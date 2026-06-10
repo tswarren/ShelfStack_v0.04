@@ -33,7 +33,7 @@ The primary goals are:
 Phase 1 does not include:
 
 - Catalog records
-- Works, editions, products, or product variants
+- Catalog items, products, or product variants
 - Inventory ledger
 - Purchase orders
 - Receiving

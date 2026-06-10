@@ -372,13 +372,13 @@ The following are intentionally deferred:
 | Item | Reason |
 | :---- | :---- |
 | Product assignment to categories | Products are introduced in a later phase. |
-| Store-specific category overrides | Global categories are sufficient for Phase 2. |
+| Store-specific category overrides | Global categories are sufficient for Phase 2\. |
 | POS tax calculation | Phase 2 prepares tax lookup, but does not calculate sales transactions. |
 | Tax remittance reports | Requires POS transaction data. |
 | GL export generation | Departments store GL account codes, but export logic is deferred. |
 | Business-date tax lookup | Phase 2 uses transaction/date lookup; business date rules are deferred. |
 | Historical transaction tax preservation | Future POS transactions should store applied tax details at time of sale. |
-| Advanced jurisdiction modeling | Store tax rates are sufficient for Phase 2. |
+| Advanced jurisdiction modeling | Store tax rates are sufficient for Phase 2\. |
 
 ---
 
