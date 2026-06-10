@@ -18,4 +18,13 @@ module ApplicationHelper
   def session_status_label(status)
     status.to_s.humanize
   end
+
+  def role_assignment_scope_label(assignment)
+    if assignment.global_scoped?
+      "Global"
+    else
+      store = assignment.store
+      store ? "#{store.name} (#{store.store_number})" : "Store"
+    end
+  end
 end

@@ -25,6 +25,6 @@ class SetupAuthorizationTest < ActionDispatch::IntegrationTest
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "basic", password: "Password123!" }
     get setup_root_path
-    assert_redirected_to root_path
+    assert_redirected_to setup_locked_out_path
   end
 end

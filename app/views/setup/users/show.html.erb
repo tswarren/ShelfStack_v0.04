@@ -8,13 +8,19 @@
 </dl>
 
 <p>
-  <%= link_to "Edit", edit_setup_user_path(@user), class: "ss-btn" %>
+  <% unless @user.system_user? %>
+    <%= link_to "Edit", edit_setup_user_path(@user), class: "ss-btn" %>
+  <% else %>
+    <p class="flash flash-notice" style="display:inline-block;margin:0;">System user is read-only.</p>
+  <% end %>
   <% if @user.active? && !@user.system_user? %>
     <%= button_to "Inactivate", inactivate_setup_user_path(@user), method: :patch, class: "ss-btn ss-btn-secondary" %>
   <% elsif !@user.active? %>
     <%= button_to "Reactivate", reactivate_setup_user_path(@user), method: :patch, class: "ss-btn" %>
   <% end %>
 </p>
+
+<%= render "role_assignments" %>
 
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>

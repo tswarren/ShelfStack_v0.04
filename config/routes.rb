@@ -19,12 +19,15 @@ Rails.application.routes.draw do
 
   namespace :setup do
     root to: "home#show"
+    get "locked_out", to: "home#locked_out"
     resources :users do
       member do
         patch :inactivate
         patch :reactivate
         patch :reset_password
         patch :clear_pin
+        post :assign_role
+        patch :remove_role
       end
     end
     resources :roles do

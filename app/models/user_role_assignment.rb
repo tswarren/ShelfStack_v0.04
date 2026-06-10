@@ -11,7 +11,9 @@ class UserRoleAssignment < ApplicationRecord
   validates :scope_type, inclusion: { in: SCOPE_TYPES }
   validates :store, presence: true, if: :store_scoped?
   validates :store, absence: true, if: :global_scoped?
-  validate :prevent_last_super_admin_removal, on: :update, if: -> { active_changed? && !active? }
+  validate :role_must_be_active, on: :create
+  validate :user_must_not_be_system, on: :create
+  validate :prevent_last_super_admin_removal, if: -> { active_changed? && !active? }
 
   scope :active_records, -> { where(active: true) }
   scope :global_scope, -> { where(scope_type: "global") }
@@ -30,6 +32,14 @@ class UserRoleAssignment < ApplicationRecord
   end
 
   private
+
+  def role_must_be_active
+    errors.add(:role, "must be active") unless role&.active?
+  end
+
+  def user_must_not_be_system
+    errors.add(:user, "cannot receive role assignments") if user&.system_user?
+  end
 
   def prevent_last_super_admin_removal
     return unless role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY && global_scoped?

@@ -32,4 +32,13 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     delete logout_path
     assert_redirected_to login_path
   end
+
+  test "header user menu links to password and pin pages" do
+    assign_workstation!(@workstation, cookies)
+    post login_path, params: { username: "bookseller", password: "Password123!" }
+    follow_redirect!
+
+    assert_select ".ss-dropdown-menu a[href='#{edit_password_path}']", text: "Change password"
+    assert_select ".ss-dropdown-menu a[href='#{edit_pin_path}']", text: "Set PIN"
+  end
 end

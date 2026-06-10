@@ -1,0 +1,36 @@
+<% if store.errors.any? %>
+  <div class="flash flash-alert">
+    <%= store.errors.full_messages.to_sentence %>
+  </div>
+<% end %>
+
+<fieldset class="ss-form-section">
+  <legend>Store identity</legend>
+  <%= f.label :store_number %><%= f.text_field :store_number, maxlength: 4 %>
+  <%= f.label :store_group %><%= f.text_field :store_group, maxlength: 5 %>
+  <%= f.label :name %><%= f.text_field :name, maxlength: 80 %>
+  <%= f.label :shopping_center %><%= f.text_field :shopping_center %>
+</fieldset>
+
+<fieldset class="ss-form-section">
+  <legend>Address</legend>
+  <%= f.label :address_line1, "Address line 1" %><%= f.text_field :address_line1 %>
+  <%= f.label :address_line2, "Address line 2" %><%= f.text_field :address_line2 %>
+  <%= f.label :city %><%= f.text_field :city %>
+  <%= f.label :region_code, "State / region" %><%= f.text_field :region_code, maxlength: 2 %>
+  <%= f.label :postal_code %><%= f.text_field :postal_code, maxlength: 20 %>
+  <%= f.label :country_code %><%= f.text_field :country_code, maxlength: 2 %>
+</fieldset>
+
+<fieldset class="ss-form-section">
+  <legend>Contact</legend>
+  <%= f.label :phone %><%= f.text_field :phone, maxlength: 20 %>
+  <%= f.label :fax %><%= f.text_field :fax, maxlength: 20 %>
+  <%= f.label :email %><%= f.email_field :email %>
+  <%= f.label :website_url, "Website" %><%= f.url_field :website_url %>
+</fieldset>
+
+<fieldset class="ss-form-section">
+  <legend>Operations</legend>
+  <%= f.label :time_zone %><%= f.text_field :time_zone %>
+</fieldset>

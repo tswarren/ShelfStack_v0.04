@@ -1,0 +1,17 @@
+<h1>Setup Access Required</h1>
+
+<p>Your account does not currently have permission to open the Admin area (<code>setup.access</code>).</p>
+
+<p>This can happen if Super Administrator role permissions were changed or the role was inactivated while exploring setup screens.</p>
+
+<h2>Recovery</h2>
+
+<p>An administrator with server access can restore defaults by running:</p>
+
+<pre>docker compose exec web bin/rails db:seed</pre>
+
+<p>Or in the Rails console:</p>
+
+<pre>SuperAdministratorProtection.restore!</pre>
+
+<p><%= link_to "Return to dashboard", root_path %></p>

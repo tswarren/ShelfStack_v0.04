@@ -12,8 +12,16 @@
   <div class="ss-search-placeholder">Search / scan (coming soon)</div>
   <div class="ss-header-actions">
     <% if current_user %>
-      <span><%= current_user.display_name %></span>
-      <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-secondary", form: { style: "display:inline;margin:0;" } %>
+      <div class="ss-user-menu">
+        <details class="ss-dropdown">
+          <summary class="ss-dropdown-trigger"><%= current_user.display_name %></summary>
+          <div class="ss-dropdown-menu" role="menu">
+            <%= link_to "Change password", edit_password_path, role: "menuitem" %>
+            <%= link_to "Set PIN", edit_pin_path, role: "menuitem" %>
+          </div>
+        </details>
+        <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-secondary", form: { style: "display:inline;margin:0;" } %>
+      </div>
     <% end %>
   </div>
 </header>

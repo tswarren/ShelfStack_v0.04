@@ -57,6 +57,7 @@ module Setup
     end
 
     def inactivate
+      SuperAdministratorProtection.ensure_role_inactivatable!(@role)
       @role.inactivate!
       record_audit!("role.inactivated", @role)
       redirect_to setup_role_path(@role), notice: "Role inactivated."
@@ -74,10 +75,13 @@ module Setup
         @role.grant_permission!(permission)
         record_audit!("role.permission_added", @role, details: { permission_key: permission.permission_key })
       else
+        SuperAdministratorProtection.ensure_permission_granted!(@role, permission)
         @role.revoke_permission!(permission)
         record_audit!("role.permission_removed", @role, details: { permission_key: permission.permission_key })
       end
       redirect_to setup_role_path(@role)
+    rescue SuperAdministratorProtection::Error => e
+      redirect_to setup_role_path(@role), alert: e.message
     end
 
     private

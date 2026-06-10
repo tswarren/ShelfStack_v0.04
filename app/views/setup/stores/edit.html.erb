@@ -1,6 +1,6 @@
 <h1>Edit <%= @store.name %></h1>
 <%= form_with model: @store, url: setup_store_path(@store), method: :patch, class: "ss-form" do |f| %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :time_zone %><%= f.text_field :time_zone %>
+  <%= render "form", f: f, store: @store %>
   <%= f.submit "Save", class: "ss-btn" %>
+  <%= link_to "Cancel", setup_store_path(@store), class: "ss-btn ss-btn-secondary" %>
 <% end %>

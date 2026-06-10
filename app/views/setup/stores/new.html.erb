@@ -1,7 +1,5 @@
 <h1>New Store</h1>
 <%= form_with model: @store, url: setup_stores_path, class: "ss-form" do |f| %>
-  <%= f.label :store_number %><%= f.text_field :store_number %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :time_zone %><%= f.text_field :time_zone %>
+  <%= render "form", f: f, store: @store %>
   <%= f.submit "Create Store", class: "ss-btn" %>
 <% end %>

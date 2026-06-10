@@ -1,0 +1,43 @@
+<% if user.errors.any? %>
+  <div class="flash flash-alert">
+    <%= user.errors.full_messages.to_sentence %>
+  </div>
+<% end %>
+
+<fieldset class="ss-form-section">
+  <legend>Account</legend>
+  <%= f.label :username %><%= f.text_field :username, maxlength: 50 %>
+  <%= f.label :user_type %><%= f.select :user_type, User::USER_TYPES, {}, disabled: user.system_user? %>
+  <%= f.label :clerk_number %><%= f.text_field :clerk_number, maxlength: 10 %>
+  <%= f.label :default_store_id, "Default store" %>
+  <%= f.collection_select :default_store_id, stores, :id, :name, { include_blank: "None" } %>
+</fieldset>
+
+<fieldset class="ss-form-section">
+  <legend>Name</legend>
+  <%= f.label :first_name %><%= f.text_field :first_name, maxlength: 50 %>
+  <%= f.label :last_name %><%= f.text_field :last_name, maxlength: 50 %>
+  <%= f.label :display_name %><%= f.text_field :display_name, maxlength: 80 %>
+</fieldset>
+
+<fieldset class="ss-form-section">
+  <legend>Login options</legend>
+  <p class="ss-form-check">
+    <%= f.check_box :interactive_login_enabled %>
+    <%= f.label :interactive_login_enabled, "Interactive login enabled" %>
+  </p>
+  <% unless user.new_record? %>
+    <p class="ss-form-check">
+      <%= f.check_box :force_password_change %>
+      <%= f.label :force_password_change, "Require password change on next login" %>
+    </p>
+  <% end %>
+</fieldset>
+
+<% if user.new_record? %>
+  <fieldset class="ss-form-section">
+    <legend>Initial password</legend>
+    <%= label_tag "user[password]", "Password" %>
+    <%= password_field_tag "user[password]" %>
+  </fieldset>
+<% end %>

@@ -10,7 +10,9 @@ module Setup
     private
 
     def require_setup_access
-      authorize!("setup.access")
+      return if Authorization.allowed?(user: current_user, permission_key: "setup.access", store: current_store)
+
+      redirect_to setup_locked_out_path, alert: "You do not have setup access."
     end
 
     def record_audit!(event_name, auditable, details: {})

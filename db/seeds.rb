@@ -49,6 +49,8 @@ Permission.active_records.find_each do |permission|
   super_admin_role.grant_permission!(permission)
 end
 
+SuperAdministratorProtection.restore!
+
 UserRoleAssignment.find_or_initialize_by(
   user: admin_user,
   role: super_admin_role,
