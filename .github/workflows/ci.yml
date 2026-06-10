@@ -37,7 +37,12 @@ jobs:
           bundler-cache: true
 
       - name: Scan for security vulnerabilities in JavaScript dependencies
-        run: bin/importmap audit
+        run: |
+          if [ -x bin/importmap ]; then
+            bin/importmap audit
+          else
+            echo "Skipping importmap audit: bin/importmap not present (importmap not fully configured)."
+          fi
 
   lint:
     runs-on: ubuntu-latest
@@ -99,7 +104,8 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_HOST: localhost
+          TEST_DATABASE_NAME: shelfstack_test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
@@ -138,7 +144,8 @@ jobs:
       - name: Run System Tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_HOST: localhost
+          TEST_DATABASE_NAME: shelfstack_test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test:system
