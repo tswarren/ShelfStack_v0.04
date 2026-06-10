@@ -7,7 +7,7 @@
   <dt>Ends on</dt><dd><%= @store_tax_category_rate.ends_on || "Open-ended" %></dd>
   <dt>Status</dt><dd><span class="<%= status_class(@store_tax_category_rate.active?) %>"><%= status_label(@store_tax_category_rate.active?) %></span></dd>
 </dl>
-<p>
+<div class="ss-detail-actions">
   <%= link_to "Edit", edit_setup_store_tax_category_rate_path(@store_tax_category_rate), class: "ss-btn" %>
   <% if @store_tax_category_rate.active? %>
     <%= button_to "Inactivate", inactivate_setup_store_tax_category_rate_path(@store_tax_category_rate), method: :patch, class: "ss-btn ss-btn-secondary" %>
@@ -15,6 +15,6 @@
     <%= button_to "Reactivate", reactivate_setup_store_tax_category_rate_path(@store_tax_category_rate), method: :patch, class: "ss-btn" %>
   <% end %>
   <%= button_to "Delete", setup_store_tax_category_rate_path(@store_tax_category_rate), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this tax mapping?" } %>
-</p>
+</div>
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>

@@ -6,7 +6,7 @@
   <dt>Description</dt><dd><%= @department.description.presence || "—" %></dd>
   <dt>Status</dt><dd><span class="<%= status_class(@department.active?) %>"><%= status_label(@department.active?) %></span></dd>
 </dl>
-<p>
+<div class="ss-detail-actions">
   <%= link_to "Edit", edit_setup_department_path(@department), class: "ss-btn" %>
   <% if @department.active? %>
     <%= button_to "Inactivate", inactivate_setup_department_path(@department), method: :patch, class: "ss-btn ss-btn-secondary" %>
@@ -14,6 +14,6 @@
     <%= button_to "Reactivate", reactivate_setup_department_path(@department), method: :patch, class: "ss-btn" %>
   <% end %>
   <%= button_to "Delete", setup_department_path(@department), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this department?" } %>
-</p>
+</div>
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>

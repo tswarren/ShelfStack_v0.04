@@ -7,7 +7,7 @@
   <dt>Clerk number</dt><dd><%= @user.clerk_number || "—" %></dd>
 </dl>
 
-<p>
+<div class="ss-detail-actions">
   <% unless @user.system_user? %>
     <%= link_to "Edit", edit_setup_user_path(@user), class: "ss-btn" %>
   <% else %>
@@ -18,7 +18,7 @@
   <% elsif !@user.active? %>
     <%= button_to "Reactivate", reactivate_setup_user_path(@user), method: :patch, class: "ss-btn" %>
   <% end %>
-</p>
+</div>
 
 <%= render "role_assignments" %>
 

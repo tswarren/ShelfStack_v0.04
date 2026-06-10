@@ -4,6 +4,6 @@
   <dt>Time zone</dt><dd><%= @store.time_zone %></dd>
   <dt>Status</dt><dd><span class="<%= status_class(@store.active?) %>"><%= status_label(@store.active?) %></span></dd>
 </dl>
-<p><%= link_to "Edit", edit_setup_store_path(@store), class: "ss-btn" %></p>
+<div class="ss-detail-actions"><%= link_to "Edit", edit_setup_store_path(@store), class: "ss-btn" %></div>
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
