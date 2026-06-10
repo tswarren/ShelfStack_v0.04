@@ -95,25 +95,15 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development should follow the phase roadmap.
+Development follows the phase roadmap.
 
-## Phase 1: Foundation
+## Phase 1: Foundation — **Complete**
 
-Focus:
+Phase 1 was completed on 2025-06-10. See [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md) for deliverables, verification steps, and known gaps.
 
-* Users
-* Roles
-* Permissions
-* Role assignments
-* Stores
-* Workstations
-* Workstation assignments
-* User sessions
-* Session locking/unlocking
-* Audit events
-* Setup shell
+Do not remove or bypass Phase 1 protections (super administrator, system user, audit events) when extending the application.
 
-## Phase 2: Departments, Categories, and Taxes
+## Phase 2: Departments, Categories, and Taxes — **Active**
 
 Focus:
 

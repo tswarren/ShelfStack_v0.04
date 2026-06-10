@@ -33,6 +33,22 @@ ShelfStack is a bookstore-focused catalog, inventory, stock, and point-of-sale m
 
 Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to the task.
 
+**Phase 1 is implemented.** Start with [implementation/phase-1-completion.md](implementation/phase-1-completion.md) for current behavior and known gaps. **Phase 2** is the active build priority.
+
+---
+
+## Implementation Status
+
+| Phase | Documentation | Implementation record |
+| ----- | ------------- | --------------------- |
+| Phase 1 | Complete | [implementation/phase-1-completion.md](implementation/phase-1-completion.md) |
+| Phase 2 | Complete | Not started |
+| Phase 3 | Complete | Not started |
+
+Operational tasks (login, workstation assignment, admin recovery): [operations/foundation-runbook.md](operations/foundation-runbook.md).
+
+Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/phase-1-test-coverage.md).
+
 ---
 
 ## General Documents
@@ -46,6 +62,9 @@ Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to th
 | [implementation-guide.md](implementation-guide.md) | Developer conventions, naming, seeds, testing |
 | [glossary.md](glossary.md) | Definitions of recurring domain terms |
 | [schema-reference.md](schema-reference.md) | Schema index assembled from phase data models |
+| [implementation/phase-1-completion.md](implementation/phase-1-completion.md) | Phase 1 sign-off: delivered scope, gaps, verification |
+| [implementation/phase-1-test-coverage.md](implementation/phase-1-test-coverage.md) | Phase 1 automated test mapping |
+| [operations/foundation-runbook.md](operations/foundation-runbook.md) | Phase 1 operational procedures |
 
 ---
 
@@ -102,6 +121,8 @@ schema-reference.md                        ← assembled schema index
 ```
 
 A phase is not complete when tables exist. A phase is complete when behavior is implemented, permission-controlled, audited, seeded, tested, and documented.
+
+**Phase 1 completion record:** [implementation/phase-1-completion.md](implementation/phase-1-completion.md)
 
 ---
 

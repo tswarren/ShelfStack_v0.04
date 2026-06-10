@@ -1,5 +1,7 @@
 # Phase 1: Foundation
 
+> **Status:** Implemented (2025-06-10). See [../implementation/phase-1-completion.md](../implementation/phase-1-completion.md).
+
 ## Purpose
 
 Phase 1 establishes ShelfStack’s operational foundation: who the user is, where they are working, what store and workstation context applies, what they are allowed to do, how their session is secured, and how critical actions are audited.
