@@ -1,0 +1,10 @@
+<nav class="ss-nav">
+  <%= link_to "Dashboard", root_path, class: (current_page?(root_path) ? "active" : nil) %>
+  <span class="disabled">POS</span>
+  <span class="disabled">Inventory</span>
+  <span class="disabled">Catalog</span>
+  <span class="disabled">Orders</span>
+  <span class="disabled">Customers</span>
+  <span class="disabled">Reports</span>
+  <%= link_to "Admin", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>
+</nav>

@@ -70,6 +70,8 @@ At the end of Phase 1:
 7. Audit events are created for security and setup changes.
 8. The application shell displays user, store, workstation, and session context.
 
+**Status:** Implemented. See [implementation/phase-1-completion.md](implementation/phase-1-completion.md).
+
 ## Detailed Documents
 
 ```text
@@ -471,11 +473,13 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 # Current Priority
 
-The current planned build sequence is:
+**Phase 1 (Foundation) is complete** as of 2025-06-10.
 
 ```text
-Phase 1 → Phase 2 → Phase 3
+Phase 1 ✓  →  Phase 2 (active)  →  Phase 3
 ```
+
+Implementation record: [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md).
 
 Once Phase 3 is complete, the next major design decision is whether to proceed with:
 

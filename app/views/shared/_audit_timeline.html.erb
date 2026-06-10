@@ -1,0 +1,14 @@
+<table class="ss-table">
+  <thead>
+    <tr><th>When</th><th>Event</th><th>Actor</th></tr>
+  </thead>
+  <tbody>
+    <% audit_events.each do |event| %>
+      <tr>
+        <td><%= display_time(event.occurred_at) %></td>
+        <td><%= event.event_name %></td>
+        <td><%= event.actor_user.display_name %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

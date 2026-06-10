@@ -1,0 +1,6 @@
+<h1><%= @audit_event.event_name %></h1>
+<dl class="ss-summary">
+  <dt>When</dt><dd><%= display_time(@audit_event.occurred_at) %></dd>
+  <dt>Actor</dt><dd><%= @audit_event.actor_user.display_name %></dd>
+  <dt>Details</dt><dd><pre><%= JSON.pretty_generate(@audit_event.event_details) %></pre></dd>
+</dl>

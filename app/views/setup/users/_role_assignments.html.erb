@@ -1,0 +1,74 @@
+<h2>Role Assignments</h2>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>Role</th>
+      <th>Scope</th>
+      <th>Status</th>
+      <th>Assigned</th>
+      <% if @can_manage_user_roles && !@user.system_user? %>
+        <th></th>
+      <% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if @role_assignments.any? %>
+      <% @role_assignments.each do |assignment| %>
+        <tr>
+          <td><%= link_to assignment.role.name, setup_role_path(assignment.role) %></td>
+          <td><%= role_assignment_scope_label(assignment) %></td>
+          <td><span class="<%= status_class(assignment.active?) %>"><%= status_label(assignment.active?) %></span></td>
+          <td>
+            <% if assignment.assigned_at.present? %>
+              <%= display_time(assignment.assigned_at) %>
+              <% if assignment.assigned_by_user.present? %>
+                <span class="ss-muted">by <%= assignment.assigned_by_user.display_name %></span>
+              <% end %>
+            <% else %>
+              —
+            <% end %>
+          </td>
+          <% if @can_manage_user_roles && !@user.system_user? %>
+            <td>
+              <% if assignment.active? %>
+                <%= button_to "Remove",
+                      remove_role_setup_user_path(@user, assignment_id: assignment.id),
+                      method: :patch,
+                      class: "ss-btn ss-btn-secondary ss-btn-small",
+                      form: { data: { turbo_confirm: "Remove this role assignment?" } } %>
+              <% end %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    <% else %>
+      <tr>
+        <td colspan="<%= @can_manage_user_roles && !@user.system_user? ? 5 : 4 %>">No role assignments.</td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @can_manage_user_roles && !@user.system_user? %>
+  <h3>Assign Role</h3>
+  <%= form_with url: assign_role_setup_user_path(@user), method: :post, class: "ss-form" do %>
+    <%= label_tag :role_id, "Role" %>
+    <%= select_tag :role_id, options_from_collection_for_select(@assignable_roles, :id, :name), include_blank: "Select a role" %>
+
+    <%= label_tag :scope_type, "Scope" %>
+    <%= select_tag :scope_type,
+          options_for_select([["Global", "global"], ["Store", "store"]], "global"),
+          id: "user_role_scope_type",
+          onchange: "document.getElementById('user_role_store_field').hidden = this.value !== 'store'" %>
+
+    <div id="user_role_store_field" hidden>
+      <%= label_tag :store_id, "Store" %>
+      <%= select_tag :store_id, options_from_collection_for_select(@stores, :id, :name), include_blank: "Select a store" %>
+    </div>
+
+    <%= submit_tag "Assign Role", class: "ss-btn" %>
+  <% end %>
+<% elsif @user.system_user? %>
+  <p class="ss-muted">The system user does not receive role assignments.</p>
+<% end %>

@@ -33,6 +33,8 @@ Each phase data model should include:
 
 Phase 1 introduces foundation tables.
 
+**Implementation status:** Present in `db/schema.rb` as of 2025-06-10 (migration `20250610120000_create_phase1_foundation`). Design source of truth: [specifications/phase-1-data-model.md](specifications/phase-1-data-model.md).
+
 ```text
 audit_events
 permissions

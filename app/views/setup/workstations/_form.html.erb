@@ -1,0 +1,20 @@
+<% if workstation.errors.any? %>
+  <div class="flash flash-alert">
+    <%= workstation.errors.full_messages.to_sentence %>
+  </div>
+<% end %>
+
+<%= f.label :store_id, "Store" %>
+<%= f.collection_select :store_id, stores, :id, :name, { include_blank: "Select a store" } %>
+
+<%= f.label :workstation_type, "Type" %>
+<%= f.select :workstation_type, Workstation::WORKSTATION_TYPES, { include_blank: "Select a type" } %>
+
+<%= f.label :workstation_number, "Workstation number" %>
+<%= f.text_field :workstation_number, maxlength: 3, placeholder: "001" %>
+
+<%= f.label :workstation_code, "Workstation code" %>
+<%= f.text_field :workstation_code, placeholder: "001-REG001" %>
+
+<%= f.label :name %>
+<%= f.text_field :name, placeholder: "Front Register" %>

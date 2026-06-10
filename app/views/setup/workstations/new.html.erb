@@ -1,0 +1,5 @@
+<h1>New Workstation</h1>
+<%= form_with model: @workstation, url: setup_workstations_path, class: "ss-form" do |f| %>
+  <%= render "form", f: f, workstation: @workstation, stores: @stores %>
+  <%= f.submit "Create Workstation", class: "ss-btn" %>
+<% end %>

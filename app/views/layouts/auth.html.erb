@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "ShelfStack" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  </head>
+  <body class="ss-auth">
+    <div class="ss-auth-box">
+      <div class="ss-auth-logo">
+        <%= link_to root_path do %>
+          <%= image_tag "logo.png", alt: "ShelfStack" %>
+        <% end %>
+      </div>
+      <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
+      <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
+      <%= yield %>
+    </div>
+  </body>
+</html>

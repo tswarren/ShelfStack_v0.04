@@ -65,6 +65,25 @@ Recommended service areas:
 | Product Naming         | Product and variant name generation.                             |
 | SKU Generation         | Product and variant SKU generation.                              |
 
+### Phase 1 implemented services (2025-06-10)
+
+These services exist in `app/services/` and are used by the Phase 1 application:
+
+| Service | File | Responsibility |
+| ------- | ---- | -------------- |
+| Authorization | `authorization.rb` | Permission resolution and store scope |
+| AuditEvents | `audit_events.rb` | Audit event creation with context |
+| AuthenticationService | `authentication_service.rb` | Login validation and lockout |
+| SessionLifecycle | `session_lifecycle.rb` | Login, logout, lock, unlock, expiration |
+| WorkstationAssignmentService | `workstation_assignment_service.rb` | Browser workstation assignment |
+| UserRoleAssignmentService | `user_role_assignment_service.rb` | User role assign/remove |
+| SuperAdministratorProtection | `super_administrator_protection.rb` | Admin lockout prevention and recovery |
+| TokenDigest | `token_digest.rb` | Secure token digest helpers |
+
+Request context: `app/models/current.rb` (`CurrentAttributes`).
+
+Future phases will add Tax Lookup, Catalog Identifiers, Metadata Parsing, Product Naming, and SKU Generation services per the table above.
+
 ---
 
 # 3. Current Context

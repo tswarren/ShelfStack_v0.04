@@ -1,0 +1,31 @@
+<h1><%= @role.name %></h1>
+<p><%= @role.description %></p>
+<% if @role.system_role? && @role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY %>
+  <p class="flash flash-notice">Super Administrator permissions are fixed and cannot be removed.</p>
+<% else %>
+  <p><%= link_to "Edit", edit_setup_role_path(@role), class: "ss-btn" %></p>
+<% end %>
+<h2>Permissions</h2>
+<table class="ss-table">
+  <thead><tr><th>Permission</th><th>Granted</th></tr></thead>
+  <tbody>
+    <% @permissions.each do |permission| %>
+      <tr>
+        <td><%= permission.permission_key %></td>
+        <td>
+          <% if @role.system_role? && @role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY %>
+            <%= @role.permissions.include?(permission) ? "Yes" : "No" %>
+          <% else %>
+            <%= form_with url: update_permissions_setup_role_path(@role), method: :patch do %>
+              <%= hidden_field_tag :permission_id, permission.id %>
+              <%= check_box_tag :grant, "1", @role.permissions.include?(permission),
+                    onchange: "this.form.submit()" %>
+            <% end %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

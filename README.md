@@ -10,14 +10,16 @@ ShelfStack separates descriptive catalog metadata from store-facing products and
 
 ## Project Status
 
-ShelfStack has a Rails application skeleton and complete Phase 1–3 documentation. Implementation is beginning with Phase 1 foundation work.
+ShelfStack has a **complete Phase 1 implementation** (foundation) and complete Phase 1–3 **documentation**. Active development priority is **Phase 2** (departments, categories, and taxes).
 
-| Phase         | Focus                                                                                                                                         | Documentation |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Phase 1       | Foundation: users, roles, permissions, stores, workstations, sessions, and audit events.                                                      | Complete      |
-| Phase 2       | Classification and taxes: departments, categories, tax categories, store tax rates, and effective-dated tax mappings.                         | Complete      |
-| Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      |
-| Future phases | Inventory ledger, stock balances, purchasing, receiving, POS, reporting, and accounting workflows.                                            | Roadmap only  |
+| Phase         | Focus                                                                                                                                         | Documentation | Implementation |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- |
+| Phase 1       | Foundation: users, roles, permissions, stores, workstations, sessions, and audit events.                                                      | Complete      | **Complete**   |
+| Phase 2       | Classification and taxes: departments, categories, tax categories, store tax rates, and effective-dated tax mappings.                         | Complete      | Not started    |
+| Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      | Not started    |
+| Future phases | Inventory ledger, stock balances, purchasing, receiving, POS, reporting, and accounting workflows.                                            | Roadmap only  | Not started    |
+
+Phase 1 completion details: [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md).
 
 ---
 
@@ -66,7 +68,7 @@ AI coding agents should also read [AGENTS.md](AGENTS.md).
 | Language              | Ruby 3.4                                          |
 | Database              | PostgreSQL 17                                     |
 | Authentication        | `has_secure_password` (bcrypt)                    |
-| Authorization         | Role/permission service (planned)                 |
+| Authorization         | Role/permission service (`Authorization`)         |
 | Background jobs       | Solid Queue                                       |
 | Cache                 | Solid Cache                                       |
 | Action Cable          | Solid Cable                                       |
@@ -100,6 +102,8 @@ Then visit:
 http://localhost:3000
 ```
 
+On first seed, the terminal prints the development **admin** password (`admin` / `ChangeMe###`). See [DOCKER.md](DOCKER.md) and [docs/operations/foundation-runbook.md](docs/operations/foundation-runbook.md).
+
 Use `./dev/rails-docker` to run Rails, Bundler, and other commands inside the `web` container. Examples:
 
 ```bash
@@ -129,11 +133,12 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 
 ## Current Scope
 
-The current design focus covers:
+**Phase 1 is implemented.** See [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md).
 
-1. Phase 1 foundation
-2. Phase 2 classification and taxes
-3. Phase 3 catalog, products, and product variants
+Current design and implementation focus:
+
+1. **Phase 2** — departments, categories, and taxes (next)
+2. Phase 3 — catalog, products, and product variants (documented, not yet built)
 
 The next major area after Phase 3 is expected to be inventory foundation.
 

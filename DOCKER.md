@@ -49,6 +49,29 @@ Then open:
 http://localhost:3000
 ```
 
+### Seeded admin user
+
+On **first** seed in development, the terminal prints:
+
+```text
+Seeded admin user: admin / ChangeMe###
+```
+
+- **Username:** `admin`
+- **Password:** shown once when the admin user is created; re-running `db:seed` does **not** change an existing admin password.
+
+After login, assign the browser to a workstation if prompted. See [docs/operations/foundation-runbook.md](docs/operations/foundation-runbook.md).
+
+### Restore setup access
+
+If Admin access is lost after permission changes:
+
+```bash
+./dev/rails-docker bin/rails db:seed
+```
+
+Or in Rails console: `SuperAdministratorProtection.restore!`
+
 ---
 
 ## Daily Development

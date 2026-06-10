@@ -1,0 +1,9 @@
+<h1><%= @store.name %></h1>
+<dl class="ss-summary">
+  <dt>Store number</dt><dd><%= @store.store_number %></dd>
+  <dt>Time zone</dt><dd><%= @store.time_zone %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@store.active?) %>"><%= status_label(@store.active?) %></span></dd>
+</dl>
+<p><%= link_to "Edit", edit_setup_store_path(@store), class: "ss-btn" %></p>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

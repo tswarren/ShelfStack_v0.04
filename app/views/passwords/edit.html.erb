@@ -1,0 +1,14 @@
+<h1>Change Password</h1>
+
+<%= form_with url: password_path, method: :patch, class: "ss-form" do %>
+  <label>Current password</label>
+  <%= password_field_tag :current_password %>
+
+  <label>New password</label>
+  <%= password_field_tag :password %>
+
+  <label>Confirm new password</label>
+  <%= password_field_tag :password_confirmation %>
+
+  <%= submit_tag "Update Password", class: "ss-btn" %>
+<% end %>
