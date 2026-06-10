@@ -1,0 +1,1 @@
+The files in this directory are guidelines for phases 1 through 3

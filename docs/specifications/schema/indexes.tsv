@@ -1,0 +1,162 @@
+Table	Index	Type	Notes
+audit_events	actor_user_id	normal	Supports user activity review.
+audit_events	event_name	normal	Supports filtering by event type.
+audit_events	occurred_at	normal	Supports chronological audit review.
+audit_events	auditable_type, auditable_id	composite	Supports record-level audit timelines.
+audit_events	source_type, source_id	composite	Supports source event/object lookup.
+audit_events	store_id	normal	Supports store-specific audit review.
+audit_events	workstation_id	normal	Supports workstation-specific review.
+audit_events	user_session_id	normal	Supports session event review.
+audit_events	store_id, occurred_at	composite	Useful for store audit timelines.
+permissions	permission_key	unique	Stable permission lookup.
+permissions	permission_group	normal	Supports grouped setup screens.
+permissions	active	normal	Supports hiding retired permissions.
+roles	role_key	unique	Stable role lookup.
+roles	name	normal	Supports setup search/listing.
+roles	active	normal	Supports active/inactive filtering.
+roles	system_role	normal	Supports protected-role behavior.
+role_permissions	role_id	normal	Supports role permission lookup.
+role_permissions	permission_id	normal	Supports reverse permission lookup.
+role_permissions	role_id, permission_id	unique composite	Prevents duplicate permission assignment.
+stores	store_number	unique	Primary store lookup/display identifier.
+stores	store_group	normal	Supports group filtering/reporting.
+stores	name	normal	Supports setup search/listing.
+stores	active	normal	Supports active/inactive filtering.
+stores	country_code, region_code	composite	Supports location filtering.
+users	username	unique	Login lookup.
+users	clerk_number	unique / partial unique	Allow multiple nulls if system user has none.
+users	default_store_id	normal	Supports store-based user lists.
+users	user_type	normal	Supports admin/system/user filtering.
+users	active	normal	Supports active/inactive filtering.
+users	locked_at	normal	Supports locked-account review.
+user_role_assignments	user_id	normal	Supports permission lookup.
+user_role_assignments	role_id	normal	Supports role assignment review.
+user_role_assignments	store_id	normal	Supports store-scoped user lists.
+user_role_assignments	assigned_by_user_id	normal	Supports admin/audit review.
+user_role_assignments	scope_type	normal	Supports global/store filtering.
+user_role_assignments	active	normal	Supports active/inactive filtering.
+user_role_assignments	user_id, role_id where scope_type = 'global'	partial unique	Prevents duplicate global assignments.
+user_role_assignments	user_id, role_id, store_id where scope_type = 'store'	partial unique	Prevents duplicate store-scoped assignments.
+workstations	store_id	normal	Supports store workstation lists.
+workstations	workstation_type	normal	Supports filtering by workstation type.
+workstations	active	normal	Supports active/inactive filtering.
+workstations	store_id, workstation_number	unique composite	Allows each store to have workstation 001.
+workstations	store_id, workstation_code	unique composite	Prevents duplicate generated codes within a store.
+user_sessions	user_id	normal	Supports user session review.
+user_sessions	store_id	normal	Supports store-level session review.
+user_sessions	workstation_id	normal	Supports workstation session review.
+user_sessions	session_token_digest	unique	Resolves current session securely.
+user_sessions	status	normal	Supports active/locked session lists.
+user_sessions	last_activity_at	normal	Supports inactivity cleanup/expiration.
+user_sessions	locked_at	normal	Supports locked-session review.
+user_sessions	ended_at	normal	Supports cleanup/history review.
+user_sessions	ended_by_user_id	normal	Supports forced logout review.
+workstation_assignments	workstation_id	normal	Supports workstation assignment review.
+workstation_assignments	assignment_token_digest	unique	Resolves browser cookie securely.
+workstation_assignments	assigned_by_user_id	normal	Supports admin/audit review.
+workstation_assignments	revoked_at	normal	Supports active/revoked filtering.
+workstation_assignments	last_seen_at	normal	Supports stale assignment cleanup/review.
+tax_categories	name	unique	Prevent duplicate global tax category names.
+tax_categories	short_name	unique	Prevent ambiguous short labels.
+tax_categories	sort_order	normal	Supports ordered display.
+tax_categories	active	normal	Supports active/inactive filtering.
+store_tax_rates	store_id	normal	Store tax setup lookup.
+store_tax_rates	store_id, name	unique composite	Prevent duplicate rate names within store.
+store_tax_rates	store_id, short_name	unique composite	Prevent duplicate receipt total labels within store.
+store_tax_rates	store_id, tax_identifier	unique composite	Prevent receipt marker ambiguity within store.
+store_tax_rates	active	normal	Supports active/inactive filtering.
+store_tax_category_rates	store_id	normal	Store-specific lookup.
+store_tax_category_rates	tax_category_id	normal	Tax category lookup.
+store_tax_category_rates	store_tax_rate_id	normal	Store tax rate lookup.
+store_tax_category_rates	store_id, tax_category_id, effective_on	unique composite	Prevent duplicate mappings with same effective date.
+store_tax_category_rates	store_id, tax_category_id, active	normal	Supports active tax lookup.
+store_tax_category_rates	effective_on, ends_on	composite	Supports date range lookup.
+departments	department_number	unique	Primary department display/sort/reporting identifier.
+departments	name	unique	Prevent duplicate top-level reporting labels.
+departments	short_name	unique	Prevent ambiguous short labels.
+departments	gl_account_code	normal	Supports future accounting/export filtering.
+departments	active	normal	Supports active/inactive filtering.
+categories	department_id	normal	Department category listing.
+categories	default_tax_category_id	normal	Tax category dependency lookup.
+categories	department_id, name	unique composite	Prevent duplicate category names within department.
+categories	department_id, short_name	unique composite	Prevent duplicate short names within department.
+categories	department_id, sort_order	normal	Supports ordered display within department.
+categories	default_pricing_model	normal	Optional filtering/reporting.
+categories	active	normal	Supports active/inactive filtering.
+tax_categories	name	unique	Prevents duplicate global tax category names.
+tax_categories	short_name	unique	Prevents ambiguous short labels.
+tax_categories	sort_order	normal	Supports ordered display.
+tax_categories	active	normal	Supports active/inactive filtering.
+store_tax_rates	store_id	normal	Supports store tax setup lookup.
+store_tax_rates	store_id, name	unique composite	Prevents duplicate rate names within one store.
+store_tax_rates	store_id, short_name	unique composite	Prevents duplicate receipt total labels within one store.
+store_tax_rates	store_id, tax_identifier	unique composite	Prevents receipt marker ambiguity within one store.
+store_tax_rates	active	normal	Supports active/inactive filtering.
+store_tax_category_rates	store_id	normal	Supports store-specific tax lookup.
+store_tax_category_rates	tax_category_id	normal	Supports tax category lookup.
+store_tax_category_rates	store_tax_rate_id	normal	Supports store tax rate dependency lookup.
+store_tax_category_rates	store_id, tax_category_id, effective_on	unique composite	Prevents duplicate mappings with the same effective date.
+store_tax_category_rates	store_id, tax_category_id, active	normal	Supports active tax lookup.
+store_tax_category_rates	effective_on, ends_on	composite	Supports date range lookup.
+departments	department_number	unique	Primary department display/sort/reporting identifier.
+departments	name	unique	Prevents duplicate top-level reporting labels.
+departments	short_name	unique	Prevents ambiguous department short labels.
+departments	gl_account_code	normal	Supports future accounting/export filtering.
+departments	active	normal	Supports active/inactive filtering.
+categories	department_id	normal	Supports department category listing.
+categories	default_tax_category_id	normal	Supports tax category dependency lookup.
+categories	department_id, name	unique composite	Prevents duplicate category names within department.
+categories	department_id, short_name	unique composite	Prevents duplicate category short names within department.
+categories	department_id, sort_order	normal	Supports ordered display within department.
+categories	default_pricing_model	normal	Supports filtering/reporting by pricing model.
+categories	active	normal	Supports active/inactive filtering.
+formats	format_key	unique	Stable lookup.
+formats	short_name	normal	Supports setup search/display.
+formats	code	normal	Supports lookup by code.
+formats	active	normal	Supports active/inactive filtering.
+catalog_items	catalog_item_type	normal	Supports type filtering.
+catalog_items	title	normal	Supports catalog search.
+catalog_items	publisher	normal	Supports publisher search.
+catalog_items	publication_status	normal	Supports publication status filtering.
+catalog_items	format_id	normal	Supports format filtering.
+catalog_items	series_name	normal	Supports series search.
+catalog_items	year	normal	Supports calendar/year filtering.
+catalog_items	active	normal	Supports active/inactive filtering.
+catalog_item_identifiers	catalog_item_id	normal	Parent lookup.
+catalog_item_identifiers	identifier_type, normalized_identifier	unique partial	Enforce uniqueness for standard/local identifiers. Exclude publisher numbers if not globally unique.
+catalog_item_identifiers	normalized_identifier	normal	Fast search/scanning.
+catalog_item_identifiers	catalog_item_id where active = true AND primary_identifier = true	partial unique	Enforces one active primary identifier per catalog item.
+catalog_item_identifiers	active	normal	Supports active/inactive filtering.
+display_locations	short_name	unique	Prevents ambiguous display labels.
+display_locations	parent_id	normal	Supports hierarchy lookup.
+display_locations	sort_order	normal	Supports ordered display.
+display_locations	active	normal	Supports active/inactive filtering.
+store_display_locations	display_location_id	normal	Supports display location dependency lookup.
+store_display_locations	store_id	normal	Supports store-specific setup.
+store_display_locations	store_id, display_location_id	unique composite	Prevents duplicate activation of same display location in same store.
+store_display_locations	active	normal	Supports active/inactive filtering.
+products	catalog_item_id	normal	Supports catalog-linked product lookup.
+products	sku	unique	Product base SKU lookup.
+products	name	normal	Supports product search.
+products	product_type	normal	Supports product type filtering.
+products	variation_type	normal	Supports variation type filtering.
+products	default_display_location_id	normal	Supports display location dependency lookup.
+products	active	normal	Supports active/inactive filtering.
+product_conditions	condition_key	unique	Stable seed/update lookup.
+product_conditions	short_name	unique	Prevents ambiguous short labels.
+product_conditions	sku_component	unique partial	Prevents duplicate condition suffixes while allowing null for New.
+product_conditions	sort_order	normal	Supports display order.
+product_conditions	new_condition	normal	Supports filtering new-like versus used-like conditions.
+product_conditions	active	normal	Supports active/inactive filtering.
+product_variants	product_id	normal	Parent product lookup.
+product_variants	sku	unique	Actual sellable SKU lookup.
+product_variants	condition_id	normal	Condition dependency lookup.
+product_variants	category_id	normal	Category/reporting lookup.
+product_variants	display_location_id	normal	Display location lookup.
+product_variants	inventory_behavior	normal	Supports behavior filtering.
+product_variants	pricing_model_override	normal	Supports pricing behavior filtering.
+product_variants	active	normal	Supports active/inactive filtering.
+vendors	name	normal	Supports vendor search.
+vendors	parent_vendor_id	normal	Supports vendor hierarchy.
+vendors	default_pricing_model	normal	Supports filtering by pricing defaults.
+vendors	active	normal	Supports active/inactive filtering.

@@ -1,0 +1,298 @@
+Table	Field	Type	Constraints	Notes
+audit_events	id	bigint	auto increment	
+audit_events	actor_user_id	bigint	references users, null false	User/system actor that performed the action. Use system user for background actions.
+audit_events	event_name	string	null false	Example: user.login, session.locked, role.permission_added.
+audit_events	auditable_type	string		Polymorphic affected record type.
+audit_events	auditable_id	bigint		Polymorphic affected record ID.
+audit_events	source_type	string		Optional source object/event type.
+audit_events	source_id	bigint		Optional source object/event ID.
+audit_events	store_id	bigint	references stores	Nullable store context.
+audit_events	workstation_id	bigint	references workstations	Nullable workstation context.
+audit_events	user_session_id	bigint	references user_sessions	Nullable session context.
+audit_events	occurred_at	datetime	null false	Set explicitly; store in UTC.
+audit_events	event_details	json/jsonb	null false, default {}	Use jsonb in PostgreSQL.
+audit_events	created_at	datetime	null false	
+audit_events	updated_at	datetime	null false	Rails standard timestamp; audit rows usually should not change.
+permissions	id	bigint	auto increment	
+permissions	permission_key	string	null false, unique	Example: setup.users.create.
+permissions	permission_group	string	null false	Example: setup, sessions, workstations.
+permissions	name	string	null false	Human-readable name.
+permissions	description	text		Optional description.
+permissions	active	boolean	null false, default true	Allows retired permissions to remain in history.
+permissions	created_at	datetime	null false	
+permissions	updated_at	datetime	null false	
+roles	id	bigint	auto increment	
+roles	role_key	string	null false, unique	Stable internal key. Example: super_administrator.
+roles	name	string	null false	Display name.
+roles	description	text		Optional description.
+roles	system_role	boolean	null false, default false	Protects seed/system roles from accidental removal.
+roles	active	boolean	null false, default true	Inactive roles cannot be newly assigned.
+roles	created_at	datetime	null false	
+roles	updated_at	datetime	null false	
+role_permissions	id	bigint	auto increment	
+role_permissions	role_id	bigint	references roles, null false	
+role_permissions	permission_id	bigint	references permissions, null false	
+role_permissions	created_at	datetime	null false	
+role_permissions	updated_at	datetime	null false	
+stores	id	bigint	auto increment	
+stores	store_number	string	null false, unique, limit 4	Store as string to preserve leading zeroes, e.g. 001.
+stores	store_group	string	limit 5	Free-form reporting group for Phase 1.
+stores	name	string	null false, limit 80	Store display name.
+stores	shopping_center	string		Optional.
+stores	address_line1	string		
+stores	address_line2	string		
+stores	city	string		
+stores	country_code	string	null false, limit 2, default US	ISO country code.
+stores	region_code	string	limit 2	State/province code.
+stores	postal_code	string	limit 20	Postal/ZIP code.
+stores	phone	string	limit 20	
+stores	fax	string	limit 20	
+stores	email	string		Normalize lowercase.
+stores	website_url	string		Store full URL, including protocol.
+stores	time_zone	string	null false, default America/New_York	Prefer IANA time zone names.
+stores	active	boolean	null false, default true	Inactive stores cannot be selected for new activity.
+stores	created_at	datetime	null false	
+stores	updated_at	datetime	null false	
+users	id	bigint	auto increment	
+users	user_type	string	null false, default user	user, admin, system.
+users	default_store_id	bigint	references stores	Nullable.
+users	username	string	null false, unique, limit 50	Normalize uppercase or lowercase consistently.
+users	first_name	string	null false, limit 50	
+users	last_name	string	null false, limit 50	
+users	display_name	string	null false, limit 80	Display name shown in UI.
+users	clerk_number	string	unique, limit 10	Nullable for system user. Store as string to preserve leading zeroes.
+users	password_digest	string		Required for interactive users.
+users	pin_digest	string		Nullable. Used for unlocking an existing locked session.
+users	password_changed_at	datetime		
+users	pin_changed_at	datetime		
+users	invalid_login_attempts	integer	null false, default 0	Reset after successful login.
+users	locked_at	datetime		Used for failed-login lockout.
+users	previous_login_at	datetime		Previous successful login timestamp.
+users	last_login_at	datetime		Most recent successful login timestamp.
+users	force_password_change	boolean	null false, default false	Useful for seeded admin user.
+users	interactive_login_enabled	boolean	null false, default true	False for system user.
+users	active	boolean	null false, default true	Inactive users cannot log in.
+users	deactivated_at	datetime		Optional history field.
+users	created_at	datetime	null false	
+users	updated_at	datetime	null false	
+user_role_assignments	id	bigint	auto increment	
+user_role_assignments	user_id	bigint	references users, null false	User receiving the role assignment.
+user_role_assignments	role_id	bigint	references roles, null false	Assigned role.
+user_role_assignments	scope_type	string	null false, default store	global or store.
+user_role_assignments	store_id	bigint	references stores	Null when scope_type = global; required when scope_type = store.
+user_role_assignments	active	boolean	null false, default true	Allows assignment to be disabled without deleting history.
+user_role_assignments	assigned_by_user_id	bigint	references users	Optional but useful.
+user_role_assignments	assigned_at	datetime		Optional but useful.
+user_role_assignments	created_at	datetime	null false	
+user_role_assignments	updated_at	datetime	null false	
+workstations	id	bigint	auto increment	
+workstations	store_id	bigint	references stores, null false	Store that owns the workstation.
+workstations	workstation_type	string	null false	register, service_desk, back_office, receiving.
+workstations	workstation_number	string	null false, limit 3	Zero-padded store-level workstation number.
+workstations	workstation_code	string	null false	Example: 001-REG001.
+workstations	name	string	null false	Friendly display name. Example: Front Register.
+workstations	active	boolean	null false, default true	Inactive workstations cannot be assigned to browsers or sessions.
+workstations	created_at	datetime	null false	
+workstations	updated_at	datetime	null false	
+user_sessions	id	bigint	auto increment	
+user_sessions	user_id	bigint	references users, null false	Active user.
+user_sessions	store_id	bigint	references stores	Active store context.
+user_sessions	workstation_id	bigint	references workstations	Active workstation context.
+user_sessions	session_token_digest	string	null false, unique	Store digest, not raw session token.
+user_sessions	status	string	null false, default active	active, locked, ended, expired, force_ended.
+user_sessions	last_activity_at	datetime	null false	Used for inactivity tracking.
+user_sessions	locked_at	datetime		Set when session is locked.
+user_sessions	unlocked_at	datetime		Optional; last successful unlock timestamp.
+user_sessions	ended_at	datetime		Set when session ends, expires, or is force-ended.
+user_sessions	ended_by_user_id	bigint	references users	Used for forced session termination.
+user_sessions	ip_address	string		Optional.
+user_sessions	user_agent	text		Optional.
+user_sessions	created_at	datetime	null false	
+user_sessions	updated_at	datetime	null false	
+workstation_assignments	id	bigint	auto increment	
+workstation_assignments	workstation_id	bigint	references workstations, null false	Assigned workstation.
+workstation_assignments	assignment_token_digest	string	null false, unique	Cookie stores raw token; database stores digest only.
+workstation_assignments	assigned_by_user_id	bigint	references users	Admin/user who assigned this browser.
+workstation_assignments	assigned_at	datetime	null false	Assignment timestamp.
+workstation_assignments	last_seen_at	datetime		Updated when browser uses assignment.
+workstation_assignments	revoked_at	datetime		Set when assignment is removed/replaced.
+workstation_assignments	created_at	datetime	null false	
+workstation_assignments	updated_at	datetime	null false	
+tax_categories	id	bigint	auto increment	
+tax_categories	name	string	null false, unique	Full tax category name. Example: Books, General Merchandise.
+tax_categories	short_name	string	null false, unique, limit 20	Short display name.
+tax_categories	sort_order	integer	null false, default 0	Display order.
+tax_categories	active	boolean	null false, default true	Inactive tax categories cannot be assigned as new category defaults.
+tax_categories	created_at	datetime	null false	
+tax_categories	updated_at	datetime	null false	
+store_tax_rates	id	bigint	auto increment	
+store_tax_rates	store_id	bigint	references stores, null false	Store this rate belongs to.
+store_tax_rates	name	string	null false	Example: Michigan Sales Tax.
+store_tax_rates	short_name	string	null false, limit 20	Prints in future receipt totals.
+store_tax_rates	tax_identifier	string	null false, limit 1	Receipt detail marker. Unique within store.
+store_tax_rates	tax_rate_bps	integer	null false, default 0	Tax rate in basis points. 600 = 6.00%.
+store_tax_rates	active	boolean	null false, default true	Inactive rates cannot be used in new mappings.
+store_tax_rates	created_at	datetime	null false	
+store_tax_rates	updated_at	datetime	null false	
+store_tax_category_rates	id	bigint	auto increment	
+store_tax_category_rates	store_id	bigint	references stores, null false	Store context.
+store_tax_category_rates	tax_category_id	bigint	references tax_categories, null false	Product taxability classification.
+store_tax_category_rates	store_tax_rate_id	bigint	references store_tax_rates, null false	Applied store tax rate. Must belong to same store.
+store_tax_category_rates	effective_on	date	null false	First date this mapping applies.
+store_tax_category_rates	ends_on	date		Last date this mapping applies. Null means open-ended.
+store_tax_category_rates	active	boolean	null false, default true	Inactive mappings are ignored by tax lookup.
+store_tax_category_rates	created_at	datetime	null false	
+store_tax_category_rates	updated_at	datetime	null false	
+departments	id	bigint	auto increment	
+departments	department_number	string	null false, unique, limit 3	Numeric-only, fixed-width, zero-padded. Example: 001, 010, 100.
+departments	name	string	null false, unique	Full department name.
+departments	short_name	string	null false, unique, limit 20	Short display/printing name.
+departments	gl_account_code	string	limit 20	Optional future accounting/export reference. Not unique.
+departments	description	text		Optional description.
+departments	active	boolean	null false, default true	Inactive departments cannot be assigned to new categories.
+departments	created_at	datetime	null false	
+departments	updated_at	datetime	null false	
+categories	id	bigint	auto increment	
+categories	department_id	bigint	references departments, null false	Parent department.
+categories	name	string	null false	Category name. Unique within department.
+categories	short_name	string	null false, limit 20	Short display/printing name. Unique within department.
+categories	sort_order	integer	null false, default 0	Display order within department.
+categories	default_pricing_model	string		Controlled value.
+categories	default_margin_target_bps	integer		Default target margin in basis points.
+categories	default_supplier_discount_bps	integer		Default supplier discount in basis points.
+categories	default_tax_category_id	bigint	references tax_categories, null false	Default tax category for future sellable items.
+categories	active	boolean	null false, default true	Inactive categories cannot be assigned to new sellable items.
+categories	created_at	datetime	null false	
+categories	updated_at	datetime	null false	
+formats	id	bigint	auto increment	
+formats	format_key	string	null false, unique, limit 30	Stable key. Example: hardcover, trade_paperback, dvd.
+formats	name	string	null false	Full format name.
+formats	short_name	string	null false, limit 20	Short display name.
+formats	code	string	limit 20	Optional external/internal code.
+formats	virtual	boolean	null false, default false	True for digital/virtual formats.
+formats	active	boolean	null false, default true	Inactive formats cannot be assigned to new records.
+formats	created_at	datetime	null false	
+formats	updated_at	datetime	null false	
+catalog_items	id	bigint	auto increment	
+catalog_items	catalog_item_type	string	null false	Controlled value: book, calendar, periodical, etc.
+catalog_items	title	string	null false	Main title/display title.
+catalog_items	creators	string		Semicolon-separated display string.
+catalog_items	creator_details	jsonb		Parsed creator details.
+catalog_items	publisher	string		Publisher display string.
+catalog_items	publisher_details	jsonb		Optional structured publisher data.
+catalog_items	publication_date	date		Publication/release date.
+catalog_items	publication_status	string	null false, default active	Controlled value.
+catalog_items	series_name	string		Series name.
+catalog_items	series_enumeration	string	limit 15	Volume/number in series.
+catalog_items	series_data	jsonb		Optional structured series data.
+catalog_items	format_id	bigint	references formats, null false	Catalog format.
+catalog_items	edition_statement	string		Example: 2nd edition, Revised edition.
+catalog_items	language_code	string	limit 10	Optional language code.
+catalog_items	height	decimal(10,2)		
+catalog_items	width	decimal(10,2)		
+catalog_items	depth	decimal(10,2)		
+catalog_items	dimension_units	string		Controlled value: cm, in.
+catalog_items	weight	decimal(10,2)		
+catalog_items	weight_units	string		Controlled value: g, kg, lb, oz.
+catalog_items	page_count	integer		
+catalog_items	duration_minutes	integer		
+catalog_items	large_print	boolean	null false, default false	
+catalog_items	bisac_subjects	string		Display string.
+catalog_items	bisac_subject_data	jsonb		Parsed subject data.
+catalog_items	genres	string		Display string.
+catalog_items	genre_data	jsonb		Parsed genre data.
+catalog_items	themes	string		Display string.
+catalog_items	theme_data	jsonb		Parsed theme data.
+catalog_items	target_audiences	string		Display string.
+catalog_items	target_audience_data	jsonb		Parsed audience data.
+catalog_items	access_restrictions	string		Display string.
+catalog_items	access_restriction_data	jsonb		Parsed restriction data.
+catalog_items	publication_frequency	string		Controlled value.
+catalog_items	description	text		Description/summary.
+catalog_items	year	string	limit 4	Four-digit year for calendars/annuals.
+catalog_items	digital	boolean	null false, default false	Digital catalog item flag.
+catalog_items	active	boolean	null false, default true	Inactive catalog items cannot be linked to new products.
+catalog_items	created_at	datetime	null false	
+catalog_items	updated_at	datetime	null false	
+catalog_item_identifiers	id	bigint	auto increment	
+catalog_item_identifiers	catalog_item_id	bigint	references catalog_items, null false	Parent catalog item.
+catalog_item_identifiers	identifier_type	string	null false	Controlled value: isbn10, isbn13, ean, upc, gtin, publisher_number, local.
+catalog_item_identifiers	identifier_value	string	null false, limit 100	Display/preserved value.
+catalog_item_identifiers	normalized_identifier	string	null false, limit 100	Search/index value.
+catalog_item_identifiers	primary_identifier	boolean	null false, default false	Exactly one active primary per catalog item.
+catalog_item_identifiers	valid_check_digit	boolean		Null when not applicable.
+catalog_item_identifiers	validation_message	string		Warning or validation message.
+catalog_item_identifiers	source	string		Example: manual, local_generated, vendor_feed.
+catalog_item_identifiers	active	boolean	null false, default true	Inactive identifiers ignored for primary lookup.
+catalog_item_identifiers	created_at	datetime	null false	
+catalog_item_identifiers	updated_at	datetime	null false	
+display_locations	id	bigint	auto increment	
+display_locations	name	string	null false	Full display location name.
+display_locations	short_name	string	null false, unique, limit 20	Short display name.
+display_locations	parent_id	bigint	references display_locations	Optional hierarchy.
+display_locations	sort_order	integer	null false, default 0	Display order.
+display_locations	active	boolean	null false, default true	Inactive locations cannot be assigned to new products/variants.
+display_locations	created_at	datetime	null false	
+display_locations	updated_at	datetime	null false	
+store_display_locations	id	bigint	auto increment	
+store_display_locations	display_location_id	bigint	references display_locations, null false	Global display location.
+store_display_locations	store_id	bigint	references stores, null false	Store using this location.
+store_display_locations	linear_feet	integer	null false, default 0	Optional merchandising capacity.
+store_display_locations	active	boolean	null false, default true	Inactive store display locations cannot be assigned to new products/variants.
+store_display_locations	created_at	datetime	null false	
+store_display_locations	updated_at	datetime	null false	
+products	id	bigint	auto increment	
+products	catalog_item_id	bigint	references catalog_items	Nullable for non-catalog products.
+products	name	string	null false	Current store-facing product name.
+products	name_override	string		Optional user override.
+products	short_name	string	limit 40	Optional compact display name.
+products	sku	string	null false, unique, limit 50	Base SKU for variants.
+products	product_type	string	null false, default physical	Controlled value.
+products	variation_type	string	null false, default standard	Controlled value.
+products	list_price_cents	integer	null false, default 0	MSRP/list/cover price when applicable.
+products	default_display_location_id	bigint	references display_locations	Default merchandising location.
+products	variant1_label	string		Example: Color, Size.
+products	variant2_label	string		Example: Size, Style.
+products	active	boolean	null false, default true	Inactive products cannot be used for new variants/sales.
+products	created_at	datetime	null false	
+products	updated_at	datetime	null false	
+product_conditions	id	bigint	auto increment	
+product_conditions	condition_key	string	null false, unique	Stable seed key.
+product_conditions	name	string	null false	Full display name.
+product_conditions	short_name	string	null false, unique, limit 20	Short display name.
+product_conditions	sku_component	string	unique, limit 5	Nullable for New. Normalize uppercase.
+product_conditions	sort_order	integer	null false, default 0	Display order.
+product_conditions	new_condition	boolean	null false, default false	True for non-used/new-like conditions.
+product_conditions	default_list_price_factor_bps	integer	null false, default 10000	Factor applied to list price.
+product_conditions	description	text		Optional.
+product_conditions	active	boolean	null false, default true	Inactive conditions cannot be assigned to new variants.
+product_conditions	created_at	datetime	null false	
+product_conditions	updated_at	datetime	null false	
+product_variants	id	bigint	auto increment	
+product_variants	product_id	bigint	references products, null false	Parent product.
+product_variants	name	string	null false	Current store-facing variant name.
+product_variants	name_override	string		Optional user override.
+product_variants	short_name	string	limit 40	Optional compact POS/receipt name.
+product_variants	sku	string	null false, unique, limit 50	Actual sellable SKU.
+product_variants	condition_id	bigint	references product_conditions	Primary condition.
+product_variants	category_id	bigint	references categories, null false	Reporting/category classification.
+product_variants	display_location_id	bigint	references display_locations	Variant display override.
+product_variants	attribute1_value	string		Example: Blue.
+product_variants	attribute1_sku_component	string	limit 5	Example: BLU.
+product_variants	attribute2_value	string		Example: Large.
+product_variants	attribute2_sku_component	string	limit 5	Example: LG.
+product_variants	selling_price_cents	integer	null false, default 0	Current selling price.
+product_variants	pricing_model_override	string		Controlled Phase 2 pricing model value.
+product_variants	inventory_behavior	string	null false, default standard_physical	Controlled value.
+product_variants	active	boolean	null false, default true	Inactive variants cannot be sold/ordered.
+product_variants	created_at	datetime	null false	
+product_variants	updated_at	datetime	null false	
+vendors	id	bigint	auto increment	
+vendors	name	string	null false	Vendor/supplier name.
+vendors	parent_vendor_id	bigint	references vendors	Parent vendor/group.
+vendors	default_pricing_model	string		Controlled Phase 2 pricing model value.
+vendors	default_margin_target_bps	integer		Optional default margin target.
+vendors	default_supplier_discount_bps	integer		Optional supplier discount.
+vendors	active	boolean	null false, default true	Inactive vendors cannot be assigned to future sourcing records.
+vendors	created_at	datetime	null false	
+vendors	updated_at	datetime	null false	

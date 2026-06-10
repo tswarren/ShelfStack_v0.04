@@ -1,0 +1,152 @@
+Table	Constraint	Notes
+audit_events	actor_user_id must reference an existing user	Use system user for automated/background events.
+audit_events	event_name must be present	Prefer dot-separated event names.
+audit_events	occurred_at must be present	Store in UTC.
+audit_events	event_details defaults to {}	Prefer jsonb in PostgreSQL.
+audit_events	audit rows should be append-only	Prevent normal UI edits/deletes.
+permissions	permission_key must be unique	Stable seed-managed identifier.
+permissions	permission_key format should be dot-separated	Example: setup.users.create.
+permissions	permission_group must be present	Used for grouped setup screens.
+roles	role_key must be unique	Stable seed-managed or admin-managed identifier.
+roles	name must be present	Human-readable display name.
+roles	system roles should not be deleted through normal UI	Protect super_administrator.
+roles	inactive roles should not be newly assigned	Existing assignments may remain for history.
+role_permissions	role_id, permission_id must be unique	Prevents duplicate permission assignment.
+stores	store_number must be unique	Store as string for leading zeroes.
+stores	store_number should be numeric-only	If that remains a business rule.
+stores	country_code should be uppercase two-character code	Example: US, CA.
+stores	region_code should be uppercase where present	Example: MI, CA, ON.
+stores	email should be normalized lowercase	Validate format at application/model layer.
+stores	website_url should include protocol	Example: https://www.shelfstack.demo.
+stores	time_zone should be valid	Prefer IANA names like America/New_York.
+users	username must be unique after normalization	Choose uppercase or lowercase and apply consistently.
+users	user_type must be controlled	Allowed: user, admin, system.
+users	invalid_login_attempts >= 0	Default 0.
+users	interactive users require password_digest	System user is non-interactive.
+users	system user must have interactive_login_enabled = false	Enforce in model/service logic.
+users	inactive users cannot log in	Enforce in authentication service.
+users	PIN unlock is only for existing locked sessions	PIN cannot be used for initial login or permission escalation.
+user_role_assignments	scope_type must be controlled	Allowed: global, store.
+user_role_assignments	if scope_type = 'global', store_id must be null	Scope rule.
+user_role_assignments	if scope_type = 'store', store_id must be present	Scope rule.
+user_role_assignments	duplicate active assignments should not be allowed	Use partial unique indexes if using PostgreSQL.
+user_role_assignments	inactive roles should not be newly assigned	Enforce in service/model logic.
+workstations	workstation_type must be controlled	Allowed: register, service_desk, back_office, receiving.
+workstations	workstation_number should be numeric-only	Display as zero-padded string.
+workstations	workstation_number must be unique within store	Unique on store_id, workstation_number.
+workstations	workstation_code should be generated consistently	Example: 001-REG001.
+workstations	inactive workstations cannot be assigned to browsers/sessions	Enforce in service/model logic.
+user_sessions	status must be controlled	Allowed: active, locked, ended, expired, force_ended.
+user_sessions	session_token_digest must be unique	Never store raw token.
+user_sessions	last_activity_at must be present	Used for inactivity tracking.
+user_sessions	locked_at should be present when status is locked	Enforce in lifecycle service.
+user_sessions	ended_at should be present when status is terminal	Terminal statuses: ended, expired, force_ended.
+user_sessions	ended_by_user_id should be present when status is force_ended	Tracks authorized force logout.
+user_sessions	terminal sessions should not return to active	Terminal statuses should be final.
+workstation_assignments	assignment_token_digest must be unique	Never store raw cookie token.
+workstation_assignments	revoked assignments cannot be used for new sessions	revoked_at must be null for active assignment.
+workstation_assignments	assigned workstation must be active when creating assignment	Enforce in service/model logic.
+workstation_assignments	browser cookie should store only raw token	Server resolves token to assignment/workstation/store.
+tax_categories	name must be present and globally unique	Tax categories are global classification records.
+tax_categories	short_name must be present and globally unique	Prevents ambiguous short labels.
+tax_categories	inactive tax categories cannot be assigned as new category defaults	Existing historical references may remain.
+store_tax_rates	store_id must reference an existing store	Rate belongs to a store.
+store_tax_rates	name must be unique within store	Prevents duplicate store tax rate names.
+store_tax_rates	short_name must be unique within store	Prevents duplicate receipt total labels.
+store_tax_rates	tax_identifier must be unique within store	Prevents receipt-line marker ambiguity.
+store_tax_rates	tax_identifier should be normalized uppercase	Example: N, T, A.
+store_tax_rates	tax_rate_bps must be present	Store tax rates must have an explicit rate.
+store_tax_rates	tax_rate_bps >= 0	Prevents negative tax rates.
+store_tax_rates	tax_rate_bps <= 10000	Recommended unless rates above 100% must be supported.
+store_tax_rates	inactive rates cannot be used in new tax mappings	Existing historical mappings may remain.
+store_tax_category_rates	store_id must reference an existing store	Required store context.
+store_tax_category_rates	tax_category_id must reference an existing tax category	Required taxability classification.
+store_tax_category_rates	store_tax_rate_id must reference an existing store tax rate	Required applied rate.
+store_tax_category_rates	store_tax_rate_id must belong to the same store_id	Prevents cross-store tax rate mappings.
+store_tax_category_rates	effective_on must be present	Effective-dated mapping requires a start date.
+store_tax_category_rates	ends_on must be null or greater than/equal to effective_on	Prevents invalid date ranges.
+store_tax_category_rates	no overlapping active mappings for same store/tax category/date	Prevents ambiguous tax lookup. Enforce in model/service logic or PostgreSQL exclusion constraint later.
+store_tax_category_rates	active tax lookup must return exactly one rate	Future POS should fail loudly if zero or multiple mappings exist.
+departments	department_number must be present and unique	Top-level reporting identifier.
+departments	department_number must match ^[0-9]{3}$	Numeric-only, fixed-width, zero-padded.
+departments	name must be present and unique	Departments are global reporting buckets.
+departments	short_name must be present and unique	Prevents ambiguous short labels.
+departments	inactive departments cannot be assigned to new categories	Existing categories may remain.
+categories	department_id must reference an existing department	Category belongs to one department.
+categories	name must be unique within department	Allows same category name in different departments if needed.
+categories	short_name must be unique within department	Prevents ambiguous short labels within department.
+categories	default_tax_category_id must reference an existing tax category	Required default for future sellable items.
+categories	inactive departments cannot be selected for new categories	Enforce in model/service logic.
+categories	inactive tax categories cannot be selected as new defaults	Enforce in model/service logic.
+categories	default_pricing_model must be controlled when present	Use Phase 2 pricing model keys.
+categories	default_margin_target_bps must be null or between 0 and 10000	Basis-point percentage field.
+categories	default_supplier_discount_bps must be null or between 0 and 10000	Basis-point percentage field.
+formats	format_key must be present and unique	Stable internal key.
+formats	name must be present	Display name.
+formats	short_name must be present	Short display name.
+formats	inactive formats cannot be assigned to new catalog items	Existing references may remain.
+catalog_items	catalog_item_type must be controlled	Allowed values: book, calendar, periodical, recorded_music, sideline, videorecording, audiobook, ebook, map, game, gift, other.
+catalog_items	title must be present	Main catalog display title.
+catalog_items	format_id must reference an active format for new records	Existing records may retain inactive formats.
+catalog_items	publication_status must be controlled	Use approved publication status values.
+catalog_items	publication_frequency must be controlled when present	Use approved frequency values.
+catalog_items	dimension_units must be controlled when present	cm or in.
+catalog_items	weight_units must be controlled when present	g, kg, lb, or oz.
+catalog_items	year must be null or match ^[0-9]{4}$	Used for calendars/annuals/year-specific items.
+catalog_items	catalog item must have at least one active identifier	Enforce in catalog item service/model logic.
+catalog_items	catalog item must have exactly one active primary identifier	Enforce with service plus partial unique index on identifiers.
+catalog_item_identifiers	catalog_item_id must reference an existing catalog item	Parent record required.
+catalog_item_identifiers	identifier_type must be controlled	Allowed values: isbn10, isbn13, ean, upc, gtin, publisher_number, local.
+catalog_item_identifiers	identifier_value must be present	Display/preserved identifier value.
+catalog_item_identifiers	normalized_identifier must be present	Search/index value.
+catalog_item_identifiers	standard identifiers normalize to digits only except ISBN-10 terminal X	Applies to ISBN/UPC/EAN/GTIN.
+catalog_item_identifiers	ISBN/UPC/EAN/GTIN check digits are validated	Invalid values may be saved with warning.
+catalog_item_identifiers	ISBN-10 creates non-primary ISBN-10 plus generated primary ISBN-13	ISBN-13 uses 978 prefix and recalculated check digit.
+catalog_item_identifiers	publisher numbers preserve display value but normalize alphanumeric uppercase	Example: ABC 123-45 → ABC12345.
+catalog_item_identifiers	publisher numbers are not globally unique by themselves	Searchable, but uniqueness should not be enforced globally.
+catalog_item_identifiers	local identifiers must be unique	Generated by ShelfStack.
+catalog_item_identifiers	exactly one active primary identifier per catalog item	Use partial unique index and service logic.
+display_locations	name must be present	Full display location name.
+display_locations	short_name must be present and unique	Short display location label.
+display_locations	parent_id must reference an existing display location when present	Supports hierarchy.
+display_locations	inactive display locations cannot be assigned to new products/variants	Existing references may remain.
+store_display_locations	display_location_id must reference an existing display location	Required.
+store_display_locations	store_id must reference an existing store	Required.
+store_display_locations	store_id, display_location_id must be unique	Prevents duplicate activation in same store.
+store_display_locations	linear_feet >= 0	Optional capacity/space planning field.
+products	sku must be present and unique	Base SKU for variants.
+products	catalog-linked product SKU defaults from catalog primary identifier	Unless explicitly overridden by authorized user.
+products	non-catalog product SKU must be manual or generated	Required for all products.
+products	name must be present	Store-facing product name.
+products	catalog-linked product name defaults from catalog title	User override allowed.
+products	non-catalog product name is user-entered	User override allowed.
+products	product_type must be controlled	Allowed values: physical, digital, service, non_inventory, financial.
+products	variation_type must be controlled	Allowed values: standard, conditional, variable, matrix.
+products	list_price_cents >= 0	Prevents negative list prices.
+products	product is not sellable until at least one active variant exists	Enforce in service/POS logic.
+products	product SKU changes are permission-controlled and audited	Should be restricted after variants/history exist.
+product_conditions	condition_key must be present and unique	Stable seed/update key.
+product_conditions	short_name must be present and unique	Prevents ambiguous condition labels.
+product_conditions	sku_component is nullable but unique when present	New condition uses null component.
+product_conditions	sku_component normalizes uppercase	Example: sg → SG.
+product_conditions	default_list_price_factor_bps must be between 0 and 10000	Basis-point list price factor.
+product_conditions	inactive conditions cannot be assigned to new variants	Existing references may remain.
+product_variants	product_id must reference an existing product	Parent product required.
+product_variants	sku must be present and unique	Actual sellable SKU.
+product_variants	category_id must reference an existing category	Required reporting/category classification.
+product_variants	inactive categories cannot be assigned to new variants	Existing references may remain.
+product_variants	selling_price_cents >= 0	Prevents negative selling prices.
+product_variants	pricing_model_override must be controlled when present	Use Phase 2 pricing model values.
+product_variants	inventory_behavior must be controlled	Allowed values: standard_physical, digital_asset, drop_ship, composite_recipe, capacitated_service, pure_financial, non_inventory.
+product_variants	new/default variant SKU equals product SKU	New condition has null SKU component.
+product_variants	condition variant SKU appends condition SKU component	Example: 9780123456789-SG.
+product_variants	variable variant SKU appends attribute 1 SKU component	Example: 9780123456789-BLU.
+product_variants	matrix variant SKU appends attribute 1 and attribute 2 SKU components	Example: 9780123456789-BLU-LG.
+product_variants	product may have at most one unsuffixed variant	Normally the New/default variant.
+product_variants	variant name is generated from product name plus condition/attributes unless overridden	Centralize in name rendering service.
+vendors	name must be present	Vendor/supplier display name.
+vendors	parent_vendor_id must reference an existing vendor when present	Supports parent vendor hierarchy.
+vendors	default_pricing_model must be controlled when present	Use Phase 2 pricing model values.
+vendors	default_margin_target_bps must be null or between 0 and 10000	Basis-point percentage field.
+vendors	default_supplier_discount_bps must be null or between 0 and 10000	Basis-point percentage field.
+vendors	inactive vendors cannot be assigned to new future sourcing records	Vendor-item sourcing is deferred.
