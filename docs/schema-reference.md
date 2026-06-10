@@ -64,6 +64,8 @@ workstation_assignments
 
 Phase 2 introduces classification and tax tables.
 
+**Implementation status:** Present in `db/schema.rb` as of 2025-06-10 (migration `20250611120000_create_phase2_classification_and_tax`). Design source of truth: [specifications/phase-2-data-model.md](specifications/phase-2-data-model.md). Completion record: [implementation/phase-2-completion.md](implementation/phase-2-completion.md).
+
 ```text
 tax_categories
 store_tax_rates

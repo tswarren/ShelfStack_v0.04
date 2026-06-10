@@ -1,0 +1,19 @@
+<h1><%= @department.name %></h1>
+<dl class="ss-summary">
+  <dt>Department number</dt><dd><%= @department.department_number %></dd>
+  <dt>Short name</dt><dd><%= @department.short_name %></dd>
+  <dt>GL account code</dt><dd><%= @department.gl_account_code || "—" %></dd>
+  <dt>Description</dt><dd><%= @department.description.presence || "—" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@department.active?) %>"><%= status_label(@department.active?) %></span></dd>
+</dl>
+<p>
+  <%= link_to "Edit", edit_setup_department_path(@department), class: "ss-btn" %>
+  <% if @department.active? %>
+    <%= button_to "Inactivate", inactivate_setup_department_path(@department), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_department_path(@department), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_department_path(@department), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this department?" } %>
+</p>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

@@ -46,6 +46,35 @@ class Authorization
     super_administrator_count > 1
   end
 
+  def self.accessible_stores(user:, permission_key:)
+    permission = Permission.find_by(permission_key: permission_key)
+    return Store.none if user.blank? || permission.blank? || !permission.active?
+
+    assignments = user.user_role_assignments.active_records.includes(role: :permissions)
+    permitted_assignments = assignments.select do |assignment|
+      assignment.role.active? && assignment.role.permissions.any? { |p| p.id == permission.id }
+    end
+
+    if permitted_assignments.any?(&:global_scoped?)
+      Store.order(:store_number)
+    else
+      store_ids = permitted_assignments.select(&:store_scoped?).filter_map(&:store_id)
+      Store.where(id: store_ids).order(:store_number)
+    end
+  end
+
+  def self.globally_allowed?(user:, permission_key:)
+    permission = Permission.find_by(permission_key: permission_key)
+    return false if user.blank? || permission.blank? || !permission.active?
+
+    user.user_role_assignments.active_records.includes(role: :permissions).any? do |assignment|
+      next false unless assignment.global_scoped?
+      next false unless assignment.role.active?
+
+      assignment.role.permissions.any? { |p| p.id == permission.id }
+    end
+  end
+
   private
 
   attr_reader :user, :permission_key, :store

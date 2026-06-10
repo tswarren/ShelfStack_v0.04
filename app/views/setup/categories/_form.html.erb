@@ -1,0 +1,23 @@
+<% if category.errors.any? %>
+  <div class="flash flash-alert">
+    <%= category.errors.full_messages.to_sentence %>
+  </div>
+<% end %>
+
+<fieldset class="ss-form-section">
+  <legend>Category</legend>
+  <%= f.label :department_id, "Department" %>
+  <%= f.collection_select :department_id, departments, :id, ->(d) { "#{d.department_number} — #{d.name}" }, { include_blank: "Select department" } %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
+  <%= f.label :sort_order %><%= f.number_field :sort_order, step: 1 %>
+  <%= f.label :default_pricing_model, "Default pricing model" %>
+  <%= f.select :default_pricing_model, Category::PRICING_MODELS.map { |m| [m.humanize, m] }, { include_blank: "None" } %>
+  <%= f.label :default_margin_target_bps, "Default margin target (bps)" %>
+  <%= f.number_field :default_margin_target_bps, step: 1, min: 0, max: 10000 %>
+  <%= f.label :default_supplier_discount_bps, "Default supplier discount (bps)" %>
+  <%= f.number_field :default_supplier_discount_bps, step: 1, min: 0, max: 10000 %>
+  <%= f.label :default_tax_category_id, "Default tax category" %>
+  <%= f.collection_select :default_tax_category_id, tax_categories, :id, :name, { include_blank: "Select tax category" } %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>

@@ -1,0 +1,19 @@
+<% if store_tax_category_rate.errors.any? %>
+  <div class="flash flash-alert">
+    <%= store_tax_category_rate.errors.full_messages.to_sentence %>
+  </div>
+<% end %>
+
+<fieldset class="ss-form-section">
+  <legend>Tax mapping</legend>
+  <%= f.label :store_id, "Store" %>
+  <%= f.collection_select :store_id, stores, :id, ->(s) { "#{s.store_number} — #{s.name}" }, { include_blank: "Select store" } %>
+  <%= f.label :tax_category_id, "Tax category" %>
+  <%= f.collection_select :tax_category_id, tax_categories, :id, :name, { include_blank: "Select tax category" } %>
+  <%= f.label :store_tax_rate_id, "Store tax rate" %>
+  <%= f.collection_select :store_tax_rate_id, store_tax_rates, :id, ->(r) { "#{r.name} (#{format_basis_points(r.tax_rate_bps)})" }, { include_blank: "Select store tax rate" } %>
+  <%= f.label :effective_on %><%= f.date_field :effective_on %>
+  <%= f.label :ends_on %><%= f.date_field :ends_on %>
+  <p class="ss-hint">Leave ends on blank for an open-ended mapping. End-date the current mapping before creating a new rule when tax rates change.</p>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>

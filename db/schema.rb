@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_06_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,43 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_10_120000) do
     t.index ["store_id"], name: "index_audit_events_on_store_id"
     t.index ["user_session_id"], name: "index_audit_events_on_user_session_id"
     t.index ["workstation_id"], name: "index_audit_events_on_workstation_id"
+  end
+
+  create_table "categories", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "default_margin_target_bps"
+    t.string "default_pricing_model"
+    t.integer "default_supplier_discount_bps"
+    t.bigint "default_tax_category_id", null: false
+    t.bigint "department_id", null: false
+    t.string "name", null: false
+    t.string "short_name", limit: 20, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_categories_on_active"
+    t.index ["default_pricing_model"], name: "index_categories_on_default_pricing_model"
+    t.index ["default_tax_category_id"], name: "index_categories_on_default_tax_category_id"
+    t.index ["department_id", "name"], name: "index_categories_on_department_id_and_name", unique: true
+    t.index ["department_id", "short_name"], name: "index_categories_on_department_id_and_short_name", unique: true
+    t.index ["department_id", "sort_order"], name: "index_categories_on_department_id_and_sort_order"
+    t.index ["department_id"], name: "index_categories_on_department_id"
+  end
+
+  create_table "departments", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "department_number", limit: 3, null: false
+    t.text "description"
+    t.string "gl_account_code", limit: 20
+    t.string "name", null: false
+    t.string "short_name", limit: 20, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_departments_on_active"
+    t.index ["department_number"], name: "index_departments_on_department_number", unique: true
+    t.index ["gl_account_code"], name: "index_departments_on_gl_account_code"
+    t.index ["name"], name: "index_departments_on_name", unique: true
+    t.index ["short_name"], name: "index_departments_on_short_name", unique: true
   end
 
   create_table "permissions", force: :cascade do |t|
@@ -76,6 +113,39 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_10_120000) do
     t.index ["system_role"], name: "index_roles_on_system_role"
   end
 
+  create_table "store_tax_category_rates", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.date "effective_on", null: false
+    t.date "ends_on"
+    t.bigint "store_id", null: false
+    t.bigint "store_tax_rate_id", null: false
+    t.bigint "tax_category_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["effective_on", "ends_on"], name: "index_store_tax_category_rates_on_effective_on_and_ends_on"
+    t.index ["store_id", "tax_category_id", "active"], name: "idx_store_tax_cat_rates_store_tax_cat_active"
+    t.index ["store_id", "tax_category_id", "effective_on"], name: "idx_store_tax_cat_rates_store_tax_cat_effective", unique: true
+    t.index ["store_id"], name: "index_store_tax_category_rates_on_store_id"
+    t.index ["store_tax_rate_id"], name: "index_store_tax_category_rates_on_store_tax_rate_id"
+    t.index ["tax_category_id"], name: "index_store_tax_category_rates_on_tax_category_id"
+  end
+
+  create_table "store_tax_rates", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "short_name", limit: 20, null: false
+    t.bigint "store_id", null: false
+    t.string "tax_identifier", limit: 1, null: false
+    t.integer "tax_rate_bps", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_store_tax_rates_on_active"
+    t.index ["store_id", "name"], name: "index_store_tax_rates_on_store_id_and_name", unique: true
+    t.index ["store_id", "short_name"], name: "index_store_tax_rates_on_store_id_and_short_name", unique: true
+    t.index ["store_id", "tax_identifier"], name: "index_store_tax_rates_on_store_id_and_tax_identifier", unique: true
+    t.index ["store_id"], name: "index_store_tax_rates_on_store_id"
+  end
+
   create_table "stores", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "address_line1"
@@ -100,6 +170,19 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_10_120000) do
     t.index ["name"], name: "index_stores_on_name"
     t.index ["store_group"], name: "index_stores_on_store_group"
     t.index ["store_number"], name: "index_stores_on_store_number", unique: true
+  end
+
+  create_table "tax_categories", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "short_name", limit: 20, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_tax_categories_on_active"
+    t.index ["name"], name: "index_tax_categories_on_name", unique: true
+    t.index ["short_name"], name: "index_tax_categories_on_short_name", unique: true
+    t.index ["sort_order"], name: "index_tax_categories_on_sort_order"
   end
 
   create_table "user_role_assignments", force: :cascade do |t|
@@ -215,8 +298,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_10_120000) do
   add_foreign_key "audit_events", "user_sessions"
   add_foreign_key "audit_events", "users", column: "actor_user_id"
   add_foreign_key "audit_events", "workstations"
+  add_foreign_key "categories", "departments"
+  add_foreign_key "categories", "tax_categories", column: "default_tax_category_id"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
+  add_foreign_key "store_tax_category_rates", "store_tax_rates"
+  add_foreign_key "store_tax_category_rates", "stores"
+  add_foreign_key "store_tax_category_rates", "tax_categories"
+  add_foreign_key "store_tax_rates", "stores"
   add_foreign_key "user_role_assignments", "roles"
   add_foreign_key "user_role_assignments", "stores"
   add_foreign_key "user_role_assignments", "users"

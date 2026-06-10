@@ -1,0 +1,15 @@
+<h1>Tax Categories <%= link_to "New", new_setup_tax_category_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Name</th><th>Short Name</th><th>Sort</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @tax_categories.each do |tax_category| %>
+      <tr>
+        <td><%= tax_category.name %></td>
+        <td><%= tax_category.short_name %></td>
+        <td><%= tax_category.sort_order %></td>
+        <td><span class="<%= status_class(tax_category.active?) %>"><%= status_label(tax_category.active?) %></span></td>
+        <td><%= link_to "View", setup_tax_category_path(tax_category) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

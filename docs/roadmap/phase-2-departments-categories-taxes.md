@@ -1,5 +1,7 @@
 # Phase 2: Departments, Categories, and Taxes
 
+**Status:** Implemented (2025-06-10). See [../implementation/phase-2-completion.md](../implementation/phase-2-completion.md).
+
 ## Purpose
 
 Phase 2 establishes ShelfStack’s product classification and tax setup layer.

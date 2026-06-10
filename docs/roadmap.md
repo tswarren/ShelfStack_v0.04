@@ -124,6 +124,8 @@ At the end of Phase 2:
 9. Phase 2 setup screens are permission-controlled.
 10. Phase 2 setup changes are audited.
 
+**Status:** Implemented. See [implementation/phase-2-completion.md](implementation/phase-2-completion.md).
+
 ## Detailed Documents
 
 ```text

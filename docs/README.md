@@ -33,7 +33,7 @@ ShelfStack is a bookstore-focused catalog, inventory, stock, and point-of-sale m
 
 Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to the task.
 
-**Phase 1 is implemented.** Start with [implementation/phase-1-completion.md](implementation/phase-1-completion.md) for current behavior and known gaps. **Phase 2** is the active build priority.
+**Phase 1 and Phase 2 are implemented.** See [implementation/phase-1-completion.md](implementation/phase-1-completion.md) and [implementation/phase-2-completion.md](implementation/phase-2-completion.md). **Phase 3** is the active build priority.
 
 ---
 
@@ -42,7 +42,7 @@ Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to th
 | Phase | Documentation | Implementation record |
 | ----- | ------------- | --------------------- |
 | Phase 1 | Complete | [implementation/phase-1-completion.md](implementation/phase-1-completion.md) |
-| Phase 2 | Complete | Not started |
+| Phase 2 | Complete | [implementation/phase-2-completion.md](implementation/phase-2-completion.md) |
 | Phase 3 | Complete | Not started |
 
 Operational tasks (login, workstation assignment, admin recovery): [operations/foundation-runbook.md](operations/foundation-runbook.md).

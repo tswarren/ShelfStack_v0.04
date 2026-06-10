@@ -1,0 +1,38 @@
+<% if department.errors.any? %>
+  <div class="flash flash-alert">
+    <%= department.errors.full_messages.to_sentence %>
+  </div>
+<% end %>
+
+<fieldset class="ss-form-section">
+  <legend>Department</legend>
+  <%= f.label :department_number %>
+  <%= f.text_field :department_number, maxlength: 3, data: { preview_target: "department-number" } %>
+  <p class="ss-hint">Normalized preview: <span data-preview="department-number"><%= normalized_department_number_preview(department.department_number) %></span></p>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
+  <%= f.label :gl_account_code, "GL account code" %><%= f.text_field :gl_account_code, maxlength: 20 %>
+  <%= f.label :description %><%= f.text_area :description, rows: 3 %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var input = document.querySelector("[data-preview-target='department-number']");
+    var output = document.querySelector("[data-preview='department-number']");
+    if (!input || !output) return;
+    input.addEventListener("input", function() {
+      var value = input.value.trim();
+      if (!/^\d+$/.test(value)) {
+        output.textContent = value || "—";
+        return;
+      }
+      var numeric = parseInt(value, 10);
+      if (numeric < 0 || numeric > 999) {
+        output.textContent = value;
+        return;
+      }
+      output.textContent = String(numeric).padStart(3, "0");
+    });
+  });
+</script>

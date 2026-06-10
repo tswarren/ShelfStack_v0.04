@@ -103,18 +103,11 @@ Phase 1 was completed on 2025-06-10. See [docs/implementation/phase-1-completion
 
 Do not remove or bypass Phase 1 protections (super administrator, system user, audit events) when extending the application.
 
-## Phase 2: Departments, Categories, and Taxes — **Active**
+## Phase 2: Departments, Categories, and Taxes — **Complete**
 
-Focus:
+Phase 2 was completed on 2025-06-10. See [docs/implementation/phase-2-completion.md](docs/implementation/phase-2-completion.md).
 
-* Departments
-* Categories
-* Tax categories
-* Store tax rates
-* Store tax category rates
-* Effective-dated tax lookup
-
-## Phase 3: Catalog, Products, and Product Variants
+## Phase 3: Catalog, Products, and Product Variants — **Active**
 
 Focus:
 

@@ -2,6 +2,8 @@
 
 class Store < ApplicationRecord
   has_many :workstations, dependent: :restrict_with_error
+  has_many :store_tax_rates, dependent: :restrict_with_error
+  has_many :store_tax_category_rates, dependent: :restrict_with_error
   has_many :user_role_assignments, dependent: :restrict_with_error
   has_many :user_sessions, dependent: :restrict_with_error
   has_many :users, foreign_key: :default_store_id, dependent: :nullify, inverse_of: :default_store

@@ -219,7 +219,7 @@ Tax setup is separated into three concepts:
 | Store Tax Rate          | A tax rate available at a store.                                   |
 | Store Tax Category Rate | Effective-dated mapping of store + tax category to store tax rate. |
 
-Tax lookup should be centralized.
+Tax lookup is implemented in `app/services/tax_rate_lookup.rb`.
 
 Conceptual interface:
 
@@ -231,7 +231,7 @@ TaxRateLookup.call(
 )
 ```
 
-The lookup must return exactly one active applicable rate. Missing or ambiguous tax setup should fail loudly.
+Returns the applicable `StoreTaxRate`. Raises `TaxRateLookup::MissingRateError` or `TaxRateLookup::AmbiguousRateError` when setup is incomplete or ambiguous.
 
 ---
 

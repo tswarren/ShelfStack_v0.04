@@ -1,0 +1,30 @@
+<% if store_tax_rate.errors.any? %>
+  <div class="flash flash-alert">
+    <%= store_tax_rate.errors.full_messages.to_sentence %>
+  </div>
+<% end %>
+
+<fieldset class="ss-form-section">
+  <legend>Store tax rate</legend>
+  <%= f.label :store_id, "Store" %>
+  <%= f.collection_select :store_id, stores, :id, ->(s) { "#{s.store_number} — #{s.name}" }, { include_blank: "Select store" } %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
+  <%= f.label :tax_identifier, "Tax identifier (receipt marker)" %><%= f.text_field :tax_identifier, maxlength: 1 %>
+  <%= f.label :tax_rate_bps, "Tax rate (basis points)" %>
+  <%= f.number_field :tax_rate_bps, step: 1, min: 0, max: 10000, data: { preview_target: "store-tax-bps" } %>
+  <p class="ss-hint">Preview: <span data-preview="store-tax-bps"><%= format_basis_points(store_tax_rate.tax_rate_bps) %></span></p>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var input = document.querySelector("[data-preview-target='store-tax-bps']");
+    var output = document.querySelector("[data-preview='store-tax-bps']");
+    if (!input || !output) return;
+    input.addEventListener("input", function() {
+      var bps = parseInt(input.value, 10);
+      output.textContent = isNaN(bps) ? "—" : (bps / 100).toFixed(2) + "%";
+    });
+  });
+</script>

@@ -1,0 +1,5 @@
+<h1>New Tax Category</h1>
+<%= form_with model: @tax_category, url: setup_tax_categories_path, class: "ss-form" do |f| %>
+  <%= render "form", f: f, tax_category: @tax_category %>
+  <%= f.submit "Create Tax Category", class: "ss-btn" %>
+<% end %>

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module ApplicationHelper
+  include SetupFormatHelper
   def display_time(timestamp)
     return "—" if timestamp.blank?
 

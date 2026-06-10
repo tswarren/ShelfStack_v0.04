@@ -1,0 +1,19 @@
+<h1><%= @store_tax_rate.name %></h1>
+<dl class="ss-summary">
+  <dt>Store</dt><dd><%= @store_tax_rate.store.name %> (<%= @store_tax_rate.store.store_number %>)</dd>
+  <dt>Short name</dt><dd><%= @store_tax_rate.short_name %></dd>
+  <dt>Tax identifier</dt><dd><%= @store_tax_rate.tax_identifier %></dd>
+  <dt>Rate</dt><dd><%= format_basis_points(@store_tax_rate.tax_rate_bps) %> (<%= @store_tax_rate.tax_rate_bps %> bps)</dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@store_tax_rate.active?) %>"><%= status_label(@store_tax_rate.active?) %></span></dd>
+</dl>
+<p>
+  <%= link_to "Edit", edit_setup_store_tax_rate_path(@store_tax_rate), class: "ss-btn" %>
+  <% if @store_tax_rate.active? %>
+    <%= button_to "Inactivate", inactivate_setup_store_tax_rate_path(@store_tax_rate), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_store_tax_rate_path(@store_tax_rate), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_store_tax_rate_path(@store_tax_rate), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this store tax rate?" } %>
+</p>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>
