@@ -106,9 +106,9 @@ module Setup
       store_id = @store_tax_category_rate.store_id || params.dig(:store_tax_category_rate, :store_id)
       @store_tax_rates = if store_id.present?
                            StoreTaxRate.active_records.where(store_id: store_id).order(:name)
-                         else
+      else
                            StoreTaxRate.none
-                         end
+      end
     end
 
     def store_tax_category_rate_params
