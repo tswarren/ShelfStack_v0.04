@@ -1,0 +1,5 @@
+<h1>New Store Tax Rate</h1>
+<%= form_with model: @store_tax_rate, url: setup_store_tax_rates_path, class: "ss-form" do |f| %>
+  <%= render "form", f: f, store_tax_rate: @store_tax_rate, stores: @stores %>
+  <%= f.submit "Create Store Tax Rate", class: "ss-btn" %>
+<% end %>

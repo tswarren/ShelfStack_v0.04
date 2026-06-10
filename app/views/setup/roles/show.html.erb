@@ -3,7 +3,7 @@
 <% if @role.system_role? && @role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY %>
   <p class="flash flash-notice">Super Administrator permissions are fixed and cannot be removed.</p>
 <% else %>
-  <p><%= link_to "Edit", edit_setup_role_path(@role), class: "ss-btn" %></p>
+  <div class="ss-detail-actions"><%= link_to "Edit", edit_setup_role_path(@role), class: "ss-btn" %></div>
 <% end %>
 <h2>Permissions</h2>
 <table class="ss-table">

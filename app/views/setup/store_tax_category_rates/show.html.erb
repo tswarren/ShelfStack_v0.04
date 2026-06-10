@@ -1,0 +1,20 @@
+<h1>Tax Mapping</h1>
+<dl class="ss-summary">
+  <dt>Store</dt><dd><%= @store_tax_category_rate.store.name %> (<%= @store_tax_category_rate.store.store_number %>)</dd>
+  <dt>Tax category</dt><dd><%= @store_tax_category_rate.tax_category.name %></dd>
+  <dt>Store tax rate</dt><dd><%= @store_tax_category_rate.store_tax_rate.name %> (<%= format_basis_points(@store_tax_category_rate.store_tax_rate.tax_rate_bps) %>)</dd>
+  <dt>Effective on</dt><dd><%= @store_tax_category_rate.effective_on %></dd>
+  <dt>Ends on</dt><dd><%= @store_tax_category_rate.ends_on || "Open-ended" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@store_tax_category_rate.active?) %>"><%= status_label(@store_tax_category_rate.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_store_tax_category_rate_path(@store_tax_category_rate), class: "ss-btn" %>
+  <% if @store_tax_category_rate.active? %>
+    <%= button_to "Inactivate", inactivate_setup_store_tax_category_rate_path(@store_tax_category_rate), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_store_tax_category_rate_path(@store_tax_category_rate), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_store_tax_category_rate_path(@store_tax_category_rate), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this tax mapping?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

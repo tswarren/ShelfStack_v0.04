@@ -1,0 +1,16 @@
+<h1>Categories <%= link_to "New", new_setup_category_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Department</th><th>Name</th><th>Short Name</th><th>Tax Category</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @categories.each do |category| %>
+      <tr>
+        <td><%= category.department.department_number %> — <%= category.department.name %></td>
+        <td><%= category.name %></td>
+        <td><%= category.short_name %></td>
+        <td><%= category.default_tax_category.name %></td>
+        <td><span class="<%= status_class(category.active?) %>"><%= status_label(category.active?) %></span></td>
+        <td><%= link_to "View", setup_category_path(category) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

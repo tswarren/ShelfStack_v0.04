@@ -1,0 +1,22 @@
+<h1><%= @category.name %></h1>
+<dl class="ss-summary">
+  <dt>Department</dt><dd><%= @category.department.department_number %> — <%= @category.department.name %></dd>
+  <dt>Short name</dt><dd><%= @category.short_name %></dd>
+  <dt>Sort order</dt><dd><%= @category.sort_order %></dd>
+  <dt>Default pricing model</dt><dd><%= @category.default_pricing_model || "—" %></dd>
+  <dt>Default margin target</dt><dd><%= @category.default_margin_target_bps ? format_basis_points(@category.default_margin_target_bps) : "—" %></dd>
+  <dt>Default supplier discount</dt><dd><%= @category.default_supplier_discount_bps ? format_basis_points(@category.default_supplier_discount_bps) : "—" %></dd>
+  <dt>Default tax category</dt><dd><%= @category.default_tax_category.name %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@category.active?) %>"><%= status_label(@category.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_category_path(@category), class: "ss-btn" %>
+  <% if @category.active? %>
+    <%= button_to "Inactivate", inactivate_setup_category_path(@category), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_category_path(@category), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_category_path(@category), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this category?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

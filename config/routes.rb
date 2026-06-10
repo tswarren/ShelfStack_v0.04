@@ -51,5 +51,35 @@ Rails.application.routes.draw do
       end
     end
     resources :audit_events, only: %i[index show]
+    resources :tax_categories do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :store_tax_rates do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :store_tax_category_rates do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :departments do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :categories do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
   end
 end

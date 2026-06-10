@@ -1,0 +1,5 @@
+<h1>New Tax Mapping</h1>
+<%= form_with model: @store_tax_category_rate, url: setup_store_tax_category_rates_path, class: "ss-form" do |f| %>
+  <%= render "form", f: f, store_tax_category_rate: @store_tax_category_rate, stores: @stores, tax_categories: @tax_categories, store_tax_rates: @store_tax_rates %>
+  <%= f.submit "Create Tax Mapping", class: "ss-btn" %>
+<% end %>

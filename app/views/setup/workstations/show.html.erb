@@ -4,6 +4,6 @@
   <dt>Store</dt><dd><%= @workstation.store.name %></dd>
   <dt>Type</dt><dd><%= @workstation.workstation_type %></dd>
 </dl>
-<p><%= link_to "Edit", edit_setup_workstation_path(@workstation), class: "ss-btn" %></p>
+<div class="ss-detail-actions"><%= link_to "Edit", edit_setup_workstation_path(@workstation), class: "ss-btn" %></div>
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>

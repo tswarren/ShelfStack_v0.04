@@ -1,0 +1,17 @@
+<h1><%= @tax_category.name %></h1>
+<dl class="ss-summary">
+  <dt>Short name</dt><dd><%= @tax_category.short_name %></dd>
+  <dt>Sort order</dt><dd><%= @tax_category.sort_order %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@tax_category.active?) %>"><%= status_label(@tax_category.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_tax_category_path(@tax_category), class: "ss-btn" %>
+  <% if @tax_category.active? %>
+    <%= button_to "Inactivate", inactivate_setup_tax_category_path(@tax_category), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_tax_category_path(@tax_category), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_tax_category_path(@tax_category), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this tax category?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

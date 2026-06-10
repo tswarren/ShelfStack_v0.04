@@ -1,0 +1,16 @@
+<h1>Departments <%= link_to "New", new_setup_department_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Number</th><th>Name</th><th>Short Name</th><th>GL Code</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @departments.each do |department| %>
+      <tr>
+        <td><%= department.department_number %></td>
+        <td><%= department.name %></td>
+        <td><%= department.short_name %></td>
+        <td><%= department.gl_account_code || "—" %></td>
+        <td><span class="<%= status_class(department.active?) %>"><%= status_label(department.active?) %></span></td>
+        <td><%= link_to "View", setup_department_path(department) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

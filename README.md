@@ -10,16 +10,16 @@ ShelfStack separates descriptive catalog metadata from store-facing products and
 
 ## Project Status
 
-ShelfStack has a **complete Phase 1 implementation** (foundation) and complete Phase 1–3 **documentation**. Active development priority is **Phase 2** (departments, categories, and taxes).
+ShelfStack has **complete Phase 1 and Phase 2 implementations** and complete Phase 1–3 **documentation**. Active development priority is **Phase 3** (catalog, products, and product variants).
 
 | Phase         | Focus                                                                                                                                         | Documentation | Implementation |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- |
 | Phase 1       | Foundation: users, roles, permissions, stores, workstations, sessions, and audit events.                                                      | Complete      | **Complete**   |
-| Phase 2       | Classification and taxes: departments, categories, tax categories, store tax rates, and effective-dated tax mappings.                         | Complete      | Not started    |
+| Phase 2       | Classification and taxes: departments, categories, tax categories, store tax rates, and effective-dated tax mappings.                         | Complete      | **Complete**   |
 | Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      | Not started    |
 | Future phases | Inventory ledger, stock balances, purchasing, receiving, POS, reporting, and accounting workflows.                                            | Roadmap only  | Not started    |
 
-Phase 1 completion details: [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md).
+Phase 1 completion: [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md). Phase 2 completion: [docs/implementation/phase-2-completion.md](docs/implementation/phase-2-completion.md).
 
 ---
 
@@ -133,12 +133,11 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 
 ## Current Scope
 
-**Phase 1 is implemented.** See [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md).
+**Phase 1 and Phase 2 are implemented.** See [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md) and [docs/implementation/phase-2-completion.md](docs/implementation/phase-2-completion.md).
 
 Current design and implementation focus:
 
-1. **Phase 2** — departments, categories, and taxes (next)
-2. Phase 3 — catalog, products, and product variants (documented, not yet built)
+1. **Phase 3** — catalog, products, and product variants (next)
 
 The next major area after Phase 3 is expected to be inventory foundation.
 

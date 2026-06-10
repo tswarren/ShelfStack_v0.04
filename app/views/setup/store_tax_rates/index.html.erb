@@ -1,0 +1,27 @@
+<h1>Store Tax Rates <%= link_to "New", new_setup_store_tax_rate_path, class: "ss-btn" %></h1>
+
+<% if @stores.many? %>
+  <p>
+    Filter:
+    <%= link_to "All stores", setup_store_tax_rates_path, class: params[:store_id].blank? ? "ss-link-active" : nil %>
+    <% @stores.each do |store| %>
+      | <%= link_to store.store_number, setup_store_tax_rates_path(store_id: store.id), class: params[:store_id].to_s == store.id.to_s ? "ss-link-active" : nil %>
+    <% end %>
+  </p>
+<% end %>
+
+<table class="ss-table">
+  <thead><tr><th>Store</th><th>Name</th><th>Identifier</th><th>Rate</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @store_tax_rates.each do |rate| %>
+      <tr>
+        <td><%= rate.store.store_number %></td>
+        <td><%= rate.name %></td>
+        <td><%= rate.tax_identifier %></td>
+        <td><%= format_basis_points(rate.tax_rate_bps) %></td>
+        <td><span class="<%= status_class(rate.active?) %>"><%= status_label(rate.active?) %></span></td>
+        <td><%= link_to "View", setup_store_tax_rate_path(rate) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
