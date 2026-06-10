@@ -20,6 +20,21 @@ module ApplicationHelper
     status.to_s.humanize
   end
 
+  def audit_event_details_summary(event)
+    details = event.event_details
+    return "—" if details.blank?
+
+    if details["changes"].present?
+      details["changes"].map do |field, change|
+        "#{field}: #{change['from'].inspect} → #{change['to'].inspect}"
+      end.join("; ")
+    elsif details["attributes"].present?
+      details["attributes"].map { |field, value| "#{field}: #{value.inspect}" }.join("; ")
+    else
+      details.map { |field, value| "#{field}: #{value.inspect}" }.join("; ")
+    end
+  end
+
   def role_assignment_scope_label(assignment)
     if assignment.global_scoped?
       "Global"

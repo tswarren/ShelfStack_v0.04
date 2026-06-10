@@ -483,6 +483,12 @@ div.ss-summary dd pre {
   }
 }
 
+.ss-audit-details {
+  font-size: 0.8125rem;
+  color: #5c5347;
+  max-width: 28rem;
+}
+
 .ss-search-placeholder {
   flex: 1;
   max-width: 240px;

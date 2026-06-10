@@ -24,6 +24,8 @@ class SetupDepartmentsControllerTest < ActionDispatch::IntegrationTest
     department = Department.last
     assert_equal "005", department.department_number
     assert AuditEvent.exists?(event_name: "department.created", auditable: department)
+    event = AuditEvent.find_by!(event_name: "department.created", auditable: department)
+    assert_equal "005", event.event_details.dig("attributes", "department_number")
   end
 
   test "cannot delete department with categories" do

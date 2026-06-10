@@ -16,7 +16,12 @@ module Setup
     end
 
     def record_audit!(event_name, auditable, details: {})
-      AuditEvents.record!(actor: current_user, event_name: event_name, auditable: auditable, details: details)
+      AuditEvents.record!(
+        actor: current_user,
+        event_name: event_name,
+        auditable: auditable,
+        details: AuditEvents.build_details(auditable: auditable, event_name: event_name, extra: details)
+      )
     end
   end
 end
