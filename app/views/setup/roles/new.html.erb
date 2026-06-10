@@ -1,0 +1,7 @@
+<h1>New Role</h1>
+<%= form_with model: @role, url: setup_roles_path, class: "ss-form" do |f| %>
+  <%= f.label :role_key %><%= f.text_field :role_key %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :description %><%= f.text_area :description %>
+  <%= f.submit "Create Role", class: "ss-btn" %>
+<% end %>

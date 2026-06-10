@@ -1,0 +1,9 @@
+<h1><%= @workstation.name %></h1>
+<dl class="ss-summary">
+  <dt>Code</dt><dd><%= @workstation.workstation_code %></dd>
+  <dt>Store</dt><dd><%= @workstation.store.name %></dd>
+  <dt>Type</dt><dd><%= @workstation.workstation_type %></dd>
+</dl>
+<p><%= link_to "Edit", edit_setup_workstation_path(@workstation), class: "ss-btn" %></p>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

@@ -1,15 +1,21 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require_relative "../db/seeds/phase1_permissions"
+require_relative "support/phase1_test_helper"
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    include Phase1TestHelper
 
-    # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
-    fixtures :all
+    parallelize(workers: 1)
 
-    # Add more helper methods to be used by all tests here...
+    setup do
+      seed_minimal_permissions!
+    end
   end
+end
+
+class ActionDispatch::IntegrationTest
+  include Phase1TestHelper
 end

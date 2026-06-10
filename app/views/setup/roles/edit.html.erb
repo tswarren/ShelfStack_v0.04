@@ -1,0 +1,6 @@
+<h1>Edit <%= @role.name %></h1>
+<%= form_with model: @role, url: setup_role_path(@role), method: :patch, class: "ss-form" do |f| %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :description %><%= f.text_area :description %>
+  <%= f.submit "Save", class: "ss-btn" %>
+<% end %>

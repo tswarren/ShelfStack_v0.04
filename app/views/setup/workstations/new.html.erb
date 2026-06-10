@@ -1,0 +1,9 @@
+<h1>New Workstation</h1>
+<%= form_with model: @workstation, url: setup_workstations_path, class: "ss-form" do |f| %>
+  <%= f.label :store_id %><%= f.collection_select :store_id, @stores, :id, :name %>
+  <%= f.label :workstation_type %><%= f.select :workstation_type, Workstation::WORKSTATION_TYPES %>
+  <%= f.label :workstation_number %><%= f.text_field :workstation_number %>
+  <%= f.label :workstation_code %><%= f.text_field :workstation_code %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.submit "Create Workstation", class: "ss-btn" %>
+<% end %>

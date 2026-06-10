@@ -1,0 +1,19 @@
+<header class="ss-header">
+  <div class="ss-header-logo">
+    <%= link_to root_path do %>
+      <%= image_tag "logo.png", alt: "ShelfStack" %>
+    <% end %>
+  </div>
+  <% if current_store %>
+    <div class="ss-header-context">
+      <%= current_store.name %> · <%= current_workstation&.name || "No workstation" %>
+    </div>
+  <% end %>
+  <div class="ss-search-placeholder">Search / scan (coming soon)</div>
+  <div class="ss-header-actions">
+    <% if current_user %>
+      <span><%= current_user.display_name %></span>
+      <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-secondary", form: { style: "display:inline;margin:0;" } %>
+    <% end %>
+  </div>
+</header>

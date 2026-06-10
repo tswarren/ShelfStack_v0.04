@@ -1,0 +1,16 @@
+<h1>Workstations <%= link_to "New", new_setup_workstation_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Code</th><th>Name</th><th>Store</th><th>Type</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @workstations.each do |ws| %>
+      <tr>
+        <td><%= ws.workstation_code %></td>
+        <td><%= ws.name %></td>
+        <td><%= ws.store.store_number %></td>
+        <td><%= ws.workstation_type %></td>
+        <td><span class="<%= status_class(ws.active?) %>"><%= status_label(ws.active?) %></span></td>
+        <td><%= link_to "View", setup_workstation_path(ws) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

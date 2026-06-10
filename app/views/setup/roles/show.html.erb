@@ -1,0 +1,23 @@
+<h1><%= @role.name %></h1>
+<p><%= @role.description %></p>
+<p><%= link_to "Edit", edit_setup_role_path(@role), class: "ss-btn" %></p>
+<h2>Permissions</h2>
+<table class="ss-table">
+  <thead><tr><th>Permission</th><th>Granted</th></tr></thead>
+  <tbody>
+    <% @permissions.each do |permission| %>
+      <tr>
+        <td><%= permission.permission_key %></td>
+        <td>
+          <%= form_with url: update_permissions_setup_role_path(@role), method: :patch do %>
+            <%= hidden_field_tag :permission_id, permission.id %>
+            <%= check_box_tag :grant, "1", @role.permissions.include?(permission),
+                  onchange: "this.form.submit()" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

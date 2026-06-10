@@ -1,0 +1,9 @@
+<h1>Assign Workstation</h1>
+
+<%= form_with url: workstation_assignment_path, method: :post, class: "ss-form" do %>
+  <label>Workstation</label>
+  <%= select_tag :workstation_id,
+        options_from_collection_for_select(@workstations, :id, :workstation_code),
+        prompt: "Select workstation" %>
+  <%= submit_tag "Assign Browser", class: "ss-btn" %>
+<% end %>

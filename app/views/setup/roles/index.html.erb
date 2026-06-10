@@ -1,0 +1,14 @@
+<h1>Roles <%= link_to "New", new_setup_role_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Key</th><th>Name</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @roles.each do |role| %>
+      <tr>
+        <td><%= role.role_key %></td>
+        <td><%= role.name %></td>
+        <td><span class="<%= status_class(role.active?) %>"><%= status_label(role.active?) %></span></td>
+        <td><%= link_to "View", setup_role_path(role) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -1,0 +1,24 @@
+<h1>Log In</h1>
+
+<% if @workstation_assignment %>
+  <p>
+    <strong><%= @workstation_assignment.workstation.store.name %></strong><br>
+    <%= @workstation_assignment.workstation.name %>
+    (<%= @workstation_assignment.workstation.workstation_type.humanize %>)
+  </p>
+<% else %>
+  <p>No workstation assigned to this browser.</p>
+  <% if current_user && Authorization.allowed?(user: current_user, permission_key: "workstations.assign_browser") %>
+    <p><%= link_to "Assign workstation", new_workstation_assignment_path %></p>
+  <% end %>
+<% end %>
+
+<%= form_with url: login_path, class: "ss-form" do |f| %>
+  <label>Username</label>
+  <%= text_field_tag :username, params[:username], autofocus: true, autocomplete: "username" %>
+
+  <label>Password</label>
+  <%= password_field_tag :password, nil, autocomplete: "current-password" %>
+
+  <%= submit_tag "Log In", class: "ss-btn" %>
+<% end %>

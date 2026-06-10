@@ -6,16 +6,17 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
-    <%= javascript_importmap_tags %>
   </head>
-  <body>
-    <%= render "layouts/header" %>
-    <%= render "layouts/nav" %>
-    <main class="ss-main">
+  <body class="ss-auth">
+    <div class="ss-auth-box">
+      <div class="ss-auth-logo">
+        <%= link_to root_path do %>
+          <%= image_tag "logo.png", alt: "ShelfStack" %>
+        <% end %>
+      </div>
       <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
       <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
       <%= yield %>
-    </main>
-    <%= render "layouts/footer" %>
+    </div>
   </body>
 </html>

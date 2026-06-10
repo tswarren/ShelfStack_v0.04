@@ -1,0 +1,6 @@
+<h1>Edit <%= @workstation.name %></h1>
+<%= form_with model: @workstation, url: setup_workstation_path(@workstation), method: :patch, class: "ss-form" do |f| %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :workstation_type %><%= f.select :workstation_type, Workstation::WORKSTATION_TYPES %>
+  <%= f.submit "Save", class: "ss-btn" %>
+<% end %>

@@ -1,0 +1,10 @@
+<h1>Unlock Session</h1>
+<p>Enter your PIN to unlock this session.</p>
+
+<%= form_with url: session_unlock_path, method: :post, class: "ss-form" do %>
+  <label>PIN</label>
+  <%= password_field_tag :pin, nil, autofocus: true, autocomplete: "off" %>
+  <%= submit_tag "Unlock", class: "ss-btn" %>
+<% end %>
+
+<p><%= button_to "Log out instead", logout_path, method: :delete, class: "ss-btn ss-btn-secondary" %></p>

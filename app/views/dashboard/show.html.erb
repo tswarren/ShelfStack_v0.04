@@ -1,0 +1,18 @@
+<h1>Dashboard</h1>
+
+<div class="ss-summary">
+  <h2>Environment</h2>
+  <dl>
+    <dt>Store</dt><dd><%= current_store&.name || "—" %></dd>
+    <dt>Store time zone</dt><dd><%= current_store&.time_zone || "—" %></dd>
+    <dt>Workstation</dt><dd><%= current_workstation&.name || "—" %></dd>
+    <dt>Workstation type</dt><dd><%= current_workstation&.workstation_type&.humanize || "—" %></dd>
+    <dt>User</dt><dd><%= current_user&.display_name %></dd>
+    <dt>User type</dt><dd><%= current_user&.user_type %></dd>
+    <dt>Last login</dt><dd><%= display_time(current_user&.last_login_at) %></dd>
+    <dt>Previous login</dt><dd><%= display_time(current_user&.previous_login_at) %></dd>
+    <dt>Session created</dt><dd><%= display_time(current_user_session&.created_at) %></dd>
+    <dt>Session status</dt><dd><%= session_status_label(current_user_session&.status) %></dd>
+    <dt>Last activity</dt><dd><%= display_time(current_user_session&.last_activity_at) %></dd>
+  </dl>
+</div>

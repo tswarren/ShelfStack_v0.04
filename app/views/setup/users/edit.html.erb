@@ -1,0 +1,9 @@
+<h1>Edit <%= @user.display_name %></h1>
+
+<%= form_with model: @user, url: setup_user_path(@user), method: :patch, class: "ss-form" do |f| %>
+  <%= f.label :display_name %><%= f.text_field :display_name %>
+  <%= f.label :first_name %><%= f.text_field :first_name %>
+  <%= f.label :last_name %><%= f.text_field :last_name %>
+  <%= f.label :user_type %><%= f.select :user_type, User::USER_TYPES, disabled: @user.system_user? %>
+  <%= f.submit "Save", class: "ss-btn" %>
+<% end %>
