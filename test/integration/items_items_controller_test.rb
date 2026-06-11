@@ -14,6 +14,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "detailuser", password: "Password123!" }
     @product = create_product!
+    @product.catalog_item.update!(bisac_subjects: "Fiction / General [bisac/FIC000000]")
     @variant = create_product_variant!(product: @product)
   end
 
@@ -24,11 +25,16 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Location &amp; Availability", response.body
     assert_match @variant.sku, response.body
     assert_match "Stock", response.body
+    assert_match "ss-item-subject-list", response.body
+    assert_match ">Subjects<", response.body
+    assert_match "ss-item-variant-defaults", response.body
+    assert_no_match "ss-item-subject-chip", response.body
     assert_no_match "ss-item-edit-link", response.body
     assert_no_match "Edit Catalog Item", response.body
     assert_no_match "Edit Product", response.body
     assert_no_match "ss-context-actions", response.body
     assert_no_match "ss-item-footer-actions", response.body
+    assert_no_match "ss-breadcrumbs", response.body
     assert_match "Sellable", response.body
   end
 
@@ -58,6 +64,24 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Shelf A", response.body
   end
 
+  test "overview eyebrow shows topic section after display location" do
+    store_floor = create_display_location!(name: "Store Floor", short_name: "Flr #{SecureRandom.hex(2)}")
+    shelf = create_display_location!(name: "Shelf A", short_name: "ShA #{SecureRandom.hex(2)}", parent: store_floor)
+    scheme = create_category_scheme!(scheme_key: "store_sections_topics", name: "Store Sections")
+    biography = create_category_node!(category_scheme: scheme, node_key: "biography", name: "Biography")
+    @product.update!(default_display_location: shelf)
+    @variant.categorizations.create!(category_node: biography, primary: true, source: "manual")
+
+    get items_item_path(catalog_item_id: @product.catalog_item.id)
+    assert_response :success
+
+    eyebrow = response.body[/ss-item-location-eyebrow.*?<\/nav>/m]
+    assert_includes eyebrow, "Store Floor"
+    assert_includes eyebrow, "Shelf A"
+    assert_includes eyebrow, "Biography"
+    assert_operator eyebrow.index("Shelf A"), :<, eyebrow.index("Biography")
+  end
+
   test "selling tab shows variant matrix and selling actions" do
     get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "selling")
     assert_response :success
@@ -80,14 +104,6 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match "ss-table-row--highlight", response.body
-  end
-
-  test "detail breadcrumbs show catalog product and variant chain" do
-    get items_item_path(catalog_item_id: @product.catalog_item.id)
-    assert_response :success
-    assert_match "Catalog: #{@product.catalog_item.title}", response.body
-    assert_match "Product: #{@product.name}", response.body
-    assert_match "Variants:", response.body
   end
 
   test "catalog tab shows primary badge and identifier row actions" do

@@ -118,4 +118,28 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
     assert_not item.reload.active?
   end
+
+  test "create catalog item with structured bisac selections" do
+    seed_bisac_scheme!
+    general = CategoryNode.find_by!(node_key: "fic000000")
+
+    assert_difference -> { CatalogItem.count }, 1 do
+      post items_catalog_items_path, params: {
+        primary_bisac_category_node_id: general.id,
+        catalog_item: {
+          catalog_item_type: "book",
+          title: "BISAC Linked Book",
+          format_id: @format.id,
+          publication_status: "active",
+          active: true,
+          initial_identifier_type: "isbn13",
+          initial_identifier_value: "9780143127741"
+        }
+      }
+    end
+
+    item = CatalogItem.find_by!(title: "BISAC Linked Book")
+    assert_equal general.id, item.primary_bisac_categorization.category_node_id
+    assert_includes item.bisac_subjects, "Fiction / General [bisac/FIC000000]"
+  end
 end

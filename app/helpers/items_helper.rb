@@ -80,16 +80,27 @@ module ItemsHelper
     tag.span("Invalid identifier", class: "ss-status-badge status-warning")
   end
 
-  def item_location_eyebrow(locations)
-    return if locations.blank?
+  def item_location_eyebrow(locations, topic_section: nil)
+    return if locations.blank? && topic_section.blank?
 
-    tag.nav(class: "ss-item-location-eyebrow", aria: { label: "Display location" }) do
-      safe_join(locations.each_with_index.flat_map do |location, index|
-        crumbs = []
-        crumbs << tag.span("›", class: "ss-item-location-sep", aria: { hidden: true }) if index.positive?
-        crumbs << tag.span(location.name, class: "ss-item-location-crumb")
-        crumbs
-      end)
+    tag.nav(class: "ss-item-location-eyebrow", aria: { label: "Display location and topic" }) do
+      parts = []
+
+      if locations.present?
+        parts << safe_join(locations.each_with_index.flat_map do |location, index|
+          crumbs = []
+          crumbs << tag.span("›", class: "ss-item-location-sep", aria: { hidden: true }) if index.positive?
+          crumbs << tag.span(location.name, class: "ss-item-location-crumb")
+          crumbs
+        end)
+      end
+
+      if topic_section.present?
+        parts << tag.span("·", class: "ss-item-location-sep", aria: { hidden: true }) if parts.any?
+        parts << tag.span(topic_section, class: "ss-item-location-crumb ss-item-topic-crumb")
+      end
+
+      safe_join(parts)
     end
   end
 

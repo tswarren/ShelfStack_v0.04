@@ -32,7 +32,7 @@ module Items
       {
         cover_image_attachment: :blob,
         default_display_location: :parent,
-        product_variants: [:display_location, :condition, :category]
+        product_variants: [:display_location, :condition, :category, { categorizations: { category_node: :parent } }]
       }
     end
 

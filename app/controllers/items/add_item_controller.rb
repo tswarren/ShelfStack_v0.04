@@ -2,6 +2,8 @@
 
 module Items
   class AddItemController < BaseController
+    include CatalogItemBisacSyncable
+
     STEPS = %w[choose_path item_details selling_setup sellable_sku].freeze
     WORKFLOWS = %w[catalog_linked non_catalog].freeze
 
@@ -78,6 +80,7 @@ module Items
         ensure_catalog_linked_workflow! or return
         @catalog_item = find_or_build_catalog_item
         @formats = Format.active_records.order(:name)
+        load_bisac_form_state(@catalog_item)
       when "selling_setup"
         if params[:generate_sku].present?
           save_draft!("generated_sku" => AddItem::ProductSkuGenerator.generate!)
@@ -121,7 +124,9 @@ module Items
       saved = save_catalog_item!(@catalog_item)
       return unless saved
 
+      bisac_result = sync_catalog_item_bisac!(@catalog_item)
       record_audit!("catalog_item.created", @catalog_item)
+      apply_bisac_sync_notice!(bisac_result)
       save_draft!("catalog_item_id" => @catalog_item.id)
 
       if done_commit?
@@ -134,6 +139,7 @@ module Items
     rescue CatalogIdentifierService::IdentifierError => e
       @catalog_item.errors.add(:base, e.message)
       @step = "item_details"
+      load_bisac_form_state(@catalog_item)
       render "items/add_item/item_details", status: :unprocessable_entity
     end
 
@@ -229,6 +235,7 @@ module Items
 
       unless saved
         @step = "item_details"
+        load_bisac_form_state(catalog_item)
         render "items/add_item/item_details", status: :unprocessable_entity
       end
 

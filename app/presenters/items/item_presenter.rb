@@ -202,10 +202,17 @@ module Items
     end
 
     def subject_headings
+      subject_groups.flat_map { |group| group[:headings] }.first(5)
+    end
+
+    def subject_groups
       return [] unless catalog_item
 
-      headings = subject_heading_sources.flat_map { |source| headings_from_subject_source(source) }
-      headings.map { |heading| clean_subject_heading(heading) }.reject(&:blank?).uniq.first(5)
+      [
+        { label: "Subjects", headings: cleaned_headings_from(bisac_subject_source) },
+        { label: "Genres", headings: cleaned_headings_from({ data: catalog_item.genre_data, raw: catalog_item.genres }) },
+        { label: "Themes", headings: cleaned_headings_from({ data: catalog_item.theme_data, raw: catalog_item.themes }) }
+      ].reject { |group| group[:headings].empty? }
     end
 
     def description_text
@@ -259,6 +266,21 @@ module Items
         summary[:condition]
       ].compact
       parts.presence&.join(" · ") || "—"
+    end
+
+    def topic_section_label(variant: nil)
+      target_variant = variant_for_eyebrow(variant)
+      return unless target_variant
+
+      target_variant.categorizations.primary_records
+                    .includes(category_node: :parent)
+                    .first&.category_node&.breadcrumb_label
+    end
+
+    def variant_for_eyebrow(variant)
+      return variant if variant.present?
+
+      variants.find { |entry| entry.categorizations.primary_records.any? } || variants.first
     end
 
     def display_location_path(variant: nil)
@@ -417,10 +439,19 @@ module Items
 
     def subject_heading_sources
       [
-        { data: catalog_item.bisac_subject_data, raw: catalog_item.bisac_subjects },
+        bisac_subject_source,
         { data: catalog_item.genre_data, raw: catalog_item.genres },
         { data: catalog_item.theme_data, raw: catalog_item.themes }
       ]
+    end
+
+    def bisac_subject_source
+      linked_headings = catalog_item.bisac_categorizations
+                                    .order(primary: :desc, id: :asc)
+                                    .map { |categorization| { "heading" => categorization.category_node.name } }
+      return { data: linked_headings, raw: nil } if linked_headings.any?
+
+      { data: catalog_item.bisac_subject_data, raw: catalog_item.bisac_subjects }
     end
 
     def headings_from_subject_source(source)
@@ -433,6 +464,10 @@ module Items
 
     def clean_subject_heading(heading)
       heading.to_s.gsub(/\s*\[[^\]]*\]/, "").strip.presence
+    end
+
+    def cleaned_headings_from(source)
+      headings_from_subject_source(source).filter_map { |heading| clean_subject_heading(heading) }.uniq
     end
 
     def humanize_status(value)

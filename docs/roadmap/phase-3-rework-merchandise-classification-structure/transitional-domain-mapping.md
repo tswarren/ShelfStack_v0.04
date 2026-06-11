@@ -33,7 +33,7 @@ Related: [00-epic-phase-3-rework-merchandise-classification-structure.md](00-epi
 | **`Product#default_display_location_id`** | Product-level display default | **`DisplayLocation`** (unchanged) | Stays separate | No schema change |
 | **`Format`** (catalog item) | Bibliographic/material type | **`Format`** + mapping inputs | Use in accounting rules later; not a replacement for merchandise class | Issue 07 extension |
 | **`Product#product_type`** | Physical/digital/etc. | Mapping input | Use in accounting rules (tickets, shipping, digital) | Issue 07 |
-| **Catalog BISAC/subjects JSONB** | Descriptive metadata | **`Categorization`** to topic nodes (future) | Not required for first slice; optional `source: bisac` later | Issue 05+ (deferred automation) |
+| **Catalog BISAC/subjects JSONB** | Descriptive metadata | **`Categorization`** to BISAC nodes | BISAC codes load into `CategoryScheme(bisac)` via Setup → BISAC Subjects import; catalog items link via structured pickers and `CatalogItemBisacSync`; `bisac_subjects` / `bisac_subject_data` are derived for export/import | Implemented |
 | **Phase 2 seed categories** | Format/merchandise buckets | **`MerchandiseClass`** records | Backfill category → merchandise class; **create new topic tree separately** | Issues 03, 08 |
 | **Phase 2 seed departments** (Books, Used Books, …) | Reporting + implied behavior | **`Department`** + **`MerchandiseClass`** | “Used Books” department overlaps merchandise class + condition; reduce reliance over time | Issue 07 |
 | **Ingram import default category** | Single category for new variants | **Default merchandise class + topic node** (future) | Keep category picker until issue 09 | Issue 09 |

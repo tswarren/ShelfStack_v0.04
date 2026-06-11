@@ -20,7 +20,9 @@ module Seeds
       { key: "setup.accounting_mappings.update", group: "setup", name: "Update Accounting Mappings", description: "Update sales account mappings" },
       { key: "setup.accounting_mappings.inactivate", group: "setup", name: "Inactivate Accounting Mappings", description: "Inactivate sales account mappings" },
       { key: "setup.accounting_mappings.reactivate", group: "setup", name: "Reactivate Accounting Mappings", description: "Reactivate sales account mappings" },
-      { key: "setup.accounting_mappings.delete", group: "setup", name: "Delete Accounting Mappings", description: "Delete unused sales account mappings" }
+      { key: "setup.accounting_mappings.delete", group: "setup", name: "Delete Accounting Mappings", description: "Delete unused sales account mappings" },
+      { key: "setup.bisac_subjects.view", group: "setup", name: "View BISAC Subjects", description: "View BISAC subject import status" },
+      { key: "setup.bisac_subjects.import", group: "setup", name: "Import BISAC Subjects", description: "Load or update BISAC subject category nodes" }
     ].freeze
 
     def self.seed!

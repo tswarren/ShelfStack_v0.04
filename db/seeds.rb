@@ -16,6 +16,7 @@ puts "Seeding Phase 1 foundation..."
 Seeds::Phase1Permissions.seed!
 Seeds::Phase2Permissions.seed!
 Seeds::Phase3Permissions.seed!
+Seeds::Phase3bPermissions.seed!
 
 system_user = User.find_or_initialize_by(username: "system")
 system_user.assign_attributes(
@@ -133,6 +134,10 @@ Seeds::Phase3CatalogProducts.seed!
 puts "Phase 3 seed complete."
 
 puts "Seeding Phase 3B merchandise classification..."
-Seeds::Phase3bPermissions.seed!
 Seeds::Phase3bTemplates.apply_simple_bookstore!
+
+super_admin_role = Role.find_by!(role_key: ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY)
+Permission.active_records.find_each { |permission| super_admin_role.grant_permission!(permission) }
+SuperAdministratorProtection.restore!
+
 puts "Phase 3B seed complete."

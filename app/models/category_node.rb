@@ -9,7 +9,7 @@ class CategoryNode < ApplicationRecord
   has_many :accounting_mappings, dependent: :restrict_with_error
 
   validates :node_key, presence: true, uniqueness: { scope: :category_scheme_id }, length: { maximum: 30 }
-  validates :name, presence: true, uniqueness: { scope: :category_scheme_id }
+  validates :name, presence: true, uniqueness: { scope: %i[category_scheme_id parent_id] }
   validates :sort_order, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :parent_must_belong_to_same_scheme
   validate :parent_must_be_active

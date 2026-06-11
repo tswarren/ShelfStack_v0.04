@@ -8,6 +8,7 @@ module Setup
     before_action -> { authorize!("setup.merchandise_classes.update") }, only: %i[edit update]
     before_action -> { authorize!("setup.merchandise_classes.inactivate") }, only: :inactivate
     before_action -> { authorize!("setup.merchandise_classes.reactivate") }, only: :reactivate
+    before_action -> { authorize!("setup.merchandise_classes.delete") }, only: :destroy
     before_action :load_form_collections, only: %i[new create edit update]
 
     def index

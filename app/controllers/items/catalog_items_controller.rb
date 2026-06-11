@@ -2,6 +2,8 @@
 
 module Items
   class CatalogItemsController < BaseController
+    include CatalogItemBisacSyncable
+
     before_action :set_catalog_item, only: %i[
       show edit update destroy inactivate reactivate add_identifier new_identifier generate_local_identifier
       set_primary_identifier edit_identifier update_identifier destroy_identifier
@@ -28,6 +30,7 @@ module Items
     def new
       @catalog_item = CatalogItem.new(active: true, publication_status: "active", catalog_item_type: "book")
       @formats = Format.active_records.order(:name)
+      load_bisac_form_state(@catalog_item)
     end
 
     def create
@@ -59,26 +62,34 @@ module Items
       end
 
       if saved
+        bisac_result = sync_catalog_item_bisac!(@catalog_item)
         record_audit!("catalog_item.created", @catalog_item)
+        apply_bisac_sync_notice!(bisac_result)
         redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item created."
       else
+        load_bisac_form_state(@catalog_item)
         render :new, status: :unprocessable_entity
       end
     rescue CatalogIdentifierService::IdentifierError => e
       @catalog_item.errors.add(:base, e.message)
+      load_bisac_form_state(@catalog_item)
       render :new, status: :unprocessable_entity
     end
 
     def edit
       @formats = Format.active_records.order(:name)
+      load_bisac_form_state(@catalog_item)
     end
 
     def update
       @formats = Format.active_records.order(:name)
       if @catalog_item.update(catalog_item_params)
+        bisac_result = sync_catalog_item_bisac!(@catalog_item)
         record_audit!("catalog_item.updated", @catalog_item)
+        apply_bisac_sync_notice!(bisac_result)
         redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item updated."
       else
+        load_bisac_form_state(@catalog_item)
         render :edit, status: :unprocessable_entity
       end
     end

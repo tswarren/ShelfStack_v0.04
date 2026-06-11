@@ -4,7 +4,10 @@
       <div class="ss-item-hero-text">
         <div class="ss-item-hero-top">
           <div>
-            <%= item_location_eyebrow(item.display_location_path(variant: local_assigns[:variant])) %>
+            <%= item_location_eyebrow(
+                  item.display_location_path(variant: local_assigns[:variant]),
+                  topic_section: item.topic_section_label(variant: local_assigns[:variant])
+                ) %>
             <h1 class="ss-item-title"><%= item.title %></h1>
             <% if item.subtitle.present? %>
               <p class="ss-item-subtitle"><%= item.subtitle %></p>
@@ -25,6 +28,30 @@
             <% end %>
           </div>
         <% end %>
+
+        <% if item.catalog_facts.any? || item.publication_status_label.present? %>
+          <dl class="ss-item-facts">
+            <% item.catalog_facts.each do |label, value| %>
+              <dt><%= label %></dt>
+              <dd>
+                <% if label == "Released" && item.publication_status_label.present? %>
+                  <span class="ss-item-released">
+                    <%= value %>
+                    <%= item_publication_status_badge(item.publication_status_label) %>
+                  </span>
+                <% else %>
+                  <%= value %>
+                <% end %>
+              </dd>
+            <% end %>
+            <% if item.publication_status_label.present? && item.released_date_label.blank? %>
+              <dt>Status</dt>
+              <dd><%= item_publication_status_badge(item.publication_status_label) %></dd>
+            <% end %>
+          </dl>
+        <% elsif item.catalog_item.blank? %>
+          <p class="ss-muted ss-item-no-catalog">This item has no catalog metadata.</p>
+        <% end %>
       </div>
 
       <div class="ss-item-cover-slot">
@@ -34,30 +61,6 @@
         <%= item_cover_thumbnail(item, size: :hero) %>
       </div>
     </header>
-
-    <% if item.catalog_facts.any? || item.publication_status_label.present? %>
-      <dl class="ss-item-facts">
-        <% item.catalog_facts.each do |label, value| %>
-          <dt><%= label %></dt>
-          <dd>
-            <% if label == "Released" && item.publication_status_label.present? %>
-              <span class="ss-item-released">
-                <%= value %>
-                <%= item_publication_status_badge(item.publication_status_label) %>
-              </span>
-            <% else %>
-              <%= value %>
-            <% end %>
-          </dd>
-        <% end %>
-        <% if item.publication_status_label.present? && item.released_date_label.blank? %>
-          <dt>Status</dt>
-          <dd><%= item_publication_status_badge(item.publication_status_label) %></dd>
-        <% end %>
-      </dl>
-    <% elsif item.catalog_item.blank? %>
-      <p class="ss-muted">This item has no catalog metadata.</p>
-    <% end %>
 
     <section class="ss-item-section">
       <h2><%= items_user_facing_label("product_variants") %></h2>
@@ -74,12 +77,26 @@
           </thead>
           <tbody>
             <% item.variants.each do |variant| %>
+              <% classification = item.classification_summary_for(variant) %>
+              <% defaults = classification[:defaults] %>
               <tr>
                 <td><%= variant.condition&.short_name || variant.name %></td>
                 <td><%= variant.sku %></td>
                 <td><%= item.variant_location_label(variant) %></td>
                 <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
                 <td><%= link_to "Details", edit_items_product_variant_path(variant, return_to: "item") %></td>
+              </tr>
+              <tr class="ss-item-variant-defaults-row">
+                <td colspan="5">
+                  <details class="ss-item-variant-defaults">
+                    <summary class="ss-item-variant-defaults-summary">
+                      <span class="ss-item-variant-defaults-hint"><%= item.classification_summary_label(variant) %></span>
+                    </summary>
+                    <%= render "items/items/overview_classification_body",
+                          summary: classification,
+                          defaults: defaults %>
+                  </details>
+                </td>
               </tr>
             <% end %>
           </tbody>
@@ -126,43 +143,7 @@
       <% end %>
     </section>
 
-    <% if item.variants.any? %>
-      <section class="ss-item-sidebar-section">
-        <h3>Classification &amp; Defaults</h3>
-        <% item.variants.each do |variant| %>
-          <% summary = item.classification_summary_for(variant) %>
-          <% defaults = summary[:defaults] %>
-          <div class="ss-item-classification-block">
-            <p class="ss-item-classification-variant"><strong><%= variant.condition&.short_name || variant.sku %></strong></p>
-            <dl class="ss-summary ss-summary-compact">
-              <dt>Merchandise class</dt><dd><%= summary[:merchandise_class].presence || "—" %></dd>
-              <dt>Merchandise category</dt><dd><%= summary[:merchandise_category].presence || "—" %></dd>
-              <dt>Topic / section</dt><dd><%= summary[:topic_section].presence || "—" %></dd>
-              <dt>Tax category</dt><dd><%= defaults.tax_category&.name || "—" %></dd>
-              <dt>Sales account</dt><dd><%= defaults.sales_account_code.presence || "—" %></dd>
-            </dl>
-            <% if defaults.warnings.any? %>
-              <ul class="ss-form-errors">
-                <% defaults.warnings.each do |warning| %>
-                  <li><%= warning %></li>
-                <% end %>
-              </ul>
-            <% end %>
-          </div>
-        <% end %>
-      </section>
-    <% end %>
-
-    <% if item.subject_headings.any? %>
-      <section class="ss-item-sidebar-section">
-        <h3>Subjects</h3>
-        <ul class="ss-item-subjects">
-          <% item.subject_headings.each do |heading| %>
-            <li><%= heading %></li>
-          <% end %>
-        </ul>
-      </section>
-    <% end %>
+    <%= render "items/items/overview_subjects", item: item %>
 
     <% if item.description_text.present? %>
       <section class="ss-item-sidebar-section">

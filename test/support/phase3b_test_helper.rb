@@ -38,4 +38,8 @@ module Phase3bTestHelper
       grant_permission!(user, permission[:key], store: store)
     end
   end
+
+  def seed_bisac_scheme!(path: Rails.root.join("test/fixtures/files/bisac_sample.csv"))
+    Bisac::CategoryNodeImporter.call(path: path)
+  end
 end

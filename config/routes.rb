@@ -31,6 +31,8 @@ Rails.application.routes.draw do
     post "ingram_import/preview", to: "ingram_import#preview", as: :ingram_import_preview
     post "ingram_import", to: "ingram_import#create", as: :ingram_import_run
 
+    get "bisac_subjects/search", to: "bisac_subject_searches#index", as: :bisac_subjects_search
+
     resources :catalog_items do
       member do
         patch :inactivate
@@ -163,6 +165,9 @@ Rails.application.routes.draw do
         patch :inactivate
         patch :reactivate
       end
+    end
+    resource :bisac_subjects, only: %i[show] do
+      post :import, on: :member
     end
     resources :formats do
       member do

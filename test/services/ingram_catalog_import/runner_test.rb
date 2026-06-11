@@ -29,6 +29,27 @@ class IngramCatalogImport::RunnerTest < ActiveSupport::TestCase
     assert item.products.active_records.first.product_variants.active_records.exists?
   end
 
+  test "imports rows and links bisac subject when tree is loaded" do
+    seed_bisac_scheme!
+    scheme = CategoryScheme.find_by!(scheme_key: "bisac")
+    node = scheme.category_nodes.create!(
+      node_key: "ingramtest",
+      name: "Biography & Autobiography / Presidents & Heads of State",
+      sort_order: 99,
+      active: true
+    )
+
+    IngramCatalogImport::Runner.call(
+      path: @fixture_path,
+      actor: @actor,
+      options: @options
+    )
+
+    item = CatalogItem.find_by!(title: "Communion: Finding My Way Back to Faith")
+    assert item.bisac_categorizations.exists?(category_node_id: node.id)
+    assert_includes item.bisac_subjects, node.name
+  end
+
   test "re-import updates catalog and product without overwriting variant" do
     IngramCatalogImport::Runner.call(path: @fixture_path, actor: @actor, options: @options)
 

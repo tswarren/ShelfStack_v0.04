@@ -29,6 +29,20 @@ class SeedTest < ActiveSupport::TestCase
     $stdout = original_stdout
   end
 
+  test "super administrator receives phase 3B setup permissions" do
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    load Rails.root.join("db/seeds.rb")
+
+    super_admin = Role.find_by!(role_key: ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY)
+    permission = Permission.find_by!(permission_key: "setup.merchandise_classes.view")
+
+    assert super_admin.permissions.exists?(id: permission.id)
+  ensure
+    $stdout = original_stdout
+  end
+
   test "seeded tax lookup succeeds for all store and tax category pairs" do
     original_stdout = $stdout
     $stdout = StringIO.new

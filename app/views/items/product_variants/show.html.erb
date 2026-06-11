@@ -1,8 +1,6 @@
 <% item = Items::ItemPresenter.from_product_variant(@product_variant) %>
 <% item_flow = { return_to: "item" } %>
 
-<%= render "items/shared/breadcrumbs", item: item, variant: @product_variant %>
-
 <h1><%= @product_variant.name %></h1>
 <dl class="ss-summary">
   <dt>Product</dt><dd><%= @product_variant.product.name %></dd>

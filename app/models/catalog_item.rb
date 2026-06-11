@@ -22,6 +22,7 @@ class CatalogItem < ApplicationRecord
   belongs_to :format
   has_many :catalog_item_identifiers, dependent: :destroy
   has_many :products, dependent: :restrict_with_error
+  has_many :categorizations, as: :categorizable, dependent: :destroy
 
   accepts_nested_attributes_for :catalog_item_identifiers, allow_destroy: true, reject_if: :all_blank
 
@@ -54,6 +55,17 @@ class CatalogItem < ApplicationRecord
 
   def active_identifiers
     catalog_item_identifiers.active_records
+  end
+
+  def bisac_categorizations
+    categorizations
+      .joins(category_node: :category_scheme)
+      .where(category_schemes: { scheme_key: Bisac::CategoryNodeImporter::SCHEME_KEY })
+      .includes(category_node: :parent)
+  end
+
+  def primary_bisac_categorization
+    bisac_categorizations.primary_records.first
   end
 
   private

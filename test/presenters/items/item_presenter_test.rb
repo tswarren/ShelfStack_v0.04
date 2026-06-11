@@ -137,6 +137,18 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     assert_equal ["Fiction / General", "Adventure", "Coming of Age"], presenter.subject_headings
   end
 
+  test "subject groups preserve headings by type" do
+    item = create_catalog_item!(
+      bisac_subjects: "Fiction / General [bisac/FIC000000]",
+      genres: "Adventure",
+      themes: "Coming of Age [theme]"
+    )
+    presenter = Items::ItemPresenter.from_catalog_item(item)
+
+    assert_equal ["Subjects", "Genres", "Themes"], presenter.subject_groups.pluck(:label)
+    assert_equal ["Fiction / General"], presenter.subject_groups.first[:headings]
+  end
+
   test "catalog facts use format name without code and separate release date" do
     format = create_format!(name: "Hardcover", code: "HC")
     item = create_catalog_item!(format: format, publication_date: Date.new(2024, 3, 15), publication_status: "active")

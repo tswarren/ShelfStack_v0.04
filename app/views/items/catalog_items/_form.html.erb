@@ -118,10 +118,13 @@
 
 <%= render layout: "shared/forms/section", locals: { title: "Classification" } do %>
   <div class="ss-form-grid ss-form-grid--2">
-    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :bisac_subjects, label: "BISAC subjects" } do %>
-      <%= f.text_area :bisac_subjects, rows: 2, data: { preview_source: "subjects" } %>
-      <p class="ss-hint">Parsed preview: <span data-preview="subjects-parsed"><%= metadata_subjects_preview(catalog_item.bisac_subjects) %></span></p>
-    <% end %>
+    <%= render "items/catalog_items/bisac_subjects_picker",
+          f: f,
+          catalog_item: catalog_item,
+          primary_bisac_category_node_id: local_assigns[:primary_bisac_category_node_id],
+          primary_bisac_category_node_label: local_assigns[:primary_bisac_category_node_label],
+          bisac_category_node_ids: local_assigns[:bisac_category_node_ids] || [],
+          bisac_scheme_loaded: local_assigns.fetch(:bisac_scheme_loaded, false) %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :genres } do %>
       <%= f.text_area :genres, rows: 2 %>
     <% end %>

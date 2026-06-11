@@ -203,8 +203,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "parent_id"
     t.integer "sort_order", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["category_scheme_id", "name"], name: "index_category_nodes_on_category_scheme_id_and_name", unique: true
+    t.index ["category_scheme_id", "name"], name: "index_category_nodes_on_scheme_and_root_name", unique: true, where: "(parent_id IS NULL)"
     t.index ["category_scheme_id", "node_key"], name: "index_category_nodes_on_category_scheme_id_and_node_key", unique: true
+    t.index ["category_scheme_id", "parent_id", "name"], name: "index_category_nodes_on_scheme_parent_and_name", unique: true, where: "(parent_id IS NOT NULL)"
     t.index ["category_scheme_id"], name: "index_category_nodes_on_category_scheme_id"
     t.index ["parent_id"], name: "index_category_nodes_on_parent_id"
   end

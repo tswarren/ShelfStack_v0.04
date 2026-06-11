@@ -1,0 +1,41 @@
+<h1>BISAC Subject Headings</h1>
+<p class="ss-muted">
+  Load the industry BISAC subject tree into a dedicated category scheme for catalog reference, reporting, and future auto-categorization.
+  This does not replace store section/topic pickers on sellable SKU forms.
+</p>
+
+<dl class="ss-summary">
+  <dt>Scheme</dt>
+  <dd><%= @scheme&.name || "Not loaded yet" %></dd>
+  <dt>Scheme key</dt>
+  <dd><%= Bisac::CategoryNodeImporter::SCHEME_KEY %></dd>
+  <dt>Loaded nodes</dt>
+  <dd><%= @node_count.positive? ? @node_count : "—" %></dd>
+  <dt>Source file</dt>
+  <dd><%= @source_path.to_s %></dd>
+  <dt>Source updated</dt>
+  <dd><%= @source_mtime ? l(@source_mtime, format: :long) : "—" %></dd>
+  <dt>Last import</dt>
+  <dd>
+    <% if @last_import %>
+      <%= l(@last_import.occurred_at, format: :long) %>
+      <% if @last_import.event_details.present? %>
+        (<%= @last_import.event_details["created"] %> created, <%= @last_import.event_details["updated"] %> updated)
+      <% end %>
+    <% else %>
+      —
+    <% end %>
+  </dd>
+</dl>
+
+<div class="ss-detail-actions">
+  <%= button_to "Load / Update BISAC subjects",
+                import_setup_bisac_subjects_path,
+                method: :post,
+                class: "ss-btn",
+                data: { turbo_confirm: "Load or update approximately 3,900 BISAC subject nodes?" } %>
+  <%= link_to "Back to Setup", setup_root_path, class: "ss-btn ss-btn-secondary" %>
+  <% if @scheme.present? %>
+    <%= link_to "View scheme", setup_category_scheme_path(@scheme), class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+</div>

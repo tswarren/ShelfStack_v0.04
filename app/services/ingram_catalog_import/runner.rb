@@ -91,6 +91,7 @@ module IngramCatalogImport
         changed = catalog_item.changed?
         catalog_item.save!
         ensure_identifiers!(catalog_item, row)
+        sync_catalog_bisac!(catalog_item)
         record_audit!("catalog_item.updated", catalog_item) if changed
         [catalog_item, :catalog_updated]
       else
@@ -99,6 +100,7 @@ module IngramCatalogImport
           catalog_item.save!
           create_identifiers!(catalog_item, row)
         end
+        sync_catalog_bisac!(catalog_item.reload)
         record_audit!("catalog_item.created", catalog_item)
         [catalog_item.reload, :catalog_created]
       end
@@ -232,6 +234,15 @@ module IngramCatalogImport
         event_name: event_name,
         auditable: auditable,
         details: AuditEvents.build_details(auditable: auditable, event_name: event_name, extra: details)
+      )
+    end
+
+    def sync_catalog_bisac!(catalog_item)
+      CatalogItemBisacSync.sync!(
+        catalog_item: catalog_item,
+        bisac_subjects: catalog_item.bisac_subjects,
+        structured: false,
+        source: "import"
       )
     end
   end
