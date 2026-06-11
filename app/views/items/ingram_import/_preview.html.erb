@@ -1,0 +1,28 @@
+<%= render "shared/forms/section", title: "Preview (#{row_count} rows)" do %>
+  <p class="ss-help">Showing the first <%= preview_rows.size %> rows.</p>
+
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Row</th>
+        <th>EAN</th>
+        <th>Product Code</th>
+        <th>Title</th>
+        <th>Format</th>
+        <th>US SRP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% preview_rows.each do |row| %>
+        <tr>
+          <td><%= row["row_number"] || row[:row_number] %></td>
+          <td><%= row["ean"] || row[:ean] %></td>
+          <td><%= row["product_code"] || row[:product_code] %></td>
+          <td><%= row["product_name"] || row[:product_name] %></td>
+          <td><%= row["format"] || row[:format] %></td>
+          <td><%= number_to_currency(((row["us_srp_cents"] || row[:us_srp_cents]).to_i) / 100.0) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

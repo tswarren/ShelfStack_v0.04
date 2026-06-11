@@ -38,8 +38,16 @@ module Seeds
       SETUP_CATALOG_RESOURCES.flat_map { |resource| ACTIONS.map { |action| permission_attrs("setup", resource, action) } }
     end
 
+    INGRAM_IMPORT_PERMISSION = {
+      key: "items.ingram_import.run",
+      group: "items",
+      name: "Run Ingram Import",
+      description: "Import catalog items from Ingram spreadsheets"
+    }.freeze
+
     PERMISSIONS = (
       ACCESS_PERMISSIONS +
+      [INGRAM_IMPORT_PERMISSION] +
       items_permissions +
       setup_catalog_permissions
     ).freeze

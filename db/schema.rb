@@ -82,7 +82,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["active"], name: "index_catalog_item_identifiers_on_active"
     t.index ["catalog_item_id"], name: "index_catalog_item_identifiers_on_catalog_item_id"
     t.index ["catalog_item_id"], name: "index_catalog_item_identifiers_one_active_primary", unique: true, where: "((active = true) AND (primary_identifier = true))"
-    t.index ["identifier_type", "normalized_identifier"], name: "idx_catalog_item_identifiers_standard_unique", unique: true, where: "((identifier_type)::text = ANY ((ARRAY['isbn10'::character varying, 'isbn13'::character varying, 'ean'::character varying, 'upc'::character varying, 'gtin'::character varying, 'local'::character varying])::text[]))"
+    t.index ["identifier_type", "normalized_identifier"], name: "idx_catalog_item_identifiers_standard_unique", unique: true, where: "((identifier_type)::text = ANY (ARRAY[('isbn10'::character varying)::text, ('isbn13'::character varying)::text, ('ean'::character varying)::text, ('upc'::character varying)::text, ('gtin'::character varying)::text, ('local'::character varying)::text]))"
     t.index ["normalized_identifier"], name: "index_catalog_item_identifiers_on_normalized_identifier"
   end
 

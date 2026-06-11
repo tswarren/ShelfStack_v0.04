@@ -5,19 +5,21 @@
 
 <%= form_with url: items_add_item_path(step: "choose_path"), method: :post, class: "ss-form ss-form--standard" do %>
   <%= render layout: "shared/forms/section", locals: { title: "Creation Path" } do %>
-    <div class="ss-check-field">
-      <%= radio_button_tag :workflow, "catalog_linked", @draft["workflow"] == "catalog_linked", id: "workflow_catalog_linked" %>
-      <div>
-        <%= label_tag "workflow_catalog_linked", "Catalog-linked item" %>
-        <p class="ss-help">Books, media, gifts, and other items with bibliographic or catalog metadata.</p>
-      </div>
-    </div>
-    <div class="ss-check-field">
-      <%= radio_button_tag :workflow, "non_catalog", @draft["workflow"] == "non_catalog", id: "workflow_non_catalog" %>
-      <div>
-        <%= label_tag "workflow_non_catalog", "Non-catalog item" %>
-        <p class="ss-help">Services, fees, donations, gift cards, and simple merchandise without catalog metadata.</p>
-      </div>
+    <div class="ss-choice-list" role="radiogroup" aria-label="Creation path">
+      <label class="ss-choice-option" for="workflow_catalog_linked">
+        <%= radio_button_tag :workflow, "catalog_linked", @draft["workflow"] == "catalog_linked", id: "workflow_catalog_linked" %>
+        <div>
+          <span class="ss-choice-title">Catalog-linked item</span>
+          <p class="ss-help">Books, media, gifts, and other items with bibliographic or catalog metadata.</p>
+        </div>
+      </label>
+      <label class="ss-choice-option" for="workflow_non_catalog">
+        <%= radio_button_tag :workflow, "non_catalog", @draft["workflow"] == "non_catalog", id: "workflow_non_catalog" %>
+        <div>
+          <span class="ss-choice-title">Non-catalog item</span>
+          <p class="ss-help">Services, fees, donations, gift cards, and simple merchandise without catalog metadata.</p>
+        </div>
+      </label>
     </div>
   <% end %>
   <footer class="ss-form-actions">

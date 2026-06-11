@@ -1,0 +1,60 @@
+<% content_for(:title, "Ingram Import") %>
+
+<%= render "shared/forms/page_header",
+           title: "Ingram Catalog Import",
+           description: "Upload an Ingram list to create or update catalog items and products, then add new-condition sellable SKUs when missing." %>
+
+<div class="ss-form ss-form--wide">
+  <%= form_with url: items_ingram_import_preview_path, method: :post, html: { multipart: true, class: "ss-form-card" } do |f| %>
+    <%= render "shared/forms/section", title: "Import options" do %>
+      <div class="ss-form-grid ss-form-grid--2">
+        <div class="ss-field">
+          <%= label_tag :category_id, ss_required_label("Default category"), class: "ss-label" %>
+          <%= select_tag :category_id,
+                         options_from_collection_for_select(@categories, :id, :name, @selected_category_id),
+                         include_blank: "Select a category",
+                         required: true,
+                         class: "ss-input" %>
+          <p class="ss-help">Applied to all newly created sellable SKUs.</p>
+        </div>
+
+        <div class="ss-field">
+          <%= label_tag :display_location_id, "Default display location", class: "ss-label" %>
+          <%= select_tag :display_location_id,
+                         options_from_collection_for_select(@display_locations, :id, :name, @selected_display_location_id),
+                         include_blank: "None",
+                         class: "ss-input" %>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render "shared/forms/section", title: "Spreadsheet file" do %>
+      <div class="ss-field">
+        <%= label_tag :import_file, ss_required_label("Ingram list file"), class: "ss-label" %>
+        <%= file_field_tag :import_file, accept: ".xls,.xlsx", required: true, class: "ss-input" %>
+        <p class="ss-help">Accepts Ingram .xls or .xlsx exports with standard column headers.</p>
+      </div>
+    <% end %>
+
+    <div class="ss-form-actions">
+      <%= submit_tag "Preview file", class: "ss-button ss-button--primary" %>
+      <%= link_to "Back to Items", items_root_path, class: "ss-button ss-button--secondary" %>
+    </div>
+  <% end %>
+
+  <% if @preview_rows.present? %>
+    <%= render "preview", preview_rows: @preview_rows, row_count: @row_count %>
+
+    <%= form_with url: items_ingram_import_run_path, method: :post, class: "ss-form-card" do %>
+      <%= hidden_field_tag :category_id, @selected_category_id %>
+      <%= hidden_field_tag :display_location_id, @selected_display_location_id %>
+      <div class="ss-form-actions">
+        <%= submit_tag "Run import", class: "ss-button ss-button--primary", data: { turbo_confirm: "Run import for #{@row_count} rows?" } %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if @import_result.present? %>
+    <%= render "results", import_result: @import_result %>
+  <% end %>
+</div>

@@ -84,6 +84,12 @@ module Phase3TestHelper
     }.merge(attrs))
   end
 
+  def seed_phase3_reference_data!
+    require_relative "../../db/seeds/phase3_catalog_products"
+    Seeds::Phase3CatalogProducts.seed_formats!
+    Seeds::Phase3CatalogProducts.seed_product_conditions!
+  end
+
   def grant_all_phase3_permissions!(user, store: nil)
     Seeds::Phase3Permissions.seed!
     Seeds::Phase3Permissions::PERMISSIONS.each do |permission|

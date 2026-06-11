@@ -169,9 +169,19 @@ Formats and Product Conditions moved from operational workspaces to Setup under 
 Phase 3 permissions now use:
 
 - `items.access` plus `items.catalog_items.*`, `items.products.*`, `items.product_variants.*`
+- `items.ingram_import.run` for Ingram spreadsheet import
 - `setup.formats.*`, `setup.product_conditions.*`, plus existing setup merchandising keys
 
 Legacy `catalog.*` and `products.*` keys are deactivated on seed.
+
+### Ingram catalog import
+
+Spreadsheet import for Ingram vendor lists (`docs/specifications/ingram-catalog-import-spec.md`):
+
+- Service: `IngramCatalogImport::Runner` with parser, identifier/product/variant resolvers
+- UI: Items → Ingram Import (upload, preview, required default category, run)
+- Upserts catalog items and products by EAN/Product Code; creates new-condition variants only when missing
+- Existing variants are matched and never overwritten by default
 
 ---
 

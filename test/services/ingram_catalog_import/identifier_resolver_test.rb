@@ -1,0 +1,66 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class IngramCatalogImport::IdentifierResolverTest < ActiveSupport::TestCase
+  test "finds catalog item by EAN" do
+    item = create_catalog_item!
+    CatalogIdentifierService.add_identifier!(
+      catalog_item: item,
+      identifier_type: "isbn13",
+      value: "9780063575011",
+      primary: true
+    )
+
+    result = IngramCatalogImport::IdentifierResolver.resolve(
+      product_code: nil,
+      ean: "9780063575011"
+    )
+
+    assert result.found?
+    assert_equal item, result.catalog_item
+  end
+
+  test "falls back to product code" do
+    item = create_catalog_item!
+    CatalogIdentifierService.add_identifier!(
+      catalog_item: item,
+      identifier_type: "isbn10",
+      value: "0063575019",
+      primary: false
+    )
+
+    result = IngramCatalogImport::IdentifierResolver.resolve(
+      product_code: "0063575019",
+      ean: nil
+    )
+
+    assert result.found?
+    assert_equal item, result.catalog_item
+  end
+
+  test "detects identifier conflict" do
+    item_one = create_catalog_item!
+    item_two = create_catalog_item!
+    CatalogIdentifierService.add_identifier!(
+      catalog_item: item_one,
+      identifier_type: "isbn13",
+      value: "9780123456786",
+      primary: true
+    )
+    CatalogIdentifierService.add_identifier!(
+      catalog_item: item_two,
+      identifier_type: "isbn10",
+      value: "0063575019",
+      primary: true
+    )
+
+    result = IngramCatalogImport::IdentifierResolver.resolve(
+      product_code: "0063575019",
+      ean: "9780123456786"
+    )
+
+    assert result.conflict?
+    assert_includes result.message, "different catalog items"
+  end
+end

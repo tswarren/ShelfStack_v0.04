@@ -27,6 +27,10 @@ Rails.application.routes.draw do
     post "add_item", to: "add_item#create"
     get "add_item/new", to: "add_item#new", as: :new_add_item
 
+    get "ingram_import", to: "ingram_import#show", as: :ingram_import
+    post "ingram_import/preview", to: "ingram_import#preview", as: :ingram_import_preview
+    post "ingram_import", to: "ingram_import#create", as: :ingram_import_run
+
     resources :catalog_items do
       member do
         patch :inactivate
