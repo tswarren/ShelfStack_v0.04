@@ -4,9 +4,17 @@
            description: "Create a sellable SKU with condition, attributes, and display settings." %>
 
 <%= form_with model: [:items, @product_variant], class: "ss-form ss-form--wide" do |f| %>
-  <%= render "form", f: f, product_variant: @product_variant, products: @products, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
+  <%= hidden_field_tag :return_to, "item" %>
+  <%= render "form",
+             f: f,
+             product_variant: @product_variant,
+             products: @products,
+             categories: @categories,
+             conditions: @conditions,
+             display_locations: @display_locations,
+             show_advanced: false %>
   <footer class="ss-form-actions">
     <%= f.submit "Create Variant", class: "ss-btn" %>
-    <%= link_to "Cancel", items_product_variants_path, class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", item_flow_cancel_path(@product_variant.product || @product_variant, tab: "selling"), class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>

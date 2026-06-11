@@ -1,0 +1,55 @@
+<div data-controller="product-form" data-action="change->product-form#refresh">
+  <%= render layout: "shared/forms/section", locals: {
+    title: "Selling Setup",
+    description: local_assigns.fetch(:description, "Define how the store sells this item.")
+  } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", required: local_assigns.fetch(:require_sku, false) } do %>
+        <%= f.text_field :sku, value: product.sku.presence || local_assigns[:generated_sku], required: local_assigns.fetch(:require_sku, false) %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name, label: "Product name", required: true } do %>
+        <%= f.text_field :name, required: true %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
+        <%= f.select :product_type,
+              Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] },
+              { selected: product.product_type || "physical" },
+              { data: { product_form_target: "productType" } } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
+        <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_display_location_id, label: "Default display location" } do %>
+        <%= f.collection_select :default_display_location_id, display_locations, :id, :name, include_blank: true %>
+      <% end %>
+    </div>
+
+    <div class="ss-form-grid ss-form-grid--2" data-product-form-target="variationBlock">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variation_type, label: "Variation type" } do %>
+        <%= f.select :variation_type,
+              Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] },
+              { selected: product.variation_type || "standard" },
+              { data: { product_form_target: "variationType" } } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variant1_label, label: "Variant 1 label" } do %>
+        <%= f.text_field :variant1_label, data: { product_form_target: "variant1Label" } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variant2_label, label: "Variant 2 label" } do %>
+        <%= f.text_field :variant2_label, data: { product_form_target: "variant2Label" } %>
+      <% end %>
+    </div>
+
+    <% if local_assigns[:initial_category_id].present? %>
+      <div class="ss-field">
+        <%= label_tag "product[initial_category_id]", "Initial SKU category", class: "ss-label" %>
+        <%= select_tag "product[initial_category_id]",
+              options_from_collection_for_select(local_assigns[:categories], :id, :name, local_assigns[:initial_category_id]),
+              include_blank: false %>
+      </div>
+    <% end %>
+
+    <%= render "shared/forms/checkbox", f: f, record: product, field: :active %>
+  <% end %>
+
+  <%= render "items/shared/product_forms/cover_image", f: f, product: product %>
+</div>

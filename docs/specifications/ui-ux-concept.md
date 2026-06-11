@@ -441,6 +441,8 @@ or:
 Item: The Hobbit
 ```
 
+Edit and create flows launched from item tabs (catalog, selling, identifiers) pass `return_to=item` and reuse the same shared product and variant form partials as the Add Item wizard. After save or cancel, controllers redirect back to the appropriate item tab via `Items::ReturnPath`; variant mutations may include `variant_id` to highlight the affected row on the Selling tab.
+
 ## 8.1 Suggested Page Structure
 
 ```text

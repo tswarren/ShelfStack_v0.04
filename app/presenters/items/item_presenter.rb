@@ -221,13 +221,13 @@ module Items
       if catalog_item
         actions << {
           label: "Edit Catalog Item",
-          url: helper.edit_items_catalog_item_path(catalog_item)
+          url: helper.edit_items_catalog_item_path(catalog_item, item_return_params)
         }
       end
       if product
         actions << {
           label: "Edit Product",
-          url: helper.edit_items_product_path(product)
+          url: helper.edit_items_product_path(product, item_return_params)
         }
       end
       actions
@@ -257,7 +257,7 @@ module Items
     def edit_catalog_path(helper: self)
       return unless catalog_item
 
-      helper.edit_items_catalog_item_path(catalog_item)
+      helper.edit_items_catalog_item_path(catalog_item, item_return_params)
     end
 
     def cover_image_attached?
@@ -293,14 +293,15 @@ module Items
       basic_statuses.first
     end
 
-    def show_path(helper: self, tab: nil)
+    def show_path(helper: self, tab: nil, variant_id: nil)
       params = route_params.dup
       params[:tab] = tab if tab.present? && tab != "overview"
+      params[:variant_id] = variant_id if variant_id.present?
       helper.items_item_path(params)
     end
 
-    def tab_path(tab, helper: self)
-      show_path(helper: helper, tab: tab)
+    def tab_path(tab, helper: self, variant_id: nil)
+      show_path(helper: helper, tab: tab, variant_id: variant_id)
     end
 
     def context_actions(helper: self)
@@ -336,7 +337,7 @@ module Items
     def edit_catalog_action(helper: self)
       return unless catalog_item
 
-      { label: "Edit Catalog", url: helper.edit_items_catalog_item_path(catalog_item) }
+      { label: "Edit Catalog", url: helper.edit_items_catalog_item_path(catalog_item, item_return_params) }
     end
 
     def sell_new_action(helper: self)
@@ -349,7 +350,7 @@ module Items
 
       {
         label: "Sell New",
-        url: helper.new_items_product_variant_path(product_id: product.id, condition_id: condition.id)
+        url: helper.new_items_product_variant_path({ product_id: product.id, condition_id: condition.id }.merge(item_return_params))
       }
     end
 
@@ -358,7 +359,7 @@ module Items
 
       {
         label: "Create Store Product",
-        url: helper.new_items_product_path(catalog_item_id: catalog_item.id)
+        url: helper.new_items_product_path({ catalog_item_id: catalog_item.id }.merge(item_return_params))
       }
     end
 
@@ -367,7 +368,7 @@ module Items
 
       {
         label: "Create First Sellable SKU",
-        url: helper.new_items_product_variant_path(product_id: product.id)
+        url: helper.new_items_product_variant_path({ product_id: product.id }.merge(item_return_params))
       }
     end
 
@@ -377,9 +378,13 @@ module Items
       ProductCondition.active_records.where(new_condition: false).order(:sort_order).limit(3).map do |condition|
         {
           label: "Add #{condition.short_name} Copy",
-          url: helper.new_items_product_variant_path(product_id: product.id, condition_id: condition.id)
+          url: helper.new_items_product_variant_path({ product_id: product.id, condition_id: condition.id }.merge(item_return_params))
         }
       end
+    end
+
+    def item_return_params
+      { return_to: "item" }
     end
 
     def new_condition_record

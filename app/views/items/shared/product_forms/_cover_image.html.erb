@@ -1,0 +1,14 @@
+<%= render layout: "shared/forms/section", locals: { title: "Cover Image" } do %>
+  <% if product.cover_image.attached? %>
+    <div class="ss-cover-preview">
+      <%= product_cover_image_tag(product.cover_image, size: :hero, alt: "Current cover image for #{product.name}") %>
+    </div>
+    <%= render "shared/forms/checkbox", f: f, record: product, field: :remove_cover_image, label: "Remove cover image" %>
+  <% end %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :cover_image, label: product.cover_image.attached? ? "Replace cover image" : "Cover image" } do %>
+      <%= f.file_field :cover_image, accept: Product::ALLOWED_COVER_IMAGE_TYPES.join(",") %>
+      <p class="ss-hint">JPEG, PNG, WebP, or GIF up to 5 MB.</p>
+    <% end %>
+  </div>
+<% end %>

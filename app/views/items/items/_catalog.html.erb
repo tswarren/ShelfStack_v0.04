@@ -1,6 +1,7 @@
 <% if item.catalog_item.blank? %>
   <p>This is a non-catalog product with no catalog metadata.</p>
 <% else %>
+  <% item_flow = { return_to: "item" } %>
   <dl class="ss-summary">
     <dt>Type</dt><dd><%= humanize_controlled_value(item.catalog_item.catalog_item_type) %></dd>
     <dt>Format</dt><dd><%= item.catalog_item.format.name %></dd>
@@ -48,7 +49,14 @@
   </table>
 
   <div class="ss-catalog-actions">
-    <%= link_to "Edit catalog details", edit_items_catalog_item_path(item.catalog_item), class: "ss-btn" %>
+    <%= link_to "Edit catalog details", edit_items_catalog_item_path(item.catalog_item, item_flow), class: "ss-btn" %>
     <%= link_to "Add identifier", new_identifier_items_catalog_item_path(item.catalog_item, return_to: "item"), class: "ss-btn ss-btn-secondary" %>
+    <% if item.catalog_item.active? %>
+      <%= button_to "Inactivate catalog item", inactivate_items_catalog_item_path(item.catalog_item, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
+    <% else %>
+      <%= button_to "Reactivate catalog item", reactivate_items_catalog_item_path(item.catalog_item, item_flow), method: :patch, class: "ss-btn" %>
+    <% end %>
+    <%= button_to "Generate local ID", generate_local_identifier_items_catalog_item_path(item.catalog_item, item_flow), method: :post, class: "ss-btn ss-btn-secondary" %>
+    <%= button_to "Delete catalog item", items_catalog_item_path(item.catalog_item, item_flow), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this catalog item?" } %>
   </div>
 <% end %>

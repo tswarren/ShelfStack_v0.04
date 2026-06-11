@@ -17,7 +17,7 @@
   <% when "catalog" %>
     <%= render "items/items/catalog", item: @item, identifiers: @identifiers %>
   <% when "selling" %>
-    <%= render "items/items/selling", item: @item, variants: @variants %>
+    <%= render "items/items/selling", item: @item, variants: @variants, highlight_variant: @highlight_variant %>
   <% when "display" %>
     <%= render "items/items/display", item: @item %>
   <% when "activity" %>

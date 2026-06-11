@@ -92,4 +92,30 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
     assert CatalogItemIdentifier.exists?(catalog_item: item, normalized_identifier: "NEWID99")
   end
+
+  test "update catalog item with return_to item redirects to catalog tab" do
+    item = create_catalog_item!(title: "Return Path Update Book")
+
+    patch items_catalog_item_path(item, return_to: "item"), params: {
+      catalog_item: {
+        catalog_item_type: item.catalog_item_type,
+        title: "Updated Return Path Title",
+        format_id: item.format_id,
+        publication_status: item.publication_status,
+        active: true
+      }
+    }
+
+    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
+    assert_equal "Updated Return Path Title", item.reload.title
+  end
+
+  test "inactivate catalog item with return_to item redirects to catalog tab" do
+    item = create_catalog_item!(title: "Return Path Inactivate Book")
+
+    patch inactivate_items_catalog_item_path(item, return_to: "item")
+
+    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
+    assert_not item.reload.active?
+  end
 end

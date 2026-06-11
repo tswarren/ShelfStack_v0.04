@@ -62,11 +62,24 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "selling")
     assert_response :success
     assert_match @variant.sku, response.body
-    assert_match edit_items_product_path(@product), response.body
-    assert_match new_items_product_variant_path(product_id: @product.id), response.body
+    assert_match edit_items_product_path(@product, return_to: "item"), response.body
+    assert_match "product_variants/new?product_id=#{@product.id}", response.body
+    assert_match "return_to=item", response.body
+    assert_match edit_items_product_variant_path(@variant, return_to: "item"), response.body
     assert_match "Edit product", response.body
     assert_match "New sellable SKUs", response.body
     assert_no_match "ss-context-actions", response.body
+  end
+
+  test "selling tab highlights variant row when variant_id param present" do
+    get items_item_path(
+      catalog_item_id: @product.catalog_item.id,
+      tab: "selling",
+      variant_id: @variant.id
+    )
+
+    assert_response :success
+    assert_match "ss-table-row--highlight", response.body
   end
 
   test "detail breadcrumbs show catalog product and variant chain" do
@@ -97,6 +110,9 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Edit catalog details", response.body
     assert_match "Add identifier", response.body
     assert_match "new_identifier", response.body
+    assert_match edit_items_catalog_item_path(@product.catalog_item, return_to: "item"), response.body
+    assert_match "Inactivate catalog item", response.body
+    assert_match "Generate local ID", response.body
     assert_no_match "ss-context-actions", response.body
   end
 

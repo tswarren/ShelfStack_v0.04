@@ -144,6 +144,7 @@ Completed polish pass after the core UX-1 through UX-3B workstreams:
 | Catalog forms | Creator and BISAC subject parse previews (server-rendered + live client preview) |
 | Variant forms | Name preview with source line driven by product/condition/attributes |
 | Add Item wizard | Catalog step reuses the full dynamic `catalog_items/_form` partial |
+| Item edit subflows | Product and variant edit/create from the unified item page reuse shared form partials with `return_to=item`; save/cancel return to the correct item tab |
 | Unified detail | Deeper breadcrumbs (catalog → product → variants); Display tab shows variant locations, store mappings, Setup vendor link |
 | Items home | Operational raw-table shortcut cards removed |
 | Cleanup | Removed legacy `catalog/` and `products/` controllers and views |

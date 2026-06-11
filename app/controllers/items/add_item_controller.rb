@@ -306,14 +306,6 @@ module Items
       if @variant.selling_price_cents.to_i.zero?
         @variant.selling_price_cents = AddItem::DefaultSellingPrice.cents(product: @product, condition: condition)
       end
-      if @variant.sku.blank?
-        @variant.sku = SkuGenerator.preview_variant_sku(
-          product: @product,
-          condition: condition,
-          attribute1_sku_component: @variant.attribute1_sku_component,
-          attribute2_sku_component: @variant.attribute2_sku_component
-        )
-      end
     end
 
     def default_condition

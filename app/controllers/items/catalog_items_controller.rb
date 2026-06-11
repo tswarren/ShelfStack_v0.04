@@ -77,7 +77,7 @@ module Items
       @formats = Format.active_records.order(:name)
       if @catalog_item.update(catalog_item_params)
         record_audit!("catalog_item.updated", @catalog_item)
-        redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item updated."
+        redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item updated."
       else
         render :edit, status: :unprocessable_entity
       end
@@ -85,24 +85,25 @@ module Items
 
     def destroy
       if @catalog_item.products.exists?
-        redirect_to items_catalog_item_path(@catalog_item), alert: "Catalog item cannot be deleted. Inactivate instead."
+        redirect_to item_return_path(@catalog_item, tab: "catalog"),
+                    alert: "Catalog item cannot be deleted. Inactivate instead."
       else
         @catalog_item.destroy
         record_audit!("catalog_item.deleted", @catalog_item)
-        redirect_to items_catalog_items_path, notice: "Catalog item deleted."
+        redirect_to items_root_path, notice: "Catalog item deleted."
       end
     end
 
     def inactivate
       @catalog_item.inactivate!
       record_audit!("catalog_item.inactivated", @catalog_item)
-      redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item inactivated."
+      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item inactivated."
     end
 
     def reactivate
       @catalog_item.reactivate!
       record_audit!("catalog_item.reactivated", @catalog_item)
-      redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item reactivated."
+      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item reactivated."
     end
 
     def add_identifier
@@ -125,13 +126,13 @@ module Items
     def generate_local_identifier
       identifier = CatalogIdentifierService.generate_local!(catalog_item: @catalog_item, actor: current_user)
       record_audit!("catalog_item_identifier.created", identifier)
-      redirect_to items_catalog_item_path(@catalog_item), notice: "Local identifier generated."
+      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Local identifier generated."
     end
 
     def set_primary_identifier
       identifier = @catalog_item.catalog_item_identifiers.find(params[:identifier_id])
       CatalogIdentifierService.set_primary!(identifier: identifier, actor: current_user)
-      redirect_to items_catalog_item_path(@catalog_item), notice: "Primary identifier updated."
+      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Primary identifier updated."
     end
 
     def edit_identifier
@@ -183,11 +184,7 @@ module Items
     end
 
     def identifier_return_path
-      if params[:return_to] == "item"
-        Items::ItemPresenter.from_catalog_item(@catalog_item).tab_path("catalog")
-      else
-        items_catalog_item_path(@catalog_item)
-      end
+      item_return_path(@catalog_item, tab: "catalog")
     end
   end
 end

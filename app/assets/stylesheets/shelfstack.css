@@ -156,6 +156,14 @@ a:hover {
   background: rgba(245, 243, 239, 0.6);
 }
 
+.ss-table tbody tr.ss-table-row--highlight {
+  background: rgba(250, 204, 21, 0.18);
+}
+
+.ss-table tbody tr.ss-table-row--highlight:hover {
+  background: rgba(250, 204, 21, 0.28);
+}
+
 .status-active {
   color: var(--color-success);
   font-weight: 600;

@@ -2,6 +2,8 @@
 
 module Items
   class BaseController < ApplicationController
+    include ReturnNavigation
+
     before_action :require_active_session
     before_action :require_items_access
 

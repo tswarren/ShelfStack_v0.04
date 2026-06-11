@@ -22,6 +22,7 @@ module Items
       @product_variant = ProductVariant.new(active: true, inventory_behavior: "standard_physical")
       @product_variant.product = Product.find(params[:product_id]) if params[:product_id].present?
       @product_variant.condition = ProductCondition.find(params[:condition_id]) if params[:condition_id].present?
+      apply_variant_defaults!
       load_form_collections
     end
 
@@ -30,7 +31,7 @@ module Items
       load_form_collections
       if @product_variant.save
         record_audit!("product_variant.created", @product_variant, details: { "sku" => @product_variant.sku })
-        redirect_to items_product_variant_path(@product_variant), notice: "Product variant created."
+        redirect_to variant_return_path(@product_variant), notice: "Product variant created."
       else
         render :new, status: :unprocessable_entity
       end
@@ -44,34 +45,39 @@ module Items
       load_form_collections
       if @product_variant.update(product_variant_params)
         record_audit!("product_variant.updated", @product_variant)
-        redirect_to items_product_variant_path(@product_variant), notice: "Product variant updated."
+        redirect_to variant_return_path(@product_variant), notice: "Product variant updated."
       else
         render :edit, status: :unprocessable_entity
       end
     end
 
     def destroy
+      product = @product_variant.product
       @product_variant.destroy
       record_audit!("product_variant.deleted", @product_variant)
-      redirect_to items_product_variants_path, notice: "Product variant deleted."
+      redirect_to Items::ReturnPath.for(
+        record: product,
+        return_to: params[:return_to].presence || "item",
+        tab: "selling"
+      ), notice: "Product variant deleted."
     end
 
     def inactivate
       @product_variant.inactivate!
       record_audit!("product_variant.inactivated", @product_variant)
-      redirect_to items_product_variant_path(@product_variant), notice: "Product variant inactivated."
+      redirect_to variant_return_path(@product_variant), notice: "Product variant inactivated."
     end
 
     def reactivate
       @product_variant.reactivate!
       record_audit!("product_variant.reactivated", @product_variant)
-      redirect_to items_product_variant_path(@product_variant), notice: "Product variant reactivated."
+      redirect_to variant_return_path(@product_variant), notice: "Product variant reactivated."
     end
 
     def regenerate_name
       @product_variant.update!(name: ProductNameRenderer.variant_name(@product_variant))
       record_audit!("product_variant.name_regenerated", @product_variant)
-      redirect_to items_product_variant_path(@product_variant), notice: "Variant name regenerated."
+      redirect_to variant_return_path(@product_variant), notice: "Variant name regenerated."
     end
 
     private
@@ -85,6 +91,27 @@ module Items
       @categories = Category.active_records.includes(:department).order("departments.department_number", :name)
       @conditions = ProductCondition.active_records.order(:sort_order, :name)
       @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+    end
+
+    def apply_variant_defaults!
+      return if @product_variant.product.blank?
+
+      condition = @product_variant.condition || ProductCondition.active_records.find_by(condition_key: "new")
+      if @product_variant.selling_price_cents.to_i.zero?
+        @product_variant.selling_price_cents = AddItem::DefaultSellingPrice.cents(
+          product: @product_variant.product,
+          condition: condition
+        )
+      end
+    end
+
+    def variant_return_path(variant = @product_variant)
+      Items::ReturnPath.for(
+        record: variant.product,
+        return_to: params[:return_to].presence || "item",
+        tab: "selling",
+        variant_id: variant.id
+      )
     end
 
     def product_variant_params

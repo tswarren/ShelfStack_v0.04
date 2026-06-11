@@ -32,7 +32,7 @@
               <td><%= variant.sku %></td>
               <td><%= variant.category&.name || "—" %></td>
               <td><%= variant.display_location&.name || "—" %></td>
-              <td><%= link_to "Edit", edit_items_product_variant_path(variant) %></td>
+              <td><%= link_to "Edit", edit_items_product_variant_path(variant, return_to: "item") %></td>
             </tr>
           <% end %>
         </tbody>

@@ -1,76 +1,27 @@
 <%= render "shared/forms/errors", record: product_variant %>
 
-<div data-controller="variant-preview"
-     data-variant-preview-products-value="<%= raw products.map { |p| { id: p.id, sku: p.sku, name: p.name, variation_type: p.variation_type, list_price_cents: p.list_price_cents.to_i } }.to_json %>"
-     data-variant-preview-conditions-value="<%= raw conditions.map { |c| { id: c.id, sku_component: c.sku_component, short_name: c.short_name, default_list_price_factor_bps: c.default_list_price_factor_bps.to_i } }.to_json %>"
-     data-action="input->variant-preview#refresh change->variant-preview#refresh">
-  <%= render layout: "shared/forms/section", locals: { title: "SKU & Name" } do %>
-    <div class="ss-form-grid ss-form-grid--2">
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :product_id, label: "Product", required: true } do %>
-        <%= f.collection_select :product_id, products, :id, :name, {}, { data: { variant_preview_target: "product" } } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :name } do %>
-        <%= f.text_field :name %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :name_override, label: "Name override" } do %>
-        <%= f.text_field :name_override, data: { variant_preview_target: "nameOverride" } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :sku, label: "SKU (leave blank to generate)" } do %>
-        <%= f.text_field :sku, maxlength: 50, data: { variant_preview_target: "skuManual", auto_generated: true, action: "input->variant-preview#markSkuManual" } %>
-      <% end %>
-      <div class="ss-field">
-        <span class="ss-label">SKU preview</span>
-        <p class="ss-hint"><span data-variant-preview-target="skuPreview"><%= product_variant.sku.presence || "—" %></span></p>
-        <p class="ss-hint">Source: product SKU + condition/attribute suffixes</p>
-      </div>
-      <div class="ss-field">
-        <span class="ss-label">Name preview</span>
-        <p class="ss-hint"><span data-variant-preview-target="namePreview"><%= product_variant.rendered_name %></span></p>
-        <p class="ss-hint">Name source: <span data-variant-preview-target="nameSourcePreview">Generated from product name and variant attributes</span></p>
-      </div>
-    </div>
-  <% end %>
+<% product = product_variant.product || products.find { |entry| entry.id == product_variant.product_id.to_i } %>
+<% lock_product = product.present? %>
+<% show_advanced = local_assigns.fetch(:show_advanced, false) %>
 
-  <%= render layout: "shared/forms/section", locals: { title: "Condition/Attributes" } do %>
-    <div class="ss-form-grid ss-form-grid--2">
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :condition_id, label: "Condition" } do %>
-        <%= f.collection_select :condition_id, conditions, :id, :name, { include_blank: true }, { data: { variant_preview_target: "condition" } } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :attribute1_value, label: "Attribute 1 value" } do %>
-        <%= f.text_field :attribute1_value, data: { variant_preview_target: "attr1Value" } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :attribute1_sku_component, label: "Attribute 1 SKU component" } do %>
-        <%= f.text_field :attribute1_sku_component, maxlength: 5, data: { variant_preview_target: "attr1Sku" } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :attribute2_value, label: "Attribute 2 value" } do %>
-        <%= f.text_field :attribute2_value, data: { variant_preview_target: "attr2Value" } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :attribute2_sku_component, label: "Attribute 2 SKU component" } do %>
-        <%= f.text_field :attribute2_sku_component, maxlength: 5, data: { variant_preview_target: "attr2Sku" } %>
-      <% end %>
-    </div>
+<% unless lock_product %>
+  <%= render layout: "shared/forms/section", locals: { title: "Product" } do %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :product_id, label: "Product", required: true } do %>
+      <%= f.collection_select :product_id, products, :id, :name %>
+    <% end %>
   <% end %>
+<% end %>
 
-  <%= render layout: "shared/forms/section", locals: { title: "Pricing & Category" } do %>
-    <div class="ss-form-grid ss-form-grid--2">
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :selling_price_cents, label: "Selling price (cents)" } do %>
-        <%= f.number_field :selling_price_cents, min: 0 %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :category_id, label: "Category", required: true } do %>
-        <%= f.collection_select :category_id, categories, :id, :name %>
-      <% end %>
-    </div>
-  <% end %>
-
-  <%= render layout: "shared/forms/section", locals: { title: "Display & Status" } do %>
-    <div class="ss-form-grid ss-form-grid--2">
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :inventory_behavior, label: "Inventory behavior" } do %>
-        <%= f.select :inventory_behavior, ProductVariant::INVENTORY_BEHAVIORS.map { |b| [humanize_controlled_value(b), b] } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :display_location_id, label: "Display location" } do %>
-        <%= f.collection_select :display_location_id, display_locations, :id, :name, include_blank: true %>
-      <% end %>
-    </div>
-    <%= render "shared/forms/checkbox", f: f, record: product_variant, field: :active %>
-  <% end %>
-</div>
+<% if product.present? %>
+  <%= render "items/shared/variant_forms/chooser",
+             f: f,
+             variant: product_variant,
+             product: product,
+             products: products,
+             categories: categories,
+             conditions: conditions,
+             display_locations: display_locations,
+             lock_product: lock_product,
+             show_product_select: false,
+             show_advanced: show_advanced %>
+<% end %>

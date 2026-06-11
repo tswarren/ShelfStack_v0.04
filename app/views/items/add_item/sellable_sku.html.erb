@@ -4,19 +4,16 @@
            description: "Product: #{@product.name} · SKU #{@product.sku}" %>
 
 <%= form_with model: @variant, url: items_add_item_path(step: "sellable_sku"), method: :post, class: "ss-form ss-form--wide" do |f| %>
-  <%= render "shared/forms/errors", record: @variant %>
-  <%= f.hidden_field :product_id, value: @product.id %>
-
-  <% case @product.variation_type %>
-  <% when "conditional" %>
-    <%= render "sellable_sku_conditional", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
-  <% when "variable" %>
-    <%= render "sellable_sku_variable", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
-  <% when "matrix" %>
-    <%= render "sellable_sku_matrix", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
-  <% else %>
-    <%= render "sellable_sku_standard", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
-  <% end %>
+  <%= render "items/shared/variant_forms/chooser",
+             f: f,
+             variant: @variant,
+             product: @product,
+             products: [@product],
+             categories: @categories,
+             conditions: @conditions,
+             display_locations: @display_locations,
+             lock_product: true,
+             show_advanced: false %>
 
   <footer class="ss-form-actions">
     <%= f.submit "Create SKU", class: "ss-btn" %>

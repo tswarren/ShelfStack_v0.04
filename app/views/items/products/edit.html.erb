@@ -1,12 +1,24 @@
 <%= render "shared/forms/page_header",
            eyebrow: "Items",
            title: "Edit Product",
-           description: "Update core product details, SKU configuration, and pricing defaults." %>
+           description: "Update selling setup for this item." %>
 
 <%= form_with model: [:items, @product], class: "ss-form ss-form--wide", html: { multipart: true } do |f| %>
-  <%= render "form", f: f, product: @product, catalog_items: @catalog_items, display_locations: @display_locations %>
+  <%= render "items/shared/return_to_item" %>
+  <% if @product.catalog_item.present? %>
+    <%= render "items/shared/product_forms/catalog_linked",
+               f: f,
+               product: @product,
+               catalog_item: @product.catalog_item,
+               display_locations: @display_locations %>
+  <% else %>
+    <%= render "items/shared/product_forms/non_catalog",
+               f: f,
+               product: @product,
+               display_locations: @display_locations %>
+  <% end %>
   <footer class="ss-form-actions">
     <%= f.submit "Update Product", class: "ss-btn" %>
-    <%= link_to "Cancel", items_product_path(@product), class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", item_flow_cancel_path(@product, tab: "selling"), class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>

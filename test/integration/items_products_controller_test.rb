@@ -54,6 +54,42 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     assert product.reload.cover_image.attached?
   end
 
+  test "update product with return_to item redirects to selling tab" do
+    product = create_product!
+
+    patch items_product_path(product, return_to: "item"), params: {
+      product: {
+        name_override: "Custom Override",
+        sku: product.sku,
+        product_type: product.product_type,
+        list_price_cents: 2499,
+        active: true
+      }
+    }
+
+    assert_redirected_to items_item_path(catalog_item_id: product.catalog_item_id, tab: "selling")
+    assert_equal 2499, product.reload.list_price_cents
+  end
+
+  test "catalog linked update ignores variation_type changes" do
+    product = create_product!(variation_type: "conditional")
+
+    patch items_product_path(product, return_to: "item"), params: {
+      product: {
+        sku: product.sku,
+        product_type: product.product_type,
+        variation_type: "matrix",
+        variant1_label: "Size",
+        variant2_label: "Color",
+        list_price_cents: product.list_price_cents,
+        active: true
+      }
+    }
+
+    assert_redirected_to items_item_path(catalog_item_id: product.catalog_item_id, tab: "selling")
+    assert_equal "conditional", product.reload.variation_type
+  end
+
   test "update product can remove cover image" do
     product = create_product!
     product.cover_image.attach(

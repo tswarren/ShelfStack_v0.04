@@ -114,4 +114,21 @@ module ItemsHelper
       tag.div(simple_format(text), class: "ss-item-description")
     end
   end
+
+  def item_flow?
+    params[:return_to].to_s == "item"
+  end
+
+  def item_flow_cancel_path(record, tab: nil, variant_id: nil)
+    Items::ReturnPath.for(
+      record: record,
+      return_to: params[:return_to].presence || "item",
+      tab: tab,
+      variant_id: variant_id
+    )
+  end
+
+  def item_flow_path_options
+    item_flow? ? { return_to: "item" } : {}
+  end
 end

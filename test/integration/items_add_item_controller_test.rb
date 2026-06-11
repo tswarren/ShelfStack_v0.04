@@ -207,8 +207,9 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     get items_add_item_path(step: "sellable_sku")
     assert_response :success
     assert_includes response.body, 'value="2000"'
-    assert_includes response.body, 'value="COND-001"'
+    assert_includes response.body, 'data-variant-preview-target="skuPreview">COND-001</span>'
     assert_includes response.body, 'data-controller="variant-preview"'
+    assert_not_includes response.body, 'name="product_variant[sku]" value="COND-001"'
   end
 
   test "non-catalog path does not require catalog item create permission" do

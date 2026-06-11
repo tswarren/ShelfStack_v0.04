@@ -4,9 +4,10 @@
            description: "Update metadata, classification, and catalog details for this item." %>
 
 <%= form_with model: [:items, @catalog_item], class: "ss-form ss-form--wide" do |f| %>
+  <%= render "items/shared/return_to_item" %>
   <%= render "form", f: f, catalog_item: @catalog_item, formats: @formats, include_identifier: false %>
   <footer class="ss-form-actions">
     <%= f.submit "Update Catalog Item", class: "ss-btn" %>
-    <%= link_to "Cancel", items_catalog_item_path(@catalog_item), class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", item_flow_cancel_path(@catalog_item, tab: "catalog"), class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>
