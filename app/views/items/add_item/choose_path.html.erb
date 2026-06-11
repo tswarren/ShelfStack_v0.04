@@ -1,0 +1,22 @@
+<h1>Add Item</h1>
+<p class="ss-muted">What kind of item are you adding?</p>
+
+<%= form_with url: items_add_item_path(step: "choose_path"), method: :post do %>
+  <fieldset class="ss-form-section">
+    <legend>Creation path</legend>
+    <div class="ss-form-check">
+      <%= radio_button_tag :workflow, "catalog_linked", @draft["workflow"] == "catalog_linked", id: "workflow_catalog_linked" %>
+      <%= label_tag "workflow_catalog_linked", "Catalog-linked item" %>
+      <p class="ss-hint">Books, media, gifts, and other items with bibliographic or catalog metadata.</p>
+    </div>
+    <div class="ss-form-check">
+      <%= radio_button_tag :workflow, "non_catalog", @draft["workflow"] == "non_catalog", id: "workflow_non_catalog" %>
+      <%= label_tag "workflow_non_catalog", "Non-catalog item" %>
+      <p class="ss-hint">Services, fees, donations, gift cards, and simple merchandise without catalog metadata.</p>
+    </div>
+  </fieldset>
+  <%= submit_tag "Continue", class: "ss-btn" %>
+<% end %>
+
+<p><%= link_to "Search for existing item", items_search_path %></p>
+<p><%= link_to "Cancel", items_root_path %></p>

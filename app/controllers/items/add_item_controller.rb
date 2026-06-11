@@ -2,22 +2,22 @@
 
 module Items
   class AddItemController < BaseController
-    STEPS = %w[identify type catalog_details selling_setup sellable_sku].freeze
+    STEPS = %w[choose_path item_details selling_setup sellable_sku].freeze
+    WORKFLOWS = %w[catalog_linked non_catalog].freeze
 
-    before_action -> { authorize!("items.catalog_items.create") }
     before_action :load_step
     before_action :load_draft
+    before_action :authorize_step!
 
     def new
       reset_draft!
-      redirect_to items_add_item_path(step: "identify")
+      redirect_to items_add_item_path(step: "choose_path")
     end
 
     def create
       case @step
-      when "identify" then handle_identify
-      when "type" then handle_type
-      when "catalog_details" then handle_catalog_details
+      when "choose_path" then handle_choose_path
+      when "item_details" then handle_item_details
       when "selling_setup" then handle_selling_setup
       when "sellable_sku" then handle_sellable_sku
       else
@@ -32,7 +32,7 @@ module Items
     private
 
     def load_step
-      @step = params[:step].presence || "identify"
+      @step = params[:step].presence || "choose_path"
       redirect_to items_root_path, alert: "Unknown wizard step." unless STEPS.include?(@step)
     end
 
@@ -49,137 +49,322 @@ module Items
       @draft = session[:add_item_draft]
     end
 
+    def authorize_step!
+      case @step
+      when "choose_path"
+        authorize!("items.access")
+      when "item_details"
+        authorize!("items.catalog_items.create")
+      when "selling_setup"
+        authorize!("items.products.create")
+      when "sellable_sku"
+        authorize!("items.product_variants.create")
+      end
+    end
+
+    def catalog_linked?
+      @draft["workflow"] == "catalog_linked"
+    end
+
+    def non_catalog?
+      @draft["workflow"] == "non_catalog"
+    end
+
     def render_step
       case @step
-      when "identify"
-        @query = params[:q].to_s.strip
-        @results = ItemSearch.call(query: @query) if @query.present?
-      when "type"
-        redirect_to items_add_item_path(step: "identify"), alert: "Identify an item first." if @draft["catalog_item_id"].blank? && @draft["new_item"].blank?
-      when "catalog_details"
+      when "choose_path"
+        # no setup
+      when "item_details"
+        ensure_catalog_linked_workflow! or return
         @catalog_item = find_or_build_catalog_item
         @formats = Format.active_records.order(:name)
       when "selling_setup"
-        @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
-        @product = Product.new(catalog_item: @catalog_item, active: true, product_type: "physical", variation_type: "standard")
-        load_product_collections
+        if params[:generate_sku].present?
+          save_draft!("generated_sku" => AddItem::ProductSkuGenerator.generate!)
+          redirect_to items_add_item_path(step: "selling_setup") and return
+        end
+        if catalog_linked?
+          ensure_catalog_item_in_draft! or return
+        else
+          ensure_non_catalog_workflow! or return
+        end
+        prepare_selling_setup_form
       when "sellable_sku"
+        ensure_product_in_draft! or return
         @product = Product.find(@draft["product_id"])
-        @variant = ProductVariant.new(product: @product, active: true, inventory_behavior: "standard_physical")
-        load_variant_collections
+        prepare_sellable_sku_form
       end
 
       render "items/add_item/#{@step}"
     end
 
-    def handle_identify
-      if params[:create_new].present?
-        save_draft!("new_item" => true, "query" => params[:q].to_s.strip)
-        redirect_to items_add_item_path(step: "type")
+    def handle_choose_path
+      workflow = params.require(:workflow)
+      unless WORKFLOWS.include?(workflow)
+        redirect_to items_add_item_path(step: "choose_path"), alert: "Choose a valid item type."
         return
       end
 
-      @query = params[:q].to_s.strip
-      @results = ItemSearch.call(query: @query) if @query.present?
-      @step = "identify"
-      render "items/add_item/identify"
+      save_draft!("workflow" => workflow)
+      if workflow == "catalog_linked"
+        redirect_to items_add_item_path(step: "item_details")
+      else
+        redirect_to items_add_item_path(step: "selling_setup")
+      end
     end
 
-    def handle_type
-      save_draft!("catalog_item_type" => params.require(:catalog_item_type))
-      redirect_to items_add_item_path(step: "catalog_details")
-    end
-
-    def handle_catalog_details
+    def handle_item_details
+      ensure_catalog_linked_workflow! or return
       @formats = Format.active_records.order(:name)
       @catalog_item = CatalogItem.new(catalog_item_params.merge(active: true, publication_status: "active"))
-      saved = false
 
-      CatalogItem.transaction do
-        raise ActiveRecord::Rollback unless @catalog_item.save
+      saved = save_catalog_item!(@catalog_item)
+      return unless saved
 
-        if identifier_value_param.present?
-          CatalogIdentifierService.add_identifier!(
-            catalog_item: @catalog_item,
-            identifier_type: identifier_type_param,
-            value: identifier_value_param,
-            primary: true,
-            actor: current_user
-          )
-        else
-          CatalogIdentifierService.generate_local!(catalog_item: @catalog_item, actor: current_user)
-        end
+      record_audit!("catalog_item.created", @catalog_item)
+      save_draft!("catalog_item_id" => @catalog_item.id)
 
-        saved = @catalog_item.reload.primary_identifier.present?
-        raise ActiveRecord::Rollback unless saved
-      end
-
-      if saved
-        record_audit!("catalog_item.created", @catalog_item)
-        save_draft!("catalog_item_id" => @catalog_item.id)
-        redirect_to items_add_item_path(step: "selling_setup")
+      if done_commit?
+        reset_draft!
+        redirect_to ItemPresenter.from_catalog_item(@catalog_item).show_path,
+                    notice: "Item details saved. Status: Catalog Only."
       else
-        @step = "catalog_details"
-        render "items/add_item/catalog_details", status: :unprocessable_entity
+        redirect_to items_add_item_path(step: "selling_setup")
       end
     rescue CatalogIdentifierService::IdentifierError => e
       @catalog_item.errors.add(:base, e.message)
-      @step = "catalog_details"
-      render "items/add_item/catalog_details", status: :unprocessable_entity
+      @step = "item_details"
+      render "items/add_item/item_details", status: :unprocessable_entity
     end
 
     def handle_selling_setup
-      @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
-      @product = Product.new(product_params.merge(catalog_item: @catalog_item, active: true, product_type: "physical", variation_type: "standard"))
+      if params[:generate_sku].present?
+        ensure_non_catalog_workflow! or return
+        save_draft!("generated_sku" => AddItem::ProductSkuGenerator.generate!)
+        redirect_to items_add_item_path(step: "selling_setup")
+        return
+      end
+
+      if catalog_linked?
+        ensure_catalog_item_in_draft! or return
+      else
+        ensure_non_catalog_workflow! or return
+      end
+
+      @product = build_product_from_params
       load_product_collections
+      @catalog_item = @product.catalog_item if catalog_linked?
 
       if @product.save
         record_audit!("product.created", @product)
-        save_draft!("product_id" => @product.id)
-        redirect_to items_add_item_path(step: "sellable_sku")
+        save_draft!(
+          "product_id" => @product.id,
+          "initial_category_id" => initial_category_id_param
+        )
+
+        if done_commit?
+          reset_draft!
+          redirect_to ItemPresenter.from_product(@product).show_path,
+                      notice: "Selling setup saved. Add a sellable SKU when ready."
+        else
+          redirect_to items_add_item_path(step: "sellable_sku")
+        end
       else
         @step = "selling_setup"
+        load_product_collections
+        @catalog_item = @product.catalog_item if catalog_linked?
         render "items/add_item/selling_setup", status: :unprocessable_entity
       end
     end
 
     def handle_sellable_sku
+      ensure_product_in_draft!
       @product = Product.find(@draft["product_id"])
-      @variant = ProductVariant.new(product_variant_params.merge(product: @product, active: true, inventory_behavior: "standard_physical"))
-      load_variant_collections
+      inventory_behavior = AddItem::InventoryBehaviorMapper.for_product_type(@product.product_type)
+      @variant = ProductVariant.new(
+        product_variant_params.merge(
+          product: @product,
+          active: true,
+          inventory_behavior: inventory_behavior
+        )
+      )
+      prepare_sellable_sku_form
 
       if @variant.save
         record_audit!("product_variant.created", @variant, details: { "sku" => @variant.sku })
-        reset_draft!
-        redirect_to ItemPresenter.from_product(@product).show_path, notice: "Item added successfully."
+
+        if add_another_commit?
+          redirect_to items_add_item_path(step: "sellable_sku"),
+                      notice: "Sellable SKU created. Add another or cancel to finish."
+        else
+          reset_draft!
+          redirect_to ItemPresenter.from_product(@product).show_path, notice: "Item added successfully."
+        end
       else
         @step = "sellable_sku"
         render "items/add_item/sellable_sku", status: :unprocessable_entity
       end
     end
 
-    def find_or_build_catalog_item
-      if @draft["catalog_item_id"].present?
-        CatalogItem.find(@draft["catalog_item_id"])
-      else
-        CatalogItem.new(
-          catalog_item_type: @draft["catalog_item_type"] || "book",
+    def save_catalog_item!(catalog_item)
+      saved = false
+      CatalogItem.transaction do
+        raise ActiveRecord::Rollback unless catalog_item.save
+
+        if identifier_value_param.present?
+          CatalogIdentifierService.add_identifier!(
+            catalog_item: catalog_item,
+            identifier_type: identifier_type_param,
+            value: identifier_value_param,
+            primary: true,
+            actor: current_user
+          )
+        else
+          CatalogIdentifierService.generate_local!(catalog_item: catalog_item, actor: current_user)
+        end
+
+        saved = catalog_item.reload.primary_identifier.present?
+        raise ActiveRecord::Rollback unless saved
+      end
+
+      unless saved
+        @step = "item_details"
+        render "items/add_item/item_details", status: :unprocessable_entity
+      end
+
+      saved
+    end
+
+    def prepare_selling_setup_form
+      load_product_collections
+
+      if catalog_linked?
+        ensure_catalog_item_in_draft!
+        @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
+        @product = Product.new(
+          catalog_item: @catalog_item,
           active: true,
-          publication_status: "active"
+          product_type: "physical",
+          variation_type: "conditional",
+          name: ProductNameRenderer.product_name(Product.new(catalog_item: @catalog_item)),
+          sku: @catalog_item.primary_identifier&.normalized_identifier,
+          list_price_cents: 0
+        )
+      else
+        ensure_non_catalog_workflow!
+        @catalog_item = nil
+        @product = Product.new(
+          active: true,
+          product_type: "physical",
+          variation_type: "standard",
+          sku: @draft["generated_sku"],
+          list_price_cents: 0
         )
       end
     end
 
+    def build_product_from_params
+      attrs = product_params.to_h.symbolize_keys
+      attrs[:active] = true
+
+      if catalog_linked?
+        @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
+        attrs[:catalog_item] = @catalog_item
+        attrs[:variation_type] = "conditional"
+        attrs.delete(:name)
+      else
+        attrs[:variation_type] = resolved_variation_type(attrs[:product_type], attrs[:variation_type])
+        attrs.delete(:name_override)
+      end
+
+      Product.new(attrs)
+    end
+
+    def resolved_variation_type(product_type, variation_type)
+      return "standard" if product_type.in?(%w[service financial non_inventory])
+
+      variation_type.presence || "standard"
+    end
+
+    def prepare_sellable_sku_form
+      load_variant_collections
+      @variant ||= ProductVariant.new(product: @product, active: true)
+      condition = @variant.condition || default_condition
+      @variant.condition_id ||= condition&.id
+      @variant.condition ||= condition
+      @variant.category_id ||= @draft["initial_category_id"].presence || @categories.first&.id
+      @variant.inventory_behavior ||= AddItem::InventoryBehaviorMapper.for_product_type(@product.product_type)
+      apply_variant_defaults! unless sellable_sku_params_submitted?
+    end
+
+    def sellable_sku_params_submitted?
+      params[:product_variant].present?
+    end
+
+    def apply_variant_defaults!
+      condition = @variant.condition || default_condition
+      if @variant.selling_price_cents.to_i.zero?
+        @variant.selling_price_cents = AddItem::DefaultSellingPrice.cents(product: @product, condition: condition)
+      end
+      if @variant.sku.blank?
+        @variant.sku = SkuGenerator.preview_variant_sku(
+          product: @product,
+          condition: condition,
+          attribute1_sku_component: @variant.attribute1_sku_component,
+          attribute2_sku_component: @variant.attribute2_sku_component
+        )
+      end
+    end
+
+    def default_condition
+      ProductCondition.active_records.find_by(new_condition: true) ||
+        ProductCondition.active_records.order(:sort_order).first
+    end
+
+    def find_or_build_catalog_item
+      if @draft["catalog_item_id"].present?
+        CatalogItem.find(@draft["catalog_item_id"])
+      else
+        CatalogItem.new(active: true, publication_status: "active", catalog_item_type: "book")
+      end
+    end
+
+    def ensure_catalog_linked_workflow!
+      return true if catalog_linked?
+
+      redirect_to items_add_item_path(step: "choose_path"), alert: "Choose catalog-linked item to continue."
+      false
+    end
+
+    def ensure_non_catalog_workflow!
+      return true if non_catalog?
+
+      redirect_to items_add_item_path(step: "choose_path"), alert: "Choose non-catalog item to continue."
+      false
+    end
+
+    def ensure_catalog_item_in_draft!
+      return true if @draft["catalog_item_id"].present?
+
+      redirect_to items_add_item_path(step: "item_details"), alert: "Complete item details first."
+      false
+    end
+
+    def ensure_product_in_draft!
+      return true if @draft["product_id"].present?
+
+      redirect_to items_add_item_path(step: "selling_setup"), alert: "Complete selling setup first."
+      false
+    end
+
     def load_product_collections
+      @categories = Category.active_records.includes(:department).order("departments.department_number", :name)
       @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
     end
 
     def load_variant_collections
-      @categories = Category.active_records.includes(:department).order("departments.department_number", :name)
+      load_product_collections
       @conditions = ProductCondition.active_records.order(:sort_order, :name)
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
-      @variant.condition ||= ProductCondition.find_by(condition_key: "new")
-      @variant.category ||= @categories.first
     end
 
     def catalog_item_params
@@ -193,13 +378,22 @@ module Items
     end
 
     def product_params
-      params.require(:product).permit(:name, :sku, :list_price_cents, :default_display_location_id)
+      params.require(:product).permit(
+        :name, :name_override, :sku, :product_type, :variation_type, :list_price_cents,
+        :default_display_location_id, :variant1_label, :variant2_label
+      )
     end
 
     def product_variant_params
       params.require(:product_variant).permit(
-        :condition_id, :category_id, :selling_price_cents, :display_location_id, :sku
+        :condition_id, :category_id, :selling_price_cents, :display_location_id, :sku,
+        :name_override, :attribute1_value, :attribute1_sku_component,
+        :attribute2_value, :attribute2_sku_component
       )
+    end
+
+    def initial_category_id_param
+      params.dig(:product, :initial_category_id).presence
     end
 
     def identifier_type_param
@@ -208,6 +402,14 @@ module Items
 
     def identifier_value_param
       params.dig(:catalog_item, :initial_identifier_value).to_s.strip
+    end
+
+    def done_commit?
+      params[:commit].to_s.casecmp("done").zero?
+    end
+
+    def add_another_commit?
+      params[:commit].to_s.include?("Add Another")
     end
   end
 end

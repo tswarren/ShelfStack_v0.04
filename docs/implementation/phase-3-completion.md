@@ -115,7 +115,18 @@ Aligned with [ui-ux-concept.md](../specifications/ui-ux-concept.md):
 | Item Details CRUD | `/items/catalog_items` | User-facing label: Item Details |
 | Selling Setup CRUD | `/items/products` | User-facing label: Selling Setup |
 | Sellable SKUs CRUD | `/items/product_variants` | User-facing label: Sellable SKUs |
-| Add Item wizard | `/items/add_item/new` | 5-step flow; completion redirects to unified detail |
+| Add Item wizard | `/items/add_item/new` | Two-path flow: Catalog-linked or Non-catalog; optional search link on path choice |
+
+#### Add Item workflows (refined)
+
+Two user-facing paths:
+
+| Path | Steps | Partial completion |
+| ---- | ----- | ------------------ |
+| **Catalog-linked item** | Item Details → Selling Setup → Sellable SKU | Done after Item Details → **Catalog Only** |
+| **Non-catalog item** | Selling Setup → Sellable SKU | Done after Selling Setup → **Product Created** |
+
+Services: `AddItem::InventoryBehaviorMapper`, `AddItem::DefaultSellingPrice`, `AddItem::ProductSkuGenerator`.
 
 Legacy `/catalog/*` and `/products/*` URLs redirect to `/items/*`. Legacy catalog/products controllers and views were removed; only redirect routes remain.
 

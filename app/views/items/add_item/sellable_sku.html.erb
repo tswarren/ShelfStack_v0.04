@@ -1,20 +1,28 @@
-<h1>Add Item — Step 5: Default Sellable SKU</h1>
+<h1>Create Sellable SKU</h1>
+<p class="ss-muted">Product: <strong><%= @product.name %></strong> · SKU <%= @product.sku %></p>
 
 <%= form_with model: @variant, url: items_add_item_path(step: "sellable_sku"), method: :post do |f| %>
   <% if @variant.errors.any? %>
     <div class="flash flash-alert"><%= @variant.errors.full_messages.to_sentence %></div>
   <% end %>
   <%= f.hidden_field :product_id, value: @product.id %>
-  <%= f.label :category_id, "Category" %>
-  <%= f.collection_select :category_id, @categories, :id, :name, selected: @variant.category_id %>
-  <%= f.label :condition_id, "Condition" %>
-  <%= f.collection_select :condition_id, @conditions, :id, :name, selected: @variant.condition_id %>
-  <%= f.label :selling_price_cents, "Selling price (cents)" %>
-  <%= f.number_field :selling_price_cents, min: 0, value: @variant.selling_price_cents || @product.list_price_cents %>
-  <%= f.label :display_location_id, "Display location" %>
-  <%= f.collection_select :display_location_id, @display_locations, :id, :name, include_blank: true %>
-  <p class="ss-hint">SKU preview: <%= variant_sku_preview(@product, condition: @variant.condition) %></p>
-  <%= f.submit "Finish", class: "ss-btn" %>
+
+  <% case @product.variation_type %>
+  <% when "conditional" %>
+    <%= render "sellable_sku_conditional", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
+  <% when "variable" %>
+    <%= render "sellable_sku_variable", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
+  <% when "matrix" %>
+    <%= render "sellable_sku_matrix", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
+  <% else %>
+    <%= render "sellable_sku_standard", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
+  <% end %>
+
+  <div class="ss-catalog-actions">
+    <%= f.submit "Create SKU", class: "ss-btn" %>
+    <%= f.submit "Create SKU and Add Another", class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", Items::ItemPresenter.from_product(@product).show_path, class: "ss-btn ss-btn-secondary" %>
+  </div>
 <% end %>
 
 <p><%= link_to "Back", items_add_item_path(step: "selling_setup") %></p>

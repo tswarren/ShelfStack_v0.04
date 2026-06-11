@@ -1,0 +1,32 @@
+<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post do |f| %>
+  <% if product.errors.any? %>
+    <div class="flash flash-alert"><%= product.errors.full_messages.to_sentence %></div>
+  <% end %>
+  <%= f.hidden_field :variation_type, value: "conditional" %>
+
+  <fieldset class="ss-form-section">
+    <legend>Selling Setup</legend>
+    <p class="ss-hint">Generated name: <strong><%= ProductNameRenderer.product_name(product) %></strong></p>
+    <%= f.label :name_override, "Name override (optional)" %>
+    <%= f.text_field :name_override %>
+    <%= f.label :sku, "SKU" %>
+    <%= f.text_field :sku, value: product.sku.presence || catalog_item.primary_identifier&.normalized_identifier %>
+    <p class="ss-hint">Prefilled from catalog primary identifier.</p>
+    <%= f.label :product_type, "Product type" %>
+    <%= f.select :product_type, %w[physical digital].map { |t| [humanize_controlled_value(t), t] }, selected: product.product_type || "physical" %>
+    <%= f.label :list_price_cents, "List price (cents)" %>
+    <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
+    <%= label_tag "product[initial_category_id]", "Initial SKU category" %>
+    <%= select_tag "product[initial_category_id]",
+          options_from_collection_for_select(categories, :id, :name, @draft["initial_category_id"]),
+          include_blank: false %>
+    <p class="ss-hint">Variation type defaults to conditional for catalog-linked items (hidden in this workflow).</p>
+  </fieldset>
+
+  <div class="ss-catalog-actions">
+    <%= f.submit "Continue to Sellable SKU", class: "ss-btn" %>
+    <%= link_to "Cancel", items_item_path(catalog_item_id: catalog_item.id), class: "ss-btn ss-btn-secondary" %>
+  </div>
+<% end %>
+
+<p><%= link_to "Back", items_add_item_path(step: "item_details") %></p>

@@ -289,171 +289,139 @@ Item Setup
 
 ---
 
-# 7. Add Item Workflow
+# 7. Add Item Workflows
 
-The Add Item workflow should guide the user through item setup without requiring them to understand the database model.
+The Add Item workflow guides users through item setup without exposing the database model. ShelfStack supports two creation paths:
 
-## Step 1: Identify the Item
+1. **Catalog-linked item** — for books, media, gifts, and other metadata-heavy items. Creates `catalog_item` → `product` → `product_variant`.
+2. **Non-catalog item** — for services, fees, donations, gift cards, and simple merchandise. Creates `product` → `product_variant`.
+
+Internally the layers remain catalog details, selling setup, and sellable SKUs. User-facing labels use **Item Details**, **Selling Setup**, and **Sellable SKU**.
+
+Before choosing a path, users may optionally **search for an existing item** to avoid duplicates.
+
+---
+
+## Choose creation path
 
 Prompt:
 
 ```text
-Scan or enter ISBN, UPC, EAN, GTIN, publisher number, SKU, or local identifier.
+What kind of item are you adding?
 ```
 
-System behavior:
-
-1. Search catalog item identifiers.
-2. Search product SKUs.
-3. Search product variant SKUs.
-4. If a match exists, show the existing item.
-5. If no match exists, offer to create a new item.
-6. If the user has no manufacturer/vendor identifier, allow local identifier generation.
-
-The result should make clear whether the item already has:
-
-```text
-Catalog details
-Store product
-Sellable SKUs
-```
+| Option | Use when | Result |
+| ------ | -------- | ------ |
+| **Catalog-linked item** | Bibliographic or catalog metadata is needed | `catalog_item` → `product` → `product_variant` |
+| **Non-catalog item** | No catalog metadata needed | `product` → `product_variant` |
 
 ---
 
-## Step 2: Choose Item Type
+## Catalog-linked item workflow
 
-Prompt:
+### Step 1: Item Details
 
-```text
-What kind of item is this?
-```
+User-facing screen: **Add Catalog-Linked Item — Item Details**
 
-Allowed catalog item types:
+The first field is **Item Type**. After selection, the form shows metadata fields appropriate to that type (book, calendar, periodical, recorded music, sideline, videorecording, audiobook, ebook, map, game, gift, other).
 
-```text
-Book
-Calendar
-Periodical
-Recorded Music
-Sideline
-Videorecording
-Audiobook
-eBook
-Map
-Game
-Gift
-Other
-```
+Requirements:
 
-The selected type controls which fields are shown or emphasized.
+- At least one identifier (external or locally generated).
+- ISBN-10 saves as non-primary; ISBN-13 becomes primary.
+- Inline identifier validation warnings.
+- Creator and subject fields support semicolon-separated entry with parsed preview.
 
-It should not make the database rigid. If an unusual item needs a normally hidden field, the system should allow it where practical.
+| Action | Behavior |
+| ------ | -------- |
+| **Create Selling Setup** | Saves catalog item and proceeds to selling setup |
+| **Done** | Saves catalog item; item overview shows status **Catalog Only** |
+| **Cancel** | Returns to Items home |
 
----
+### Step 2: Selling Setup
 
-## Step 3: Enter Catalog Details
+User-facing screen: **Create Selling Setup**
 
-The catalog section answers:
+When reached from a catalog item:
 
-```text
-What is this item?
-```
+- Product is linked to the catalog item automatically.
+- Catalog title shown near optional name override.
+- SKU prefilled from primary identifier.
+- Product type limited to `physical` or `digital` (default `physical`).
+- Variation type **defaults to `conditional`** and is hidden in this simplified workflow (workflow simplification, not a permanent domain rule).
+- **Initial SKU category** prefills the first sellable SKU.
 
-For a book, show fields such as:
+| Action | Behavior |
+| ------ | -------- |
+| **Continue to Sellable SKU** | Creates product and proceeds |
+| **Cancel** | Returns to catalog item overview |
 
-```text
-Title
-Creators
-Publisher
-Format
-Publication date/status
-Edition statement
-Language
-Page count
-Large print
-Subjects
-Description
-```
+### Step 3: Sellable SKU
 
-For a sideline or gift item, show fields such as:
+User-facing screen: **Create Sellable SKU**
 
-```text
-Title/name
-Publisher/vendor/brand
-Format
-Dimensions
-Weight
-Themes
-Target audience
-Description
-```
+For catalog-linked products in this workflow, the first variant is condition-based:
 
-The user should not need to think, “I am creating a catalog item.” The screen should simply ask for item details.
+- Inventory behavior derived from product type (`physical` → `standard_physical`, `digital` → `digital_asset`).
+- Condition defaults to New.
+- Selling price defaults to `list_price_cents × condition.default_list_price_factor_bps / 10000`.
+- SKU and name previews shown; New condition uses product SKU/name without suffix.
+
+| Action | Behavior |
+| ------ | -------- |
+| **Create SKU** | Creates variant; returns to item overview (**Sellable**) |
+| **Create SKU and Add Another** | Creates variant; stays on sellable SKU step for another variant |
+| **Cancel** | Returns to item overview |
 
 ---
 
-## Step 4: Create Store Product
+## Non-catalog item workflow
 
-The product section answers:
+### Step 1: Selling Setup
 
-```text
-How does the store recognize and sell this item?
-```
+User-facing screen: **Add Non-Catalog Item**
 
-For catalog-linked products, default:
+Skips catalog item creation. Fields include SKU (manual or **Generate SKU**), product name, product type, list price, initial SKU category, and variation type when applicable.
 
-| Field          | Default                         |
-| -------------- | ------------------------------- |
-| Product name   | Catalog item title              |
-| Product SKU    | Catalog item primary identifier |
-| Product type   | Based on item type/format       |
-| Variation type | Standard                        |
-| List price     | User-entered or imported value  |
+Variation type rules:
 
-For non-catalog products:
+| Product type | Variation type |
+| ------------ | -------------- |
+| `service`, `financial` | Forced to `standard` (hidden) |
+| `non_inventory` | Defaults to `standard` (hidden in simplified workflow) |
+| `physical` | User may choose `standard`, `conditional`, `variable`, or `matrix` |
+| `digital` | User may choose `standard`, `conditional`, or `variable` |
 
-| Field          | Behavior                         |
-| -------------- | -------------------------------- |
-| Product name   | User-entered                     |
-| Product SKU    | User-entered or system-generated |
-| Product type   | User-selected                    |
-| Variation type | User-selected                    |
+Show `variant1_label` when variation type is `variable` or `matrix`. Show `variant2_label` when variation type is `matrix`.
+
+| Action | Behavior |
+| ------ | -------- |
+| **Add Sellable SKU** | Creates product and proceeds |
+| **Done** | Creates product only; overview shows **Product Created** / **No Active Variant** |
+| **Cancel** | Returns to Items home |
+
+### Step 2: Sellable SKU
+
+Displayed fields depend on `variation_type`:
+
+- **Standard** — name override, SKU (= product SKU), selling price, category, display location.
+- **Conditional** — condition, SKU/name previews, selling price from condition factor.
+- **Variable** — attribute 1 value and SKU component, previews.
+- **Matrix** — attribute 1 and 2 values and components, previews.
+
+Completion returns to item overview.
 
 ---
 
-## Step 5: Create Sellable SKU
+## Partial completion statuses
 
-The sellable SKU section answers:
+| User stops after | Lifecycle status |
+| ---------------- | ---------------- |
+| Catalog item only | Catalog Only |
+| Product only | Product Created / No Active Variant |
+| Product + variant | Sellable |
 
-```text
-What exactly can be sold, ordered, received, or tracked?
-```
-
-For a simple item, ShelfStack should automatically create the default New variant:
-
-| Field              | Default                      |
-| ------------------ | ---------------------------- |
-| Condition          | New                          |
-| Variant SKU        | Product SKU                  |
-| Variant name       | Product name                 |
-| Category           | User-selected or defaulted   |
-| Selling price      | Based on list price/defaults |
-| Inventory behavior | Based on product type        |
-
-Example:
-
-| Layer            | Value           |
-| ---------------- | --------------- |
-| Catalog title    | `The Hobbit`    |
-| Product SKU      | `9780123456789` |
-| New variant SKU  | `9780123456789` |
-| New variant name | `The Hobbit`    |
-
-The UI should explain:
-
-```text
-ShelfStack created the default sellable SKU for this item.
-```
+Advanced fields (variation type override, inventory behavior, pricing model) remain available on full Selling Setup and Sellable SKU edit screens.
 
 ---
 

@@ -1,17 +1,8 @@
-<h1>Add Item — Step 4: Selling Setup</h1>
-
-<%= form_with model: @product, url: items_add_item_path(step: "selling_setup"), method: :post do |f| %>
-  <% if @product.errors.any? %>
-    <div class="flash flash-alert"><%= @product.errors.full_messages.to_sentence %></div>
-  <% end %>
-  <%= f.hidden_field :catalog_item_id, value: @catalog_item.id %>
-  <%= f.label :name %><%= f.text_field :name, value: @product.name.presence || ProductNameRenderer.product_name(@product) %>
-  <%= f.label :sku, "SKU (leave blank for catalog default)" %><%= f.text_field :sku %>
-  <p class="ss-hint">Source: catalog primary identifier (<%= @catalog_item.primary_identifier&.normalized_identifier %>)</p>
-  <%= f.label :list_price_cents, "List price (cents)" %><%= f.number_field :list_price_cents, min: 0, value: @product.list_price_cents || 0 %>
-  <%= f.label :default_display_location_id, "Default display location" %>
-  <%= f.collection_select :default_display_location_id, @display_locations, :id, :name, include_blank: true %>
-  <%= f.submit "Continue", class: "ss-btn" %>
+<% if @catalog_item %>
+  <h1>Create Selling Setup</h1>
+  <p class="ss-muted">Catalog item: <strong><%= @catalog_item.title %></strong></p>
+  <%= render "catalog_selling_setup", product: @product, catalog_item: @catalog_item, categories: @categories, display_locations: @display_locations %>
+<% else %>
+  <h1>Add Non-Catalog Item</h1>
+  <%= render "non_catalog_selling_setup", product: @product, categories: @categories, generated_sku: @draft["generated_sku"] %>
 <% end %>
-
-<p><%= link_to "Back", items_add_item_path(step: "catalog_details") %></p>

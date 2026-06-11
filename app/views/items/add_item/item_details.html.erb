@@ -1,0 +1,17 @@
+<h1>Add Catalog-Linked Item — Item Details</h1>
+
+<%= form_with url: items_add_item_path(step: "item_details"), method: :post do %>
+  <%= fields_for :catalog_item, @catalog_item do |f| %>
+    <%= render "items/catalog_items/form",
+          f: f,
+          catalog_item: @catalog_item,
+          formats: @formats,
+          include_identifier: true %>
+  <% end %>
+  <div class="ss-catalog-actions">
+    <%= submit_tag "Create Selling Setup", class: "ss-btn" %>
+    <%= submit_tag "Done", name: "commit", class: "ss-btn ss-btn-secondary" %>
+  </div>
+<% end %>
+
+<p><%= link_to "Cancel", items_root_path %></p>

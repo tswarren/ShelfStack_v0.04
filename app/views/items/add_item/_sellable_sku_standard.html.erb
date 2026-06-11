@@ -1,0 +1,14 @@
+<fieldset class="ss-form-section">
+  <legend>Sellable SKU</legend>
+  <%= f.label :name_override, "Name override (optional)" %>
+  <%= f.text_field :name_override %>
+  <p class="ss-hint">Generated name: <%= product.name %></p>
+  <%= f.label :sku, "SKU" %>
+  <%= f.text_field :sku, value: variant.sku.presence || product.sku %>
+  <%= f.label :selling_price_cents, "Selling price (cents)" %>
+  <%= f.number_field :selling_price_cents, min: 0, value: variant.selling_price_cents, data: { preview_target: "variant-selling-price", auto_generated: true } %>
+  <%= f.label :category_id, "Category" %>
+  <%= f.collection_select :category_id, categories, :id, :name, selected: variant.category_id %>
+  <%= f.label :display_location_id, "Display location" %>
+  <%= f.collection_select :display_location_id, display_locations, :id, :name, include_blank: true %>
+</fieldset>
