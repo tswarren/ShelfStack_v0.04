@@ -1,0 +1,16 @@
+<h1>Product Variants <%= link_to "New", new_items_product_variant_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Product</th><th>Name</th><th>SKU</th><th>Price</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @product_variants.each do |variant| %>
+      <tr>
+        <td><%= variant.product.name %></td>
+        <td><%= variant.name %></td>
+        <td><%= variant.sku %></td>
+        <td><%= format_cents(variant.selling_price_cents) %></td>
+        <td><span class="<%= status_class(variant.active?) %>"><%= status_label(variant.active?) %></span></td>
+        <td><%= link_to "View", items_product_variant_path(variant) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

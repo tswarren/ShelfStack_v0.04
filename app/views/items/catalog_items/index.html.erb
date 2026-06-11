@@ -1,0 +1,16 @@
+<h1>Catalog Items <%= link_to "New", new_items_catalog_item_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Title</th><th>Type</th><th>Format</th><th>Primary ID</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @catalog_items.each do |item| %>
+      <tr>
+        <td><%= item.title %></td>
+        <td><%= humanize_controlled_value(item.catalog_item_type) %></td>
+        <td><%= item.format.short_name %></td>
+        <td><%= item.primary_identifier&.normalized_identifier || "—" %></td>
+        <td><span class="<%= status_class(item.active?) %>"><%= status_label(item.active?) %></span></td>
+        <td><%= link_to "View", items_catalog_item_path(item) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -1,0 +1,12 @@
+<% if display_location.errors.any? %>
+  <div class="flash flash-alert"><%= display_location.errors.full_messages.to_sentence %></div>
+<% end %>
+<fieldset class="ss-form-section">
+  <legend>Display Location</legend>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
+  <%= f.label :parent_id, "Parent location" %>
+  <%= f.collection_select :parent_id, parents, :id, :name, include_blank: true %>
+  <%= f.label :sort_order %><%= f.number_field :sort_order %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>

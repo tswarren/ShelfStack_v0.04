@@ -1,0 +1,34 @@
+<%= render "items/shared/breadcrumbs", item: @item, variant: @highlight_variant %>
+
+<% unless @tab == "overview" %>
+  <h1><%= @item.title %></h1>
+<% end %>
+
+<nav class="ss-tabs ss-item-tabs">
+  <% Items::ItemsController::VALID_TABS.each do |tab| %>
+    <%= link_to tab.titleize, @item.tab_path(tab), class: (@tab == tab ? "active" : nil) %>
+  <% end %>
+</nav>
+
+<div class="ss-tab-content">
+  <% case @tab %>
+  <% when "overview" %>
+    <%= render "items/items/overview", item: @item, statuses: @statuses, variant: @highlight_variant %>
+  <% when "catalog" %>
+    <%= render "items/items/catalog", item: @item, identifiers: @identifiers %>
+  <% when "selling" %>
+    <%= render "items/items/selling", item: @item, variants: @variants %>
+  <% when "display" %>
+    <%= render "items/items/display", item: @item %>
+  <% when "activity" %>
+    <%= render "shared/audit_timeline", audit_events: @audit_events %>
+  <% end %>
+</div>
+
+<% unless @tab.in?(%w[overview catalog selling]) %>
+  <div class="ss-context-actions">
+    <% @item.context_actions.each do |action| %>
+      <%= link_to action[:label], action[:url], class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,20 @@
+<h1>Add Item — Step 5: Default Sellable SKU</h1>
+
+<%= form_with model: @variant, url: items_add_item_path(step: "sellable_sku"), method: :post do |f| %>
+  <% if @variant.errors.any? %>
+    <div class="flash flash-alert"><%= @variant.errors.full_messages.to_sentence %></div>
+  <% end %>
+  <%= f.hidden_field :product_id, value: @product.id %>
+  <%= f.label :category_id, "Category" %>
+  <%= f.collection_select :category_id, @categories, :id, :name, selected: @variant.category_id %>
+  <%= f.label :condition_id, "Condition" %>
+  <%= f.collection_select :condition_id, @conditions, :id, :name, selected: @variant.condition_id %>
+  <%= f.label :selling_price_cents, "Selling price (cents)" %>
+  <%= f.number_field :selling_price_cents, min: 0, value: @variant.selling_price_cents || @product.list_price_cents %>
+  <%= f.label :display_location_id, "Display location" %>
+  <%= f.collection_select :display_location_id, @display_locations, :id, :name, include_blank: true %>
+  <p class="ss-hint">SKU preview: <%= variant_sku_preview(@product, condition: @variant.condition) %></p>
+  <%= f.submit "Finish", class: "ss-btn" %>
+<% end %>
+
+<p><%= link_to "Back", items_add_item_path(step: "selling_setup") %></p>

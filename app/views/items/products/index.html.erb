@@ -1,0 +1,17 @@
+<h1>Products <%= link_to "New", new_items_product_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Cover</th><th>Name</th><th>SKU</th><th>Type</th><th>Sellable</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @products.each do |product| %>
+      <tr>
+        <td class="ss-table-cover"><%= item_cover_thumbnail(Items::ItemPresenter.from_product(product), size: :index) %></td>
+        <td><%= product.name %></td>
+        <td><%= product.sku %></td>
+        <td><%= humanize_controlled_value(product.product_type) %></td>
+        <td><%= product.sellable? ? "Yes" : "No" %></td>
+        <td><span class="<%= status_class(product.active?) %>"><%= status_label(product.active?) %></span></td>
+        <td><%= link_to "View", items_product_path(product) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

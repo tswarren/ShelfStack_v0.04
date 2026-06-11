@@ -88,6 +88,8 @@ categories
 
 Phase 3 introduces catalog and sellable-item foundation tables.
 
+**Implemented** in `db/migrate/20250612120000_create_phase3_catalog_products_variants.rb`. See [implementation/phase-3-completion.md](implementation/phase-3-completion.md).
+
 ```text
 formats
 catalog_items

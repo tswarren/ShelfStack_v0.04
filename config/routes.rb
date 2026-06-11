@@ -17,6 +17,61 @@ Rails.application.routes.draw do
 
   root "dashboard#show"
 
+  namespace :items do
+    root to: "home#show"
+    get "locked_out", to: "home#locked_out"
+    get "search", to: "search#index"
+    get "item", to: "items#show", as: :item
+
+    get "add_item", to: "add_item#show", as: :add_item
+    post "add_item", to: "add_item#create"
+    get "add_item/new", to: "add_item#new", as: :new_add_item
+
+    resources :catalog_items do
+      member do
+        patch :inactivate
+        patch :reactivate
+        post :add_identifier
+        get :new_identifier
+        post :generate_local_identifier
+        patch :set_primary_identifier
+        get :edit_identifier
+        patch :update_identifier
+        delete :destroy_identifier
+      end
+    end
+    resources :products do
+      member do
+        patch :inactivate
+        patch :reactivate
+        patch :regenerate_name
+      end
+    end
+    resources :product_variants do
+      member do
+        patch :inactivate
+        patch :reactivate
+        patch :regenerate_name
+      end
+    end
+  end
+
+  # Legacy redirects
+  get "/catalog", to: redirect("/items")
+  get "/catalog/*path", to: redirect { |params, _req| "/items/#{params[:path]}" }
+  get "/products", to: redirect("/items")
+  get "/products/*path", to: redirect { |params, _req| "/items/#{params[:path]}" }
+
+  namespace :catalog do
+    root to: redirect("/items")
+    get "locked_out", to: redirect("/items/locked_out")
+  end
+
+  namespace :products do
+    root to: redirect("/items")
+    get "locked_out", to: redirect("/items/locked_out")
+  end
+
   namespace :setup do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"
@@ -76,6 +131,36 @@ Rails.application.routes.draw do
       end
     end
     resources :categories do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :formats do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :product_conditions do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :display_locations do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :store_display_locations do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :vendors do
       member do
         patch :inactivate
         patch :reactivate

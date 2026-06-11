@@ -1,0 +1,147 @@
+<div class="ss-item-catalog">
+  <div class="ss-item-main">
+    <header class="ss-item-hero">
+      <div class="ss-item-hero-text">
+        <div class="ss-item-hero-top">
+          <div>
+            <%= item_location_eyebrow(item.display_location_path(variant: local_assigns[:variant])) %>
+            <h1 class="ss-item-title"><%= item.title %></h1>
+            <% if item.subtitle.present? %>
+              <p class="ss-item-subtitle"><%= item.subtitle %></p>
+            <% end %>
+          </div>
+        </div>
+
+        <% if item.creator_entries.any? %>
+          <div class="ss-item-creators">
+            <% item.creator_entries.each_with_index do |creator, index| %>
+              <% if index.positive? %><span class="ss-item-sep">|</span><% end %>
+              <span class="ss-item-creator">
+                <span class="ss-item-creator-name"><%= creator["display_name"] %></span>
+                <% creator["roles"].each do |role| %>
+                  <%= item_creator_role_badge(role) %>
+                <% end %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="ss-item-cover-slot">
+        <div class="ss-item-cover-badges">
+          <%= item_lifecycle_status_badge(item.primary_status) %>
+        </div>
+        <%= item_cover_thumbnail(item, size: :hero) %>
+      </div>
+    </header>
+
+    <% if item.catalog_facts.any? || item.publication_status_label.present? %>
+      <dl class="ss-item-facts">
+        <% item.catalog_facts.each do |label, value| %>
+          <dt><%= label %></dt>
+          <dd>
+            <% if label == "Released" && item.publication_status_label.present? %>
+              <span class="ss-item-released">
+                <%= value %>
+                <%= item_publication_status_badge(item.publication_status_label) %>
+              </span>
+            <% else %>
+              <%= value %>
+            <% end %>
+          </dd>
+        <% end %>
+        <% if item.publication_status_label.present? && item.released_date_label.blank? %>
+          <dt>Status</dt>
+          <dd><%= item_publication_status_badge(item.publication_status_label) %></dd>
+        <% end %>
+      </dl>
+    <% elsif item.catalog_item.blank? %>
+      <p class="ss-muted">This item has no catalog metadata.</p>
+    <% end %>
+
+    <section class="ss-item-section">
+      <h2><%= items_user_facing_label("product_variants") %></h2>
+      <% if item.variants.any? %>
+        <table class="ss-table ss-item-table">
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>SKU</th>
+              <th>Location</th>
+              <th class="ss-num">Price</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% item.variants.each do |variant| %>
+              <tr>
+                <td><%= variant.condition&.short_name || variant.name %></td>
+                <td><%= variant.sku %></td>
+                <td><%= item.variant_location_label(variant) %></td>
+                <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
+                <td><%= link_to "Details", edit_items_product_variant_path(variant) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="ss-muted">No sellable SKUs yet.</p>
+      <% end %>
+    </section>
+
+    <section class="ss-item-section">
+      <h2>Location &amp; Availability</h2>
+      <p class="ss-muted ss-item-future-note">Store-level availability will appear here when inventory tracking is implemented.</p>
+    </section>
+  </div>
+
+  <aside class="ss-item-sidebar">
+    <section class="ss-item-sidebar-section">
+      <h3>Stock</h3>
+      <% if item.variants.any? %>
+        <table class="ss-table ss-item-table ss-item-table-compact">
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th class="ss-num">Price</th>
+              <th class="ss-num">Avail.</th>
+              <th class="ss-num">Res.</th>
+              <th class="ss-num">Order</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% item.variants.each do |variant| %>
+              <tr>
+                <td><%= variant.condition&.short_name || "—" %></td>
+                <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
+                <td class="ss-num ss-muted">—</td>
+                <td class="ss-num ss-muted">—</td>
+                <td class="ss-num ss-muted">—</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="ss-muted">No stock yet.</p>
+      <% end %>
+    </section>
+
+    <% if item.subject_headings.any? %>
+      <section class="ss-item-sidebar-section">
+        <h3>Subjects</h3>
+        <ul class="ss-item-subjects">
+          <% item.subject_headings.each do |heading| %>
+            <li><%= heading %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <% if item.description_text.present? %>
+      <section class="ss-item-sidebar-section">
+        <h3>Description</h3>
+        <%= item_description_block(item.description_text) %>
+      </section>
+    <% end %>
+  </aside>
+</div>

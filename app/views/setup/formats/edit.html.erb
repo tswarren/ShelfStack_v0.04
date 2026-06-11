@@ -1,0 +1,5 @@
+<h1>Edit Format</h1>
+<%= form_with model: [:catalog, @format] do |f| %>
+  <%= render "form", f: f, format: @format %>
+  <%= f.submit "Update Format", class: "ss-btn" %>
+<% end %>

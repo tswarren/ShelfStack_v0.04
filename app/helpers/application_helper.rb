@@ -2,6 +2,7 @@
 
 module ApplicationHelper
   include SetupFormatHelper
+  include ItemsHelper
   def display_time(timestamp)
     return "—" if timestamp.blank?
 

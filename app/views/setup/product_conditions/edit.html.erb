@@ -1,0 +1,5 @@
+<h1>Edit Product Condition</h1>
+<%= form_with model: [:products, @product_condition] do |f| %>
+  <%= render "form", f: f, product_condition: @product_condition %>
+  <%= f.submit "Update Condition", class: "ss-btn" %>
+<% end %>

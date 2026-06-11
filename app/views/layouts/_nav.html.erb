@@ -2,9 +2,9 @@
   <%= link_to "Dashboard", root_path, class: (current_page?(root_path) ? "active" : nil) %>
   <span class="disabled">POS</span>
   <span class="disabled">Inventory</span>
-  <span class="disabled">Catalog</span>
+  <%= link_to "Items", items_root_path, class: (request.path.start_with?("/items") ? "active" : nil) %>
   <span class="disabled">Orders</span>
   <span class="disabled">Customers</span>
   <span class="disabled">Reports</span>
-  <%= link_to "Admin", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>
+  <%= link_to "Setup", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>
 </nav>

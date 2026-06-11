@@ -1,684 +1,1173 @@
-# ShelfStack UX recommendation
+# ShelfStack UI/UX Concept
 
-ShelfStack should use a **workflow-first UX**, not a table-first/admin CRUD UX.
+## Purpose
 
-The schema is now broad enough to support cataloging, inventory, POS, receiving, special orders, gift cards, store credit, buybacks, vendor returns, and stock valuation. If the UX mirrors the tables directly, it will feel overwhelming. The interface should organize those tables into a few clear workspaces.
+This document defines the core UI/UX direction for ShelfStack.
+
+ShelfStack should use a **workflow-first, item-centered UX**, not a table-first/admin CRUD UX.
+
+The underlying data model intentionally separates catalog metadata, store-facing products, and sellable SKUs:
+
+```text
+Catalog Item → Product → Product Variant/SKU
+```
+
+However, users should not experience those as disconnected modules. The interface should present them as one coherent item lifecycle:
+
+```text
+Identify the item → describe what it is → define how the store sells it → manage sellable SKUs
+```
+
+The goal is to make ShelfStack feel practical for bookstore staff while preserving the technical separation needed for inventory, purchasing, POS, reporting, and future accounting workflows.
 
 ---
 
-# 1. Primary UX principle
+# 1. Primary UX Principle
 
-Use this mental model:
+ShelfStack should organize the application around **store workflows**, not database tables.
 
+Users should not need to understand whether they are working with:
+
+```text
+catalog_items
+catalog_item_identifiers
+products
+product_variants
+stock_balances
+inventory_ledger_entries
+purchase_order_lines
+sale_lines
 ```
-Front counter = fast transaction work
-Inventory desk = stock movement and receiving work
-Catalog desk = item/product maintenance
-Customer desk = holds, credits, special orders
-Manager desk = approvals, reporting, controls
+
+Instead, screens should guide users through familiar bookstore work:
+
+```text
+Find an item
+Add an item
+Sell an item
+Receive stock
+Create an order
+Manage variants/SKUs
+Handle a customer request
+Review inventory
+Run reports
 ```
 
-The user should not need to know whether they are editing `catalog_items`, `stock_items`, `stock_variants`, `stock_movements`, or `purchase_order_allocations`. The screen should guide them through the workflow.
+The service layer can update the correct tables behind the scenes. The UI should present clear task-oriented screens that match how bookstore staff actually work.
 
 ---
 
-# 2. Recommended app workspaces
+# 2. Core Mental Model
 
-## Main navigation
+ShelfStack has two related UX models:
 
+1. **Workspace model** for the whole application.
+2. **Item lifecycle model** for catalog, product, and variant workflows.
+
+---
+
+## 2.1 Workspace Model
+
+Use this high-level mental model:
+
+```text
+Front Counter = fast sales and customer-facing work
+Inventory Desk = stock movement, receiving, counts, and availability
+Catalog Desk = item, product, and SKU maintenance
+Customer Desk = holds, credits, special orders, and customer history
+Manager Desk = approvals, reporting, setup, and controls
 ```
+
+This can be expressed in main navigation as:
+
+```text
 Dashboard
 POS
+Items
 Inventory
-Catalog
 Orders
 Customers
 Reports
-Admin
+Setup
 ```
-
-## Workspace meaning
-
-| Workspace | Primary users | Purpose |
-| :---- | :---- | :---- |
-| **Dashboard** | Everyone | Today’s store status, tasks, alerts |
-| **POS** | Clerks/front counter | Sales, returns, gift cards, store credit, buybacks |
-| **Inventory** | Stock staff/managers | Receiving, adjustments, counts, stock lookup |
-| **Catalog** | Inventory/catalog staff | Catalog items, stock items, stock variants |
-| **Orders** | Buyers/managers | Purchase orders, special orders, vendor returns |
-| **Customers** | Clerks/managers | Customer profiles, credits, holds, special orders |
-| **Reports** | Managers | Sales, inventory value, cash, margins, buybacks |
-| **Admin** | Admins | Stores, users, permissions, tax, departments, tenders |
 
 ---
 
-# 3. Dashboard UX
+## 2.2 Item Lifecycle Model
+
+For catalog/product/variant workflows, use this mental model:
+
+```text
+Identify → Describe → Sell → Organize → Review
+```
+
+| Step     | User Meaning                                         | Technical Records                                      |
+| -------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| Identify | What barcode, identifier, or SKU is this?            | `catalog_item_identifiers`, product/variant SKU lookup |
+| Describe | What is this item?                                   | `catalog_items`                                        |
+| Sell     | How does the store recognize and sell it?            | `products`                                             |
+| Organize | Which versions/SKUs exist?                           | `product_variants`                                     |
+| Review   | What changed, what is missing, what needs attention? | `audit_events`, status checks                          |
+
+The user should experience this as one item workflow, not as three unrelated screens.
+
+---
+
+# 3. Recommended App Workspaces
+
+## 3.1 Main Navigation
+
+```text
+Dashboard
+POS
+Items
+Inventory
+Orders
+Customers
+Reports
+Setup
+```
+
+## 3.2 Workspace Meaning
+
+| Workspace | Primary Users                     | Purpose                                                                               |
+| --------- | --------------------------------- | ------------------------------------------------------------------------------------- |
+| Dashboard | Everyone                          | Today’s store status, alerts, pending work, and high-level context.                   |
+| POS       | Clerks/front counter              | Sales, returns, tenders, customer-facing transactions, and future register workflows. |
+| Items     | Catalog/inventory/frontline staff | Search, add, review, and maintain items, products, and sellable SKUs.                 |
+| Inventory | Stock staff/managers              | Future receiving, adjustments, counts, stock lookup, and movement history.            |
+| Orders    | Buyers/managers                   | Future purchase orders, special orders, and vendor returns.                           |
+| Customers | Clerks/managers                   | Future customer profiles, credits, holds, special orders, and buybacks.               |
+| Reports   | Managers                          | Sales, inventory, cash, tax, margin, and operational reports.                         |
+| Setup     | Admins/managers                   | Stores, users, roles, departments, categories, tax, formats, conditions, vendors.     |
+
+---
+
+# 4. Current Phase UX Priorities
+
+ShelfStack should not attempt to build the complete future-state UI all at once.
+
+The current UX priority should match the phased roadmap.
+
+## Phase 1 UX Priorities
+
+Phase 1 should focus on:
+
+```text
+Login
+Workstation assignment
+Session context
+Session lock/unlock
+Application shell
+Dashboard placeholder
+Setup navigation
+Users
+Roles
+Permissions
+Stores
+Workstations
+Audit event review
+```
+
+## Phase 2 UX Priorities
+
+Phase 2 should focus on:
+
+```text
+Departments
+Categories
+Tax categories
+Store tax rates
+Store tax category rates
+Tax lookup preview
+Setup audit timelines
+```
+
+## Phase 3 UX Priorities
+
+Phase 3 should focus on:
+
+```text
+Unified item search
+Add item workflow
+Catalog details
+Barcodes and identifiers
+Product selling setup
+Sellable SKUs / variants
+Product conditions
+Display locations
+Vendors
+SKU generation previews
+Name rendering previews
+Catalog/product/variant audit timelines
+```
+
+Future POS, receiving, inventory, special orders, buybacks, vendor returns, and reports should remain conceptually described but should not drive the immediate Phase 1–3 implementation.
+
+---
+
+# 5. Dashboard UX
 
 The dashboard should answer:
 
-```
+```text
 What needs attention today?
 ```
 
-## Suggested dashboard cards
+For early phases, the dashboard may be simple.
 
+## Phase 1 Dashboard
+
+Show environment/session context:
+
+```text
+Current store
+Store time zone
+Workstation
+Current user
+Last login
+Previous login
+Session status
+Inactivity duration
 ```
+
+## Later Dashboard Cards
+
+Future dashboard cards may include:
+
+```text
 Open register sessions
 Suspended POS transactions
 Pending approvals
-Special orders received but not picked up
+Special orders ready for pickup
 Purchase orders expected soon
 Low-stock / out-of-stock items
+Receiving batches pending
 Vendor returns pending credit
 Inventory value summary
 Cash variance alerts
 Gift card / store credit exceptions
 ```
 
-## Example layout
-
-```
-----------------------------------------------------
-ShelfStack Dashboard
-
-Today
-- Register 1 open since 9:02 AM
-- 2 suspended transactions
-- 3 pending supervisor approvals
-- 4 special orders ready for pickup
-
-Inventory
-- 18 low-stock items
-- $42,318 inventory cost value
-- $71,940 retail value
-
-Operations
-- 2 receiving batches pending
-- 1 vendor return awaiting credit
-----------------------------------------------------
-```
-
 ---
 
-# 4. POS workspace
+# 6. Items Workspace
 
-The POS needs to be the fastest, most focused part of the app.
+The Items workspace is the most important UX area for Phase 3.
 
-## POS screen layout
+Its purpose is to make catalog records, products, and variants feel like one coherent concept.
 
-I recommend a **three-panel layout**:
+## 6.1 Primary Item Actions
 
-```
-----------------------------------------------------
-[ Search / Scan / Command Bar ]
-
-[ Cart / Transaction Lines ]        [ Item / Customer / Totals Panel ]
-
-[ Tender / Actions Bar ]
-----------------------------------------------------
-```
-
-## Left/main panel: transaction lines
-
-Shows:
-
-```
-Item description
-SKU / identifier
-Quantity
-Unit price
-Adjustments
-Tax
-Line total
-Return/original-sale indicator
-```
-
-## Right panel: context
-
-Dynamically shows:
-
-```
-Selected item details
-Stock availability
-Customer profile
-Gift card balance
-Store credit balance
-Special order status
-Transaction totals
-```
-
-## Bottom action bar
-
-Large, keyboard-friendly actions:
-
-```
+```text
+Search Items
 Add Item
-Open Ring
-Return
-Discount
-Tax Exempt
-Gift Card
-Store Credit
-Suspend
-Void
-Tender
-Complete
+View Item
+Edit Item
+Manage Sellable SKUs
 ```
 
----
+The main UI should avoid making ordinary users choose directly between:
 
-## POS workflows to support
-
-### Sale
-
-```
-Scan/search item
-→ Add line
-→ Apply adjustments if needed
-→ Take tender
-→ Complete
-→ Create stock movement
-```
-
-### Open-ring sale
-
-```
-Choose department
-→ Enter description/amount
-→ Calculate tax
-→ Complete
-```
-
-### Return/refund
-
-```
-Lookup receipt or scan item
-→ Select original line if available
-→ Enter return reason/disposition
-→ Refund to tender/store credit/gift card
-→ Create stock movement if returned to stock
-```
-
-### Exchange
-
-Treat as:
-
-```
-Return line + Sale line in same transaction
-```
-
-The UI can label it “Exchange,” but the underlying model can remain POS lines and tender balancing.
-
-### Gift card sale
-
-```
-Choose gift card activation
-→ Enter amount
-→ Assign/scan card number
-→ Complete sale
-→ Create gift card ledger entry
-```
-
-### Gift card redemption
-
-```
-Choose gift card tender
-→ Scan card
-→ Validate balance
-→ Apply tender
-→ Create redemption ledger entry
-```
-
-### Store credit redemption
-
-```
-Select customer
-→ Show credit balance
-→ Apply store credit tender
-→ Create customer credit ledger entry
-```
-
-### Suspended transaction
-
-```
-Suspend
-→ Optional reason
-→ Resume from POS queue
-```
-
----
-
-# 5. POS should use keyboard-first commands
-
-For bookstore/front-counter speed, make POS usable without a mouse.
-
-## Suggested command bar
-
-```
-Scan ISBN, SKU, gift card, receipt number, or type command...
-```
-
-Examples:
-
-```
-9780140177398
-SKU12345
-/giftcard 25
-/open Books 12.99
-/return R-100245
-/discount 10%
-/taxexempt nonprofit
-/suspend
-```
-
-This can coexist with buttons.
-
----
-
-# 6. Item detail / stock lookup UX
-
-A front-line user needs a compact item page that combines catalog, stock, and availability.
-
-## Recommended item detail layout
-
-```
-----------------------------------------------------
-The Hobbit
-J.R.R. Tolkien · Paperback · ISBN 978...
-
-[New Paperback]       $16.99
-On hand: 4   Reserved: 1   Available: 3
-On order: 10   Special order: 2   On-order available: 8
-
-[Used - Good]         $8.00
-On hand: 2   Available: 2
-
-[Used - Acceptable]   $5.00
-On hand: 1   Available: 1
-----------------------------------------------------
-Actions:
-Sell | Reserve | Special Order | Receive | Adjust | View History
-----------------------------------------------------
-```
-
-This screen should not expose the user to the fact that data comes from:
-
-```
-catalog_items
-stock_items
-stock_variants
-stock_balances
-purchase_order_lines
-purchase_order_allocations
-stock_reservations
-```
-
-It should simply present the operational view.
-
----
-
-# 7. Catalog / stock management UX
-
-Catalog and stock setup should be split into two related views.
-
-## Catalog item view
-
-Answers:
-
-```
-What is this item?
-```
-
-Shows:
-
-```
-Title
-Subtitle
-Creator
-Identifier
-Format
-Publisher
-Publication date
-Subjects
-Description
-Search/abbreviation keys
-Linked stock items
-```
-
-## Stock item / variant view
-
-Answers:
-
-```
-How do we sell and stock this item?
-```
-
-Shows:
-
-```
-SKU
-Stock item type
-Variants
-Condition
-Sale price
-Default cost
-Department
-Merchandise category
-Tax category
-Tracking method
-Availability by store
-```
-
-## Recommended UX pattern
-
-Use tabs:
-
-```
-Catalog
-Stock Variants
-Inventory
-Orders
-Sales History
-Movements
-```
-
----
-
-# 8. Receiving UX
-
-Receiving should feel like a controlled checklist.
-
-## Receiving batch screen
-
-```
-Receiving Batch #123
-Vendor: Ingram
-Store: Main
-Status: Pending
-
-PO Line                         Ordered  Received  Backordered  Cancelled  Cost
-The Hobbit - New Paperback      10       [ 6 ]      [ 4 ]        [ 0 ]      $9.80
-Dune - New Paperback            5        [ 5 ]      [ 0 ]        [ 0 ]      $11.25
-
-[Save Draft] [Complete Receiving]
-```
-
-When completed:
-
-```
-Update PO line quantities
-Create stock movements
-Update stock balances
-Update inventory value
-```
-
-## Key UX rule
-
-Before completion, receiving lines are editable.
-
-After completion, they should be locked or corrected only through adjustment/reversal workflows.
-
----
-
-# 9. Purchase order UX
-
-Purchase orders should support both manual and suggested ordering.
-
-## PO list filters
-
-```
-Draft
-Sent
-Confirmed
-Partially received
-Complete
-Cancelled
-Expected soon
-Overdue
-```
-
-## PO detail actions
-
-```
-Add line
-Send
-Confirm
-Receive
-Cancel line
-Close PO
-Allocate to special order
-```
-
-## Recommended PO line display
-
-```
-Item
-Variant
-Ordered
-Confirmed
-Received
-Cancelled
-Backordered
-Open
-Allocated
-Available on order
-Expected cost
-Expected retail
-```
-
----
-
-# 10. Special order UX
-
-Special orders should be customer-centered.
-
-## Customer special order screen
-
-```
-Customer: Jane Smith
-Special Order #502
-Status: Ordered
-
-Requested:
-- The Art of Fermentation
-  Requested: 1
-  Ordered: 1
-  Received: 0
-  Deposit: $5.00
-  Status: Ordered
-
-Actions:
-Allocate PO Line
-Mark Received
-Notify Customer
-Fulfill at POS
-Cancel
-```
-
-## Special order board
-
-A manager/front-counter queue:
-
-```
-Requested
-Ordered
-Received
-Notified
-Ready for pickup
-Abandoned
-Cancelled
-```
-
-This should be one of the dashboard’s most important task queues.
-
----
-
-# 11. Used buyback UX
-
-Used buyback should be a guided workflow, not a POS cart line.
-
-## Buyback flow
-
-```
-1. Select/create customer
-2. Add items
-3. Evaluate item condition
-4. Set resale price
-5. Calculate cash/store-credit offer
-6. Customer accepts/rejects
-7. Complete payout
-```
-
-## Buyback screen
-
-```
-Used Buyback #884
-Customer: Jane Smith
-Status: Evaluating
-
-Item                         Condition   Resale   Cash Offer   Credit Offer   Disposition
-The Hobbit                   Good        $8.00    $2.00        $4.00          Accepted
-Old Textbook                  Poor        —        —            —              Rejected
-
-Totals:
-Resale value: $8.00
-Cash offer: $2.00
-Store credit offer: $4.00
-
-Payout:
-( ) Cash
-( ) Store Credit
-( ) Split
-
-[Complete Buyback]
-```
-
-On completion:
-
-```
-Accepted items create positive stock movements.
-Cash payout creates register cash event.
-Store credit payout creates customer credit ledger entry.
-```
-
----
-
-# 12. Vendor return UX
-
-Vendor returns should feel like a controlled outbound workflow.
-
-## Vendor return statuses
-
-```
-Draft
-Requested
-Approved
-Shipped
-Credited
-Completed
-Cancelled
-```
-
-## Vendor return screen
-
-```
-Vendor Return #77
-Vendor: Ingram
-Reason: Damaged
-Status: Draft
-
-Item                  Qty   Unit Cost   Expected Credit   Reason
-Book A                2     $8.00       $16.00            Damaged
-Book B                1     $12.00      $12.00            Overstock
-
-[Approve] [Ship Return] [Record Credit]
-```
-
-On shipping:
-
-```
-Create negative stock movement.
-Reduce inventory value.
-```
-
-On credit:
-
+```text
+Catalog Items
+Products
+Product Variants
 ```
-Record actual credit.
-Close workflow.
-```
-
----
-
-# 13. Inventory adjustment UX
-
-Manual adjustments need strict reason tracking.
-
-## Adjustment screen
-
-```
-Stock Adjustment #44
-Store: Main
-Reason: Cycle count correction
-
-Item                    Current Qty   New Qty   Delta   Cost Basis
-The Hobbit - Used Good  4             3         -1      Current Average
-
-[Submit for Approval] [Complete Adjustment]
-```
 
-## Best UX
+Those are implementation concepts. The user-facing concept should be:
 
-Allow either:
-
-```
-Enter quantity delta
+```text
+Items
 ```
 
 or:
 
+```text
+Item Setup
 ```
-Enter counted/new quantity
-```
-
-Then calculate delta.
-
-For normal users, “new counted quantity” is usually safer.
 
 ---
 
-# 14. Inventory count UX
+# 7. Add Item Workflow
 
-If included in Phase 1 or Phase 2, make it a scanning workflow.
+The Add Item workflow should guide the user through item setup without requiring them to understand the database model.
 
-## Count screen
+## Step 1: Identify the Item
 
-```
-Cycle Count: Used Paperbacks
-Expected counts hidden? Yes/No
+Prompt:
 
-Scan item:
-[________________]
-
-Counted:
-The Hobbit - Used Good     3
-Dune - Used Acceptable     2
-
-Variance report:
-The Hobbit expected 4, counted 3, variance -1
+```text
+Scan or enter ISBN, UPC, EAN, GTIN, publisher number, SKU, or local identifier.
 ```
 
-Final approval should create stock adjustment lines.
+System behavior:
+
+1. Search catalog item identifiers.
+2. Search product SKUs.
+3. Search product variant SKUs.
+4. If a match exists, show the existing item.
+5. If no match exists, offer to create a new item.
+6. If the user has no manufacturer/vendor identifier, allow local identifier generation.
+
+The result should make clear whether the item already has:
+
+```text
+Catalog details
+Store product
+Sellable SKUs
+```
 
 ---
 
-# 15. Customer UX
+## Step 2: Choose Item Type
 
-Customer profiles should consolidate operational activity.
+Prompt:
 
-## Customer page tabs
-
+```text
+What kind of item is this?
 ```
+
+Allowed catalog item types:
+
+```text
+Book
+Calendar
+Periodical
+Recorded Music
+Sideline
+Videorecording
+Audiobook
+eBook
+Map
+Game
+Gift
+Other
+```
+
+The selected type controls which fields are shown or emphasized.
+
+It should not make the database rigid. If an unusual item needs a normally hidden field, the system should allow it where practical.
+
+---
+
+## Step 3: Enter Catalog Details
+
+The catalog section answers:
+
+```text
+What is this item?
+```
+
+For a book, show fields such as:
+
+```text
+Title
+Creators
+Publisher
+Format
+Publication date/status
+Edition statement
+Language
+Page count
+Large print
+Subjects
+Description
+```
+
+For a sideline or gift item, show fields such as:
+
+```text
+Title/name
+Publisher/vendor/brand
+Format
+Dimensions
+Weight
+Themes
+Target audience
+Description
+```
+
+The user should not need to think, “I am creating a catalog item.” The screen should simply ask for item details.
+
+---
+
+## Step 4: Create Store Product
+
+The product section answers:
+
+```text
+How does the store recognize and sell this item?
+```
+
+For catalog-linked products, default:
+
+| Field          | Default                         |
+| -------------- | ------------------------------- |
+| Product name   | Catalog item title              |
+| Product SKU    | Catalog item primary identifier |
+| Product type   | Based on item type/format       |
+| Variation type | Standard                        |
+| List price     | User-entered or imported value  |
+
+For non-catalog products:
+
+| Field          | Behavior                         |
+| -------------- | -------------------------------- |
+| Product name   | User-entered                     |
+| Product SKU    | User-entered or system-generated |
+| Product type   | User-selected                    |
+| Variation type | User-selected                    |
+
+---
+
+## Step 5: Create Sellable SKU
+
+The sellable SKU section answers:
+
+```text
+What exactly can be sold, ordered, received, or tracked?
+```
+
+For a simple item, ShelfStack should automatically create the default New variant:
+
+| Field              | Default                      |
+| ------------------ | ---------------------------- |
+| Condition          | New                          |
+| Variant SKU        | Product SKU                  |
+| Variant name       | Product name                 |
+| Category           | User-selected or defaulted   |
+| Selling price      | Based on list price/defaults |
+| Inventory behavior | Based on product type        |
+
+Example:
+
+| Layer            | Value           |
+| ---------------- | --------------- |
+| Catalog title    | `The Hobbit`    |
+| Product SKU      | `9780123456789` |
+| New variant SKU  | `9780123456789` |
+| New variant name | `The Hobbit`    |
+
+The UI should explain:
+
+```text
+ShelfStack created the default sellable SKU for this item.
+```
+
+---
+
+# 8. Unified Item Detail Page
+
+ShelfStack should provide one primary detail page for an item.
+
+Recommended page title:
+
+```text
+The Hobbit
+```
+
+or:
+
+```text
+Item: The Hobbit
+```
+
+## 8.1 Suggested Page Structure
+
+```text
+[Item Header]
+
+Tabs:
+  Overview
+  Catalog Details
+  Selling / SKUs
+  Display & Vendors
+  Activity
+```
+
+Future tabs may include:
+
+```text
+Inventory
+Purchasing
+Sales History
+```
+
+---
+
+## 8.2 Item Header
+
+The header should summarize the item immediately.
+
+Recommended header data:
+
+```text
+Title/product name
+Primary identifier
+Product SKU
+Sellable status
+Active variant count
+Main format
+Category/department
+Price range
+```
+
+Example:
+
+```text
+The Hobbit
+ISBN 9780123456789 · Hardcover · Books
+
+Status: Sellable
+Product SKU: 9780123456789
+Active SKUs: 3
+```
+
+---
+
+## 8.3 Overview Tab
+
+The Overview tab should answer:
+
+```text
+Can I use this item operationally?
+```
+
+Recommended cards:
+
+| Card                 | Purpose                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| Catalog Status       | Shows whether metadata exists and has usable identifiers.                                          |
+| Selling Status       | Shows whether product and active variants exist.                                                   |
+| SKU Summary          | Shows product SKU and active variant SKUs.                                                         |
+| Category/Tax Summary | Shows category, department, and tax default.                                                       |
+| Alerts               | Shows missing price, missing category, invalid identifier, no active variant, inactive references. |
+
+Example:
+
+```text
+Catalog Record: Complete
+Product: Active
+Sellable SKUs: 3 active variants
+Primary SKU: 9780123456789
+Warnings: ISBN check digit invalid
+```
+
+---
+
+## 8.4 Catalog Details Tab
+
+The Catalog tab should answer:
+
+```text
+What is this item?
+```
+
+Show:
+
+```text
+Identifiers
+Title
+Creators
+Publisher
+Format
+Publication details
+Series
+Edition statement
+Language
+Dimensions/weight
+Subjects/genres/themes
+Description
+```
+
+This tab should feel like metadata, not selling setup.
+
+---
+
+## 8.5 Selling / SKUs Tab
+
+The Selling / SKUs tab should answer:
+
+```text
+How does the store sell this item?
+```
+
+Show product-level fields:
+
+```text
+Product name
+Product SKU
+Product type
+Variation type
+List price
+Default display location
+```
+
+Then show active variants in a table.
+
+Example:
+
+| Variant               | SKU                | Condition | Category   |  Price | Active |
+| --------------------- | ------------------ | --------- | ---------- | -----: | ------ |
+| The Hobbit            | `9780123456789`    | New       | Books      | $18.99 | Yes    |
+| The Hobbit - Signed   | `9780123456789-SG` | Signed    | Books      | $24.99 | Yes    |
+| The Hobbit - Like New | `9780123456789-UN` | Like New  | Used Books | $12.99 | Yes    |
+
+Suggested actions:
+
+```text
+Add Variant
+Generate Used Variant
+Add Signed Copy
+Add Remainder Copy
+Add Matrix Variants
+Edit Product
+Regenerate Names
+Regenerate SKUs
+```
+
+---
+
+## 8.6 Display & Vendors Tab
+
+This tab should answer:
+
+```text
+Where is this item merchandised, and who supplies it?
+```
+
+Phase 3 can show:
+
+```text
+Default display location
+Variant display locations
+Basic vendor references
+```
+
+Vendor-product sourcing can be marked as future work:
+
+```text
+Vendor sourcing, costs, and ordering rules will be added in a later purchasing phase.
+```
+
+---
+
+## 8.7 Activity Tab
+
+The Activity tab should show audit events.
+
+Examples:
+
+```text
+Catalog item created
+Identifier added
+ISBN-10 converted to ISBN-13
+Product created
+Variant SKU generated
+Product name overridden
+Variant price changed
+Variant inactivated
+```
+
+---
+
+# 9. Unified Search Experience
+
+Search should be unified.
+
+Users should be able to search by:
+
+```text
+Title
+Creator
+Publisher
+ISBN
+UPC
+EAN
+GTIN
+Publisher number
+Local identifier
+Product SKU
+Variant SKU
+```
+
+Search results should not force the user to decide whether they are searching catalog records, products, or variants.
+
+## 9.1 Search Result Format
+
+Example:
+
+```text
+The Hobbit
+J.R.R. Tolkien · Hardcover · ISBN 9780123456789
+
+Catalog: Active
+Product SKU: 9780123456789
+Variants: New, Signed, Like New
+Price Range: $12.99–$24.99
+Status: Sellable
+```
+
+Suggested actions:
+
+```text
+View Item
+Sell New
+Edit Catalog
+Edit SKUs
+Add Used Copy
+```
+
+---
+
+# 10. Relationship Breadcrumbs
+
+Every catalog/product/variant screen should show the relationship between records.
+
+Example:
+
+```text
+Catalog: The Hobbit → Product: The Hobbit → Variant: Signed Copy
+```
+
+Or visually:
+
+```text
+Catalog Item
+The Hobbit
+  ↓
+Product
+The Hobbit — SKU 9780123456789
+  ↓
+Variants
+New, Signed, Like New
+```
+
+This helps users understand that these records are connected parts of one item lifecycle.
+
+---
+
+# 11. User-Facing Labels
+
+Use labels that match user expectations.
+
+| Internal Model             | User-Facing Label              |
+| -------------------------- | ------------------------------ |
+| `catalog_items`            | Catalog Details / Item Details |
+| `catalog_item_identifiers` | Barcodes & Identifiers         |
+| `products`                 | Store Product / Selling Setup  |
+| `product_variants`         | Sellable SKUs / Versions       |
+| `product_conditions`       | Conditions                     |
+| `display_locations`        | Shelf/Display Locations        |
+| `vendors`                  | Vendors                        |
+
+For frontline users, prefer:
+
+```text
+Items
+Sellable SKUs
+Barcodes & Identifiers
+```
+
+over raw model names.
+
+---
+
+# 12. Status Indicators
+
+ShelfStack should show clear statuses that explain whether an item is usable.
+
+## Recommended Statuses
+
+| Status                     | Meaning                                                          |
+| -------------------------- | ---------------------------------------------------------------- |
+| Catalog Only               | Catalog metadata exists, but no product/variant exists.          |
+| Product Created            | Product exists, but no active sellable variant exists.           |
+| Sellable                   | At least one active variant exists.                              |
+| Missing Category           | Variant needs a category before it can be sold.                  |
+| Missing Price              | Variant needs a selling price.                                   |
+| Invalid Identifier Warning | Identifier was saved but failed check digit validation.          |
+| Inactive Setup Reference   | Variant references inactive category/condition/display location. |
+| No Active Variant          | Product is not currently sellable.                               |
+
+These statuses should appear on:
+
+```text
+Item detail page
+Search results
+Product/variant setup screens
+Dashboard alerts where appropriate
+```
+
+---
+
+# 13. Generated Values and Previews
+
+Generated values should be visible and explainable.
+
+## Product SKU Preview
+
+```text
+Product SKU
+9780123456789
+Source: catalog primary identifier
+```
+
+## Variant SKU Preview
+
+```text
+Variant SKU
+9780123456789-SG
+Source: product SKU + condition suffix SG
+```
+
+## Variant Name Preview
+
+```text
+Variant Name
+The Hobbit - Signed
+Source: product name + condition short name
+```
+
+Generated values should update dynamically as users change:
+
+```text
+Primary identifier
+Product SKU
+Condition
+Attribute values
+Attribute SKU components
+Name override fields
+```
+
+---
+
+# 14. Variant/SKU Matrix
+
+The Selling / SKUs tab should use a matrix or table when multiple variants exist.
+
+## 14.1 Condition Variants
+
+| Condition | SKU Suffix | Generated SKU      | Name                  |  Price |
+| --------- | ---------- | ------------------ | --------------------- | -----: |
+| New       | —          | `9780123456789`    | The Hobbit            | $18.99 |
+| Signed    | SG         | `9780123456789-SG` | The Hobbit - Signed   | $24.99 |
+| Like New  | UN         | `9780123456789-UN` | The Hobbit - Like New | $12.99 |
+
+## 14.2 Matrix Variants
+
+| Color | Size  | SKU             | Name                         |  Price |
+| ----- | ----- | --------------- | ---------------------------- | -----: |
+| Blue  | Small | `TSHIRT-BLU-SM` | Store T-Shirt - Blue / Small | $19.99 |
+| Blue  | Large | `TSHIRT-BLU-LG` | Store T-Shirt - Blue / Large | $19.99 |
+
+The matrix should make SKU generation predictable.
+
+---
+
+# 15. Dynamic Form Behavior
+
+ShelfStack forms should feel responsive and operational.
+
+Use **reactive operational workflows** where appropriate.
+
+Reactive operational workflows are dynamic, line-oriented or task-oriented screens that continuously recalculate totals, validate entries, preview downstream effects, and support uninterrupted data entry while preserving a clear distinction between editable draft state and posted transaction state.
+
+---
+
+## 15.1 Catalog Form
+
+The catalog form should support:
+
+```text
+Change catalog item type → relevant fields appear/disappear
+Enter identifier → validation warning appears
+Enter ISBN-10 → generated ISBN-13 preview appears
+Enter creators → parsed creator/role preview appears
+Enter subjects → scheme/code parsing preview appears
+```
+
+---
+
+## 15.2 Product Form
+
+The product form should support:
+
+```text
+Catalog-linked product name previews from catalog title
+Product SKU previews from primary identifier
+Name override immediately updates display name preview
+Product type influences inventory behavior defaults
+```
+
+---
+
+## 15.3 Variant Form
+
+The variant form should support:
+
+```text
+Condition selection previews SKU and name
+Attribute components preview SKU
+Attribute values preview variant name
+Category selection fills tax/pricing defaults where applicable
+Price preview reflects condition list-price factor where applicable
+```
+
+---
+
+# 16. Progressive Disclosure
+
+Avoid overwhelming users with every field at once.
+
+## 16.1 Catalog Details Sections
+
+```text
+Basic Details
+Barcodes & Identifiers
+Creators
+Publisher
+Format & Physical Details
+Subjects, Genres & Audience
+Description
+Advanced Metadata
+```
+
+## 16.2 Selling Setup Sections
+
+```text
+Product Name & SKU
+Product Type & Variation Type
+Price & Category Defaults
+Display
+Sellable SKUs
+```
+
+## 16.3 Variant Sections
+
+```text
+SKU & Name
+Condition / Attributes
+Price
+Category
+Display
+Inventory Behavior
+```
+
+---
+
+# 17. Context-Aware Actions
+
+Actions should appear where users need them.
+
+## On a catalog record with no product
+
+```text
+Create Store Product
+```
+
+## On a product with no variants
+
+```text
+Create First Sellable SKU
+```
+
+## On a standard product
+
+```text
+Add Used/Special Copy
+Add Signed Copy
+Add Remainder Copy
+```
+
+## On a variable product
+
+```text
+Add Option
+```
+
+## On a matrix product
+
+```text
+Generate Matrix Variants
+```
+
+## On a variant
+
+```text
+Edit Price
+Edit Category
+Edit Display Location
+Inactivate SKU
+```
+
+---
+
+# 18. Administrative Setup Separation
+
+Technical setup should not dominate the main workflow.
+
+Place foundational setup records under Setup:
+
+```text
+Setup
+  Stores
+  Users
+  Roles
+  Permissions
+  Workstations
+
+  Classification
+    Departments
+    Categories
+    Tax Categories
+    Store Tax Rates
+    Store Tax Category Rates
+
+  Catalog & Items
+    Formats
+    Product Conditions
+    Display Locations
+    Vendors
+```
+
+The Items workspace should focus on item search, item creation, and sellable SKU management.
+
+---
+
+# 19. Phase 1 Application Shell
+
+Phase 1 should establish a clear application shell.
+
+## Header
+
+The header should show:
+
+```text
+ShelfStack logo/name
+Active store
+Active workstation
+Main navigation
+Search/command area placeholder
+User display name
+Session/logout controls
+```
+
+## Footer or Utility Area
+
+The footer or utility area may show:
+
+```text
+Application version
+Copyright
+Lock session action
+```
+
+## Session Context
+
+Store/workstation/user context should be visible enough that staff know where they are working, but not so prominent that it clutters operational screens.
+
+---
+
+# 20. POS Workspace: Future Direction
+
+POS should eventually be the fastest, most focused part of the application.
+
+A future POS screen should use a three-panel layout:
+
+```text
+[Search / Scan / Command Bar]
+
+[Cart / Transaction Lines]        [Item / Customer / Totals Panel]
+
+[Tender / Actions Bar]
+```
+
+## POS UX Principles
+
+```text
+Keyboard-friendly
+Scan-first
+Fast item lookup
+Large action targets
+Clear totals
+Clear tender state
+Clear tax/discount/return state
+Minimal clutter
+```
+
+## Future POS Workflows
+
+Future POS should support:
+
+```text
+Sale
+Return
+Exchange
+Open-ring sale
+Gift card sale/redemption
+Store credit redemption
+Suspended transaction
+Tax exemption
+Discount/markdown approval
+```
+
+These workflows are future scope and should not be implemented until the POS phase.
+
+---
+
+# 21. Inventory Workspace: Future Direction
+
+Inventory should eventually focus on stock state and stock movement.
+
+Future inventory screens may include:
+
+```text
+Stock lookup
+Receiving
+Adjustments
+Cycle counts
+Inventory movements
+Inventory value
+Transfers
+Vendor returns
+```
+
+## Future Inventory UX Principles
+
+```text
+Quantity and value effects should preview before posting.
+Draft stock workflows should be editable.
+Posted stock workflows should be corrected through adjustments or reversals.
+Inventory screens should operate at the product variant/SKU level.
+```
+
+---
+
+# 22. Orders Workspace: Future Direction
+
+Orders should eventually support:
+
+```text
+Purchase orders
+Receiving from purchase orders
+Special orders
+Vendor returns
+Vendor order history
+```
+
+Purchase order and receiving screens should feel like controlled workpads with live totals and automatic row continuation.
+
+---
+
+# 23. Customer Workspace: Future Direction
+
+Customer profiles should eventually consolidate operational activity.
+
+Future customer page tabs may include:
+
+```text
 Profile
 Purchases
 Returns
@@ -690,484 +1179,99 @@ Reservations
 Notes
 ```
 
-## Customer summary card
-
-```
-Jane Smith
-Phone: ...
-Email: ...
-
-Store credit balance: $14.00
-Open special orders: 2
-Items on hold: 1
-Recent purchases: 5
-```
-
-This makes front-counter workflows easier.
+This should make front-counter customer workflows easier.
 
 ---
 
-# 16. Manager approvals UX
+# 24. Manager and Reports UX: Future Direction
 
-Approvals should be a central queue and inline prompt.
+Manager views should group work by operational questions.
 
-## Approval queue
+## Approval Queues
 
-```
-Pending Approvals
+Future approval queues may include:
 
-Type                  Requested By   Amount   Reason        Source
-Markdown              Clerk A        -$10     Damaged       POS #1002
-Cash Paid Out         Clerk B        $25      Supplies      Register 1
-No-receipt Return     Clerk C        $18      Customer      POS #1005
-Stock Adjustment      Clerk A        -3 qty   Count diff    Adjustment #44
-```
-
-## Inline approval
-
-When clerk attempts restricted action:
-
-```
-Supervisor approval required
-Reason: Markdown over limit
-
-Supervisor PIN:
-[________]
-
-[Approve] [Reject]
+```text
+Markdown approvals
+No-receipt return approvals
+Cash paid out approvals
+Stock adjustment approvals
+Buyback approvals
 ```
 
-This should create `pos_approvals` or a generic approval record.
+## Reports
 
----
+Reports should be grouped by business question:
 
-# 17. Reports UX
-
-Reports should be grouped by operational question.
-
-## Sales reports
-
-```
-Daily sales
-Sales by department
-Sales by category
-Sales by tender
-Discounts/markdowns
-Returns/refunds
-Tax collected
-Gift card sales/redemptions
-Store credit issued/redeemed
-```
-
-## Inventory reports
-
-```
-Inventory value
-On hand by category
-Available stock
-On order
-Special order allocated
-Low stock
-Dead stock
-Stock movement history
-Vendor return status
-```
-
-## Cash/register reports
-
-```
-Register session summary
-Expected vs actual cash
-Paid in/out
-Cash drops
-Cash variance
-No-sale events
-```
-
-## Buyback reports
-
-```
-Buybacks by date
-Cash paid out
-Store credit issued
-Resale value added
-Accepted/rejected items
-```
-
----
-
-# 18. Admin UX
-
-Admin screens should be boring, stable, and controlled.
-
-## Admin areas
-
-```
-Stores
-Registers
-Users
-Roles
-Permissions
-Departments
-Merchandise categories
-Tax categories
-Store tax rates
-Tender types
-Product formats
-Stock conditions
+```text
+Sales
+Inventory
+Cash/Register
+Taxes
+Buybacks
 Vendors
-```
-
-These can be conventional CRUD screens.
-
-The rest of the app should be workflow-first.
-
----
-
-# 19. Recommended controller/workspace organization
-
-## POS namespace
-
-```
-/pos
-/pos/transactions
-/pos/transactions/:id/lines
-/pos/transactions/:id/adjustments
-/pos/transactions/:id/tenders
-/pos/transactions/:id/complete
-/pos/transactions/:id/suspend
-/pos/transactions/:id/void
-```
-
-## Inventory namespace
-
-```
-/inventory
-/inventory/stock_items
-/inventory/stock_variants
-/inventory/receiving_batches
-/inventory/stock_adjustments
-/inventory/stock_counts
-/inventory/movements
-```
-
-## Orders namespace
-
-```
-/orders/purchase_orders
-/orders/special_orders
-/orders/vendor_returns
-```
-
-## Customer namespace
-
-```
-/customers
-/customers/:id/special_orders
-/customers/:id/store_credit
-/customers/:id/buybacks
-```
-
-## Manager namespace
-
-```
-/manager/approvals
-/manager/reports
-/manager/register_sessions
+Audit
 ```
 
 ---
 
-# 20. Recommended visual style
+# 25. Visual Style
 
-For ShelfStack, I would use a **workstation-style interface**:
+ShelfStack should use a **workstation-style interface**.
 
-```
+Recommended characteristics:
+
+```text
 Dense but readable
 Keyboard-friendly
 Clear tables
 Strong status labels
 Minimal animation
 Large POS action targets
-Persistent search/scan bar
+Persistent search/scan where useful
 Clear audit/status cues
 ```
 
-Avoid making it too card-heavy. Cards are useful for dashboards and summaries, but operational workflows need tables, queues, and forms.
+Avoid making the application too card-heavy.
 
-## Design pattern
-
-Use:
-
-```
-Header
-Persistent workspace nav
-Search/scan bar
-Main work area
-Right-side context panel
-Bottom action bar for POS/receiving workflows
-```
+Cards are useful for dashboards and summaries. Operational workflows need tables, queues, and forms.
 
 ---
 
-# 21. Phase 1 UX priorities
+# 26. Reactive Operational Workflows
 
-Build these first:
+ShelfStack screens should be dynamic and workflow-oriented.
 
-```
-Dashboard
-POS sale/return screen
-Item/stock lookup screen
-Receiving workflow
-Purchase order workflow
-Used buyback workflow
-Customer profile with store credit
-Gift card activation/redemption
-Register open/close
-Manager approval queue
-Inventory summary report
-```
+As users enter lines, quantities, prices, discounts, tax exemptions, tenders, receiving quantities, or payout amounts, the interface should immediately preview calculated totals, balances, margins, taxes, inventory effects, and validation warnings.
 
-Defer:
-
-```
-Advanced promotions engine
-Full cycle count workflow
-Advanced loyalty
-Detailed price history UI
-Advanced consignment settlement
-Multi-store transfer UI
-Offline sync conflict UI
-```
+Users should not need to save or refresh a form to understand the effect of their entry.
 
 ---
 
-# Bottom line
+## 26.1 Recommended Terms
 
-ShelfStack should be organized around **store workflows**, not database objects.
-
-The most important UX rule is:
-
-```
-Users should interact with sales, receiving, buybacks, special orders, returns, and register sessions — not with raw stock_movements, stock_balances, ledger entries, or allocation rows.
-```
-
-The service layer can handle the complex table updates behind the scenes. The UX should present clean, task-oriented screens that match how bookstore staff actually work.
-
-Yes. That makes strong sense, and it is an important UX requirement for ShelfStack.
-
-The best way to describe this is:
-
-ShelfStack should use **reactive, workflow-driven forms** with **real-time calculation, inline validation, automatic row continuation, and live transaction summaries**.
-
-Or more simply:
-
-Forms should behave like operational workpads, not static data-entry screens.
+| Term                        | Meaning                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| Reactive forms              | Fields, totals, statuses, and dependent values update immediately as the user enters data.      |
+| Live calculations           | Totals, taxes, margins, inventory value, expected costs, and balances recalculate in real time. |
+| Inline validation           | Errors/warnings appear next to the field as soon as the system can detect them.                 |
+| Automatic row continuation  | When a user completes a line item, a new blank line is automatically added.                     |
+| Progressive disclosure      | Additional fields appear only when relevant.                                                    |
+| Preview-before-commit       | The screen shows calculated effects before finalizing the workflow.                             |
+| Workflow workpad            | The form acts like a live workspace for building a transaction/order/batch.                     |
+| Non-destructive draft state | Entries can be edited freely until the user completes/posts/finalizes the record.               |
 
 ---
 
-# Recommended terminology
+## 26.2 Preview vs. Posted State
 
-Use these terms in your UX/spec documents:
+This distinction is critical.
 
-| Term | Meaning |
-| :---- | :---- |
-| **Reactive forms** | Fields, totals, statuses, and dependent values update immediately as the user enters data. |
-| **Live calculations** | Totals, taxes, margins, inventory value, expected costs, and balances recalculate in real time. |
-| **Inline validation** | Errors/warnings appear next to the field as soon as the system can detect them. |
-| **Automatic row continuation** | When a user completes a line item, a new blank line is automatically added. |
-| **Progressive disclosure** | Additional fields appear only when relevant. |
-| **Preview-before-commit** | The screen shows calculated effects before the user completes/finalizes the workflow. |
-| **Workflow workpad** | The form acts like a live workspace for building a transaction/order/batch. |
-| **Non-destructive draft state** | Entries can be edited freely until the user completes/posts/finalizes the record. |
-
----
-
-# Suggested UX principle
-
-I would write it this way:
-
-```
-ShelfStack screens should be dynamic and workflow-oriented. As users enter lines, quantities, prices, discounts, tax exemptions, tenders, receiving quantities, or payout amounts, the interface should immediately preview calculated totals, balances, margins, taxes, inventory effects, and validation warnings. Users should not need to save or refresh a form to understand the effect of their entry.
-```
-
----
-
-# How this applies by workflow
-
-## POS
-
-POS should update immediately as the transaction is built.
-
-Examples:
-
-```
-Scan/add item → line appears immediately
-Change quantity → subtotal, tax, total update
-Apply discount → net amount and tax update
-Add tender → balance due updates
-Redeem gift card → remaining gift card balance previews
-Return item → refund amount previews
-Tax exemption → exempt amount and tax reduction update
-```
-
-The POS screen should always show:
-
-```
-Gross amount
-Adjustments
-Net amount
-Tax
-Total due
-Tendered amount
-Balance due / change due
-Inventory effect preview
-```
-
----
-
-## Purchase orders
-
-PO entry should feel like a spreadsheet/workpad.
-
-Examples:
-
-```
-Add stock variant → expected cost and sale price populate
-Enter quantity → line extended cost updates
-Finish a line → new blank line appears automatically
-Change cost or discount → margin preview updates
-Allocate to special order → on-order available quantity updates
-```
-
-A PO should show live:
-
-```
-Total quantity ordered
-Total expected cost
-Total expected retail
-Expected gross margin
-Allocated quantity
-Unallocated on-order quantity
-```
-
----
-
-## Receiving
-
-Receiving should preview both quantity and value effects.
-
-Examples:
-
-```
-Enter quantity received → received total updates
-Enter backordered quantity → open order balance updates
-Enter actual unit cost → inventory value preview updates
-Complete batch → stock movement preview becomes posted movement
-```
-
-Before completion, the screen should show:
-
-```
-On-hand increase preview
-Inventory cost value increase
-Open PO quantity after receiving
-Backordered/cancelled quantities
-Cost variance from expected
-```
-
----
-
-## Used buybacks
-
-Buyback evaluation should update offers and inventory effects live.
-
-Examples:
-
-```
-Set resale price → cash/store-credit offer previews
-Change condition → suggested resale price changes
-Accept/reject item → payout totals update
-Choose cash/store credit/split → drawer/credit impact previews
-Complete buyback → stock movement and payout records are created
-```
-
-The buyback screen should show:
-
-```
-Total resale value
-Cash offer
-Store credit offer
-Final payout
-Inventory value added
-Cash drawer impact
-Store credit liability impact
-```
-
----
-
-## Vendor returns
-
-Vendor returns should preview outbound inventory and credit impact.
-
-Examples:
-
-```
-Enter quantity returned → stock reduction preview updates
-Enter expected credit → return total updates
-Ship return → negative stock movements are created
-Record credit → expected vs actual credit variance updates
-```
-
----
-
-## Inventory adjustments
-
-Adjustments should preview the before/after state.
-
-Examples:
-
-```
-Enter counted quantity → variance calculated
-Enter quantity delta → new quantity previewed
-Change cost basis → inventory value impact recalculated
-Submit adjustment → approval required if variance threshold exceeded
-```
-
-Show:
-
-```
-Current quantity
-New quantity
-Variance
-Current inventory value
-Adjusted inventory value
-Value difference
-```
-
----
-
-# Recommended phrase for requirements docs
-
-You can describe the behavior like this:
-
-```
-ShelfStack forms should support reactive line-entry behavior. Transactional screens should recalculate dependent values in real time as users enter or modify data. Line-oriented workflows such as POS transactions, purchase orders, receiving batches, used buybacks, vendor returns, and stock adjustments should automatically maintain a ready blank line after the last completed line, allowing continuous keyboard-driven entry without requiring the user to click “Add line” repeatedly.
-
-Calculated values should be previewed before posting and committed only when the user completes the workflow. Draft records may be edited freely; completed records should become locked and corrected only through reversal, adjustment, or follow-up workflows.
-```
-
----
-
-# Important distinction: preview vs. posted
-
-This is the key architectural concept.
-
-## Draft state
+### Draft State
 
 While the user is entering data:
 
-```
+```text
 Totals are previews.
 Inventory effects are previews.
 Gift card/store credit effects are previews.
@@ -1175,11 +1279,11 @@ Register cash effects are previews.
 Validation warnings are live.
 ```
 
-## Completed state
+### Completed/Posted State
 
 When the user clicks complete/post/finalize:
 
-```
+```text
 Stock movements are created.
 Ledger entries are created.
 Register cash events are created.
@@ -1187,42 +1291,71 @@ Balances are updated.
 Transaction becomes locked.
 ```
 
-That distinction should be explicit in the UX spec.
+Completed records should be corrected through reversal, adjustment, or follow-up workflows, not direct editing.
 
 ---
 
-# Technical description
+# 27. Technical UX Implementation Direction
 
-If you are describing this for Rails implementation, I would call it:
+For Rails implementation, use:
 
-```
+```text
 Hotwire/Turbo-driven reactive forms with Stimulus controllers for local calculations and server-backed recalculation/validation where authoritative business rules are required.
 ```
 
 A practical split:
 
-| Calculation type | Where it can happen |
-| :---- | :---- |
-| Simple line math | Client-side Stimulus |
-| Display subtotal previews | Client-side Stimulus |
-| Tax calculation | Server-backed or shared service |
-| Gift card balance validation | Server-backed |
-| Inventory availability | Server-backed |
-| Approval requirement checks | Server-backed |
-| Final posting | Server-side service only |
+| Calculation Type             | Recommended Location                          |
+| ---------------------------- | --------------------------------------------- |
+| Simple line math             | Client-side Stimulus                          |
+| Display subtotal previews    | Client-side Stimulus                          |
+| Product/variant name preview | Client-side Stimulus or server-backed preview |
+| SKU preview                  | Client-side preview plus server validation    |
+| Tax calculation              | Server-backed service                         |
+| Gift card balance validation | Server-backed service                         |
+| Inventory availability       | Server-backed service                         |
+| Approval requirement checks  | Server-backed service                         |
+| Final posting                | Server-side service only                      |
 
 ---
 
-# Best short label
+# 28. UX Acceptance Criteria
 
-For your project documentation, I would call this:
+The UI/UX concept is being followed when:
 
-## **Reactive Operational Workflows**
+1. Users can search for an item without choosing catalog/product/variant first.
+2. Users can add an item through a guided workflow.
+3. Catalog, product, and variant records are shown as one item lifecycle.
+4. Product SKU and variant SKU generation are previewed and explained.
+5. Product and variant names are previewed and overrideable.
+6. Item detail pages clearly show catalog status, selling status, and sellable SKU status.
+7. Setup screens are separated from operational workflows.
+8. Dynamic forms use progressive disclosure and inline validation.
+9. Future operational workflows distinguish preview/draft state from posted state.
+10. The interface uses bookstore workflow language rather than raw table names.
 
-Definition:
+---
 
+# Bottom Line
+
+ShelfStack should be organized around **store workflows** and **items**, not database objects.
+
+The most important UX rule is:
+
+```text
+Users should interact with items, sellable SKUs, sales, receiving, orders, customers, and inventory workflows — not with raw implementation tables.
 ```
-Reactive Operational Workflows are dynamic, line-oriented screens that continuously recalculate totals, validate entries, preview downstream effects, and support uninterrupted data entry while preserving a clear distinction between editable draft state and posted transaction state.
+
+For Phase 3 specifically:
+
+```text
+Catalog Item → Product → Product Variant/SKU
 ```
 
-That phrase fits ShelfStack well because it applies equally to POS, purchasing, receiving, buybacks, returns, stock adjustments, and register workflows.  
+should be presented as:
+
+```text
+Item Details → Selling Setup → Sellable SKUs
+```
+
+The data model can remain precise. The UI should make it feel obvious.

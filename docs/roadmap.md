@@ -477,11 +477,19 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 **Phase 1 (Foundation) is complete** as of 2025-06-10.
 
+**Phase 2 (Departments, Categories, and Taxes) is complete** as of 2025-06-10.
+
+**Phase 3 (Catalog, Products, and Product Variants) is complete** as of 2025-06-10.
+
 ```text
-Phase 1 ✓  →  Phase 2 (active)  →  Phase 3
+Phase 1 ✓  →  Phase 2 ✓  →  Phase 3 ✓  →  Phase 4 (inventory foundation)
 ```
 
-Implementation record: [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md).
+Implementation records:
+
+- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md)
+- [docs/implementation/phase-2-completion.md](implementation/phase-2-completion.md)
+- [docs/implementation/phase-3-completion.md](implementation/phase-3-completion.md)
 
 Once Phase 3 is complete, the next major design decision is whether to proceed with:
 

@@ -1,0 +1,172 @@
+<% if catalog_item.errors.any? %>
+  <div class="flash flash-alert"><%= catalog_item.errors.full_messages.to_sentence %></div>
+<% end %>
+
+<fieldset class="ss-form-section">
+  <legend>Catalog Item</legend>
+  <%= f.label :catalog_item_type, "Type" %>
+  <%= f.select :catalog_item_type, CatalogItem::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] }, {}, data: { catalog_type: "select" } %>
+  <%= f.label :title %><%= f.text_field :title %>
+  <%= f.label :format_id, "Format" %>
+  <%= f.collection_select :format_id, formats, :id, :name %>
+  <%= f.label :publication_status %>
+  <%= f.select :publication_status, CatalogItem::PUBLICATION_STATUSES.map { |s| [humanize_controlled_value(s), s] } %>
+  <%= f.label :publisher %><%= f.text_field :publisher %>
+  <%= f.label :creators %><%= f.text_area :creators, rows: 2, data: { preview_source: "creators" } %>
+  <p class="ss-hint">Parsed preview: <span data-preview="creators-parsed"><%= metadata_creators_preview(catalog_item.creators) %></span></p>
+  <%= f.label :description %><%= f.text_area :description, rows: 4 %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>
+
+<fieldset class="ss-form-section" data-catalog-fields="book periodical recorded_music videorecording audiobook ebook map game gift sideline other">
+  <legend>Publication</legend>
+  <%= f.label :publication_date %><%= f.date_field :publication_date %>
+  <%= f.label :edition_statement %><%= f.text_field :edition_statement %>
+  <%= f.label :language_code %><%= f.text_field :language_code, maxlength: 10 %>
+  <%= f.label :series_name %><%= f.text_field :series_name %>
+  <%= f.label :series_enumeration %><%= f.text_field :series_enumeration, maxlength: 15 %>
+</fieldset>
+
+<fieldset class="ss-form-section" data-catalog-fields="periodical">
+  <legend>Periodical</legend>
+  <%= f.label :publication_frequency %>
+  <%= f.select :publication_frequency, CatalogItem::PUBLICATION_FREQUENCIES.map { |v| [humanize_controlled_value(v), v] }, include_blank: true %>
+</fieldset>
+
+<fieldset class="ss-form-section" data-catalog-fields="calendar">
+  <legend>Calendar</legend>
+  <%= f.label :year %><%= f.text_field :year, maxlength: 4 %>
+</fieldset>
+
+<fieldset class="ss-form-section" data-catalog-fields="book calendar periodical recorded_music sideline videorecording audiobook map game gift other">
+  <legend>Physical Details</legend>
+  <%= f.label :height %><%= f.number_field :height, step: 0.01 %>
+  <%= f.label :width %><%= f.number_field :width, step: 0.01 %>
+  <%= f.label :depth %><%= f.number_field :depth, step: 0.01 %>
+  <%= f.label :dimension_units %><%= f.select :dimension_units, CatalogItem::DIMENSION_UNITS, include_blank: true %>
+  <%= f.label :weight %><%= f.number_field :weight, step: 0.01 %>
+  <%= f.label :weight_units %><%= f.select :weight_units, CatalogItem::WEIGHT_UNITS, include_blank: true %>
+  <%= f.label :page_count %><%= f.number_field :page_count %>
+  <%= f.label :large_print %><%= f.check_box :large_print %>
+</fieldset>
+
+<fieldset class="ss-form-section" data-catalog-fields="recorded_music videorecording audiobook other">
+  <legend>Media</legend>
+  <%= f.label :duration_minutes %><%= f.number_field :duration_minutes %>
+  <%= f.label :digital %><%= f.check_box :digital %>
+</fieldset>
+
+<fieldset class="ss-form-section" data-catalog-fields="ebook audiobook_digital">
+  <legend>Digital</legend>
+  <%= f.label :digital %><%= f.check_box :digital %>
+</fieldset>
+
+<fieldset class="ss-form-section">
+  <legend>Classification</legend>
+  <%= f.label :bisac_subjects, "BISAC subjects" %><%= f.text_area :bisac_subjects, rows: 2, data: { preview_source: "subjects" } %>
+  <p class="ss-hint">Parsed preview: <span data-preview="subjects-parsed"><%= metadata_subjects_preview(catalog_item.bisac_subjects) %></span></p>
+  <%= f.label :genres %><%= f.text_area :genres, rows: 2 %>
+  <%= f.label :themes %><%= f.text_area :themes, rows: 2 %>
+  <%= f.label :target_audiences, "Target audiences" %><%= f.text_area :target_audiences, rows: 2 %>
+  <%= f.label :access_restrictions, "Access restrictions" %><%= f.text_area :access_restrictions, rows: 2 %>
+</fieldset>
+
+<% if include_identifier %>
+  <fieldset class="ss-form-section">
+    <legend>Initial Identifier</legend>
+    <%= label_tag "catalog_item[initial_identifier_type]", "Identifier type" %>
+    <%= select_tag "catalog_item[initial_identifier_type]", options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, "isbn13"), data: { preview_target: "identifier-type" } %>
+    <%= label_tag "catalog_item[initial_identifier_value]", "Identifier value" %>
+    <%= text_field_tag "catalog_item[initial_identifier_value]", nil, data: { preview_target: "identifier-value" } %>
+    <p class="ss-hint">Normalized preview: <span data-preview="identifier-normalized">—</span></p>
+  </fieldset>
+<% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var typeSelect = document.querySelector("[data-catalog-type='select']");
+    var fieldsets = document.querySelectorAll("[data-catalog-fields]");
+    function updateCatalogFields() {
+      var selected = typeSelect ? typeSelect.value : "book";
+      fieldsets.forEach(function(fieldset) {
+        var types = fieldset.getAttribute("data-catalog-fields").split(" ");
+        fieldset.style.display = types.indexOf(selected) >= 0 ? "" : "none";
+      });
+    }
+    if (typeSelect) {
+      typeSelect.addEventListener("change", updateCatalogFields);
+      updateCatalogFields();
+    }
+
+    var idType = document.querySelector("[data-preview-target='identifier-type']");
+    var idValue = document.querySelector("[data-preview-target='identifier-value']");
+    var idPreview = document.querySelector("[data-preview='identifier-normalized']");
+    function updateIdentifierPreview() {
+      if (!idType || !idValue || !idPreview) return;
+      var value = idValue.value.trim();
+      if (!value) { idPreview.textContent = "—"; return; }
+      var normalized = value.replace(/[^0-9Xx]/g, "").toUpperCase();
+      if (idType.value === "publisher_number") {
+        normalized = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      }
+      idPreview.textContent = normalized || "—";
+    }
+    if (idType && idValue) {
+      idType.addEventListener("change", updateIdentifierPreview);
+      idValue.addEventListener("input", updateIdentifierPreview);
+    }
+
+    function splitOutsideBrackets(input) {
+      var parts = [];
+      var current = "";
+      var depth = 0;
+      for (var i = 0; i < input.length; i++) {
+        var char = input[i];
+        if (char === "[") {
+          depth += 1;
+          current += char;
+        } else if (char === "]") {
+          if (depth > 0) depth -= 1;
+          current += char;
+        } else if (char === ";" && depth === 0) {
+          parts.push(current);
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+      if (current.length) parts.push(current);
+      return parts;
+    }
+
+    function parseCreatorPreview(value) {
+      return splitOutsideBrackets(value).map(function(entry) {
+        entry = entry.trim();
+        if (!entry) return null;
+        return entry.replace(/\[[^\]]+\]\s*$/, "").trim();
+      }).filter(Boolean).join("; ") || "—";
+    }
+
+    function parseSubjectPreview(value) {
+      return splitOutsideBrackets(value).map(function(entry) {
+        entry = entry.trim();
+        if (!entry) return null;
+        return entry.replace(/\[[A-Za-z0-9_]+(?:\/[^\]]+)?\]\s*$/, "").trim();
+      }).filter(Boolean).join("; ") || "—";
+    }
+
+    function bindMetadataPreview(sourceName, previewName, parser) {
+      var source = document.querySelector("[data-preview-source='" + sourceName + "']");
+      var preview = document.querySelector("[data-preview='" + previewName + "']");
+      if (!source || !preview) return;
+      function update() {
+        preview.textContent = parser(source.value);
+      }
+      source.addEventListener("input", update);
+      source.addEventListener("change", update);
+    }
+
+    bindMetadataPreview("creators", "creators-parsed", parseCreatorPreview);
+    bindMetadataPreview("subjects", "subjects-parsed", parseSubjectPreview);
+  });
+</script>

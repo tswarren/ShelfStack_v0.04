@@ -107,23 +107,13 @@ Do not remove or bypass Phase 1 protections (super administrator, system user, a
 
 Phase 2 was completed on 2025-06-10. See [docs/implementation/phase-2-completion.md](docs/implementation/phase-2-completion.md).
 
-## Phase 3: Catalog, Products, and Product Variants — **Active**
+## Phase 3: Catalog, Products, and Product Variants — **Complete**
 
-Focus:
+Phase 3 was completed on 2025-06-10. See [docs/implementation/phase-3-completion.md](docs/implementation/phase-3-completion.md).
 
-* Formats
-* Catalog items
-* Catalog item identifiers
-* Products
-* Product conditions
-* Product variants
-* Display locations
-* Store display locations
-* Vendors
-* SKU generation
-* Name rendering
+## Phase 4: Inventory Foundation — **Next**
 
-Do not jump ahead to inventory, purchasing, receiving, POS, or reporting tables unless the user explicitly asks to design that phase.
+Do not jump ahead to purchasing, receiving, POS, or reporting tables unless the user explicitly asks to design that phase.
 
 ---
 
@@ -516,6 +506,14 @@ Audit events should include:
 ---
 
 # UI Guidelines
+
+## Workspaces
+
+Present operational catalog/product/variant work in the **Items** workspace (`/items`). Admin reference data (formats, product conditions, display locations, vendors, tax, users) belongs in **Setup** (`/setup`).
+
+Use user-facing labels from the UX concept (Item Details, Selling Setup, Sellable SKUs) in Items views via `ItemsHelper`.
+
+Unified item flows should use `Items::ItemPresenter` and `ItemLifecycleStatus` rather than branching on raw model types in views.
 
 ## Setup screens
 

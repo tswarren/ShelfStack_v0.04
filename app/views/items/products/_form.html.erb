@@ -1,0 +1,39 @@
+<% if product.errors.any? %>
+  <div class="flash flash-alert"><%= product.errors.full_messages.to_sentence %></div>
+<% end %>
+<fieldset class="ss-form-section">
+  <legend>Cover Image</legend>
+  <% if product.cover_image.attached? %>
+    <div class="ss-cover-preview">
+      <%= product_cover_image_tag(product.cover_image, size: :hero, alt: "Current cover image for #{product.name}") %>
+    </div>
+    <%= f.label :remove_cover_image, "Remove cover image" %>
+    <%= f.check_box :remove_cover_image %>
+  <% end %>
+  <%= f.label :cover_image, product.cover_image.attached? ? "Replace cover image" : "Cover image" %>
+  <%= f.file_field :cover_image, accept: Product::ALLOWED_COVER_IMAGE_TYPES.join(",") %>
+  <p class="ss-hint">JPEG, PNG, WebP, or GIF up to 5 MB. Shown on the item overview and product lists.</p>
+</fieldset>
+<fieldset class="ss-form-section">
+  <legend>Product</legend>
+  <%= f.label :catalog_item_id, "Catalog item" %>
+  <%= f.collection_select :catalog_item_id, catalog_items, :id, :title, include_blank: "Non-catalog product" %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :name_override, "Name override" %><%= f.text_field :name_override %>
+  <%= f.label :short_name, "Short name" %><%= f.text_field :short_name, maxlength: 40 %>
+  <%= f.label :sku, "SKU (leave blank for catalog default)" %><%= f.text_field :sku, maxlength: 50 %>
+  <% if product.catalog_item&.primary_identifier %>
+    <p class="ss-hint">Source: catalog primary identifier (<%= product.catalog_item.primary_identifier.normalized_identifier %>)</p>
+  <% end %>
+  <%= f.label :product_type, "Product type" %>
+  <%= f.select :product_type, Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] } %>
+  <%= f.label :variation_type, "Variation type" %>
+  <%= f.select :variation_type, Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] } %>
+  <%= f.label :list_price_cents, "List price (cents)" %><%= f.number_field :list_price_cents, min: 0 %>
+  <p class="ss-hint">List price preview: <%= format_cents(product.list_price_cents) %></p>
+  <%= f.label :default_display_location_id, "Default display location" %>
+  <%= f.collection_select :default_display_location_id, display_locations, :id, :name, include_blank: true, id: "product_default_display_location_id" %>
+  <%= f.label :variant1_label, "Variant 1 label" %><%= f.text_field :variant1_label %>
+  <%= f.label :variant2_label, "Variant 2 label" %><%= f.text_field :variant2_label %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>

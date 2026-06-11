@@ -33,7 +33,7 @@ ShelfStack is a bookstore-focused catalog, inventory, stock, and point-of-sale m
 
 Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to the task.
 
-**Phase 1 and Phase 2 are implemented.** See [implementation/phase-1-completion.md](implementation/phase-1-completion.md) and [implementation/phase-2-completion.md](implementation/phase-2-completion.md). **Phase 3** is the active build priority.
+**Phases 1–3 are implemented.** See completion records under [implementation/](implementation/). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data (formats, conditions, tax, users, etc.). **Phase 4** (inventory foundation) is the next planned phase.
 
 ---
 
@@ -43,7 +43,7 @@ Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to th
 | ----- | ------------- | --------------------- |
 | Phase 1 | Complete | [implementation/phase-1-completion.md](implementation/phase-1-completion.md) |
 | Phase 2 | Complete | [implementation/phase-2-completion.md](implementation/phase-2-completion.md) |
-| Phase 3 | Complete | Not started |
+| Phase 3 | Complete | [implementation/phase-3-completion.md](implementation/phase-3-completion.md) |
 
 Operational tasks (login, workstation assignment, admin recovery): [operations/foundation-runbook.md](operations/foundation-runbook.md).
 

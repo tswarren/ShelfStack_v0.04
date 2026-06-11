@@ -1,0 +1,15 @@
+<h1>Display Locations <%= link_to "New", new_setup_display_location_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Name</th><th>Short Name</th><th>Parent</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @display_locations.each do |location| %>
+      <tr>
+        <td><%= location.name %></td>
+        <td><%= location.short_name %></td>
+        <td><%= location.parent&.name || "—" %></td>
+        <td><span class="<%= status_class(location.active?) %>"><%= status_label(location.active?) %></span></td>
+        <td><%= link_to "View", setup_display_location_path(location) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

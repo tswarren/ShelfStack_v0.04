@@ -1,0 +1,14 @@
+<% if vendor.errors.any? %>
+  <div class="flash flash-alert"><%= vendor.errors.full_messages.to_sentence %></div>
+<% end %>
+<fieldset class="ss-form-section">
+  <legend>Vendor</legend>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :parent_vendor_id, "Parent vendor" %>
+  <%= f.collection_select :parent_vendor_id, parent_vendors, :id, :name, include_blank: true %>
+  <%= f.label :default_pricing_model, "Default pricing model" %>
+  <%= f.select :default_pricing_model, Category::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
+  <%= f.label :default_margin_target_bps, "Default margin target (bps)" %><%= f.number_field :default_margin_target_bps, min: 0, max: 10_000 %>
+  <%= f.label :default_supplier_discount_bps, "Default supplier discount (bps)" %><%= f.number_field :default_supplier_discount_bps, min: 0, max: 10_000 %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>

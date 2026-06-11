@@ -1,0 +1,19 @@
+<h1><%= @vendor.name %></h1>
+<dl class="ss-summary">
+  <dt>Parent vendor</dt><dd><%= @vendor.parent_vendor&.name || "—" %></dd>
+  <dt>Default pricing model</dt><dd><%= @vendor.default_pricing_model ? humanize_controlled_value(@vendor.default_pricing_model) : "—" %></dd>
+  <dt>Default margin target</dt><dd><%= format_basis_points(@vendor.default_margin_target_bps) %></dd>
+  <dt>Default supplier discount</dt><dd><%= format_basis_points(@vendor.default_supplier_discount_bps) %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@vendor.active?) %>"><%= status_label(@vendor.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_vendor_path(@vendor), class: "ss-btn" %>
+  <% if @vendor.active? %>
+    <%= button_to "Inactivate", inactivate_setup_vendor_path(@vendor), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_vendor_path(@vendor), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_vendor_path(@vendor), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this vendor?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

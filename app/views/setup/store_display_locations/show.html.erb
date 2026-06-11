@@ -1,0 +1,18 @@
+<h1><%= @store_display_location.store.name %> — <%= @store_display_location.display_location.name %></h1>
+<dl class="ss-summary">
+  <dt>Store</dt><dd><%= @store_display_location.store.name %> (<%= @store_display_location.store.store_number %>)</dd>
+  <dt>Display location</dt><dd><%= @store_display_location.display_location.name %></dd>
+  <dt>Linear feet</dt><dd><%= @store_display_location.linear_feet %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@store_display_location.active?) %>"><%= status_label(@store_display_location.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_store_display_location_path(@store_display_location), class: "ss-btn" %>
+  <% if @store_display_location.active? %>
+    <%= button_to "Inactivate", inactivate_setup_store_display_location_path(@store_display_location), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_store_display_location_path(@store_display_location), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_store_display_location_path(@store_display_location), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this store display location?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

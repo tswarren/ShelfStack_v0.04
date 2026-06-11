@@ -1,0 +1,12 @@
+<% if format.errors.any? %>
+  <div class="flash flash-alert"><%= format.errors.full_messages.to_sentence %></div>
+<% end %>
+<fieldset class="ss-form-section">
+  <legend>Format</legend>
+  <%= f.label :format_key %><%= f.text_field :format_key, maxlength: 30 %>
+  <%= f.label :name %><%= f.text_field :name %>
+  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
+  <%= f.label :code %><%= f.text_field :code, maxlength: 20 %>
+  <%= f.label :virtual %><%= f.check_box :virtual %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>

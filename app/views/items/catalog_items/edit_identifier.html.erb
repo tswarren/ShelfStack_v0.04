@@ -1,0 +1,13 @@
+<h1>Edit Identifier</h1>
+<p class="ss-muted"><%= @catalog_item.title %> · <%= @identifier.identifier_type.upcase %></p>
+
+<%= form_with url: update_identifier_items_catalog_item_path(@catalog_item, identifier_id: @identifier.id, return_to: params[:return_to]), method: :patch do |f| %>
+  <%= f.label :identifier_value, "Identifier value" %>
+  <%= f.text_field :identifier_value, value: @identifier.identifier_value, required: true, autofocus: true %>
+  <p class="ss-hint">Normalized preview: <span><%= @identifier.normalized_identifier %></span></p>
+  <%= f.submit "Save Identifier", class: "ss-btn" %>
+<% end %>
+
+<p>
+  <%= link_to "Cancel", params[:return_to] == "item" ? items_item_path(catalog_item_id: @catalog_item.id, tab: "catalog") : items_catalog_item_path(@catalog_item) %>
+</p>

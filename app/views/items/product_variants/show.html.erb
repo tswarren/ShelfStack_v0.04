@@ -1,0 +1,22 @@
+<h1><%= @product_variant.name %></h1>
+<dl class="ss-summary">
+  <dt>Product</dt><dd><%= @product_variant.product.name %></dd>
+  <dt>SKU</dt><dd><%= @product_variant.sku %></dd>
+  <dt>Category</dt><dd><%= @product_variant.category.name %></dd>
+  <dt>Condition</dt><dd><%= @product_variant.condition&.name || "—" %></dd>
+  <dt>Selling price</dt><dd><%= format_cents(@product_variant.selling_price_cents) %></dd>
+  <dt>Inventory behavior</dt><dd><%= humanize_controlled_value(@product_variant.inventory_behavior) %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@product_variant.active?) %>"><%= status_label(@product_variant.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_items_product_variant_path(@product_variant), class: "ss-btn" %>
+  <%= button_to "Regenerate Name", regenerate_name_items_product_variant_path(@product_variant), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% if @product_variant.active? %>
+    <%= button_to "Inactivate", inactivate_items_product_variant_path(@product_variant), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_items_product_variant_path(@product_variant), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", items_product_variant_path(@product_variant), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this variant?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

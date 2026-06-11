@@ -1,0 +1,5 @@
+<h1>New Product Variant</h1>
+<%= form_with model: [:items, @product_variant] do |f| %>
+  <%= render "form", f: f, product_variant: @product_variant, products: @products, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
+  <%= f.submit "Create Variant", class: "ss-btn" %>
+<% end %>

@@ -1,15 +1,35 @@
 <h1>Setup</h1>
 
-<div class="ss-card-grid">
-  <%= link_to setup_users_path do %><div class="ss-card">Users</div><% end %>
-  <%= link_to setup_roles_path do %><div class="ss-card">Roles</div><% end %>
-  <%= link_to setup_permissions_path do %><div class="ss-card">Permissions</div><% end %>
-  <%= link_to setup_stores_path do %><div class="ss-card">Stores</div><% end %>
-  <%= link_to setup_workstations_path do %><div class="ss-card">Workstations</div><% end %>
-  <%= link_to setup_tax_categories_path do %><div class="ss-card">Tax Categories</div><% end %>
-  <%= link_to setup_store_tax_rates_path do %><div class="ss-card">Store Tax Rates</div><% end %>
-  <%= link_to setup_store_tax_category_rates_path do %><div class="ss-card">Tax Mappings</div><% end %>
-  <%= link_to setup_departments_path do %><div class="ss-card">Departments</div><% end %>
-  <%= link_to setup_categories_path do %><div class="ss-card">Categories</div><% end %>
-  <%= link_to setup_audit_events_path do %><div class="ss-card">Audit Events</div><% end %>
-</div>
+<section class="ss-setup-section">
+  <h2>Foundation</h2>
+  <div class="ss-card-grid">
+    <%= link_to setup_users_path do %><div class="ss-card">Users</div><% end %>
+    <%= link_to setup_roles_path do %><div class="ss-card">Roles</div><% end %>
+    <%= link_to setup_permissions_path do %><div class="ss-card">Permissions</div><% end %>
+    <%= link_to setup_stores_path do %><div class="ss-card">Stores</div><% end %>
+    <%= link_to setup_workstations_path do %><div class="ss-card">Workstations</div><% end %>
+    <%= link_to setup_audit_events_path do %><div class="ss-card">Audit Events</div><% end %>
+  </div>
+</section>
+
+<section class="ss-setup-section">
+  <h2>Classification</h2>
+  <div class="ss-card-grid">
+    <%= link_to setup_departments_path do %><div class="ss-card">Departments</div><% end %>
+    <%= link_to setup_categories_path do %><div class="ss-card">Categories</div><% end %>
+    <%= link_to setup_tax_categories_path do %><div class="ss-card">Tax Categories</div><% end %>
+    <%= link_to setup_store_tax_rates_path do %><div class="ss-card">Store Tax Rates</div><% end %>
+    <%= link_to setup_store_tax_category_rates_path do %><div class="ss-card">Tax Mappings</div><% end %>
+  </div>
+</section>
+
+<section class="ss-setup-section">
+  <h2>Catalog and Items</h2>
+  <div class="ss-card-grid">
+    <%= link_to setup_formats_path do %><div class="ss-card">Formats</div><% end %>
+    <%= link_to setup_product_conditions_path do %><div class="ss-card"><%= items_user_facing_label("product_conditions") %></div><% end %>
+    <%= link_to setup_display_locations_path do %><div class="ss-card"><%= items_user_facing_label("display_locations") %></div><% end %>
+    <%= link_to setup_store_display_locations_path do %><div class="ss-card">Store Display Locations</div><% end %>
+    <%= link_to setup_vendors_path do %><div class="ss-card">Vendors</div><% end %>
+  </div>
+</section>

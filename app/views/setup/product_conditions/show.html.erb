@@ -1,0 +1,20 @@
+<h1><%= @product_condition.name %></h1>
+<dl class="ss-summary">
+  <dt>Condition key</dt><dd><%= @product_condition.condition_key %></dd>
+  <dt>Short name</dt><dd><%= @product_condition.short_name %></dd>
+  <dt>SKU component</dt><dd><%= @product_condition.sku_component || "—" %></dd>
+  <dt>List price factor</dt><dd><%= format_basis_points(@product_condition.default_list_price_factor_bps) %></dd>
+  <dt>New condition</dt><dd><%= @product_condition.new_condition? ? "Yes" : "No" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@product_condition.active?) %>"><%= status_label(@product_condition.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_product_condition_path(@product_condition), class: "ss-btn" %>
+  <% if @product_condition.active? %>
+    <%= button_to "Inactivate", inactivate_setup_product_condition_path(@product_condition), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_product_condition_path(@product_condition), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_product_condition_path(@product_condition), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this condition?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

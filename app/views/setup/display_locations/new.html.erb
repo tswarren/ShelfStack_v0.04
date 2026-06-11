@@ -1,0 +1,5 @@
+<h1>New Display Location</h1>
+<%= form_with model: [:setup, @display_location] do |f| %>
+  <%= render "form", f: f, display_location: @display_location, parents: @parents %>
+  <%= f.submit "Create Display Location", class: "ss-btn" %>
+<% end %>

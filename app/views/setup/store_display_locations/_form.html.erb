@@ -1,0 +1,12 @@
+<% if store_display_location.errors.any? %>
+  <div class="flash flash-alert"><%= store_display_location.errors.full_messages.to_sentence %></div>
+<% end %>
+<fieldset class="ss-form-section">
+  <legend>Store Display Location</legend>
+  <%= f.label :store_id, "Store" %>
+  <%= f.collection_select :store_id, stores, :id, :name %>
+  <%= f.label :display_location_id, "Display location" %>
+  <%= f.collection_select :display_location_id, display_locations, :id, :name %>
+  <%= f.label :linear_feet, "Linear feet" %><%= f.number_field :linear_feet, min: 0 %>
+  <%= f.label :active %><%= f.check_box :active %>
+</fieldset>

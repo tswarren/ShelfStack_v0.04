@@ -1,0 +1,47 @@
+<h1><%= @product.name %></h1>
+
+<% if @product.cover_image.attached? %>
+  <div class="ss-cover-preview">
+    <%= product_cover_image_tag(@product.cover_image, size: :hero, alt: "Cover image for #{@product.name}") %>
+  </div>
+<% end %>
+
+<dl class="ss-summary">
+  <dt>SKU</dt><dd><%= @product.sku %></dd>
+  <dt>Catalog item</dt><dd><%= @product.catalog_item&.title || "—" %></dd>
+  <dt>Product type</dt><dd><%= humanize_controlled_value(@product.product_type) %></dd>
+  <dt>Variation type</dt><dd><%= humanize_controlled_value(@product.variation_type) %></dd>
+  <dt>List price</dt><dd><%= format_cents(@product.list_price_cents) %></dd>
+  <dt>Sellable</dt><dd><%= @product.sellable? ? "Yes" : "No" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@product.active?) %>"><%= status_label(@product.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_items_product_path(@product), class: "ss-btn" %>
+  <%= link_to "New Variant", new_items_product_variant_path(product_id: @product.id), class: "ss-btn ss-btn-secondary" %>
+  <%= button_to "Regenerate Name", regenerate_name_items_product_path(@product), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% if @product.active? %>
+    <%= button_to "Inactivate", inactivate_items_product_path(@product), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_items_product_path(@product), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", items_product_path(@product), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this product?" } %>
+</div>
+
+<h2>Variants</h2>
+<table class="ss-table">
+  <thead><tr><th>Name</th><th>SKU</th><th>Price</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @variants.each do |variant| %>
+      <tr>
+        <td><%= variant.name %></td>
+        <td><%= variant.sku %></td>
+        <td><%= format_cents(variant.selling_price_cents) %></td>
+        <td><span class="<%= status_class(variant.active?) %>"><%= status_label(variant.active?) %></span></td>
+        <td><%= link_to "View", items_product_variant_path(variant) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

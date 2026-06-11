@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "audit_events", force: :cascade do |t|
     t.bigint "actor_user_id", null: false
@@ -37,6 +65,77 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
     t.index ["store_id"], name: "index_audit_events_on_store_id"
     t.index ["user_session_id"], name: "index_audit_events_on_user_session_id"
     t.index ["workstation_id"], name: "index_audit_events_on_workstation_id"
+  end
+
+  create_table "catalog_item_identifiers", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.bigint "catalog_item_id", null: false
+    t.datetime "created_at", null: false
+    t.string "identifier_type", null: false
+    t.string "identifier_value", limit: 100, null: false
+    t.string "normalized_identifier", limit: 100, null: false
+    t.boolean "primary_identifier", default: false, null: false
+    t.string "source"
+    t.datetime "updated_at", null: false
+    t.boolean "valid_check_digit"
+    t.string "validation_message"
+    t.index ["active"], name: "index_catalog_item_identifiers_on_active"
+    t.index ["catalog_item_id"], name: "index_catalog_item_identifiers_on_catalog_item_id"
+    t.index ["catalog_item_id"], name: "index_catalog_item_identifiers_one_active_primary", unique: true, where: "((active = true) AND (primary_identifier = true))"
+    t.index ["identifier_type", "normalized_identifier"], name: "idx_catalog_item_identifiers_standard_unique", unique: true, where: "((identifier_type)::text = ANY ((ARRAY['isbn10'::character varying, 'isbn13'::character varying, 'ean'::character varying, 'upc'::character varying, 'gtin'::character varying, 'local'::character varying])::text[]))"
+    t.index ["normalized_identifier"], name: "index_catalog_item_identifiers_on_normalized_identifier"
+  end
+
+  create_table "catalog_items", force: :cascade do |t|
+    t.jsonb "access_restriction_data"
+    t.string "access_restrictions"
+    t.boolean "active", default: true, null: false
+    t.jsonb "bisac_subject_data"
+    t.string "bisac_subjects"
+    t.string "catalog_item_type", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "creator_details"
+    t.string "creators"
+    t.decimal "depth", precision: 10, scale: 2
+    t.text "description"
+    t.boolean "digital", default: false, null: false
+    t.string "dimension_units"
+    t.integer "duration_minutes"
+    t.string "edition_statement"
+    t.bigint "format_id", null: false
+    t.jsonb "genre_data"
+    t.string "genres"
+    t.decimal "height", precision: 10, scale: 2
+    t.string "language_code", limit: 10
+    t.boolean "large_print", default: false, null: false
+    t.integer "page_count"
+    t.date "publication_date"
+    t.string "publication_frequency"
+    t.string "publication_status", default: "active", null: false
+    t.string "publisher"
+    t.jsonb "publisher_details"
+    t.jsonb "series_data"
+    t.string "series_enumeration", limit: 15
+    t.string "series_name"
+    t.jsonb "target_audience_data"
+    t.string "target_audiences"
+    t.jsonb "theme_data"
+    t.string "themes"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "weight", precision: 10, scale: 2
+    t.string "weight_units"
+    t.decimal "width", precision: 10, scale: 2
+    t.string "year", limit: 4
+    t.index ["active"], name: "index_catalog_items_on_active"
+    t.index ["catalog_item_type"], name: "index_catalog_items_on_catalog_item_type"
+    t.index ["format_id"], name: "index_catalog_items_on_format_id"
+    t.index ["publication_status"], name: "index_catalog_items_on_publication_status"
+    t.index ["publisher"], name: "index_catalog_items_on_publisher"
+    t.index ["series_name"], name: "index_catalog_items_on_series_name"
+    t.index ["title"], name: "index_catalog_items_on_title"
+    t.index ["year"], name: "index_catalog_items_on_year"
+    t.check_constraint "year IS NULL OR year::text ~ '^[0-9]{4}$'::text", name: "chk_catalog_items_year_format"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -76,6 +175,35 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
     t.index ["short_name"], name: "index_departments_on_short_name", unique: true
   end
 
+  create_table "display_locations", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "parent_id"
+    t.string "short_name", limit: 20, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_display_locations_on_active"
+    t.index ["parent_id"], name: "index_display_locations_on_parent_id"
+    t.index ["short_name"], name: "index_display_locations_on_short_name", unique: true
+    t.index ["sort_order"], name: "index_display_locations_on_sort_order"
+  end
+
+  create_table "formats", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "code", limit: 20
+    t.datetime "created_at", null: false
+    t.string "format_key", limit: 30, null: false
+    t.string "name", null: false
+    t.string "short_name", limit: 20, null: false
+    t.datetime "updated_at", null: false
+    t.boolean "virtual", default: false, null: false
+    t.index ["active"], name: "index_formats_on_active"
+    t.index ["code"], name: "index_formats_on_code"
+    t.index ["format_key"], name: "index_formats_on_format_key", unique: true
+    t.index ["short_name"], name: "index_formats_on_short_name"
+  end
+
   create_table "permissions", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -87,6 +215,82 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
     t.index ["active"], name: "index_permissions_on_active"
     t.index ["permission_group"], name: "index_permissions_on_permission_group"
     t.index ["permission_key"], name: "index_permissions_on_permission_key", unique: true
+  end
+
+  create_table "product_conditions", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "condition_key", null: false
+    t.datetime "created_at", null: false
+    t.integer "default_list_price_factor_bps", default: 10000, null: false
+    t.text "description"
+    t.string "name", null: false
+    t.boolean "new_condition", default: false, null: false
+    t.string "short_name", limit: 20, null: false
+    t.string "sku_component", limit: 5
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_product_conditions_on_active"
+    t.index ["condition_key"], name: "index_product_conditions_on_condition_key", unique: true
+    t.index ["new_condition"], name: "index_product_conditions_on_new_condition"
+    t.index ["short_name"], name: "index_product_conditions_on_short_name", unique: true
+    t.index ["sku_component"], name: "idx_product_conditions_sku_component_unique", unique: true, where: "(sku_component IS NOT NULL)"
+    t.index ["sort_order"], name: "index_product_conditions_on_sort_order"
+    t.check_constraint "default_list_price_factor_bps >= 0 AND default_list_price_factor_bps <= 10000", name: "chk_product_conditions_list_price_factor"
+  end
+
+  create_table "product_variants", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "attribute1_sku_component", limit: 5
+    t.string "attribute1_value"
+    t.string "attribute2_sku_component", limit: 5
+    t.string "attribute2_value"
+    t.bigint "category_id", null: false
+    t.bigint "condition_id"
+    t.datetime "created_at", null: false
+    t.bigint "display_location_id"
+    t.string "inventory_behavior", default: "standard_physical", null: false
+    t.string "name", null: false
+    t.string "name_override"
+    t.string "pricing_model_override"
+    t.bigint "product_id", null: false
+    t.integer "selling_price_cents", default: 0, null: false
+    t.string "short_name", limit: 40
+    t.string "sku", limit: 50, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_product_variants_on_active"
+    t.index ["category_id"], name: "index_product_variants_on_category_id"
+    t.index ["condition_id"], name: "index_product_variants_on_condition_id"
+    t.index ["display_location_id"], name: "index_product_variants_on_display_location_id"
+    t.index ["inventory_behavior"], name: "index_product_variants_on_inventory_behavior"
+    t.index ["pricing_model_override"], name: "index_product_variants_on_pricing_model_override"
+    t.index ["product_id"], name: "index_product_variants_on_product_id"
+    t.index ["sku"], name: "index_product_variants_on_sku", unique: true
+    t.check_constraint "selling_price_cents >= 0", name: "chk_product_variants_selling_price_cents"
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.bigint "catalog_item_id"
+    t.datetime "created_at", null: false
+    t.bigint "default_display_location_id"
+    t.integer "list_price_cents", default: 0, null: false
+    t.string "name", null: false
+    t.string "name_override"
+    t.string "product_type", default: "physical", null: false
+    t.string "short_name", limit: 40
+    t.string "sku", limit: 50, null: false
+    t.datetime "updated_at", null: false
+    t.string "variant1_label"
+    t.string "variant2_label"
+    t.string "variation_type", default: "standard", null: false
+    t.index ["active"], name: "index_products_on_active"
+    t.index ["catalog_item_id"], name: "index_products_on_catalog_item_id"
+    t.index ["default_display_location_id"], name: "index_products_on_default_display_location_id"
+    t.index ["name"], name: "index_products_on_name"
+    t.index ["product_type"], name: "index_products_on_product_type"
+    t.index ["sku"], name: "index_products_on_sku", unique: true
+    t.index ["variation_type"], name: "index_products_on_variation_type"
+    t.check_constraint "list_price_cents >= 0", name: "chk_products_list_price_cents"
   end
 
   create_table "role_permissions", force: :cascade do |t|
@@ -111,6 +315,19 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
     t.index ["name"], name: "index_roles_on_name"
     t.index ["role_key"], name: "index_roles_on_role_key", unique: true
     t.index ["system_role"], name: "index_roles_on_system_role"
+  end
+
+  create_table "store_display_locations", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.bigint "display_location_id", null: false
+    t.integer "linear_feet", default: 0, null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_store_display_locations_on_active"
+    t.index ["display_location_id"], name: "index_store_display_locations_on_display_location_id"
+    t.index ["store_id", "display_location_id"], name: "index_store_display_locations_unique", unique: true
+    t.index ["store_id"], name: "index_store_display_locations_on_store_id"
   end
 
   create_table "store_tax_category_rates", force: :cascade do |t|
@@ -261,6 +478,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  create_table "vendors", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "default_margin_target_bps"
+    t.string "default_pricing_model"
+    t.integer "default_supplier_discount_bps"
+    t.string "name", null: false
+    t.bigint "parent_vendor_id"
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_vendors_on_active"
+    t.index ["default_pricing_model"], name: "index_vendors_on_default_pricing_model"
+    t.index ["name"], name: "index_vendors_on_name"
+    t.index ["parent_vendor_id"], name: "index_vendors_on_parent_vendor_id"
+  end
+
   create_table "workstation_assignments", force: :cascade do |t|
     t.datetime "assigned_at", null: false
     t.bigint "assigned_by_user_id"
@@ -294,14 +526,27 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
     t.index ["workstation_type"], name: "index_workstations_on_workstation_type"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_events", "stores"
   add_foreign_key "audit_events", "user_sessions"
   add_foreign_key "audit_events", "users", column: "actor_user_id"
   add_foreign_key "audit_events", "workstations"
+  add_foreign_key "catalog_item_identifiers", "catalog_items"
+  add_foreign_key "catalog_items", "formats"
   add_foreign_key "categories", "departments"
   add_foreign_key "categories", "tax_categories", column: "default_tax_category_id"
+  add_foreign_key "display_locations", "display_locations", column: "parent_id"
+  add_foreign_key "product_variants", "categories"
+  add_foreign_key "product_variants", "display_locations"
+  add_foreign_key "product_variants", "product_conditions", column: "condition_id"
+  add_foreign_key "product_variants", "products"
+  add_foreign_key "products", "catalog_items"
+  add_foreign_key "products", "display_locations", column: "default_display_location_id"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
+  add_foreign_key "store_display_locations", "display_locations"
+  add_foreign_key "store_display_locations", "stores"
   add_foreign_key "store_tax_category_rates", "store_tax_rates"
   add_foreign_key "store_tax_category_rates", "stores"
   add_foreign_key "store_tax_category_rates", "tax_categories"
@@ -315,6 +560,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_06_11_120000) do
   add_foreign_key "user_sessions", "users", column: "ended_by_user_id"
   add_foreign_key "user_sessions", "workstations"
   add_foreign_key "users", "stores", column: "default_store_id"
+  add_foreign_key "vendors", "vendors", column: "parent_vendor_id"
   add_foreign_key "workstation_assignments", "users", column: "assigned_by_user_id"
   add_foreign_key "workstation_assignments", "workstations"
   add_foreign_key "workstations", "stores"

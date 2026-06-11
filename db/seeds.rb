@@ -2,12 +2,15 @@
 
 require_relative "seeds/phase1_permissions"
 require_relative "seeds/phase2_permissions"
+require_relative "seeds/phase3_permissions"
 require_relative "seeds/phase2_classification_tax"
+require_relative "seeds/phase3_catalog_products"
 
 puts "Seeding Phase 1 foundation..."
 
 Seeds::Phase1Permissions.seed!
 Seeds::Phase2Permissions.seed!
+Seeds::Phase3Permissions.seed!
 
 system_user = User.find_or_initialize_by(username: "system")
 system_user.assign_attributes(
@@ -119,3 +122,7 @@ puts "Phase 1 seed complete."
 puts "Seeding Phase 2 classification and tax..."
 Seeds::Phase2ClassificationTax.seed!
 puts "Phase 2 seed complete."
+
+puts "Seeding Phase 3 catalog, products, and variants..."
+Seeds::Phase3CatalogProducts.seed!
+puts "Phase 3 seed complete."

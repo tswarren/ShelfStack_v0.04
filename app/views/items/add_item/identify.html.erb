@@ -1,0 +1,27 @@
+<h1>Add Item — Step 1: Identify</h1>
+
+<%= form_with url: items_add_item_path(step: "identify"), method: :post do %>
+  <%= label_tag :q, "Scan or enter ISBN, UPC, SKU, title, or local identifier" %>
+  <%= text_field_tag :q, @query, autofocus: true %>
+  <%= submit_tag "Search", class: "ss-btn" %>
+  <%= submit_tag "Create New Item", name: "create_new", class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<% if @query.present? && @results&.any? %>
+  <h2>Existing matches</h2>
+  <table class="ss-table">
+    <thead><tr><th>Item</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @results.each do |result| %>
+        <% item = result.presenter %>
+        <tr>
+          <td><strong><%= item.title %></strong> · <%= item.primary_identifier_display %></td>
+          <td><%= item_lifecycle_status_badge(item.primary_status) %></td>
+          <td><%= link_to "View Item", item.show_path, class: "ss-btn ss-btn-secondary" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<p><%= link_to "Cancel", items_root_path %></p>
