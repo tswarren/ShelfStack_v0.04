@@ -1,32 +1,38 @@
-<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post do |f| %>
-  <% if product.errors.any? %>
-    <div class="flash flash-alert"><%= product.errors.full_messages.to_sentence %></div>
-  <% end %>
+<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post, class: "ss-form ss-form--wide" do |f| %>
+  <%= render "shared/forms/errors", record: product %>
   <%= f.hidden_field :variation_type, value: "conditional" %>
 
-  <fieldset class="ss-form-section">
-    <legend>Selling Setup</legend>
-    <p class="ss-hint">Generated name: <strong><%= ProductNameRenderer.product_name(product) %></strong></p>
-    <%= f.label :name_override, "Name override (optional)" %>
-    <%= f.text_field :name_override %>
-    <%= f.label :sku, "SKU" %>
-    <%= f.text_field :sku, value: product.sku.presence || catalog_item.primary_identifier&.normalized_identifier %>
-    <p class="ss-hint">Prefilled from catalog primary identifier.</p>
-    <%= f.label :product_type, "Product type" %>
-    <%= f.select :product_type, %w[physical digital].map { |t| [humanize_controlled_value(t), t] }, selected: product.product_type || "physical" %>
-    <%= f.label :list_price_cents, "List price (cents)" %>
-    <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
-    <%= label_tag "product[initial_category_id]", "Initial SKU category" %>
-    <%= select_tag "product[initial_category_id]",
-          options_from_collection_for_select(categories, :id, :name, @draft["initial_category_id"]),
-          include_blank: false %>
-    <p class="ss-hint">Variation type defaults to conditional for catalog-linked items (hidden in this workflow).</p>
-  </fieldset>
+  <%= render layout: "shared/forms/section", locals: {
+    title: "Selling Setup",
+    description: "Generated name: #{ProductNameRenderer.product_name(product)}"
+  } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name_override, label: "Name override (optional)" } do %>
+        <%= f.text_field :name_override %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", help: "Prefilled from catalog primary identifier." } do %>
+        <%= f.text_field :sku, value: product.sku.presence || catalog_item.primary_identifier&.normalized_identifier %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
+        <%= f.select :product_type, %w[physical digital].map { |t| [humanize_controlled_value(t), t] }, selected: product.product_type || "physical" %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
+        <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
+      <% end %>
+      <div class="ss-field">
+        <%= label_tag "product[initial_category_id]", "Initial SKU category", class: "ss-label" %>
+        <%= select_tag "product[initial_category_id]",
+              options_from_collection_for_select(categories, :id, :name, @draft["initial_category_id"]),
+              include_blank: false %>
+        <p class="ss-help">Variation type defaults to conditional for catalog-linked items (hidden in this workflow).</p>
+      </div>
+    </div>
+  <% end %>
 
-  <div class="ss-catalog-actions">
+  <footer class="ss-form-actions">
     <%= f.submit "Continue to Sellable SKU", class: "ss-btn" %>
     <%= link_to "Cancel", items_item_path(catalog_item_id: catalog_item.id), class: "ss-btn ss-btn-secondary" %>
-  </div>
+  </footer>
 <% end %>
 
 <p><%= link_to "Back", items_add_item_path(step: "item_details") %></p>

@@ -1,10 +1,10 @@
-<h1>Create Sellable SKU</h1>
-<p class="ss-muted">Product: <strong><%= @product.name %></strong> · SKU <%= @product.sku %></p>
+<%= render "shared/forms/page_header",
+           eyebrow: "Add Item",
+           title: "Create Sellable SKU",
+           description: "Product: #{@product.name} · SKU #{@product.sku}" %>
 
-<%= form_with model: @variant, url: items_add_item_path(step: "sellable_sku"), method: :post do |f| %>
-  <% if @variant.errors.any? %>
-    <div class="flash flash-alert"><%= @variant.errors.full_messages.to_sentence %></div>
-  <% end %>
+<%= form_with model: @variant, url: items_add_item_path(step: "sellable_sku"), method: :post, class: "ss-form ss-form--wide" do |f| %>
+  <%= render "shared/forms/errors", record: @variant %>
   <%= f.hidden_field :product_id, value: @product.id %>
 
   <% case @product.variation_type %>
@@ -18,11 +18,11 @@
     <%= render "sellable_sku_standard", f: f, variant: @variant, product: @product, categories: @categories, conditions: @conditions, display_locations: @display_locations %>
   <% end %>
 
-  <div class="ss-catalog-actions">
+  <footer class="ss-form-actions">
     <%= f.submit "Create SKU", class: "ss-btn" %>
     <%= f.submit "Create SKU and Add Another", class: "ss-btn ss-btn-secondary" %>
     <%= link_to "Cancel", Items::ItemPresenter.from_product(@product).show_path, class: "ss-btn ss-btn-secondary" %>
-  </div>
+  </footer>
 <% end %>
 
 <p><%= link_to "Back", items_add_item_path(step: "selling_setup") %></p>

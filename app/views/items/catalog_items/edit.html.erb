@@ -1,5 +1,12 @@
-<h1>Edit Catalog Item</h1>
-<%= form_with model: [:items, @catalog_item] do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "Edit Catalog Item",
+           description: "Update metadata, classification, and catalog details for this item." %>
+
+<%= form_with model: [:items, @catalog_item], class: "ss-form ss-form--wide" do |f| %>
   <%= render "form", f: f, catalog_item: @catalog_item, formats: @formats, include_identifier: false %>
-  <%= f.submit "Update Catalog Item", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Update Catalog Item", class: "ss-btn" %>
+    <%= link_to "Cancel", items_catalog_item_path(@catalog_item), class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

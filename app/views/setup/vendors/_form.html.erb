@@ -1,14 +1,26 @@
-<% if vendor.errors.any? %>
-  <div class="flash flash-alert"><%= vendor.errors.full_messages.to_sentence %></div>
+<%= render "shared/forms/errors", record: vendor %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Vendor Details", description: "Vendors supply products and may provide default pricing terms." } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :parent_vendor_id, label: "Parent vendor" } do %>
+      <%= f.collection_select :parent_vendor_id, parent_vendors, :id, :name, include_blank: true %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :default_pricing_model, label: "Default pricing model" } do %>
+      <%= f.select :default_pricing_model, Category::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :default_margin_target_bps, label: "Default margin target (bps)" } do %>
+      <%= f.number_field :default_margin_target_bps, min: 0, max: 10_000 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :default_supplier_discount_bps, label: "Default supplier discount (bps)" } do %>
+      <%= f.number_field :default_supplier_discount_bps, min: 0, max: 10_000 %>
+    <% end %>
+  </div>
 <% end %>
-<fieldset class="ss-form-section">
-  <legend>Vendor</legend>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :parent_vendor_id, "Parent vendor" %>
-  <%= f.collection_select :parent_vendor_id, parent_vendors, :id, :name, include_blank: true %>
-  <%= f.label :default_pricing_model, "Default pricing model" %>
-  <%= f.select :default_pricing_model, Category::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
-  <%= f.label :default_margin_target_bps, "Default margin target (bps)" %><%= f.number_field :default_margin_target_bps, min: 0, max: 10_000 %>
-  <%= f.label :default_supplier_discount_bps, "Default supplier discount (bps)" %><%= f.number_field :default_supplier_discount_bps, min: 0, max: 10_000 %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: vendor, field: :active,
+             help: "Inactive vendors remain for history but cannot be selected for new sourcing." %>
+<% end %>

@@ -208,7 +208,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'value="2000"'
     assert_includes response.body, 'value="COND-001"'
-    assert_includes response.body, "data-preview-target=\"variant-condition\""
+    assert_includes response.body, 'data-controller="variant-preview"'
   end
 
   test "non-catalog path does not require catalog item create permission" do

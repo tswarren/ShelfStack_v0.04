@@ -1,6 +1,12 @@
-<h1>Edit <%= @store.name %></h1>
-<%= form_with model: @store, url: setup_store_path(@store), method: :patch, class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Store",
+           description: "Stores define the physical locations where ShelfStack operates." %>
+
+<%= form_with model: @store, url: setup_store_path(@store), class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, store: @store %>
-  <%= f.submit "Save", class: "ss-btn" %>
-  <%= link_to "Cancel", setup_store_path(@store), class: "ss-btn ss-btn-secondary" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Update Store", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_store_path(@store), class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

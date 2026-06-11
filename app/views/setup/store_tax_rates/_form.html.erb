@@ -1,30 +1,34 @@
-<% if store_tax_rate.errors.any? %>
-  <div class="flash flash-alert">
-    <%= store_tax_rate.errors.full_messages.to_sentence %>
+<%= render "shared/forms/errors", record: store_tax_rate %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Rate Details",
+  description: "Store tax rates are referenced by tax category mappings."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2" data-controller="basis-points-preview">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_rate, field: :store_id, label: "Store", required: true } do %>
+      <%= f.collection_select :store_id, stores, :id, ->(s) { "#{s.store_number} — #{s.name}" }, { include_blank: "Select store" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_rate, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_rate, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_rate, field: :tax_identifier, label: "Tax identifier (receipt marker)" } do %>
+      <%= f.text_field :tax_identifier, maxlength: 1 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_rate, field: :tax_rate_bps, label: "Tax rate (basis points)", required: true } do %>
+      <%= f.number_field :tax_rate_bps, step: 1, min: 0, max: 10000,
+          data: { basis_points_preview_target: "input", action: "input->basis-points-preview#update" } %>
+    <% end %>
+    <div class="ss-field">
+      <span class="ss-label">Rate preview</span>
+      <p class="ss-hint" data-basis-points-preview-target="output"><%= format_basis_points(store_tax_rate.tax_rate_bps) %></p>
+    </div>
   </div>
 <% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Store tax rate</legend>
-  <%= f.label :store_id, "Store" %>
-  <%= f.collection_select :store_id, stores, :id, ->(s) { "#{s.store_number} — #{s.name}" }, { include_blank: "Select store" } %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
-  <%= f.label :tax_identifier, "Tax identifier (receipt marker)" %><%= f.text_field :tax_identifier, maxlength: 1 %>
-  <%= f.label :tax_rate_bps, "Tax rate (basis points)" %>
-  <%= f.number_field :tax_rate_bps, step: 1, min: 0, max: 10000, data: { preview_target: "store-tax-bps" } %>
-  <p class="ss-hint">Preview: <span data-preview="store-tax-bps"><%= format_basis_points(store_tax_rate.tax_rate_bps) %></span></p>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    var input = document.querySelector("[data-preview-target='store-tax-bps']");
-    var output = document.querySelector("[data-preview='store-tax-bps']");
-    if (!input || !output) return;
-    input.addEventListener("input", function() {
-      var bps = parseInt(input.value, 10);
-      output.textContent = isNaN(bps) ? "—" : (bps / 100).toFixed(2) + "%";
-    });
-  });
-</script>
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: store_tax_rate, field: :active,
+             help: "Inactive rates remain for history but cannot be selected for new mappings." %>
+<% end %>

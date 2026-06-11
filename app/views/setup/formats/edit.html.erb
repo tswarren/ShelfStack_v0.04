@@ -1,5 +1,12 @@
-<h1>Edit Format</h1>
-<%= form_with model: [:catalog, @format] do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Format",
+           description: "Formats describe the physical or digital form of catalog items." %>
+
+<%= form_with model: @format, url: setup_format_path(@format), class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, format: @format %>
-  <%= f.submit "Update Format", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Update Format", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_format_path(@format), class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

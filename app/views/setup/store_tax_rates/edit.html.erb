@@ -1,5 +1,12 @@
-<h1>Edit Store Tax Rate</h1>
-<%= form_with model: @store_tax_rate, url: setup_store_tax_rate_path(@store_tax_rate), class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Store Tax Rate",
+           description: "Define a named tax rate for a store. Map tax categories to this rate separately." %>
+
+<%= form_with model: @store_tax_rate, url: setup_store_tax_rate_path(@store_tax_rate), class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, store_tax_rate: @store_tax_rate, stores: @stores %>
-  <%= f.submit "Update Store Tax Rate", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Update Store Tax Rate", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_store_tax_rate_path(@store_tax_rate), class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

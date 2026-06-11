@@ -1,12 +1,23 @@
-<% if store_display_location.errors.any? %>
-  <div class="flash flash-alert"><%= store_display_location.errors.full_messages.to_sentence %></div>
+<%= render "shared/forms/errors", record: store_display_location %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Store Assignment",
+  description: "Link a global display location to a store with optional linear feet."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_display_location, field: :store_id, label: "Store", required: true } do %>
+      <%= f.collection_select :store_id, stores, :id, :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_display_location, field: :display_location_id, label: "Display location", required: true } do %>
+      <%= f.collection_select :display_location_id, display_locations, :id, :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_display_location, field: :linear_feet, label: "Linear feet" } do %>
+      <%= f.number_field :linear_feet, min: 0 %>
+    <% end %>
+  </div>
 <% end %>
-<fieldset class="ss-form-section">
-  <legend>Store Display Location</legend>
-  <%= f.label :store_id, "Store" %>
-  <%= f.collection_select :store_id, stores, :id, :name %>
-  <%= f.label :display_location_id, "Display location" %>
-  <%= f.collection_select :display_location_id, display_locations, :id, :name %>
-  <%= f.label :linear_feet, "Linear feet" %><%= f.number_field :linear_feet, min: 0 %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: store_display_location, field: :active,
+             help: "Inactive assignments remain for history but are not used for new variants." %>
+<% end %>

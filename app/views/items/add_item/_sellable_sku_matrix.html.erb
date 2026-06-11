@@ -1,24 +1,45 @@
-<fieldset class="ss-form-section">
-  <legend>Sellable SKU</legend>
-  <%= f.label :attribute1_value, product.variant1_label.presence || "Attribute 1 value" %>
-  <%= f.text_field :attribute1_value, data: { preview_target: "variant-attr1-value" } %>
-  <%= f.label :attribute1_sku_component, "Attribute 1 SKU component" %>
-  <%= f.text_field :attribute1_sku_component, maxlength: 5, data: { preview_target: "variant-attr1-sku" } %>
-  <%= f.label :attribute2_value, product.variant2_label.presence || "Attribute 2 value" %>
-  <%= f.text_field :attribute2_value, data: { preview_target: "variant-attr2-value" } %>
-  <%= f.label :attribute2_sku_component, "Attribute 2 SKU component" %>
-  <%= f.text_field :attribute2_sku_component, maxlength: 5, data: { preview_target: "variant-attr2-sku" } %>
-  <%= f.label :name_override, "Name override (optional)" %>
-  <%= f.text_field :name_override, data: { preview_target: "variant-name-override" } %>
-  <p class="ss-hint">Name preview: <span data-preview="variant-name"><%= product.name %></span></p>
-  <%= f.label :sku, "SKU (leave blank to generate)" %>
-  <%= f.text_field :sku, maxlength: 50, value: variant.sku, data: { preview_target: "variant-sku-manual", auto_generated: true } %>
-  <p class="ss-hint">SKU preview: <span data-preview="variant-sku"><%= variant_sku_preview(product) %></span></p>
-  <%= f.label :selling_price_cents, "Selling price (cents)" %>
-  <%= f.number_field :selling_price_cents, min: 0, value: variant.selling_price_cents, data: { preview_target: "variant-selling-price", auto_generated: true } %>
-  <%= f.label :category_id, "Category" %>
-  <%= f.collection_select :category_id, categories, :id, :name, selected: variant.category_id %>
-  <%= f.label :display_location_id, "Display location" %>
-  <%= f.collection_select :display_location_id, display_locations, :id, :name, include_blank: true %>
-</fieldset>
-<%= render "items/add_item/sellable_sku_preview_script", product: product, conditions: [] %>
+<section class="ss-form-card" data-controller="variant-preview"
+  data-variant-preview-product-value="<%= { sku: product.sku, name: product.name, variation_type: product.variation_type, list_price_cents: product.list_price_cents.to_i }.to_json %>"
+  data-variant-preview-conditions-value="[]"
+  data-action="input->variant-preview#refresh change->variant-preview#refresh">
+  <header class="ss-form-card-header">
+    <h2>Attributes &amp; SKU</h2>
+  </header>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :attribute1_value, label: product.variant1_label.presence || "Attribute 1 value" } do %>
+      <%= f.text_field :attribute1_value, data: { variant_preview_target: "attr1Value" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :attribute1_sku_component, label: "Attribute 1 SKU component" } do %>
+      <%= f.text_field :attribute1_sku_component, maxlength: 5, data: { variant_preview_target: "attr1Sku" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :attribute2_value, label: product.variant2_label.presence || "Attribute 2 value" } do %>
+      <%= f.text_field :attribute2_value, data: { variant_preview_target: "attr2Value" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :attribute2_sku_component, label: "Attribute 2 SKU component" } do %>
+      <%= f.text_field :attribute2_sku_component, maxlength: 5, data: { variant_preview_target: "attr2Sku" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :name_override, label: "Name override (optional)" } do %>
+      <%= f.text_field :name_override, data: { variant_preview_target: "nameOverride" } %>
+    <% end %>
+    <div class="ss-field">
+      <span class="ss-label">Name preview</span>
+      <p class="ss-hint"><span data-variant-preview-target="namePreview"><%= product.name %></span></p>
+    </div>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sku, label: "SKU (leave blank to generate)" } do %>
+      <%= f.text_field :sku, maxlength: 50, value: variant.sku, data: { variant_preview_target: "skuManual", auto_generated: true, action: "input->variant-preview#markSkuManual" } %>
+    <% end %>
+    <div class="ss-field">
+      <span class="ss-label">SKU preview</span>
+      <p class="ss-hint"><span data-variant-preview-target="skuPreview"><%= variant_sku_preview(product) %></span></p>
+    </div>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :selling_price_cents, label: "Selling price (cents)" } do %>
+      <%= f.number_field :selling_price_cents, min: 0, value: variant.selling_price_cents %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :category_id, label: "Category", required: true } do %>
+      <%= f.collection_select :category_id, categories, :id, :name, selected: variant.category_id %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :display_location_id, label: "Display location" } do %>
+      <%= f.collection_select :display_location_id, display_locations, :id, :name, include_blank: true %>
+    <% end %>
+  </div>
+</section>

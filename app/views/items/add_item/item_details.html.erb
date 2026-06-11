@@ -1,6 +1,9 @@
-<h1>Add Catalog-Linked Item — Item Details</h1>
+<%= render "shared/forms/page_header",
+           eyebrow: "Add Item",
+           title: "Add Catalog-Linked Item — Item Details",
+           description: "Enter catalog metadata. You can finish after this step or continue to selling setup." %>
 
-<%= form_with url: items_add_item_path(step: "item_details"), method: :post do %>
+<%= form_with url: items_add_item_path(step: "item_details"), method: :post, class: "ss-form ss-form--wide" do %>
   <%= fields_for :catalog_item, @catalog_item do |f| %>
     <%= render "items/catalog_items/form",
           f: f,
@@ -8,10 +11,9 @@
           formats: @formats,
           include_identifier: true %>
   <% end %>
-  <div class="ss-catalog-actions">
+  <footer class="ss-form-actions">
     <%= submit_tag "Create Selling Setup", class: "ss-btn" %>
     <%= submit_tag "Done", name: "commit", class: "ss-btn ss-btn-secondary" %>
-  </div>
+    <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>
-
-<p><%= link_to "Cancel", items_root_path %></p>

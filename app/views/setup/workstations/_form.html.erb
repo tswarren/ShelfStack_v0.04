@@ -1,20 +1,24 @@
-<% if workstation.errors.any? %>
-  <div class="flash flash-alert">
-    <%= workstation.errors.full_messages.to_sentence %>
+<%= render "shared/forms/errors", record: workstation %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Workstation Details",
+  description: "Workstations identify registers and back-office terminals for session context."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: workstation, field: :store_id, label: "Store", required: true } do %>
+      <%= f.collection_select :store_id, stores, :id, :name, { include_blank: "Select a store" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: workstation, field: :workstation_type, label: "Type", required: true } do %>
+      <%= f.select :workstation_type, Workstation::WORKSTATION_TYPES, { include_blank: "Select a type" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: workstation, field: :workstation_number, label: "Workstation number" } do %>
+      <%= f.text_field :workstation_number, maxlength: 3, placeholder: "001" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: workstation, field: :workstation_code, label: "Workstation code" } do %>
+      <%= f.text_field :workstation_code, placeholder: "001-REG001" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: workstation, field: :name, required: true } do %>
+      <%= f.text_field :name, placeholder: "Front Register" %>
+    <% end %>
   </div>
 <% end %>
-
-<%= f.label :store_id, "Store" %>
-<%= f.collection_select :store_id, stores, :id, :name, { include_blank: "Select a store" } %>
-
-<%= f.label :workstation_type, "Type" %>
-<%= f.select :workstation_type, Workstation::WORKSTATION_TYPES, { include_blank: "Select a type" } %>
-
-<%= f.label :workstation_number, "Workstation number" %>
-<%= f.text_field :workstation_number, maxlength: 3, placeholder: "001" %>
-
-<%= f.label :workstation_code, "Workstation code" %>
-<%= f.text_field :workstation_code, placeholder: "001-REG001" %>
-
-<%= f.label :name %>
-<%= f.text_field :name, placeholder: "Front Register" %>

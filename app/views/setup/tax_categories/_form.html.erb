@@ -1,13 +1,23 @@
-<% if tax_category.errors.any? %>
-  <div class="flash flash-alert">
-    <%= tax_category.errors.full_messages.to_sentence %>
+<%= render "shared/forms/errors", record: tax_category %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Tax Category Details",
+  description: "Tax categories describe how items are taxed at the register."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: tax_category, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: tax_category, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: tax_category, field: :sort_order } do %>
+      <%= f.number_field :sort_order, step: 1 %>
+    <% end %>
   </div>
 <% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Tax category</legend>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
-  <%= f.label :sort_order %><%= f.number_field :sort_order, step: 1 %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: tax_category, field: :active,
+             help: "Inactive tax categories remain for history but cannot be selected for new mappings." %>
+<% end %>

@@ -1,28 +1,47 @@
-<% if product_condition.errors.any? %>
-  <div class="flash flash-alert"><%= product_condition.errors.full_messages.to_sentence %></div>
+<%= render "shared/forms/errors", record: product_condition %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Condition Details",
+  description: "Conditions drive SKU suffixes, variant names, and used-book pricing factors."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :condition_key, required: true } do %>
+      <%= f.text_field :condition_key %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :sku_component, label: "SKU component", help: "Leave blank for new condition (no SKU suffix)." } do %>
+      <%= f.text_field :sku_component, maxlength: 5 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :sort_order } do %>
+      <%= f.number_field :sort_order %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :description } do %>
+      <%= f.text_area :description, rows: 3 %>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: product_condition, field: :new_condition,
+             help: "New conditions use full list price factor by default." %>
 <% end %>
-<fieldset class="ss-form-section">
-  <legend>Product Condition</legend>
-  <%= f.label :condition_key %><%= f.text_field :condition_key %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
-  <%= f.label :sku_component, "SKU component" %><%= f.text_field :sku_component, maxlength: 5 %>
-  <%= f.label :sort_order %><%= f.number_field :sort_order %>
-  <%= f.label :new_condition %><%= f.check_box :new_condition %>
-  <%= f.label :default_list_price_factor_bps, "List price factor (bps)" %>
-  <%= f.number_field :default_list_price_factor_bps, data: { preview_target: "condition-factor-bps" } %>
-  <p class="ss-hint">Factor preview: <span data-preview="condition-factor"><%= format_basis_points(product_condition.default_list_price_factor_bps) %></span></p>
-  <%= f.label :description %><%= f.text_area :description, rows: 3 %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    var input = document.querySelector("[data-preview-target='condition-factor-bps']");
-    var output = document.querySelector("[data-preview='condition-factor']");
-    if (!input || !output) return;
-    input.addEventListener("input", function() {
-      var bps = parseInt(input.value, 10);
-      output.textContent = isNaN(bps) ? "—" : (bps / 100.0).toFixed(2) + "%";
-    });
-  });
-</script>
+
+<%= render layout: "shared/forms/section", locals: { title: "Pricing Factor" } do %>
+  <div class="ss-form-grid ss-form-grid--2" data-controller="basis-points-preview">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :default_list_price_factor_bps, label: "List price factor (bps)" } do %>
+      <%= f.number_field :default_list_price_factor_bps,
+          data: { basis_points_preview_target: "input", action: "input->basis-points-preview#update" } %>
+    <% end %>
+    <div class="ss-field">
+      <span class="ss-label">Factor preview</span>
+      <p class="ss-hint" data-basis-points-preview-target="output"><%= format_basis_points(product_condition.default_list_price_factor_bps) %></p>
+    </div>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: product_condition, field: :active,
+             help: "Inactive conditions remain for history but cannot be selected for new variants." %>
+<% end %>

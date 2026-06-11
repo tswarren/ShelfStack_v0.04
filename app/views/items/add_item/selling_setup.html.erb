@@ -1,8 +1,13 @@
 <% if @catalog_item %>
-  <h1>Create Selling Setup</h1>
-  <p class="ss-muted">Catalog item: <strong><%= @catalog_item.title %></strong></p>
+  <%= render "shared/forms/page_header",
+             eyebrow: "Add Item",
+             title: "Create Selling Setup",
+             description: "Catalog item: #{@catalog_item.title}" %>
   <%= render "catalog_selling_setup", product: @product, catalog_item: @catalog_item, categories: @categories, display_locations: @display_locations %>
 <% else %>
-  <h1>Add Non-Catalog Item</h1>
+  <%= render "shared/forms/page_header",
+             eyebrow: "Add Item",
+             title: "Add Non-Catalog Item",
+             description: "Create a product without catalog metadata." %>
   <%= render "non_catalog_selling_setup", product: @product, categories: @categories, generated_sku: @draft["generated_sku"] %>
 <% end %>

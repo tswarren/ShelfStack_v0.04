@@ -128,6 +128,10 @@ Two user-facing paths:
 
 Services: `AddItem::InventoryBehaviorMapper`, `AddItem::DefaultSellingPrice`, `AddItem::ProductSkuGenerator`.
 
+#### Form layout standard
+
+Setup and Items forms use shared partials under `app/views/shared/forms/` (`_page_header`, `_section`, `_field`, `_checkbox`, `_errors`) with CSS width modifiers (`ss-form--standard`, `ss-form--wide`). Stimulus preview controllers: `department-number-preview`, `basis-points-preview`, `tax-mapping-preview`, `variant-preview`. See `docs/specifications/ui-ux-concept.md` §29.
+
 Legacy `/catalog/*` and `/products/*` URLs redirect to `/items/*`. Legacy catalog/products controllers and views were removed; only redirect routes remain.
 
 ### UX polish (Items workspace alignment)

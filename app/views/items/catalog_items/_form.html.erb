@@ -1,85 +1,156 @@
-<% if catalog_item.errors.any? %>
-  <div class="flash flash-alert"><%= catalog_item.errors.full_messages.to_sentence %></div>
+<%= render "shared/forms/errors", record: catalog_item %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Basic Details" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :catalog_item_type, label: "Type", required: true } do %>
+      <%= f.select :catalog_item_type, CatalogItem::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] }, {}, data: { catalog_type: "select" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :title, required: true } do %>
+      <%= f.text_field :title %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :format_id, label: "Format", required: true } do %>
+      <%= f.collection_select :format_id, formats, :id, :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publication_status } do %>
+      <%= f.select :publication_status, CatalogItem::PUBLICATION_STATUSES.map { |s| [humanize_controlled_value(s), s] } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publisher } do %>
+      <%= f.text_field :publisher %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :creators } do %>
+      <%= f.text_area :creators, rows: 2, data: { preview_source: "creators" } %>
+      <p class="ss-hint">Parsed preview: <span data-preview="creators-parsed"><%= metadata_creators_preview(catalog_item.creators) %></span></p>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :description } do %>
+      <%= f.text_area :description, rows: 4 %>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: catalog_item, field: :active %>
 <% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Catalog Item</legend>
-  <%= f.label :catalog_item_type, "Type" %>
-  <%= f.select :catalog_item_type, CatalogItem::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] }, {}, data: { catalog_type: "select" } %>
-  <%= f.label :title %><%= f.text_field :title %>
-  <%= f.label :format_id, "Format" %>
-  <%= f.collection_select :format_id, formats, :id, :name %>
-  <%= f.label :publication_status %>
-  <%= f.select :publication_status, CatalogItem::PUBLICATION_STATUSES.map { |s| [humanize_controlled_value(s), s] } %>
-  <%= f.label :publisher %><%= f.text_field :publisher %>
-  <%= f.label :creators %><%= f.text_area :creators, rows: 2, data: { preview_source: "creators" } %>
-  <p class="ss-hint">Parsed preview: <span data-preview="creators-parsed"><%= metadata_creators_preview(catalog_item.creators) %></span></p>
-  <%= f.label :description %><%= f.text_area :description, rows: 4 %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+<div data-catalog-fields="book periodical recorded_music videorecording audiobook ebook map game gift sideline other">
+  <%= render layout: "shared/forms/section", locals: { title: "Publication" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publication_date } do %>
+        <%= f.date_field :publication_date %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :edition_statement } do %>
+        <%= f.text_field :edition_statement %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :language_code } do %>
+        <%= f.text_field :language_code, maxlength: 10 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :series_name } do %>
+        <%= f.text_field :series_name %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :series_enumeration } do %>
+        <%= f.text_field :series_enumeration, maxlength: 15 %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
 
-<fieldset class="ss-form-section" data-catalog-fields="book periodical recorded_music videorecording audiobook ebook map game gift sideline other">
-  <legend>Publication</legend>
-  <%= f.label :publication_date %><%= f.date_field :publication_date %>
-  <%= f.label :edition_statement %><%= f.text_field :edition_statement %>
-  <%= f.label :language_code %><%= f.text_field :language_code, maxlength: 10 %>
-  <%= f.label :series_name %><%= f.text_field :series_name %>
-  <%= f.label :series_enumeration %><%= f.text_field :series_enumeration, maxlength: 15 %>
-</fieldset>
+<div data-catalog-fields="periodical">
+  <%= render layout: "shared/forms/section", locals: { title: "Periodical" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publication_frequency } do %>
+        <%= f.select :publication_frequency, CatalogItem::PUBLICATION_FREQUENCIES.map { |v| [humanize_controlled_value(v), v] }, include_blank: true %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
 
-<fieldset class="ss-form-section" data-catalog-fields="periodical">
-  <legend>Periodical</legend>
-  <%= f.label :publication_frequency %>
-  <%= f.select :publication_frequency, CatalogItem::PUBLICATION_FREQUENCIES.map { |v| [humanize_controlled_value(v), v] }, include_blank: true %>
-</fieldset>
+<div data-catalog-fields="calendar">
+  <%= render layout: "shared/forms/section", locals: { title: "Calendar" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :year } do %>
+        <%= f.text_field :year, maxlength: 4 %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
 
-<fieldset class="ss-form-section" data-catalog-fields="calendar">
-  <legend>Calendar</legend>
-  <%= f.label :year %><%= f.text_field :year, maxlength: 4 %>
-</fieldset>
+<div data-catalog-fields="book calendar periodical recorded_music sideline videorecording audiobook map game gift other">
+  <%= render layout: "shared/forms/section", locals: { title: "Physical Details" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :height } do %>
+        <%= f.number_field :height, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :width } do %>
+        <%= f.number_field :width, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :depth } do %>
+        <%= f.number_field :depth, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :dimension_units } do %>
+        <%= f.select :dimension_units, CatalogItem::DIMENSION_UNITS, include_blank: true %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :weight } do %>
+        <%= f.number_field :weight, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :weight_units } do %>
+        <%= f.select :weight_units, CatalogItem::WEIGHT_UNITS, include_blank: true %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :page_count } do %>
+        <%= f.number_field :page_count %>
+      <% end %>
+    </div>
+    <%= render "shared/forms/checkbox", f: f, record: catalog_item, field: :large_print %>
+  <% end %>
+</div>
 
-<fieldset class="ss-form-section" data-catalog-fields="book calendar periodical recorded_music sideline videorecording audiobook map game gift other">
-  <legend>Physical Details</legend>
-  <%= f.label :height %><%= f.number_field :height, step: 0.01 %>
-  <%= f.label :width %><%= f.number_field :width, step: 0.01 %>
-  <%= f.label :depth %><%= f.number_field :depth, step: 0.01 %>
-  <%= f.label :dimension_units %><%= f.select :dimension_units, CatalogItem::DIMENSION_UNITS, include_blank: true %>
-  <%= f.label :weight %><%= f.number_field :weight, step: 0.01 %>
-  <%= f.label :weight_units %><%= f.select :weight_units, CatalogItem::WEIGHT_UNITS, include_blank: true %>
-  <%= f.label :page_count %><%= f.number_field :page_count %>
-  <%= f.label :large_print %><%= f.check_box :large_print %>
-</fieldset>
+<div data-catalog-fields="recorded_music videorecording audiobook other">
+  <%= render layout: "shared/forms/section", locals: { title: "Media" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :duration_minutes } do %>
+        <%= f.number_field :duration_minutes %>
+      <% end %>
+    </div>
+    <%= render "shared/forms/checkbox", f: f, record: catalog_item, field: :digital %>
+  <% end %>
+</div>
 
-<fieldset class="ss-form-section" data-catalog-fields="recorded_music videorecording audiobook other">
-  <legend>Media</legend>
-  <%= f.label :duration_minutes %><%= f.number_field :duration_minutes %>
-  <%= f.label :digital %><%= f.check_box :digital %>
-</fieldset>
+<div data-catalog-fields="ebook audiobook_digital">
+  <%= render layout: "shared/forms/section", locals: { title: "Digital" } do %>
+    <%= render "shared/forms/checkbox", f: f, record: catalog_item, field: :digital %>
+  <% end %>
+</div>
 
-<fieldset class="ss-form-section" data-catalog-fields="ebook audiobook_digital">
-  <legend>Digital</legend>
-  <%= f.label :digital %><%= f.check_box :digital %>
-</fieldset>
-
-<fieldset class="ss-form-section">
-  <legend>Classification</legend>
-  <%= f.label :bisac_subjects, "BISAC subjects" %><%= f.text_area :bisac_subjects, rows: 2, data: { preview_source: "subjects" } %>
-  <p class="ss-hint">Parsed preview: <span data-preview="subjects-parsed"><%= metadata_subjects_preview(catalog_item.bisac_subjects) %></span></p>
-  <%= f.label :genres %><%= f.text_area :genres, rows: 2 %>
-  <%= f.label :themes %><%= f.text_area :themes, rows: 2 %>
-  <%= f.label :target_audiences, "Target audiences" %><%= f.text_area :target_audiences, rows: 2 %>
-  <%= f.label :access_restrictions, "Access restrictions" %><%= f.text_area :access_restrictions, rows: 2 %>
-</fieldset>
+<%= render layout: "shared/forms/section", locals: { title: "Classification" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :bisac_subjects, label: "BISAC subjects" } do %>
+      <%= f.text_area :bisac_subjects, rows: 2, data: { preview_source: "subjects" } %>
+      <p class="ss-hint">Parsed preview: <span data-preview="subjects-parsed"><%= metadata_subjects_preview(catalog_item.bisac_subjects) %></span></p>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :genres } do %>
+      <%= f.text_area :genres, rows: 2 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :themes } do %>
+      <%= f.text_area :themes, rows: 2 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :target_audiences, label: "Target audiences" } do %>
+      <%= f.text_area :target_audiences, rows: 2 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :access_restrictions, label: "Access restrictions" } do %>
+      <%= f.text_area :access_restrictions, rows: 2 %>
+    <% end %>
+  </div>
+<% end %>
 
 <% if include_identifier %>
-  <fieldset class="ss-form-section">
-    <legend>Initial Identifier</legend>
-    <%= label_tag "catalog_item[initial_identifier_type]", "Identifier type" %>
-    <%= select_tag "catalog_item[initial_identifier_type]", options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, "isbn13"), data: { preview_target: "identifier-type" } %>
-    <%= label_tag "catalog_item[initial_identifier_value]", "Identifier value" %>
-    <%= text_field_tag "catalog_item[initial_identifier_value]", nil, data: { preview_target: "identifier-value" } %>
+  <%= render layout: "shared/forms/section", locals: { title: "Initial Identifier" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <div class="ss-field">
+        <%= label_tag "catalog_item[initial_identifier_type]", "Identifier type", class: "ss-label" %>
+        <%= select_tag "catalog_item[initial_identifier_type]", options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, "isbn13"), data: { preview_target: "identifier-type" } %>
+      </div>
+      <div class="ss-field">
+        <%= label_tag "catalog_item[initial_identifier_value]", "Identifier value", class: "ss-label" %>
+        <%= text_field_tag "catalog_item[initial_identifier_value]", nil, data: { preview_target: "identifier-value" } %>
+      </div>
+    </div>
     <p class="ss-hint">Normalized preview: <span data-preview="identifier-normalized">—</span></p>
-  </fieldset>
+  <% end %>
 <% end %>
 
 <script>

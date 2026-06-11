@@ -1,12 +1,25 @@
-<% if format.errors.any? %>
-  <div class="flash flash-alert"><%= format.errors.full_messages.to_sentence %></div>
+<%= render "shared/forms/errors", record: format %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Format Details", description: "Formats describe the physical or digital form of catalog items." } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :format_key, required: true } do %>
+      <%= f.text_field :format_key, maxlength: 30 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :code } do %>
+      <%= f.text_field :code, maxlength: 20 %>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: format, field: :virtual,
+             help: "Virtual formats represent digital or non-physical items." %>
 <% end %>
-<fieldset class="ss-form-section">
-  <legend>Format</legend>
-  <%= f.label :format_key %><%= f.text_field :format_key, maxlength: 30 %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
-  <%= f.label :code %><%= f.text_field :code, maxlength: 20 %>
-  <%= f.label :virtual %><%= f.check_box :virtual %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: format, field: :active,
+             help: "Inactive formats remain for history but cannot be selected for new catalog items." %>
+<% end %>

@@ -1,5 +1,12 @@
-<h1>New Catalog Item</h1>
-<%= form_with model: [:items, @catalog_item] do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "New Catalog Item",
+           description: "Create a catalog metadata record for titles, media, and other item types." %>
+
+<%= form_with model: [:items, @catalog_item], class: "ss-form ss-form--wide" do |f| %>
   <%= render "form", f: f, catalog_item: @catalog_item, formats: @formats, include_identifier: true %>
-  <%= f.submit "Create Catalog Item", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Catalog Item", class: "ss-btn" %>
+    <%= link_to "Cancel", items_catalog_items_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

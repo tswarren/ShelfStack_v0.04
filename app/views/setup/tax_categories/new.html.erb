@@ -1,5 +1,12 @@
-<h1>New Tax Category</h1>
-<%= form_with model: @tax_category, url: setup_tax_categories_path, class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Tax Category",
+           description: "Tax categories describe item taxability for store tax mappings." %>
+
+<%= form_with model: @tax_category, url: setup_tax_categories_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, tax_category: @tax_category %>
-  <%= f.submit "Create Tax Category", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Tax Category", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_tax_categories_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

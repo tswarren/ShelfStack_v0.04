@@ -1,38 +1,43 @@
-<% if department.errors.any? %>
-  <div class="flash flash-alert">
-    <%= department.errors.full_messages.to_sentence %>
+<%= render "shared/forms/errors", record: department %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Identity",
+  description: "Department numbers are normalized to three zero-padded digits."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2" data-controller="department-number-preview">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: department, field: :department_number, required: true } do %>
+      <%= f.text_field :department_number, maxlength: 3, data: { department_number_preview_target: "input", action: "input->department-number-preview#update" } %>
+    <% end %>
+    <div class="ss-field">
+      <span class="ss-label">Normalized preview</span>
+      <p class="ss-hint" data-department-number-preview-target="output"><%= normalized_department_number_preview(department.department_number) %></p>
+    </div>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: department, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: department, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
   </div>
 <% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Department</legend>
-  <%= f.label :department_number %>
-  <%= f.text_field :department_number, maxlength: 3, data: { preview_target: "department-number" } %>
-  <p class="ss-hint">Normalized preview: <span data-preview="department-number"><%= normalized_department_number_preview(department.department_number) %></span></p>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
-  <%= f.label :gl_account_code, "GL account code" %><%= f.text_field :gl_account_code, maxlength: 20 %>
-  <%= f.label :description %><%= f.text_area :description, rows: 3 %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+<%= render layout: "shared/forms/section", locals: { title: "Accounting", description: "Optional general ledger reference." } do %>
+  <div class="ss-form-grid">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: department, field: :gl_account_code, label: "GL account code" } do %>
+      <%= f.text_field :gl_account_code, maxlength: 20 %>
+    <% end %>
+  </div>
+<% end %>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    var input = document.querySelector("[data-preview-target='department-number']");
-    var output = document.querySelector("[data-preview='department-number']");
-    if (!input || !output) return;
-    input.addEventListener("input", function() {
-      var value = input.value.trim();
-      if (!/^\d+$/.test(value)) {
-        output.textContent = value || "—";
-        return;
-      }
-      var numeric = parseInt(value, 10);
-      if (numeric < 0 || numeric > 999) {
-        output.textContent = value;
-        return;
-      }
-      output.textContent = String(numeric).padStart(3, "0");
-    });
-  });
-</script>
+<%= render layout: "shared/forms/section", locals: { title: "Details" } do %>
+  <div class="ss-form-grid">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: department, field: :description } do %>
+      <%= f.text_area :description, rows: 3 %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: department, field: :active,
+             help: "Inactive departments remain for history but cannot be selected for new categories." %>
+<% end %>

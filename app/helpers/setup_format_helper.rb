@@ -7,6 +7,16 @@ module SetupFormatHelper
     format("%.2f%%", bps / 100.0)
   end
 
+  def tax_mapping_preview_text(mapping)
+    store = mapping.store
+    tax_category = mapping.tax_category
+    rate = mapping.store_tax_rate
+    return "Select store, tax category, and tax rate to preview this mapping." if store.blank? || tax_category.blank? || rate.blank?
+
+    effective = mapping.effective_on&.strftime("%Y-%m-%d") || "the effective date"
+    "For #{store.store_number}, #{tax_category.name} will use #{rate.name} (#{format_basis_points(rate.tax_rate_bps)}) beginning #{effective}."
+  end
+
   def normalized_department_number_preview(value)
     return "—" if value.blank?
 

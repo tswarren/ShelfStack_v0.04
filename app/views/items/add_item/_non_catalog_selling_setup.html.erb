@@ -1,47 +1,58 @@
-<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post do |f| %>
-  <% if product.errors.any? %>
-    <div class="flash flash-alert"><%= product.errors.full_messages.to_sentence %></div>
+<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post, class: "ss-form ss-form--wide" do |f| %>
+  <%= render "shared/forms/errors", record: product %>
+
+  <%= render layout: "shared/forms/section", locals: {
+    title: "Selling Setup",
+    description: "Define the product before creating sellable SKUs."
+  } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", required: true } do %>
+        <%= f.text_field :sku, value: product.sku.presence || generated_sku, required: true %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name, label: "Product name", required: true } do %>
+        <%= f.text_field :name, required: true %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
+        <%= f.select :product_type,
+              Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] },
+              { selected: product.product_type || "physical" },
+              { data: { add_item_product_type: "select" } } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
+        <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
+      <% end %>
+      <div class="ss-field">
+        <%= label_tag "product[initial_category_id]", "Initial SKU category", class: "ss-label" %>
+        <%= select_tag "product[initial_category_id]",
+              options_from_collection_for_select(categories, :id, :name, @draft["initial_category_id"]),
+              include_blank: false %>
+      </div>
+    </div>
+
+    <div class="ss-form-grid ss-form-grid--2" data-add-item-fields="variation" style="<%= product.product_type.in?(%w[service financial non_inventory]) ? 'display:none' : '' %>">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variation_type, label: "Variation type" } do %>
+        <%= f.select :variation_type,
+              Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] },
+              { selected: product.variation_type || "standard" },
+              { data: { add_item_variation_type: "select" } } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variant1_label, label: "Variant 1 label" } do %>
+        <%= f.text_field :variant1_label, data: { add_item_variant1_label: "field" } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variant2_label, label: "Variant 2 label" } do %>
+        <%= f.text_field :variant2_label, data: { add_item_variant2_label: "field" } %>
+      <% end %>
+    </div>
   <% end %>
 
-  <fieldset class="ss-form-section">
-    <legend>Selling Setup</legend>
-    <%= f.label :sku, "SKU" %>
-    <%= f.text_field :sku, value: product.sku.presence || generated_sku, required: true %>
-    <%= f.label :name, "Product name" %>
-    <%= f.text_field :name, required: true %>
-    <%= f.label :product_type, "Product type" %>
-    <%= f.select :product_type,
-          Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] },
-          { selected: product.product_type || "physical" },
-          data: { add_item_product_type: "select" } %>
-    <%= f.label :list_price_cents, "List price (cents)" %>
-    <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
-    <%= label_tag "product[initial_category_id]", "Initial SKU category" %>
-    <%= select_tag "product[initial_category_id]",
-          options_from_collection_for_select(categories, :id, :name, @draft["initial_category_id"]),
-          include_blank: false %>
-
-    <div data-add-item-fields="variation" style="<%= product.product_type.in?(%w[service financial non_inventory]) ? 'display:none' : '' %>">
-      <%= f.label :variation_type, "Variation type" %>
-      <%= f.select :variation_type,
-            Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] },
-            { selected: product.variation_type || "standard" },
-            data: { add_item_variation_type: "select" } %>
-      <%= f.label :variant1_label, "Variant 1 label" %>
-      <%= f.text_field :variant1_label, data: { add_item_variant1_label: "field" } %>
-      <%= f.label :variant2_label, "Variant 2 label" %>
-      <%= f.text_field :variant2_label, data: { add_item_variant2_label: "field" } %>
-    </div>
-  </fieldset>
-
-  <div class="ss-catalog-actions">
+  <footer class="ss-form-actions">
     <%= f.submit "Add Sellable SKU", class: "ss-btn" %>
     <%= submit_tag "Done", name: "commit", class: "ss-btn ss-btn-secondary" %>
     <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
-  </div>
+  </footer>
 <% end %>
 
-<p>
+<p class="ss-form-actions" style="margin-top: 0.5rem;">
   <%= button_to "Generate SKU", items_add_item_path(step: "selling_setup"), method: :post,
         params: { generate_sku: "1" }, class: "ss-btn ss-btn-secondary ss-btn-small" %>
   <%= link_to "Back", items_add_item_path(step: "choose_path") %>
@@ -66,21 +77,12 @@
     function updateLabelVisibility() {
       if (!variationType) return;
       var vt = variationType.value;
-      if (variant1) variant1.closest("label, .field") || variant1.parentElement;
-      if (variant1) {
-        var v1Wrap = variant1.previousElementSibling;
-        if (v1Wrap && v1Wrap.tagName === "LABEL") {
-          v1Wrap.style.display = (vt === "variable" || vt === "matrix") ? "" : "none";
-        }
-        variant1.style.display = (vt === "variable" || vt === "matrix") ? "" : "none";
-      }
-      if (variant2) {
-        var v2Wrap = variant2.previousElementSibling;
-        if (v2Wrap && v2Wrap.tagName === "LABEL") {
-          v2Wrap.style.display = vt === "matrix" ? "" : "none";
-        }
-        variant2.style.display = vt === "matrix" ? "" : "none";
-      }
+      [variant1, variant2].forEach(function(field, index) {
+        if (!field) return;
+        var show = index === 0 ? (vt === "variable" || vt === "matrix") : vt === "matrix";
+        var wrap = field.closest(".ss-field");
+        if (wrap) wrap.style.display = show ? "" : "none";
+      });
     }
 
     if (productType) productType.addEventListener("change", updateVariationVisibility);

@@ -1,5 +1,12 @@
-<h1>New Product</h1>
-<%= form_with model: [:items, @product], html: { multipart: true } do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "New Product",
+           description: "Create a store-facing product and define base pricing and variation settings." %>
+
+<%= form_with model: [:items, @product], class: "ss-form ss-form--wide", html: { multipart: true } do |f| %>
   <%= render "form", f: f, product: @product, catalog_items: @catalog_items, display_locations: @display_locations %>
-  <%= f.submit "Create Product", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Product", class: "ss-btn" %>
+    <%= link_to "Cancel", items_products_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

@@ -1327,3 +1327,45 @@ Item Details → Selling Setup → Sellable SKUs
 ```
 
 The data model can remain precise. The UI should make it feel obvious.
+
+---
+
+# 29. Form Layout Standard
+
+ShelfStack forms use a shared layout system for setup and Items workflows.
+
+## Page structure
+
+```text
+ss-page-header (eyebrow, h1, description, optional actions)
+ss-form (width modifier)
+  shared/forms/errors
+  shared/forms/section (ss-form-card)
+    ss-form-grid
+      shared/forms/field (label, input, help, inline error)
+      shared/forms/checkbox
+  ss-form-actions (submit, cancel)
+```
+
+## Width modifiers
+
+| Class | Use |
+| ----- | --- |
+| `ss-form--standard` | Setup forms (56rem) |
+| `ss-form--wide` | Catalog, product, variant, Add Item wizard (72rem) |
+| `ss-form--narrow` | Auth forms (reserved; login/PIN unchanged) |
+
+## Field errors
+
+Top-level error summary plus inline `ss-field-error` per field via `FormHelper#ss_field_error`.
+
+## Preview controllers (Stimulus)
+
+| Controller | Use |
+| ---------- | --- |
+| `department-number-preview` | Zero-padded department number |
+| `basis-points-preview` | bps → percent display |
+| `tax-mapping-preview` | Store tax mapping sentence preview |
+| `variant-preview` | Variant SKU, name, conditional selling price |
+
+Catalog metadata previews (creators, subjects, identifier normalization) remain inline until extracted in a later pass.

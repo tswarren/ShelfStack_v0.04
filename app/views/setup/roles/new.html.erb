@@ -1,7 +1,26 @@
-<h1>New Role</h1>
-<%= form_with model: @role, url: setup_roles_path, class: "ss-form" do |f| %>
-  <%= f.label :role_key %><%= f.text_field :role_key %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :description %><%= f.text_area :description %>
-  <%= f.submit "Create Role", class: "ss-btn" %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Role",
+           description: "Roles group permissions for users and store-scoped assignments." %>
+
+<%= form_with model: @role, url: setup_roles_path, class: "ss-form ss-form--standard" do |f| %>
+  <%= render layout: "shared/forms/section", locals: { title: "Role Details" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: @role, field: :role_key, required: true } do %>
+        <%= f.text_field :role_key %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: @role, field: :name, required: true } do %>
+        <%= f.text_field :name %>
+      <% end %>
+      <div class="ss-form-grid" style="grid-column: 1 / -1;">
+        <%= render layout: "shared/forms/field", locals: { f: f, record: @role, field: :description } do %>
+          <%= f.text_area :description, rows: 3 %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Role", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_roles_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

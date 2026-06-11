@@ -1,5 +1,12 @@
-<h1>New Product Condition</h1>
-<%= form_with model: [:products, @product_condition] do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Product Condition",
+           description: "Conditions drive SKU suffixes, variant names, and used-book pricing factors." %>
+
+<%= form_with model: @product_condition, url: setup_product_conditions_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, product_condition: @product_condition %>
-  <%= f.submit "Create Condition", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Condition", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_product_conditions_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

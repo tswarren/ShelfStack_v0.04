@@ -1,19 +1,50 @@
-<% if store_tax_category_rate.errors.any? %>
-  <div class="flash flash-alert">
-    <%= store_tax_category_rate.errors.full_messages.to_sentence %>
+<%= render "shared/forms/errors", record: store_tax_category_rate %>
+
+<div data-controller="tax-mapping-preview"
+     data-tax-mapping-preview-stores-value="<%= stores.map { |s| { id: s.id, label: s.store_number } }.to_json %>"
+     data-tax-mapping-preview-tax-categories-value="<%= tax_categories.map { |c| { id: c.id, name: c.name } }.to_json %>"
+     data-tax-mapping-preview-store-tax-rates-value="<%= store_tax_rates.map { |r| { id: r.id, name: r.name, bps: r.tax_rate_bps } }.to_json %>">
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Tax Rule",
+  description: "This rule determines which store tax rate applies to a tax category."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_category_rate, field: :store_id, label: "Store", required: true } do %>
+      <%= f.collection_select :store_id, stores, :id, ->(s) { "#{s.store_number} — #{s.name}" }, { include_blank: "Select store" },
+          { data: { tax_mapping_preview_target: "store", action: "change->tax-mapping-preview#update" } } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_category_rate, field: :tax_category_id, label: "Tax category", required: true } do %>
+      <%= f.collection_select :tax_category_id, tax_categories, :id, :name, { include_blank: "Select tax category" },
+          { data: { tax_mapping_preview_target: "taxCategory", action: "change->tax-mapping-preview#update" } } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_category_rate, field: :store_tax_rate_id, label: "Store tax rate", required: true } do %>
+      <%= f.collection_select :store_tax_rate_id, store_tax_rates, :id, ->(r) { "#{r.name} (#{format_basis_points(r.tax_rate_bps)})" }, { include_blank: "Select store tax rate" },
+          { data: { tax_mapping_preview_target: "storeTaxRate", action: "change->tax-mapping-preview#update" } } %>
+    <% end %>
   </div>
 <% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Tax mapping</legend>
-  <%= f.label :store_id, "Store" %>
-  <%= f.collection_select :store_id, stores, :id, ->(s) { "#{s.store_number} — #{s.name}" }, { include_blank: "Select store" } %>
-  <%= f.label :tax_category_id, "Tax category" %>
-  <%= f.collection_select :tax_category_id, tax_categories, :id, :name, { include_blank: "Select tax category" } %>
-  <%= f.label :store_tax_rate_id, "Store tax rate" %>
-  <%= f.collection_select :store_tax_rate_id, store_tax_rates, :id, ->(r) { "#{r.name} (#{format_basis_points(r.tax_rate_bps)})" }, { include_blank: "Select store tax rate" } %>
-  <%= f.label :effective_on %><%= f.date_field :effective_on %>
-  <%= f.label :ends_on %><%= f.date_field :ends_on %>
-  <p class="ss-hint">Leave ends on blank for an open-ended mapping. End-date the current mapping before creating a new rule when tax rates change.</p>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+<%= render layout: "shared/forms/section", locals: {
+  title: "Effective Dates",
+  description: "Leave ends on blank for an open-ended mapping."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_category_rate, field: :effective_on, required: true } do %>
+      <%= f.date_field :effective_on, data: { tax_mapping_preview_target: "effectiveOn", action: "change->tax-mapping-preview#update input->tax-mapping-preview#update" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: store_tax_category_rate, field: :ends_on } do %>
+      <%= f.date_field :ends_on %>
+    <% end %>
+  </div>
+  <p class="ss-form-preview" data-tax-mapping-preview-target="output">
+    <strong>Preview:</strong> <%= tax_mapping_preview_text(store_tax_category_rate) %>
+  </p>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: store_tax_category_rate, field: :active,
+             help: "Inactive mappings remain for history but are not used for tax lookup." %>
+<% end %>
+
+</div>
