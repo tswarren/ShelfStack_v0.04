@@ -92,15 +92,16 @@ module Setup
     end
 
     def reset_password
-      @user.password = params[:password]
-      @user.password_confirmation = params[:password_confirmation]
-      @user.force_password_change = true
-      if @user.save
-        record_audit!("user.password_reset", @user)
-        redirect_to setup_user_path(@user), notice: "Password reset."
-      else
-        redirect_to setup_user_path(@user), alert: @user.errors.full_messages.to_sentence
-      end
+      UserPasswordReset.call(
+        user: @user,
+        password: params[:password],
+        password_confirmation: params[:password_confirmation],
+        force_password_change: true,
+        actor: current_user
+      )
+      redirect_to setup_user_path(@user), notice: "Password reset."
+    rescue UserPasswordReset::Error => e
+      redirect_to setup_user_path(@user), alert: e.message
     end
 
     def clear_pin
