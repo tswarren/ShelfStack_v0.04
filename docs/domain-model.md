@@ -77,6 +77,27 @@ Store + Tax Category + Date → Store Tax Category Rate → Store Tax Rate
 * Store tax category rates define which rate applies to each tax category at each store during a date range.
 * For a given store, tax category, and date, tax lookup must return exactly one applicable rate.
 
+## Phase 3B transitional mapping
+
+Phase 3B separates merchandise behavior, topic classification, and accounting mapping while keeping legacy Phase 2 structures working. See:
+
+```text
+docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-domain-mapping.md
+```
+
+| Legacy / transitional | Target concept |
+| --- | --- |
+| `Category` | `MerchandiseClass` (behavior defaults), not topic `CategoryNode` |
+| `CategoryScheme` / `CategoryNode` / `Categorization` | Topic / section classification |
+| `AccountingMapping` | Sales account and reporting bucket rules |
+| `product_variants.category_id` | Required bridge through transition |
+
+Default resolution order for pricing/tax/accounting derivation:
+
+```text
+variant override → accounting mapping → merchandise class → legacy category → legacy department GL
+```
+
 ---
 
 # 3. Catalog Domain

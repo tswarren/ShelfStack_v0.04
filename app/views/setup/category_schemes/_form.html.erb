@@ -1,0 +1,19 @@
+<%= form_with model: [:setup, @category_scheme], class: "ss-form ss-form--standard" do |f| %>
+  <%= render "shared/forms/errors", record: @category_scheme %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @category_scheme, field: :scheme_key, label: "Scheme key", required: true } do %>
+      <%= f.text_field :scheme_key, maxlength: 30 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @category_scheme, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @category_scheme, field: :purpose, required: true } do %>
+      <%= f.select :purpose, CategoryScheme::PURPOSES.map { |p| [humanize_controlled_value(p), p] } %>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: @category_scheme, field: :active %>
+  <footer class="ss-form-actions">
+    <%= f.submit class: "ss-btn" %>
+    <%= link_to "Cancel", setup_category_schemes_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

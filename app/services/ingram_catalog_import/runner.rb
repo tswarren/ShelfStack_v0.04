@@ -149,6 +149,13 @@ module IngramCatalogImport
         selling_price_cents: AddItem::DefaultSellingPrice.cents(product: product, condition: condition)
       )
       record_audit!("product_variant.created", variant, details: { "sku" => variant.sku, "source" => "ingram_import" })
+      if @options.default_primary_category_node.present?
+        VariantTopicCategorization.sync!(
+          variant: variant,
+          category_node_id: @options.default_primary_category_node.id,
+          source: "import"
+        )
+      end
       { status: :variant_created, variant: variant }
     end
 

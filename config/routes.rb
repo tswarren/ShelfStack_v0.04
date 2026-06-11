@@ -140,6 +140,30 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
+    resources :merchandise_classes do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :category_schemes do
+      resources :category_nodes do
+        member do
+          patch :inactivate
+          patch :reactivate
+        end
+      end
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :accounting_mappings do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
     resources :formats do
       member do
         patch :inactivate

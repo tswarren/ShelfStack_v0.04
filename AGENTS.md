@@ -394,6 +394,13 @@ product_variants.product_id → products.id
 * Product and variant names are generated conservatively and may be overridden.
 * Product is not sellable until it has at least one active variant.
 
+## Phase 3B transitional rules
+
+* Legacy `Category` ≈ `MerchandiseClass`, not topic `CategoryNode`.
+* Keep `product_variants.category_id` required through Phase 3B.
+* Default resolution order: variant override → accounting mapping → merchandise class → legacy category → legacy department.
+* See `docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-domain-mapping.md`.
+
 ---
 
 # Testing Expectations

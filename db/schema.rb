@@ -14,6 +14,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "accounting_mappings", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.bigint "category_node_id"
+    t.bigint "condition_id"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "gl_export_code", limit: 20
+    t.bigint "merchandise_class_id"
+    t.string "product_type"
+    t.string "reporting_bucket", limit: 50
+    t.string "sales_account_code", limit: 20, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_node_id"], name: "index_accounting_mappings_on_category_node_id"
+    t.index ["condition_id"], name: "index_accounting_mappings_on_condition_id"
+    t.index ["merchandise_class_id"], name: "index_accounting_mappings_on_merchandise_class_id"
+    t.index ["product_type"], name: "index_accounting_mappings_on_product_type"
+    t.index ["sales_account_code"], name: "index_accounting_mappings_on_sales_account_code"
+  end
+
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -146,6 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "default_supplier_discount_bps"
     t.bigint "default_tax_category_id", null: false
     t.bigint "department_id", null: false
+    t.bigint "merchandise_class_id"
     t.string "name", null: false
     t.string "short_name", limit: 20, null: false
     t.integer "sort_order", default: 0, null: false
@@ -157,6 +178,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["department_id", "short_name"], name: "index_categories_on_department_id_and_short_name", unique: true
     t.index ["department_id", "sort_order"], name: "index_categories_on_department_id_and_sort_order"
     t.index ["department_id"], name: "index_categories_on_department_id"
+    t.index ["merchandise_class_id"], name: "index_categories_on_merchandise_class_id"
+  end
+
+  create_table "categorizations", force: :cascade do |t|
+    t.bigint "categorizable_id", null: false
+    t.string "categorizable_type", null: false
+    t.bigint "category_node_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "primary", default: false, null: false
+    t.string "source"
+    t.datetime "updated_at", null: false
+    t.index ["categorizable_type", "categorizable_id", "category_node_id"], name: "index_categorizations_on_categorizable_and_node", unique: true
+    t.index ["categorizable_type", "categorizable_id"], name: "index_categorizations_on_categorizable"
+    t.index ["category_node_id"], name: "index_categorizations_on_category_node_id"
+  end
+
+  create_table "category_nodes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.bigint "category_scheme_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "node_key", null: false
+    t.bigint "parent_id"
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_scheme_id", "name"], name: "index_category_nodes_on_category_scheme_id_and_name", unique: true
+    t.index ["category_scheme_id", "node_key"], name: "index_category_nodes_on_category_scheme_id_and_node_key", unique: true
+    t.index ["category_scheme_id"], name: "index_category_nodes_on_category_scheme_id"
+    t.index ["parent_id"], name: "index_category_nodes_on_parent_id"
+  end
+
+  create_table "category_schemes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "purpose", null: false
+    t.string "scheme_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_category_schemes_on_name", unique: true
+    t.index ["scheme_key"], name: "index_category_schemes_on_scheme_key", unique: true
   end
 
   create_table "departments", force: :cascade do |t|
@@ -202,6 +263,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["code"], name: "index_formats_on_code"
     t.index ["format_key"], name: "index_formats_on_format_key", unique: true
     t.index ["short_name"], name: "index_formats_on_short_name"
+  end
+
+  create_table "merchandise_classes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.boolean "buyback_allowed", default: false, null: false
+    t.datetime "created_at", null: false
+    t.integer "default_margin_target_bps"
+    t.string "default_pricing_model"
+    t.string "default_sales_account_code", limit: 20
+    t.integer "default_supplier_discount_bps"
+    t.bigint "default_tax_category_id", null: false
+    t.boolean "has_list_price", default: true, null: false
+    t.string "merchandise_class_key", null: false
+    t.string "name", null: false
+    t.string "short_name", null: false
+    t.boolean "store_marks_up_from_cost", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.boolean "used_sales_allowed", default: false, null: false
+    t.boolean "vendor_discounts_from_list_price", default: true, null: false
+    t.boolean "vendor_returnable_default", default: false, null: false
+    t.index ["default_tax_category_id"], name: "index_merchandise_classes_on_default_tax_category_id"
+    t.index ["merchandise_class_key"], name: "index_merchandise_classes_on_merchandise_class_key", unique: true
+    t.index ["name"], name: "index_merchandise_classes_on_name", unique: true
+    t.index ["short_name"], name: "index_merchandise_classes_on_short_name", unique: true
   end
 
   create_table "permissions", force: :cascade do |t|
@@ -526,6 +611,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["workstation_type"], name: "index_workstations_on_workstation_type"
   end
 
+  add_foreign_key "accounting_mappings", "category_nodes"
+  add_foreign_key "accounting_mappings", "merchandise_classes"
+  add_foreign_key "accounting_mappings", "product_conditions", column: "condition_id"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_events", "stores"
@@ -535,8 +623,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "catalog_item_identifiers", "catalog_items"
   add_foreign_key "catalog_items", "formats"
   add_foreign_key "categories", "departments"
+  add_foreign_key "categories", "merchandise_classes"
   add_foreign_key "categories", "tax_categories", column: "default_tax_category_id"
+  add_foreign_key "categorizations", "category_nodes"
+  add_foreign_key "category_nodes", "category_nodes", column: "parent_id"
+  add_foreign_key "category_nodes", "category_schemes"
   add_foreign_key "display_locations", "display_locations", column: "parent_id"
+  add_foreign_key "merchandise_classes", "tax_categories", column: "default_tax_category_id"
   add_foreign_key "product_variants", "categories"
   add_foreign_key "product_variants", "display_locations"
   add_foreign_key "product_variants", "product_conditions", column: "condition_id"

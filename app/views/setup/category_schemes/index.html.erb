@@ -1,0 +1,15 @@
+<h1>Category Schemes <%= link_to "New", new_setup_category_scheme_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Key</th><th>Name</th><th>Purpose</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @category_schemes.each do |scheme| %>
+      <tr>
+        <td><%= scheme.scheme_key %></td>
+        <td><%= scheme.name %></td>
+        <td><%= humanize_controlled_value(scheme.purpose) %></td>
+        <td><span class="<%= status_class(scheme.active?) %>"><%= status_label(scheme.active?) %></span></td>
+        <td><%= link_to "View", setup_category_scheme_path(scheme) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

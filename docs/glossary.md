@@ -150,12 +150,44 @@ Catalog item type controls UI field display, not hard database validity.
 
 A product-level classification linked to a department.
 
+**Transitional note (Phase 3B):** Legacy categories correspond to **MerchandiseClass** behavior buckets, not topic **CategoryNode** records. During transition, categories remain required on product variants and are labeled “Merchandise Category” in setup and item UI.
+
 Categories provide default values for future product variants, including:
 
 * Pricing model
 * Margin target
 * Supplier discount
 * Tax category
+
+---
+
+## Merchandise Class
+
+Operational merchandise behavior bucket (pricing model, margin/supplier defaults, tax category, returnability, buyback). Linked from legacy categories during Phase 3B transition.
+
+---
+
+## Category Scheme
+
+Named topical classification system (for example, Store Sections / Topics).
+
+---
+
+## Category Node
+
+A node within a category scheme hierarchy (for example, Fiction, Biography).
+
+---
+
+## Categorization
+
+Assignment of a catalog item, product, or product variant to a category node.
+
+---
+
+## Accounting Mapping
+
+Configurable rule that maps merchandise class, condition, product type, and optional topic node to sales account and reporting bucket outputs.
 
 ---
 

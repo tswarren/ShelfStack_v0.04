@@ -1,0 +1,16 @@
+<h1><%= @category_scheme.name %> Nodes <%= link_to "New", new_setup_category_scheme_category_node_path(@category_scheme), class: "ss-btn" %></h1>
+<%= link_to "Back to scheme", setup_category_scheme_path(@category_scheme), class: "ss-btn ss-btn-secondary" %>
+<table class="ss-table">
+  <thead><tr><th>Name</th><th>Key</th><th>Parent</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @category_nodes.each do |node| %>
+      <tr>
+        <td><%= node.name %></td>
+        <td><%= node.node_key %></td>
+        <td><%= node.parent&.name || "—" %></td>
+        <td><span class="<%= status_class(node.active?) %>"><%= status_label(node.active?) %></span></td>
+        <td><%= link_to "View", setup_category_scheme_category_node_path(@category_scheme, node) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -23,7 +23,8 @@ module Items
       store_preview_cache!(
         rows: rows,
         category_id: params[:category_id],
-        display_location_id: params[:display_location_id]
+        display_location_id: params[:display_location_id],
+        primary_category_node_id: params[:primary_category_node_id]
       )
 
       redirect_to items_ingram_import_path, notice: "Parsed #{rows.size} rows. Review the preview, then run import."
@@ -49,7 +50,8 @@ module Items
       display_location = DisplayLocation.active_records.find_by(id: display_location_id)
       options = IngramCatalogImport::ImportOptions.new(
         default_category: category,
-        default_display_location: display_location
+        default_display_location: display_location,
+        default_primary_category_node: resolve_topic_node
       )
 
       result = IngramCatalogImport::Runner.call(path: path, actor: current_user, options: options)
@@ -67,8 +69,19 @@ module Items
     end
 
     def load_collections
-      @categories = Category.active_records.includes(:department).order("departments.name", :name)
+      @categories = Category.active_records.includes(:department, :merchandise_class).order("departments.name", :name)
       @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @topic_scheme = CategoryScheme.active_records.find_by(scheme_key: "store_sections_topics")
+      @category_nodes = if @topic_scheme
+                          @topic_scheme.category_nodes.active_records.includes(:parent).order(:sort_order, :name)
+                        else
+                          CategoryNode.none
+                        end
+    end
+
+    def resolve_topic_node
+      node_id = params[:primary_category_node_id].presence || preview_cache_data&.dig(:primary_category_node_id)
+      @category_nodes.find_by(id: node_id)
     end
 
     def validate_upload!(file)
@@ -98,7 +111,7 @@ module Items
       clear_preview_cache!
     end
 
-    def store_preview_cache!(rows:, category_id:, display_location_id:)
+    def store_preview_cache!(rows:, category_id:, display_location_id:, primary_category_node_id: nil)
       clear_preview_cache!
       key = cache_key("preview")
       Rails.cache.write(
@@ -107,7 +120,8 @@ module Items
           rows: rows.first(PREVIEW_LIMIT).map(&:to_preview_hash),
           row_count: rows.size,
           category_id: category_id,
-          display_location_id: display_location_id
+          display_location_id: display_location_id,
+          primary_category_node_id: primary_category_node_id
         },
         expires_in: CACHE_EXPIRY
       )
@@ -122,6 +136,7 @@ module Items
       @row_count = data[:row_count]
       @selected_category_id = data[:category_id]
       @selected_display_location_id = data[:display_location_id]
+      @selected_primary_category_node_id = data[:primary_category_node_id]
     end
 
     def preview_cache_data

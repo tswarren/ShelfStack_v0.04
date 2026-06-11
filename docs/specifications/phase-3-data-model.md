@@ -239,7 +239,7 @@ access_restriction_data
 | `short_name` | string | limit 40 | Optional compact POS/receipt name. |
 | `sku` | string | null false, unique, limit 50 | Actual sellable SKU. |
 | `condition_id` | bigint | references `product_conditions`, nullable | Primary condition. |
-| `category_id` | bigint | references `categories`, null false | Reporting/category classification. |
+| `category_id` | bigint | references `categories`, null false | Required transitional merchandise category bridge. Still drives item forms and lifecycle checks; topic classification uses `Categorization` separately. |
 | `display_location_id` | bigint | references `display_locations`, nullable | Variant display override. |
 | `attribute1_value` | string | nullable | Example: `Blue`. |
 | `attribute1_sku_component` | string | limit 5 | Example: `BLU`. |

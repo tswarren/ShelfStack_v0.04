@@ -3,8 +3,13 @@
 require_relative "seeds/phase1_permissions"
 require_relative "seeds/phase2_permissions"
 require_relative "seeds/phase3_permissions"
+require_relative "seeds/phase3b_permissions"
 require_relative "seeds/phase2_classification_tax"
 require_relative "seeds/phase3_catalog_products"
+require_relative "seeds/phase3b_merchandise_classes"
+require_relative "seeds/phase3b_category_schemes"
+require_relative "seeds/phase3b_accounting_mappings"
+require_relative "seeds/phase3b_templates"
 
 puts "Seeding Phase 1 foundation..."
 
@@ -126,3 +131,8 @@ puts "Phase 2 seed complete."
 puts "Seeding Phase 3 catalog, products, and variants..."
 Seeds::Phase3CatalogProducts.seed!
 puts "Phase 3 seed complete."
+
+puts "Seeding Phase 3B merchandise classification..."
+Seeds::Phase3bPermissions.seed!
+Seeds::Phase3bTemplates.apply_simple_bookstore!
+puts "Phase 3B seed complete."

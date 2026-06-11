@@ -237,6 +237,30 @@ module Items
       variant.display_location&.name || variant.category&.name || "—"
     end
 
+    def classification_summary_for(variant)
+      defaults = ClassificationDefaultsResolver.for(variant: variant)
+      primary_topic = variant.categorizations.primary_records.includes(category_node: :parent).first&.category_node
+
+      {
+        merchandise_class: variant.category&.merchandise_class&.name,
+        merchandise_category: variant.category&.name,
+        topic_section: primary_topic&.breadcrumb_label,
+        condition: variant.condition&.short_name || variant.condition&.name,
+        display_location: variant.display_location&.name,
+        defaults: defaults
+      }
+    end
+
+    def classification_summary_label(variant)
+      summary = classification_summary_for(variant)
+      parts = [
+        summary[:merchandise_class].presence || summary[:merchandise_category],
+        summary[:topic_section],
+        summary[:condition]
+      ].compact
+      parts.presence&.join(" · ") || "—"
+    end
+
     def display_location_path(variant: nil)
       location = primary_display_location(variant: variant)
       return [] unless location

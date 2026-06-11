@@ -30,6 +30,7 @@ module Items
       @product_variant = ProductVariant.new(product_variant_params)
       load_form_collections
       if @product_variant.save
+        sync_topic_categorization!
         record_audit!("product_variant.created", @product_variant, details: { "sku" => @product_variant.sku })
         redirect_to variant_return_path(@product_variant), notice: "Product variant created."
       else
@@ -44,6 +45,7 @@ module Items
     def update
       load_form_collections
       if @product_variant.update(product_variant_params)
+        sync_topic_categorization!
         record_audit!("product_variant.updated", @product_variant)
         redirect_to variant_return_path(@product_variant), notice: "Product variant updated."
       else
@@ -88,9 +90,17 @@ module Items
 
     def load_form_collections
       @products = Product.active_records.order(:name)
-      @categories = Category.active_records.includes(:department).order("departments.department_number", :name)
+      @categories = Category.active_records.includes(:department, :merchandise_class).order("departments.department_number", :name)
       @conditions = ProductCondition.active_records.order(:sort_order, :name)
       @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @topic_scheme = CategoryScheme.active_records.find_by(scheme_key: "store_sections_topics")
+      @category_nodes = if @topic_scheme
+                          @topic_scheme.category_nodes.active_records.includes(:parent).order(:sort_order, :name)
+                        else
+                          CategoryNode.none
+                        end
+      @primary_category_node_id = @product_variant&.categorizations&.primary_records&.first&.category_node_id
+      @classification_defaults = @product_variant&.category.present? ? ClassificationDefaultsResolver.for(variant: @product_variant) : nil
     end
 
     def apply_variant_defaults!
@@ -120,6 +130,14 @@ module Items
         :display_location_id, :attribute1_value, :attribute1_sku_component, :attribute2_value,
         :attribute2_sku_component, :selling_price_cents, :pricing_model_override,
         :inventory_behavior, :active
+      )
+    end
+
+    def sync_topic_categorization!
+      VariantTopicCategorization.sync!(
+        variant: @product_variant,
+        category_node_id: params[:primary_category_node_id],
+        source: "manual"
       )
     end
   end

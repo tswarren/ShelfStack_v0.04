@@ -1,19 +1,12 @@
 # frozen_string_literal: true
 
 class Category < ApplicationRecord
-  PRICING_MODELS = %w[
-    trade_discount
-    trade_discount_returnable
-    short_discount
-    net_cost_markup
-    blended_lot_cost
-    buyback_resale
-    recipe_cost
-    pass_through
-    markdown
-  ].freeze
+  include PricingModels
+
+  PRICING_MODELS = PricingModels::PRICING_MODELS
 
   belongs_to :department
+  belongs_to :merchandise_class, optional: true
   belongs_to :default_tax_category, class_name: "TaxCategory"
 
   validates :name, presence: true, uniqueness: { scope: :department_id }

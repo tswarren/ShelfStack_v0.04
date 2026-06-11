@@ -2,11 +2,14 @@
 
 <%= render layout: "shared/forms/section", locals: {
   title: "Basic Details",
-  description: "Define how this category appears in setup and reporting."
+  description: "Merchandise categories bridge legacy reporting buckets to merchandise classes."
 } do %>
   <div class="ss-form-grid ss-form-grid--2">
     <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :department_id, label: "Department", required: true } do %>
       <%= f.collection_select :department_id, departments, :id, ->(d) { "#{d.department_number} — #{d.name}" }, { include_blank: "Select department" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :merchandise_class_id, label: "Merchandise class" } do %>
+      <%= f.collection_select :merchandise_class_id, merchandise_classes, :id, :name, include_blank: "Select merchandise class" %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :name, required: true } do %>
       <%= f.text_field :name %>

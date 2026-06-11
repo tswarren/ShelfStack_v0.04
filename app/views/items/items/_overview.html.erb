@@ -126,6 +126,33 @@
       <% end %>
     </section>
 
+    <% if item.variants.any? %>
+      <section class="ss-item-sidebar-section">
+        <h3>Classification &amp; Defaults</h3>
+        <% item.variants.each do |variant| %>
+          <% summary = item.classification_summary_for(variant) %>
+          <% defaults = summary[:defaults] %>
+          <div class="ss-item-classification-block">
+            <p class="ss-item-classification-variant"><strong><%= variant.condition&.short_name || variant.sku %></strong></p>
+            <dl class="ss-summary ss-summary-compact">
+              <dt>Merchandise class</dt><dd><%= summary[:merchandise_class].presence || "—" %></dd>
+              <dt>Merchandise category</dt><dd><%= summary[:merchandise_category].presence || "—" %></dd>
+              <dt>Topic / section</dt><dd><%= summary[:topic_section].presence || "—" %></dd>
+              <dt>Tax category</dt><dd><%= defaults.tax_category&.name || "—" %></dd>
+              <dt>Sales account</dt><dd><%= defaults.sales_account_code.presence || "—" %></dd>
+            </dl>
+            <% if defaults.warnings.any? %>
+              <ul class="ss-form-errors">
+                <% defaults.warnings.each do |warning| %>
+                  <li><%= warning %></li>
+                <% end %>
+              </ul>
+            <% end %>
+          </div>
+        <% end %>
+      </section>
+    <% end %>
+
     <% if item.subject_headings.any? %>
       <section class="ss-item-sidebar-section">
         <h3>Subjects</h3>

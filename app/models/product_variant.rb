@@ -11,6 +11,8 @@ class ProductVariant < ApplicationRecord
   belongs_to :category
   belongs_to :display_location, optional: true
 
+  has_many :categorizations, as: :categorizable, dependent: :destroy
+
   validates :name, presence: true
   validates :sku, presence: true, uniqueness: true, length: { maximum: 50 }
   validates :short_name, length: { maximum: 40 }, allow_blank: true

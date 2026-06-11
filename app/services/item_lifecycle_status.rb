@@ -11,6 +11,8 @@ class ItemLifecycleStatus
 
   FULL_STATUSES = %w[
     missing_category
+    missing_merchandise_class
+    missing_accounting_mapping
     missing_price
     inactive_setup_reference
   ].freeze
@@ -51,6 +53,9 @@ class ItemLifecycleStatus
     statuses = []
     @presenter.variants.each do |variant|
       statuses << "missing_category" if variant.category.blank?
+      statuses << "missing_merchandise_class" if variant.category.present? && variant.category.merchandise_class.blank?
+      resolved = ClassificationDefaultsResolver.for(variant: variant)
+      statuses << "missing_accounting_mapping" if resolved.sales_account_code.blank?
       statuses << "missing_price" if variant.selling_price_cents.blank?
       statuses << "inactive_setup_reference" if inactive_setup_reference?(variant)
     end

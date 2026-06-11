@@ -1,0 +1,61 @@
+<section class="ss-form-card">
+  <header class="ss-form-card-header">
+    <h2>Classification &amp; Defaults</h2>
+    <p class="ss-muted">Choose how this SKU is classified. Derived defaults update from merchandise class and sales account mappings.</p>
+  </header>
+
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :category_id, label: "Merchandise category", required: true } do %>
+      <%= f.collection_select :category_id, categories, :id, :name, selected: variant.category_id %>
+    <% end %>
+
+    <% if category_nodes.present? %>
+      <div class="ss-field">
+        <%= label_tag :primary_category_node_id, "Topic / section", class: "ss-label" %>
+        <%= select_tag :primary_category_node_id,
+                       options_from_collection_for_select(category_nodes, :id, :breadcrumb_label, primary_category_node_id),
+                       include_blank: "Select topic / section",
+                       class: "ss-input" %>
+      </div>
+    <% end %>
+
+    <% if variant.condition_id.present? || f.object.condition.present? %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :condition_id, label: "Condition" } do %>
+        <%= f.collection_select :condition_id, conditions, :id, :name, selected: variant.condition_id %>
+      <% end if local_assigns[:conditions].present? && !local_assigns[:hide_condition] %>
+    <% end %>
+
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :display_location_id, label: "Display location" } do %>
+      <%= f.collection_select :display_location_id, display_locations, :id, :name, include_blank: true %>
+    <% end %>
+  </div>
+
+  <% if classification_defaults.present? %>
+    <div class="ss-form-card ss-form-card--nested">
+      <h3>Derived defaults</h3>
+      <dl class="ss-summary">
+        <dt>Pricing model</dt>
+        <dd><%= classification_defaults.pricing_model.present? ? humanize_controlled_value(classification_defaults.pricing_model) : "—" %></dd>
+        <dt>Tax category</dt>
+        <dd><%= classification_defaults.tax_category&.name || "—" %></dd>
+        <dt>Sales account</dt>
+        <dd><%= classification_defaults.sales_account_code.presence || "—" %></dd>
+        <% if classification_defaults.reporting_bucket.present? %>
+          <dt>Reporting bucket</dt>
+          <dd><%= classification_defaults.reporting_bucket %></dd>
+        <% end %>
+        <dt>Returnable</dt>
+        <dd><%= classification_defaults.returnable.nil? ? "—" : (classification_defaults.returnable ? "Yes" : "No") %></dd>
+        <dt>Buyback eligible</dt>
+        <dd><%= classification_defaults.buyback_allowed.nil? ? "—" : (classification_defaults.buyback_allowed ? "Yes" : "No") %></dd>
+      </dl>
+      <% if classification_defaults.warnings.any? %>
+        <ul class="ss-form-errors">
+          <% classification_defaults.warnings.each do |warning| %>
+            <li><%= warning %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
+</section>

@@ -14,6 +14,7 @@ class SeedTest < ActiveSupport::TestCase
     tax_category_count = TaxCategory.count
     department_count = Department.count
     category_count = Category.count
+    merchandise_class_count = MerchandiseClass.count
 
     load Rails.root.join("db/seeds.rb")
 
@@ -23,6 +24,7 @@ class SeedTest < ActiveSupport::TestCase
     assert_equal tax_category_count, TaxCategory.count
     assert_equal department_count, Department.count
     assert_equal category_count, Category.count
+    assert_equal merchandise_class_count, MerchandiseClass.count
   ensure
     $stdout = original_stdout
   end
