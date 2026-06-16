@@ -159,7 +159,7 @@ module Items
 
       @resolved_store_category_ids = if @store_category_id.present?
                                        CategoryNode.descendant_ids_including_self(@store_category_id)
-                                     end
+      end
     end
 
     def text_query

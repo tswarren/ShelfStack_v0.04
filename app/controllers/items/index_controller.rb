@@ -38,15 +38,15 @@ module Items
       @departments = Department.active_records.order(:department_number)
       @sub_departments = if index_params[:department_id].present?
                            SubDepartment.active_records.where(department_id: index_params[:department_id]).order(:name)
-                         else
+      else
                            SubDepartment.active_records.order(:name)
-                         end
+      end
       @store_category_scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
       @store_category_nodes = if @store_category_scheme
                                 CategoryNode.active_for_tree_select(@store_category_scheme)
-                              else
+      else
                                 CategoryNode.none
-                              end
+      end
     end
   end
 end
