@@ -13,19 +13,9 @@ class ClassificationDefaultsResolverTest < ActiveSupport::TestCase
       short_name: "Trade Resolver",
       department: @department,
       default_pricing_model: "trade_discount",
-      default_margin_target_bps: 4000,
-      default_supplier_discount_bps: 4600,
       default_tax_category: @tax_category,
-      default_sales_account_code: "4100",
       vendor_returnable_default: true,
       buyback_allowed: true
-    )
-    @category = create_category!(
-      department: @department,
-      default_tax_category: @tax_category,
-      sub_department: @sub_department,
-      default_pricing_model: "net_cost_markup",
-      default_margin_target_bps: 1000
     )
     @product = create_product!
     @variant = create_product_variant!(product: @product, sub_department: @sub_department)
@@ -45,8 +35,10 @@ class ClassificationDefaultsResolverTest < ActiveSupport::TestCase
 
     assert_equal "sub_department", result.source
     assert_equal "trade_discount", result.pricing_model
-    assert_equal 4000, result.margin_target_bps
+    assert_equal @tax_category, result.tax_category
     assert_equal "1000", result.sales_account_code
+    assert result.returnable
+    assert result.buyback_allowed
   end
 
   test "returns none source when subdepartment association unavailable" do

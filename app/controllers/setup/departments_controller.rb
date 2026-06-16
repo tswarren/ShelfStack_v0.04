@@ -46,7 +46,7 @@ module Setup
     end
 
     def destroy
-      if @department.categories.exists? || @department.sub_departments.exists?
+      if @department.sub_departments.exists?
         redirect_to setup_department_path(@department), alert: "Department cannot be deleted. Inactivate instead."
       else
         @department.destroy

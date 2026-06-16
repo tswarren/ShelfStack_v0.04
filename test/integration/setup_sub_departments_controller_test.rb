@@ -39,16 +39,16 @@ class SetupSubDepartmentsControllerTest < ActionDispatch::IntegrationTest
       name: "Tree Sub",
       short_name: "TreeSub",
       default_tax_category: @tax_category,
-      default_margin_target_bps: 4000
+      default_pricing_model: "trade_discount"
     )
 
     get setup_sub_departments_path
 
     assert_response :success
     assert_includes response.body, "ss-table--tree"
-    assert_includes response.body, "Default margin target"
+    assert_includes response.body, "Default pricing model"
     assert_includes response.body, @tax_category.name
-    assert_includes response.body, "40.00%"
+    assert_includes response.body, "Trade Discount"
     assert response.body.index("015 — Tree Dept") < response.body.index("Tree Sub")
   end
 end

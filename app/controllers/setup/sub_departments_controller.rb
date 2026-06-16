@@ -20,7 +20,7 @@ module Setup
     end
 
     def new
-      @sub_department = SubDepartment.new(active: true, has_list_price: true, vendor_discounts_from_list_price: true)
+      @sub_department = SubDepartment.new(active: true)
     end
 
     def create
@@ -47,7 +47,7 @@ module Setup
     end
 
     def destroy
-      if @sub_department.categories.exists?
+      if @sub_department.product_variants.exists?
         redirect_to setup_sub_department_path(@sub_department),
                     alert: "Subdepartment cannot be deleted. Inactivate instead."
       else
@@ -83,10 +83,7 @@ module Setup
     def sub_department_params
       params.require(:sub_department).permit(
         :sub_department_key, :name, :short_name, :department_id, :default_pricing_model, :default_tax_category_id,
-        :default_margin_target_bps, :default_supplier_discount_bps, :has_list_price,
-        :vendor_discounts_from_list_price, :store_marks_up_from_cost, :vendor_returnable_default,
-        :used_sales_allowed, :buyback_allowed, :default_sales_account_code, :active,
-        :default_variation_type, :default_inventory_behavior
+        :vendor_returnable_default, :buyback_allowed, :active
       )
     end
   end

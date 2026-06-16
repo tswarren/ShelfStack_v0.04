@@ -43,16 +43,4 @@ module Phase2TestHelper
       active: true
     }.merge(attrs))
   end
-
-  def create_category!(department: nil, default_tax_category: nil, **attrs)
-    department ||= create_department!
-    default_tax_category ||= create_tax_category!
-    Category.create!({
-      department: department,
-      name: "Test Category",
-      short_name: "Test Cat",
-      default_tax_category: default_tax_category,
-      active: true
-    }.merge(attrs))
-  end
 end

@@ -14,26 +14,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "accounting_mappings", force: :cascade do |t|
-    t.boolean "active", default: true, null: false
-    t.bigint "category_node_id"
-    t.bigint "condition_id"
-    t.datetime "created_at", null: false
-    t.string "description"
-    t.string "gl_export_code", limit: 20
-    t.string "product_type"
-    t.string "reporting_bucket", limit: 50
-    t.string "sales_account_code", limit: 20, null: false
-    t.integer "sort_order", default: 0, null: false
-    t.bigint "sub_department_id"
-    t.datetime "updated_at", null: false
-    t.index ["category_node_id"], name: "index_accounting_mappings_on_category_node_id"
-    t.index ["condition_id"], name: "index_accounting_mappings_on_condition_id"
-    t.index ["product_type"], name: "index_accounting_mappings_on_product_type"
-    t.index ["sales_account_code"], name: "index_accounting_mappings_on_sales_account_code"
-    t.index ["sub_department_id"], name: "index_accounting_mappings_on_sub_department_id"
-  end
-
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -160,29 +140,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.check_constraint "year IS NULL OR year::text ~ '^[0-9]{4}$'::text", name: "chk_catalog_items_year_format"
   end
 
-  create_table "categories", force: :cascade do |t|
-    t.boolean "active", default: true, null: false
-    t.datetime "created_at", null: false
-    t.integer "default_margin_target_bps"
-    t.string "default_pricing_model"
-    t.integer "default_supplier_discount_bps"
-    t.bigint "default_tax_category_id", null: false
-    t.bigint "department_id", null: false
-    t.string "name", null: false
-    t.string "short_name", limit: 20, null: false
-    t.integer "sort_order", default: 0, null: false
-    t.bigint "sub_department_id"
-    t.datetime "updated_at", null: false
-    t.index ["active"], name: "index_categories_on_active"
-    t.index ["default_pricing_model"], name: "index_categories_on_default_pricing_model"
-    t.index ["default_tax_category_id"], name: "index_categories_on_default_tax_category_id"
-    t.index ["department_id", "name"], name: "index_categories_on_department_id_and_name", unique: true
-    t.index ["department_id", "short_name"], name: "index_categories_on_department_id_and_short_name", unique: true
-    t.index ["department_id", "sort_order"], name: "index_categories_on_department_id_and_sort_order"
-    t.index ["department_id"], name: "index_categories_on_department_id"
-    t.index ["sub_department_id"], name: "index_categories_on_sub_department_id"
-  end
-
   create_table "categorizations", force: :cascade do |t|
     t.bigint "categorizable_id", null: false
     t.string "categorizable_type", null: false
@@ -201,19 +158,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "category_scheme_id", null: false
     t.datetime "created_at", null: false
     t.bigint "default_display_location_id"
-    t.bigint "default_store_category_id"
     t.bigint "default_sub_department_id"
     t.string "name", null: false
     t.string "node_key", null: false
     t.bigint "parent_id"
     t.integer "sort_order", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["category_scheme_id", "name"], name: "index_category_nodes_on_scheme_and_root_name", unique: true, where: "(parent_id IS NULL)"
     t.index ["category_scheme_id", "node_key"], name: "index_category_nodes_on_category_scheme_id_and_node_key", unique: true
     t.index ["category_scheme_id", "parent_id", "name"], name: "index_category_nodes_on_scheme_parent_and_name", unique: true, where: "(parent_id IS NOT NULL)"
     t.index ["category_scheme_id"], name: "index_category_nodes_on_category_scheme_id"
     t.index ["default_display_location_id"], name: "index_category_nodes_on_default_display_location_id"
-    t.index ["default_store_category_id"], name: "index_category_nodes_on_default_store_category_id"
     t.index ["default_sub_department_id"], name: "index_category_nodes_on_default_sub_department_id"
     t.index ["parent_id"], name: "index_category_nodes_on_parent_id"
   end
@@ -465,22 +419,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.boolean "active", default: true, null: false
     t.boolean "buyback_allowed", default: false, null: false
     t.datetime "created_at", null: false
-    t.string "default_inventory_behavior", default: "standard_physical", null: false
-    t.integer "default_margin_target_bps"
     t.string "default_pricing_model"
-    t.string "default_sales_account_code", limit: 20
-    t.integer "default_supplier_discount_bps"
     t.bigint "default_tax_category_id", null: false
-    t.string "default_variation_type", default: "standard", null: false
     t.bigint "department_id", null: false
-    t.boolean "has_list_price", default: true, null: false
     t.string "name", null: false
     t.string "short_name", null: false
-    t.boolean "store_marks_up_from_cost", default: false, null: false
     t.string "sub_department_key", null: false
     t.datetime "updated_at", null: false
-    t.boolean "used_sales_allowed", default: false, null: false
-    t.boolean "vendor_discounts_from_list_price", default: true, null: false
     t.boolean "vendor_returnable_default", default: false, null: false
     t.index ["default_tax_category_id"], name: "index_sub_departments_on_default_tax_category_id"
     t.index ["department_id"], name: "index_sub_departments_on_department_id"
@@ -626,9 +571,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["workstation_type"], name: "index_workstations_on_workstation_type"
   end
 
-  add_foreign_key "accounting_mappings", "category_nodes"
-  add_foreign_key "accounting_mappings", "product_conditions", column: "condition_id"
-  add_foreign_key "accounting_mappings", "sub_departments"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_events", "stores"
@@ -638,11 +580,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "catalog_item_identifiers", "catalog_items"
   add_foreign_key "catalog_items", "category_nodes", column: "store_category_id"
   add_foreign_key "catalog_items", "formats"
-  add_foreign_key "categories", "departments"
-  add_foreign_key "categories", "sub_departments"
-  add_foreign_key "categories", "tax_categories", column: "default_tax_category_id"
   add_foreign_key "categorizations", "category_nodes"
-  add_foreign_key "category_nodes", "category_nodes", column: "default_store_category_id"
   add_foreign_key "category_nodes", "category_nodes", column: "parent_id"
   add_foreign_key "category_nodes", "category_schemes"
   add_foreign_key "category_nodes", "display_locations", column: "default_display_location_id"

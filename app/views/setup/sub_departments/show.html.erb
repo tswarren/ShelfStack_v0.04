@@ -6,11 +6,7 @@
   <dt>Short name</dt><dd><%= @sub_department.short_name %></dd>
   <dt>Default pricing model</dt><dd><%= @sub_department.default_pricing_model ? humanize_controlled_value(@sub_department.default_pricing_model) : "—" %></dd>
   <dt>Default tax category</dt><dd><%= @sub_department.default_tax_category.name %></dd>
-  <dt>Default margin target</dt><dd><%= @sub_department.default_margin_target_bps ? format_basis_points(@sub_department.default_margin_target_bps) : "—" %></dd>
-  <dt>Default supplier discount</dt><dd><%= @sub_department.default_supplier_discount_bps ? format_basis_points(@sub_department.default_supplier_discount_bps) : "—" %></dd>
-  <dt>Default sales account</dt><dd><%= @sub_department.default_sales_account_code || "—" %></dd>
-  <dt>Has list price</dt><dd><%= @sub_department.has_list_price? ? "Yes" : "No" %></dd>
-  <dt>Used sales allowed</dt><dd><%= @sub_department.used_sales_allowed? ? "Yes" : "No" %></dd>
+  <dt>Vendor returnable default</dt><dd><%= @sub_department.vendor_returnable_default? ? "Yes" : "No" %></dd>
   <dt>Buyback allowed</dt><dd><%= @sub_department.buyback_allowed? ? "Yes" : "No" %></dd>
   <dt>Status</dt><dd><span class="<%= status_class(@sub_department.active?) %>"><%= status_label(@sub_department.active?) %></span></dd>
 </dl>

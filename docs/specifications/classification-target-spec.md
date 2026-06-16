@@ -457,7 +457,7 @@ Prefill display location when store category changes (client + server fallback),
 * deprecate `product_variants.category_id` (nullable, then remove)
 * hide Phase 2 **Categories** from item entry flows
 * update lifecycle checks (`missing_category` → missing subdepartment / store category as appropriate)
-* freeze or remove unused `AccountingMapping` behavior tied to old category model
+* **Done (2025-06):** removed `categories` and `accounting_mappings` tables; slimmed `sub_departments`; flattened BISAC import. See [classification-cleanup.md](../implementation/classification-cleanup.md).
 
 ---
 

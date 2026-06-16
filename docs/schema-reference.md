@@ -71,13 +71,13 @@ tax_categories
 store_tax_rates
 store_tax_category_rates
 departments
-categories
 ```
+
+> **Note:** Phase 2 `categories` was removed in migration `20250616120000_classification_simplification_cleanup`. Operational classification uses `sub_departments` (Phase 3B). See [implementation/classification-cleanup.md](implementation/classification-cleanup.md).
 
 ## Phase 2 Focus
 
 * Department reporting structure
-* Category defaults
 * Tax classification
 * Store tax rates
 * Effective-dated tax mappings

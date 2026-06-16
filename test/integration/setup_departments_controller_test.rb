@@ -28,9 +28,9 @@ class SetupDepartmentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "005", event.event_details.dig("attributes", "department_number")
   end
 
-  test "cannot delete department with categories" do
+  test "cannot delete department with subdepartments" do
     department = create_department!(department_number: "010", name: "Maps Dept", short_name: "Maps")
-    create_category!(department: department, name: "Road Maps", short_name: "Road")
+    create_sub_department!(department: department, name: "Road Maps", short_name: "Road")
 
     assert_no_difference -> { Department.count } do
       delete setup_department_path(department)

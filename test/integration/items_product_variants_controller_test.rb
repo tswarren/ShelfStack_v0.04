@@ -13,8 +13,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
       items.product_variants.inactivate items.product_variants.reactivate items.product_variants.delete
     ].each { |key| grant_permission!(@admin, key) }
     @product = create_product!(variation_type: "conditional")
-    @category = create_category!
-    @sub_department = @category.sub_department || create_sub_department!(default_tax_category: @category.default_tax_category)
+    @sub_department = create_sub_department!
     @used_condition = ProductCondition.active_records.find_by(new_condition: false) ||
                       create_product_condition!(condition_key: "used_test", name: "Used Test", short_name: "Used", new_condition: false, sku_component: "U", sort_order: 50)
     assign_workstation!(@workstation, cookies)

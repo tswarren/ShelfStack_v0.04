@@ -38,26 +38,7 @@ class CatalogItemStoreCategorySync
       return Result.new(store_category: node, source: "manual", warnings: warnings)
     end
 
-    suggested = suggest_from_bisac
-    return suggested if suggested.store_category.present?
-
     Result.new(store_category: catalog_item.store_category, source: "unchanged", warnings: warnings)
-  end
-
-  def suggest_from_bisac
-    primary_bisac_id = bisac_category_node_ids.first
-    return Result.new(store_category: nil, source: "none", warnings: warnings) if primary_bisac_id.blank?
-
-    bisac_node = CategoryNode.active_records.find_by(id: primary_bisac_id)
-    return Result.new(store_category: nil, source: "none", warnings: warnings) if bisac_node.blank?
-
-    suggested = bisac_node.default_store_category
-    if suggested.blank?
-      warnings << "No store category suggestion mapped for selected BISAC subject."
-      return Result.new(store_category: nil, source: "bisac_unmapped", warnings: warnings)
-    end
-
-    Result.new(store_category: suggested, source: "bisac_default", warnings: warnings)
   end
 
   def apply_product_defaults!

@@ -13,7 +13,6 @@ class SeedTest < ActiveSupport::TestCase
     store_count = Store.count
     tax_category_count = TaxCategory.count
     department_count = Department.count
-    category_count = Category.count
     sub_department_count = SubDepartment.count
     display_location_count = DisplayLocation.count
     store_category_count = CategoryScheme.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
@@ -26,7 +25,6 @@ class SeedTest < ActiveSupport::TestCase
     assert_equal store_count, Store.count
     assert_equal tax_category_count, TaxCategory.count
     assert_equal department_count, Department.count
-    assert_equal category_count, Category.count
     assert_equal sub_department_count, SubDepartment.count
     assert_equal display_location_count, DisplayLocation.count
     assert_equal store_category_count,

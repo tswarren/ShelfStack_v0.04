@@ -8,27 +8,32 @@ class CategoryNode < ApplicationRecord
   belongs_to :parent, class_name: "CategoryNode", optional: true
   belongs_to :default_sub_department, class_name: "SubDepartment", optional: true
   belongs_to :default_display_location, class_name: "DisplayLocation", optional: true
-  belongs_to :default_store_category, class_name: "CategoryNode", optional: true
 
   has_many :children, class_name: "CategoryNode", foreign_key: :parent_id, dependent: :restrict_with_error,
            inverse_of: :parent
   has_many :categorizations, dependent: :restrict_with_error
-  has_many :accounting_mappings, dependent: :restrict_with_error
   has_many :catalog_items_as_store_category, class_name: "CatalogItem", foreign_key: :store_category_id,
            dependent: :restrict_with_error, inverse_of: :store_category
 
   validates :node_key, presence: true, uniqueness: { scope: :category_scheme_id }, length: { maximum: 30 }
-  validates :name, presence: true, uniqueness: { scope: %i[category_scheme_id parent_id] }
+  validates :name, presence: true
   validates :sort_order, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :parent_must_belong_to_same_scheme
   validate :parent_must_be_active
   validate :default_sub_department_must_be_active
   validate :default_display_location_must_be_active
-  validate :default_store_category_must_be_store_category_node
+  validate :name_unique_within_parent_scope
 
   scope :active_records, -> { where(active: true) }
 
   def self.ordered_tree_rows_for(category_scheme)
+    if category_scheme.scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
+      return category_scheme.category_nodes
+                            .includes(:default_sub_department, :default_display_location)
+                            .order(:sort_order, :node_key, :name)
+                            .map { |node| TreeOrdering::Row.new(record: node, depth: 0) }
+    end
+
     TreeOrdering.rows(
       category_scheme.category_nodes
         .includes(:default_sub_department, :default_display_location)
@@ -92,11 +97,11 @@ class CategoryNode < ApplicationRecord
     errors.add(:default_display_location, "must be active")
   end
 
-  def default_store_category_must_be_store_category_node
-    return if default_store_category.blank?
+  def name_unique_within_parent_scope
+    return if category_scheme&.scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
 
-    unless default_store_category.store_category?
-      errors.add(:default_store_category, "must belong to the store categories scheme")
-    end
+    scope = self.class.where(category_scheme_id: category_scheme_id, parent_id: parent_id, name: name)
+    scope = scope.where.not(id: id) if persisted?
+    errors.add(:name, "has already been taken") if scope.exists?
   end
 end

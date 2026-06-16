@@ -22,40 +22,21 @@
 
 <%= render layout: "shared/forms/section", locals: {
   title: "Operational Defaults",
-  description: "Defaults applied to sellable SKUs assigned to this subdepartment."
+  description: "Defaults shown on sellable SKUs assigned to this subdepartment."
 } do %>
   <div class="ss-form-grid ss-form-grid--2">
-    <%= render layout: "shared/forms/field", locals: { f: f, record: sub_department, field: :default_variation_type, label: "Default variation type" } do %>
-      <%= f.select :default_variation_type, Product::VARIATION_TYPES.map { |value| [humanize_controlled_value(value), value] } %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: sub_department, field: :default_inventory_behavior, label: "Default inventory behavior" } do %>
-      <%= f.select :default_inventory_behavior, ProductVariant::INVENTORY_BEHAVIORS.map { |value| [humanize_controlled_value(value), value] } %>
-    <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: sub_department, field: :default_pricing_model, label: "Default pricing model" } do %>
       <%= f.select :default_pricing_model, PricingModels::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: sub_department, field: :default_tax_category_id, label: "Default tax category", required: true } do %>
       <%= f.collection_select :default_tax_category_id, tax_categories, :id, :name, include_blank: "Select tax category" %>
     <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: sub_department, field: :default_margin_target_bps, label: "Default margin target (bps)" } do %>
-      <%= f.number_field :default_margin_target_bps, step: 1, min: 0, max: 10000 %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: sub_department, field: :default_supplier_discount_bps, label: "Default supplier discount (bps)" } do %>
-      <%= f.number_field :default_supplier_discount_bps, step: 1, min: 0, max: 10000 %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: sub_department, field: :default_sales_account_code, label: "Default sales account code" } do %>
-      <%= f.text_field :default_sales_account_code, maxlength: 20 %>
-    <% end %>
   </div>
 <% end %>
 
 <%= render layout: "shared/forms/section", locals: { title: "Behavior Flags" } do %>
   <div class="ss-form-grid ss-form-grid--2">
-    <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :has_list_price %>
-    <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :vendor_discounts_from_list_price %>
-    <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :store_marks_up_from_cost %>
     <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :vendor_returnable_default %>
-    <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :used_sales_allowed %>
     <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :buyback_allowed %>
   </div>
 <% end %>
