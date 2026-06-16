@@ -1,19 +1,19 @@
-store_number,tax_category_name,store_tax_rate_name,effective_on,ends_on
-001,Gen Merch,State Sales Tax,2020-01-01,
-001,Book,State Sales Tax,2020-01-01,
-001,Periodical,Non-Taxable,2020-01-01,
-001,Media,State Sales Tax,2020-01-01,
-001,Digital,Non-Taxable,2020-01-01,
-001,Pkg Food,Non-Taxable,2020-01-01,
-001,Food/Bev,State Sales Tax,2020-01-01,
-001,Service,Non-Taxable,2020-01-01,
-001,Non Merch,Non-Taxable,2020-01-01,
-002,Gen Merch,State Sales Tax,2020-01-01,
-002,Book,State Sales Tax,2020-01-01,
-002,Periodical,State Sales Tax,2020-01-01,
-002,Media,State Sales Tax,2020-01-01,
-002,Digital,Non-Taxable,2020-01-01,
-002,Pkg Food,Non-Taxable,2020-01-01,
-002,Food/Bev,Prepared Food & Beverage,2020-01-01,
-002,Service,Non-Taxable,2020-01-01,
-002,Non Merch,Non-Taxable,2020-01-01,
+store_number,tax_category_name,store_tax_rate_name,effective_on
+001,General Merchandise,State Sales Tax,2020-01-01
+001,Books,State Sales Tax,2020-01-01
+001,Periodicals,Non-Taxable,2020-01-01
+001,Media,State Sales Tax,2020-01-01
+001,Digital Media,Non-Taxable,2020-01-01
+001,Packaged Food,Non-Taxable,2020-01-01
+001,Prepared Food,State Sales Tax,2020-01-01
+001,Services,Non-Taxable,2020-01-01
+001,Non-Merchandise,Non-Taxable,2020-01-01
+002,General Merchandise,State Sales Tax,2020-01-01
+002,Books,State Sales Tax,2020-01-01
+002,Periodicals,State Sales Tax,2020-01-01
+002,Media,State Sales Tax,2020-01-01
+002,Digital Media,Non-Taxable,2020-01-01
+002,Packaged Food,Non-Taxable,2020-01-01
+002,Prepared Food,Prepared Food & Beverage,2020-01-01
+002,Services,Non-Taxable,2020-01-01
+002,Non-Merchandise,Non-Taxable,2020-01-01

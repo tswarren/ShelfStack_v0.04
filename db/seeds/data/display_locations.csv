@@ -1,23 +1,24 @@
-short_name,name,parent_short_name,sort_order,,,,,,,,
-10100,Salesfloor,,,,,,10100,Salesfloor,Books,,Salesfloor > Books
-10101,Books,10100,,,,,10101,Salesfloor,Books,Children's,Salesfloor > Books > Children's
-10102,Children's,10101,,,,,10102,Salesfloor,Books,Young Adult,Salesfloor > Books > Young Adult
-10103,Young Adult,10101,,,,,10103,Salesfloor,Books,Bargain Books,Salesfloor > Books > Bargain Books
-10200,Media,10100,,,,,10200,Salesfloor,Media,,Salesfloor > Media
-10201,Recorded Music,10200,,,,,10201,Salesfloor,Media,Recorded Music,Salesfloor > Media > Recorded Music
-10203,Video,10200,,,,,10203,Salesfloor,Media,Video,Salesfloor > Media > Video
-10204,Gaming,10200,,,,,10204,Salesfloor,Media,Gaming,Salesfloor > Media > Gaming
-10205,Electronics,10200,,,,,10205,Salesfloor,Media,Electronics,Salesfloor > Media > Electronics
-10300,Newsstand,10100,,,,,10300,Salesfloor,Newsstand,,Salesfloor > Newsstand
-10301,Magazines,10300,,,,,10301,Salesfloor,Newsstand,Magazines,Salesfloor > Newsstand > Magazines
-10302,Newspapers,10300,,,,,10302,Salesfloor,Newsstand,Newspapers,Salesfloor > Newsstand > Newspapers
-10400,Cafe,10100,,,,,10400,Salesfloor,Cafe,,Salesfloor > Cafe
-10500,Gift & Accessories,10100,,,,,10500,Salesfloor,Gift & Acccessories,,Salesfloor > Gift & Acccessories
-10900,Featured,10100,,,,,10900,Salesfloor,Featured,,Salesfloor > Featured
-10910,Cashwrap,10900,,,,,10910,Salesfloor,Featured,Cashwrap,Salesfloor > Featured > Cashwrap
-10920,Bestsellers,10900,,,,,10920,Salesfloor,Featured,Bestsellers,Salesfloor > Featured > Bestsellers
-10930,Staff Recommends,10900,,,,,10930,Salesfloor,Featured,Staff Recommendations,Salesfloor > Featured > Staff Recommendations
-10940,Clearance,10900,,,,,10940,Salesfloor,Featured,Clearance,Salesfloor > Featured > Clearance
-10950,Aisle,10900,,,,,10950,Salesfloor,Featured,Aisle,Salesfloor > Featured > Aisle
-10960,Front of Store,10900,,,,,10960,Salesfloor,Featured,Front of Store,Salesfloor > Featured > Front of Store
-10970,Endcap,10900,,,,,10970,Salesfloor,Featured,Endcap,Salesfloor > Featured > Endcap
+short_name,name,parent_short_name,sort_order
+salesfloor,Salesfloor,,10100
+books,Books,salesfloor,10101
+childrens,Children's,books,10102
+young_adult,Young Adult,books,10103
+media,Media,salesfloor,10200
+recorded_music,Recorded Music,media,10201
+video,Video,media,10203
+gaming,Gaming,media,10204
+electronics,Electronics,media,10205
+newsstand,Newsstand,salesfloor,10300
+magazines,Magazines,newsstand,10301
+newspapers,Newspapers,newsstand,10302
+cafe,Cafe,salesfloor,10400
+gift_accessories,Gift & Accessories,salesfloor,10500
+featured,Featured,salesfloor,10900
+cashwrap,Cashwrap,featured,10910
+bestsellers,Bestsellers,featured,10920
+staff_reommendations,Staff Recommends,featured,10930
+clearance,Clearance,featured,10940
+aisle,Aisle,featured,10950
+front_of_store,Front of Store,featured,10960
+endcap,Endcap,featured,10970
+overrstock,Back Room Overstock,,20100

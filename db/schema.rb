@@ -430,7 +430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["default_tax_category_id"], name: "index_sub_departments_on_default_tax_category_id"
     t.index ["department_id"], name: "index_sub_departments_on_department_id"
     t.index ["name"], name: "index_sub_departments_on_name", unique: true
-    t.index ["short_name"], name: "index_sub_departments_on_short_name", unique: true
+    t.index ["short_name"], name: "index_sub_departments_on_short_name"
     t.index ["sub_department_key"], name: "index_sub_departments_on_sub_department_key", unique: true
   end
 

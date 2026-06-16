@@ -1,0 +1,3 @@
+short_name,name,parent_short_name,sort_order
+salesfloor,Salesfloor,,0
+books,Books,salesfloor,10

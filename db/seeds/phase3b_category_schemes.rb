@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "concerns/tsv_tree_importer"
+require_relative "concerns/csv_classification_importer"
 
 module Seeds
   module Phase3bCategorySchemes

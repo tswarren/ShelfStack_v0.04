@@ -1,0 +1,4 @@
+department_number,name,short_name,gl_account_code
+001,Books Dept,BOOKS,4100
+002,Media Dept,MEDIA,4200
+004,Sidelines,SIDES,4400

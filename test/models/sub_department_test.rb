@@ -18,6 +18,28 @@ class SubDepartmentTest < ActiveSupport::TestCase
     assert sub_department.save
   end
 
+  test "allows duplicate short_name when keys differ" do
+    tax_category = create_tax_category!
+    department = create_department!
+    create_sub_department!(
+      sub_department_key: "video_games",
+      name: "Video Games",
+      short_name: "Games",
+      department: department,
+      default_tax_category: tax_category
+    )
+    duplicate_short = SubDepartment.new(
+      sub_department_key: "sideline_games",
+      name: "Sideline Games",
+      short_name: "Games",
+      department: department,
+      default_tax_category: tax_category
+    )
+
+    assert duplicate_short.valid?
+    assert duplicate_short.save
+  end
+
   test "normalizes merchandise class key" do
     tax_category = create_tax_category!
     sub_department = create_sub_department!(

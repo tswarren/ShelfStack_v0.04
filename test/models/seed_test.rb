@@ -47,15 +47,15 @@ class SeedTest < ActiveSupport::TestCase
     $stdout = original_stdout
   end
 
-  test "reference trees seed display locations and store categories from tsv" do
+  test "reference trees seed display locations and store categories from csv" do
     original_stdout = $stdout
     $stdout = StringIO.new
 
     load Rails.root.join("db/seeds.rb")
 
-    assert_operator DisplayLocation.active_records.count, :>=, 30
+    assert_operator DisplayLocation.active_records.count, :>=, 20
     store_scheme = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
-    assert_operator store_scheme.category_nodes.active_records.count, :>=, 65
+    assert_operator store_scheme.category_nodes.active_records.count, :>=, 140
 
     fiction = store_scheme.category_nodes.find_by!(node_key: "fiction")
     assert fiction.default_sub_department.present?

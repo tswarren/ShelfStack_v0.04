@@ -520,6 +520,18 @@ Production seeds should not expose credentials.
 
 ---
 
+## 5.4 CSV classification reference data
+
+Phase 2 and Phase 3B classification seeds load from `db/seeds/data/*.csv`. Validate files before seeding:
+
+```bash
+./dev/rails-docker rails shelfstack:seeds:validate
+```
+
+See [csv-seeds.md](implementation/csv-seeds.md) and [seed-data-spec.md](specifications/seed-data-spec.md).
+
+---
+
 # 6. Audit Conventions
 
 ## 6.1 Event naming

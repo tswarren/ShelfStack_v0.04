@@ -1,0 +1,4 @@
+sub_department_key,department_number,name,short_name,default_pricing_model,tax_category_name,vendor_returnable_default,buyback_allowed
+general_trade,001,General Trade,General Trade,trade_discount,Books Tax,TRUE,TRUE
+video_games,002,Video Games,Games,trade_discount,Books Tax,TRUE,TRUE
+sideline_games,004,Sideline Games,Games,net_cost_markup,Books Tax,FALSE,FALSE

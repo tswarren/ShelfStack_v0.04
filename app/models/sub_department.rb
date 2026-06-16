@@ -10,7 +10,7 @@ class SubDepartment < ApplicationRecord
 
   validates :sub_department_key, presence: true, uniqueness: true, length: { maximum: 30 }
   validates :name, presence: true, uniqueness: true
-  validates :short_name, presence: true, uniqueness: true, length: { maximum: 20 }
+  validates :short_name, presence: true, length: { maximum: 20 }
   validates :department_id, presence: true
   validates :default_pricing_model, inclusion: { in: PRICING_MODELS }, allow_blank: true
   validate :default_tax_category_must_be_active

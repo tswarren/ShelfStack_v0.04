@@ -77,14 +77,14 @@ module Seeds
     def self.seed_demo_catalog_and_products!
       hardcover = Format.find_by!(format_key: "hardcover")
       sideline = Format.find_by!(format_key: "sideline")
-      trade_sub_department = SubDepartment.find_by!(sub_department_key: "general_trade_books")
-      gift_sub_department = SubDepartment.find_by!(sub_department_key: "gift_cards")
+      trade_sub_department = SubDepartment.find_by!(sub_department_key: "general_trade")
+      gift_sub_department = SubDepartment.find_by!(sub_department_key: "other")
       new_condition = ProductCondition.find_by!(condition_key: "new")
-      front_table = DisplayLocation.find_by!(short_name: "Front Table")
+      featured_display = DisplayLocation.find_by!(short_name: "bestsellers")
       fiction_store_category = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
                                             .category_nodes.find_by!(node_key: "fiction")
-      gifts_store_category = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
-                                           .category_nodes.find_by!(node_key: "gifts")
+      sideline_store_category = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+                                              .category_nodes.find_by!(node_key: "sideline")
 
       catalog_item = CatalogItem.find_or_initialize_by(title: "The Hobbit", format: hardcover)
       if catalog_item.new_record?
@@ -115,7 +115,7 @@ module Seeds
           product_type: "physical",
           variation_type: "standard",
           list_price_cents: 1899,
-          default_display_location: front_table,
+          default_display_location: featured_display,
           active: true
         )
         product.save!
@@ -160,7 +160,7 @@ module Seeds
         sideline_item.assign_attributes(
           catalog_item_type: "sideline",
           publication_status: "active",
-          store_category: gifts_store_category,
+          store_category: sideline_store_category,
           active: true
         )
         sideline_item.save!

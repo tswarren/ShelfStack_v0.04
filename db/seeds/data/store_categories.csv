@@ -1,0 +1,152 @@
+department_number,node_key,name,parent_node_key,sort_order,default_sub_department_key,default_display_location_short_name
+001,books,Books,,1000000,general_trade,salesfloor
+001,bus_com_sci_tech,"Business, Computers, Science & Technology",books,1010000,general_trade,books
+001,business,Business & Finance,bus_com_sci_tech,1010100,general_trade,books
+001,computer,Computers,bus_com_sci_tech,1010200,general_trade,books
+001,sci_nat,Science & Nature,bus_com_sci_tech,1010300,general_trade,books
+001,technlgy,Technology,bus_com_sci_tech,1010400,general_trade,books
+001,trnsport,Transportation & Automobiles,bus_com_sci_tech,1010500,general_trade,books
+001,child_fam,Children & Family,books,1020000,general_trade,books
+001,fam_chld,Family & Childcare,books,1020101,general_trade,books
+001,jv,Children's Books,child_fam,1020200,juvyoung_adult,books
+001,jv_pb,Children's Books / Picture Books,jv,1020201,juvyoung_adult,childrens
+001,jv_0-3,Children's Books / Baby-Preschool,jv,1020202,juvyoung_adult,childrens
+001,jv_9-12,Children's Books / Ages 9-12,jv,1020203,juvyoung_adult,childrens
+001,jv_4-8,Children's Books / Ages 4-8,jv,1020204,juvyoung_adult,childrens
+001,jv_all,Children's Books / All Ages,jv,1020205,juvyoung_adult,childrens
+001,jv_nf,Children's Books / Nonfiction,jv,1020206,juvyoung_adult,childrens
+001,jv_ya,Young Adult,child_fam,1020300,juvyoung_adult,books
+001,jv_yan,Young Adult Nonfiction,jv_ya,1020301,juvyoung_adult,young_adult
+001,jv_yaf,Young Adult Fiction,jv_ya,1020302,juvyoung_adult,young_adult
+001,fict_genre,Fiction Genres,books,1030000,juvyoung_adult,young_adult
+001,fiction,Fiction,fict_genre,1030100,general_trade,books
+001,literatr,Literature/Classics/Criticism,fict_genre,1030200,general_trade,books
+001,mystery,Mystery,fict_genre,1030300,general_trade,books
+001,romance,Romance,fict_genre,1030400,general_trade,books
+001,sf_fant,Science Fiction & Fantasy,fict_genre,1030500,general_trade,books
+001,western,Westerns,fict_genre,1030600,general_trade,books
+001,ant_coll,Anthologies & Collections,fict_genre,1030700,general_trade,books
+001,hist_soc_sci,History & Social Sciences,books,1040000,general_trade,books
+001,arch_ant,Archaeology & Anthropology,hist_soc_sci,1040100,general_trade,books
+001,biogrphy,Biography & Autobiography,hist_soc_sci,1040200,general_trade,books
+001,cur_evnt,Politics & Current Events,hist_soc_sci,1040300,general_trade,books
+001,hist,History / General,hist_soc_sci,1040400,general_trade,books
+001,hist_wrl,History / World History,hist,1040401,general_trade,books
+001,hist_us,History / U.S.,hist,1040402,general_trade,books
+001,hist_mil,History / Military,hist,1040403,general_trade,books
+001,pop_cult,Pop Arts/Popular Culture,hist_soc_sci,1040500,general_trade,books
+001,sociolgy,Sociology,hist_soc_sci,1040600,general_trade,books
+001,true_crm,True Crime/Espionage,hist_soc_sci,1040700,general_trade,books
+001,leisure,Leisure,books,1050000,general_trade,books
+001,archtctr,Architecture,leisure,1050100,general_trade,books
+001,art,Art & Art Instruction,leisure,1050200,general_trade,books
+001,ckbk_ent,"Cooking, Entertaining & Wine",leisure,1050300,general_trade,books
+001,crft_hob,Crafts & Hobbies,leisure,1050400,general_trade,books
+001,games,"Games, Gamebooks & Puzzles",leisure,1050500,general_trade,books
+001,gardens,Gardening,leisure,1050600,general_trade,books
+001,hse_home,House & Home,leisure,1050700,general_trade,books
+001,humor,Humor & Cartoons,leisure,1050800,general_trade,books
+001,photgrph,Photography,leisure,1050900,general_trade,books
+001,sports,Sports & Recreation,leisure,1051000,general_trade,books
+001,trv,Travel / General,leisure,1051100,general_trade,books
+001,trv_dom,Travel / Domestic,trv,1051101,general_trade,books
+001,trv_intl,Travel / International,trv,1051102,general_trade,books
+001,lifestyle,Life Styles,books,1060000,general_trade,books
+001,hlth_body,Personal Health,lifestyle,1060100,general_trade,books
+001,hlth_fit,Health & Fitness,hlth_body,1060101,general_trade,books
+001,diseases,Diseases,hlth_body,1060102,general_trade,books
+001,diet_nut,Diet & Nutrition,hlth_body,1060103,general_trade,books
+001,selfhelp,Self-Help,lifestyle,1060200,general_trade,books
+001,add_recv,Addition & Recovery,selfhelp,1060201,general_trade,books
+001,relation,Relationships,selfhelp,1060202,general_trade,books
+001,sex,Sexuality,selfhelp,1060203,general_trade,books
+001,mbs,"Mind, Body & Spirit",books,1070000,general_trade,books
+001,new_age,New Age/Parapsychology,mbs,1070100,general_trade,books
+001,philsphy,Philosophy,mbs,1070200,general_trade,books
+001,psych,Psychology,mbs,1070300,general_trade,books
+001,rel,Religion / General,mbs,1070400,general_trade,books
+001,rel_bibl,Religion / Bibles,rel,1070401,general_trade,books
+001,rel_chr,Religion / Christianity,rel,1070402,general_trade,books
+001,rel_fict,Religion / Religious Fiction,rel,1070403,general_trade,books
+001,rel_insp,Religion / Inspiration,rel,1070404,general_trade,books
+001,rel_isl,Religion / Islam,rel,1070405,general_trade,books
+001,rel_jud,Religion / Judaism,rel,1070406,general_trade,books
+001,rel_theo,Religion / Theology,rel,1070407,general_trade,books
+001,rel_wrld,Religion / World Religions,rel,1070408,general_trade,books
+001,poet_perf_art,Poetry & the Performing Arts,books,1080000,general_trade,books
+001,drama,Drama & Theatre,poet_perf_art,1080100,general_trade,books
+001,film_tv,"Film, Television & Radio",poet_perf_art,1080200,general_trade,books
+001,music_pa,Music & the Performing Arts,poet_perf_art,1080300,general_trade,books
+001,poetry,Poetry,poet_perf_art,1080400,general_trade,books
+001,ref_lang,Reference and Languages,books,1090000,general_trade,books
+001,edu_tch,Education & Teaching,ref_lang,1090100,general_trade,books
+001,stdy_gde,Study Guides & Book Notes,edu_tch,1090101,general_trade,books
+001,for_lang,Foreign Language Study,ref_lang,1090200,general_trade,books
+001,language,"Language Arts, Linguistics & Literacy",ref_lang,1090300,general_trade,books
+001,law,Law & Legal Affairs,ref_lang,1090400,general_trade,books
+001,referenc,Reference,ref_lang,1090500,general_trade,books
+002,media,Media,ref_lang,2000000,rec_music,media
+002,rms,Recorded Music,media,2010000,rec_music,recorded_music
+002,rms_childrens,Children's,rms,2010100,rec_music,recorded_music
+002,rms_classical,Classical,rms,2010200,rec_music,recorded_music
+002,rms_country,Country,rms,2010300,rec_music,recorded_music
+002,rms_new_age,New Age,rms,2010400,rec_music,recorded_music
+002,rms_pop_rock,Pop/Rock,rms,2010500,rec_music,recorded_music
+002,rms_soundtrk,Soundtracks,rms,2010600,rec_music,recorded_music
+002,rms_world,World Music,rms,2010700,rec_music,recorded_music
+002,vd,Video,media,2020000,videodvd,video
+002,vd_action,Action/Adventure,vd,2020100,videodvd,video
+002,vd_com,Comedy,vd,2020200,videodvd,video
+002,vd_doc,Documentary,vd,2020300,videodvd,video
+002,vd_drama,Drama,vd,2020400,videodvd,video
+002,vd_horror,Horror/Suspense,vd,2020500,videodvd,video
+002,vd_tv,Television Series,vd,2020600,videodvd,video
+002,vgm,Gaming,media,2030000,games,gaming
+002,vgm_nin,Nintendo Switch,vgm,2030100,games,gaming
+002,vgm_ps,Playstation,vgm,2030200,games,gaming
+002,vgm_xbox,Xbox,vgm,2030300,games,gaming
+002,vgm_other,Other Platforms,vgm,2030900,games,gaming
+002,elec,Electronics,media,2040000,digital,
+002,elec_vid,DVD/Blu-ray Players,elec,2040100,digital,
+002,elec_audio,Personal Audio,elec,2040200,digital,
+002,elec_rec_plyr,Record Players,elec,2040300,digital,
+002,elec_access,Accessories,elec,2040400,digital,
+002,elec_other,Other,elec,2040500,digital,
+002,dgm,Digital Media,media,2050000,electronics,electronics
+002,dgm_bks,Books,dgm,2050100,electronics,electronics
+002,dgm_music,Music / Audio,dgm,2050200,electronics,electronics
+002,dgm_video,Video,dgm,2050300,electronics,electronics
+003,newsstand,Newsstand,,3000000,magazines,newsstand
+003,pd,Magazines,newsstand,3010000,magazines,magazines
+003,pd_art,Art & Photography,pd,3010100,magazines,magazines
+003,pd_comp,Computers & Technology,pd,3010200,magazines,magazines
+003,pd_ent,Entertainment,pd,3010300,magazines,magazines
+003,pd_gen,General Interest,pd,3010400,magazines,magazines
+003,pd_jv,Children's & Young Adult,pd,3010500,magazines,magazines
+003,pd_life,Lifestyle,pd,3010600,magazines,magazines
+003,pd_mens,Men's Interest,pd,3010700,magazines,magazines
+003,pd_sci,"Science, Nature & Animals",pd,3010800,magazines,magazines
+003,pd_trns,Transportation,pd,3010900,magazines,magazines
+003,pd_wkly,Weeklies,pd,3011000,magazines,magazines
+003,pd_women,Women's Interest,pd,3011200,magazines,magazines
+003,nsp,Newspapers,newsstand,3020000,newspapers,newspapers
+003,nsp_local,Local,nsp,3020100,newspapers,newspapers
+003,nsp_natl,National,nsp,3020200,newspapers,newspapers
+003,nsp_intl,International,nsp,3020300,newspapers,newspapers
+004,sideline,Gifts & Accessories,,4000000,other_sidelines,gift_accessories
+004,clothing,Clothing,sideline,4010000,other_sidelines,gift_accessories
+004,sideline_games,Games,sideline,4020000,other_sidelines,gift_accessories
+004,novelty,Novelties,sideline,4030000,other_sidelines,gift_accessories
+004,pkg_fd_candy,Packaged Food & Candy,sideline,4040000,other_sidelines,gift_accessories
+004,rdg_aids,Reading Aides,sideline,4050000,other_sidelines,gift_accessories
+004,stn,Stationery,sideline,4060000,other_sidelines,gift_accessories
+004,toys,Children's Toys & Games,sideline,4070000,other_sidelines,gift_accessories
+004,other_sideline,Other,sideline,4090000,other_sidelines,gift_accessories
+005,cafe,Cafe,,5000000,coffeeespresso,cafe
+006,ssnl,Seasonal,,6000000,coffeeespresso,
+006,cal,Calendars,ssnl,6010000,coffeeespresso,
+006,cal_wall,Wall Calendars,cal,6010100,coffeeespresso,
+006,cal_box,Boxed/Page-a-Day Calendars,cal,6010200,coffeeespresso,
+006,ssnl_winter,Seasonal - Christmas/Hannukkah/Etc.,ssnl,6020000,coffeeespresso,
+006,ssnl_other,Seasonal - Other,ssnl,6090000,coffeeespresso,
+009,other,Non-Item,,7000000,other,
