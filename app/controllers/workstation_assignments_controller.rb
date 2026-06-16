@@ -24,9 +24,9 @@ class WorkstationAssignmentsController < ApplicationController
     path = authentication_completion_path(current_user)
     notice = if path == root_path
                "Browser assigned to #{workstation.name}."
-             else
+    else
                authentication_completion_notice(current_user)
-             end
+    end
     redirect_to path, notice: notice
   end
 
