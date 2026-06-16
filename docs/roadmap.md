@@ -21,7 +21,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 1 | Foundation                      | Users, roles, permissions, stores, workstations, sessions, and audit events.                                 |
 | Phase 2 | Classification and Taxes        | Departments, categories, tax categories, store tax rates, and effective-dated tax mappings.                  |
 | Phase 3 | Catalog, Products, and Variants | Catalog metadata, identifiers, products, product variants, SKUs, conditions, display locations, and vendors. |
-| Phase 4 | Inventory Foundation            | Inventory ledger, stock balances, stock movements, and inventory value.                                      |
+| Phase 4 | Inventory Foundation            | Inventory ledger, store balances, adjustments, valuation snapshots, and inventory read surfaces.             |
 | Phase 5 | Purchasing and Receiving        | Vendors, purchase orders, receiving, supplier terms, vendor costs, and returns to vendor.                    |
 | Phase 6 | POS Foundation                  | Sales, returns, line items, tax calculation, tenders, receipts, and session/workstation-aware POS behavior.  |
 | Phase 7 | Advanced Store Operations       | Transfers, adjustments, cycle counts, special orders, holds, and operational workflows.                      |
@@ -201,55 +201,69 @@ docs/specifications/phase-3-test-plan.md
 
 ## Purpose
 
-Phase 4 should establish the inventory ledger and stock balance foundation.
+Phase 4 establishes the inventory ledger and store-level balance foundation.
 
-It should answer:
+It answers:
 
-> What stock exists, where is it, how did it get there, and what is its value?
+> What quantity of each product variant does each store have, how did it change, and what is its estimated value?
+
+Detailed scope: [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md)
 
 ## Expected Capabilities
 
-* Inventory ledger
-* Stock movement types
-* Stock balances
-* Quantity on hand
-* Quantity available
-* Quantity committed/held
-* Cost tracking
-* Inventory value
-* Adjustments
+* Grouped inventory postings and append-only ledger entries
+* Cached `inventory_balances` at `store_id + product_variant_id`
+* Quantity on hand and quantity available (initially equal)
+* Negative on-hand support
+* Opening inventory and manual adjustments
+* Cost and retail valuation snapshots
+* Inventory reason codes and optional inventory locations (context only)
 * Inventory audit events
-* Store-level stock views
-* Product variant stock views
+* Store, variant, product, and enterprise read surfaces
+* Balance rebuild and integrity-check tooling
 
 ## Expected Design Direction
 
-Inventory should operate at the product variant level.
+Inventory operates at the product variant + store level.
 
 ```text
-Product Variant → Inventory Ledger → Stock Balance
+Product Variant → Inventory Posting → Inventory Ledger Entries → Inventory Balance
 ```
 
-Inventory records should be append-oriented. Stock balances may be derived or cached from ledger events.
+Only variants with `inventory_behavior = standard_physical` are ledger-eligible in Phase 4.
 
-## Possible Tables
+Balances are cached projections from posted ledger entries. Application code must post through `Inventory::Post`, not mutate balances directly.
+
+## Phase 4 Tables
 
 ```text
+inventory_postings
 inventory_ledger_entries
-stock_balances
+inventory_balances
 inventory_adjustments
 inventory_adjustment_lines
-stock_movement_types
+inventory_reason_codes
+inventory_locations
+```
+
+Phase 4 also restores `sub_departments.default_margin_target_bps` for cost estimation.
+
+## Documentation
+
+```text
+docs/roadmap/phase-4-inventory-foundation.md
+docs/specifications/phase-4-inventory-foundation-spec.md
+docs/specifications/phase-4-data-model.md
+docs/specifications/phase-4-test-plan.md
 ```
 
 ## Major Risks
 
-* Average cost calculation
-* Handling used inventory
-* Handling consignment inventory
-* Handling non-inventory product variants
-* Preventing stock quantity drift
-* Preserving historical cost/value
+* Preventing balance drift from direct mutation
+* Idempotent posting from adjustments
+* Cost estimation when actual cost is unknown
+* Handling ineligible variant behaviors
+* Store-scoped authorization on write paths
 
 ---
 

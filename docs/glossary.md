@@ -302,6 +302,38 @@ pure_financial
 non_inventory
 ```
 
+In Phase 4, only `standard_physical` variants may receive inventory ledger entries.
+
+---
+
+## Inventory Balance
+
+The cached quantity and estimated value of one product variant at one store.
+
+Authoritative grain:
+
+```text
+store_id + product_variant_id
+```
+
+Balances are projections from posted ledger entries.
+
+---
+
+## Inventory Ledger Entry
+
+An append-only record of one quantity and value effect within an inventory posting.
+
+Ledger entries capture signed `quantity_delta`, movement type, cost and retail snapshots, and optional location or reason context.
+
+---
+
+## Inventory Posting
+
+The atomic posted inventory event. One posting may contain one or many ledger entries.
+
+Postings are immutable once created.
+
 ---
 
 # L

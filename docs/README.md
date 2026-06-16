@@ -33,7 +33,7 @@ ShelfStack is a bookstore-focused catalog, inventory, stock, and point-of-sale m
 
 Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to the task.
 
-**Phases 1–3 are implemented.** See completion records under [implementation/](implementation/). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data (formats, conditions, tax, users, etc.). **Phase 4** (inventory foundation) is the next planned phase.
+**Phases 1–3 are implemented.** See completion records under [implementation/](implementation/). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data (formats, conditions, tax, users, etc.). **Phase 4** (inventory foundation) is in progress — see [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md) and [specifications/phase-4-inventory-foundation-spec.md](specifications/phase-4-inventory-foundation-spec.md).
 
 ---
 
@@ -80,6 +80,7 @@ Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/p
 | [roadmap/phase-1-foundation.md](roadmap/phase-1-foundation.md) | Users, roles, permissions, stores, workstations, sessions, audit |
 | [roadmap/phase-2-departments-categories-taxes.md](roadmap/phase-2-departments-categories-taxes.md) | Departments, categories, tax categories, store tax rates |
 | [roadmap/phase-3-catalog-products-variants.md](roadmap/phase-3-catalog-products-variants.md) | Catalog items, products, variants, SKUs, vendors |
+| [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md) | Inventory ledger, balances, adjustments, valuation |
 
 ---
 
@@ -110,6 +111,14 @@ Each phase has three companion documents: functional specification, data model, 
 | [specifications/phase-3-catalog-products-variants-spec.md](specifications/phase-3-catalog-products-variants-spec.md) | Catalog items, identifiers, products, variants, SKUs |
 | [specifications/phase-3-data-model.md](specifications/phase-3-data-model.md) | Phase 3 tables, indexes, constraints, and seed data |
 | [specifications/phase-3-test-plan.md](specifications/phase-3-test-plan.md) | Required Phase 3 test coverage |
+
+### Phase 4: Inventory Foundation
+
+| Document | Purpose |
+| -------- | ------- |
+| [specifications/phase-4-inventory-foundation-spec.md](specifications/phase-4-inventory-foundation-spec.md) | Ledger, balances, adjustments, valuation, read surfaces |
+| [specifications/phase-4-data-model.md](specifications/phase-4-data-model.md) | Phase 4 tables, indexes, constraints, and seed data |
+| [specifications/phase-4-test-plan.md](specifications/phase-4-test-plan.md) | Required Phase 4 test coverage |
 
 ---
 

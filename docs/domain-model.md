@@ -192,30 +192,48 @@ Store → Store Display Location → Display Location
 
 ---
 
-# 5. Future Inventory Domain
+# 5. Inventory Domain (Phase 4)
 
-The inventory domain is not yet implemented in early phases, but the Phase 3 model prepares for it.
+Phase 4 implements store-level inventory at the product variant grain.
 
-## Expected Concepts
+## Core Concepts
 
-| Concept          | Meaning                                              |
-| ---------------- | ---------------------------------------------------- |
-| Inventory Ledger | Append-only record of stock movements.               |
-| Stock Balance    | Derived or cached quantity on hand/available.        |
-| Receiving        | Process of adding purchased inventory.               |
-| Adjustment       | Correction to stock due to damage, count, loss, etc. |
-| Transfer         | Movement between stores or locations.                |
-| Inventory Value  | Cost basis/value of stock on hand.                   |
+| Concept | Meaning |
+| --- | --- |
+| Inventory Posting | Atomic posted inventory event grouping one or more ledger entries. |
+| Inventory Ledger Entry | Append-only quantity and value effect for one store + variant within a posting. |
+| Inventory Balance | Cached quantity and estimated value for one store + variant. |
+| Inventory Adjustment | User-facing draft workflow that posts opening inventory or manual corrections. |
+| Inventory Location | Optional store context on ledger lines; not an authoritative balance grain in Phase 4. |
+| Inventory Value | Management cost and retail snapshots on ledger entries and balances. |
+
+## Authoritative Grain
+
+```text
+store_id + product_variant_id
+```
+
+Product-level, department-level, and enterprise quantities are rollups from variant/store balances.
+
+## Eligibility
+
+Only product variants with:
+
+```text
+inventory_behavior = standard_physical
+```
+
+receive ledger entries in Phase 4.
 
 ## Design Direction
 
-Future inventory should operate at the product variant level.
-
 ```text
-Product Variant → Inventory Ledger → Stock Balance
+Product Variant → Inventory Posting → Inventory Ledger Entries → Inventory Balance
 ```
 
-Product variant `inventory_behavior` should influence how future inventory/POS behavior works.
+Posted ledger entries are immutable. Balances update only through `Inventory::Post` (and rebuild tooling).
+
+Phase 4 defers purchasing, receiving, POS, transfers, holds, location balances, and accounting-grade average cost.
 
 ---
 

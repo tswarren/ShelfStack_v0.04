@@ -38,17 +38,16 @@ Phase 4 supports quantity-tracked variants only.
 
 A product variant may receive inventory ledger entries only when its inventory behavior allows physical inventory tracking.
 
-Initial enforcement:
+Initial enforcement (Phase 3 `product_variants.inventory_behavior` values):
 
 ```
-standard_physical -> inventory ledger eligible
-digital_asset     -> not eligible
-non_inventory     -> not eligible
-service           -> not eligible
-drop_ship         -> not eligible for store on-hand inventory
-prepared_item     -> not eligible as finished-good inventory in Phase 4
-stored_value      -> not inventory; future stored-value ledger
-event_capacity    -> not inventory; future capacity/attendance model
+standard_physical    -> inventory ledger eligible
+digital_asset        -> not eligible
+drop_ship            -> not eligible for store on-hand inventory
+composite_recipe     -> not eligible as finished-good inventory in Phase 4
+capacitated_service  -> not inventory; future capacity/attendance model
+pure_financial       -> not inventory; future stored-value ledger
+non_inventory        -> not eligible
 ```
 
 Condition, source, and pricing distinctions do not determine inventory eligibility. New, used, signed, remainder, damaged, and consignment variants may all eventually be physical inventory if their `inventory_behavior` is `standard_physical`.
