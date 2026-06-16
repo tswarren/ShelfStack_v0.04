@@ -1,3 +1,4 @@
+<%= render "setup/shared/back_link", path: setup_audit_events_path, label: "Audit Events" %>
 <h1><%= @audit_event.event_name %></h1>
 <dl class="ss-summary">
   <dt>When</dt><dd><%= display_time(@audit_event.occurred_at) %></dd>

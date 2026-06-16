@@ -1,3 +1,4 @@
+<%= render "setup/shared/back_link", path: setup_roles_path, label: "Roles" %>
 <h1><%= @role.name %></h1>
 <p><%= @role.description %></p>
 <% if @role.system_role? && @role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY %>

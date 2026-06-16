@@ -224,6 +224,10 @@ a:hover {
   margin: 0;
 }
 
+.ss-detail-back {
+  margin: 0 0 0.75rem;
+}
+
 .ss-eyebrow {
   margin: 0 0 0.25rem;
   font-size: 0.75rem;

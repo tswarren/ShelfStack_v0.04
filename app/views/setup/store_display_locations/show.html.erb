@@ -1,3 +1,4 @@
+<%= render "setup/shared/back_link", path: setup_store_display_locations_path, label: "Store Display Locations" %>
 <h1><%= @store_display_location.store.name %> — <%= @store_display_location.display_location.name %></h1>
 <dl class="ss-summary">
   <dt>Store</dt><dd><%= @store_display_location.store.name %> (<%= @store_display_location.store.store_number %>)</dd>
