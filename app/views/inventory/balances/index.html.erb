@@ -40,7 +40,12 @@
         <td class="ss-num"><%= balance.quantity_on_hand %></td>
         <td class="ss-num"><%= balance.quantity_available %></td>
         <td class="ss-num"><%= format_cents(balance.inventory_retail_value_cents) %></td>
-        <td><%= link_to "Ledger", inventory_variant_path(balance.product_variant) %></td>
+        <td>
+          <%= link_to "Ledger", inventory_variant_path(balance.product_variant) %>
+          <% if Authorization.allowed?(user: current_user, permission_key: "inventory.adjustments.create", store: current_store) %>
+            | <%= link_to "Adjust", new_inventory_adjustment_path(product_variant_id: balance.product_variant_id) %>
+          <% end %>
+        </td>
       </tr>
     <% end %>
   </tbody>

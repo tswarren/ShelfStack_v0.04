@@ -211,6 +211,7 @@ Rails.application.routes.draw do
     get "negative", to: "negative_exceptions#index"
     get "enterprise", to: "enterprise#index"
     resources :variants, only: %i[show]
+    resource :variant_lookup, only: %i[show]
     resources :adjustments do
       member do
         patch :post, action: :post

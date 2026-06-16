@@ -25,7 +25,7 @@ module Inventory
         adjustment_type: params[:adjustment_type].presence || "manual_adjustment",
         status: "draft"
       )
-      @adjustment.inventory_adjustment_lines.build
+      build_initial_line
       load_form_collections
     end
 
@@ -88,9 +88,23 @@ module Inventory
     end
 
     def load_form_collections
-      @variants = ProductVariant.active_records.order(:sku).limit(500)
       @reason_codes = InventoryReasonCode.active_records.order(:sort_order, :name)
       @locations = InventoryLocation.active_records.where(store: inventory_store).order(:sort_order, :name)
+    end
+
+    def build_initial_line
+      if params[:product_variant_id].present?
+        variant = ProductVariant.active_records.find_by(id: params[:product_variant_id])
+        if variant
+          @adjustment.inventory_adjustment_lines.build(
+            product_variant: variant,
+            quantity_delta: params[:quantity_delta].presence&.to_i
+          )
+          return
+        end
+      end
+
+      @adjustment.inventory_adjustment_lines.build
     end
 
     def adjustment_params

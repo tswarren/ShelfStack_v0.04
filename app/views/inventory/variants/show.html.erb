@@ -11,6 +11,10 @@
   <p class="ss-muted">No balance recorded for this store.</p>
 <% end %>
 
+<% if Authorization.allowed?(user: current_user, permission_key: "inventory.adjustments.create", store: current_store) %>
+  <p><%= link_to "Adjust this variant", new_inventory_adjustment_path(product_variant_id: @variant.id), class: "ss-btn" %></p>
+<% end %>
+
 <h2>Ledger History</h2>
 <table class="ss-table">
   <thead>

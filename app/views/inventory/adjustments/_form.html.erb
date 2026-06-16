@@ -16,11 +16,34 @@
   </div>
 
   <h2>Lines</h2>
+  <p class="ss-hint">Scan or type a SKU or barcode, then press Enter. Type at least 2 characters to search by name or SKU prefix.</p>
+
   <%= f.fields_for :inventory_adjustment_lines do |line_form| %>
-    <fieldset>
+    <% variant = line_form.object.product_variant %>
+    <% balance = variant ? InventoryBalance.find_by(store: inventory_store, product_variant: variant) : nil %>
+    <fieldset
+      data-controller="inventory-variant-lookup"
+      data-inventory-variant-lookup-url-value="<%= inventory_variant_lookup_path %>"
+      <% if variant %>
+        data-inventory-variant-lookup-initial-sku-value="<%= variant.sku %>"
+        data-inventory-variant-lookup-initial-variant-id-value="<%= variant.id %>"
+        data-inventory-variant-lookup-initial-label-value="<%= variant.name %>"
+        data-inventory-variant-lookup-initial-on-hand-value="<%= balance&.quantity_on_hand || 0 %>"
+      <% end %>
+    >
       <div class="ss-field">
-        <%= line_form.label :product_variant_id, "Variant" %>
-        <%= line_form.collection_select :product_variant_id, @variants, :id, :sku %>
+        <%= line_form.label :product_variant_id, "SKU / barcode" %>
+        <%= text_field_tag nil, variant&.sku, class: "ss-input",
+              placeholder: "Scan or enter SKU, ISBN, UPC…",
+              autocomplete: "off",
+              data: {
+                inventory_variant_lookup_target: "lookupInput",
+                action: "keydown->inventory-variant-lookup#lookupExact input->inventory-variant-lookup#search"
+              } %>
+        <%= line_form.hidden_field :product_variant_id, data: { inventory_variant_lookup_target: "variantId" } %>
+        <p class="ss-hint" data-inventory-variant-lookup-target="preview"></p>
+        <p class="ss-hint" data-inventory-variant-lookup-target="message"></p>
+        <div data-inventory-variant-lookup-target="choices"></div>
       </div>
       <div class="ss-field">
         <%= line_form.label :quantity_delta %>
