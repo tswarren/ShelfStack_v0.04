@@ -19,7 +19,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase   | Focus                           | Outcome                                                                                                      |
 | ------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Phase 1 | Foundation                      | Users, roles, permissions, stores, workstations, sessions, and audit events.                                 |
-| Phase 2 | Classification and Taxes        | Departments, categories, tax categories, store tax rates, and effective-dated tax mappings.                  |
+| Phase 2 | Classification and Taxes        | Departments, subdepartments, tax categories, store tax rates, and effective-dated tax mappings.              |
 | Phase 3 | Catalog, Products, and Variants | Catalog metadata, identifiers, products, product variants, SKUs, conditions, display locations, and vendors. |
 | Phase 4 | Inventory Foundation            | Inventory ledger, store balances, adjustments, valuation snapshots, and inventory read surfaces.             |
 | Phase 5 | Purchasing and Receiving        | Vendors, purchase orders, receiving, supplier terms, vendor costs, and returns to vendor.                    |
@@ -83,7 +83,7 @@ docs/specifications/phase-1-test-plan.md
 
 ---
 
-# Phase 2: Departments, Categories, and Taxes
+# Phase 2: Departments, Subdepartments, and Taxes
 
 ## Purpose
 
@@ -93,18 +93,20 @@ It answers:
 
 > How are future sellable items classified for reporting, pricing defaults, and tax behavior?
 
+> **Note:** Phase 2 originally delivered a `categories` table. That table was removed in the 2025-06 classification simplification; operational defaults now live on `sub_departments`. See [implementation/classification-cleanup.md](implementation/classification-cleanup.md).
+
 ## Major Capabilities
 
 * Departments
-* Categories
+* Subdepartments (operational merchandise behavior buckets)
 * Tax categories
 * Store tax rates
 * Store tax category rates
 * Effective-dated tax lookup
-* Category default pricing model
-* Category default margin target
-* Category default supplier discount
-* Category default tax category
+* Subdepartment default pricing model
+* Subdepartment default margin target
+* Subdepartment default supplier discount
+* Subdepartment default tax category
 * Phase 2 setup permissions
 * Phase 2 audit events
 * Bookstore-oriented seed data
@@ -115,8 +117,8 @@ At the end of Phase 2:
 
 1. Departments exist as top-level sales/reporting buckets.
 2. Department numbers are three-character zero-padded strings.
-3. Categories belong to departments.
-4. Categories provide defaults for future sellable items.
+3. Subdepartments belong to departments and provide operational defaults for sellable items.
+4. Subdepartments provide defaults for future product variants.
 5. Tax categories classify item taxability.
 6. Store tax rates define store-specific tax percentages.
 7. Store tax category rates map tax categories to store tax rates by effective date.
@@ -407,8 +409,8 @@ Phase 7 should expand operational workflows around inventory and customer-facing
 ## Possible Tables
 
 ```text
-stock_transfers
-stock_transfer_lines
+inventory_transfers
+inventory_transfer_lines
 cycle_counts
 cycle_count_lines
 holds

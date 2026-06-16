@@ -343,7 +343,7 @@ Cached balance per store + variant.
 | `quantity_available` | integer | null false, default 0 | Phase 4 equals on hand. |
 | `inventory_cost_value_cents` | integer | null false, default 0 | |
 | `inventory_retail_value_cents` | integer | null false, default 0 | |
-| `estimated_unit_cost_cents` | integer | nullable | Latest snapshot. |
+| `unit_cost_cents` | integer | nullable | Latest unit cost snapshot; `cost_source` disambiguates manual vs margin vs unknown. |
 | `unit_retail_cents` | integer | nullable | Latest snapshot. |
 | `cost_source` | string | nullable | Latest snapshot. |
 | `retail_source` | string | nullable | Latest snapshot. |

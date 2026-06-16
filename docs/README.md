@@ -78,7 +78,7 @@ Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/p
 | Document | Phase focus |
 | -------- | ----------- |
 | [roadmap/phase-1-foundation.md](roadmap/phase-1-foundation.md) | Users, roles, permissions, stores, workstations, sessions, audit |
-| [roadmap/phase-2-departments-categories-taxes.md](roadmap/phase-2-departments-categories-taxes.md) | Departments, categories, tax categories, store tax rates |
+| [roadmap/phase-2-departments-categories-taxes.md](roadmap/phase-2-departments-categories-taxes.md) | Departments, subdepartments, tax categories, store tax rates |
 | [roadmap/phase-3-catalog-products-variants.md](roadmap/phase-3-catalog-products-variants.md) | Catalog items, products, variants, SKUs, vendors |
 | [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md) | Inventory ledger, balances, adjustments, valuation |
 

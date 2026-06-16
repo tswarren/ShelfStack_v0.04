@@ -1,0 +1,18 @@
+<h1>Negative Inventory</h1>
+<%= link_to "Back to Inventory", inventory_root_path %>
+
+<table class="ss-table">
+  <thead>
+    <tr><th>SKU</th><th>Variant</th><th class="ss-num">On Hand</th><th></th></tr>
+  </thead>
+  <tbody>
+    <% @balances.each do |balance| %>
+      <tr>
+        <td><%= balance.product_variant.sku %></td>
+        <td><%= balance.product_variant.name %></td>
+        <td class="ss-num"><%= balance.quantity_on_hand %></td>
+        <td><%= link_to "Ledger", inventory_variant_path(balance.product_variant) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

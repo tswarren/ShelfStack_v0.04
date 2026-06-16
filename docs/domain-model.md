@@ -47,74 +47,59 @@ Audit Event → Actor/User + Auditable Record + Context
 
 # 2. Classification and Tax Domain
 
-The classification domain defines how future sellable items are grouped, reported, priced by default, and taxed.
+The classification domain defines how sellable items are grouped for reporting, operational defaults, shelving/topic organization, and taxation.
 
 ## Core Concepts
 
-| Concept                 | Meaning                                                            |
-| ----------------------- | ------------------------------------------------------------------ |
-| Department              | Top-level sales/reporting bucket.                                  |
-| Category                | Product-level classification linked to a department.               |
-| Tax Category            | Global taxability classification for items.                        |
-| Store Tax Rate          | Store-specific tax rate.                                           |
+| Concept | Meaning |
+| --- | --- |
+| Department | Top-level sales/reporting bucket with GL account code. |
+| SubDepartment | Operational merchandise behavior bucket (pricing model, margin, supplier discount, tax category, returnability). Required on every product variant. |
+| Category Scheme | Named topical classification system (for example, `store_categories`, BISAC). |
+| Category Node | A node within a category scheme hierarchy (for example, Fiction, Biography). Store categories are **not** the merchandise behavior bucket. |
+| Display Location | Store-facing shelf/signage location; distinct from inventory locations. |
+| Tax Category | Global taxability classification for items. |
+| Store Tax Rate | Store-specific tax rate. |
 | Store Tax Category Rate | Effective-dated mapping of store + tax category to store tax rate. |
 
 ## Key Relationships
 
 ```text
-Department → Category
-Category → Default Tax Category
+Department → SubDepartment
+SubDepartment → Default Tax Category
+Catalog Item → Store Category (CategoryNode in store_categories scheme)
+Product Variant → SubDepartment (required)
 Store → Store Tax Rate
 Store + Tax Category + Date → Store Tax Category Rate → Store Tax Rate
 ```
 
 ## Important Rules
 
-* Departments and categories are global across the ShelfStack instance.
-* Categories provide defaults for future sellable items.
+* Departments and subdepartments are global across the ShelfStack instance.
+* Subdepartments provide operational defaults for product variants (pricing model, margin target, supplier discount, tax category).
+* Store category nodes classify catalog topics and may suggest defaults on catalog-linked items; they are not required on every variant.
 * Tax categories do not directly define rates.
 * Tax rates belong to stores.
 * Store tax category rates define which rate applies to each tax category at each store during a date range.
 * For a given store, tax category, and date, tax lookup must return exactly one applicable rate.
 
-## Phase 3B transitional mapping
-
-Phase 3B separates merchandise behavior, topic classification, and accounting mapping while keeping legacy Phase 2 structures working.
-
-**Target model (decisions and migration plan):**
-
-```text
-docs/specifications/classification-target-spec.md
-```
-
-**Current transition notes (partially superseded):**
-
-```text
-docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-domain-mapping.md
-```
-
-| Legacy / transitional | Target concept |
-| --- | --- |
-| `Category` | `SubDepartment` (operational defaults), not store category `CategoryNode` |
-| `MerchandiseClass` | **`SubDepartment`** (rename) |
-| `CategoryScheme` / `CategoryNode` / `Categorization` | Store categories (`store_categories` scheme), BISAC, future subject schemes |
-| `AccountingMapping` | **Removed** (2025-06); GL at department level |
-| `product_variants.category_id` | **`product_variants.sub_department_id`** (required after migration Phase D) |
-| `catalog_items` | add **`store_category_id`** (catalog items only) |
-
-**Implemented (classification target migration):** Phase A–D on `phase-3-catalog-products-variants`. See checklist in `classification-target-spec.md`. Reference trees load from CSV (`db/seeds/data/*.csv`) via `Seeds::CsvClassificationImporter` — ~151 store category nodes, ~57 display locations, ~35 subdepartments. Validate with `rails shelfstack:seeds:validate`. See [implementation/csv-seeds.md](implementation/csv-seeds.md).
-
-Default resolution order for operational defaults (target):
+Default resolution order for operational defaults:
 
 ```text
 variant override → variant.sub_department → product defaults → store category defaults (catalog path)
 ```
 
-GL (for now):
+GL posting:
 
 ```text
 variant.sub_department → department.gl_account_code
 ```
+
+Reference data loads from CSV (`db/seeds/data/*.csv`) via `Seeds::CsvClassificationImporter`. Validate with `rails shelfstack:seeds:validate`. See [implementation/csv-seeds.md](implementation/csv-seeds.md) and [specifications/classification-target-spec.md](specifications/classification-target-spec.md).
+
+### Historical note
+
+Phase 2 originally introduced a `categories` table combining merchandise behavior and topic classification. That table was **removed** in the 2025-06 classification simplification. Operational defaults now live on `sub_departments`; topic trees use `category_schemes` / `category_nodes`. See [implementation/classification-cleanup.md](implementation/classification-cleanup.md).
 
 ---
 

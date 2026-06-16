@@ -1,7 +1,11 @@
 <nav class="ss-nav">
   <%= link_to "Dashboard", root_path, class: (current_page?(root_path) ? "active" : nil) %>
   <span class="disabled">POS</span>
-  <span class="disabled">Inventory</span>
+  <% if Authorization.allowed?(user: current_user, permission_key: "inventory.access", store: current_store) %>
+    <%= link_to "Inventory", inventory_root_path, class: (request.path.start_with?("/inventory") ? "active" : nil) %>
+  <% else %>
+    <span class="disabled">Inventory</span>
+  <% end %>
   <%= link_to "Items", items_root_path, class: (request.path.start_with?("/items") ? "active" : nil) %>
   <span class="disabled">Orders</span>
   <span class="disabled">Customers</span>

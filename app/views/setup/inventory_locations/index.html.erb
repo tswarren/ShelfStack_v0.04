@@ -1,0 +1,15 @@
+<h1>Inventory Locations <%= link_to "New", new_setup_inventory_location_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Store</th><th>Name</th><th>Short</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @locations.each do |location| %>
+      <tr>
+        <td><%= location.store.name %></td>
+        <td><%= location.name %></td>
+        <td><%= location.short_name %></td>
+        <td><%= status_label(location.active?) %></td>
+        <td><%= link_to "View", setup_inventory_location_path(location) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

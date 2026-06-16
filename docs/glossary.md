@@ -148,34 +148,33 @@ Catalog item type controls UI field display, not hard database validity.
 
 ## Category
 
-A product-level classification linked to a department.
+**Deprecated / historical.** Phase 2 introduced a `categories` table for product-level classification linked to a department. That table was **removed** in the 2025-06 classification simplification.
 
-**Transitional note (Phase 3B):** Legacy categories correspond to **MerchandiseClass** behavior buckets, not topic **CategoryNode** records. During transition, categories remain required on product variants and are labeled “Merchandise Category” in setup and item UI.
+Operational merchandise defaults now live on **SubDepartment**. Topic/shelving classification uses **Category Node** records in the `store_categories` scheme.
 
-Categories provide default values for future product variants, including:
-
-* Pricing model
-* Margin target
-* Supplier discount
-* Tax category
+See [implementation/classification-cleanup.md](implementation/classification-cleanup.md).
 
 ---
 
 ## Merchandise Class
 
-Operational merchandise behavior bucket (pricing model, margin/supplier defaults, tax category, returnability, buyback). Linked from legacy categories during Phase 3B transition.
+**Deprecated.** Renamed to **SubDepartment** during the classification target migration. Do not use this term for new work.
 
 ---
 
 ## Category Scheme
 
-Named topical classification system (for example, Store Sections / Topics).
+Named topical classification system (for example, `store_categories` for store shelving/topics, or BISAC for subject headings).
+
+Category schemes organize **topic** trees. They are not the operational merchandise behavior bucket — that is **SubDepartment**.
 
 ---
 
 ## Category Node
 
 A node within a category scheme hierarchy (for example, Fiction, Biography).
+
+Store category nodes classify catalog topics and may suggest defaults on catalog-linked items. They are **not** required on every product variant and are **not** the same as subdepartments.
 
 ---
 
@@ -187,7 +186,15 @@ Assignment of a catalog item, product, or product variant to a category node.
 
 ## Accounting Mapping
 
-Configurable rule that maps merchandise class, condition, product type, and optional topic node to sales account and reporting bucket outputs.
+**Removed (2025-06).** Former configurable rules mapping merchandise class, condition, and topic to GL accounts.
+
+GL posting now uses:
+
+```text
+variant.sub_department → department.gl_account_code
+```
+
+See [implementation/classification-cleanup.md](implementation/classification-cleanup.md).
 
 ---
 
@@ -336,6 +343,14 @@ Postings are immutable once created.
 
 ---
 
+## Inventory Reason Code
+
+Global setup record describing why an inventory adjustment line was posted (for example, shrink, damage, cycle count).
+
+Identified by stable `reason_key` for idempotent seeds.
+
+---
+
 # L
 
 ## Local Identifier
@@ -465,6 +480,22 @@ The assignment is scoped, not the role itself.
 ---
 
 # S
+
+## SubDepartment
+
+Operational merchandise behavior bucket belonging to a department.
+
+Subdepartments provide defaults for product variants:
+
+* Pricing model
+* Margin target (`default_margin_target_bps`)
+* Supplier discount
+* Tax category
+* Returnability and buyback defaults
+
+Every product variant requires a `sub_department_id`. GL posting resolves via `sub_department → department.gl_account_code`.
+
+---
 
 ## SKU
 

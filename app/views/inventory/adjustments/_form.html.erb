@@ -1,0 +1,45 @@
+<h1><%= @adjustment.persisted? ? "Edit" : "New" %> Inventory Adjustment</h1>
+
+<%= form_with model: @adjustment, url: (@adjustment.persisted? ? inventory_adjustment_path(@adjustment) : inventory_adjustments_path) do |f| %>
+  <% if @adjustment.errors.any? %>
+    <div class="ss-errors"><%= @adjustment.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="ss-field">
+    <%= f.label :adjustment_type %>
+    <%= f.select :adjustment_type, InventoryAdjustment::ADJUSTMENT_TYPES %>
+  </div>
+
+  <div class="ss-field">
+    <%= f.label :notes %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <h2>Lines</h2>
+  <%= f.fields_for :inventory_adjustment_lines do |line_form| %>
+    <fieldset>
+      <div class="ss-field">
+        <%= line_form.label :product_variant_id, "Variant" %>
+        <%= line_form.collection_select :product_variant_id, @variants, :id, :sku %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :quantity_delta %>
+        <%= line_form.number_field :quantity_delta, step: 1 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :unit_cost_cents, "Manual unit cost (cents)" %>
+        <%= line_form.number_field :unit_cost_cents, min: 0, step: 1 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :inventory_reason_code_id, "Reason" %>
+        <%= line_form.collection_select :inventory_reason_code_id, @reason_codes, :id, :name, include_blank: true %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :inventory_location_id, "Location" %>
+        <%= line_form.collection_select :inventory_location_id, @locations, :id, :name, include_blank: true %>
+      </div>
+    </fieldset>
+  <% end %>
+
+  <%= f.submit class: "ss-btn" %>
+<% end %>

@@ -1,0 +1,10 @@
+<h1><%= @reason_code.name %></h1>
+<p>Key: <%= @reason_code.reason_key %></p>
+<div class="ss-actions">
+  <%= link_to "Edit", edit_setup_inventory_reason_code_path(@reason_code), class: "ss-btn" %>
+  <% if @reason_code.active? %>
+    <%= button_to "Inactivate", inactivate_setup_inventory_reason_code_path(@reason_code), method: :patch, class: "ss-btn" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_inventory_reason_code_path(@reason_code), method: :patch, class: "ss-btn" %>
+  <% end %>
+</div>

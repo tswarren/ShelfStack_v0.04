@@ -194,7 +194,9 @@ Ledger entries snapshot unit and total cost at post time. Later price or margin 
 
 * `inventory_cost_value_cents` — sum of ledger total cost effects (see data model)
 * `inventory_retail_value_cents` — based on current on-hand quantity and latest balance retail unit snapshot
-* `estimated_unit_cost_cents`, `unit_retail_cents`, `cost_source`, `retail_source` — from the most recent posting affecting the balance
+* `unit_cost_cents`, `unit_retail_cents`, `cost_source`, `retail_source` — from the most recent posting affecting the balance
+
+Phase 4 valuation is management inventory value, not accounting-grade COGS. `unit_cost_cents` on balances may reflect manual or margin-estimated costs per `cost_source`.
 
 ---
 

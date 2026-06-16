@@ -70,6 +70,7 @@ module Seeds
           sub_department.name = row.fetch("name").strip
           sub_department.short_name = row.fetch("short_name").strip
           sub_department.default_pricing_model = row["default_pricing_model"]&.strip.presence
+          sub_department.default_margin_target_bps = row["default_margin_target_bps"]&.strip.presence&.to_i
           sub_department.default_tax_category = tax_category
           sub_department.vendor_returnable_default = parse_boolean(row["vendor_returnable_default"])
           sub_department.buyback_allowed = parse_boolean(row["buyback_allowed"])

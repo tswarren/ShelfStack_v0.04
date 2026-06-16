@@ -1,0 +1,8 @@
+<h1>Edit Inventory Location</h1>
+<%= form_with model: @location, url: setup_inventory_location_path(@location), method: :patch do |f| %>
+  <div class="ss-field"><%= f.label :store_id %><%= f.collection_select :store_id, Store.active_records.order(:store_number), :id, :name %></div>
+  <div class="ss-field"><%= f.label :name %><%= f.text_field :name %></div>
+  <div class="ss-field"><%= f.label :short_name %><%= f.text_field :short_name %></div>
+  <div class="ss-field"><%= f.label :sort_order %><%= f.number_field :sort_order %></div>
+  <%= f.submit class: "ss-btn" %>
+<% end %>

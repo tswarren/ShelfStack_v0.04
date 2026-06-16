@@ -120,7 +120,7 @@ vendors
 
 Phase 4 introduces inventory foundation tables.
 
-**Planned** per [specifications/phase-4-data-model.md](specifications/phase-4-data-model.md). See [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md).
+**Implemented** per [specifications/phase-4-data-model.md](specifications/phase-4-data-model.md). See [implementation/phase-4-completion.md](implementation/phase-4-completion.md).
 
 ```text
 inventory_reason_codes

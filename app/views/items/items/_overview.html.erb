@@ -108,7 +108,7 @@
 
     <section class="ss-item-section">
       <h2>Location &amp; Availability</h2>
-      <p class="ss-muted ss-item-future-note">Store-level availability will appear here when inventory tracking is implemented.</p>
+      <p class="ss-muted ss-item-future-note">Reserved and on-order quantities are not tracked in Phase 4.</p>
     </section>
   </div>
 
@@ -131,7 +131,7 @@
               <tr>
                 <td><%= variant.condition&.short_name || "—" %></td>
                 <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
-                <td class="ss-num ss-muted">—</td>
+                <td class="ss-num"><%= Inventory::Availability.available(store: current_store, variant: variant) %></td>
                 <td class="ss-num ss-muted">—</td>
                 <td class="ss-num ss-muted">—</td>
               </tr>

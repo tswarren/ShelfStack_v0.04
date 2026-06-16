@@ -1,0 +1,7 @@
+<h1>New Inventory Reason Code</h1>
+<%= form_with model: @reason_code, url: setup_inventory_reason_codes_path do |f| %>
+  <div class="ss-field"><%= f.label :reason_key %><%= f.text_field :reason_key %></div>
+  <div class="ss-field"><%= f.label :name %><%= f.text_field :name %></div>
+  <div class="ss-field"><%= f.label :sort_order %><%= f.number_field :sort_order %></div>
+  <%= f.submit class: "ss-btn" %>
+<% end %>

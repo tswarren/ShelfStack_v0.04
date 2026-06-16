@@ -208,7 +208,7 @@ quantity_on_hand
 quantity_available
 inventory_cost_value_cents
 inventory_retail_value_cents
-estimated_unit_cost_cents
+unit_cost_cents
 unit_retail_cents
 cost_source
 retail_source
@@ -233,15 +233,14 @@ Retail value is based on the product variant’s current retail/selling price at
 
 Cost value uses the best available method in this order:
 
-1. Manual cost entered on the adjustment/opening inventory line  
-2. Product variant default or expected cost, if present  
-3. Estimated cost from subdepartment target margin  
-4. Unknown or zero cost with `cost_source = unknown`
+1. Manual cost entered on the adjustment/opening inventory line
+2. Estimated cost from subdepartment target margin (`default_margin_target_bps`)
+3. Unknown or zero cost with `cost_source = unknown`
 
 Target-margin estimate:
 
-```
-estimated_cost = retail_price * (1 - target_margin)
+```text
+unit_cost_cents = selling_price_cents * (1 - default_margin_target_bps / 10000)
 ```
 
 Phase 4 valuation is management inventory value, not final accounting-grade cost of goods sold. Later receiving, vendor order, used buyback, and consignment workflows will provide stronger actual-cost sources.
