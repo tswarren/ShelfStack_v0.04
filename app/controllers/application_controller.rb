@@ -11,6 +11,9 @@ class ApplicationController < ActionController::Base
 
   before_action :load_request_context
   before_action :enforce_session_state
+  before_action :enforce_onboarding_requirements
+
+  ONBOARDING_EXEMPT_CONTROLLERS = %w[sessions session_locks passwords pins workstation_assignments].freeze
 
   private
 
@@ -74,5 +77,47 @@ class ApplicationController < ActionController::Base
     return if Authorization.allowed?(user: current_user, permission_key: permission_key, store: current_store)
 
     redirect_to root_path, alert: "You are not authorized to perform that action."
+  end
+
+  def enforce_onboarding_requirements
+    return if ONBOARDING_EXEMPT_CONTROLLERS.include?(controller_name)
+    return unless current_user_session&.active?
+
+    user = current_user
+    return unless user
+
+    if user.force_password_change?
+      redirect_to edit_password_path, notice: "You must change your password before continuing."
+      return
+    end
+
+    return if user.pin_set?
+
+    redirect_to edit_pin_path, notice: "You must set a PIN before continuing."
+  end
+
+  def authentication_completion_path(user)
+    return edit_password_path if user.force_password_change?
+    return edit_pin_path unless user.pin_set?
+
+    root_path
+  end
+
+  def authentication_completion_notice(user)
+    if user.force_password_change?
+      "You must change your password before continuing."
+    elsif !user.pin_set?
+      "You must set a PIN before continuing."
+    else
+      login_welcome_message(user)
+    end
+  end
+
+  def login_welcome_message(user)
+    if user.previous_login_at.present?
+      "Welcome, #{user.display_name}. You last logged in at #{display_time(user.previous_login_at)}."
+    else
+      "Welcome, #{user.display_name}."
+    end
   end
 end

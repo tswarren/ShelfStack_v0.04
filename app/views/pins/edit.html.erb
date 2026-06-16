@@ -1,7 +1,11 @@
-<h1>Set PIN</h1>
+<h1><%= current_user.pin_set? ? "Change PIN" : "Set PIN" %></h1>
 
 <%= form_with url: pin_path, method: :patch, class: "ss-form" do %>
   <label>New PIN</label>
-  <%= password_field_tag :pin %>
-  <%= submit_tag "Save PIN", class: "ss-btn" %>
+  <%= password_field_tag :pin, nil, autofocus: true, autocomplete: "off" %>
+
+  <label>Confirm PIN</label>
+  <%= password_field_tag :pin_confirmation, nil, autocomplete: "off" %>
+
+  <%= submit_tag current_user.pin_set? ? "Update PIN" : "Save PIN", class: "ss-btn" %>
 <% end %>

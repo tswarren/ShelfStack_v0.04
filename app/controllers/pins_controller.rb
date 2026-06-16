@@ -8,7 +8,28 @@ class PinsController < ApplicationController
 
   def update
     user = current_user
-    user.pin = params[:pin]
+    pin = params[:pin].to_s
+    pin_confirmation = params[:pin_confirmation].to_s
+
+    if pin.blank?
+      flash.now[:alert] = "PIN can't be blank."
+      render :edit, status: :unprocessable_entity
+      return
+    end
+
+    if pin_confirmation.blank?
+      flash.now[:alert] = "PIN confirmation can't be blank."
+      render :edit, status: :unprocessable_entity
+      return
+    end
+
+    if pin != pin_confirmation
+      flash.now[:alert] = "PIN confirmation does not match."
+      render :edit, status: :unprocessable_entity
+      return
+    end
+
+    user.pin = pin
 
     if user.save
       AuditEvents.record!(actor: user, event_name: "user.pin_changed", auditable: user)

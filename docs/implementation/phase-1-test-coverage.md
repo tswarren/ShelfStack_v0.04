@@ -44,7 +44,10 @@ Normative test requirements: [../specifications/phase-1-test-plan.md](../specifi
 | `test/services/workstation_assignment_service_test.rb` | Assign, cookie, resolution |
 | `test/services/user_role_assignment_service_test.rb` | Assign, remove, super admin protection |
 | `test/services/super_administrator_protection_test.rb` | Restore, protection rules, setup integration |
-| `test/controllers/sessions_controller_test.rb` | Login flow, logout, header user menu |
+| `test/controllers/sessions_controller_test.rb` | Login flow, logout, header user menu, PIN/password onboarding |
+| `test/controllers/passwords_controller_test.rb` | Password change confirmation and forced reset |
+| `test/controllers/pins_controller_test.rb` | PIN change confirmation |
+| `test/controllers/session_inactivity_test.rb` | Inactivity locks session |
 | `test/integration/setup_authorization_test.rb` | Setup access control |
 | `test/integration/setup_user_role_assignments_test.rb` | Role assignment UI and audit |
 | `test/integration/setup_workstations_controller_test.rb` | Validation error display |
@@ -60,10 +63,10 @@ Normative test requirements: [../specifications/phase-1-test-plan.md](../specifi
 | Valid login | Covered | `sessions_controller_test`, `session_lifecycle_test` |
 | Failed login | Covered | `authentication_service_test` |
 | Logout | Covered | `sessions_controller_test`, `session_lifecycle_test` |
-| Password change | Not covered | Manual verification |
+| Password change | Covered | `passwords_controller_test` |
 | Admin password reset | Not covered | No UI tests |
-| PIN change | Not covered | Manual verification |
-| Forced password change redirect | Not covered | Manual verification |
+| PIN change | Covered | `pins_controller_test` |
+| Forced password change redirect | Covered | `sessions_controller_test`, `passwords_controller_test` |
 
 ### Section 3–4: Authorization
 
@@ -95,9 +98,10 @@ Normative test requirements: [../specifications/phase-1-test-plan.md](../specifi
 
 | Test plan topic | Status | Notes |
 | --------------- | ------ | ----- |
-| Lock / unlock | Covered | `session_lifecycle_test` |
+| Lock / unlock | Covered | `session_lifecycle_test`, `session_inactivity_test` |
 | Force-end | Not covered | Service exists, no test |
-| Expiration | Not covered | |
+| Expiration | Partial | Inactivity now locks per spec; `session_lifecycle_test`, `session_inactivity_test` |
+| Password unlock when no PIN | Covered | `session_lifecycle_test` |
 | Cross-tab polling | Not covered | |
 
 ### Section 9–11: Setup UI
@@ -122,8 +126,8 @@ Normative test requirements: [../specifications/phase-1-test-plan.md](../specifi
 
 Priority items if hardening Phase 1 before Phase 2:
 
-1. Password and PIN controller/request tests.
-2. `SessionLifecycle.force_end!` and expiration tests.
+1. ~~Password and PIN controller/request tests.~~ Done.
+2. `SessionLifecycle.force_end!` tests.
 3. Store model normalization validations.
 4. Setup roles permission checkbox protection.
 5. Capybara system test: login → dashboard → setup user → assign role.

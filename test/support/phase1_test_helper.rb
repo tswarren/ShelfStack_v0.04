@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ostruct"
+
 module Phase1TestHelper
   def seed_minimal_permissions!
     Seeds::Phase1Permissions.seed!
@@ -39,7 +41,10 @@ module Phase1TestHelper
   end
 
   def create_user!(attrs = {})
-    User.create!({
+    pin_provided = attrs.key?(:pin)
+    pin = attrs.delete(:pin) if pin_provided
+
+    user = User.create!({
       user_type: "user",
       username: "testuser",
       first_name: "Test",
@@ -49,6 +54,16 @@ module Phase1TestHelper
       interactive_login_enabled: true,
       active: true
     }.merge(attrs))
+
+    if pin_provided && pin.present?
+      user.pin = pin
+      user.save!
+    elsif !pin_provided
+      user.pin = "1234"
+      user.save!
+    end
+
+    user
   end
 
   def grant_permission!(user, permission_key, store: nil)
@@ -76,6 +91,11 @@ module Phase1TestHelper
       assigned_at: Time.current
     )
     cookies[ShelfStack::WORKSTATION_COOKIE_NAME] = raw
+  end
+
+  def login_user!(user, workstation:, password: "Password123!")
+    assign_workstation!(workstation, cookies)
+    post login_path, params: { username: user.username, password: password }
   end
 
   def login_as(user, workstation:, cookies:)

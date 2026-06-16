@@ -52,12 +52,7 @@ class SessionsController < ApplicationController
       cookies: cookies
     )
 
-    if user.force_password_change?
-      redirect_to edit_password_path, notice: "You must change your password before continuing."
-    else
-      flash[:notice] = login_welcome_message(user)
-      redirect_to root_path
-    end
+    complete_authentication_for(user)
   end
 
   def destroy
@@ -77,11 +72,14 @@ class SessionsController < ApplicationController
     false
   end
 
-  def login_welcome_message(user)
-    if user.previous_login_at.present?
-      "Welcome, #{user.display_name}. You last logged in at #{display_time(user.previous_login_at)}."
-    else
-      "Welcome, #{user.display_name}."
+  def complete_authentication_for(user)
+    path = authentication_completion_path(user)
+    notice = authentication_completion_notice(user)
+
+    if path == root_path
+      flash[:notice] = notice
     end
+
+    redirect_to path, notice: path == root_path ? nil : notice
   end
 end

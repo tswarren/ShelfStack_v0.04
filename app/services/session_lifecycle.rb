@@ -73,8 +73,12 @@ class SessionLifecycle
     AuditEvents.record!(actor: actor, event_name: "session.locked", auditable: session)
   end
 
-  def self.unlock!(session:, user:, pin:)
-    raise Error, "Invalid PIN" unless user.authenticate_pin(pin)
+  def self.unlock!(session:, user:, pin: nil, password: nil)
+    if user.pin_set?
+      raise Error, "Invalid PIN" unless user.authenticate_pin(pin)
+    else
+      raise Error, "Invalid password" unless user.authenticate(password)
+    end
 
     session.unlock!
     AuditEvents.record!(actor: user, event_name: "session.unlocked", auditable: session)
@@ -89,12 +93,7 @@ class SessionLifecycle
     return unless session.active?
     return unless session.last_activity_at < ShelfStack::SESSION_INACTIVITY_TIMEOUT.ago
 
-    session.expire!
-    AuditEvents.record!(
-      actor: User.find_by!(username: ShelfStack::SYSTEM_USERNAME),
-      event_name: "session.expired",
-      auditable: session
-    )
+    lock!(session: session, actor: session.user)
   end
 
   def self.touch_activity!(session)

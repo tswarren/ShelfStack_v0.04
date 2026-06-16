@@ -21,7 +21,13 @@ class WorkstationAssignmentsController < ApplicationController
     current_user_session.update!(store: workstation.store, workstation: workstation)
     Current.store = workstation.store
     Current.workstation = workstation
-    redirect_to root_path, notice: "Browser assigned to #{workstation.name}."
+    path = authentication_completion_path(current_user)
+    notice = if path == root_path
+               "Browser assigned to #{workstation.name}."
+             else
+               authentication_completion_notice(current_user)
+             end
+    redirect_to path, notice: notice
   end
 
   private

@@ -34,8 +34,13 @@ class User < ApplicationRecord
   validates :first_name, :last_name, :display_name, presence: true
   validates :user_type, inclusion: { in: USER_TYPES }
   validates :clerk_number, uniqueness: true, allow_nil: true, length: { maximum: 10 }
+  validates :password, confirmation: true, if: -> { password.present? }
   validate :password_required_for_interactive_users
   validate :system_user_rules
+
+  def pin_set?
+    pin_digest.present?
+  end
 
   before_validation :normalize_username
 

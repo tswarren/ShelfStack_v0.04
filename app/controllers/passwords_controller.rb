@@ -17,6 +17,18 @@ class PasswordsController < ApplicationController
       return
     end
 
+    if params[:password].blank?
+      flash.now[:alert] = "New password can't be blank."
+      render :edit, status: :unprocessable_entity
+      return
+    end
+
+    if params[:password_confirmation].blank?
+      flash.now[:alert] = "Password confirmation can't be blank."
+      render :edit, status: :unprocessable_entity
+      return
+    end
+
     user.password = params[:password]
     user.password_confirmation = params[:password_confirmation]
     user.force_password_change = false
@@ -24,7 +36,11 @@ class PasswordsController < ApplicationController
 
     if user.save
       AuditEvents.record!(actor: user, event_name: "user.password_changed", auditable: user)
-      redirect_to root_path, notice: "Password updated successfully."
+      if user.pin_set?
+        redirect_to root_path, notice: "Password updated successfully."
+      else
+        redirect_to edit_pin_path, notice: "Password updated successfully. You must set a PIN before continuing."
+      end
     else
       flash.now[:alert] = user.errors.full_messages.to_sentence
       render :edit, status: :unprocessable_entity

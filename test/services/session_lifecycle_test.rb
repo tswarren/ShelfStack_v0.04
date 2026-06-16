@@ -38,6 +38,23 @@ class SessionLifecycleTest < ActiveSupport::TestCase
     assert @session.reload.active?
   end
 
+  test "unlock with password when user has no pin" do
+    @user.clear_pin!
+    SessionLifecycle.lock!(session: @session, actor: @user)
+
+    SessionLifecycle.unlock!(session: @session, user: @user, password: "Password123!")
+    assert @session.reload.active?
+  end
+
+  test "inactivity locks session instead of expiring it" do
+    @session.update!(last_activity_at: (ShelfStack::SESSION_INACTIVITY_TIMEOUT + 1.minute).ago)
+
+    SessionLifecycle.check_inactivity!(@session)
+
+    assert @session.reload.locked?
+    assert_not_equal "expired", @session.status
+  end
+
   test "terminal session cannot return to active" do
     @session.end!
     assert @session.terminal?

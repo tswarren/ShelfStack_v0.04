@@ -18,6 +18,36 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert AuditEvent.exists?(event_name: "user.login")
   end
 
+  test "login redirects to pin setup when user has no pin" do
+    @user.clear_pin!
+
+    assign_workstation!(@workstation, cookies)
+    post login_path, params: { username: "bookseller", password: "Password123!" }
+
+    assert_redirected_to edit_pin_path
+    assert_match(/set a PIN/i, flash[:notice])
+  end
+
+  test "user without pin cannot access dashboard" do
+    @user.clear_pin!
+    assign_workstation!(@workstation, cookies)
+    login_user!(@user, workstation: @workstation)
+
+    get root_path
+
+    assert_redirected_to edit_pin_path
+  end
+
+  test "forced password change redirects before pin setup" do
+    @user.clear_pin!
+    @user.update!(force_password_change: true)
+
+    assign_workstation!(@workstation, cookies)
+    post login_path, params: { username: "bookseller", password: "Password123!" }
+
+    assert_redirected_to edit_password_path
+  end
+
   test "login fails without workstation assignment" do
     post login_path, params: { username: "bookseller", password: "Password123!" }
     assert_response :unprocessable_entity

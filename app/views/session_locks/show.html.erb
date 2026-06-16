@@ -1,10 +1,21 @@
 <h1>Unlock Session</h1>
-<p>Enter your PIN to unlock this session.</p>
 
-<%= form_with url: session_unlock_path, method: :post, class: "ss-form" do %>
-  <label>PIN</label>
-  <%= password_field_tag :pin, nil, autofocus: true, autocomplete: "off" %>
-  <%= submit_tag "Unlock", class: "ss-btn" %>
+<% if current_user.pin_set? %>
+  <p>Enter your PIN to unlock this session.</p>
+
+  <%= form_with url: session_unlock_path, method: :post, class: "ss-form" do %>
+    <label>PIN</label>
+    <%= password_field_tag :pin, nil, autofocus: true, autocomplete: "off" %>
+    <%= submit_tag "Unlock", class: "ss-btn" %>
+  <% end %>
+<% else %>
+  <p>Enter your password to unlock this session.</p>
+
+  <%= form_with url: session_unlock_path, method: :post, class: "ss-form" do %>
+    <label>Password</label>
+    <%= password_field_tag :password, nil, autofocus: true, autocomplete: "current-password" %>
+    <%= submit_tag "Unlock", class: "ss-btn" %>
+  <% end %>
 <% end %>
 
 <p><%= button_to "Log out instead", logout_path, method: :delete, class: "ss-btn ss-btn-secondary" %></p>

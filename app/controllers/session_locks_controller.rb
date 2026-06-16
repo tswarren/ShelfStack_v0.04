@@ -11,10 +11,14 @@ class SessionLocksController < ApplicationController
 
   def create
     begin
-      SessionLifecycle.unlock!(session: current_user_session, user: current_user, pin: params[:pin])
+      if current_user.pin_set?
+        SessionLifecycle.unlock!(session: current_user_session, user: current_user, pin: params[:pin])
+      else
+        SessionLifecycle.unlock!(session: current_user_session, user: current_user, password: params[:password])
+      end
       redirect_to root_path, notice: "Session unlocked."
     rescue SessionLifecycle::Error
-      flash.now[:alert] = "Invalid PIN."
+      flash.now[:alert] = current_user.pin_set? ? "Invalid PIN." : "Invalid password."
       render :show, status: :unprocessable_entity
     end
   end
