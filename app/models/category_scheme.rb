@@ -23,7 +23,7 @@ class CategoryScheme < ApplicationRecord
   end
 
   def store_category_scheme?
-    scheme_key.in?([CategoryNode::STORE_CATEGORIES_SCHEME_KEY, CategoryNode::LEGACY_STORE_SCHEME_KEY])
+    scheme_key.in?([ CategoryNode::STORE_CATEGORIES_SCHEME_KEY, CategoryNode::LEGACY_STORE_SCHEME_KEY ])
   end
 
   private

@@ -386,9 +386,9 @@ module Items
       @store_category_scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
       @store_category_nodes = if @store_category_scheme
                                 CategoryNode.active_for_tree_select(@store_category_scheme)
-                              else
+      else
                                 CategoryNode.none
-                              end
+      end
     end
 
     def load_product_collections
@@ -439,7 +439,7 @@ module Items
     def apply_store_category_sync_notice!(result)
       return if result.warnings.blank?
 
-      flash.now[:alert] = [flash.now[:alert], result.warnings.join(" ")].compact.join(" ")
+      flash.now[:alert] = [ flash.now[:alert], result.warnings.join(" ") ].compact.join(" ")
     end
 
     def identifier_type_param

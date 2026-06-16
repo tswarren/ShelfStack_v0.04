@@ -15,8 +15,8 @@ class TreeOrderingTest < ActiveSupport::TestCase
 
     rows = TreeOrdering.rows(records)
 
-    assert_equal [2, 4, 3, 1], rows.map { |row| row.record.id }
-    assert_equal [0, 1, 1, 0], rows.map(&:depth)
+    assert_equal [ 2, 4, 3, 1 ], rows.map { |row| row.record.id }
+    assert_equal [ 0, 1, 1, 0 ], rows.map(&:depth)
   end
 
   test "finishes a parent subtree before the next top parent even when child sort order is lower" do
@@ -30,7 +30,7 @@ class TreeOrderingTest < ActiveSupport::TestCase
 
     rows = TreeOrdering.rows(records)
 
-    assert_equal [1, 2, 3, 4, 5], rows.map { |row| row.record.id }
+    assert_equal [ 1, 2, 3, 4, 5 ], rows.map { |row| row.record.id }
   end
 
   test "sorts siblings by sort order only within the same parent" do
@@ -42,7 +42,7 @@ class TreeOrderingTest < ActiveSupport::TestCase
 
     rows = TreeOrdering.rows(records)
 
-    assert_equal [1, 3, 2], rows.map { |row| row.record.id }
+    assert_equal [ 1, 3, 2 ], rows.map { |row| row.record.id }
   end
 
   test "treats missing parent as orphan root after valid top parents" do
@@ -53,7 +53,7 @@ class TreeOrderingTest < ActiveSupport::TestCase
 
     rows = TreeOrdering.rows(records)
 
-    assert_equal [1, 2], rows.map { |row| row.record.id }
-    assert_equal [0, 0], rows.map(&:depth)
+    assert_equal [ 1, 2 ], rows.map { |row| row.record.id }
+    assert_equal [ 0, 0 ], rows.map(&:depth)
   end
 end

@@ -15,7 +15,7 @@ class CatalogItemBisacSyncTest < ActiveSupport::TestCase
     result = CatalogItemBisacSync.sync!(
       catalog_item: @item,
       primary_bisac_category_node_id: @general.id,
-      bisac_category_node_ids: [@fantasy.id],
+      bisac_category_node_ids: [ @fantasy.id ],
       structured: true
     )
 

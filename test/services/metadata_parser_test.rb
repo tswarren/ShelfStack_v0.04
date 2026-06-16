@@ -8,9 +8,9 @@ class MetadataParserTest < ActiveSupport::TestCase
     assert_equal "Smith, John", result.first["display_name"]
     assert_equal "Smith", result.first["family_name"]
     assert_equal "John", result.first["given_names"]
-    assert_equal ["author"], result.first["roles"]
+    assert_equal [ "author" ], result.first["roles"]
     assert_equal "The Beatles", result.last["display_name"]
-    assert_equal ["performer"], result.last["roles"]
+    assert_equal [ "performer" ], result.last["roles"]
   end
 
   test "parse subjects with scheme and code" do

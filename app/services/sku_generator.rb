@@ -31,7 +31,7 @@ class SkuGenerator
     when "variable"
       parts << attribute1_sku_component if attribute1_sku_component.present?
     when "matrix"
-      parts.concat([attribute1_sku_component, attribute2_sku_component].compact_blank)
+      parts.concat([ attribute1_sku_component, attribute2_sku_component ].compact_blank)
     end
 
     parts.compact_blank!

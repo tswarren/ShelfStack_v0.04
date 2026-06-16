@@ -36,7 +36,7 @@ class ItemSearch
   def identifier_hits
     CatalogItemIdentifier.active_records
       .where("normalized_identifier ILIKE ? OR identifier_value ILIKE ?", text_query, text_query)
-      .includes(catalog_item: [:format, { products: { cover_image_attachment: :blob } }, :catalog_item_identifiers])
+      .includes(catalog_item: [ :format, { products: { cover_image_attachment: :blob } }, :catalog_item_identifiers ])
       .limit(@limit)
       .map { |identifier| hit("catalog_item_identifier", identifier) }
   end
@@ -61,7 +61,7 @@ class ItemSearch
   def variant_hits
     ProductVariant.active_records
       .where("sku ILIKE ? OR name ILIKE ?", text_query, text_query)
-      .includes(product: [:catalog_item, { cover_image_attachment: :blob }], condition: nil, sub_department: nil)
+      .includes(product: [ :catalog_item, { cover_image_attachment: :blob } ], condition: nil, sub_department: nil)
       .limit(@limit)
       .map { |variant| hit("product_variant", variant) }
   end
@@ -73,7 +73,7 @@ class ItemSearch
   def dedupe_presenters(hits)
     hits.each_with_object({}) do |hit, memo|
       presenter = Items::ItemPresenter.from_search_hit(hit)
-      key = [presenter.catalog_item&.id, presenter.product&.id]
+      key = [ presenter.catalog_item&.id, presenter.product&.id ]
       memo[key] ||= Result.new(presenter: presenter, match_type: hit[:record_type])
     end.values
   end

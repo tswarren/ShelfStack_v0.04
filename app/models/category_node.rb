@@ -58,7 +58,7 @@ class CategoryNode < ApplicationRecord
   end
 
   def store_category?
-    category_scheme&.scheme_key.in?([STORE_CATEGORIES_SCHEME_KEY, LEGACY_STORE_SCHEME_KEY])
+    category_scheme&.scheme_key.in?([ STORE_CATEGORIES_SCHEME_KEY, LEGACY_STORE_SCHEME_KEY ])
   end
 
   private

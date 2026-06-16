@@ -23,7 +23,7 @@ module Bisac
       updated = 0
 
       CategoryScheme.transaction do
-        nodes_by_code.values.sort_by { |node| [node[:depth], node[:code]] }.each do |definition|
+        nodes_by_code.values.sort_by { |node| [ node[:depth], node[:code] ] }.each do |definition|
           parent = definition[:parent_code].present? ? find_node!(scheme, definition[:parent_code]) : nil
           node = scheme.category_nodes.find_or_initialize_by(node_key: definition[:code].downcase)
           was_new = node.new_record?

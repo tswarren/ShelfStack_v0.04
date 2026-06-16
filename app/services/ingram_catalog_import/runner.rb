@@ -43,7 +43,7 @@ module IngramCatalogImport
       product, product_status, product_message = upsert_product!(row, catalog_item)
       variant_status = upsert_variant!(row, product)
 
-      message = [product_message, variant_status[:message]].compact.join("; ").presence
+      message = [ product_message, variant_status[:message] ].compact.join("; ").presence
       status = determine_status(catalog_status, product_status, variant_status)
       add_outcome(
         row,
@@ -94,7 +94,7 @@ module IngramCatalogImport
         ensure_identifiers!(catalog_item, row)
         sync_catalog_bisac!(catalog_item)
         record_audit!("catalog_item.updated", catalog_item) if changed
-        [catalog_item, :catalog_updated]
+        [ catalog_item, :catalog_updated ]
       else
         catalog_item = CatalogItem.new(attrs)
         apply_store_category!(catalog_item)
@@ -104,7 +104,7 @@ module IngramCatalogImport
         end
         sync_catalog_bisac!(catalog_item.reload)
         record_audit!("catalog_item.created", catalog_item)
-        [catalog_item.reload, :catalog_created]
+        [ catalog_item.reload, :catalog_created ]
       end
     end
 
@@ -112,7 +112,7 @@ module IngramCatalogImport
       resolution = ProductResolver.resolve(catalog_item: catalog_item)
 
       if resolution.ambiguous?
-        return [nil, :skipped, resolution.message]
+        return [ nil, :skipped, resolution.message ]
       end
 
       if resolution.found?
@@ -120,7 +120,7 @@ module IngramCatalogImport
         previous_price = product.list_price_cents
         product.update!(list_price_cents: row.us_srp_cents)
         record_audit!("product.updated", product) if previous_price != row.us_srp_cents
-        [product, :product_updated, nil]
+        [ product, :product_updated, nil ]
       else
         product_attrs = {
           catalog_item: catalog_item,
@@ -134,7 +134,7 @@ module IngramCatalogImport
         product_attrs[:default_display_location] = defaults.default_display_location if defaults.default_display_location.present?
         product = Product.create!(product_attrs)
         record_audit!("product.created", product)
-        [product, :product_created, nil]
+        [ product, :product_created, nil ]
       end
     end
 

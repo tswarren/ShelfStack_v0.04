@@ -47,7 +47,7 @@ module Seeds
 
     PERMISSIONS = (
       ACCESS_PERMISSIONS +
-      [INGRAM_IMPORT_PERMISSION] +
+      [ INGRAM_IMPORT_PERMISSION ] +
       items_permissions +
       setup_catalog_permissions
     ).freeze

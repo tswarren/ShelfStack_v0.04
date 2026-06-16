@@ -12,8 +12,8 @@ class SubDepartmentIndexTreeTest < ActiveSupport::TestCase
 
     rows = SubDepartmentIndexTree.rows
 
-    assert_equal [:department, :sub_department, :department, :sub_department], rows.map(&:record_type)
-    assert_equal [dept_a, sub_a, dept_b, sub_b], rows.map(&:record)
-    assert_equal [0, 1, 0, 1], rows.map(&:depth)
+    assert_equal [ :department, :sub_department, :department, :sub_department ], rows.map(&:record_type)
+    assert_equal [ dept_a, sub_a, dept_b, sub_b ], rows.map(&:record)
+    assert_equal [ 0, 1, 0, 1 ], rows.map(&:depth)
   end
 end

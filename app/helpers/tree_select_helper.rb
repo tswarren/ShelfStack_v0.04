@@ -8,7 +8,7 @@ module TreeSelectHelper
 
     TreeOrdering.rows(Array(records)).map do |row|
       label = row.record.public_send(label_method)
-      ["#{TREE_SELECT_INDENT * row.depth}#{label}", row.record.id]
+      [ "#{TREE_SELECT_INDENT * row.depth}#{label}", row.record.id ]
     end
   end
 end

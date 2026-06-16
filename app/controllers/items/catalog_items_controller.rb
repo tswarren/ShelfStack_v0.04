@@ -215,7 +215,7 @@ module Items
     def apply_store_category_sync_notice!(result)
       return if result.warnings.blank?
 
-      flash.now[:alert] = [flash.now[:alert], result.warnings.join(" ")].compact.join(" ")
+      flash.now[:alert] = [ flash.now[:alert], result.warnings.join(" ") ].compact.join(" ")
     end
 
     def identifier_type_param

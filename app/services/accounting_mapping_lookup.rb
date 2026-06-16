@@ -14,7 +14,7 @@ class AccountingMappingLookup
     candidates.select! { |mapping| matches?(mapping) }
     return nil if candidates.empty?
 
-    candidates.max_by { |mapping| [mapping.specificity_score, -mapping.sort_order, -mapping.id] }
+    candidates.max_by { |mapping| [ mapping.specificity_score, -mapping.sort_order, -mapping.id ] }
   end
 
   private

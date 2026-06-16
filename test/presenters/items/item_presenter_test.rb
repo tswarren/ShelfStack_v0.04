@@ -99,7 +99,7 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
 
     labels = presenter.overview_actions.map { |action| action[:label] }
 
-    assert_equal ["Edit Catalog Item", "Edit Product"], labels
+    assert_equal [ "Edit Catalog Item", "Edit Product" ], labels
   end
 
   test "creator entries parse display names and roles" do
@@ -108,7 +108,7 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
 
     assert_equal 2, presenter.creator_entries.size
     assert_equal "Tolkien, J.R.R.", presenter.creator_entries.first["display_name"]
-    assert_equal ["author"], presenter.creator_entries.first["roles"]
+    assert_equal [ "author" ], presenter.creator_entries.first["roles"]
     assert_equal %w[author editor], presenter.creator_entries.second["roles"]
   end
 
@@ -116,14 +116,14 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     item = create_catalog_item!(bisac_subjects: "Fiction / General [bisac/FIC000000]; Mystery [local]")
     presenter = Items::ItemPresenter.from_catalog_item(item)
 
-    assert_equal ["Fiction / General", "Mystery"], presenter.subject_headings
+    assert_equal [ "Fiction / General", "Mystery" ], presenter.subject_headings
   end
 
   test "subject headings strip non scheme bracket labels" do
     item = create_catalog_item!(genres: "Science Fiction [sci-fi]; Historical [period]")
     presenter = Items::ItemPresenter.from_catalog_item(item)
 
-    assert_equal ["Science Fiction", "Historical"], presenter.subject_headings
+    assert_equal [ "Science Fiction", "Historical" ], presenter.subject_headings
   end
 
   test "subject headings combine bisac genres and themes" do
@@ -134,7 +134,7 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     )
     presenter = Items::ItemPresenter.from_catalog_item(item)
 
-    assert_equal ["Fiction / General", "Adventure", "Coming of Age"], presenter.subject_headings
+    assert_equal [ "Fiction / General", "Adventure", "Coming of Age" ], presenter.subject_headings
   end
 
   test "subject groups preserve headings by type" do
@@ -145,8 +145,8 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     )
     presenter = Items::ItemPresenter.from_catalog_item(item)
 
-    assert_equal ["Subjects", "Genres", "Themes"], presenter.subject_groups.pluck(:label)
-    assert_equal ["Fiction / General"], presenter.subject_groups.first[:headings]
+    assert_equal [ "Subjects", "Genres", "Themes" ], presenter.subject_groups.pluck(:label)
+    assert_equal [ "Fiction / General" ], presenter.subject_groups.first[:headings]
   end
 
   test "catalog facts use format name without code and separate release date" do
@@ -167,7 +167,7 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     product = create_product!(default_display_location: shelf)
     presenter = Items::ItemPresenter.from_product(product)
 
-    assert_equal ["Store Floor", "Fiction", "Shelf A"], presenter.display_location_path.map(&:name)
+    assert_equal [ "Store Floor", "Fiction", "Shelf A" ], presenter.display_location_path.map(&:name)
   end
 
   test "display location path prefers highlighted variant location" do
@@ -177,6 +177,6 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     variant = create_product_variant!(product: product, display_location: variant_location)
     presenter = Items::ItemPresenter.from_product(product)
 
-    assert_equal ["Signed Table"], presenter.display_location_path(variant: variant).map(&:name)
+    assert_equal [ "Signed Table" ], presenter.display_location_path(variant: variant).map(&:name)
   end
 end

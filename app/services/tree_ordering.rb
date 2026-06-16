@@ -9,7 +9,7 @@ class TreeOrdering
     left_label = sort_label_for(left)
     right_label = sort_label_for(right)
 
-    [left_sort, left_label] <=> [right_sort, right_label]
+    [ left_sort, left_label ] <=> [ right_sort, right_label ]
   }.freeze
 
   def self.rows(records, parent_id: :parent_id, id: :id, sort: DEFAULT_SORT)

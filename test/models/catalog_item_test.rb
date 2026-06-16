@@ -21,7 +21,7 @@ class CatalogItemTest < ActiveSupport::TestCase
   test "parses creators into creator_details" do
     item = create_catalog_item!(creators: "Smith, John [author]")
     assert_equal "Smith, John", item.creator_details.first["display_name"]
-    assert_equal ["author"], item.creator_details.first["roles"]
+    assert_equal [ "author" ], item.creator_details.first["roles"]
   end
 
   private

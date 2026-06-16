@@ -139,7 +139,7 @@ module Seeds
     end
 
     def find_or_build_sub_department(canonical_key, attrs)
-      aliases = LEGACY_KEY_ALIASES.fetch(canonical_key, [canonical_key])
+      aliases = LEGACY_KEY_ALIASES.fetch(canonical_key, [ canonical_key ])
       SubDepartment.where(sub_department_key: aliases).first ||
         SubDepartment.find_by(short_name: attrs[:short_name]) ||
         SubDepartment.find_by(name: attrs[:name]) ||

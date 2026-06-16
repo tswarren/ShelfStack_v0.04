@@ -86,9 +86,9 @@ module Setup
       @store_category_nodes = if @category_scheme.scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
                                 store_scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
                                 store_scheme ? CategoryNode.active_for_tree_select(store_scheme) : CategoryNode.none
-                              else
+      else
                                 CategoryNode.none
-                              end
+      end
     end
 
     def category_node_params

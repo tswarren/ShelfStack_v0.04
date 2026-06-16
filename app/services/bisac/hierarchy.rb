@@ -41,7 +41,7 @@ module Bisac
       prefix_segments = segments[0...-1]
       return segments.first if prefix_segments.empty?
 
-      (prefix_segments + ["General"]).join(" / ")
+      (prefix_segments + [ "General" ]).join(" / ")
     end
 
     def normalize_code(code)

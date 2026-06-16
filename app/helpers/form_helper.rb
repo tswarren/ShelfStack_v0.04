@@ -15,15 +15,15 @@ module FormHelper
   end
 
   def ss_required_label(text)
-    safe_join([text, tag.abbr("*", title: "required", class: "ss-required")], " ")
+    safe_join([ text, tag.abbr("*", title: "required", class: "ss-required") ], " ")
   end
 
   def tree_collection_select(form, attribute, records, include_blank: false, label_method: :name, html_options: {})
     selected = form.object&.public_send(attribute)
     blank_label = case include_blank
-                  when String then include_blank
-                  when true then ""
-                  end
+    when String then include_blank
+    when true then ""
+    end
 
     form.select(
       attribute,
@@ -35,9 +35,9 @@ module FormHelper
 
   def tree_select_tag(name, records, selected: nil, include_blank: false, label_method: :name, html_options: {})
     blank_label = case include_blank
-                  when String then include_blank
-                  when true then ""
-                  end
+    when String then include_blank
+    when true then ""
+    end
 
     select_tag(
       name,

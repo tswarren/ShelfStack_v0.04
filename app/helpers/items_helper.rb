@@ -17,19 +17,19 @@ module ItemsHelper
 
   def item_lifecycle_status_badge(status)
     css_class = case status.to_s
-                when "sellable" then "status-active"
-                when "catalog_only", "product_created", "no_active_variant" then "status-inactive"
-                when "invalid_identifier_warning", "missing_sub_department", "missing_store_category", "missing_price", "inactive_setup_reference" then "status-warning"
-                else "status-inactive"
-                end
+    when "sellable" then "status-active"
+    when "catalog_only", "product_created", "no_active_variant" then "status-inactive"
+    when "invalid_identifier_warning", "missing_sub_department", "missing_store_category", "missing_price", "inactive_setup_reference" then "status-warning"
+    else "status-inactive"
+    end
 
     tag.span(status.to_s.tr("_", " ").titleize, class: "ss-status-badge #{css_class}")
   end
 
   COVER_IMAGE_SIZES = {
-    hero: [112, 160],
-    search: [48, 70],
-    index: [40, 58]
+    hero: [ 112, 160 ],
+    search: [ 48, 70 ],
+    index: [ 40, 58 ]
   }.freeze
 
   def product_cover_image_representation(attachment, size: :hero)

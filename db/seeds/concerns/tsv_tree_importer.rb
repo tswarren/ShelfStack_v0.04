@@ -20,7 +20,7 @@ module Seeds
           next
         end
 
-        row = headers.each_with_index.to_h { |header, index| [header, fields[index].presence] }
+        row = headers.each_with_index.to_h { |header, index| [ header, fields[index].presence ] }
         rows << row
       end
 

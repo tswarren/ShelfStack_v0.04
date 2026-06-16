@@ -11,7 +11,7 @@ class CatalogItemIdentifier < ApplicationRecord
   validates :normalized_identifier, presence: true, length: { maximum: 100 }
   validates :normalized_identifier, uniqueness: {
     scope: :identifier_type,
-    conditions: -> { where(identifier_type: STANDARD_TYPES + ["local"]) }
+    conditions: -> { where(identifier_type: STANDARD_TYPES + [ "local" ]) }
   }
 
   scope :active_records, -> { where(active: true) }

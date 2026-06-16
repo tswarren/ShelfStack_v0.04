@@ -33,7 +33,7 @@ class CatalogItemBisacSync
       return Result.new(
         linked_count: 0,
         unresolved_entries: [],
-        warnings: ["BISAC subject tree is not loaded. Import subjects from Setup → BISAC Subjects."],
+        warnings: [ "BISAC subject tree is not loaded. Import subjects from Setup → BISAC Subjects." ],
         skipped: true
       )
     end
@@ -48,7 +48,7 @@ class CatalogItemBisacSync
     end
 
     if structured_input?
-      node_ids = ([primary_bisac_category_node_id] + bisac_category_node_ids).compact.uniq
+      node_ids = ([ primary_bisac_category_node_id ] + bisac_category_node_ids).compact.uniq
       if node_ids.any?
         sync_structured!(scheme)
       elsif bisac_subjects.present?
@@ -86,7 +86,7 @@ class CatalogItemBisacSync
   end
 
   def sync_structured!(scheme)
-    node_ids = ([primary_bisac_category_node_id] + bisac_category_node_ids).compact.uniq
+    node_ids = ([ primary_bisac_category_node_id ] + bisac_category_node_ids).compact.uniq
     nodes = resolve_nodes!(scheme, node_ids)
     primary_node = nodes.find { |node| node.id.to_s == primary_bisac_category_node_id.to_s } || nodes.first
 
@@ -160,7 +160,7 @@ class CatalogItemBisacSync
   def ordered_nodes(nodes, primary_node)
     return nodes if primary_node.blank?
 
-    [primary_node] + nodes.reject { |node| node.id == primary_node.id }
+    [ primary_node ] + nodes.reject { |node| node.id == primary_node.id }
   end
 
   def update_subject_fields!(linked_nodes:, extra_entries:)

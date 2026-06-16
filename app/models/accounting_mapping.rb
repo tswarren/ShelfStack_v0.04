@@ -26,7 +26,7 @@ class AccountingMapping < ApplicationRecord
   end
 
   def specificity_score
-    [sub_department_id, condition_id, product_type, category_node_id].compact.size
+    [ sub_department_id, condition_id, product_type, category_node_id ].compact.size
   end
 
   private

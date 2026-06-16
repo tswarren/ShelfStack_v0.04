@@ -32,7 +32,7 @@ module Items
       {
         cover_image_attachment: :blob,
         default_display_location: :parent,
-        product_variants: [:display_location, :condition, :sub_department]
+        product_variants: [ :display_location, :condition, :sub_department ]
       }
     end
 

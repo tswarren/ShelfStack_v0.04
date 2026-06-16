@@ -305,7 +305,7 @@ class CatalogIdentifierService
 
   def self.validate_gtin_family(normalized)
     return invalid_result("Identifier must contain digits only") unless normalized.match?(/\A[0-9]+\z/)
-    return invalid_result("GTIN family identifier has invalid length") unless [8, 12, 13, 14].include?(normalized.length)
+    return invalid_result("GTIN family identifier has invalid length") unless [ 8, 12, 13, 14 ].include?(normalized.length)
 
     valid = gtin_check_digit(normalized[0..-2]) == normalized[-1].to_i
     valid ? valid_result : invalid_result("Check digit is invalid")

@@ -1,0 +1,6 @@
+store_number,rate_name,short_name,tax_identifer,tax_rate_bps
+001,State Sales Tax,Taxable,T,600
+001,Non-Taxable,Non-Tax,N,0
+002,State Sales Tax,Taxable,T,800
+002,Non-Taxable,Non-Tax,N,0
+003,Prepared Food & Beverage,Food/Bev,F,975

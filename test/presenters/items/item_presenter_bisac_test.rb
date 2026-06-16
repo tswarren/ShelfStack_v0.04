@@ -10,6 +10,6 @@ class ItemsItemPresenterBisacTest < ActiveSupport::TestCase
     item.categorizations.create!(category_node: node, primary: true, source: "bisac")
     presenter = Items::ItemPresenter.from_catalog_item(item)
 
-    assert_equal ["Fiction / General"], presenter.subject_headings
+    assert_equal [ "Fiction / General" ], presenter.subject_headings
   end
 end

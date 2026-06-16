@@ -77,9 +77,9 @@ module Items
       @store_category_scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
       @store_category_nodes = if @store_category_scheme
                                 CategoryNode.active_for_tree_select(@store_category_scheme)
-                              else
+      else
                                 CategoryNode.none
-                              end
+      end
     end
 
     def resolve_store_category

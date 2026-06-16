@@ -155,7 +155,7 @@ module Items
       return nil unless catalog_item
 
       item = catalog_item
-      dims = [item.height, item.width, item.depth].compact
+      dims = [ item.height, item.width, item.depth ].compact
       return nil if dims.empty? && item.weight.blank?
 
       parts = []
@@ -185,19 +185,19 @@ module Items
 
     def catalog_facts
       [
-        ["Format", format_name],
-        ["Released", released_date_label],
-        ["Publisher", catalog_item&.publisher],
-        ["Primary Identifier", primary_identifier_label],
-        ["Series", series_label],
-        ["Pages", pages_label],
-        ["Dimensions", dimensions_label],
-        ["Running Time", running_time_label],
-        ["Pub. Frequency", pub_frequency_label]
+        [ "Format", format_name ],
+        [ "Released", released_date_label ],
+        [ "Publisher", catalog_item&.publisher ],
+        [ "Primary Identifier", primary_identifier_label ],
+        [ "Series", series_label ],
+        [ "Pages", pages_label ],
+        [ "Dimensions", dimensions_label ],
+        [ "Running Time", running_time_label ],
+        [ "Pub. Frequency", pub_frequency_label ]
       ].filter_map do |label, value|
         next if value.blank? || value == "—"
 
-        [label, value]
+        [ label, value ]
       end
     end
 
@@ -321,7 +321,7 @@ module Items
     end
 
     def search_statuses
-      basic_statuses - ["invalid_identifier_warning"]
+      basic_statuses - [ "invalid_identifier_warning" ]
     end
 
     def full_statuses

@@ -1,0 +1,9 @@
+department_number,name,short_name,gl_account_code
+001,Books,BOOKS,4100
+002,Media,MEDIA,4200
+003,Periodicals,PERIODICALS,4300
+004,Sidelines,SIDELINES,4400
+005,Cafe,CAFE,4500
+006,Seasonal,SEASONAL,4400
+009,Other,OTHER,4900
+010,Tracking,TRACKING,2000
