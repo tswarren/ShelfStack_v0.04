@@ -75,13 +75,14 @@ module Items
     def render_step
       case @step
       when "choose_path"
-        # no setup
+        render "items/add_item/choose_path"
       when "item_details"
         ensure_catalog_linked_workflow! or return
         @catalog_item = find_or_build_catalog_item
         @formats = Format.active_records.order(:name)
         load_bisac_form_state(@catalog_item)
         load_store_category_collections
+        render "items/add_item/item_details"
       when "selling_setup"
         if params[:generate_sku].present?
           save_draft!("generated_sku" => AddItem::ProductSkuGenerator.generate!)
@@ -93,13 +94,13 @@ module Items
           ensure_non_catalog_workflow! or return
         end
         prepare_selling_setup_form
+        render "items/add_item/selling_setup"
       when "sellable_sku"
         ensure_product_in_draft! or return
         @product = Product.find(@draft["product_id"])
         prepare_sellable_sku_form
+        render "items/add_item/sellable_sku"
       end
-
-      render "items/add_item/#{@step}"
     end
 
     def handle_choose_path
