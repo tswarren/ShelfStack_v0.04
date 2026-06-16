@@ -10,7 +10,7 @@
   <dt>Selling price</dt><dd><%= format_cents(@product_variant.selling_price_cents) %></dd>
   <dt>Inventory behavior</dt><dd><%= humanize_controlled_value(@product_variant.inventory_behavior) %></dd>
   <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.balances.view", store: current_store) %>
-    <dt>On hand (<%= current_store.short_name %>)</dt>
+    <dt>On hand (<%= current_store.name %>)</dt>
     <dd><%= Inventory::Availability.on_hand(store: current_store, variant: @product_variant) %></dd>
   <% end %>
   <dt>Status</dt><dd><span class="<%= status_class(@product_variant.active?) %>"><%= status_label(@product_variant.active?) %></span></dd>
