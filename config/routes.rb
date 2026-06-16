@@ -218,5 +218,9 @@ Rails.application.routes.draw do
         patch :cancel
       end
     end
+    resource :admin, only: %i[show], controller: "admin" do
+      post :rebuild_balances
+      post :integrity_check
+    end
   end
 end

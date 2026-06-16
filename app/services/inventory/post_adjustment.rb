@@ -26,7 +26,11 @@ module Inventory
       end
 
       posting_type = adjustment.adjustment_type
-      movement_type = posting_type == "opening_inventory" ? "opening_balance" : "manual_adjustment"
+      movement_type = case adjustment.adjustment_type
+      when "opening_inventory" then "opening_balance"
+      when "balance_correction" then "correction"
+      else "manual_adjustment"
+      end
 
       lines = adjustment.inventory_adjustment_lines.map do |line|
         Post::LinePayload.new(

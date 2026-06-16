@@ -5,17 +5,17 @@ module Inventory
     before_action -> { authorize!("inventory.balances.view") }
 
     def index
-      @balances = InventoryBalance
-        .includes(product_variant: :product)
-        .where(store: inventory_store)
-        .order("product_variants.sku")
-        .joins(:product_variant)
+      result = Inventory::BalancesQuery.call(
+        store: inventory_store,
+        query: params[:q],
+        page: params[:page]
+      )
 
-      if params[:q].present?
-        q = "%#{params[:q].strip}%"
-        @balances = @balances.where("product_variants.sku ILIKE :q OR product_variants.name ILIKE :q", q: q)
-      end
-
+      @balances = result.balances
+      @total_count = result.total_count
+      @page = result.page
+      @per_page = result.per_page
+      @total_pages = [ (@total_count.to_f / @per_page).ceil, 1 ].max
       @totals = Inventory::Valuation.store_totals(store: inventory_store)
     end
   end

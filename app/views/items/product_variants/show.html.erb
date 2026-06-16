@@ -9,10 +9,17 @@
   <dt>Condition</dt><dd><%= @product_variant.condition&.name || "—" %></dd>
   <dt>Selling price</dt><dd><%= format_cents(@product_variant.selling_price_cents) %></dd>
   <dt>Inventory behavior</dt><dd><%= humanize_controlled_value(@product_variant.inventory_behavior) %></dd>
+  <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.balances.view", store: current_store) %>
+    <dt>On hand (<%= current_store.short_name %>)</dt>
+    <dd><%= Inventory::Availability.on_hand(store: current_store, variant: @product_variant) %></dd>
+  <% end %>
   <dt>Status</dt><dd><span class="<%= status_class(@product_variant.active?) %>"><%= status_label(@product_variant.active?) %></span></dd>
 </dl>
 <div class="ss-detail-actions">
   <%= link_to "Back to Item", item.tab_path("selling", variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
+  <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store) %>
+    <%= link_to "Inventory Ledger", inventory_variant_path(@product_variant), class: "ss-btn ss-btn-secondary" %>
+  <% end %>
   <%= link_to "Edit", edit_items_product_variant_path(@product_variant, item_flow), class: "ss-btn" %>
   <%= button_to "Regenerate Name", regenerate_name_items_product_variant_path(@product_variant, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
   <% if @product_variant.active? %>

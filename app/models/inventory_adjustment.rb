@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InventoryAdjustment < ApplicationRecord
-  ADJUSTMENT_TYPES = %w[opening_inventory manual_adjustment].freeze
+  ADJUSTMENT_TYPES = %w[opening_inventory manual_adjustment balance_correction].freeze
   STATUSES = %w[draft posted cancelled].freeze
 
   belongs_to :store
@@ -11,6 +11,8 @@ class InventoryAdjustment < ApplicationRecord
   has_many :inventory_adjustment_lines, -> { order(:line_number) }, dependent: :destroy, inverse_of: :inventory_adjustment
 
   accepts_nested_attributes_for :inventory_adjustment_lines, allow_destroy: true, reject_if: :all_blank
+
+  before_validation :normalize_line_numbers
 
   validates :adjustment_type, presence: true, inclusion: { in: ADJUSTMENT_TYPES }
   validates :status, presence: true, inclusion: { in: STATUSES }
@@ -57,5 +59,13 @@ class InventoryAdjustment < ApplicationRecord
     return unless status_in_database == "posted"
 
     errors.add(:base, "posted adjustments are immutable")
+  end
+
+  def normalize_line_numbers
+    return if posted?
+
+    inventory_adjustment_lines.reject(&:marked_for_destruction?).each_with_index do |line, index|
+      line.line_number = index + 1
+    end
   end
 end

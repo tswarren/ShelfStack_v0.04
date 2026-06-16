@@ -122,18 +122,13 @@ Phase 2 was completed on 2025-06-10. See [docs/implementation/phase-2-completion
 
 Phase 3 was completed on 2025-06-10. See [docs/implementation/phase-3-completion.md](docs/implementation/phase-3-completion.md).
 
-## Phase 4: Inventory Foundation — **Next**
+## Phase 4: Inventory Foundation — **Complete**
 
-Focus:
+Phase 4 was completed on 2026-06-16. See [docs/implementation/phase-4-completion.md](docs/implementation/phase-4-completion.md).
 
-* Inventory postings and ledger entries
-* Store-level `inventory_balances`
-* Opening inventory and manual adjustments
-* Valuation snapshots and cost estimation
-* Inventory reason codes and optional inventory locations
-* Inventory read surfaces and integrity tooling
+## Phase 5: Purchasing and Receiving — **Next**
 
-Do not jump ahead to purchasing, receiving, POS, or reporting tables unless the user explicitly asks to design that phase.
+Do not jump ahead to POS or reporting tables unless the user explicitly asks to design that phase.
 
 ---
 

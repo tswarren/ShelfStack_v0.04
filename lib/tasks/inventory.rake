@@ -2,16 +2,24 @@
 
 namespace :shelfstack do
   namespace :inventory do
-    desc "Rebuild inventory balances from ledger entries"
+    desc "Rebuild inventory balances from ledger entries (requires USERNAME= with inventory.admin.rebuild_balances)"
     task rebuild_balances: :environment do
-      actor = User.find_by(username: ShelfStack::SYSTEM_USERNAME)
+      actor = Inventory::AdminTaskAuthorization.authorize!(username: ENV["USERNAME"])
       count = Inventory::RebuildBalances.call(actor: actor)
       puts "Rebuilt #{count} inventory balance(s)."
+    rescue Inventory::AdminTaskAuthorization::AuthorizationError => e
+      warn e.message
+      exit 1
     end
 
     desc "Check inventory balance integrity against ledger sums"
     task check_integrity: :environment do
-      result = Inventory::BalanceIntegrityCheck.call
+      actor = if ENV["USERNAME"].present?
+        Inventory::AdminTaskAuthorization.authorize!(username: ENV["USERNAME"])
+      else
+        User.find_by(username: ShelfStack::SYSTEM_USERNAME)
+      end
+      result = Inventory::BalanceIntegrityCheck.call(actor: actor)
       if result.passed
         puts "Inventory integrity check passed."
       else
@@ -21,6 +29,9 @@ namespace :shelfstack do
         end
         exit 1
       end
+    rescue Inventory::AdminTaskAuthorization::AuthorizationError => e
+      warn e.message
+      exit 1
     end
   end
 end

@@ -7,7 +7,11 @@
   <% if Authorization.allowed?(user: current_user, permission_key: "inventory.enterprise.view", store: current_store) %>
     <%= link_to "Enterprise Rollup", inventory_enterprise_path, class: "ss-btn" %>
   <% end %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "inventory.admin.rebuild_balances", store: current_store) %>
+    <%= link_to "Admin Tools", inventory_admin_path, class: "ss-btn" %>
+  <% end %>
   <%= link_to "New Adjustment", new_inventory_adjustment_path, class: "ss-btn" %>
+  <%= link_to "New Opening Inventory", new_inventory_adjustment_path(adjustment_type: "opening_inventory"), class: "ss-btn" %>
 </div>
 
 <%= form_with url: inventory_root_path, method: :get, class: "ss-form-inline" do %>
@@ -29,6 +33,7 @@
       <th class="ss-num">On Hand</th>
       <th class="ss-num">Available</th>
       <th class="ss-num">Retail Value</th>
+      <th class="ss-num">Cost Value</th>
       <th></th>
     </tr>
   </thead>
@@ -40,6 +45,7 @@
         <td class="ss-num"><%= balance.quantity_on_hand %></td>
         <td class="ss-num"><%= balance.quantity_available %></td>
         <td class="ss-num"><%= format_cents(balance.inventory_retail_value_cents) %></td>
+        <td class="ss-num"><%= format_cents(balance.inventory_cost_value_cents) %></td>
         <td>
           <%= link_to "Ledger", inventory_variant_path(balance.product_variant) %>
           <% if Authorization.allowed?(user: current_user, permission_key: "inventory.adjustments.create", store: current_store) %>
@@ -50,3 +56,5 @@
     <% end %>
   </tbody>
 </table>
+
+<%= render "pagination" %>

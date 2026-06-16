@@ -36,7 +36,7 @@ module Inventory
       end
 
       balance.save!
-      record_negative_transition!(balance, prior_on_hand)
+      record_negative_transitions!(balance, prior_on_hand)
       balance
     end
 
@@ -44,17 +44,25 @@ module Inventory
 
     attr_reader :store, :variant, :quantity_delta, :valuation, :posting
 
-    def record_negative_transition!(balance, prior_on_hand)
-      return unless prior_on_hand >= 0 && balance.quantity_on_hand.negative?
+    def record_negative_transitions!(balance, prior_on_hand)
+      new_on_hand = balance.quantity_on_hand
 
+      if prior_on_hand >= 0 && new_on_hand.negative?
+        record_balance_audit!("inventory_balance.negative", balance, new_on_hand)
+      elsif prior_on_hand.negative? && new_on_hand >= 0
+        record_balance_audit!("inventory_balance.cleared_negative", balance, new_on_hand)
+      end
+    end
+
+    def record_balance_audit!(event_name, balance, quantity_on_hand)
       AuditEvents.record!(
         actor: posting.posted_by_user,
-        event_name: "inventory_balance.negative",
+        event_name: event_name,
         auditable: balance,
         details: {
           "store_id" => store.id,
           "product_variant_id" => variant.id,
-          "quantity_on_hand" => balance.quantity_on_hand
+          "quantity_on_hand" => quantity_on_hand
         }
       )
     end

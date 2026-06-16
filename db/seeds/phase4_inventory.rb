@@ -18,11 +18,17 @@ module Seeds
       "recipe_cost" => 6000
     }.freeze
 
+    INVENTORY_LOCATIONS = [
+      { short_name: "SF", name: "Sales Floor", sort_order: 10 },
+      { short_name: "BR", name: "Back Room", sort_order: 20 }
+    ].freeze
+
     module_function
 
     def seed!
       seed_reason_codes!
       seed_subdepartment_margins!
+      seed_inventory_locations!
     end
 
     def seed_reason_codes!
@@ -44,6 +50,19 @@ module Seeds
         next if margin.blank?
 
         sub_department.update!(default_margin_target_bps: margin)
+      end
+    end
+
+    def seed_inventory_locations!
+      Store.active_records.find_each do |store|
+        INVENTORY_LOCATIONS.each do |attrs|
+          InventoryLocation.find_or_initialize_by(store: store, short_name: attrs[:short_name]).tap do |location|
+            location.name = attrs[:name]
+            location.sort_order = attrs[:sort_order]
+            location.active = true
+            location.save!
+          end
+        end
       end
     end
   end

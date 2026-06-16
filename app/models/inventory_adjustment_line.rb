@@ -22,8 +22,12 @@ class InventoryAdjustmentLine < ApplicationRecord
   def assign_line_number
     return if line_number.present? || inventory_adjustment.blank?
 
-    max_line = inventory_adjustment.inventory_adjustment_lines.where.not(id: id).maximum(:line_number) || 0
-    self.line_number = max_line + 1
+    siblings = inventory_adjustment.inventory_adjustment_lines.to_a.reject do |line|
+      line.marked_for_destruction? || line == self
+    end
+    used_numbers = siblings.filter_map(&:line_number)
+    persisted_max = inventory_adjustment.inventory_adjustment_lines.where.not(id: id).maximum(:line_number) || 0
+    self.line_number = [ persisted_max, used_numbers.max || 0 ].max + 1
   end
 
   def adjustment_must_be_draft

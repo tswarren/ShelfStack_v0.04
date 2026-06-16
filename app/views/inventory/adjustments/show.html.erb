@@ -2,8 +2,33 @@
 <p>Type: <%= @adjustment.adjustment_type %> | Status: <%= @adjustment.status %></p>
 <% if @adjustment.notes.present? %><p><%= @adjustment.notes %></p><% end %>
 
+<% if @adjustment.posted? && @adjustment.inventory_posting %>
+  <section class="ss-summary-block">
+    <h2>Posting</h2>
+    <dl class="ss-summary">
+      <dt>Posting ID</dt><dd><%= @adjustment.inventory_posting.id %></dd>
+      <dt>Posted at</dt><dd><%= l(@adjustment.posted_at, format: :long) %></dd>
+      <dt>Posted by</dt><dd><%= @adjustment.posted_by_user&.display_name || "—" %></dd>
+    </dl>
+    <% first_line = @adjustment.inventory_adjustment_lines.first %>
+    <% if first_line && Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store) %>
+      <p><%= link_to "View ledger for #{first_line.product_variant.sku}", inventory_variant_path(first_line.product_variant) %></p>
+    <% end %>
+  </section>
+<% end %>
+
 <table class="ss-table">
-  <thead><tr><th>#</th><th>SKU</th><th class="ss-num">Delta</th><th class="ss-num">Unit Cost</th></tr></thead>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>SKU</th>
+      <th class="ss-num">Delta</th>
+      <th class="ss-num">Unit Cost</th>
+      <th>Reason</th>
+      <th>Location</th>
+      <th></th>
+    </tr>
+  </thead>
   <tbody>
     <% @adjustment.inventory_adjustment_lines.each do |line| %>
       <tr>
@@ -11,6 +36,13 @@
         <td><%= line.product_variant.sku %></td>
         <td class="ss-num"><%= line.quantity_delta %></td>
         <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
+        <td><%= line.inventory_reason_code&.name || "—" %></td>
+        <td><%= line.inventory_location&.name || "—" %></td>
+        <td>
+          <% if Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store) %>
+            <%= link_to "Ledger", inventory_variant_path(line.product_variant) %>
+          <% end %>
+        </td>
       </tr>
     <% end %>
   </tbody>
@@ -24,3 +56,6 @@
   <% end %>
   <%= link_to "Back", inventory_adjustments_path %>
 </div>
+
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

@@ -90,6 +90,17 @@ module Inventory
     def load_form_collections
       @reason_codes = InventoryReasonCode.active_records.order(:sort_order, :name)
       @locations = InventoryLocation.active_records.where(store: inventory_store).order(:sort_order, :name)
+      @adjustment_type_options = adjustment_type_options
+    end
+
+    def adjustment_type_options
+      types = InventoryAdjustment::ADJUSTMENT_TYPES - %w[balance_correction]
+      types << "balance_correction" if Authorization.allowed?(
+        user: current_user,
+        permission_key: "inventory.admin.rebuild_balances",
+        store: current_store
+      )
+      types
     end
 
     def build_initial_line

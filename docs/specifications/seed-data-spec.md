@@ -50,6 +50,7 @@ Importer: [`db/seeds/concerns/csv_classification_importer.rb`](../db/seeds/conce
 | tax_category_name | yes (matches tax_categories.name) |
 | vendor_returnable_default | no (TRUE/FALSE) |
 | buyback_allowed | no (TRUE/FALSE) |
+| default_margin_target_bps | no (0–10000; margin basis points for inventory cost estimation) |
 
 ### store_tax_rates.csv
 
