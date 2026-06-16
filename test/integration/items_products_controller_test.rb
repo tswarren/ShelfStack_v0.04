@@ -93,6 +93,24 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Color", product.variant2_label
   end
 
+  test "catalog linked edit includes variation label fields and product form controller" do
+    product = create_product!(
+      variation_type: "matrix",
+      variant1_label: "Size",
+      variant2_label: "Color"
+    )
+
+    get edit_items_product_path(product)
+
+    assert_response :success
+    assert_includes response.body, 'data-controller="product-form"'
+    assert_includes response.body, "variant1_label"
+    assert_includes response.body, "variant2_label"
+    assert_includes response.body, 'data-product-form-target="variant1Label"'
+    assert_includes response.body, 'data-product-form-target="variant2Label"'
+    assert_includes response.body, 'data-product-form-target="variationType"'
+  end
+
   test "update product can remove cover image" do
     product = create_product!
     product.cover_image.attach(

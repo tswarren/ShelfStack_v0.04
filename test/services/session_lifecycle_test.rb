@@ -46,6 +46,18 @@ class SessionLifecycleTest < ActiveSupport::TestCase
     assert @session.reload.active?
   end
 
+  test "unlock refreshes last_activity_at" do
+    stale = 2.hours.ago
+    @session.update!(last_activity_at: stale)
+    SessionLifecycle.lock!(session: @session, actor: @user)
+
+    SessionLifecycle.unlock!(session: @session, user: @user, pin: "5678")
+
+    @session.reload
+    assert @session.active?
+    assert_operator @session.last_activity_at, :>, stale
+  end
+
   test "inactivity locks session instead of expiring it" do
     @session.update!(last_activity_at: (ShelfStack::SESSION_INACTIVITY_TIMEOUT + 1.minute).ago)
 

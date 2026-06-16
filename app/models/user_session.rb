@@ -39,7 +39,12 @@ class UserSession < ApplicationRecord
   end
 
   def unlock!
-    update!(status: "active", unlocked_at: Time.current, locked_at: nil)
+    update!(
+      status: "active",
+      unlocked_at: Time.current,
+      locked_at: nil,
+      last_activity_at: Time.current
+    )
   end
 
   def end!(ended_by: nil)

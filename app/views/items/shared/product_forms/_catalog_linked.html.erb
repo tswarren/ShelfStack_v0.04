@@ -15,33 +15,36 @@
   title: "Selling Setup",
   description: "Generated name: #{ProductNameRenderer.product_name(product)}"
 } do %>
-  <div class="ss-form-grid ss-form-grid--2">
-    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name_override, label: "Name override (optional)" } do %>
-      <%= f.text_field :name_override %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", help: "Prefilled from catalog primary identifier." } do %>
-      <%= f.text_field :sku, value: product.sku.presence || catalog_item.primary_identifier&.normalized_identifier %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
-      <%= f.select :product_type, %w[physical digital].map { |t| [humanize_controlled_value(t), t] }, selected: product.product_type || "physical" %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variation_type, label: "Variation type" } do %>
-      <%= f.select :variation_type,
-            Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] },
-            { selected: product.variation_type || "conditional" } %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
-      <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_sub_department_id, label: "Default subdepartment" } do %>
-      <%= f.collection_select :default_sub_department_id, sub_departments, :id, :name, include_blank: false %>
-      <p class="ss-help">Applied as the default for sellable SKUs you create for this product.</p>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_display_location_id, label: "Default display location" } do %>
-      <%= tree_collection_select(f, :default_display_location_id, display_locations, include_blank: true) %>
-    <% end %>
+  <div data-controller="product-form" data-action="change->product-form#refresh">
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name_override, label: "Name override (optional)" } do %>
+        <%= f.text_field :name_override %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", help: "Prefilled from catalog primary identifier." } do %>
+        <%= f.text_field :sku, value: product.sku.presence || catalog_item.primary_identifier&.normalized_identifier %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
+        <%= f.select :product_type, %w[physical digital].map { |t| [humanize_controlled_value(t), t] }, selected: product.product_type || "physical" %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
+        <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_sub_department_id, label: "Default subdepartment" } do %>
+        <%= f.collection_select :default_sub_department_id, sub_departments, :id, :name, include_blank: false %>
+        <p class="ss-help">Applied as the default for sellable SKUs you create for this product.</p>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_display_location_id, label: "Default display location" } do %>
+        <%= tree_collection_select(f, :default_display_location_id, display_locations, include_blank: true) %>
+      <% end %>
+    </div>
+
+    <%= render "items/shared/product_forms/variation_fields",
+               f: f,
+               product: product,
+               variation_default: "conditional" %>
+
+    <%= render "shared/forms/checkbox", f: f, record: product, field: :active %>
   </div>
-  <%= render "shared/forms/checkbox", f: f, record: product, field: :active %>
 <% end %>
 
 <%= render "items/shared/product_forms/cover_image", f: f, product: product %>
