@@ -45,7 +45,7 @@ module Setup
     end
 
     def destroy
-      if @tax_category.categories.exists? || @tax_category.store_tax_category_rates.exists?
+      if @tax_category.sub_departments.exists? || @tax_category.store_tax_category_rates.exists?
         redirect_to setup_tax_category_path(@tax_category), alert: "Tax category cannot be deleted. Inactivate instead."
       else
         @tax_category.destroy

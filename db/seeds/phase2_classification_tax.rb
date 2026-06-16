@@ -46,49 +46,6 @@ module Seeds
       { department_number: "006", name: "Food & Beverage", short_name: "Food/Bev", gl_account_code: "4040" }
     ].freeze
 
-    CATEGORIES = {
-      "001" => [
-        { name: "Hardcover", short_name: "Hardcover", default_pricing_model: "trade_discount",
-          default_margin_target_bps: 4000, default_supplier_discount_bps: 4600, tax_category: "Books" },
-        { name: "Trade Paperback", short_name: "Trade Paper", default_pricing_model: "trade_discount",
-          default_margin_target_bps: 4000, default_supplier_discount_bps: 4600, tax_category: "Books" },
-        { name: "Mass Market Paperback", short_name: "Mass Market", default_pricing_model: "trade_discount",
-          default_margin_target_bps: 4000, default_supplier_discount_bps: 4600, tax_category: "Books" },
-        { name: "Children's Books", short_name: "Children", default_pricing_model: "trade_discount",
-          default_margin_target_bps: 4000, default_supplier_discount_bps: 4600, tax_category: "Books" }
-      ],
-      "002" => [
-        { name: "Magazines", short_name: "Magazines", default_pricing_model: "trade_discount",
-          default_margin_target_bps: 3500, default_supplier_discount_bps: 3500, tax_category: "Periodicals" },
-        { name: "Newspapers", short_name: "Newspapers", default_pricing_model: "trade_discount",
-          default_margin_target_bps: 2500, default_supplier_discount_bps: 2500, tax_category: "Periodicals" }
-      ],
-      "003" => [
-        { name: "Gifts", short_name: "Gifts", default_pricing_model: "net_cost_markup",
-          default_margin_target_bps: 5000, default_supplier_discount_bps: nil, tax_category: "General Merchandise" },
-        { name: "Stationery", short_name: "Stationery", default_pricing_model: "net_cost_markup",
-          default_margin_target_bps: 5000, default_supplier_discount_bps: nil, tax_category: "General Merchandise" },
-        { name: "Games & Puzzles", short_name: "Games", default_pricing_model: "net_cost_markup",
-          default_margin_target_bps: 5000, default_supplier_discount_bps: nil, tax_category: "General Merchandise" }
-      ],
-      "004" => [
-        { name: "Used Hardcover", short_name: "Used HC", default_pricing_model: "buyback_resale",
-          default_margin_target_bps: 6000, default_supplier_discount_bps: nil, tax_category: "Books" },
-        { name: "Used Paperback", short_name: "Used PB", default_pricing_model: "buyback_resale",
-          default_margin_target_bps: 6000, default_supplier_discount_bps: nil, tax_category: "Books" }
-      ],
-      "005" => [
-        { name: "Gift Cards", short_name: "Gift Cards", default_pricing_model: "pass_through",
-          default_margin_target_bps: 0, default_supplier_discount_bps: nil, tax_category: "Gift Card" }
-      ],
-      "006" => [
-        { name: "Prepared Beverages", short_name: "Beverages", default_pricing_model: "net_cost_markup",
-          default_margin_target_bps: 6000, default_supplier_discount_bps: nil, tax_category: "Prepared Food" },
-        { name: "Packaged Snacks", short_name: "Snacks", default_pricing_model: "net_cost_markup",
-          default_margin_target_bps: 5000, default_supplier_discount_bps: nil, tax_category: "Prepared Food" }
-      ]
-    }.freeze
-
     module_function
 
     def seed!
@@ -96,7 +53,6 @@ module Seeds
       seed_store_tax_rates!
       seed_store_tax_category_rates!
       seed_departments!
-      seed_categories!
     end
 
     def seed_tax_categories!
@@ -162,27 +118,6 @@ module Seeds
           department.gl_account_code = attrs[:gl_account_code]
           department.active = true
           department.save!
-        end
-      end
-    end
-
-    def seed_categories!
-      tax_categories_by_name = TaxCategory.all.index_by(&:name)
-
-      CATEGORIES.each do |department_number, categories|
-        department = Department.find_by!(department_number: department_number)
-
-        categories.each_with_index do |attrs, index|
-          Category.find_or_initialize_by(department: department, name: attrs[:name]).tap do |category|
-            category.short_name = attrs[:short_name]
-            category.sort_order = index
-            category.default_pricing_model = attrs[:default_pricing_model]
-            category.default_margin_target_bps = attrs[:default_margin_target_bps]
-            category.default_supplier_discount_bps = attrs[:default_supplier_discount_bps]
-            category.default_tax_category = tax_categories_by_name.fetch(attrs[:tax_category])
-            category.active = true
-            category.save!
-          end
         end
       end
     end

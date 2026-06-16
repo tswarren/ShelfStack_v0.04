@@ -16,8 +16,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "items.catalog_items.view")
     @format = create_format!(format_key: "wizard_fmt", name: "Wizard Format", short_name: "WF")
     seed_phase3_reference_data!
-    @category = create_category!
-    @sub_department = @category.sub_department || create_sub_department!(default_tax_category: @category.default_tax_category)
+    @sub_department = create_sub_department!
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "wizarduser", password: "Password123!" }
   end

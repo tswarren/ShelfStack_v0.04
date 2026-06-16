@@ -98,7 +98,7 @@ docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-do
 | `Category` | `SubDepartment` (operational defaults), not store category `CategoryNode` |
 | `MerchandiseClass` | **`SubDepartment`** (rename) |
 | `CategoryScheme` / `CategoryNode` / `Categorization` | Store categories (`store_categories` scheme), BISAC, future subject schemes |
-| `AccountingMapping` | Frozen/simplified; GL at department level for now |
+| `AccountingMapping` | **Removed** (2025-06); GL at department level |
 | `product_variants.category_id` | **`product_variants.sub_department_id`** (required after migration Phase D) |
 | `catalog_items` | add **`store_category_id`** (catalog items only) |
 

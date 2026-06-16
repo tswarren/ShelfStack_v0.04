@@ -3,7 +3,6 @@
 class Department < ApplicationRecord
   include DepartmentNumberNormalizer
 
-  has_many :categories, dependent: :restrict_with_error
   has_many :sub_departments, dependent: :restrict_with_error
 
   validates :department_number, presence: true, uniqueness: true, length: { is: 3 },

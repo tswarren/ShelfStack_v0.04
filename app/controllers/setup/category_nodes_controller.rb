@@ -83,18 +83,12 @@ module Setup
       @parent_nodes = @category_scheme.category_nodes.active_records.where.not(id: @category_node&.id).order(:sort_order, :name).to_a
       @sub_departments = SubDepartment.active_records.order(:name)
       @display_locations = DisplayLocation.active_for_tree_select
-      @store_category_nodes = if @category_scheme.scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
-                                store_scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
-                                store_scheme ? CategoryNode.active_for_tree_select(store_scheme) : CategoryNode.none
-      else
-                                CategoryNode.none
-      end
     end
 
     def category_node_params
       params.require(:category_node).permit(
         :node_key, :name, :parent_id, :sort_order, :active,
-        :default_sub_department_id, :default_display_location_id, :default_store_category_id
+        :default_sub_department_id, :default_display_location_id
       )
     end
   end

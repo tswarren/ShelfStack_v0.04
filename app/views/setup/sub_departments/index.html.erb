@@ -6,7 +6,7 @@
       <th>Key</th>
       <th>Short name</th>
       <th>Default tax category</th>
-      <th>Default margin target</th>
+      <th>Default pricing model</th>
       <th>Status</th>
       <th></th>
     </tr>
@@ -35,7 +35,7 @@
           <td><%= sub_department.sub_department_key %></td>
           <td><%= sub_department.short_name %></td>
           <td><%= sub_department.default_tax_category.name %></td>
-          <td><%= sub_department.default_margin_target_bps ? format_basis_points(sub_department.default_margin_target_bps) : "—" %></td>
+          <td><%= sub_department.default_pricing_model ? humanize_controlled_value(sub_department.default_pricing_model) : "—" %></td>
           <td><span class="<%= status_class(sub_department.active?) %>"><%= status_label(sub_department.active?) %></span></td>
           <td><%= link_to "View", setup_sub_department_path(sub_department) %></td>
         </tr>

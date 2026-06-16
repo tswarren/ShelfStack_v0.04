@@ -637,12 +637,19 @@ Renamed from `merchandise_classes`. Stable key column: `sub_department_key`.
 
 | Field | Type | Notes |
 | :---- | ----: | :---- |
+| `sub_department_key` | string | Stable internal key |
+| `name` | string | Display name |
+| `short_name` | string | Abbreviated label |
 | `department_id` | bigint | **Required.** FK to `departments`; parent reporting/GL department |
-| `default_variation_type` | string | Default `standard`; validates against `Product::VARIATION_TYPES` |
-| `default_inventory_behavior` | string | Validates against `ProductVariant::INVENTORY_BEHAVIORS` |
-| `default_tax_category_id` | bigint | Operational tax default (unchanged from merchandise class) |
+| `default_tax_category_id` | bigint | Operational tax default |
+| `default_pricing_model` | string | Controlled pricing model default |
+| `vendor_returnable_default` | boolean | Default vendor returnability |
+| `buyback_allowed` | boolean | Buyback eligibility default |
+| `active` | boolean | Lifecycle flag |
 
-Legacy `categories.sub_department_id` remains a bridge from Phase 2 categories during setup reference only; item entry uses variant `sub_department_id` directly.
+Removed in migration `20250616120000_classification_simplification_cleanup`: margin/supplier discount fields, list-price flags, `default_sales_account_code`, `default_variation_type`, `default_inventory_behavior`.
+
+Phase 2 `categories` table removed in the same migration; item entry uses variant `sub_department_id` directly.
 
 ## `catalog_items.store_category_id`
 
@@ -656,7 +663,8 @@ Legacy `categories.sub_department_id` remains a bridge from Phase 2 categories d
 | :---- | ----: | :---- |
 | `default_sub_department_id` | bigint | Nullable FK to `sub_departments` |
 | `default_display_location_id` | bigint | Nullable FK to `display_locations` |
-| `default_store_category_id` | bigint | Nullable self-FK; used on BISAC nodes to suggest a store category |
+
+`default_store_category_id` removed in migration `20250616120000_classification_simplification_cleanup`; BISAC nodes are flat metadata only.
 
 ## `products.default_sub_department_id`
 

@@ -6,7 +6,7 @@ class Vendor < ApplicationRecord
            inverse_of: :parent_vendor
 
   validates :name, presence: true
-  validates :default_pricing_model, inclusion: { in: Category::PRICING_MODELS }, allow_blank: true
+  validates :default_pricing_model, inclusion: { in: PricingModels::PRICING_MODELS }, allow_blank: true
   validates :default_margin_target_bps,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 10_000 },
             allow_nil: true

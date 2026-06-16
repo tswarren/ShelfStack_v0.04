@@ -7,7 +7,7 @@
       <%= f.select :inventory_behavior, ProductVariant::INVENTORY_BEHAVIORS.map { |b| [humanize_controlled_value(b), b] } %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :pricing_model_override, label: "Pricing model override" } do %>
-      <%= f.select :pricing_model_override, Category::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
+      <%= f.select :pricing_model_override, PricingModels::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
     <% end %>
   </div>
   <%= render "shared/forms/checkbox", f: f, record: variant, field: :active %>

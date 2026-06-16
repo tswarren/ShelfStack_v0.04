@@ -12,6 +12,8 @@ This document captured transitional semantics during the Phase 3B classification
 
 **Superseded in part by:** [classification-target-spec.md](../../specifications/classification-target-spec.md) — the authoritative record of target naming (`sub_departments`, `store_categories` scheme), attachment rules (store category on catalog items only), GL at department level, migration phases A–D, and related decisions. Where this file conflicts with the target spec, follow the target spec.
 
+**Phase 2 `categories` table:** removed in migration `20250616120000_classification_simplification_cleanup`. See [classification-cleanup.md](../../implementation/classification-cleanup.md).
+
 Related: [00-epic-phase-3-rework-merchandise-classification-structure.md](00-epic-phase-3-rework-merchandise-classification-structure.md)
 
 ---

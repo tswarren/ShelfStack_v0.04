@@ -26,13 +26,7 @@ module Seeds
       { key: "setup.departments.update", group: "setup", name: "Update Departments", description: "Update departments" },
       { key: "setup.departments.inactivate", group: "setup", name: "Inactivate Departments", description: "Inactivate departments" },
       { key: "setup.departments.reactivate", group: "setup", name: "Reactivate Departments", description: "Reactivate departments" },
-      { key: "setup.departments.delete", group: "setup", name: "Delete Departments", description: "Delete unused departments" },
-      { key: "setup.categories.view", group: "setup", name: "View Categories", description: "View categories" },
-      { key: "setup.categories.create", group: "setup", name: "Create Categories", description: "Create categories" },
-      { key: "setup.categories.update", group: "setup", name: "Update Categories", description: "Update categories" },
-      { key: "setup.categories.inactivate", group: "setup", name: "Inactivate Categories", description: "Inactivate categories" },
-      { key: "setup.categories.reactivate", group: "setup", name: "Reactivate Categories", description: "Reactivate categories" },
-      { key: "setup.categories.delete", group: "setup", name: "Delete Categories", description: "Delete unused categories" }
+      { key: "setup.departments.delete", group: "setup", name: "Delete Departments", description: "Delete unused departments" }
     ].freeze
 
     def self.seed!

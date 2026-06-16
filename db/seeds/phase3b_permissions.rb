@@ -15,12 +15,6 @@ module Seeds
       { key: "setup.category_schemes.inactivate", group: "setup", name: "Inactivate Category Schemes", description: "Inactivate category schemes" },
       { key: "setup.category_schemes.reactivate", group: "setup", name: "Reactivate Category Schemes", description: "Reactivate category schemes" },
       { key: "setup.category_schemes.delete", group: "setup", name: "Delete Category Schemes", description: "Delete unused category schemes" },
-      { key: "setup.accounting_mappings.view", group: "setup", name: "View Accounting Mappings", description: "View sales account mappings" },
-      { key: "setup.accounting_mappings.create", group: "setup", name: "Create Accounting Mappings", description: "Create sales account mappings" },
-      { key: "setup.accounting_mappings.update", group: "setup", name: "Update Accounting Mappings", description: "Update sales account mappings" },
-      { key: "setup.accounting_mappings.inactivate", group: "setup", name: "Inactivate Accounting Mappings", description: "Inactivate sales account mappings" },
-      { key: "setup.accounting_mappings.reactivate", group: "setup", name: "Reactivate Accounting Mappings", description: "Reactivate sales account mappings" },
-      { key: "setup.accounting_mappings.delete", group: "setup", name: "Delete Accounting Mappings", description: "Delete unused sales account mappings" },
       { key: "setup.bisac_subjects.view", group: "setup", name: "View BISAC Subjects", description: "View BISAC subject import status" },
       { key: "setup.bisac_subjects.import", group: "setup", name: "Import BISAC Subjects", description: "Load or update BISAC subject category nodes" }
     ].freeze

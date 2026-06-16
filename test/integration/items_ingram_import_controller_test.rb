@@ -9,8 +9,7 @@ class ItemsIngramImportControllerTest < ActionDispatch::IntegrationTest
     @admin = create_user!(username: "ingramadmin", password: "Password123!")
     grant_permission!(@admin, "items.access")
     grant_permission!(@admin, "items.ingram_import.run")
-    @category = create_category!
-    @sub_department = @category.sub_department || create_sub_department!(default_tax_category: @category.default_tax_category)
+    @sub_department = create_sub_department!
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "ingramadmin", password: "Password123!" }
     seed_phase3_reference_data!

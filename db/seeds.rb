@@ -9,7 +9,6 @@ require_relative "seeds/phase3_catalog_products"
 require_relative "seeds/phase3b_sub_departments"
 require_relative "seeds/phase3b_reference_trees"
 require_relative "seeds/phase3b_category_schemes"
-require_relative "seeds/phase3b_accounting_mappings"
 require_relative "seeds/phase3b_templates"
 
 puts "Seeding Phase 1 foundation..."

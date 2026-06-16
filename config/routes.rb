@@ -137,12 +137,6 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
-    resources :categories do
-      member do
-        patch :inactivate
-        patch :reactivate
-      end
-    end
     resources :sub_departments do
       member do
         patch :inactivate
@@ -156,12 +150,6 @@ Rails.application.routes.draw do
           patch :reactivate
         end
       end
-      member do
-        patch :inactivate
-        patch :reactivate
-      end
-    end
-    resources :accounting_mappings do
       member do
         patch :inactivate
         patch :reactivate

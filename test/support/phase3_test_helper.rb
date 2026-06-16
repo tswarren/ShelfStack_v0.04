@@ -84,12 +84,10 @@ module Phase3TestHelper
     }.merge(attrs))
   end
 
-  def create_product_variant!(product: nil, sub_department: nil, category: nil, condition: nil, **attrs)
+  def create_product_variant!(product: nil, sub_department: nil, condition: nil, **attrs)
     product ||= create_product!
-    category ||= create_category! unless sub_department
-    sub_department ||= category&.sub_department
-    if sub_department.blank?
-      department = category&.department || create_department!(
+    unless sub_department
+      department = create_department!(
         department_number: format("%03d", SecureRandom.random_number(900) + 100),
         name: "Test Department #{SecureRandom.hex(2)}",
         short_name: "TD#{SecureRandom.hex(2)}"
@@ -99,10 +97,10 @@ module Phase3TestHelper
         name: "Test Subdepartment #{SecureRandom.hex(2)}",
         short_name: "TSD #{SecureRandom.hex(1)}",
         department: department,
-        default_tax_category: category.default_tax_category,
+        default_tax_category: create_tax_category!,
+        default_pricing_model: "trade_discount",
         active: true
       )
-      category.update!(sub_department: sub_department, department: sub_department.department)
     end
     condition ||= ProductCondition.find_by(condition_key: "new") || create_product_condition!(condition_key: "new", sku_component: nil)
     ProductVariant.create!({

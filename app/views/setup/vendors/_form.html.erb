@@ -9,7 +9,7 @@
       <%= f.collection_select :parent_vendor_id, parent_vendors, :id, :name, include_blank: true %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :default_pricing_model, label: "Default pricing model" } do %>
-      <%= f.select :default_pricing_model, Category::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
+      <%= f.select :default_pricing_model, PricingModels::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :default_margin_target_bps, label: "Default margin target (bps)" } do %>
       <%= f.number_field :default_margin_target_bps, min: 0, max: 10_000 %>
