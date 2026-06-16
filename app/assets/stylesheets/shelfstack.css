@@ -1546,3 +1546,66 @@ h2 {
 .ss-field--full {
   grid-column: 1 / -1;
 }
+
+.ss-items-index-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ss-items-index-filters {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e2ddd4;
+  border-radius: 0.5rem;
+  background: #faf8f5;
+}
+
+.ss-items-index-filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.ss-items-index-filters__row--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.ss-items-index-filters__row--grid label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.ss-items-index-filters__row--grid select,
+.ss-items-index-filters__row input[type="text"] {
+  width: 100%;
+}
+
+.ss-items-index-filters__actions {
+  justify-content: space-between;
+}
+
+.ss-pagination {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.ss-pagination__summary {
+  color: #5c5347;
+  font-size: 0.875rem;
+}
+
+.ss-empty-state {
+  margin-top: 1.5rem;
+  color: #5c5347;
+}

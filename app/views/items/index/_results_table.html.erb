@@ -1,0 +1,39 @@
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Status</th>
+      <th>Product SKU</th>
+      <th>Variants</th>
+      <th>Price</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% results.each do |result| %>
+      <% item = result.presenter %>
+      <tr>
+        <td>
+          <div class="ss-search-item-cell">
+            <%= item_cover_thumbnail(item, size: :search) %>
+            <div>
+              <strong><%= item.title %></strong><br>
+              <span class="ss-muted"><%= item.creator_line %> · <%= item.format_name %> · <%= item.primary_identifier_display %></span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <% item.search_statuses.each do |status| %>
+            <%= item_lifecycle_status_badge(status) %>
+          <% end %>
+        </td>
+        <td><%= item.product_sku || "—" %></td>
+        <td><%= item.variant_summary_label %></td>
+        <td><%= item.price_range_label %></td>
+        <td class="ss-search-action-cell">
+          <%= link_to "View Item", item.show_path, class: "ss-search-view-link" %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

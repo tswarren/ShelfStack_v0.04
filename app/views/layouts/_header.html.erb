@@ -10,7 +10,7 @@
     </div>
   <% end %>
   <div class="ss-search-form">
-    <%= form_with url: items_search_path, method: :get, local: true do %>
+    <%= form_with url: items_root_path, method: :get, local: true do %>
       <%= text_field_tag :q, params[:q], placeholder: "Search / scan items…", aria: { label: "Search items" } %>
       <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
     <% end %>

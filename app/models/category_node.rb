@@ -46,6 +46,22 @@ class CategoryNode < ApplicationRecord
     category_scheme.category_nodes.active_records.order(:sort_order, :node_key, :name).to_a
   end
 
+  def self.descendant_ids_including_self(node_or_id)
+    node = node_or_id.is_a?(CategoryNode) ? node_or_id : find_by(id: node_or_id)
+    return [] if node.blank?
+
+    ids = [ node.id ]
+    frontier = [ node.id ]
+
+    while frontier.any?
+      child_ids = where(category_scheme_id: node.category_scheme_id, parent_id: frontier).pluck(:id)
+      ids.concat(child_ids)
+      frontier = child_ids
+    end
+
+    ids.uniq
+  end
+
   before_validation :normalize_strings
 
   def inactivate!

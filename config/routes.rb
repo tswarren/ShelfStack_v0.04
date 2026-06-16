@@ -18,9 +18,12 @@ Rails.application.routes.draw do
   root "dashboard#show"
 
   namespace :items do
-    root to: "home#show"
+    root to: "index#index"
     get "locked_out", to: "home#locked_out"
-    get "search", to: "search#index"
+    get "search", to: redirect { |_params, request|
+      query = request.query_parameters.slice("q", "page", "format_id", "department_id", "sub_department_id", "store_category_id", "include_inactive")
+      query.present? ? "/items?#{query.to_query}" : "/items"
+    }, as: :search
     get "item", to: "items#show", as: :item
 
     get "add_item", to: "add_item#show", as: :add_item

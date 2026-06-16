@@ -1,0 +1,67 @@
+<div class="ss-page-header">
+  <div>
+    <h1>Items</h1>
+    <p class="ss-muted">Search and browse catalog items, selling setup, and sellable SKUs.</p>
+  </div>
+  <div class="ss-items-index-toolbar">
+    <%= link_to "Add Item", items_new_add_item_path, class: "ss-btn" %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "items.ingram_import.run", store: current_store) %>
+      <%= link_to "Ingram Import", items_ingram_import_path, class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
+</div>
+
+<%= form_with url: items_root_path, method: :get, local: true, class: "ss-items-index-filters" do %>
+  <div class="ss-items-index-filters__row">
+    <%= label_tag :q, "Keyword" %>
+    <%= text_field_tag :q, @query, placeholder: "ISBN, SKU, title, creator, series, subject…", autofocus: true %>
+  </div>
+
+  <div class="ss-items-index-filters__row ss-items-index-filters__row--grid">
+    <div>
+      <%= label_tag :format_id, "Format" %>
+      <%= select_tag :format_id,
+            options_from_collection_for_select(@formats, :id, :name, params[:format_id]),
+            include_blank: "All formats" %>
+    </div>
+    <div>
+      <%= label_tag :department_id, "Department" %>
+      <%= select_tag :department_id,
+            options_from_collection_for_select(@departments, :id, :name, params[:department_id]),
+            include_blank: "All departments" %>
+    </div>
+    <div>
+      <%= label_tag :sub_department_id, "Subdepartment" %>
+      <%= select_tag :sub_department_id,
+            options_from_collection_for_select(@sub_departments, :id, :name, params[:sub_department_id]),
+            include_blank: "All subdepartments" %>
+    </div>
+    <div>
+      <%= label_tag :store_category_id, "Store category" %>
+      <%= tree_select_tag :store_category_id, @store_category_nodes, selected: params[:store_category_id], include_blank: "All store categories" %>
+    </div>
+  </div>
+
+  <div class="ss-items-index-filters__row ss-items-index-filters__actions">
+    <%= label_tag :include_inactive, class: "ss-checkbox-label" do %>
+      <%= check_box_tag :include_inactive, "1", @include_inactive %>
+      Include inactive
+    <% end %>
+    <%= submit_tag @query.present? ? "Search" : "Apply filters", class: "ss-btn" %>
+    <%= link_to "Clear filters", items_root_path, class: "ss-btn ss-btn-secondary" %>
+  </div>
+<% end %>
+
+<% if @results.any? %>
+  <%= render "items/index/results_table", results: @results %>
+  <%= render "items/index/pagination" %>
+<% else %>
+  <p class="ss-empty-state">
+    <% if @query.present? || params.except(:controller, :action).present? %>
+      No items matched your search and filters.
+      <%= link_to "Clear filters", items_root_path %>
+    <% else %>
+      No items yet. <%= link_to "Add Item", items_new_add_item_path %> to get started.
+    <% end %>
+  </p>
+<% end %>

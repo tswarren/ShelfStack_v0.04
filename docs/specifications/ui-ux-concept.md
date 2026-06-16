@@ -646,12 +646,25 @@ Variant inactivated
 
 Search should be unified.
 
+The **Items index** at `/items` is the primary discovery surface (Phase 3.5). It supports:
+
+- **Browse** all logical items when no keyword is entered (paginated)
+- **Keyword** search across title, creator, publisher, series, subject text, identifiers, and SKUs
+- **Filters:** format, department, subdepartment, store category, include inactive
+- Toolbar actions: **Add Item**, **Ingram Import** (permission-gated)
+
+Legacy `/items/search` redirects to `/items` with the same query parameters. Header search also posts to `/items`.
+
+**Deferred (Items Index v2):** separate search fields per dimension, column sorting, full-text indexing, row quick actions beyond View Item.
+
 Users should be able to search by:
 
 ```text
 Title
 Creator
 Publisher
+Series
+Subject words (including BISAC heading text via categorizations)
 ISBN
 UPC
 EAN

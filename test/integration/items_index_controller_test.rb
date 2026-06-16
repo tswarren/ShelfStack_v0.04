@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class ItemsSearchControllerTest < ActionDispatch::IntegrationTest
+class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
   include Phase3TestHelper
 
   setup do
@@ -16,8 +16,17 @@ class ItemsSearchControllerTest < ActionDispatch::IntegrationTest
     @item = create_catalog_item!(title: "Searchable Book Title")
   end
 
+  test "browse without query returns index table" do
+    get items_root_path
+
+    assert_response :success
+    assert_match "Items", response.body
+    assert_match "Add Item", response.body
+    assert_match "View Item", response.body
+  end
+
   test "search returns matching item with lifecycle status" do
-    get items_search_path, params: { q: "Searchable Book" }
+    get items_root_path, params: { q: "Searchable Book" }
     assert_response :success
     assert_match "Searchable Book Title", response.body
     assert_match "Catalog Only", response.body
@@ -31,7 +40,7 @@ class ItemsSearchControllerTest < ActionDispatch::IntegrationTest
       primary: false
     )
 
-    get items_search_path, params: { q: @item.title }
+    get items_root_path, params: { q: @item.title }
     assert_response :success
     assert_no_match "Invalid Identifier Warning", response.body
     assert_match "Catalog Only", response.body
@@ -41,7 +50,7 @@ class ItemsSearchControllerTest < ActionDispatch::IntegrationTest
     product = create_product!(catalog_item: @item)
     variant = create_product_variant!(product: product, selling_price_cents: 1899)
 
-    get items_search_path, params: { q: @item.title }
+    get items_root_path, params: { q: @item.title }
     assert_response :success
     assert_match variant.condition.short_name, response.body
     assert_match "$18.99", response.body
@@ -49,5 +58,22 @@ class ItemsSearchControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Edit Catalog", response.body
     assert_no_match "Edit SKUs", response.body
     assert_no_match "Sell New", response.body
+  end
+
+  test "filter by format narrows results" do
+    hardcover = @item.format
+    other_format = create_format!(format_key: "filter_fmt", name: "Filter Format Test")
+    create_catalog_item!(title: "Other Format Book", format: other_format)
+
+    get items_root_path, params: { format_id: hardcover.id, q: "Searchable" }
+    assert_response :success
+    assert_match "Searchable Book Title", response.body
+    assert_no_match "Other Format Book", response.body
+  end
+
+  test "legacy search path redirects to items index with params" do
+    get items_search_path, params: { q: "Searchable Book" }
+
+    assert_redirected_to items_root_path(q: "Searchable Book")
   end
 end

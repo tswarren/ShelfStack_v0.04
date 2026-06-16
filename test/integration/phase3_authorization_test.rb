@@ -65,6 +65,17 @@ class Phase3AuthorizationTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_locked_out_path
   end
 
+  test "user with items access can browse items index without catalog view permission" do
+    delete logout_path
+    user = create_user!(username: "itemsaccess", password: "Password123!")
+    grant_permission!(user, "items.access")
+    assign_workstation!(@workstation, cookies)
+    post login_path, params: { username: "itemsaccess", password: "Password123!" }
+
+    get items_root_path
+    assert_response :success
+  end
+
   test "user without format permission cannot access formats" do
     delete logout_path
     user = create_user!(username: "noformat", password: "Password123!")

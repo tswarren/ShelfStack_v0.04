@@ -120,14 +120,14 @@ Aligned with [ui-ux-concept.md](../specifications/ui-ux-concept.md):
 ### Navigation
 
 - Main nav: **Items** + **Setup** (replacing separate Catalog, Products, and Admin labels)
-- Header search wired to unified item search
+- Header search wired to Items index at `/items`
 
 ### Items workspace (`/items/*`)
 
 | Area | Route | Notes |
 | ---- | ----- | ----- |
-| Items home | `/items` | Search Items, Add Item, operational shortcuts |
-| Unified search | `/items/search` | Lifecycle status badges on every result |
+| Items index | `/items` | Browse + keyword search, filters, pagination; Add Item and Ingram Import toolbar |
+| Legacy search redirect | `/items/search` | Redirects to `/items` with preserved params |
 | Unified item detail | `/items/item?catalog_item_id=` or `?product_id=` | Overview, Catalog, Selling/SKUs, Display, Activity tabs |
 | Item Details CRUD | `/items/catalog_items` | User-facing label: Item Details |
 | Selling Setup CRUD | `/items/products` | User-facing label: Selling Setup |
@@ -150,6 +150,16 @@ Services: `AddItem::InventoryBehaviorMapper`, `AddItem::DefaultSellingPrice`, `A
 Setup and Items forms use shared partials under `app/views/shared/forms/` (`_page_header`, `_section`, `_field`, `_checkbox`, `_errors`) with CSS width modifiers (`ss-form--standard`, `ss-form--wide`). Stimulus preview controllers: `department-number-preview`, `basis-points-preview`, `tax-mapping-preview`, `variant-preview`. See `docs/specifications/ui-ux-concept.md` §29.
 
 Legacy `/catalog/*` and `/products/*` URLs redirect to `/items/*`. Legacy catalog/products controllers and views were removed; only redirect routes remain.
+
+### Items Index v1 (Phase 3.5)
+
+Delivered 2026-06:
+
+- `/items` replaces card launcher with paginated browse + keyword search
+- Filters: format, department, subdepartment, store category, include inactive
+- Row grain: logical item via `Items::ItemPresenter` (catalog-linked or non-catalog product)
+- Service: `Items::IndexQuery`; `ItemSearch` delegates for backward compatibility
+- Deferred: per-field search UI, column sorting, full-text search, inventory columns
 
 ### UX polish (Items workspace alignment)
 
@@ -180,7 +190,8 @@ Formats and Product Conditions moved from operational workspaces to Setup under 
 | --------- | ---- | ---- |
 | `Items::ItemPresenter` | `app/presenters/items/item_presenter.rb` | Canonical item view model for search, detail, wizard |
 | `ItemLifecycleStatus` | `app/services/item_lifecycle_status.rb` | `basic` (search) and `full` (detail) lifecycle statuses |
-| `ItemSearch` | `app/services/item_search.rb` | Unified search grouped by logical item |
+| `ItemSearch` | `app/services/item_search.rb` | Thin wrapper over `Items::IndexQuery` for keyword-only callers |
+| `Items::IndexQuery` | `app/services/items/index_query.rb` | Browse, search, filters, pagination for Items index |
 
 ### Permissions
 
