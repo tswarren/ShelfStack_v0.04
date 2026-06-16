@@ -64,6 +64,24 @@ class SeedTest < ActiveSupport::TestCase
     $stdout = original_stdout
   end
 
+  test "phase 4 seeds are idempotent" do
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    load Rails.root.join("db/seeds.rb")
+    reason_count = InventoryReasonCode.count
+    location_count = InventoryLocation.count
+    inventory_permission_count = Permission.where("permission_key LIKE ?", "inventory.%").count
+
+    load Rails.root.join("db/seeds.rb")
+
+    assert_equal reason_count, InventoryReasonCode.count
+    assert_equal location_count, InventoryLocation.count
+    assert_equal inventory_permission_count, Permission.where("permission_key LIKE ?", "inventory.%").count
+  ensure
+    $stdout = original_stdout
+  end
+
   test "seeded tax lookup succeeds for all store and tax category pairs" do
     original_stdout = $stdout
     $stdout = StringIO.new

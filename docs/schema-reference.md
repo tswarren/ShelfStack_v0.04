@@ -16,6 +16,7 @@ The schema reference is assembled from:
 docs/specifications/phase-1-data-model.md
 docs/specifications/phase-2-data-model.md
 docs/specifications/phase-3-data-model.md
+docs/specifications/phase-4-data-model.md
 ```
 
 Each phase data model should include:
@@ -112,6 +113,39 @@ vendors
 * Product conditions
 * Display locations
 * Vendor directory
+
+---
+
+# Phase 4 Tables
+
+Phase 4 introduces inventory foundation tables.
+
+**Implemented** per [specifications/phase-4-data-model.md](specifications/phase-4-data-model.md). See [implementation/phase-4-completion.md](implementation/phase-4-completion.md).
+
+```text
+inventory_reason_codes
+inventory_locations
+inventory_adjustments
+inventory_adjustment_lines
+inventory_postings
+inventory_ledger_entries
+inventory_balances
+```
+
+Phase 4 also restores:
+
+```text
+sub_departments.default_margin_target_bps
+```
+
+## Phase 4 Focus
+
+* Grouped inventory postings
+* Append-only ledger entries
+* Store + variant balances
+* Opening inventory and manual adjustments
+* Valuation snapshots
+* Reason codes and optional location context
 
 ---
 
@@ -284,11 +318,14 @@ For every new table, confirm:
 
 # Deferred Schema Areas
 
-These are expected future schema areas:
+These are expected future schema areas (beyond Phase 4):
 
 ```text
-inventory_ledger_entries
-stock_balances
+inventory_location_balances
+inventory_location_movements
+inventory_transfers
+inventory_transfer_lines
+inventory_reservations
 product_variant_vendors
 purchase_orders
 purchase_order_lines
@@ -298,7 +335,6 @@ sales
 sale_lines
 sale_tenders
 sale_taxes
-stock_transfers
 cycle_counts
 ```
 

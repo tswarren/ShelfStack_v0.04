@@ -191,5 +191,36 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
+    resources :inventory_reason_codes do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :inventory_locations do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+  end
+
+  namespace :inventory do
+    root to: "balances#index"
+    get "locked_out", to: "home#locked_out"
+    get "negative", to: "negative_exceptions#index"
+    get "enterprise", to: "enterprise#index"
+    resources :variants, only: %i[show]
+    resource :variant_lookup, only: %i[show]
+    resources :adjustments do
+      member do
+        patch :post, action: :post
+        patch :cancel
+      end
+    end
+    resource :admin, only: %i[show], controller: "admin" do
+      post :rebuild_balances
+      post :integrity_check
+    end
   end
 end

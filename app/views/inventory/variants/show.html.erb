@@ -1,0 +1,42 @@
+<h1>Variant Inventory</h1>
+<p><strong><%= @variant.sku %></strong> — <%= @variant.name %></p>
+
+<% if @balance %>
+  <p>
+    On hand: <%= @balance.quantity_on_hand %> |
+    Available: <%= @balance.quantity_available %> |
+    Retail value: <%= format_cents(@balance.inventory_retail_value_cents) %>
+  </p>
+<% else %>
+  <p class="ss-muted">No balance recorded for this store.</p>
+<% end %>
+
+<% if Authorization.allowed?(user: current_user, permission_key: "inventory.adjustments.create", store: current_store) %>
+  <p><%= link_to "Adjust this variant", new_inventory_adjustment_path(product_variant_id: @variant.id), class: "ss-btn" %></p>
+<% end %>
+
+<h2>Ledger History</h2>
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>When</th>
+      <th>Movement</th>
+      <th class="ss-num">Delta</th>
+      <th class="ss-num">Unit Cost</th>
+      <th>Cost Source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @ledger_entries.each do |entry| %>
+      <tr>
+        <td><%= display_time(entry.occurred_at) %></td>
+        <td><%= entry.movement_type %></td>
+        <td class="ss-num"><%= entry.quantity_delta %></td>
+        <td class="ss-num"><%= entry.unit_cost_cents ? format_cents(entry.unit_cost_cents) : "—" %></td>
+        <td><%= entry.cost_source %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= link_to "Back to Inventory", inventory_root_path %>

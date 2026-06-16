@@ -1,0 +1,47 @@
+<fieldset
+  class="ss-adjustment-line"
+  data-inventory-adjustment-lines-target="line"
+  data-controller="inventory-variant-lookup"
+  data-inventory-variant-lookup-url-value="<%= inventory_variant_lookup_path %>"
+  <% if variant %>
+    data-inventory-variant-lookup-initial-sku-value="<%= variant.sku %>"
+    data-inventory-variant-lookup-initial-variant-id-value="<%= variant.id %>"
+    data-inventory-variant-lookup-initial-label-value="<%= variant.name %>"
+    data-inventory-variant-lookup-initial-on-hand-value="<%= balance&.quantity_on_hand || 0 %>"
+  <% end %>
+>
+  <%= line_form.hidden_field :id if line_form.object.persisted? %>
+  <%= line_form.hidden_field :_destroy, value: false, data: { inventory_adjustment_lines_target: "destroy" } %>
+
+  <div class="ss-field">
+    <%= line_form.label :product_variant_id, "SKU / barcode" %>
+    <%= text_field_tag nil, variant&.sku, class: "ss-input",
+          placeholder: "Scan or enter SKU, ISBN, UPC…",
+          autocomplete: "off",
+          data: {
+            inventory_variant_lookup_target: "lookupInput",
+            action: "keydown->inventory-variant-lookup#lookupExact input->inventory-variant-lookup#search"
+          } %>
+    <%= line_form.hidden_field :product_variant_id, data: { inventory_variant_lookup_target: "variantId" } %>
+    <p class="ss-hint" data-inventory-variant-lookup-target="preview"></p>
+    <p class="ss-hint" data-inventory-variant-lookup-target="message"></p>
+    <div data-inventory-variant-lookup-target="choices"></div>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :quantity_delta %>
+    <%= line_form.number_field :quantity_delta, step: 1 %>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :unit_cost_cents, "Manual unit cost (cents)" %>
+    <%= line_form.number_field :unit_cost_cents, min: 0, step: 1 %>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :inventory_reason_code_id, "Reason" %>
+    <%= line_form.collection_select :inventory_reason_code_id, reason_codes, :id, :name, include_blank: true %>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :inventory_location_id, "Location" %>
+    <%= line_form.collection_select :inventory_location_id, locations, :id, :name, include_blank: true %>
+  </div>
+  <button type="button" class="ss-btn ss-btn-secondary" data-action="inventory-adjustment-lines#removeLine">Remove line</button>
+</fieldset>

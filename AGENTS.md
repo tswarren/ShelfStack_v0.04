@@ -91,6 +91,15 @@ docs/specifications/phase-3-data-model.md
 docs/specifications/phase-3-test-plan.md
 ```
 
+## Phase 4 Documents
+
+```text
+docs/roadmap/phase-4-inventory-foundation.md
+docs/specifications/phase-4-inventory-foundation-spec.md
+docs/specifications/phase-4-data-model.md
+docs/specifications/phase-4-test-plan.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -113,9 +122,13 @@ Phase 2 was completed on 2025-06-10. See [docs/implementation/phase-2-completion
 
 Phase 3 was completed on 2025-06-10. See [docs/implementation/phase-3-completion.md](docs/implementation/phase-3-completion.md).
 
-## Phase 4: Inventory Foundation — **Next**
+## Phase 4: Inventory Foundation — **Complete**
 
-Do not jump ahead to purchasing, receiving, POS, or reporting tables unless the user explicitly asks to design that phase.
+Phase 4 was completed on 2026-06-16. See [docs/implementation/phase-4-completion.md](docs/implementation/phase-4-completion.md).
+
+## Phase 5: Purchasing and Receiving — **Next**
+
+Do not jump ahead to POS or reporting tables unless the user explicitly asks to design that phase.
 
 ---
 
@@ -138,6 +151,7 @@ Use services for:
 * SKU generation
 * Product/variant name rendering
 * Metadata parsing
+* Inventory posting, eligibility, cost estimation, and balance updates
 
 ## Centralize business rules
 
@@ -155,6 +169,12 @@ CatalogIdentifierService
 SkuGenerator
 ProductNameRenderer
 MetadataParser
+Inventory::Eligibility
+Inventory::CostEstimator
+Inventory::Post
+Inventory::BalanceUpdater
+Inventory::RebuildBalances
+Inventory::BalanceIntegrityCheck
 ```
 
 ## Preserve auditability
@@ -410,6 +430,18 @@ product_variants.sub_department_id → sub_departments.id
 * Classification reference seeds load from `db/seeds/data/*.csv`; validate with `rails shelfstack:seeds:validate`.
 * See `docs/specifications/classification-target-spec.md` and `docs/implementation/classification-cleanup.md`.
 
+## Phase 4 Rules
+
+* Authoritative inventory grain is `store_id + product_variant_id`.
+* Only `inventory_behavior = standard_physical` variants are ledger-eligible.
+* Balances are cached from posted ledger entries; do not mutate balances outside `Inventory::Post` / `Inventory::BalanceUpdater`.
+* `quantity_available = quantity_on_hand` in Phase 4.
+* Negative on-hand is allowed; treat as an operational exception.
+* Posted postings and ledger entries are immutable in normal operation.
+* Inventory locations are context only; they do not maintain authoritative balances.
+* Cost fallback order: manual line cost → subdepartment margin estimate → unknown.
+* Phase 4 restores `sub_departments.default_margin_target_bps` for margin estimation.
+
 ---
 
 # Testing Expectations
@@ -468,6 +500,16 @@ Use tests for:
 * Variant name rendering
 * Creator/subject metadata parsing
 
+### Phase 4
+
+* Inventory eligibility by `inventory_behavior`
+* Posting idempotency
+* Balance equals ledger sum
+* Cost estimation and valuation snapshots
+* Adjustment draft/post/cancel workflows
+* Store-scoped inventory authorization
+* Balance rebuild and integrity checks
+
 ---
 
 # Seed Data Rules
@@ -491,6 +533,7 @@ Use stable keys:
 | Display Location  | `short_name`            |
 | Format            | `format_key`            |
 | Product Condition | `condition_key`         |
+| Inventory Reason Code | `reason_key`        |
 
 Classification CSV files and load order: `docs/specifications/seed-data-spec.md`, `docs/implementation/csv-seeds.md`. Importer: `db/seeds/concerns/csv_classification_importer.rb`.
 
@@ -581,13 +624,13 @@ Where practical, show previews for:
 
 Do not introduce these unless explicitly requested:
 
-* Inventory ledger tables
-* Stock balance tables
 * POS transaction tables
 * Purchase order tables
 * Receiving tables
 * Vendor-product sourcing tables
 * Product price history tables
+* Inventory location balance tables
+* Inventory transfer and reservation tables
 * Fully normalized contributor tables
 * Fully normalized subject tables
 * External bibliographic API integration

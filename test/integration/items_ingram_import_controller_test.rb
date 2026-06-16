@@ -59,4 +59,23 @@ class ItemsIngramImportControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Import complete/, flash[:notice])
     assert AuditEvent.exists?(event_name: "ingram_import.completed")
   end
+
+  test "run import with store category resolves category node" do
+    file = fixture_file_upload("ingram_list_sample.xls", "application/vnd.ms-excel")
+    store_category = store_category_node_for_tests
+    post items_ingram_import_preview_path, params: {
+      import_file: file,
+      sub_department_id: @sub_department.id,
+      store_category_id: store_category.id
+    }
+
+    post items_ingram_import_run_path, params: {
+      sub_department_id: @sub_department.id,
+      store_category_id: store_category.id
+    }
+
+    assert_redirected_to items_ingram_import_path
+    follow_redirect!
+    assert_match(/Import complete/, flash[:notice])
+  end
 end

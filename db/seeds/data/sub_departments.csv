@@ -1,36 +1,36 @@
-sub_department_key,department_number,name,short_name,default_pricing_model,tax_category_name,vendor_returnable_default,buyback_allowed
-general_trade,001,General Trade,General Trade,trade_discount,Books,TRUE,TRUE
-juvyoung_adult,001,Juvenile/Young Adult,Juv/Young Adult,trade_discount,Books,TRUE,TRUE
-bargainremainder,001,Bargain/Promo/Remainder,Bargain/Remainder,trade_discount,Books,FALSE,FALSE
-rareoop,001,Rare/Out of Print (Spec. Order),Rare/OOP,trade_discount,Books,FALSE,FALSE
-magazines,003,Magazines,Magazines,trade_discount,Periodicals,TRUE,FALSE
-newspapers,003,Newspapers,Newspapers,trade_discount,Periodicals,TRUE,FALSE
-rec_music,002,Recorded Music,Rec Music,trade_discount,Media,TRUE,TRUE
-videodvd,002,Video/DVD,Video/DVD,trade_discount,Media,TRUE,TRUE
-video_games,002,Video Games,Games,trade_discount,Media,TRUE,TRUE
-digital,002,Digital Media,Digital,trade_discount,Digital Media,FALSE,TRUE
-electronics,002,Electronic Devices,Electronics,trade_discount,General Merchandise,FALSE,FALSE
-accessories,002,Accessories,Accessories,trade_discount,General Merchandise,FALSE,FALSE
-counter_cards,004,Counter Cards (Non-Inventoried),Counter Cards,net_cost_markup,General Merchandise,FALSE,FALSE
-stationery,004,Stationery,Stationery,net_cost_markup,General Merchandise,FALSE,FALSE
-games,004,Games,Games,net_cost_markup,General Merchandise,FALSE,FALSE
-juv_toysgames,004,Children's Toys/Games,Juv Toys/Games,net_cost_markup,General Merchandise,FALSE,FALSE
-mapsglobes,004,Maps & Globes,Maps/Globes,net_cost_markup,General Merchandise,FALSE,FALSE
-pkg_food,004,Prepackaged Food,Pkg Food,net_cost_markup,Packaged Food,FALSE,FALSE
-other_sidelines,004,Other Sidelines,Other,net_cost_markup,General Merchandise,FALSE,FALSE
-cal_wall,006,Calendars (Wall),Cal Wall,trade_discount,Media,FALSE,FALSE
-cal_box,006,Calendars (Box/Page-a-Day),Cal Box,trade_discount,Media,FALSE,FALSE
-holiday_cards,006,Holiday Wrapping/Cards,Holiday Cards,trade_discount,General Merchandise,FALSE,FALSE
-coffeeespresso,005,Coffee/Espresso Beverages,Coffee/Espresso,blended_lot_cost,Prepared Food,FALSE,FALSE
-teachocolate,005,Tea/Chocolate Beverages,Tea/Chocolate,blended_lot_cost,Prepared Food,FALSE,FALSE
-kidsother_bev,005,Kids/Other Beverages,Kids/Other Bev,blended_lot_cost,Prepared Food,FALSE,FALSE
-frozen_bev,005,Frozen Beverages,Frozen Bev,blended_lot_cost,Prepared Food,FALSE,FALSE
-bottle_bev,005,Bottled Beverages,Bottle Bev,net_cost_markup,Prepared Food,FALSE,FALSE
-bakery,005,Bakery Case,Bakery,blended_lot_cost,Prepared Food,FALSE,FALSE
-food,005,Soups/Sandwiches,Food,blended_lot_cost,Prepared Food,FALSE,FALSE
-cafe_prepack,005,Packaged Food/Candy,Cafe Prepack,net_cost_markup,Packaged Food,FALSE,FALSE
-modifiers,005,Modifiers/Add-Ons,Modifiers,blended_lot_cost,Prepared Food,FALSE,FALSE
-donations,009,Donations/Contributions,Donations,pass_through,Prepared Food,FALSE,FALSE
-tickets,009,Ticket Sales,Tickets,pass_through,Prepared Food,FALSE,FALSE
-shipping,009,Shipping/Postage,Shipping,pass_through,Prepared Food,FALSE,FALSE
-other,009,Other,Other,net_cost_markup,Prepared Food,FALSE,FALSE
+sub_department_key,department_number,name,short_name,default_pricing_model,tax_category_name,vendor_returnable_default,buyback_allowed,default_margin_target_bps
+general_trade,001,General Trade,General Trade,trade_discount,Books,TRUE,TRUE,4000
+juvyoung_adult,001,Juvenile/Young Adult,Juv/Young Adult,trade_discount,Books,TRUE,TRUE,4000
+bargainremainder,001,Bargain/Promo/Remainder,Bargain/Remainder,trade_discount,Books,FALSE,FALSE,4000
+rareoop,001,Rare/Out of Print (Spec. Order),Rare/OOP,trade_discount,Books,FALSE,FALSE,4000
+magazines,003,Magazines,Magazines,trade_discount,Periodicals,TRUE,FALSE,4000
+newspapers,003,Newspapers,Newspapers,trade_discount,Periodicals,TRUE,FALSE,4000
+rec_music,002,Recorded Music,Rec Music,trade_discount,Media,TRUE,TRUE,4000
+videodvd,002,Video/DVD,Video/DVD,trade_discount,Media,TRUE,TRUE,4000
+video_games,002,Video Games,Games,trade_discount,Media,TRUE,TRUE,4000
+digital,002,Digital Media,Digital,trade_discount,Digital Media,FALSE,TRUE,4000
+electronics,002,Electronic Devices,Electronics,trade_discount,General Merchandise,FALSE,FALSE,4000
+accessories,002,Accessories,Accessories,trade_discount,General Merchandise,FALSE,FALSE,4000
+counter_cards,004,Counter Cards (Non-Inventoried),Counter Cards,net_cost_markup,General Merchandise,FALSE,FALSE,5000
+stationery,004,Stationery,Stationery,net_cost_markup,General Merchandise,FALSE,FALSE,5000
+games,004,Games,Games,net_cost_markup,General Merchandise,FALSE,FALSE,5000
+juv_toysgames,004,Children's Toys/Games,Juv Toys/Games,net_cost_markup,General Merchandise,FALSE,FALSE,5000
+mapsglobes,004,Maps & Globes,Maps/Globes,net_cost_markup,General Merchandise,FALSE,FALSE,5000
+pkg_food,004,Prepackaged Food,Pkg Food,net_cost_markup,Packaged Food,FALSE,FALSE,5000
+other_sidelines,004,Other Sidelines,Other,net_cost_markup,General Merchandise,FALSE,FALSE,5000
+cal_wall,006,Calendars (Wall),Cal Wall,trade_discount,Media,FALSE,FALSE,4000
+cal_box,006,Calendars (Box/Page-a-Day),Cal Box,trade_discount,Media,FALSE,FALSE,4000
+holiday_cards,006,Holiday Wrapping/Cards,Holiday Cards,trade_discount,General Merchandise,FALSE,FALSE,4000
+coffeeespresso,005,Coffee/Espresso Beverages,Coffee/Espresso,blended_lot_cost,Prepared Food,FALSE,FALSE,4500
+teachocolate,005,Tea/Chocolate Beverages,Tea/Chocolate,blended_lot_cost,Prepared Food,FALSE,FALSE,4500
+kidsother_bev,005,Kids/Other Beverages,Kids/Other Bev,blended_lot_cost,Prepared Food,FALSE,FALSE,4500
+frozen_bev,005,Frozen Beverages,Frozen Bev,blended_lot_cost,Prepared Food,FALSE,FALSE,4500
+bottle_bev,005,Bottled Beverages,Bottle Bev,net_cost_markup,Prepared Food,FALSE,FALSE,5000
+bakery,005,Bakery Case,Bakery,blended_lot_cost,Prepared Food,FALSE,FALSE,4500
+food,005,Soups/Sandwiches,Food,blended_lot_cost,Prepared Food,FALSE,FALSE,4500
+cafe_prepack,005,Packaged Food/Candy,Cafe Prepack,net_cost_markup,Packaged Food,FALSE,FALSE,5000
+modifiers,005,Modifiers/Add-Ons,Modifiers,blended_lot_cost,Prepared Food,FALSE,FALSE,4500
+donations,009,Donations/Contributions,Donations,pass_through,Prepared Food,FALSE,FALSE,
+tickets,009,Ticket Sales,Tickets,pass_through,Prepared Food,FALSE,FALSE,
+shipping,009,Shipping/Postage,Shipping,pass_through,Prepared Food,FALSE,FALSE,
+other,009,Other,Other,net_cost_markup,Prepared Food,FALSE,FALSE,5000

@@ -1,0 +1,60 @@
+<h1>Store Inventory</h1>
+<p class="ss-muted">Store: <%= inventory_store.name %></p>
+
+<div class="ss-actions">
+  <%= link_to "Adjustments", inventory_adjustments_path, class: "ss-btn" %>
+  <%= link_to "Negative On Hand", inventory_negative_path, class: "ss-btn" %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "inventory.enterprise.view", store: current_store) %>
+    <%= link_to "Enterprise Rollup", inventory_enterprise_path, class: "ss-btn" %>
+  <% end %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "inventory.admin.rebuild_balances", store: current_store) %>
+    <%= link_to "Admin Tools", inventory_admin_path, class: "ss-btn" %>
+  <% end %>
+  <%= link_to "New Adjustment", new_inventory_adjustment_path, class: "ss-btn" %>
+  <%= link_to "New Opening Inventory", new_inventory_adjustment_path(adjustment_type: "opening_inventory"), class: "ss-btn" %>
+</div>
+
+<%= form_with url: inventory_root_path, method: :get, class: "ss-form-inline" do %>
+  <%= text_field_tag :q, params[:q], placeholder: "Search SKU or name" %>
+  <%= submit_tag "Search", class: "ss-btn" %>
+<% end %>
+
+<p class="ss-muted">
+  On hand: <%= @totals[:quantity_on_hand] %> |
+  Retail value: <%= format_cents(@totals[:inventory_retail_value_cents]) %> |
+  Cost value: <%= format_cents(@totals[:inventory_cost_value_cents]) %>
+</p>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>SKU</th>
+      <th>Variant</th>
+      <th class="ss-num">On Hand</th>
+      <th class="ss-num">Available</th>
+      <th class="ss-num">Retail Value</th>
+      <th class="ss-num">Cost Value</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @balances.each do |balance| %>
+      <tr>
+        <td><%= balance.product_variant.sku %></td>
+        <td><%= balance.product_variant.name %></td>
+        <td class="ss-num"><%= balance.quantity_on_hand %></td>
+        <td class="ss-num"><%= balance.quantity_available %></td>
+        <td class="ss-num"><%= format_cents(balance.inventory_retail_value_cents) %></td>
+        <td class="ss-num"><%= format_cents(balance.inventory_cost_value_cents) %></td>
+        <td>
+          <%= link_to "Ledger", inventory_variant_path(balance.product_variant) %>
+          <% if Authorization.allowed?(user: current_user, permission_key: "inventory.adjustments.create", store: current_store) %>
+            | <%= link_to "Adjust", new_inventory_adjustment_path(product_variant_id: balance.product_variant_id) %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= render "pagination" %>

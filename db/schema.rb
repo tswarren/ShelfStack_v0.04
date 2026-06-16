@@ -228,6 +228,139 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["short_name"], name: "index_formats_on_short_name"
   end
 
+  create_table "inventory_adjustment_lines", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "inventory_adjustment_id", null: false
+    t.bigint "inventory_location_id"
+    t.bigint "inventory_reason_code_id"
+    t.integer "line_number", null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity_delta", null: false
+    t.integer "unit_cost_cents"
+    t.datetime "updated_at", null: false
+    t.index ["inventory_adjustment_id", "line_number"], name: "idx_inventory_adjustment_lines_adjustment_line_number", unique: true
+    t.index ["inventory_adjustment_id"], name: "index_inventory_adjustment_lines_on_inventory_adjustment_id"
+    t.index ["inventory_location_id"], name: "index_inventory_adjustment_lines_on_inventory_location_id"
+    t.index ["inventory_reason_code_id"], name: "index_inventory_adjustment_lines_on_inventory_reason_code_id"
+    t.index ["product_variant_id"], name: "index_inventory_adjustment_lines_on_product_variant_id"
+  end
+
+  create_table "inventory_adjustments", force: :cascade do |t|
+    t.string "adjustment_type", null: false
+    t.datetime "created_at", null: false
+    t.bigint "inventory_posting_id"
+    t.text "notes"
+    t.datetime "posted_at"
+    t.bigint "posted_by_user_id"
+    t.string "status", default: "draft", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["adjustment_type"], name: "index_inventory_adjustments_on_adjustment_type"
+    t.index ["inventory_posting_id"], name: "index_inventory_adjustments_on_inventory_posting_id"
+    t.index ["posted_by_user_id"], name: "index_inventory_adjustments_on_posted_by_user_id"
+    t.index ["store_id", "status"], name: "index_inventory_adjustments_on_store_id_and_status"
+    t.index ["store_id"], name: "index_inventory_adjustments_on_store_id"
+  end
+
+  create_table "inventory_balances", force: :cascade do |t|
+    t.string "cost_source"
+    t.datetime "created_at", null: false
+    t.integer "inventory_cost_value_cents", default: 0, null: false
+    t.integer "inventory_retail_value_cents", default: 0, null: false
+    t.bigint "last_posting_id"
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity_available", default: 0, null: false
+    t.integer "quantity_on_hand", default: 0, null: false
+    t.string "retail_source"
+    t.bigint "store_id", null: false
+    t.integer "unit_cost_cents"
+    t.integer "unit_retail_cents"
+    t.datetime "updated_at", null: false
+    t.index ["last_posting_id"], name: "index_inventory_balances_on_last_posting_id"
+    t.index ["product_variant_id"], name: "index_inventory_balances_on_product_variant_id"
+    t.index ["store_id", "product_variant_id"], name: "index_inventory_balances_on_store_id_and_product_variant_id", unique: true
+    t.index ["store_id", "quantity_on_hand"], name: "idx_inventory_balances_store_quantity_on_hand"
+    t.index ["store_id"], name: "index_inventory_balances_on_store_id"
+  end
+
+  create_table "inventory_ledger_entries", force: :cascade do |t|
+    t.string "cost_source", null: false
+    t.datetime "created_at", null: false
+    t.bigint "inventory_location_id"
+    t.bigint "inventory_posting_id", null: false
+    t.bigint "inventory_reason_code_id"
+    t.integer "line_number", null: false
+    t.string "movement_type", null: false
+    t.datetime "occurred_at", null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity_delta", null: false
+    t.string "retail_source", null: false
+    t.bigint "store_id", null: false
+    t.integer "total_cost_cents"
+    t.integer "total_retail_cents"
+    t.integer "unit_cost_cents"
+    t.integer "unit_retail_cents"
+    t.datetime "updated_at", null: false
+    t.index ["inventory_location_id"], name: "index_inventory_ledger_entries_on_inventory_location_id"
+    t.index ["inventory_posting_id", "line_number"], name: "idx_inventory_ledger_entries_posting_line_number", unique: true
+    t.index ["inventory_posting_id"], name: "index_inventory_ledger_entries_on_inventory_posting_id"
+    t.index ["inventory_reason_code_id"], name: "index_inventory_ledger_entries_on_inventory_reason_code_id"
+    t.index ["product_variant_id", "occurred_at"], name: "idx_inventory_ledger_entries_variant_occurred_at"
+    t.index ["product_variant_id"], name: "index_inventory_ledger_entries_on_product_variant_id"
+    t.index ["store_id", "product_variant_id"], name: "idx_inventory_ledger_entries_store_variant"
+    t.index ["store_id"], name: "index_inventory_ledger_entries_on_store_id"
+  end
+
+  create_table "inventory_locations", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "short_name", limit: 40, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_inventory_locations_on_active"
+    t.index ["store_id", "short_name"], name: "index_inventory_locations_on_store_id_and_short_name", unique: true
+    t.index ["store_id"], name: "index_inventory_locations_on_store_id"
+  end
+
+  create_table "inventory_postings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "idempotency_key", null: false
+    t.text "notes"
+    t.datetime "posted_at", null: false
+    t.bigint "posted_by_user_id", null: false
+    t.string "posting_type", null: false
+    t.bigint "reversal_of_posting_id"
+    t.bigint "reversed_by_posting_id"
+    t.bigint "source_id", null: false
+    t.string "source_type", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workstation_id"
+    t.index ["idempotency_key"], name: "index_inventory_postings_on_idempotency_key", unique: true
+    t.index ["posted_by_user_id"], name: "index_inventory_postings_on_posted_by_user_id"
+    t.index ["posting_type"], name: "index_inventory_postings_on_posting_type"
+    t.index ["reversal_of_posting_id"], name: "index_inventory_postings_on_reversal_of_posting_id"
+    t.index ["reversed_by_posting_id"], name: "index_inventory_postings_on_reversed_by_posting_id"
+    t.index ["source_type", "source_id"], name: "index_inventory_postings_on_source_type_and_source_id", unique: true
+    t.index ["store_id", "posted_at"], name: "index_inventory_postings_on_store_id_and_posted_at"
+    t.index ["store_id"], name: "index_inventory_postings_on_store_id"
+    t.index ["workstation_id"], name: "index_inventory_postings_on_workstation_id"
+  end
+
+  create_table "inventory_reason_codes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "reason_key", limit: 40, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_inventory_reason_codes_on_active"
+    t.index ["name"], name: "index_inventory_reason_codes_on_name", unique: true
+    t.index ["reason_key"], name: "index_inventory_reason_codes_on_reason_key", unique: true
+  end
+
   create_table "permissions", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -419,6 +552,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.boolean "active", default: true, null: false
     t.boolean "buyback_allowed", default: false, null: false
     t.datetime "created_at", null: false
+    t.integer "default_margin_target_bps"
     t.string "default_pricing_model"
     t.bigint "default_tax_category_id", null: false
     t.bigint "department_id", null: false
@@ -432,6 +566,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["name"], name: "index_sub_departments_on_name", unique: true
     t.index ["short_name"], name: "index_sub_departments_on_short_name"
     t.index ["sub_department_key"], name: "index_sub_departments_on_sub_department_key", unique: true
+    t.check_constraint "default_margin_target_bps IS NULL OR default_margin_target_bps >= 0 AND default_margin_target_bps <= 10000", name: "chk_sub_departments_default_margin_target_bps"
   end
 
   create_table "tax_categories", force: :cascade do |t|
@@ -586,6 +721,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "category_nodes", "display_locations", column: "default_display_location_id"
   add_foreign_key "category_nodes", "sub_departments", column: "default_sub_department_id"
   add_foreign_key "display_locations", "display_locations", column: "parent_id"
+  add_foreign_key "inventory_adjustment_lines", "inventory_adjustments"
+  add_foreign_key "inventory_adjustment_lines", "inventory_locations"
+  add_foreign_key "inventory_adjustment_lines", "inventory_reason_codes"
+  add_foreign_key "inventory_adjustment_lines", "product_variants"
+  add_foreign_key "inventory_adjustments", "inventory_postings"
+  add_foreign_key "inventory_adjustments", "stores"
+  add_foreign_key "inventory_adjustments", "users", column: "posted_by_user_id"
+  add_foreign_key "inventory_balances", "inventory_postings", column: "last_posting_id"
+  add_foreign_key "inventory_balances", "product_variants"
+  add_foreign_key "inventory_balances", "stores"
+  add_foreign_key "inventory_ledger_entries", "inventory_locations"
+  add_foreign_key "inventory_ledger_entries", "inventory_postings"
+  add_foreign_key "inventory_ledger_entries", "inventory_reason_codes"
+  add_foreign_key "inventory_ledger_entries", "product_variants"
+  add_foreign_key "inventory_ledger_entries", "stores"
+  add_foreign_key "inventory_locations", "stores"
+  add_foreign_key "inventory_postings", "inventory_postings", column: "reversal_of_posting_id"
+  add_foreign_key "inventory_postings", "inventory_postings", column: "reversed_by_posting_id"
+  add_foreign_key "inventory_postings", "stores"
+  add_foreign_key "inventory_postings", "users", column: "posted_by_user_id"
+  add_foreign_key "inventory_postings", "workstations"
   add_foreign_key "product_variants", "display_locations"
   add_foreign_key "product_variants", "product_conditions", column: "condition_id"
   add_foreign_key "product_variants", "products"

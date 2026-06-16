@@ -1,0 +1,16 @@
+<h1>Inventory Adjustments <%= link_to "New", new_inventory_adjustment_path, class: "ss-btn" %></h1>
+
+<table class="ss-table">
+  <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>Posted</th><th></th></tr></thead>
+  <tbody>
+    <% @adjustments.each do |adjustment| %>
+      <tr>
+        <td><%= adjustment.id %></td>
+        <td><%= adjustment.adjustment_type %></td>
+        <td><%= adjustment.status %></td>
+        <td><%= adjustment.posted_at ? display_time(adjustment.posted_at) : "—" %></td>
+        <td><%= link_to "View", inventory_adjustment_path(adjustment) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

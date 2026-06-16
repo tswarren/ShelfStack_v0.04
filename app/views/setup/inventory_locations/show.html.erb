@@ -1,0 +1,6 @@
+<%= render "setup/shared/back_link", path: setup_inventory_locations_path, label: "Store Inventory Locations" %>
+<h1><%= @location.name %></h1>
+<p>Store: <%= @location.store.name %> | Short: <%= @location.short_name %></p>
+<div class="ss-actions">
+  <%= link_to "Edit", edit_setup_inventory_location_path(@location), class: "ss-btn" %>
+</div>

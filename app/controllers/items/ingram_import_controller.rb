@@ -84,7 +84,9 @@ module Items
 
     def resolve_store_category
       node_id = params[:store_category_id].presence || preview_cache_data&.dig(:store_category_id)
-      @store_category_nodes.find_by(id: node_id)
+      return if node_id.blank? || @store_category_scheme.blank?
+
+      @store_category_scheme.category_nodes.active_records.find_by(id: node_id)
     end
 
     def validate_upload!(file)

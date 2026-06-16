@@ -1,0 +1,20 @@
+<h1>Enterprise Inventory</h1>
+<p class="ss-muted">
+  Total on hand: <%= @totals[:quantity_on_hand] %> |
+  Retail: <%= format_cents(@totals[:inventory_retail_value_cents]) %> |
+  Cost: <%= format_cents(@totals[:inventory_cost_value_cents]) %>
+</p>
+
+<table class="ss-table">
+  <thead><tr><th>Store</th><th class="ss-num">On Hand</th><th class="ss-num">Retail Value</th></tr></thead>
+  <tbody>
+    <% @stores.each do |store| %>
+      <% rollup = @balances_by_store[store.id] %>
+      <tr>
+        <td><%= store.name %></td>
+        <td class="ss-num"><%= rollup&.total_on_hand || 0 %></td>
+        <td class="ss-num"><%= format_cents(rollup&.total_retail_cents || 0) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

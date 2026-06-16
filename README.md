@@ -10,17 +10,17 @@ ShelfStack separates descriptive catalog metadata from store-facing products and
 
 ## Project Status
 
-ShelfStack has **complete Phase 1–3 implementations** and complete Phase 1–3 **documentation**. Active development priority is **Phase 4** (inventory foundation).
+ShelfStack has **complete Phase 1–4 implementations** and complete Phase 1–4 **documentation**. Active development priority is **Phase 5** (purchasing and receiving, per roadmap).
 
 | Phase         | Focus                                                                                                                                         | Documentation | Implementation |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- |
 | Phase 1       | Foundation: users, roles, permissions, stores, workstations, sessions, and audit events.                                                      | Complete      | **Complete**   |
 | Phase 2       | Classification and taxes: departments, tax categories, store tax rates, and effective-dated tax mappings.                                     | Complete      | **Complete**   |
 | Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      | **Complete**   |
-| Phase 4       | Inventory foundation (next).                                                                                                                  | Roadmap       | Not started    |
+| Phase 4       | Inventory foundation: ledger, balances, adjustments, valuation, read surfaces, and integrity tooling.                                          | Complete      | **Complete**   |
 | Future phases | Purchasing, receiving, POS, reporting, and accounting workflows.                                                                                | Roadmap only  | Not started    |
 
-Completion records: [Phase 1](docs/implementation/phase-1-completion.md) · [Phase 2](docs/implementation/phase-2-completion.md) · [Phase 3](docs/implementation/phase-3-completion.md).
+Completion records: [Phase 1](docs/implementation/phase-1-completion.md) · [Phase 2](docs/implementation/phase-2-completion.md) · [Phase 3](docs/implementation/phase-3-completion.md) · [Phase 4](docs/implementation/phase-4-completion.md).
 
 ---
 
@@ -138,13 +138,13 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 
 ## Current Scope
 
-**Phases 1–3 are implemented.** See completion records under [docs/implementation/](docs/implementation/).
+**Phases 1–4 are implemented.** See completion records under [docs/implementation/](docs/implementation/).
 
 Current design and implementation focus:
 
-1. **Phase 4** — inventory foundation (next)
+1. **Phase 5** — purchasing and receiving (next, per roadmap)
 
-Operational catalog work uses **Items** (`/items`); admin reference data uses **Setup** (`/setup`).
+Operational catalog work uses **Items** (`/items`); admin reference data uses **Setup** (`/setup`); store inventory uses **Inventory** (`/inventory`).
 
 ---
 
