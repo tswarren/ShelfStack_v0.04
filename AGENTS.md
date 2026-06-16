@@ -60,6 +60,8 @@ docs/roadmap.md
 docs/implementation-guide.md
 docs/glossary.md
 docs/schema-reference.md
+docs/specifications/seed-data-spec.md
+docs/implementation/csv-seeds.md
 ```
 
 ## Phase 1 Documents
@@ -339,10 +341,11 @@ Examples:
 
 ```text
 users.default_store_id → stores.id
-categories.department_id → departments.id
+sub_departments.department_id → departments.id
 catalog_items.format_id → formats.id
 products.catalog_item_id → catalog_items.id
 product_variants.product_id → products.id
+product_variants.sub_department_id → sub_departments.id
 ```
 
 ---
@@ -359,20 +362,22 @@ product_variants.product_id → products.id
 * User sessions are persisted.
 * Session statuses are controlled: `active`, `locked`, `ended`, `expired`, `force_ended`.
 * Terminal sessions cannot return to active.
+* Inactivity timeout **locks** the session; it does not set `force_password_change` or require full re-login.
+* Interactive users must set a PIN after login (navigation gated until `pin_digest` is present).
+* Self-service password and PIN changes require matching confirmation fields.
 * Audit events are append-only in normal behavior.
 * At least one active interactive global super administrator path must remain.
 
 ## Phase 2 Rules
 
 * Departments are global.
-* Categories are global and belong to departments.
 * Department numbers are strings, three digits, numeric-only, and zero-padded.
-* Categories provide defaults for future sellable items.
 * Tax categories describe item taxability.
 * Store tax rates belong to stores.
 * Store tax category rates are effective-dated mappings.
 * For a store, tax category, and date, tax lookup must return exactly one applicable active rate.
 * Overlapping active tax mappings for the same store/tax category/date are not allowed.
+* Phase 2 `categories` table was **removed** (2025-06); sellable classification uses `sub_departments` and store category nodes instead.
 
 ## Phase 3 Rules
 
@@ -396,10 +401,14 @@ product_variants.product_id → products.id
 
 ## Phase 3B transitional rules
 
-* Legacy `Category` ≈ `MerchandiseClass`, not topic `CategoryNode`.
-* Keep `product_variants.category_id` required through Phase 3B.
-* Default resolution order: variant override → accounting mapping → merchandise class → legacy category → legacy department.
-* See `docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-domain-mapping.md`.
+* `SubDepartment` is the operational sellable classification (renamed from `merchandise_classes`).
+* `CategoryNode` in the `store_categories` scheme is the store shelving/topic tree (not Phase 2 `categories`).
+* `product_variants.sub_department_id` is **required**; `product_variants.category_id` was removed.
+* Default resolution order: variant override → variant `sub_department` → product defaults → store category defaults (catalog path).
+* GL posting uses `sub_department → department.gl_account_code` (no `AccountingMapping`).
+* `SubDepartment.short_name` may duplicate; `sub_department_key` and `name` are unique.
+* Classification reference seeds load from `db/seeds/data/*.csv`; validate with `rails shelfstack:seeds:validate`.
+* See `docs/specifications/classification-target-spec.md` and `docs/implementation/classification-cleanup.md`.
 
 ---
 
@@ -447,7 +456,7 @@ Use tests for:
 * Tax rate basis points
 * Effective-dated tax lookup
 * Tax mapping overlap prevention
-* Category defaults
+* Subdepartment and store category defaults
 
 ### Phase 3
 
@@ -469,15 +478,21 @@ Running seeds multiple times should not duplicate records.
 
 Use stable keys:
 
-| Entity            | Stable Key          |
-| ----------------- | ------------------- |
-| User              | `username`          |
-| Role              | `role_key`          |
-| Permission        | `permission_key`    |
-| Store             | `store_number`      |
-| Department        | `department_number` |
-| Format            | `format_key`        |
-| Product Condition | `condition_key`     |
+| Entity            | Stable Key              |
+| ----------------- | ----------------------- |
+| User              | `username`              |
+| Role              | `role_key`              |
+| Permission        | `permission_key`        |
+| Store             | `store_number`          |
+| Department        | `department_number`     |
+| SubDepartment     | `sub_department_key`    |
+| Tax Category      | `name`                  |
+| Category Node     | `node_key` (per scheme) |
+| Display Location  | `short_name`            |
+| Format            | `format_key`            |
+| Product Condition | `condition_key`         |
+
+Classification CSV files and load order: `docs/specifications/seed-data-spec.md`, `docs/implementation/csv-seeds.md`. Importer: `db/seeds/concerns/csv_classification_importer.rb`.
 
 When updating seed files, prefer upsert-style behavior based on stable keys.
 

@@ -87,12 +87,15 @@ Legacy `catalog.*` and `products.*` keys are deactivated on seed.
 - 3 example vendors
 - Demo catalog item (The Hobbit with ISBN-10→13 conversion), catalog-linked product + variant, gift card product, sideline with local identifier
 
-Reference trees (`db/seeds/phase3b_reference_trees.rb`, TSV importers):
+Reference trees (`db/seeds/phase3b_reference_trees.rb`, `Seeds::CsvClassificationImporter`):
 
-- Display location hierarchy
-- Store category nodes with default subdepartment and display location
-- BISAC → store category suggestion links
-- Subdepartments with department assignment
+- ~57 display locations (hierarchy from `display_locations.csv`)
+- ~151 store category nodes with default subdepartment and display location (`store_categories.csv`)
+- ~35 subdepartments (`sub_departments.csv`)
+- Phase 2 tax/department data from CSV (`tax_categories.csv`, `departments.csv`, `store_tax_rates.csv`, `store_tax_mappings.csv`)
+- Optional BISAC import from `bisac.csv` (see [csv-seeds.md](csv-seeds.md))
+
+Validate CSVs before seeding: `./dev/rails-docker bin/rails shelfstack:seeds:validate`
 
 ---
 
@@ -104,7 +107,7 @@ Reference trees (`db/seeds/phase3b_reference_trees.rb`, TSV importers):
 ./dev/rails-docker bin/rails test
 ```
 
-Expected: **273 tests**, 0 failures (model, service, authorization, and integration coverage through Phase 3 and classification-target migration).
+Expected: full Minitest suite passes (280+ tests; model, service, authorization, and integration coverage through Phase 3 and classification migration).
 
 Manual QA (2026-06-10): passed — catalog identifiers (including invalid ISBN-13 warnings), Add Item wizard (catalog-linked and non-catalog), product/variant CRUD, cover image upload, classification setup trees, permissions, seeds idempotency, and Phase 1–2 regression smoke.
 

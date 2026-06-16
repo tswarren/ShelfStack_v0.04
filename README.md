@@ -10,16 +10,17 @@ ShelfStack separates descriptive catalog metadata from store-facing products and
 
 ## Project Status
 
-ShelfStack has **complete Phase 1 and Phase 2 implementations** and complete Phase 1–3 **documentation**. Active development priority is **Phase 3** (catalog, products, and product variants).
+ShelfStack has **complete Phase 1–3 implementations** and complete Phase 1–3 **documentation**. Active development priority is **Phase 4** (inventory foundation).
 
 | Phase         | Focus                                                                                                                                         | Documentation | Implementation |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- |
 | Phase 1       | Foundation: users, roles, permissions, stores, workstations, sessions, and audit events.                                                      | Complete      | **Complete**   |
-| Phase 2       | Classification and taxes: departments, categories, tax categories, store tax rates, and effective-dated tax mappings.                         | Complete      | **Complete**   |
-| Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      | Not started    |
-| Future phases | Inventory ledger, stock balances, purchasing, receiving, POS, reporting, and accounting workflows.                                            | Roadmap only  | Not started    |
+| Phase 2       | Classification and taxes: departments, tax categories, store tax rates, and effective-dated tax mappings.                                     | Complete      | **Complete**   |
+| Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      | **Complete**   |
+| Phase 4       | Inventory foundation (next).                                                                                                                  | Roadmap       | Not started    |
+| Future phases | Purchasing, receiving, POS, reporting, and accounting workflows.                                                                                | Roadmap only  | Not started    |
 
-Phase 1 completion: [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md). Phase 2 completion: [docs/implementation/phase-2-completion.md](docs/implementation/phase-2-completion.md).
+Completion records: [Phase 1](docs/implementation/phase-1-completion.md) · [Phase 2](docs/implementation/phase-2-completion.md) · [Phase 3](docs/implementation/phase-3-completion.md).
 
 ---
 
@@ -93,8 +94,12 @@ docker compose up --build
 In another terminal, prepare the database:
 
 ```bash
-./dev/rails-docker bin/rails db:create db:migrate db:seed
+./dev/rails-docker bin/rails db:create db:migrate
+./dev/rails-docker bin/rails shelfstack:seeds:validate
+./dev/rails-docker bin/rails db:seed
 ```
+
+Optional: skip BISAC during seed (`SKIP_BISAC_SEED=1`) or include it in test (`SEED_BISAC=1`). See [docs/implementation/csv-seeds.md](docs/implementation/csv-seeds.md).
 
 Then visit:
 
@@ -102,7 +107,7 @@ Then visit:
 http://localhost:3000
 ```
 
-On first seed, the terminal prints the development **admin** password (`admin` / `ChangeMe###`). See [DOCKER.md](DOCKER.md) and [docs/operations/foundation-runbook.md](docs/operations/foundation-runbook.md).
+On first seed, the terminal prints the development **admin** password (`admin` / `ChangeMe###`). First login flow: assign workstation (if needed) → log in → **change password** (when `force_password_change`) → **set PIN** (required) → dashboard. See [DOCKER.md](DOCKER.md) and [docs/operations/foundation-runbook.md](docs/operations/foundation-runbook.md).
 
 Use `./dev/rails-docker` to run Rails, Bundler, and other commands inside the `web` container. Examples:
 
@@ -133,13 +138,13 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 
 ## Current Scope
 
-**Phase 1 and Phase 2 are implemented.** See [docs/implementation/phase-1-completion.md](docs/implementation/phase-1-completion.md) and [docs/implementation/phase-2-completion.md](docs/implementation/phase-2-completion.md).
+**Phases 1–3 are implemented.** See completion records under [docs/implementation/](docs/implementation/).
 
 Current design and implementation focus:
 
-1. **Phase 3** — catalog, products, and product variants (next)
+1. **Phase 4** — inventory foundation (next)
 
-The next major area after Phase 3 is expected to be inventory foundation.
+Operational catalog work uses **Items** (`/items`); admin reference data uses **Setup** (`/setup`).
 
 ---
 

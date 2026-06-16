@@ -40,7 +40,9 @@ docker compose up --build
 In another terminal:
 
 ```bash
-./dev/rails-docker bin/rails db:create db:migrate db:seed
+./dev/rails-docker bin/rails db:create db:migrate
+./dev/rails-docker bin/rails shelfstack:seeds:validate
+./dev/rails-docker bin/rails db:seed
 ```
 
 Then open:
@@ -60,11 +62,13 @@ Seeded admin user: admin / ChangeMe###
 - **Username:** `admin`
 - **Password:** shown once when the admin user is created; re-running `db:seed` does **not** change an existing admin password.
 
-After login, assign the browser to a workstation if prompted. See [docs/operations/foundation-runbook.md](docs/operations/foundation-runbook.md).
+After login: assign workstation if prompted → change password if required → **set PIN** (required). See [docs/operations/foundation-runbook.md](docs/operations/foundation-runbook.md).
+
+Optional: `SKIP_BISAC_SEED=1` or `SEED_BISAC=1` when seeding. See [docs/implementation/csv-seeds.md](docs/implementation/csv-seeds.md).
 
 ### Restore setup access
 
-If Admin access is lost after permission changes:
+If Setup access is lost after permission changes:
 
 ```bash
 ./dev/rails-docker bin/rails db:seed

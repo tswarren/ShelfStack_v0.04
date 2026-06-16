@@ -543,7 +543,7 @@ inventory_behavior = pure_financial
 | One store category per catalog item? | **Yes** (single FK) |
 | Cafe reporting scheme | Keep separate reporting scheme until POS; not same as store category |
 | Department list finalization | e.g. Used Books as top-level dept vs subdepartment only |
-| Pop TSV reference seed stash | **Done (initial):** `db/seeds/data/*.tsv` + `TsvTreeImporter`; expand toward full 175-node fidelity in a later pass |
+| Pop TSV reference seed stash | **Done:** `db/seeds/data/*.csv` + `CsvClassificationImporter`; TSV retired. See `seed-data-spec.md`. |
 | Product-level tax/inventory overrides | Defer unless needed |
 
 ---

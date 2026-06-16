@@ -21,6 +21,40 @@ Each store has workstations **Front Register** and **Service Desk**.
 
 ---
 
+## First Login (Interactive Users)
+
+After workstation assignment (if required):
+
+1. Log in with username and password.
+2. If `force_password_change` is set (seeded `admin` on first seed), change password at `/password/edit` (new password and confirmation must match).
+3. **Set a PIN** at `/pin/edit` (required before normal navigation; confirmation must match).
+4. Continue to the dashboard.
+
+Password change and PIN setup are enforced on login and on subsequent requests until complete.
+
+---
+
+## Classification Reference Seeds (CSV)
+
+Phase 2 and Phase 3B classification reference data loads from `db/seeds/data/*.csv`.
+
+Validate before seeding:
+
+```bash
+./dev/rails-docker bin/rails shelfstack:seeds:validate
+```
+
+See [../implementation/csv-seeds.md](../implementation/csv-seeds.md) and [../specifications/seed-data-spec.md](../specifications/seed-data-spec.md).
+
+BISAC (~5k rows) is skipped in test by default. In development:
+
+```bash
+SKIP_BISAC_SEED=1 ./dev/rails-docker bin/rails db:seed   # skip BISAC
+SEED_BISAC=1 ./dev/rails-docker bin/rails db:seed        # include BISAC
+```
+
+---
+
 ## Assign a Browser to a Workstation
 
 1. Open `http://localhost:3000/login`.
@@ -65,13 +99,11 @@ The browser must still clear its cookie or complete a new assignment to pick up 
 
 ## Lock and Unlock Session
 
-- **Lock:** Footer **Lock Session** button (while logged in).
-- **Unlock:** Enter PIN at `/session/unlock`.
+- **Lock:** Footer **Lock Session** button (while logged in), or **inactivity timeout** (session locks; does not log you out or require password reset).
+- **Unlock:** Enter PIN at `/session/unlock` if the user has a PIN set; otherwise enter **password**.
 - **Log out instead:** Available on unlock screen.
 
-Users must set a PIN at `/pin/edit` (header user menu → **Set PIN**) before unlock works.
-
----
+Every interactive user must have a PIN. Login and navigation redirect to `/pin/edit` until a PIN is set (with confirmation). Manual change is also available from the header user menu.
 
 ## Restore Setup Access After Permission Changes
 
@@ -133,4 +165,5 @@ UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_pas
 ## Related Documents
 
 - [../implementation/phase-1-completion.md](../implementation/phase-1-completion.md)
+- [../implementation/csv-seeds.md](../implementation/csv-seeds.md)
 - [../../DOCKER.md](../../DOCKER.md)

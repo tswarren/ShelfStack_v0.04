@@ -45,7 +45,9 @@ Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to th
 | Phase 2 | Complete | [implementation/phase-2-completion.md](implementation/phase-2-completion.md) |
 | Phase 3 | Complete | [implementation/phase-3-completion.md](implementation/phase-3-completion.md) |
 
-Operational tasks (login, workstation assignment, admin recovery): [operations/foundation-runbook.md](operations/foundation-runbook.md).
+Operational tasks (login, workstation assignment, PIN/password onboarding, sessions, admin recovery): [operations/foundation-runbook.md](operations/foundation-runbook.md).
+
+Classification CSV seeds: [implementation/csv-seeds.md](implementation/csv-seeds.md), [specifications/seed-data-spec.md](specifications/seed-data-spec.md).
 
 Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/phase-1-test-coverage.md).
 
@@ -60,6 +62,9 @@ Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/p
 | [architecture.md](architecture.md) | Technical architecture and service structure |
 | [roadmap.md](roadmap.md) | Full development roadmap including future phases |
 | [implementation-guide.md](implementation-guide.md) | Developer conventions, naming, seeds, testing |
+| [implementation/csv-seeds.md](implementation/csv-seeds.md) | CSV classification seed pipeline and validation |
+| [specifications/seed-data-spec.md](specifications/seed-data-spec.md) | CSV column definitions and FK rules |
+| [implementation/classification-cleanup.md](implementation/classification-cleanup.md) | Classification simplification (categories removed) |
 | [glossary.md](glossary.md) | Definitions of recurring domain terms |
 | [schema-reference.md](schema-reference.md) | Schema index assembled from phase data models |
 | [implementation/phase-1-completion.md](implementation/phase-1-completion.md) | Phase 1 sign-off: delivered scope, gaps, verification |

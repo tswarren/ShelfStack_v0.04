@@ -4,7 +4,7 @@
 
 **Phase 1 (Foundation) is complete** as of 2025-06-10.
 
-Phase 1 delivered a working identity, authorization, session, workstation, audit, and setup foundation. Phase 2 (departments, categories, and taxes) is the active development priority.
+Phase 1 delivered a working identity, authorization, session, workstation, audit, and setup foundation. Later phases built on this foundation; see completion records for Phases 2 and 3.
 
 This document records what was implemented, how to verify it, known gaps relative to the Phase 1 specifications, and recovery procedures discovered during development.
 
@@ -47,7 +47,7 @@ Schema is reflected in `db/schema.rb`.
 | `Authorization` | Permission resolution with global/store scope |
 | `AuditEvents` | Centralized audit event creation |
 | `AuthenticationService` | Login validation and lockout tracking |
-| `SessionLifecycle` | Login, logout, lock, unlock, expiration |
+| `SessionLifecycle` | Login, logout, lock, unlock, inactivity lock |
 | `WorkstationAssignmentService` | Browser assignment, resolution, revoke, reassign |
 | `UserRoleAssignmentService` | Assign and remove user role assignments |
 | `SuperAdministratorProtection` | Prevent admin lockout; seed recovery helper |
@@ -78,7 +78,7 @@ Request context: `Current` (`CurrentAttributes`).
 ### Application shell
 
 - Header: logo, store/workstation context, search placeholder, user menu (password/PIN links), logout
-- Nav: dashboard, disabled future modules, Admin
+- Nav: dashboard, disabled future modules, Setup
 - Footer: version, copyright, lock session
 - Dashboard: environment and session summary
 - Light-theme styling in `app/assets/stylesheets/shelfstack.css`
@@ -111,9 +111,10 @@ Open `http://localhost:3000`.
 
 1. Assign the browser to a workstation (login redirect or `/workstation_assignment/new` with `workstations.assign_browser`).
 2. Log in as `admin` (password from seed output on first seed).
-3. Change password when prompted (`force_password_change`).
-4. Confirm dashboard shows store, workstation, user, and session details.
-5. Open **Admin** and verify setup screens load.
+3. Change password when prompted (`force_password_change`); new password and confirmation must match.
+4. Set a PIN when prompted (required); PIN and confirmation must match.
+5. Confirm dashboard shows store, workstation, user, and session details.
+6. Open **Setup** and verify setup screens load.
 
 ### Automated tests
 
@@ -121,9 +122,7 @@ Open `http://localhost:3000`.
 ./dev/rails-docker bin/rails test
 ```
 
-As of completion: **37 tests, 103 assertions**, all passing.
-
-See [phase-1-test-coverage.md](phase-1-test-coverage.md) for mapping to the Phase 1 test plan.
+The suite includes Phase 1–3 coverage (280+ tests). See [phase-1-test-coverage.md](phase-1-test-coverage.md) for Phase 1 mapping.
 
 ---
 
@@ -138,10 +137,10 @@ Legend: **Met** | **Partial** | **Deferred**
 | Login / logout | Met | |
 | Failed login tracking | Met | Lockout after threshold |
 | Login timestamps | Met | `previous_login_at`, `last_login_at` |
-| User password change | Met | `/password/edit`; header user menu |
+| User password change | Met | `/password/edit`; confirmation required |
 | Admin password reset | Partial | Controller action exists; **no setup UI** |
-| Forced password change | Met | Redirect on login when flag set |
-| PIN set/change | Met | `/pin/edit`; header user menu |
+| Forced password change | Met | Login redirect + navigation gate until changed |
+| PIN set/change | Met | `/pin/edit`; required after login; confirmation required |
 | Admin PIN clear | Partial | Controller action exists; **no setup UI** |
 | System user cannot log in | Met | |
 | Inactive / non-interactive blocked | Met | |
@@ -175,7 +174,8 @@ Legend: **Met** | **Partial** | **Deferred**
 | --------- | ------ | ----- |
 | Session record on login | Met | |
 | Status lifecycle | Met | active, locked, ended, expired, force_ended |
-| Lock / unlock own session | Met | Footer lock; unlock screen |
+| Lock / unlock own session | Met | Footer lock; unlock with PIN or password if no PIN |
+| Inactivity timeout | Met | Locks session (does not expire to login or reset password) |
 | Force-end another session | Partial | `SessionLifecycle.force_end!` exists; **no setup UI** |
 | Terminal sessions stay terminal | Met | |
 | Cross-tab lock behavior | Met | Request enforcement + `/session/status` polling |
@@ -203,7 +203,7 @@ Legend: **Met** | **Partial** | **Deferred**
 
 | Criterion | Status | Notes |
 | --------- | ------ | ----- |
-| Core auth/authz/session tests | Met | |
+| Core auth/authz/session tests | Met | Includes password/PIN controller and inactivity tests |
 | Setup integration tests | Partial | Not full test-plan breadth |
 | Seed idempotency | Met | |
 | System tests | Deferred | No Capybara system tests yet |
@@ -219,7 +219,7 @@ These are acceptable for Phase 1 sign-off but should be tracked for hardening or
 3. **Force-end session UI** for authorized users.
 4. **Setup active sessions** list/management screen.
 5. **`WorkstationAssignmentService.reassign!`** not wired to a dedicated UI flow.
-6. **Test coverage** covers core flows, not every scenario in `phase-1-test-plan.md`.
+6. **Test coverage** — Phase 1 password/PIN/onboarding flows are covered; not every scenario in `phase-1-test-plan.md`.
 7. **Email password reset** — intentionally deferred per roadmap.
 8. **`password_reset_tokens` / `system_settings` tables** — deferred per Phase 1 roadmap.
 

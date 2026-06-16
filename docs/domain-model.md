@@ -102,7 +102,7 @@ docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-do
 | `product_variants.category_id` | **`product_variants.sub_department_id`** (required after migration Phase D) |
 | `catalog_items` | add **`store_category_id`** (catalog items only) |
 
-**Implemented (classification target migration):** Phase A–D on `phase-3-catalog-products-variants`. See checklist in `classification-target-spec.md`. Reference trees ship via TSV (`db/seeds/data/store_categories.tsv`, `display_locations.tsv`) with ~70 store category nodes and ~33 display locations; expand toward full bookstore fidelity in a follow-up.
+**Implemented (classification target migration):** Phase A–D on `phase-3-catalog-products-variants`. See checklist in `classification-target-spec.md`. Reference trees load from CSV (`db/seeds/data/*.csv`) via `Seeds::CsvClassificationImporter` — ~151 store category nodes, ~57 display locations, ~35 subdepartments. Validate with `rails shelfstack:seeds:validate`. See [implementation/csv-seeds.md](implementation/csv-seeds.md).
 
 Default resolution order for operational defaults (target):
 
@@ -170,7 +170,7 @@ The product domain defines how the store sells cataloged and non-cataloged items
 
 ```text
 Catalog Item → Product → Product Variant
-Product Variant → Category
+Product Variant → SubDepartment
 Product Variant → Product Condition
 Product Variant → Display Location
 Product → Default Display Location
