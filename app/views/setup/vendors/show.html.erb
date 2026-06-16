@@ -1,3 +1,4 @@
+<%= render "setup/shared/back_link", path: setup_vendors_path, label: "Vendors" %>
 <h1><%= @vendor.name %></h1>
 <dl class="ss-summary">
   <dt>Parent vendor</dt><dd><%= @vendor.parent_vendor&.name || "—" %></dd>
