@@ -20,7 +20,7 @@
         <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_display_location_id, label: "Default display location" } do %>
-        <%= f.collection_select :default_display_location_id, display_locations, :id, :name, include_blank: true %>
+        <%= tree_collection_select(f, :default_display_location_id, display_locations, include_blank: true) %>
       <% end %>
     </div>
 
@@ -39,13 +39,9 @@
       <% end %>
     </div>
 
-    <% if local_assigns[:initial_category_id].present? %>
-      <div class="ss-field">
-        <%= label_tag "product[initial_category_id]", "Initial SKU category", class: "ss-label" %>
-        <%= select_tag "product[initial_category_id]",
-              options_from_collection_for_select(local_assigns[:categories], :id, :name, local_assigns[:initial_category_id]),
-              include_blank: false %>
-      </div>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_sub_department_id, label: "Default subdepartment" } do %>
+      <%= f.collection_select :default_sub_department_id, local_assigns[:sub_departments], :id, :name, include_blank: false %>
+      <p class="ss-help">Applied as the default for sellable SKUs you create for this product.</p>
     <% end %>
 
     <%= render "shared/forms/checkbox", f: f, record: product, field: :active %>

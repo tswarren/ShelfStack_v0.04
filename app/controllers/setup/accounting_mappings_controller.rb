@@ -4,15 +4,11 @@ module Setup
   class AccountingMappingsController < BaseController
     before_action :set_accounting_mapping, only: %i[show edit update destroy inactivate reactivate]
     before_action -> { authorize!("setup.accounting_mappings.view") }, only: %i[index show]
-    before_action -> { authorize!("setup.accounting_mappings.create") }, only: %i[new create]
-    before_action -> { authorize!("setup.accounting_mappings.update") }, only: %i[edit update]
-    before_action -> { authorize!("setup.accounting_mappings.inactivate") }, only: :inactivate
-    before_action -> { authorize!("setup.accounting_mappings.reactivate") }, only: :reactivate
-    before_action -> { authorize!("setup.accounting_mappings.delete") }, only: :destroy
+    before_action :freeze_mutations!, only: %i[new create edit update destroy inactivate reactivate]
     before_action :load_form_collections, only: %i[new create edit update]
 
     def index
-      @accounting_mappings = AccountingMapping.includes(:merchandise_class, :condition, :category_node).order(:sort_order, :id)
+      @accounting_mappings = AccountingMapping.includes(:sub_department, :condition, :category_node).order(:sort_order, :id)
     end
 
     def show
@@ -70,16 +66,21 @@ module Setup
     end
 
     def load_form_collections
-      @merchandise_classes = MerchandiseClass.active_records.order(:name)
+      @sub_departments = SubDepartment.active_records.order(:name)
       @conditions = ProductCondition.active_records.order(:sort_order, :name)
       @category_nodes = CategoryNode.active_records.includes(:category_scheme).order("category_schemes.name", :name)
     end
 
     def accounting_mapping_params
       params.require(:accounting_mapping).permit(
-        :merchandise_class_id, :condition_id, :category_node_id, :product_type,
+        :sub_department_id, :condition_id, :category_node_id, :product_type,
         :sales_account_code, :reporting_bucket, :gl_export_code, :description, :sort_order, :active
       )
+    end
+
+    def freeze_mutations!
+      redirect_to setup_accounting_mappings_path,
+                  alert: "Accounting mappings are read-only while GL posting uses department-level accounts."
     end
   end
 end

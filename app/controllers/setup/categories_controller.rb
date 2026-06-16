@@ -76,12 +76,12 @@ module Setup
     def load_form_collections
       @departments = Department.active_records.order(:department_number)
       @tax_categories = TaxCategory.active_records.order(:sort_order, :name)
-      @merchandise_classes = MerchandiseClass.active_records.order(:name)
+      @sub_departments = SubDepartment.active_records.order(:name)
     end
 
     def category_params
       params.require(:category).permit(
-        :department_id, :merchandise_class_id, :name, :short_name, :sort_order, :default_pricing_model,
+        :department_id, :sub_department_id, :name, :short_name, :sort_order, :default_pricing_model,
         :default_margin_target_bps, :default_supplier_discount_bps, :default_tax_category_id, :active
       )
     end

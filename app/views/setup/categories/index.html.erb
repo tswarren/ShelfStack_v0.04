@@ -1,12 +1,16 @@
-<h1>Merchandise Categories <%= link_to "New", new_setup_category_path, class: "ss-btn" %></h1>
+<h1>Categories (Legacy) <%= link_to "New", new_setup_category_path, class: "ss-btn" %></h1>
+<p class="ss-muted">
+  Phase 2 categories remain for historical reference and department reporting bridges.
+  New item entry uses subdepartments and store categories instead.
+</p>
 <table class="ss-table">
-  <thead><tr><th>Department</th><th>Name</th><th>Merchandise Class</th><th>Tax Category</th><th>Status</th><th></th></tr></thead>
+  <thead><tr><th>Department</th><th>Name</th><th>Subdepartment</th><th>Tax Category</th><th>Status</th><th></th></tr></thead>
   <tbody>
     <% @categories.each do |category| %>
       <tr>
         <td><%= category.department.department_number %> — <%= category.department.name %></td>
         <td><%= category.name %></td>
-        <td><%= category.merchandise_class&.name || "—" %></td>
+        <td><%= category.sub_department&.name || "—" %></td>
         <td><%= category.default_tax_category.name %></td>
         <td><span class="<%= status_class(category.active?) %>"><%= status_label(category.active?) %></span></td>
         <td><%= link_to "View", setup_category_path(category) %></td>

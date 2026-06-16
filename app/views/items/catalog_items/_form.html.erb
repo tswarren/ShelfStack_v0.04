@@ -118,6 +118,11 @@
 
 <%= render layout: "shared/forms/section", locals: { title: "Classification" } do %>
   <div class="ss-form-grid ss-form-grid--2">
+    <% if local_assigns[:store_category_nodes].present? %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :store_category_id, label: "Store category" } do %>
+        <%= tree_collection_select(f, :store_category_id, local_assigns[:store_category_nodes], include_blank: "Select store category") %>
+      <% end %>
+    <% end %>
     <%= render "items/catalog_items/bisac_subjects_picker",
           f: f,
           catalog_item: catalog_item,
@@ -142,17 +147,25 @@
 
 <% if include_identifier %>
   <%= render layout: "shared/forms/section", locals: { title: "Initial Identifier" } do %>
-    <div class="ss-form-grid ss-form-grid--2">
-      <div class="ss-field">
-        <%= label_tag "catalog_item[initial_identifier_type]", "Identifier type", class: "ss-label" %>
-        <%= select_tag "catalog_item[initial_identifier_type]", options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, "isbn13"), data: { preview_target: "identifier-type" } %>
+    <div data-controller="identifier-preview"
+         data-identifier-preview-url-value="<%= items_identifier_preview_path %>"
+         data-action="input->identifier-preview#refresh change->identifier-preview#refresh">
+      <div class="ss-form-grid ss-form-grid--2">
+        <div class="ss-field">
+          <%= label_tag "catalog_item[initial_identifier_type]", "Identifier type", class: "ss-label" %>
+          <%= select_tag "catalog_item[initial_identifier_type]",
+                options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, "isbn13"),
+                data: { identifier_preview_target: "identifierType" } %>
+        </div>
+        <div class="ss-field">
+          <%= label_tag "catalog_item[initial_identifier_value]", "Identifier value", class: "ss-label" %>
+          <%= text_field_tag "catalog_item[initial_identifier_value]", nil,
+                data: { identifier_preview_target: "identifierValue" } %>
+        </div>
       </div>
-      <div class="ss-field">
-        <%= label_tag "catalog_item[initial_identifier_value]", "Identifier value", class: "ss-label" %>
-        <%= text_field_tag "catalog_item[initial_identifier_value]", nil, data: { preview_target: "identifier-value" } %>
-      </div>
+      <p class="ss-hint">Normalized preview: <span data-identifier-preview-target="normalized">—</span></p>
+      <p class="ss-hint" data-identifier-preview-target="validation"></p>
     </div>
-    <p class="ss-hint">Normalized preview: <span data-preview="identifier-normalized">—</span></p>
   <% end %>
 <% end %>
 
@@ -170,24 +183,6 @@
     if (typeSelect) {
       typeSelect.addEventListener("change", updateCatalogFields);
       updateCatalogFields();
-    }
-
-    var idType = document.querySelector("[data-preview-target='identifier-type']");
-    var idValue = document.querySelector("[data-preview-target='identifier-value']");
-    var idPreview = document.querySelector("[data-preview='identifier-normalized']");
-    function updateIdentifierPreview() {
-      if (!idType || !idValue || !idPreview) return;
-      var value = idValue.value.trim();
-      if (!value) { idPreview.textContent = "—"; return; }
-      var normalized = value.replace(/[^0-9Xx]/g, "").toUpperCase();
-      if (idType.value === "publisher_number") {
-        normalized = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-      }
-      idPreview.textContent = normalized || "—";
-    }
-    if (idType && idValue) {
-      idType.addEventListener("change", updateIdentifierPreview);
-      idValue.addEventListener("input", updateIdentifierPreview);
     }
 
     function splitOutsideBrackets(input) {

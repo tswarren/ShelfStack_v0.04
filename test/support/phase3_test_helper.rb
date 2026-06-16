@@ -27,6 +27,28 @@ module Phase3TestHelper
     item.reload
   end
 
+  def store_category_node_for_tests
+    @store_category_node_for_tests ||= begin
+      scheme = CategoryScheme.find_or_create_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY) do |record|
+        record.name = "Store Categories"
+        record.purpose = CategoryNode::STORE_CATEGORIES_SCHEME_KEY
+        record.active = true
+      end
+      scheme.category_nodes.find_or_create_by!(node_key: "fiction") do |node|
+        node.name = "Fiction"
+        node.sort_order = 1
+        node.active = true
+      end
+    end
+  end
+
+  def ensure_test_store_category!(catalog_item)
+    return catalog_item if catalog_item.store_category.present?
+
+    catalog_item.update!(store_category: store_category_node_for_tests)
+    catalog_item
+  end
+
   def create_product_condition!(**attrs)
     ProductCondition.create!({
       condition_key: "test_new",
@@ -50,6 +72,7 @@ module Phase3TestHelper
 
   def create_product!(catalog_item: nil, **attrs)
     catalog_item ||= create_catalog_item!
+    ensure_test_store_category!(catalog_item)
     Product.create!({
       catalog_item: catalog_item,
       name: catalog_item.title,
@@ -61,13 +84,30 @@ module Phase3TestHelper
     }.merge(attrs))
   end
 
-  def create_product_variant!(product: nil, category: nil, condition: nil, **attrs)
+  def create_product_variant!(product: nil, sub_department: nil, category: nil, condition: nil, **attrs)
     product ||= create_product!
-    category ||= create_category!
+    category ||= create_category! unless sub_department
+    sub_department ||= category&.sub_department
+    if sub_department.blank?
+      department = category&.department || create_department!(
+        department_number: format("%03d", SecureRandom.random_number(900) + 100),
+        name: "Test Department #{SecureRandom.hex(2)}",
+        short_name: "TD#{SecureRandom.hex(2)}"
+      )
+      sub_department = SubDepartment.create!(
+        sub_department_key: "test_sd_#{SecureRandom.hex(3)}",
+        name: "Test Subdepartment #{SecureRandom.hex(2)}",
+        short_name: "TSD #{SecureRandom.hex(1)}",
+        department: department,
+        default_tax_category: category.default_tax_category,
+        active: true
+      )
+      category.update!(sub_department: sub_department, department: sub_department.department)
+    end
     condition ||= ProductCondition.find_by(condition_key: "new") || create_product_condition!(condition_key: "new", sku_component: nil)
     ProductVariant.create!({
       product: product,
-      category: category,
+      sub_department: sub_department,
       condition: condition,
       name: product.name,
       sku: product.sku,

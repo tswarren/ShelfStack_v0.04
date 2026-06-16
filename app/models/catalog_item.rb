@@ -20,6 +20,7 @@ class CatalogItem < ApplicationRecord
   WEIGHT_UNITS = %w[g kg lb oz].freeze
 
   belongs_to :format
+  belongs_to :store_category, class_name: "CategoryNode", optional: true
   has_many :catalog_item_identifiers, dependent: :destroy
   has_many :products, dependent: :restrict_with_error
   has_many :categorizations, as: :categorizable, dependent: :destroy
@@ -34,6 +35,8 @@ class CatalogItem < ApplicationRecord
   validates :weight_units, inclusion: { in: WEIGHT_UNITS }, allow_blank: true
   validates :year, format: { with: /\A[0-9]{4}\z/ }, allow_blank: true
   validate :format_must_be_active
+  validate :store_category_must_be_valid
+  validate :store_category_required_for_active_catalog, on: :update
   validate :must_have_active_primary_identifier, on: :update
 
   scope :active_records, -> { where(active: true) }
@@ -110,6 +113,25 @@ class CatalogItem < ApplicationRecord
     return if format.blank? || format.active?
 
     errors.add(:format, "must be active")
+  end
+
+  def store_category_must_be_valid
+    return if store_category.blank?
+
+    unless store_category.store_category?
+      errors.add(:store_category, "must belong to the store categories scheme")
+    end
+    return if store_category.active?
+
+    errors.add(:store_category, "must be active")
+  end
+
+  def store_category_required_for_active_catalog
+    return if store_category.present?
+    return unless publication_status == "active"
+    return unless products.exists?
+
+    errors.add(:store_category, "must be selected for active catalog items with products")
   end
 
   def must_have_active_primary_identifier

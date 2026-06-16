@@ -34,58 +34,22 @@ class ClassificationDefaultsResolver
       )
     end
 
-    mapping = AccountingMappingLookup.match_for(variant: variant)
-    if mapping
-      mc = mapping.merchandise_class || merchandise_class
+    sub_department = resolved_sub_department
+    if sub_department
       return build_result(
-        pricing_model: mc&.default_pricing_model || category&.default_pricing_model,
-        margin_target_bps: mc&.default_margin_target_bps || category&.default_margin_target_bps,
-        supplier_discount_bps: mc&.default_supplier_discount_bps || category&.default_supplier_discount_bps,
-        tax_category: mc&.default_tax_category || category&.default_tax_category,
-        sales_account_code: mapping.sales_account_code,
-        reporting_bucket: mapping.reporting_bucket,
-        returnable: mc&.vendor_returnable_default,
-        buyback_allowed: mc&.buyback_allowed,
-        has_list_price: mc&.has_list_price,
-        source: "accounting_mapping"
+        pricing_model: sub_department.default_pricing_model,
+        margin_target_bps: sub_department.default_margin_target_bps,
+        supplier_discount_bps: sub_department.default_supplier_discount_bps,
+        tax_category: sub_department.default_tax_category,
+        sales_account_code: department_gl_account(sub_department),
+        returnable: sub_department.vendor_returnable_default,
+        buyback_allowed: sub_department.buyback_allowed,
+        has_list_price: sub_department.has_list_price,
+        source: "sub_department"
       )
     end
 
-    if merchandise_class
-      return build_result(
-        pricing_model: merchandise_class.default_pricing_model,
-        margin_target_bps: merchandise_class.default_margin_target_bps,
-        supplier_discount_bps: merchandise_class.default_supplier_discount_bps,
-        tax_category: merchandise_class.default_tax_category,
-        sales_account_code: merchandise_class.default_sales_account_code,
-        returnable: merchandise_class.vendor_returnable_default,
-        buyback_allowed: merchandise_class.buyback_allowed,
-        has_list_price: merchandise_class.has_list_price,
-        source: "merchandise_class"
-      )
-    end
-
-    if category
-      @warnings << "Merchandise class missing; using legacy category defaults." if category.merchandise_class.blank?
-      return build_result(
-        pricing_model: category.default_pricing_model,
-        margin_target_bps: category.default_margin_target_bps,
-        supplier_discount_bps: category.default_supplier_discount_bps,
-        tax_category: category.default_tax_category,
-        sales_account_code: category.department&.gl_account_code,
-        source: "legacy_category"
-      )
-    end
-
-    if category&.department&.gl_account_code.present?
-      @warnings << "No category assigned; using department GL account fallback."
-      return build_result(
-        sales_account_code: category.department.gl_account_code,
-        source: "legacy_department"
-      )
-    end
-
-    @warnings << "No category assigned; defaults unavailable."
+    @warnings << "No subdepartment assigned; defaults unavailable."
     build_result(source: "none")
   end
 
@@ -93,22 +57,18 @@ class ClassificationDefaultsResolver
 
   attr_reader :variant, :store, :date, :warnings
 
-  def category
-    variant.category
+  def resolved_sub_department
+    variant.sub_department
   end
 
-  def merchandise_class
-    category&.merchandise_class
+  def department_gl_account(sub_department)
+    sub_department.department&.gl_account_code.presence || sub_department.default_sales_account_code
   end
 
   def build_result(pricing_model: nil, margin_target_bps: nil, supplier_discount_bps: nil,
                    tax_category: nil, sales_account_code: nil, reporting_bucket: nil,
                    returnable: nil, buyback_allowed: nil, has_list_price: nil, source:)
-    if sales_account_code.blank? && source.in?(%w[merchandise_class legacy_category])
-      sales_account_code = category&.department&.gl_account_code
-    end
-    @warnings << "Using department GL account as reporting fallback." if source == "legacy_category" && sales_account_code == category&.department&.gl_account_code
-    @warnings << "No sales account mapping matched." if sales_account_code.blank? && source != "variant_override"
+    @warnings << "No department GL account available." if sales_account_code.blank? && source == "sub_department"
 
     Result.new(
       pricing_model: pricing_model,

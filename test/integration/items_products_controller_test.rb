@@ -31,6 +31,7 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     product = Product.order(:id).last
     assert_equal @catalog_item.primary_identifier.normalized_identifier, product.sku
     assert_equal @catalog_item.title, product.name
+    assert_equal "standard", product.variation_type
     assert AuditEvent.exists?(event_name: "product.created", auditable: product)
   end
 
@@ -71,7 +72,7 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2499, product.reload.list_price_cents
   end
 
-  test "catalog linked update ignores variation_type changes" do
+  test "catalog linked update allows variation_type changes" do
     product = create_product!(variation_type: "conditional")
 
     patch items_product_path(product, return_to: "item"), params: {
@@ -87,7 +88,9 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to items_item_path(catalog_item_id: product.catalog_item_id, tab: "selling")
-    assert_equal "conditional", product.reload.variation_type
+    assert_equal "matrix", product.reload.variation_type
+    assert_equal "Size", product.variant1_label
+    assert_equal "Color", product.variant2_label
   end
 
   test "update product can remove cover image" do

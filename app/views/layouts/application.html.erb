@@ -13,6 +13,7 @@
     <%= render "layouts/nav" %>
     <main class="ss-main">
       <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
+      <% if flash[:warning] %><div class="flash flash-warning"><%= flash[:warning] %></div><% end %>
       <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
       <%= yield %>
     </main>

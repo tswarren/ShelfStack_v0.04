@@ -1,7 +1,7 @@
 <h1><%= @category_scheme.name %></h1>
 <dl class="ss-summary">
   <dt>Scheme key</dt><dd><%= @category_scheme.scheme_key %></dd>
-  <dt>Purpose</dt><dd><%= humanize_controlled_value(@category_scheme.purpose) %></dd>
+  <dt>Purpose</dt><dd><%= humanize_scheme_purpose(@category_scheme.purpose) %></dd>
   <dt>Status</dt><dd><span class="<%= status_class(@category_scheme.active?) %>"><%= status_label(@category_scheme.active?) %></span></dd>
 </dl>
 <div class="ss-detail-actions">

@@ -64,13 +64,14 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Shelf A", response.body
   end
 
-  test "overview eyebrow shows topic section after display location" do
+  test "overview eyebrow shows store category after display location" do
     store_floor = create_display_location!(name: "Store Floor", short_name: "Flr #{SecureRandom.hex(2)}")
     shelf = create_display_location!(name: "Shelf A", short_name: "ShA #{SecureRandom.hex(2)}", parent: store_floor)
-    scheme = create_category_scheme!(scheme_key: "store_sections_topics", name: "Store Sections")
+    scheme = CategoryScheme.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY) ||
+             create_category_scheme!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY, name: "Store Sections")
     biography = create_category_node!(category_scheme: scheme, node_key: "biography", name: "Biography")
     @product.update!(default_display_location: shelf)
-    @variant.categorizations.create!(category_node: biography, primary: true, source: "manual")
+    @product.catalog_item.update!(store_category: biography)
 
     get items_item_path(catalog_item_id: @product.catalog_item.id)
     assert_response :success

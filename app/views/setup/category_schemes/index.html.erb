@@ -6,7 +6,7 @@
       <tr>
         <td><%= scheme.scheme_key %></td>
         <td><%= scheme.name %></td>
-        <td><%= humanize_controlled_value(scheme.purpose) %></td>
+        <td><%= humanize_scheme_purpose(scheme.purpose) %></td>
         <td><span class="<%= status_class(scheme.active?) %>"><%= status_label(scheme.active?) %></span></td>
         <td><%= link_to "View", setup_category_scheme_path(scheme) %></td>
       </tr>

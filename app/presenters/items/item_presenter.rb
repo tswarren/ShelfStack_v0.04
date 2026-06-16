@@ -58,7 +58,7 @@ module Items
     def variants
       return ProductVariant.none if product.blank?
 
-      product.product_variants.active_records.includes(:condition, :category).order(:sku)
+      product.product_variants.active_records.includes(:condition, :sub_department).order(:sku)
     end
 
     def active_variant_count
@@ -241,17 +241,15 @@ module Items
     end
 
     def variant_location_label(variant)
-      variant.display_location&.name || variant.category&.name || "—"
+      variant.display_location&.name || variant.sub_department&.name || "—"
     end
 
     def classification_summary_for(variant)
       defaults = ClassificationDefaultsResolver.for(variant: variant)
-      primary_topic = variant.categorizations.primary_records.includes(category_node: :parent).first&.category_node
 
       {
-        merchandise_class: variant.category&.merchandise_class&.name,
-        merchandise_category: variant.category&.name,
-        topic_section: primary_topic&.breadcrumb_label,
+        sub_department: variant.sub_department&.name,
+        store_category: catalog_item&.store_category&.breadcrumb_label,
         condition: variant.condition&.short_name || variant.condition&.name,
         display_location: variant.display_location&.name,
         defaults: defaults
@@ -261,20 +259,15 @@ module Items
     def classification_summary_label(variant)
       summary = classification_summary_for(variant)
       parts = [
-        summary[:merchandise_class].presence || summary[:merchandise_category],
-        summary[:topic_section],
+        summary[:sub_department],
+        summary[:store_category],
         summary[:condition]
       ].compact
       parts.presence&.join(" · ") || "—"
     end
 
     def topic_section_label(variant: nil)
-      target_variant = variant_for_eyebrow(variant)
-      return unless target_variant
-
-      target_variant.categorizations.primary_records
-                    .includes(category_node: :parent)
-                    .first&.category_node&.breadcrumb_label
+      catalog_item&.store_category&.breadcrumb_label
     end
 
     def variant_for_eyebrow(variant)

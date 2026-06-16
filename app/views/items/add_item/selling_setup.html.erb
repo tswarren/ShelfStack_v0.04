@@ -3,11 +3,11 @@
              eyebrow: "Add Item",
              title: "Create Selling Setup",
              description: "Catalog item: #{@catalog_item.title}" %>
-  <%= render "catalog_selling_setup", product: @product, catalog_item: @catalog_item, categories: @categories, display_locations: @display_locations, initial_category_id: @draft["initial_category_id"] %>
+  <%= render "catalog_selling_setup", product: @product, catalog_item: @catalog_item, sub_departments: @sub_departments, display_locations: @display_locations %>
 <% else %>
   <%= render "shared/forms/page_header",
              eyebrow: "Add Item",
              title: "Add Non-Catalog Item",
              description: "Create a product without catalog metadata." %>
-  <%= render "non_catalog_selling_setup", product: @product, categories: @categories, display_locations: @display_locations, generated_sku: @draft["generated_sku"], initial_category_id: @draft["initial_category_id"] %>
+  <%= render "non_catalog_selling_setup", product: @product, sub_departments: @sub_departments, display_locations: @display_locations, generated_sku: @draft["generated_sku"] %>
 <% end %>

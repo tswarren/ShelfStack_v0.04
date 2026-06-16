@@ -1,5 +1,7 @@
 Below are ready-to-paste GitHub issue drafts. I’d structure this as **one parent epic** plus **nine child issues**.
 
+> **Target decisions and migration plan (authoritative):** [classification-target-spec.md](../../specifications/classification-target-spec.md) — subdepartments, store categories on catalog items, GL at department level, phased migration A–D. Child issues below predate some of those decisions; implement against the target spec where they differ.
+
 ---
 
 # Rework merchandise classification architecture

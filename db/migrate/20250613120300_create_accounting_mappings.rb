@@ -3,7 +3,7 @@
 class CreateAccountingMappings < ActiveRecord::Migration[8.0]
   def change
     create_table :accounting_mappings do |t|
-      t.references :merchandise_class, foreign_key: true
+      t.references :sub_department, foreign_key: true
       t.references :condition, foreign_key: { to_table: :product_conditions }
       t.references :category_node, foreign_key: true
       t.string :product_type

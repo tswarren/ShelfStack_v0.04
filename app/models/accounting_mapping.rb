@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class AccountingMapping < ApplicationRecord
-  belongs_to :merchandise_class, optional: true
+  belongs_to :sub_department, optional: true
   belongs_to :condition, class_name: "ProductCondition", optional: true
   belongs_to :category_node, optional: true
 
@@ -26,7 +26,7 @@ class AccountingMapping < ApplicationRecord
   end
 
   def specificity_score
-    [merchandise_class_id, condition_id, product_type, category_node_id].compact.size
+    [sub_department_id, condition_id, product_type, category_node_id].compact.size
   end
 
   private
@@ -40,13 +40,13 @@ class AccountingMapping < ApplicationRecord
   end
 
   def at_least_one_match_dimension
-    return if merchandise_class_id.present? || condition_id.present? || product_type.present? || category_node_id.present?
+    return if sub_department_id.present? || condition_id.present? || product_type.present? || category_node_id.present?
 
     errors.add(:base, "At least one match dimension is required")
   end
 
   def referenced_records_must_be_active
-    errors.add(:merchandise_class, "must be active") if merchandise_class.present? && !merchandise_class.active?
+    errors.add(:sub_department, "must be active") if sub_department.present? && !sub_department.active?
     errors.add(:condition, "must be active") if condition.present? && !condition.active?
     errors.add(:category_node, "must be active") if category_node.present? && !category_node.active?
   end

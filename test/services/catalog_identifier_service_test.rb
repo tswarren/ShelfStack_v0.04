@@ -23,6 +23,17 @@ class CatalogIdentifierServiceTest < ActiveSupport::TestCase
     assert_equal "9780123456789", identifier.normalized_identifier
   end
 
+  test "validation_preview reports invalid isbn13" do
+    preview = CatalogIdentifierService.validation_preview(
+      identifier_type: "isbn13",
+      value: "9780123456780"
+    )
+
+    assert_equal "9780123456780", preview[:normalized]
+    assert_equal false, preview[:valid]
+    assert_match(/invalid/i, preview[:message])
+  end
+
   test "invalid isbn13 saves with warning" do
     identifier = CatalogIdentifierService.add_identifier!(
       catalog_item: @item,

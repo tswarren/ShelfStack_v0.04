@@ -9,7 +9,7 @@
       <%= f.text_field :short_name, maxlength: 20 %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: display_location, field: :parent_id, label: "Parent location" } do %>
-      <%= f.collection_select :parent_id, parents, :id, :name, include_blank: true %>
+      <%= tree_collection_select(f, :parent_id, parents, include_blank: true) %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: display_location, field: :sort_order } do %>
       <%= f.number_field :sort_order %>

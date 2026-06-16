@@ -53,7 +53,7 @@ class ItemSearch
     Product.active_records
       .where("sku ILIKE ? OR name ILIKE ?", text_query, text_query)
       .with_attached_cover_image
-      .includes(:catalog_item, product_variants: %i[condition category])
+      .includes(:catalog_item, product_variants: %i[condition sub_department])
       .limit(@limit)
       .map { |product| hit("product", product) }
   end
@@ -61,7 +61,7 @@ class ItemSearch
   def variant_hits
     ProductVariant.active_records
       .where("sku ILIKE ? OR name ILIKE ?", text_query, text_query)
-      .includes(product: [:catalog_item, { cover_image_attachment: :blob }], condition: nil, category: nil)
+      .includes(product: [:catalog_item, { cover_image_attachment: :blob }], condition: nil, sub_department: nil)
       .limit(@limit)
       .map { |variant| hit("product_variant", variant) }
   end

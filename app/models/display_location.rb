@@ -16,6 +16,14 @@ class DisplayLocation < ApplicationRecord
 
   scope :active_records, -> { where(active: true) }
 
+  def self.active_for_tree_select
+    active_records.order(:sort_order, :short_name, :name).to_a
+  end
+
+  def self.ordered_tree_rows
+    TreeOrdering.rows(order(:sort_order, :short_name, :name).to_a)
+  end
+
   before_validation :normalize_strings
 
   def inactivate!

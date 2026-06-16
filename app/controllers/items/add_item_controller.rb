@@ -81,6 +81,7 @@ module Items
         @catalog_item = find_or_build_catalog_item
         @formats = Format.active_records.order(:name)
         load_bisac_form_state(@catalog_item)
+        load_store_category_collections
       when "selling_setup"
         if params[:generate_sku].present?
           save_draft!("generated_sku" => AddItem::ProductSkuGenerator.generate!)
@@ -119,14 +120,18 @@ module Items
     def handle_item_details
       ensure_catalog_linked_workflow! or return
       @formats = Format.active_records.order(:name)
+      load_store_category_collections
       @catalog_item = CatalogItem.new(catalog_item_params.merge(active: true, publication_status: "active"))
 
       saved = save_catalog_item!(@catalog_item)
       return unless saved
 
       bisac_result = sync_catalog_item_bisac!(@catalog_item)
+      store_category_result = sync_catalog_store_category!(@catalog_item)
       record_audit!("catalog_item.created", @catalog_item)
       apply_bisac_sync_notice!(bisac_result)
+      apply_store_category_sync_notice!(store_category_result)
+      apply_identifier_validation_notice!(@catalog_item)
       save_draft!("catalog_item_id" => @catalog_item.id)
 
       if done_commit?
@@ -140,6 +145,7 @@ module Items
       @catalog_item.errors.add(:base, e.message)
       @step = "item_details"
       load_bisac_form_state(@catalog_item)
+      load_store_category_collections
       render "items/add_item/item_details", status: :unprocessable_entity
     end
 
@@ -163,10 +169,7 @@ module Items
 
       if @product.save
         record_audit!("product.created", @product)
-        save_draft!(
-          "product_id" => @product.id,
-          "initial_category_id" => initial_category_id_param
-        )
+        save_draft!("product_id" => @product.id)
 
         if done_commit?
           reset_draft!
@@ -194,6 +197,8 @@ module Items
           inventory_behavior: inventory_behavior
         )
       )
+      @variant.condition ||= default_condition
+      VariantClassificationSetup.apply!(variant: @variant)
       prepare_sellable_sku_form
 
       if @variant.save
@@ -236,6 +241,7 @@ module Items
       unless saved
         @step = "item_details"
         load_bisac_form_state(catalog_item)
+        load_store_category_collections
         render "items/add_item/item_details", status: :unprocessable_entity
       end
 
@@ -257,6 +263,7 @@ module Items
           sku: @catalog_item.primary_identifier&.normalized_identifier,
           list_price_cents: 0
         )
+        apply_store_category_product_defaults!(@product)
       else
         ensure_non_catalog_workflow!
         @catalog_item = nil
@@ -277,14 +284,32 @@ module Items
       if catalog_linked?
         @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
         attrs[:catalog_item] = @catalog_item
-        attrs[:variation_type] = "conditional"
+        attrs[:variation_type] = resolved_variation_type(attrs[:product_type], attrs[:variation_type].presence || "conditional")
         attrs.delete(:name)
+        apply_store_category_product_defaults!(attrs)
       else
         attrs[:variation_type] = resolved_variation_type(attrs[:product_type], attrs[:variation_type])
         attrs.delete(:name_override)
       end
 
       Product.new(attrs)
+    end
+
+    def apply_store_category_product_defaults!(target)
+      defaults = StoreCategoryDefaults.for(store_category_node: @catalog_item&.store_category)
+      return if defaults.source == "none"
+
+      if target.is_a?(Hash)
+        if defaults.default_sub_department.present? && target[:default_sub_department_id].blank?
+          target[:default_sub_department_id] = defaults.default_sub_department.id
+        end
+        if defaults.default_display_location.present? && target[:default_display_location_id].blank?
+          target[:default_display_location_id] = defaults.default_display_location.id
+        end
+      else
+        target.default_sub_department ||= defaults.default_sub_department if defaults.default_sub_department.present?
+        target.default_display_location ||= defaults.default_display_location if defaults.default_display_location.present?
+      end
     end
 
     def resolved_variation_type(product_type, variation_type)
@@ -299,8 +324,9 @@ module Items
       condition = @variant.condition || default_condition
       @variant.condition_id ||= condition&.id
       @variant.condition ||= condition
-      @variant.category_id ||= @draft["initial_category_id"].presence || @categories.first&.id
+      @variant.sub_department_id ||= @product.default_sub_department_id.presence || @sub_departments.first&.id
       @variant.inventory_behavior ||= AddItem::InventoryBehaviorMapper.for_product_type(@product.product_type)
+      VariantClassificationSetup.apply!(variant: @variant) unless sellable_sku_params_submitted?
       apply_variant_defaults! unless sellable_sku_params_submitted?
     end
 
@@ -356,9 +382,18 @@ module Items
       false
     end
 
+    def load_store_category_collections
+      @store_category_scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+      @store_category_nodes = if @store_category_scheme
+                                CategoryNode.active_for_tree_select(@store_category_scheme)
+                              else
+                                CategoryNode.none
+                              end
+    end
+
     def load_product_collections
-      @categories = Category.active_records.includes(:department).order("departments.department_number", :name)
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @sub_departments = SubDepartment.active_records.order(:name)
+      @display_locations = DisplayLocation.active_for_tree_select
     end
 
     def load_variant_collections
@@ -372,27 +407,39 @@ module Items
         :series_name, :series_enumeration, :format_id, :edition_statement, :language_code,
         :height, :width, :depth, :dimension_units, :weight, :weight_units, :page_count,
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
-        :access_restrictions, :publication_frequency, :description, :year, :digital, :active
+        :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
+        :store_category_id
       )
     end
 
     def product_params
       params.require(:product).permit(
         :name, :name_override, :sku, :product_type, :variation_type, :list_price_cents,
-        :default_display_location_id, :variant1_label, :variant2_label
+        :default_display_location_id, :default_sub_department_id, :variant1_label, :variant2_label,
+        :cover_image
       )
     end
 
     def product_variant_params
       params.require(:product_variant).permit(
-        :condition_id, :category_id, :selling_price_cents, :display_location_id, :sku,
+        :condition_id, :sub_department_id, :selling_price_cents, :display_location_id, :sku,
         :name_override, :attribute1_value, :attribute1_sku_component,
         :attribute2_value, :attribute2_sku_component
       )
     end
 
-    def initial_category_id_param
-      params.dig(:product, :initial_category_id).presence
+    def sync_catalog_store_category!(catalog_item)
+      CatalogItemStoreCategorySync.apply!(
+        catalog_item: catalog_item,
+        store_category_id: params.dig(:catalog_item, :store_category_id),
+        bisac_category_node_ids: params[:bisac_category_node_ids]
+      )
+    end
+
+    def apply_store_category_sync_notice!(result)
+      return if result.warnings.blank?
+
+      flash.now[:alert] = [flash.now[:alert], result.warnings.join(" ")].compact.join(" ")
     end
 
     def identifier_type_param

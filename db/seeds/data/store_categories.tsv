@@ -1,0 +1,73 @@
+# ShelfStack reference store categories (store_categories scheme)
+node_key	name	parent_node_key	sort_order	default_sub_department_key	default_display_location_short_name
+unclassified	Unclassified		990	general_trade_books	
+books	Books		10	general_trade_books	
+fiction	Fiction	books	10	general_trade_books	Fiction Wall
+general_fiction	General Fiction	fiction	10	general_trade_books	Fiction Wall
+literary_fiction	Literary Fiction	fiction	20	general_trade_books	Fiction Wall
+mystery_suspense	Mystery & Suspense	fiction	30	general_trade_books	Fiction Wall
+romance	Romance	fiction	40	general_trade_books	Fiction Wall
+science_fiction	Science Fiction	fiction	50	general_trade_books	Fiction Wall
+fantasy	Fantasy	fiction	60	general_trade_books	Fiction Wall
+horror	Horror	fiction	70	general_trade_books	Fiction Wall
+graphic_novels	Graphic Novels	fiction	80	general_trade_books	Fiction Wall
+poetry	Poetry	fiction	90	general_trade_books	Fiction Wall
+local_authors	Local Authors	fiction	100	general_trade_books	Local Authors
+signed_books	Signed Editions	fiction	110	general_trade_books	Signed Editions
+nonfiction	Nonfiction	books	20	general_trade_books	Nonfiction Wall
+biography	Biography	nonfiction	10	general_trade_books	Biography Wall
+memoir	Memoir	biography	10	general_trade_books	Biography Wall
+history	History	nonfiction	20	general_trade_books	History Section
+world_history	World History	history	10	general_trade_books	History Section
+us_history	U.S. History	history	20	general_trade_books	History Section
+military_history	Military History	history	30	general_trade_books	History Section
+science	Science & Nature	nonfiction	30	general_trade_books	Science Section
+social_sciences	Social Sciences	nonfiction	40	general_trade_books	Nonfiction Wall
+business	Business	nonfiction	50	general_trade_books	Nonfiction Wall
+self_help	Self-Help	nonfiction	60	general_trade_books	Nonfiction Wall
+true_crime	True Crime	nonfiction	70	general_trade_books	Nonfiction Wall
+travel	Travel	nonfiction	80	general_trade_books	Travel Section
+cooking	Cooking & Food	nonfiction	90	general_trade_books	Cooking Section
+arts	Arts & Photography	nonfiction	100	general_trade_books	Arts Section
+religion	Religion & Spirituality	books	30	general_trade_books	Religion Section
+bibles	Bibles & Devotionals	religion	10	general_trade_books	Religion Section
+christianity	Christianity	religion	20	general_trade_books	Religion Section
+world_religions	World Religions	religion	30	general_trade_books	Religion Section
+childrens	Children's	books	40	general_trade_books	Children's Area
+picture_books	Picture Books	childrens	10	general_trade_books	Children's Area
+early_readers	Early Readers	childrens	20	general_trade_books	Children's Area
+middle_grade	Middle Grade	childrens	30	general_trade_books	Children's Area
+young_adult	Young Adult	books	50	general_trade_books	Young Adult
+ya_fiction	YA Fiction	young_adult	10	general_trade_books	Young Adult
+ya_nonfiction	YA Nonfiction	young_adult	20	general_trade_books	Young Adult
+bargain	Bargain & Remainder	books	60	general_trade_books	Bargain Books
+textbooks	Textbooks	books	70	general_trade_books	Reference
+reference	Reference	books	80	general_trade_books	Reference
+used	Used Books		15	used_books	Bargain Books
+used_fiction	Used Fiction	used	10	used_books	Bargain Books
+used_nonfiction	Used Nonfiction	used	20	used_books	Bargain Books
+media	Media		20	general_trade_books	Media Wall
+recorded_music	Recorded Music	media	10	general_trade_books	Music
+pop_rock	Pop & Rock	recorded_music	10	general_trade_books	Music
+jazz_blues	Jazz & Blues	recorded_music	20	general_trade_books	Music
+classical	Classical	recorded_music	30	general_trade_books	Music
+video	Video	media	30	general_trade_books	Video
+audiobooks	Audiobooks	media	20	general_trade_books	Music
+video_games	Video Games	media	40	sidelines	Games Wall
+periodicals	Periodicals & Newsstand		30	periodicals	Newsstand
+magazines	Magazines	periodicals	10	periodicals	Magazines
+newspapers	Newspapers	periodicals	20	periodicals	Newspapers
+comics	Comics & Graphic Novels	periodicals	30	periodicals	Magazines
+sidelines	Gifts & Sidelines		40	sidelines	Gift Area
+stationery	Stationery & Journals	sidelines	10	sidelines	Stationery
+gifts	Gifts	sidelines	20	sidelines	Gift Area
+games	Games & Puzzles	sidelines	30	sidelines	Games Wall
+toys	Toys	sidelines	40	sidelines	Gift Area
+calendars	Calendars & Planners	sidelines	50	sidelines	Gift Area
+cafe	Cafe & Bakery		50	cafe	Cafe Counter
+coffee_espresso	Coffee & Espresso	cafe	10	cafe	Cafe Counter
+bakery	Bakery	cafe	20	cafe	Cafe Shelves
+packaged_food	Packaged Snacks	cafe	30	cafe	Cafe Shelves
+gift_cards	Gift Cards & Certificates		60	gift_cards	Register
+services	Services		70	gift_cards	Register
+event_tickets	Event Tickets	services	10	gift_cards	Register

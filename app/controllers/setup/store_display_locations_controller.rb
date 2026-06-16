@@ -31,14 +31,14 @@ module Setup
     def new
       @store_display_location = StoreDisplayLocation.new(active: true, linear_feet: 0)
       @stores = accessible_stores_for("setup.store_display_locations.create").active_records
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @display_locations = DisplayLocation.active_for_tree_select
     end
 
     def create
       @store_display_location = StoreDisplayLocation.new(store_display_location_params)
       authorize_store_access!(@store_display_location.store, permission_key: "setup.store_display_locations.create") if @store_display_location.store
       @stores = accessible_stores_for("setup.store_display_locations.create").active_records
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @display_locations = DisplayLocation.active_for_tree_select
       if @store_display_location.save
         record_audit!("store_display_location.created", @store_display_location)
         redirect_to setup_store_display_location_path(@store_display_location), notice: "Store display location created."
@@ -49,12 +49,12 @@ module Setup
 
     def edit
       @stores = accessible_stores_for("setup.store_display_locations.update").active_records
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @display_locations = DisplayLocation.active_for_tree_select
     end
 
     def update
       @stores = accessible_stores_for("setup.store_display_locations.update").active_records
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @display_locations = DisplayLocation.active_for_tree_select
       if @store_display_location.update(store_display_location_params)
         record_audit!("store_display_location.updated", @store_display_location)
         redirect_to setup_store_display_location_path(@store_display_location), notice: "Store display location updated."

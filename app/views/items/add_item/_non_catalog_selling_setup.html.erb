@@ -1,11 +1,10 @@
-<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post, class: "ss-form ss-form--wide" do |f| %>
+<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post, class: "ss-form ss-form--wide", html: { multipart: true } do |f| %>
   <%= render "shared/forms/errors", record: product %>
   <%= render "items/shared/product_forms/non_catalog",
              f: f,
              product: product,
              display_locations: display_locations,
-             categories: categories,
-             initial_category_id: initial_category_id,
+             sub_departments: sub_departments,
              generated_sku: generated_sku,
              require_sku: true,
              description: "Define the product before creating sellable SKUs." %>

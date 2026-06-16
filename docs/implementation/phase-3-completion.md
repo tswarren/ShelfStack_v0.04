@@ -2,9 +2,11 @@
 
 ## Status
 
-**Phase 3 (Catalog, Products, and Product Variants) is complete** as of 2025-06-10.
+**Phase 3 (Catalog, Products, and Product Variants) is complete** as of 2026-06-10.
 
-Phase 3 delivered the catalog metadata and sellable SKU foundation: formats, catalog items with identifiers, products, product variants, conditions, display locations, store display locations, vendors, identifier/SKU/name services, setup UI, permissions, audit events, and bookstore-oriented seeds.
+Manual QA sign-off: all Phase 3 manual test scenarios passed (catalog identifiers, Add Item wizard, products/variants, classification setup, Ingram import smoke paths, permissions, and audit timelines).
+
+Phase 3 delivered the catalog metadata and sellable SKU foundation: formats, catalog items with identifiers, products, product variants, conditions, display locations, store display locations, vendors, subdepartments and store categories (classification target), identifier/SKU/name services, setup UI, permissions, audit events, and bookstore-oriented seeds.
 
 Normative requirements remain in:
 
@@ -32,7 +34,7 @@ Migration: `db/migrate/20250612120000_create_phase3_catalog_products_variants.rb
 | `store_display_locations` | Store activation of display locations |
 | `products` | Store-facing product groupings with base SKU |
 | `product_conditions` | Condition/special-state definitions for variant SKU suffixes |
-| `product_variants` | Sellable SKUs with category, price, and inventory behavior |
+| `product_variants` | Sellable SKUs with subdepartment, price, and inventory behavior |
 | `vendors` | Basic supplier directory |
 
 ### Services
@@ -43,8 +45,10 @@ Migration: `db/migrate/20250612120000_create_phase3_catalog_products_variants.rb
 | `MetadataParser` | Parse semicolon-separated creators and subjects into JSONB |
 | `SkuGenerator` | Product and variant SKU generation with condition/attribute suffix rules |
 | `ProductNameRenderer` | Conservative product and variant name generation with override support |
+| `SubDepartmentSuggestion`, `StoreCategoryDefaults`, `VariantClassificationSetup` | Subdepartment and display-location defaults from product, store category, or condition |
+| `TreeOrdering`, `SubDepartmentIndexTree` | Hierarchical index and select-list ordering for setup screens |
 
-Product cover images use Active Storage (`Product#cover_image`) and appear on the item overview, product index, and search results.
+Product cover images use Active Storage (`Product#cover_image`) and appear on the item overview, product index, and search results. Cover images attach during the Add Item selling-setup step and on product edit.
 
 ### Setup UI
 
@@ -58,17 +62,18 @@ Items workspace (`/items/*`):
 Setup workspace (`/setup/*`) — admin and reference data:
 
 - **Foundation:** users, roles, stores, workstations, audit
-- **Classification:** departments, categories, tax
-- **Catalog and Items:** formats, product conditions, display locations, store display locations, vendors
+- **Classification:** departments, subdepartments, store categories, tax (legacy categories retained for reference)
+- **Catalog and Items:** formats, product conditions, display locations, store display locations, vendors, BISAC subjects
 
-Main navigation links **Items** and **Setup**.
+Setup index pages and related select lists use hierarchical tree ordering for display locations, store categories, and subdepartments (department → subdepartment).
 
 ### Permissions
 
 Phase 3–related permissions seeded via `db/seeds/phase3_permissions.rb`:
 
 - `items.access` plus `items.catalog_items.*`, `items.products.*`, and `items.product_variants.*`
-- `setup.formats.*`, `setup.product_conditions.*`, `setup.display_locations.*`, `setup.store_display_locations.*`, and `setup.vendors.*`
+- `items.ingram_import.run`
+- `setup.formats.*`, `setup.product_conditions.*`, `setup.display_locations.*`, `setup.store_display_locations.*`, `setup.vendors.*`, `setup.sub_departments.*`, `setup.category_schemes.*`
 
 Legacy `catalog.*` and `products.*` keys are deactivated on seed.
 
@@ -82,6 +87,13 @@ Legacy `catalog.*` and `products.*` keys are deactivated on seed.
 - 3 example vendors
 - Demo catalog item (The Hobbit with ISBN-10→13 conversion), catalog-linked product + variant, gift card product, sideline with local identifier
 
+Reference trees (`db/seeds/phase3b_reference_trees.rb`, TSV importers):
+
+- Display location hierarchy
+- Store category nodes with default subdepartment and display location
+- BISAC → store category suggestion links
+- Subdepartments with department assignment
+
 ---
 
 ## Verification
@@ -92,7 +104,9 @@ Legacy `catalog.*` and `products.*` keys are deactivated on seed.
 ./dev/rails-docker bin/rails test
 ```
 
-Expected: **136 tests, 0 failures** (model, service, authorization, and integration coverage for Phase 3).
+Expected: **273 tests**, 0 failures (model, service, authorization, and integration coverage through Phase 3 and classification-target migration).
+
+Manual QA (2026-06-10): passed — catalog identifiers (including invalid ISBN-13 warnings), Add Item wizard (catalog-linked and non-catalog), product/variant CRUD, cover image upload, classification setup trees, permissions, seeds idempotency, and Phase 1–2 regression smoke.
 
 ---
 
@@ -201,4 +215,4 @@ Per Phase 3 non-goals (unchanged):
 
 ## Next Priority
 
-Phase 4 direction (see [roadmap.md](../roadmap.md)): **Inventory Foundation** is the recommended next phase.
+**Phase 4: Inventory Foundation** per [roadmap.md](../roadmap.md) — recommended because purchasing, receiving, and POS depend on reliable stock movement behavior.

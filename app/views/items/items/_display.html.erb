@@ -30,7 +30,7 @@
             <tr>
               <td><%= variant.condition&.short_name || variant.name %></td>
               <td><%= variant.sku %></td>
-              <td><%= variant.category&.name || "—" %></td>
+              <td><%= variant.sub_department&.name || "—" %></td>
               <td><%= variant.display_location&.name || "—" %></td>
               <td><%= link_to "Edit", edit_items_product_variant_path(variant, return_to: "item") %></td>
             </tr>

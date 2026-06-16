@@ -1,8 +1,8 @@
 <h1>Sales Account Mapping</h1>
 <dl class="ss-summary">
-  <dt>Merchandise class</dt><dd><%= @accounting_mapping.merchandise_class&.name || "Any" %></dd>
+  <dt>Subdepartment</dt><dd><%= @accounting_mapping.sub_department&.name || "Any" %></dd>
   <dt>Condition</dt><dd><%= @accounting_mapping.condition&.name || "Any" %></dd>
-  <dt>Topic node</dt><dd><%= @accounting_mapping.category_node&.breadcrumb_label || "Any" %></dd>
+  <dt>Store category node</dt><dd><%= @accounting_mapping.category_node&.breadcrumb_label || "Any" %></dd>
   <dt>Product type</dt><dd><%= @accounting_mapping.product_type.present? ? humanize_controlled_value(@accounting_mapping.product_type) : "Any" %></dd>
   <dt>Sales account code</dt><dd><%= @accounting_mapping.sales_account_code %></dd>
   <dt>Reporting bucket</dt><dd><%= @accounting_mapping.reporting_bucket || "—" %></dd>

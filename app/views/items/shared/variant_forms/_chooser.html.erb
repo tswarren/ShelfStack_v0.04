@@ -12,19 +12,17 @@
 <% end %>
 
 <% classification_locals = {
-  category_nodes: local_assigns[:category_nodes],
-  primary_category_node_id: local_assigns[:primary_category_node_id],
   classification_defaults: local_assigns[:classification_defaults]
 } %>
 <% case product.variation_type %>
 <% when "conditional" %>
-  <%= render "items/shared/variant_forms/conditional", f: f, variant: variant, product: product, categories: categories, conditions: conditions, display_locations: display_locations, **classification_locals %>
+  <%= render "items/shared/variant_forms/conditional", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
 <% when "variable" %>
-  <%= render "items/shared/variant_forms/variable", f: f, variant: variant, product: product, categories: categories, conditions: conditions, display_locations: display_locations, **classification_locals %>
+  <%= render "items/shared/variant_forms/variable", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
 <% when "matrix" %>
-  <%= render "items/shared/variant_forms/matrix", f: f, variant: variant, product: product, categories: categories, conditions: conditions, display_locations: display_locations, **classification_locals %>
+  <%= render "items/shared/variant_forms/matrix", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
 <% else %>
-  <%= render "items/shared/variant_forms/standard", f: f, variant: variant, product: product, categories: categories, conditions: conditions, display_locations: display_locations, **classification_locals %>
+  <%= render "items/shared/variant_forms/standard", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
 <% end %>
 
 <% if show_advanced %>

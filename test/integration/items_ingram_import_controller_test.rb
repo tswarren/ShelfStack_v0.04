@@ -10,6 +10,7 @@ class ItemsIngramImportControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@admin, "items.access")
     grant_permission!(@admin, "items.ingram_import.run")
     @category = create_category!
+    @sub_department = @category.sub_department || create_sub_department!(default_tax_category: @category.default_tax_category)
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "ingramadmin", password: "Password123!" }
     seed_phase3_reference_data!
@@ -32,7 +33,7 @@ class ItemsIngramImportControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference -> { ProductVariant.count } do
       post items_ingram_import_preview_path, params: {
         import_file: file,
-        category_id: @category.id
+        sub_department_id: @sub_department.id
       }
     end
 
@@ -46,11 +47,11 @@ class ItemsIngramImportControllerTest < ActionDispatch::IntegrationTest
     file = fixture_file_upload("ingram_list_sample.xls", "application/vnd.ms-excel")
     post items_ingram_import_preview_path, params: {
       import_file: file,
-      category_id: @category.id
+      sub_department_id: @sub_department.id
     }
 
     before_count = ProductVariant.count
-    post items_ingram_import_run_path, params: { category_id: @category.id }
+    post items_ingram_import_run_path, params: { sub_department_id: @sub_department.id }
 
     assert_operator ProductVariant.count - before_count, :>=, 1
 

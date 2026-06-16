@@ -32,6 +32,7 @@ Rails.application.routes.draw do
     post "ingram_import", to: "ingram_import#create", as: :ingram_import_run
 
     get "bisac_subjects/search", to: "bisac_subject_searches#index", as: :bisac_subjects_search
+    get "identifier_preview", to: "identifier_previews#show", as: :identifier_preview
 
     resources :catalog_items do
       member do
@@ -142,7 +143,7 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
-    resources :merchandise_classes do
+    resources :sub_departments do
       member do
         patch :inactivate
         patch :reactivate

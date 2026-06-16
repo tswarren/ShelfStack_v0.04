@@ -88,6 +88,7 @@ module IngramCatalogImport
       if resolution.found?
         catalog_item = resolution.catalog_item
         catalog_item.assign_attributes(attrs)
+        apply_store_category!(catalog_item)
         changed = catalog_item.changed?
         catalog_item.save!
         ensure_identifiers!(catalog_item, row)
@@ -96,6 +97,7 @@ module IngramCatalogImport
         [catalog_item, :catalog_updated]
       else
         catalog_item = CatalogItem.new(attrs)
+        apply_store_category!(catalog_item)
         CatalogItem.transaction do
           catalog_item.save!
           create_identifiers!(catalog_item, row)
@@ -120,13 +122,17 @@ module IngramCatalogImport
         record_audit!("product.updated", product) if previous_price != row.us_srp_cents
         [product, :product_updated, nil]
       else
-        product = Product.create!(
+        product_attrs = {
           catalog_item: catalog_item,
           active: true,
           product_type: "physical",
           variation_type: "conditional",
           list_price_cents: row.us_srp_cents
-        )
+        }
+        defaults = StoreCategoryDefaults.for(store_category_node: catalog_item.store_category)
+        product_attrs[:default_sub_department] = defaults.default_sub_department if defaults.default_sub_department.present?
+        product_attrs[:default_display_location] = defaults.default_display_location if defaults.default_display_location.present?
+        product = Product.create!(product_attrs)
         record_audit!("product.created", product)
         [product, :product_created, nil]
       end
@@ -141,23 +147,18 @@ module IngramCatalogImport
       end
 
       condition = ProductCondition.active_records.find_by!(condition_key: "new")
+      suggestion = SubDepartmentSuggestion.for(product: product, condition: condition)
+      sub_department = suggestion.sub_department || @options.default_sub_department
       variant = ProductVariant.create!(
         product: product,
         condition: condition,
-        category: @options.default_category,
-        display_location: @options.default_display_location,
+        sub_department: sub_department,
+        display_location: @options.default_display_location || product.default_display_location,
         active: true,
         inventory_behavior: AddItem::InventoryBehaviorMapper.for_product_type("physical"),
         selling_price_cents: AddItem::DefaultSellingPrice.cents(product: product, condition: condition)
       )
       record_audit!("product_variant.created", variant, details: { "sku" => variant.sku, "source" => "ingram_import" })
-      if @options.default_primary_category_node.present?
-        VariantTopicCategorization.sync!(
-          variant: variant,
-          category_node_id: @options.default_primary_category_node.id,
-          source: "import"
-        )
-      end
       { status: :variant_created, variant: variant }
     end
 
@@ -244,6 +245,20 @@ module IngramCatalogImport
         structured: false,
         source: "import"
       )
+    end
+
+    def apply_store_category!(catalog_item)
+      if @options.default_store_category.present?
+        catalog_item.store_category = @options.default_store_category
+      elsif catalog_item.store_category.blank?
+        catalog_item.store_category = fallback_store_category
+      end
+    end
+
+    def fallback_store_category
+      @fallback_store_category ||= CategoryScheme.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+                                                 &.category_nodes
+                                                 &.find_by(node_key: "unclassified")
     end
   end
 end

@@ -164,6 +164,14 @@ a:hover {
   background: rgba(250, 204, 21, 0.28);
 }
 
+.ss-table--tree .ss-tree-name-cell {
+  padding-left: calc(0.75rem + var(--tree-depth, 0) * 1.25rem);
+}
+
+.ss-table--tree .ss-tree-row--root .ss-tree-name-cell {
+  font-weight: 600;
+}
+
 .status-active {
   color: var(--color-success);
   font-weight: 600;
@@ -586,6 +594,22 @@ a:hover {
   background: rgba(217, 56, 56, 0.1);
   border: var(--border) solid var(--color-error);
   color: var(--color-error);
+}
+
+.flash-warning {
+  background: rgba(255, 170, 0, 0.12);
+  border: var(--border) solid var(--color-warning);
+  color: #92400e;
+}
+
+.ss-hint--warning {
+  color: #92400e;
+  font-weight: 600;
+}
+
+.ss-hint--success {
+  color: var(--color-success);
+  font-weight: 600;
 }
 
 .ss-auth {

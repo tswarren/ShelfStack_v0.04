@@ -4,6 +4,7 @@ class Department < ApplicationRecord
   include DepartmentNumberNormalizer
 
   has_many :categories, dependent: :restrict_with_error
+  has_many :sub_departments, dependent: :restrict_with_error
 
   validates :department_number, presence: true, uniqueness: true, length: { is: 3 },
             format: { with: /\A[0-9]{3}\z/, message: "must be three numeric digits" }

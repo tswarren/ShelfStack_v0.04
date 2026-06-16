@@ -1,13 +1,13 @@
 <%= form_with model: [:setup, @accounting_mapping], class: "ss-form ss-form--standard" do |f| %>
   <%= render "shared/forms/errors", record: @accounting_mapping %>
   <div class="ss-form-grid ss-form-grid--2">
-    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :merchandise_class_id, label: "Merchandise class" } do %>
-      <%= f.collection_select :merchandise_class_id, @merchandise_classes, :id, :name, include_blank: "Any" %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :sub_department_id, label: "Subdepartment" } do %>
+      <%= f.collection_select :sub_department_id, @sub_departments, :id, :name, include_blank: "Any" %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :condition_id, label: "Condition" } do %>
       <%= f.collection_select :condition_id, @conditions, :id, :name, include_blank: "Any" %>
     <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :category_node_id, label: "Topic node" } do %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :category_node_id, label: "Store category node" } do %>
       <%= f.collection_select :category_node_id, @category_nodes, :id, :breadcrumb_label, include_blank: "Any" %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :product_type, label: "Product type" } do %>

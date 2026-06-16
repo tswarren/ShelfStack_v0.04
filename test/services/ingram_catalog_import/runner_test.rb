@@ -7,7 +7,13 @@ class IngramCatalogImport::RunnerTest < ActiveSupport::TestCase
     seed_phase3_reference_data!
     @actor = create_user!
     @category = create_category!
-    @options = IngramCatalogImport::ImportOptions.new(default_category: @category)
+    @sub_department = @category.sub_department || create_sub_department!(
+      default_tax_category: @category.default_tax_category
+    )
+    @options = IngramCatalogImport::ImportOptions.new(
+      default_sub_department: @sub_department,
+      default_store_category: store_category_node_for_tests
+    )
     @fixture_path = Rails.root.join("test/fixtures/files/ingram_list_sample.xls").to_s
   end
 

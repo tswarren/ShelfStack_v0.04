@@ -8,7 +8,9 @@ Phase 2/3 shipped a workable but overloaded model. Phase 3B separates **behavior
 
 > Legacy `Category` ≈ future **`MerchandiseClass`** (+ some format overlap), **not** future topic **`CategoryNode`**.
 
-This document is the source of truth for transitional semantics during the Phase 3B classification rework. Issue 01 introduces it; later issues implement against it.
+This document captured transitional semantics during the Phase 3B classification rework.
+
+**Superseded in part by:** [classification-target-spec.md](../../specifications/classification-target-spec.md) — the authoritative record of target naming (`sub_departments`, `store_categories` scheme), attachment rules (store category on catalog items only), GL at department level, migration phases A–D, and related decisions. Where this file conflicts with the target spec, follow the target spec.
 
 Related: [00-epic-phase-3-rework-merchandise-classification-structure.md](00-epic-phase-3-rework-merchandise-classification-structure.md)
 

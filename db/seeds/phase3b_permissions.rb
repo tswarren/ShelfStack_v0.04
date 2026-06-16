@@ -3,12 +3,12 @@
 module Seeds
   module Phase3bPermissions
     PERMISSIONS = [
-      { key: "setup.merchandise_classes.view", group: "setup", name: "View Merchandise Classes", description: "View merchandise classes" },
-      { key: "setup.merchandise_classes.create", group: "setup", name: "Create Merchandise Classes", description: "Create merchandise classes" },
-      { key: "setup.merchandise_classes.update", group: "setup", name: "Update Merchandise Classes", description: "Update merchandise classes" },
-      { key: "setup.merchandise_classes.inactivate", group: "setup", name: "Inactivate Merchandise Classes", description: "Inactivate merchandise classes" },
-      { key: "setup.merchandise_classes.reactivate", group: "setup", name: "Reactivate Merchandise Classes", description: "Reactivate merchandise classes" },
-      { key: "setup.merchandise_classes.delete", group: "setup", name: "Delete Merchandise Classes", description: "Delete unused merchandise classes" },
+      { key: "setup.sub_departments.view", group: "setup", name: "View Subdepartments", description: "View subdepartments" },
+      { key: "setup.sub_departments.create", group: "setup", name: "Create Subdepartments", description: "Create subdepartments" },
+      { key: "setup.sub_departments.update", group: "setup", name: "Update Subdepartments", description: "Update subdepartments" },
+      { key: "setup.sub_departments.inactivate", group: "setup", name: "Inactivate Subdepartments", description: "Inactivate subdepartments" },
+      { key: "setup.sub_departments.reactivate", group: "setup", name: "Reactivate Subdepartments", description: "Reactivate subdepartments" },
+      { key: "setup.sub_departments.delete", group: "setup", name: "Delete Subdepartments", description: "Delete unused subdepartments" },
       { key: "setup.category_schemes.view", group: "setup", name: "View Category Schemes", description: "View category schemes" },
       { key: "setup.category_schemes.create", group: "setup", name: "Create Category Schemes", description: "Create category schemes" },
       { key: "setup.category_schemes.update", group: "setup", name: "Update Category Schemes", description: "Update category schemes" },

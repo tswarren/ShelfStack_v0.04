@@ -1,17 +1,11 @@
-<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post, class: "ss-form ss-form--wide" do |f| %>
+<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post, class: "ss-form ss-form--wide", html: { multipart: true } do |f| %>
   <%= render "shared/forms/errors", record: product %>
   <%= render "items/shared/product_forms/catalog_linked",
              f: f,
              product: product,
              catalog_item: catalog_item,
+             sub_departments: sub_departments,
              display_locations: display_locations %>
-  <div class="ss-field">
-    <%= label_tag "product[initial_category_id]", "Initial SKU category", class: "ss-label" %>
-    <%= select_tag "product[initial_category_id]",
-          options_from_collection_for_select(categories, :id, :name, initial_category_id),
-          include_blank: false %>
-    <p class="ss-help">Applied to the first sellable SKU you create next.</p>
-  </div>
   <footer class="ss-form-actions">
     <%= f.submit "Continue to Sellable SKU", class: "ss-btn" %>
     <%= link_to "Cancel", items_item_path(catalog_item_id: catalog_item.id), class: "ss-btn ss-btn-secondary" %>

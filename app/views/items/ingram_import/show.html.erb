@@ -9,31 +9,33 @@
     <%= render "shared/forms/section", title: "Import options" do %>
       <div class="ss-form-grid ss-form-grid--2">
         <div class="ss-field">
-          <%= label_tag :category_id, ss_required_label("Default merchandise category"), class: "ss-label" %>
-          <%= select_tag :category_id,
-                         options_from_collection_for_select(@categories, :id, :name, @selected_category_id),
-                         include_blank: "Select a merchandise category",
+          <%= label_tag :sub_department_id, ss_required_label("Default subdepartment"), class: "ss-label" %>
+          <%= select_tag :sub_department_id,
+                         options_from_collection_for_select(@sub_departments, :id, :name, @selected_sub_department_id),
+                         include_blank: "Select a subdepartment",
                          required: true,
                          class: "ss-input" %>
-          <p class="ss-help">Applied to all newly created sellable SKUs during transition.</p>
+          <p class="ss-help">Applied to all newly created sellable SKUs.</p>
         </div>
 
-        <% if @category_nodes.any? %>
+        <% if @store_category_nodes.any? %>
           <div class="ss-field">
-            <%= label_tag :primary_category_node_id, "Default topic / section", class: "ss-label" %>
-            <%= select_tag :primary_category_node_id,
-                           options_from_collection_for_select(@category_nodes, :id, :breadcrumb_label, @selected_primary_category_node_id),
-                           include_blank: "Select topic / section",
-                           class: "ss-input" %>
+            <%= label_tag :store_category_id, "Default store category", class: "ss-label" %>
+            <%= tree_select_tag :store_category_id,
+                  @store_category_nodes,
+                  selected: @selected_store_category_id,
+                  include_blank: "Select store category",
+                  html_options: { class: "ss-input" } %>
           </div>
         <% end %>
 
         <div class="ss-field">
           <%= label_tag :display_location_id, "Default display location", class: "ss-label" %>
-          <%= select_tag :display_location_id,
-                         options_from_collection_for_select(@display_locations, :id, :name, @selected_display_location_id),
-                         include_blank: "None",
-                         class: "ss-input" %>
+          <%= tree_select_tag :display_location_id,
+                @display_locations,
+                selected: @selected_display_location_id,
+                include_blank: "None",
+                html_options: { class: "ss-input" } %>
         </div>
       </div>
     <% end %>
@@ -56,9 +58,9 @@
     <%= render "preview", preview_rows: @preview_rows, row_count: @row_count %>
 
     <%= form_with url: items_ingram_import_run_path, method: :post, class: "ss-form-card" do %>
-      <%= hidden_field_tag :category_id, @selected_category_id %>
+      <%= hidden_field_tag :sub_department_id, @selected_sub_department_id %>
+      <%= hidden_field_tag :store_category_id, @selected_store_category_id %>
       <%= hidden_field_tag :display_location_id, @selected_display_location_id %>
-      <%= hidden_field_tag :primary_category_node_id, @selected_primary_category_node_id if @selected_primary_category_node_id.present? %>
       <div class="ss-form-actions">
         <%= submit_tag "Run import", class: "ss-button ss-button--primary", data: { turbo_confirm: "Run import for #{@row_count} rows?" } %>
       </div>

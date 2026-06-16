@@ -83,4 +83,25 @@ class CategoryTest < ActiveSupport::TestCase
     assert_not category.valid?
     assert_includes category.errors[:default_tax_category], "must be active"
   end
+
+  test "rejects subdepartment from a different department" do
+    other_department = Department.create!(department_number: "004", name: "Used Books", short_name: "Used")
+    sub_department = create_sub_department!(
+      department: other_department,
+      sub_department_key: "used_books_test",
+      name: "Used Books Test",
+      short_name: "Used Test"
+    )
+
+    category = Category.new(
+      department: @department,
+      name: "Mismatch",
+      short_name: "Mismatch",
+      default_tax_category: @tax_category,
+      sub_department: sub_department
+    )
+
+    assert_not category.valid?
+    assert_includes category.errors[:sub_department], "must belong to the same department"
+  end
 end

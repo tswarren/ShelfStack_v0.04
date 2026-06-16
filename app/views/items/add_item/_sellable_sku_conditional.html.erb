@@ -33,11 +33,11 @@
       <%= f.number_field :selling_price_cents, min: 0, value: variant.selling_price_cents,
           data: { variant_preview_target: "sellingPrice", auto_generated: true, action: "input->variant-preview#markSellingPriceManual" } %>
     <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :category_id, label: "Category", required: true } do %>
-      <%= f.collection_select :category_id, categories, :id, :name, selected: variant.category_id %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sub_department_id, label: "Subdepartment", required: true } do %>
+      <%= f.collection_select :sub_department_id, sub_departments, :id, :name, selected: variant.sub_department_id %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :display_location_id, label: "Display location" } do %>
-      <%= f.collection_select :display_location_id, display_locations, :id, :name, include_blank: true %>
+      <%= tree_collection_select(f, :display_location_id, display_locations, include_blank: true) %>
     <% end %>
   </div>
 </section>

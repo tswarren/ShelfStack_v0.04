@@ -5,7 +5,7 @@
 <dl class="ss-summary">
   <dt>Product</dt><dd><%= @product_variant.product.name %></dd>
   <dt>SKU</dt><dd><%= @product_variant.sku %></dd>
-  <dt>Category</dt><dd><%= @product_variant.category.name %></dd>
+  <dt>Subdepartment</dt><dd><%= @product_variant.sub_department.name %></dd>
   <dt>Condition</dt><dd><%= @product_variant.condition&.name || "—" %></dd>
   <dt>Selling price</dt><dd><%= format_cents(@product_variant.selling_price_cents) %></dd>
   <dt>Inventory behavior</dt><dd><%= humanize_controlled_value(@product_variant.inventory_behavior) %></dd>

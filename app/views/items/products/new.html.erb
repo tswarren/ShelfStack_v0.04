@@ -12,11 +12,13 @@
                f: f,
                product: @product,
                catalog_item: catalog_item,
+               sub_departments: @sub_departments,
                display_locations: @display_locations %>
   <% else %>
     <%= render "items/shared/product_forms/non_catalog",
                f: f,
                product: @product,
+               sub_departments: @sub_departments,
                display_locations: @display_locations,
                require_sku: true %>
   <% end %>

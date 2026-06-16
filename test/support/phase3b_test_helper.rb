@@ -1,12 +1,21 @@
 # frozen_string_literal: true
 
 module Phase3bTestHelper
-  def create_merchandise_class!(default_tax_category: nil, **attrs)
-    default_tax_category ||= create_tax_category!
-    MerchandiseClass.create!({
-      merchandise_class_key: "test_class_#{SecureRandom.hex(3)}",
-      name: "Test Merchandise Class #{SecureRandom.hex(2)}",
-      short_name: "Test MC #{SecureRandom.hex(1)}",
+  def create_sub_department!(default_tax_category: nil, department: nil, **attrs)
+    default_tax_category ||= create_tax_category!(
+      name: "Tax #{SecureRandom.hex(3)}",
+      short_name: "T#{SecureRandom.hex(2)}"
+    )
+    department ||= create_department!(
+      department_number: format("%03d", SecureRandom.random_number(900) + 100),
+      name: "Test Department #{SecureRandom.hex(2)}",
+      short_name: "TD#{SecureRandom.hex(2)}"
+    )
+    SubDepartment.create!({
+      sub_department_key: "test_class_#{SecureRandom.hex(3)}",
+      name: "Test Subdepartment #{SecureRandom.hex(2)}",
+      short_name: "TSD #{SecureRandom.hex(1)}",
+      department: department,
       default_tax_category: default_tax_category,
       active: true
     }.merge(attrs))
@@ -16,7 +25,7 @@ module Phase3bTestHelper
     CategoryScheme.create!({
       scheme_key: "test_scheme_#{SecureRandom.hex(3)}",
       name: "Test Scheme #{SecureRandom.hex(2)}",
-      purpose: "store_sections_topics",
+      purpose: "store_categories",
       active: true
     }.merge(attrs))
   end

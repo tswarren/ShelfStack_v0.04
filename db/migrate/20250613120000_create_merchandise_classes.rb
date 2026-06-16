@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-class CreateMerchandiseClasses < ActiveRecord::Migration[8.0]
+class CreateSubDepartments < ActiveRecord::Migration[8.0]
   def change
-    create_table :merchandise_classes do |t|
-      t.string :merchandise_class_key, null: false
+    create_table :sub_departments do |t|
+      t.string :sub_department_key, null: false
       t.string :name, null: false
       t.string :short_name, null: false
       t.string :default_pricing_model
@@ -21,8 +21,8 @@ class CreateMerchandiseClasses < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :merchandise_classes, :merchandise_class_key, unique: true
-    add_index :merchandise_classes, :name, unique: true
-    add_index :merchandise_classes, :short_name, unique: true
+    add_index :sub_departments, :sub_department_key, unique: true
+    add_index :sub_departments, :name, unique: true
+    add_index :sub_departments, :short_name, unique: true
   end
 end

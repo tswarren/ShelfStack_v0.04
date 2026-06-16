@@ -20,7 +20,7 @@ module Setup
     end
 
     def new
-      @category_scheme = CategoryScheme.new(active: true, purpose: "store_sections_topics")
+      @category_scheme = CategoryScheme.new(active: true, purpose: "store_categories")
     end
 
     def create

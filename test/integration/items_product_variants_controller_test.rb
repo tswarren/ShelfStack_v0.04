@@ -14,6 +14,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     ].each { |key| grant_permission!(@admin, key) }
     @product = create_product!(variation_type: "conditional")
     @category = create_category!
+    @sub_department = @category.sub_department || create_sub_department!(default_tax_category: @category.default_tax_category)
     @used_condition = ProductCondition.active_records.find_by(new_condition: false) ||
                       create_product_condition!(condition_key: "used_test", name: "Used Test", short_name: "Used", new_condition: false, sku_component: "U", sort_order: 50)
     assign_workstation!(@workstation, cookies)
@@ -26,7 +27,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
         product_variant: {
           product_id: @product.id,
           condition_id: @used_condition.id,
-          category_id: @category.id,
+          sub_department_id: @sub_department.id,
           selling_price_cents: 899,
           inventory_behavior: "standard_physical",
           active: true
@@ -45,13 +46,13 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update variant with return_to item redirects to selling tab with variant highlight" do
-    variant = create_product_variant!(product: @product, category: @category)
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
 
     patch items_product_variant_path(variant, return_to: "item"), params: {
       product_variant: {
         product_id: @product.id,
         condition_id: variant.condition_id,
-        category_id: variant.category_id,
+        sub_department_id: variant.sub_department_id,
         selling_price_cents: 1299,
         inventory_behavior: variant.inventory_behavior,
         active: true
@@ -76,13 +77,13 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update variant without return_to param still redirects to item selling tab" do
-    variant = create_product_variant!(product: @product, category: @category)
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
 
     patch items_product_variant_path(variant), params: {
       product_variant: {
         product_id: @product.id,
         condition_id: variant.condition_id,
-        category_id: variant.category_id,
+        sub_department_id: variant.sub_department_id,
         selling_price_cents: 1399,
         inventory_behavior: variant.inventory_behavior,
         active: true
@@ -106,7 +107,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "variant show includes back to item link" do
-    variant = create_product_variant!(product: @product, category: @category)
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
 
     get items_product_variant_path(variant)
 

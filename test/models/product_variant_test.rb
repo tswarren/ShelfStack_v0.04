@@ -3,7 +3,7 @@
 require "test_helper"
 
 class ProductVariantTest < ActiveSupport::TestCase
-  test "category is required" do
+  test "subdepartment is required" do
     product = create_product!
     variant = ProductVariant.new(
       product: product,
@@ -14,14 +14,18 @@ class ProductVariantTest < ActiveSupport::TestCase
       active: true
     )
     assert_not variant.valid?
-    assert_includes variant.errors[:category], "must exist"
+    assert_includes variant.errors[:sub_department], "must exist"
   end
 
-  test "inactive category is rejected" do
-    category = create_category!(active: false)
-    variant = build_variant(category: category)
+  test "inactive subdepartment is rejected" do
+    sub_department = create_sub_department!(
+      active: false,
+      name: "Inactive Subdept #{SecureRandom.hex(2)}",
+      short_name: "Inact #{SecureRandom.hex(1)}"
+    )
+    variant = build_variant(sub_department: sub_department)
     assert_not variant.valid?
-    assert_includes variant.errors[:category], "must be active"
+    assert_includes variant.errors[:sub_department], "must be active"
   end
 
   test "generates suffixed sku for non-new condition on standard product" do
@@ -29,7 +33,7 @@ class ProductVariantTest < ActiveSupport::TestCase
     used = create_product_condition!(condition_key: "used_test", sku_component: "UG", short_name: "Good", name: "Used - Good")
     variant = ProductVariant.create!(
       product: product,
-      category: create_category!,
+      sub_department: create_sub_department!,
       condition: used,
       selling_price_cents: 1000,
       inventory_behavior: "standard_physical",
@@ -41,15 +45,9 @@ class ProductVariantTest < ActiveSupport::TestCase
   private
 
   def build_variant(**attrs)
-    dept = create_department!(
-      department_number: format("%03d", rand(100..899)),
-      name: "Dept #{SecureRandom.hex(2)}",
-      short_name: "D#{SecureRandom.hex(2)}"
-    )
-    tax = create_tax_category!(name: "Tax #{SecureRandom.hex(2)}", short_name: "T#{SecureRandom.hex(2)}")
     ProductVariant.new({
       product: create_product!,
-      category: create_category!(department: dept, default_tax_category: tax, name: "Cat #{SecureRandom.hex(2)}", short_name: "C#{SecureRandom.hex(2)}"),
+      sub_department: create_sub_department!,
       name: "Variant",
       sku: "VAR-#{SecureRandom.hex(3)}",
       selling_price_cents: 1000,

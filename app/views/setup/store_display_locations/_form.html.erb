@@ -9,7 +9,7 @@
       <%= f.collection_select :store_id, stores, :id, :name %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: store_display_location, field: :display_location_id, label: "Display location", required: true } do %>
-      <%= f.collection_select :display_location_id, display_locations, :id, :name %>
+      <%= tree_collection_select(f, :display_location_id, display_locations) %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: store_display_location, field: :linear_feet, label: "Linear feet" } do %>
       <%= f.number_field :linear_feet, min: 0 %>

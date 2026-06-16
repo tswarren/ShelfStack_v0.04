@@ -8,7 +8,7 @@
       <%= f.text_field :name %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: @category_scheme, field: :purpose, required: true } do %>
-      <%= f.select :purpose, CategoryScheme::PURPOSES.map { |p| [humanize_controlled_value(p), p] } %>
+      <%= f.select :purpose, CategoryScheme::PURPOSES.map { |p| [humanize_scheme_purpose(p), p] } %>
     <% end %>
   </div>
   <%= render "shared/forms/checkbox", f: f, record: @category_scheme, field: :active %>

@@ -60,10 +60,10 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
 
   test "price range label formats min and max selling prices" do
     product = create_product!
-    category = create_category!
-    create_product_variant!(product: product, category: category, selling_price_cents: 1299)
+    sub_department = create_sub_department!
+    create_product_variant!(product: product, sub_department: sub_department, selling_price_cents: 1299)
     used = ProductCondition.find_by(condition_key: "used") || create_product_condition!(condition_key: "used", short_name: "Used", new_condition: false, sku_component: "U")
-    create_product_variant!(product: product, category: category, condition: used, sku: "#{product.sku}-U", selling_price_cents: 899)
+    create_product_variant!(product: product, sub_department: sub_department, condition: used, sku: "#{product.sku}-U", selling_price_cents: 899)
     presenter = Items::ItemPresenter.from_product(product.reload)
 
     assert_equal "$8.99 – $12.99", presenter.price_range_label

@@ -22,9 +22,9 @@ module Items
       rows = IngramCatalogImport::SpreadsheetParser.call(path: session[:ingram_import_path])
       store_preview_cache!(
         rows: rows,
-        category_id: params[:category_id],
-        display_location_id: params[:display_location_id],
-        primary_category_node_id: params[:primary_category_node_id]
+        sub_department_id: params[:sub_department_id],
+        store_category_id: params[:store_category_id],
+        display_location_id: params[:display_location_id]
       )
 
       redirect_to items_ingram_import_path, notice: "Parsed #{rows.size} rows. Review the preview, then run import."
@@ -40,18 +40,21 @@ module Items
       end
 
       preview_data = preview_cache_data
-      category = Category.active_records.find_by(id: params[:category_id].presence || preview_data&.dig(:category_id))
-      if category.blank?
-        redirect_to items_ingram_import_path, alert: "Default category is required."
+      sub_department = SubDepartment.active_records.find_by(
+        id: params[:sub_department_id].presence || preview_data&.dig(:sub_department_id)
+      )
+      if sub_department.blank?
+        redirect_to items_ingram_import_path, alert: "Default subdepartment is required."
         return
       end
 
       display_location_id = params[:display_location_id].presence || preview_data&.dig(:display_location_id)
       display_location = DisplayLocation.active_records.find_by(id: display_location_id)
+      store_category = resolve_store_category
       options = IngramCatalogImport::ImportOptions.new(
-        default_category: category,
-        default_display_location: display_location,
-        default_primary_category_node: resolve_topic_node
+        default_sub_department: sub_department,
+        default_store_category: store_category,
+        default_display_location: display_location
       )
 
       result = IngramCatalogImport::Runner.call(path: path, actor: current_user, options: options)
@@ -69,19 +72,19 @@ module Items
     end
 
     def load_collections
-      @categories = Category.active_records.includes(:department, :merchandise_class).order("departments.name", :name)
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
-      @topic_scheme = CategoryScheme.active_records.find_by(scheme_key: "store_sections_topics")
-      @category_nodes = if @topic_scheme
-                          @topic_scheme.category_nodes.active_records.includes(:parent).order(:sort_order, :name)
-                        else
-                          CategoryNode.none
-                        end
+      @sub_departments = SubDepartment.active_records.order(:name)
+      @display_locations = DisplayLocation.active_for_tree_select
+      @store_category_scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+      @store_category_nodes = if @store_category_scheme
+                                CategoryNode.active_for_tree_select(@store_category_scheme)
+                              else
+                                CategoryNode.none
+                              end
     end
 
-    def resolve_topic_node
-      node_id = params[:primary_category_node_id].presence || preview_cache_data&.dig(:primary_category_node_id)
-      @category_nodes.find_by(id: node_id)
+    def resolve_store_category
+      node_id = params[:store_category_id].presence || preview_cache_data&.dig(:store_category_id)
+      @store_category_nodes.find_by(id: node_id)
     end
 
     def validate_upload!(file)
@@ -111,7 +114,7 @@ module Items
       clear_preview_cache!
     end
 
-    def store_preview_cache!(rows:, category_id:, display_location_id:, primary_category_node_id: nil)
+    def store_preview_cache!(rows:, sub_department_id:, store_category_id:, display_location_id:)
       clear_preview_cache!
       key = cache_key("preview")
       Rails.cache.write(
@@ -119,9 +122,9 @@ module Items
         {
           rows: rows.first(PREVIEW_LIMIT).map(&:to_preview_hash),
           row_count: rows.size,
-          category_id: category_id,
-          display_location_id: display_location_id,
-          primary_category_node_id: primary_category_node_id
+          sub_department_id: sub_department_id,
+          store_category_id: store_category_id,
+          display_location_id: display_location_id
         },
         expires_in: CACHE_EXPIRY
       )
@@ -134,9 +137,9 @@ module Items
 
       @preview_rows = data[:rows]
       @row_count = data[:row_count]
-      @selected_category_id = data[:category_id]
+      @selected_sub_department_id = data[:sub_department_id]
+      @selected_store_category_id = data[:store_category_id]
       @selected_display_location_id = data[:display_location_id]
-      @selected_primary_category_node_id = data[:primary_category_node_id]
     end
 
     def preview_cache_data

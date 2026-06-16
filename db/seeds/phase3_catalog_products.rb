@@ -29,14 +29,11 @@ module Seeds
       { condition_key: "remainder", name: "Remainder", short_name: "Remainder", sku_component: "RM", sort_order: 21, new_condition: true, default_list_price_factor_bps: 10_000 }
     ].freeze
 
-    DISPLAY_LOCATIONS = [
-      { name: "Front Table", short_name: "Front Table", sort_order: 0 },
-      { name: "New Releases", short_name: "New Releases", sort_order: 1 },
-      { name: "Fiction", short_name: "Fiction", sort_order: 2 },
-      { name: "Children's", short_name: "Children's", sort_order: 3 },
-      { name: "Bargain", short_name: "Bargain", sort_order: 4 },
-      { name: "Register Counter", short_name: "Register", sort_order: 5 }
-    ].freeze
+    DISPLAY_LOCATIONS = [].freeze
+
+    def self.seed_display_locations!
+      Seeds::Phase3bReferenceTrees.import_display_locations! if DisplayLocation.none?
+    end
 
     VENDORS = [
       { name: "Ingram" },
@@ -47,9 +44,7 @@ module Seeds
     def self.seed!
       seed_formats!
       seed_product_conditions!
-      seed_display_locations!
       seed_vendors!
-      seed_demo_catalog_and_products!
     end
 
     def self.seed_formats!
@@ -70,25 +65,6 @@ module Seeds
       end
     end
 
-    def self.seed_display_locations!
-      DISPLAY_LOCATIONS.each do |attrs|
-        DisplayLocation.find_or_initialize_by(short_name: attrs[:short_name]).tap do |location|
-          location.assign_attributes(attrs.merge(active: true))
-          location.save!
-        end
-      end
-
-      Store.find_each do |store|
-        DisplayLocation.active_records.find_each do |location|
-          StoreDisplayLocation.find_or_initialize_by(store: store, display_location: location).tap do |record|
-            record.linear_feet = 0
-            record.active = true
-            record.save!
-          end
-        end
-      end
-    end
-
     def self.seed_vendors!
       VENDORS.each do |attrs|
         Vendor.find_or_initialize_by(name: attrs[:name]).tap do |vendor|
@@ -101,10 +77,14 @@ module Seeds
     def self.seed_demo_catalog_and_products!
       hardcover = Format.find_by!(format_key: "hardcover")
       sideline = Format.find_by!(format_key: "sideline")
-      fiction = Category.joins(:department).find_by(name: "Fiction") ||
-                Category.active_records.order(:id).first
+      trade_sub_department = SubDepartment.find_by!(sub_department_key: "general_trade_books")
+      gift_sub_department = SubDepartment.find_by!(sub_department_key: "gift_cards")
       new_condition = ProductCondition.find_by!(condition_key: "new")
       front_table = DisplayLocation.find_by!(short_name: "Front Table")
+      fiction_store_category = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+                                            .category_nodes.find_by!(node_key: "fiction")
+      gifts_store_category = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+                                           .category_nodes.find_by!(node_key: "gifts")
 
       catalog_item = CatalogItem.find_or_initialize_by(title: "The Hobbit", format: hardcover)
       if catalog_item.new_record?
@@ -113,6 +93,7 @@ module Seeds
           creators: "Tolkien, J.R.R. [author]",
           publisher: "Houghton Mifflin",
           publication_status: "active",
+          store_category: fiction_store_category,
           active: true
         )
         catalog_item.save!
@@ -141,10 +122,10 @@ module Seeds
         ProductVariant.find_or_create_by!(product: product, sku: product.sku) do |variant|
           variant.assign_attributes(
             name: ProductNameRenderer.variant_name(
-              ProductVariant.new(product: product, condition: new_condition, category: fiction)
+              ProductVariant.new(product: product, condition: new_condition, sub_department: trade_sub_department)
             ),
             condition: new_condition,
-            category: fiction,
+            sub_department: trade_sub_department,
             selling_price_cents: 1899,
             inventory_behavior: "standard_physical",
             active: true
@@ -166,7 +147,7 @@ module Seeds
           variant.assign_attributes(
             name: gift_product.name,
             condition: new_condition,
-            category: fiction,
+            sub_department: gift_sub_department,
             selling_price_cents: 2500,
             inventory_behavior: "pure_financial",
             active: true
@@ -179,6 +160,7 @@ module Seeds
         sideline_item.assign_attributes(
           catalog_item_type: "sideline",
           publication_status: "active",
+          store_category: gifts_store_category,
           active: true
         )
         sideline_item.save!

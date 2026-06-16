@@ -62,6 +62,18 @@ module Items
       flash[:notice] = [notice, warning_text].compact.join(" ")
     end
 
+    def apply_identifier_validation_notice!(record)
+      identifier = if record.is_a?(CatalogItemIdentifier)
+                       record
+                     else
+                       record.reload.primary_identifier
+                     end
+      return if identifier.blank? || identifier.validation_message.blank?
+
+      message = "Identifier saved with warning: #{identifier.validation_message}"
+      flash[:warning] = [flash[:warning], message].compact.join(" ")
+    end
+
     def bisac_structured_input?
       params.key?(:primary_bisac_category_node_id) || params.key?(:bisac_category_node_ids)
     end

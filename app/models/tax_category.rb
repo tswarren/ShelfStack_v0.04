@@ -4,7 +4,7 @@ class TaxCategory < ApplicationRecord
   has_many :store_tax_category_rates, dependent: :restrict_with_error
   has_many :categories, foreign_key: :default_tax_category_id, dependent: :restrict_with_error,
            inverse_of: :default_tax_category
-  has_many :merchandise_classes, foreign_key: :default_tax_category_id, dependent: :restrict_with_error,
+  has_many :sub_departments, foreign_key: :default_tax_category_id, dependent: :restrict_with_error,
            inverse_of: :default_tax_category
 
   validates :name, presence: true, uniqueness: true

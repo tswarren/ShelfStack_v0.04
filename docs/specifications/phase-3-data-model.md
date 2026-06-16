@@ -133,6 +133,7 @@ access_restriction_data
 | `description` | text | nullable | Description/summary. |
 | `year` | string | limit 4 | Four-digit year for calendars/annuals. |
 | `digital` | boolean | null false, default false | Digital catalog item flag. |
+| `store_category_id` | bigint | references `category_nodes`, nullable | Store topic category (`store_categories` scheme). |
 | `active` | boolean | null false, default true | Inactive catalog items cannot be linked to new products. |
 | `created_at` | datetime | null false |  |
 | `updated_at` | datetime | null false |  |
@@ -201,6 +202,7 @@ access_restriction_data
 | `variation_type` | string | null false, default `standard` | Controlled value. |
 | `list_price_cents` | integer | null false, default 0 | MSRP/list/cover price when applicable. |
 | `default_display_location_id` | bigint | references `display_locations`, nullable | Default merchandising location. |
+| `default_sub_department_id` | bigint | references `sub_departments`, nullable | Default subdepartment for variants (catalog path may inherit from store category). |
 | `variant1_label` | string | nullable | Example: `Color`, `Size`. |
 | `variant2_label` | string | nullable | Example: `Size`, `Style`. |
 | `active` | boolean | null false, default true | Inactive products cannot be used for new variants/sales. |
@@ -239,7 +241,7 @@ access_restriction_data
 | `short_name` | string | limit 40 | Optional compact POS/receipt name. |
 | `sku` | string | null false, unique, limit 50 | Actual sellable SKU. |
 | `condition_id` | bigint | references `product_conditions`, nullable | Primary condition. |
-| `category_id` | bigint | references `categories`, null false | Required transitional merchandise category bridge. Still drives item forms and lifecycle checks; topic classification uses `Categorization` separately. |
+| `sub_department_id` | bigint | references `sub_departments`, null false | Required operational subdepartment for sellable SKU. |
 | `display_location_id` | bigint | references `display_locations`, nullable | Variant display override. |
 | `attribute1_value` | string | nullable | Example: `Blue`. |
 | `attribute1_sku_component` | string | limit 5 | Example: `BLU`. |
@@ -460,7 +462,7 @@ markdown
 | `product_id` | normal |
 | `sku` | unique |
 | `condition_id` | normal |
-| `category_id` | normal |
+| `sub_department_id` | normal |
 | `display_location_id` | normal |
 | `inventory_behavior` | normal |
 | `pricing_model_override` | normal |
@@ -622,3 +624,60 @@ product_price_history
 Use restrictive foreign keys where practical.
 
 Prefer inactivation over deletion after references exist.
+
+---
+
+# Appendix A — Classification target migration (post Phase 3B)
+
+Authority: `docs/specifications/classification-target-spec.md`
+
+## Renamed table: `sub_departments`
+
+Renamed from `merchandise_classes`. Stable key column: `sub_department_key`.
+
+| Field | Type | Notes |
+| :---- | ----: | :---- |
+| `department_id` | bigint | **Required.** FK to `departments`; parent reporting/GL department |
+| `default_variation_type` | string | Default `standard`; validates against `Product::VARIATION_TYPES` |
+| `default_inventory_behavior` | string | Validates against `ProductVariant::INVENTORY_BEHAVIORS` |
+| `default_tax_category_id` | bigint | Operational tax default (unchanged from merchandise class) |
+
+Legacy `categories.sub_department_id` remains a bridge from Phase 2 categories during setup reference only; item entry uses variant `sub_department_id` directly.
+
+## `catalog_items.store_category_id`
+
+| Field | Type | Notes |
+| :---- | ----: | :---- |
+| `store_category_id` | bigint | Nullable FK to `category_nodes` in the `store_categories` scheme |
+
+## `category_nodes` default FKs
+
+| Field | Type | Notes |
+| :---- | ----: | :---- |
+| `default_sub_department_id` | bigint | Nullable FK to `sub_departments` |
+| `default_display_location_id` | bigint | Nullable FK to `display_locations` |
+| `default_store_category_id` | bigint | Nullable self-FK; used on BISAC nodes to suggest a store category |
+
+## `products.default_sub_department_id`
+
+| Field | Type | Notes |
+| :---- | ----: | :---- |
+| `default_sub_department_id` | bigint | Nullable FK to `sub_departments`; may be set from store category defaults on catalog path |
+
+## `product_variants` classification (updated)
+
+Replace prior `category_id` documentation with:
+
+| Field | Type | Notes |
+| :---- | ----: | :---- |
+| `sub_department_id` | bigint | **Required.** FK to `sub_departments`; sellable operational classification |
+
+`category_id` removed in migration `20250615120200_classification_target_retire_legacy`.
+
+## Index updates
+
+| Table | Index |
+| :---- | :---- |
+| `product_variants` | `sub_department_id` (replaces `category_id`) |
+| `catalog_items` | `store_category_id` |
+| `products` | `default_sub_department_id` |

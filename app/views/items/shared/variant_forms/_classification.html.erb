@@ -1,22 +1,12 @@
 <section class="ss-form-card">
   <header class="ss-form-card-header">
     <h2>Classification &amp; Defaults</h2>
-    <p class="ss-muted">Choose how this SKU is classified. Derived defaults update from merchandise class and sales account mappings.</p>
+    <p class="ss-muted">Choose the subdepartment for this sellable SKU. Derived defaults come from the subdepartment and department GL account.</p>
   </header>
 
   <div class="ss-form-grid ss-form-grid--2">
-    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :category_id, label: "Merchandise category", required: true } do %>
-      <%= f.collection_select :category_id, categories, :id, :name, selected: variant.category_id %>
-    <% end %>
-
-    <% if category_nodes.present? %>
-      <div class="ss-field">
-        <%= label_tag :primary_category_node_id, "Topic / section", class: "ss-label" %>
-        <%= select_tag :primary_category_node_id,
-                       options_from_collection_for_select(category_nodes, :id, :breadcrumb_label, primary_category_node_id),
-                       include_blank: "Select topic / section",
-                       class: "ss-input" %>
-      </div>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sub_department_id, label: "Subdepartment", required: true } do %>
+      <%= f.collection_select :sub_department_id, sub_departments, :id, :name, selected: variant.sub_department_id %>
     <% end %>
 
     <% if variant.condition_id.present? || f.object.condition.present? %>
@@ -26,7 +16,7 @@
     <% end %>
 
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :display_location_id, label: "Display location" } do %>
-      <%= f.collection_select :display_location_id, display_locations, :id, :name, include_blank: true %>
+      <%= tree_collection_select(f, :display_location_id, display_locations, include_blank: true) %>
     <% end %>
   </div>
 
@@ -40,10 +30,6 @@
         <dd><%= classification_defaults.tax_category&.name || "—" %></dd>
         <dt>Sales account</dt>
         <dd><%= classification_defaults.sales_account_code.presence || "—" %></dd>
-        <% if classification_defaults.reporting_bucket.present? %>
-          <dt>Reporting bucket</dt>
-          <dd><%= classification_defaults.reporting_bucket %></dd>
-        <% end %>
         <dt>Returnable</dt>
         <dd><%= classification_defaults.returnable.nil? ? "—" : (classification_defaults.returnable ? "Yes" : "No") %></dd>
         <dt>Buyback eligible</dt>

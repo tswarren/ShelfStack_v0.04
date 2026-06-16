@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CategoryScheme < ApplicationRecord
-  PURPOSES = %w[store_sections_topics reporting website browse internal bisac].freeze
+  PURPOSES = %w[store_categories store_sections_topics reporting website browse internal bisac].freeze
 
   has_many :category_nodes, dependent: :restrict_with_error
   has_many :categorizations, through: :category_nodes
@@ -20,6 +20,10 @@ class CategoryScheme < ApplicationRecord
 
   def reactivate!
     update!(active: true)
+  end
+
+  def store_category_scheme?
+    scheme_key.in?([CategoryNode::STORE_CATEGORIES_SCHEME_KEY, CategoryNode::LEGACY_STORE_SCHEME_KEY])
   end
 
   private

@@ -166,6 +166,31 @@ class CatalogIdentifierService
     normalize_standard_digits(value)
   end
 
+  def self.validation_preview(identifier_type:, value:)
+    identifier_type = identifier_type.to_s
+    trimmed = value.to_s.strip
+    return { normalized: "—", valid: nil, message: nil } if trimmed.blank?
+
+    if identifier_type == "publisher_number"
+      return {
+        normalized: normalize_publisher_number(trimmed),
+        valid: nil,
+        message: nil
+      }
+    end
+
+    return { normalized: trimmed, valid: nil, message: nil } if identifier_type == "local"
+
+    normalized = normalize_standard_digits(trimmed)
+    validation = validate_standard_identifier(identifier_type, normalized)
+
+    {
+      normalized: normalized.presence || "—",
+      valid: validation[:valid_check_digit],
+      message: validation[:validation_message]
+    }
+  end
+
   def self.add_isbn10!(catalog_item:, value:, actor:, source:)
     normalized = normalize_standard_digits(value)
     validation = validate_isbn10(normalized)

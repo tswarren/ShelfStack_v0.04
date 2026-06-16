@@ -28,8 +28,11 @@ module Items
       )
       if params[:catalog_item_id].present?
         catalog_item = CatalogItem.find_by(id: params[:catalog_item_id])
-        @product.name = ProductNameRenderer.product_name(@product) if catalog_item
-        @product.variation_type = "conditional" if catalog_item
+        if catalog_item
+          @product.name = ProductNameRenderer.product_name(@product)
+          @product.variation_type = "conditional"
+          apply_store_category_product_defaults!(@product, catalog_item)
+        end
       end
       load_form_collections
     end
@@ -52,7 +55,6 @@ module Items
     def update
       load_form_collections
       purge_cover_image_if_requested
-      apply_catalog_linked_defaults!
       if @product.update(product_params)
         regenerate_catalog_linked_name!
         record_audit!("product.updated", @product)
@@ -105,13 +107,16 @@ module Items
 
     def load_form_collections
       @catalog_items = CatalogItem.active_records.includes(:format).order(:title)
-      @display_locations = DisplayLocation.active_records.order(:sort_order, :name)
+      @display_locations = DisplayLocation.active_for_tree_select
+      @sub_departments = SubDepartment.active_records.order(:name)
     end
 
-    def apply_catalog_linked_defaults!
-      return if @product.catalog_item.blank?
+    def apply_store_category_product_defaults!(product, catalog_item = product.catalog_item)
+      defaults = StoreCategoryDefaults.for(store_category_node: catalog_item&.store_category)
+      return if defaults.source == "none"
 
-      @product.variation_type = "conditional"
+      product.default_sub_department ||= defaults.default_sub_department if defaults.default_sub_department.present?
+      product.default_display_location ||= defaults.default_display_location if defaults.default_display_location.present?
     end
 
     def regenerate_catalog_linked_name!
@@ -123,12 +128,12 @@ module Items
     def product_params
       permitted = params.require(:product).permit(
         :catalog_item_id, :name, :name_override, :short_name, :sku, :product_type, :variation_type,
-        :list_price_cents, :default_display_location_id, :variant1_label, :variant2_label, :active,
-        :cover_image
+        :list_price_cents, :default_display_location_id, :default_sub_department_id,
+        :variant1_label, :variant2_label, :active, :cover_image
       )
 
       if catalog_linked_product?
-        excluded = %w[variation_type name]
+        excluded = %w[name]
         excluded << "catalog_item_id" if action_name == "update"
         permitted.except(*excluded)
       elsif action_name == "update" && @product.catalog_item_id.blank?

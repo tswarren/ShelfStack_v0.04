@@ -15,7 +15,9 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "items.product_variants.create")
     grant_permission!(@user, "items.catalog_items.view")
     @format = create_format!(format_key: "wizard_fmt", name: "Wizard Format", short_name: "WF")
+    seed_phase3_reference_data!
     @category = create_category!
+    @sub_department = @category.sub_department || create_sub_department!(default_tax_category: @category.default_tax_category)
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "wizarduser", password: "Password123!" }
   end
@@ -38,10 +40,13 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to items_add_item_path(step: "selling_setup")
 
+    follow_redirect!
+    assert_response :success
+
     post items_add_item_path(step: "selling_setup"), params: {
       product: {
         list_price_cents: 2000,
-        initial_category_id: @category.id
+        default_sub_department_id: @sub_department.id
       }
     }
     assert_redirected_to items_add_item_path(step: "sellable_sku")
@@ -50,7 +55,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
       post items_add_item_path(step: "sellable_sku"), params: {
         product_variant: {
           selling_price_cents: 2000,
-          category_id: @category.id
+          sub_department_id: @sub_department.id
         }
       }
     end
@@ -58,7 +63,33 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     item = CatalogItem.find_by!(title: "Wizard Book")
     product = item.products.first
     assert_equal "conditional", product.variation_type
+    assert_equal @sub_department.id, product.default_sub_department_id
     assert_redirected_to items_item_path(catalog_item_id: item.id)
+  end
+
+  test "catalog-linked selling setup allows non-conditional variation type" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        title: "Variable Book",
+        catalog_item_type: "book",
+        format_id: @format.id
+      },
+      commit: "Create Selling Setup"
+    }
+
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: {
+        variation_type: "standard",
+        list_price_cents: 1500,
+        default_sub_department_id: @sub_department.id
+      },
+      commit: "Done"
+    }
+
+    product = CatalogItem.find_by!(title: "Variable Book").products.first
+    assert_equal "standard", product.variation_type
+    assert_equal @sub_department.id, product.default_sub_department_id
   end
 
   test "catalog-linked done after item details saves catalog only" do
@@ -94,7 +125,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         name: "Bag Fee",
         product_type: "financial",
         list_price_cents: 10,
-        initial_category_id: @category.id
+        default_sub_department_id: @sub_department.id
       }
     }
     assert_redirected_to items_add_item_path(step: "sellable_sku")
@@ -102,7 +133,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_difference -> { ProductVariant.count }, 1 do
       post items_add_item_path(step: "sellable_sku"), params: {
         product_variant: {
-          category_id: @category.id,
+          sub_department_id: @sub_department.id,
           selling_price_cents: 10
         }
       }
@@ -126,7 +157,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
             name: "Done Product",
             product_type: "service",
             list_price_cents: 0,
-            initial_category_id: @category.id
+            default_sub_department_id: @sub_department.id
           },
           commit: "Done"
         }
@@ -149,7 +180,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         product_type: "physical",
         variation_type: "conditional",
         list_price_cents: 1500,
-        initial_category_id: @category.id
+        default_sub_department_id: @sub_department.id
       }
     }
 
@@ -157,14 +188,14 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     used = ProductCondition.find_by(condition_key: "used") || create_product_condition!(condition_key: "used", short_name: "Used", new_condition: false, sku_component: "U")
 
     post items_add_item_path(step: "sellable_sku"), params: {
-      product_variant: { condition_id: condition_new.id, category_id: @category.id, selling_price_cents: 1500 },
+      product_variant: { condition_id: condition_new.id, sub_department_id: @sub_department.id, selling_price_cents: 1500 },
       commit: "Create SKU and Add Another"
     }
     assert_redirected_to items_add_item_path(step: "sellable_sku")
 
     assert_difference -> { ProductVariant.count }, 1 do
       post items_add_item_path(step: "sellable_sku"), params: {
-        product_variant: { condition_id: used.id, category_id: @category.id, selling_price_cents: 900, sku: "MULTI-001-U" },
+        product_variant: { condition_id: used.id, sub_department_id: @sub_department.id, selling_price_cents: 900, sku: "MULTI-001-U" },
         commit: "Create SKU"
       }
     end
@@ -182,7 +213,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         product_type: "physical",
         variation_type: "standard",
         list_price_cents: 2499,
-        initial_category_id: @category.id
+        default_sub_department_id: @sub_department.id
       }
     }
 
@@ -200,7 +231,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         product_type: "physical",
         variation_type: "conditional",
         list_price_cents: 2000,
-        initial_category_id: @category.id
+        default_sub_department_id: @sub_department.id
       }
     }
 
@@ -224,5 +255,44 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
 
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
     assert_redirected_to items_add_item_path(step: "selling_setup")
+  end
+
+  test "invalid isbn13 during item details shows warning after save" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        title: "Invalid ISBN Book",
+        catalog_item_type: "book",
+        format_id: @format.id,
+        initial_identifier_type: "isbn13",
+        initial_identifier_value: "9780123456780"
+      },
+      commit: "Create Selling Setup"
+    }
+
+    follow_redirect!
+    assert_response :success
+    assert_includes response.body, "Identifier saved with warning"
+    assert_includes response.body, "ISBN-13 check digit is invalid"
+  end
+
+  test "selling setup attaches cover image during add item wizard" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
+
+    cover = fixture_file_upload("cover.png", "image/png")
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: {
+        sku: "COVER-001",
+        name: "Cover Product",
+        product_type: "physical",
+        list_price_cents: 1000,
+        default_sub_department_id: @sub_department.id,
+        cover_image: cover
+      },
+      commit: "Done"
+    }
+
+    product = Product.find_by!(sku: "COVER-001")
+    assert product.cover_image.attached?
   end
 end

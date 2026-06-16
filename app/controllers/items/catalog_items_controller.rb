@@ -31,6 +31,7 @@ module Items
       @catalog_item = CatalogItem.new(active: true, publication_status: "active", catalog_item_type: "book")
       @formats = Format.active_records.order(:name)
       load_bisac_form_state(@catalog_item)
+      load_store_category_collections
     end
 
     def create
@@ -63,33 +64,42 @@ module Items
 
       if saved
         bisac_result = sync_catalog_item_bisac!(@catalog_item)
+        store_category_result = sync_catalog_store_category!(@catalog_item)
         record_audit!("catalog_item.created", @catalog_item)
         apply_bisac_sync_notice!(bisac_result)
+        apply_store_category_sync_notice!(store_category_result)
+        apply_identifier_validation_notice!(@catalog_item)
         redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item created."
       else
         load_bisac_form_state(@catalog_item)
+        load_store_category_collections
         render :new, status: :unprocessable_entity
       end
     rescue CatalogIdentifierService::IdentifierError => e
       @catalog_item.errors.add(:base, e.message)
       load_bisac_form_state(@catalog_item)
+      load_store_category_collections
       render :new, status: :unprocessable_entity
     end
 
     def edit
       @formats = Format.active_records.order(:name)
       load_bisac_form_state(@catalog_item)
+      load_store_category_collections
     end
 
     def update
       @formats = Format.active_records.order(:name)
       if @catalog_item.update(catalog_item_params)
         bisac_result = sync_catalog_item_bisac!(@catalog_item)
+        store_category_result = sync_catalog_store_category!(@catalog_item)
         record_audit!("catalog_item.updated", @catalog_item)
         apply_bisac_sync_notice!(bisac_result)
+        apply_store_category_sync_notice!(store_category_result)
         redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item updated."
       else
         load_bisac_form_state(@catalog_item)
+        load_store_category_collections
         render :edit, status: :unprocessable_entity
       end
     end
@@ -118,14 +128,15 @@ module Items
     end
 
     def add_identifier
-      CatalogIdentifierService.add_identifier!(
+      identifier = CatalogIdentifierService.add_identifier!(
         catalog_item: @catalog_item,
         identifier_type: params.require(:identifier_type),
         value: params.require(:identifier_value),
         primary: params[:primary] == "1",
         actor: current_user
       )
-      record_audit!("catalog_item_identifier.created", @catalog_item.catalog_item_identifiers.order(:id).last)
+      record_audit!("catalog_item_identifier.created", identifier)
+      apply_identifier_validation_notice!(identifier)
       redirect_to identifier_return_path, notice: "Identifier added."
     rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
       redirect_to identifier_return_path, alert: e.message
@@ -157,6 +168,7 @@ module Items
         value: params.require(:identifier_value),
         actor: current_user
       )
+      apply_identifier_validation_notice!(@identifier.reload)
       redirect_to identifier_return_path, notice: "Identifier updated."
     rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
       redirect_to identifier_return_path, alert: e.message
@@ -182,8 +194,28 @@ module Items
         :series_name, :series_enumeration, :format_id, :edition_statement, :language_code,
         :height, :width, :depth, :dimension_units, :weight, :weight_units, :page_count,
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
-        :access_restrictions, :publication_frequency, :description, :year, :digital, :active
+        :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
+        :store_category_id
       )
+    end
+
+    def load_store_category_collections
+      scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+      @store_category_nodes = scheme ? CategoryNode.active_for_tree_select(scheme) : CategoryNode.none
+    end
+
+    def sync_catalog_store_category!(_catalog_item)
+      CatalogItemStoreCategorySync.apply!(
+        catalog_item: @catalog_item,
+        store_category_id: params.dig(:catalog_item, :store_category_id),
+        bisac_category_node_ids: params[:bisac_category_node_ids]
+      )
+    end
+
+    def apply_store_category_sync_notice!(result)
+      return if result.warnings.blank?
+
+      flash.now[:alert] = [flash.now[:alert], result.warnings.join(" ")].compact.join(" ")
     end
 
     def identifier_type_param

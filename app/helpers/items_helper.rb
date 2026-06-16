@@ -19,7 +19,7 @@ module ItemsHelper
     css_class = case status.to_s
                 when "sellable" then "status-active"
                 when "catalog_only", "product_created", "no_active_variant" then "status-inactive"
-                when "invalid_identifier_warning", "missing_category", "missing_price", "inactive_setup_reference" then "status-warning"
+                when "invalid_identifier_warning", "missing_sub_department", "missing_store_category", "missing_price", "inactive_setup_reference" then "status-warning"
                 else "status-inactive"
                 end
 

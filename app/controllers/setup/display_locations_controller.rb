@@ -11,7 +11,7 @@ module Setup
     before_action -> { authorize!("setup.display_locations.delete") }, only: :destroy
 
     def index
-      @display_locations = DisplayLocation.includes(:parent).order(:sort_order, :name)
+      @display_location_rows = DisplayLocation.ordered_tree_rows
     end
 
     def show
@@ -20,12 +20,12 @@ module Setup
 
     def new
       @display_location = DisplayLocation.new(active: true)
-      @parents = DisplayLocation.active_records.order(:sort_order, :name)
+      @parents = DisplayLocation.active_for_tree_select
     end
 
     def create
       @display_location = DisplayLocation.new(display_location_params)
-      @parents = DisplayLocation.active_records.order(:sort_order, :name)
+      @parents = DisplayLocation.active_for_tree_select
       if @display_location.save
         record_audit!("display_location.created", @display_location)
         redirect_to setup_display_location_path(@display_location), notice: "Display location created."
@@ -35,11 +35,11 @@ module Setup
     end
 
     def edit
-      @parents = DisplayLocation.active_records.where.not(id: @display_location.id).order(:sort_order, :name)
+      @parents = parent_location_options
     end
 
     def update
-      @parents = DisplayLocation.active_records.where.not(id: @display_location.id).order(:sort_order, :name)
+      @parents = parent_location_options
       if @display_location.update(display_location_params)
         record_audit!("display_location.updated", @display_location)
         redirect_to setup_display_location_path(@display_location), notice: "Display location updated."
@@ -79,6 +79,10 @@ module Setup
 
     def display_location_params
       params.require(:display_location).permit(:name, :short_name, :parent_id, :sort_order, :active)
+    end
+
+    def parent_location_options
+      DisplayLocation.active_for_tree_select.reject { |location| location.id == @display_location&.id }
     end
   end
 end

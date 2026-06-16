@@ -8,7 +8,7 @@ class ProductVariant < ApplicationRecord
 
   belongs_to :product
   belongs_to :condition, class_name: "ProductCondition", optional: true
-  belongs_to :category
+  belongs_to :sub_department
   belongs_to :display_location, optional: true
 
   has_many :categorizations, as: :categorizable, dependent: :destroy
@@ -22,7 +22,7 @@ class ProductVariant < ApplicationRecord
   validates :attribute1_sku_component, length: { maximum: 5 }, allow_blank: true
   validates :attribute2_sku_component, length: { maximum: 5 }, allow_blank: true
   validate :condition_must_be_active
-  validate :category_must_be_active
+  validate :sub_department_must_be_active
   validate :display_location_must_be_active
   validate :product_must_be_active
 
@@ -41,6 +41,10 @@ class ProductVariant < ApplicationRecord
 
   def rendered_name
     ProductNameRenderer.variant_name(self)
+  end
+
+  def resolved_sub_department
+    sub_department
   end
 
   private
@@ -70,10 +74,10 @@ class ProductVariant < ApplicationRecord
     errors.add(:condition, "must be active")
   end
 
-  def category_must_be_active
-    return if category.blank? || category.active?
+  def sub_department_must_be_active
+    return if sub_department.blank? || sub_department.active?
 
-    errors.add(:category, "must be active")
+    errors.add(:sub_department, "must be active")
   end
 
   def display_location_must_be_active
