@@ -1,0 +1,25 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Add Item",
+           title: "Create Sellable SKU",
+           description: "Product: #{@product.name} · SKU #{@product.sku}" %>
+
+<%= form_with model: @variant, url: items_add_item_path(step: "sellable_sku"), method: :post, class: "ss-form ss-form--wide" do |f| %>
+  <%= render "items/shared/variant_forms/chooser",
+             f: f,
+             variant: @variant,
+             product: @product,
+             products: [@product],
+             sub_departments: @sub_departments,
+             conditions: @conditions,
+             display_locations: @display_locations,
+             lock_product: true,
+             show_advanced: false %>
+
+  <footer class="ss-form-actions">
+    <%= f.submit "Create SKU", class: "ss-btn" %>
+    <%= f.submit "Create SKU and Add Another", class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", Items::ItemPresenter.from_product(@product).show_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>
+
+<p><%= link_to "Back", items_add_item_path(step: "selling_setup") %></p>

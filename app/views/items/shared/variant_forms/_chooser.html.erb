@@ -1,0 +1,30 @@
+<% lock_product = local_assigns.fetch(:lock_product, false) %>
+<% show_advanced = local_assigns.fetch(:show_advanced, false) %>
+
+<% if lock_product %>
+  <%= f.hidden_field :product_id, value: product.id %>
+<% elsif local_assigns.fetch(:show_product_select, true) %>
+  <%= render layout: "shared/forms/section", locals: { title: "Product" } do %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :product_id, label: "Product", required: true } do %>
+      <%= f.collection_select :product_id, products, :id, :name %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% classification_locals = {
+  classification_defaults: local_assigns[:classification_defaults]
+} %>
+<% case product.variation_type %>
+<% when "conditional" %>
+  <%= render "items/shared/variant_forms/conditional", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
+<% when "variable" %>
+  <%= render "items/shared/variant_forms/variable", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
+<% when "matrix" %>
+  <%= render "items/shared/variant_forms/matrix", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
+<% else %>
+  <%= render "items/shared/variant_forms/standard", f: f, variant: variant, product: product, sub_departments: sub_departments, conditions: conditions, display_locations: display_locations, **classification_locals %>
+<% end %>
+
+<% if show_advanced %>
+  <%= render "items/shared/variant_forms/advanced", f: f, variant: variant %>
+<% end %>

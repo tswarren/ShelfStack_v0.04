@@ -72,6 +72,14 @@ If Admin access is lost after permission changes:
 
 Or in Rails console: `SuperAdministratorProtection.restore!`
 
+Reset a user password from the CLI:
+
+```bash
+./dev/rails-docker bin/rails shelfstack:password:reset USERNAME=admin
+```
+
+See [docs/operations/foundation-runbook.md](docs/operations/foundation-runbook.md) for options.
+
 ---
 
 ## Daily Development

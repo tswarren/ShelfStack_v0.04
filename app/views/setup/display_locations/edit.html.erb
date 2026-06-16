@@ -1,0 +1,12 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Display Location",
+           description: "Display locations organize where items appear on the sales floor." %>
+
+<%= form_with model: [:setup, @display_location], class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, display_location: @display_location, parents: @parents %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Update Display Location", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_display_location_path(@display_location), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

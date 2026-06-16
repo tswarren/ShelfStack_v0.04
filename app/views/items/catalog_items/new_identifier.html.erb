@@ -1,0 +1,8 @@
+<h1>Add Identifier</h1>
+<p class="ss-muted"><%= @catalog_item.title %></p>
+
+<%= render "add_identifier_form", catalog_item: @catalog_item, return_to: params[:return_to] %>
+
+<p>
+  <%= link_to "Cancel", params[:return_to] == "item" ? items_item_path(catalog_item_id: @catalog_item.id, tab: "catalog") : items_catalog_item_path(@catalog_item) %>
+</p>

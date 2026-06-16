@@ -1,0 +1,23 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "New Product Variant",
+           description: "Create a sellable SKU with condition, attributes, and display settings." %>
+
+<%= form_with model: [:items, @product_variant], class: "ss-form ss-form--wide" do |f| %>
+  <%= hidden_field_tag :return_to, "item" %>
+  <%= render "form",
+             f: f,
+             product_variant: @product_variant,
+             products: @products,
+             sub_departments: @sub_departments,
+             conditions: @conditions,
+             display_locations: @display_locations,
+             category_nodes: @category_nodes,
+             primary_category_node_id: @primary_category_node_id,
+             classification_defaults: @classification_defaults,
+             show_advanced: false %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Variant", class: "ss-btn" %>
+    <%= link_to "Cancel", item_flow_cancel_path(@product_variant.product || @product_variant, tab: "selling"), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

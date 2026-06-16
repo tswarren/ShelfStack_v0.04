@@ -1,0 +1,46 @@
+<section class="ss-form-card" data-controller="variant-preview"
+  data-variant-preview-product-value="<%= { sku: product.sku, name: product.name, variation_type: product.variation_type, list_price_cents: product.list_price_cents.to_i }.to_json %>"
+  data-variant-preview-conditions-value="<%= conditions.map { |c| { id: c.id, sku_component: c.sku_component, short_name: c.short_name, default_list_price_factor_bps: c.default_list_price_factor_bps.to_i } }.to_json %>"
+  data-action="input->variant-preview#refresh change->variant-preview#refresh">
+  <header class="ss-form-card-header">
+    <h2>SKU &amp; Name</h2>
+    <p>Condition selection previews SKU suffix and variant name.</p>
+  </header>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :condition_id, label: "Condition", required: true } do %>
+      <%= f.collection_select :condition_id, conditions, :id, :name, { selected: variant.condition_id }, { data: { variant_preview_target: "condition" } } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :name_override, label: "Name override (optional)" } do %>
+      <%= f.text_field :name_override, data: { variant_preview_target: "nameOverride" } %>
+    <% end %>
+    <div class="ss-field" style="grid-column: 1 / -1;">
+      <span class="ss-label">Name preview</span>
+      <p class="ss-hint"><span data-variant-preview-target="namePreview"><%= variant.rendered_name %></span></p>
+    </div>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sku, label: "SKU (leave blank to generate)" } do %>
+      <%= f.text_field :sku, maxlength: 50, data: { variant_preview_target: "skuManual", action: "input->variant-preview#markSkuManual" } %>
+    <% end %>
+    <div class="ss-field">
+      <span class="ss-label">SKU preview</span>
+      <p class="ss-hint"><span data-variant-preview-target="skuPreview"><%= variant_sku_preview(product, condition: variant.condition) %></span></p>
+    </div>
+  </div>
+  <header class="ss-form-card-header">
+    <h2>Pricing</h2>
+  </header>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :selling_price_cents, label: "Selling price (cents)" } do %>
+      <%= f.number_field :selling_price_cents, min: 0, value: variant.selling_price_cents,
+          data: { variant_preview_target: "sellingPrice", auto_generated: true, action: "input->variant-preview#markSellingPriceManual" } %>
+    <% end %>
+  </div>
+</section>
+
+<%= render "items/shared/variant_forms/classification",
+           f: f,
+           variant: variant,
+           sub_departments: sub_departments,
+           conditions: conditions,
+           display_locations: display_locations,
+           classification_defaults: local_assigns[:classification_defaults],
+           hide_condition: true %>

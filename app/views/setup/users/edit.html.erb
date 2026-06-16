@@ -1,6 +1,12 @@
-<h1>Edit <%= @user.display_name %></h1>
-<%= form_with model: @user, url: setup_user_path(@user), method: :patch, class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit #{@user.display_name}",
+           description: "Update account details and login options for this user." %>
+
+<%= form_with model: @user, url: setup_user_path(@user), method: :patch, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, user: @user, stores: @stores %>
-  <%= f.submit "Save", class: "ss-btn" %>
-  <%= link_to "Cancel", setup_user_path(@user), class: "ss-btn ss-btn-secondary" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Save", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_user_path(@user), class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

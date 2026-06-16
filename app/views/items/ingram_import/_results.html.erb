@@ -1,0 +1,39 @@
+<% summary = import_result[:summary] || import_result["summary"] %>
+<% outcomes = import_result[:outcomes] || import_result["outcomes"] %>
+
+<%= render "shared/forms/section", title: "Import results" do %>
+  <ul class="ss-help">
+    <li>Rows processed: <%= summary[:total_rows] || summary["total_rows"] %></li>
+    <li>Catalog created: <%= summary[:catalog_created] || summary["catalog_created"] %></li>
+    <li>Catalog updated: <%= summary[:catalog_updated] || summary["catalog_updated"] %></li>
+    <li>Product created: <%= summary[:product_created] || summary["product_created"] %></li>
+    <li>Product updated: <%= summary[:product_updated] || summary["product_updated"] %></li>
+    <li>Variants created: <%= summary[:variant_created] || summary["variant_created"] %></li>
+    <li>Variants matched: <%= summary[:variant_matched] || summary["variant_matched"] %></li>
+    <li>Skipped: <%= summary[:skipped] || summary["skipped"] %></li>
+    <li>Errors: <%= summary[:error] || summary["error"] %></li>
+  </ul>
+
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Row</th>
+        <th>Identifier</th>
+        <th>Title</th>
+        <th>Outcome</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% outcomes.each do |outcome| %>
+        <tr>
+          <td><%= outcome[:row_number] || outcome["row_number"] %></td>
+          <td><%= outcome[:identifier] || outcome["identifier"] %></td>
+          <td><%= outcome[:title] || outcome["title"] %></td>
+          <td><%= (outcome[:status] || outcome["status"]).to_s.humanize %></td>
+          <td><%= outcome[:message] || outcome["message"] %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

@@ -1,6 +1,23 @@
-<h1>Edit <%= @role.name %></h1>
-<%= form_with model: @role, url: setup_role_path(@role), method: :patch, class: "ss-form" do |f| %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :description %><%= f.text_area :description %>
-  <%= f.submit "Save", class: "ss-btn" %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit #{@role.name}",
+           description: "Update role name and description. Permissions are managed separately." %>
+
+<%= form_with model: @role, url: setup_role_path(@role), method: :patch, class: "ss-form ss-form--standard" do |f| %>
+  <%= render layout: "shared/forms/section", locals: { title: "Role Details" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: @role, field: :name, required: true } do %>
+        <%= f.text_field :name %>
+      <% end %>
+      <div class="ss-form-grid" style="grid-column: 1 / -1;">
+        <%= render layout: "shared/forms/field", locals: { f: f, record: @role, field: :description } do %>
+          <%= f.text_area :description, rows: 3 %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Save", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_role_path(@role), class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

@@ -1,0 +1,28 @@
+<%= render "shared/forms/errors", record: product_variant %>
+
+<% product = product_variant.product || products.find { |entry| entry.id == product_variant.product_id.to_i } %>
+<% lock_product = product.present? %>
+<% show_advanced = local_assigns.fetch(:show_advanced, false) %>
+
+<% unless lock_product %>
+  <%= render layout: "shared/forms/section", locals: { title: "Product" } do %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :product_id, label: "Product", required: true } do %>
+      <%= f.collection_select :product_id, products, :id, :name %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if product.present? %>
+  <%= render "items/shared/variant_forms/chooser",
+             f: f,
+             variant: product_variant,
+             product: product,
+             products: products,
+             sub_departments: sub_departments,
+             conditions: conditions,
+             display_locations: display_locations,
+             classification_defaults: local_assigns[:classification_defaults],
+             lock_product: lock_product,
+             show_product_select: false,
+             show_advanced: show_advanced %>
+<% end %>

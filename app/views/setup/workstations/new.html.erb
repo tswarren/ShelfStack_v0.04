@@ -1,5 +1,12 @@
-<h1>New Workstation</h1>
-<%= form_with model: @workstation, url: setup_workstations_path, class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Workstation",
+           description: "Register a terminal or back-office workstation for a store." %>
+
+<%= form_with model: @workstation, url: setup_workstations_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, workstation: @workstation, stores: @stores %>
-  <%= f.submit "Create Workstation", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Workstation", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_workstations_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

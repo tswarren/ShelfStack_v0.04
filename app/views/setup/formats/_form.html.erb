@@ -1,0 +1,25 @@
+<%= render "shared/forms/errors", record: format %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Format Details", description: "Formats describe the physical or digital form of catalog items." } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :format_key, required: true } do %>
+      <%= f.text_field :format_key, maxlength: 30 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :code } do %>
+      <%= f.text_field :code, maxlength: 20 %>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: format, field: :virtual,
+             help: "Virtual formats represent digital or non-physical items." %>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: format, field: :active,
+             help: "Inactive formats remain for history but cannot be selected for new catalog items." %>
+<% end %>

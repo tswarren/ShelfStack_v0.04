@@ -445,6 +445,8 @@ Example:
 ]
 ```
 
+Structured catalog item forms select BISAC subjects from the imported `CategoryScheme(bisac)` tree. Linked nodes are stored as `Categorization` records; `bisac_subjects` and `bisac_subject_data` are regenerated from those links for export and import compatibility. A collapsed advanced field still accepts pasted publisher or Ingram subject strings.
+
 ---
 
 ## 6.4 Subject Parsing Rules

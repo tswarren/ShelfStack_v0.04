@@ -1,43 +1,53 @@
-<% if user.errors.any? %>
-  <div class="flash flash-alert">
-    <%= user.errors.full_messages.to_sentence %>
+<%= render "shared/forms/errors", record: user %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Account", description: "Sign-in identity and default store context." } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: user, field: :username, required: true, help: "Used to sign in. Must be unique." } do %>
+      <%= f.text_field :username, maxlength: 50 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: user, field: :user_type } do %>
+      <%= f.select :user_type, User::USER_TYPES, {}, disabled: user.system_user? %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: user, field: :clerk_number } do %>
+      <%= f.text_field :clerk_number, maxlength: 10 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: user, field: :default_store_id, label: "Default store" } do %>
+      <%= f.collection_select :default_store_id, stores, :id, :name, { include_blank: "None" } %>
+    <% end %>
   </div>
 <% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Account</legend>
-  <%= f.label :username %><%= f.text_field :username, maxlength: 50 %>
-  <%= f.label :user_type %><%= f.select :user_type, User::USER_TYPES, {}, disabled: user.system_user? %>
-  <%= f.label :clerk_number %><%= f.text_field :clerk_number, maxlength: 10 %>
-  <%= f.label :default_store_id, "Default store" %>
-  <%= f.collection_select :default_store_id, stores, :id, :name, { include_blank: "None" } %>
-</fieldset>
+<%= render layout: "shared/forms/section", locals: { title: "Name" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: user, field: :first_name } do %>
+      <%= f.text_field :first_name, maxlength: 50 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: user, field: :last_name } do %>
+      <%= f.text_field :last_name, maxlength: 50 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: user, field: :display_name } do %>
+      <%= f.text_field :display_name, maxlength: 80 %>
+    <% end %>
+  </div>
+<% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Name</legend>
-  <%= f.label :first_name %><%= f.text_field :first_name, maxlength: 50 %>
-  <%= f.label :last_name %><%= f.text_field :last_name, maxlength: 50 %>
-  <%= f.label :display_name %><%= f.text_field :display_name, maxlength: 80 %>
-</fieldset>
-
-<fieldset class="ss-form-section">
-  <legend>Login options</legend>
-  <p class="ss-form-check">
-    <%= f.check_box :interactive_login_enabled %>
-    <%= f.label :interactive_login_enabled, "Interactive login enabled" %>
-  </p>
+<%= render layout: "shared/forms/section", locals: { title: "Login Options" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: user, field: :interactive_login_enabled,
+             label: "Interactive login enabled",
+             help: "When disabled, the user cannot sign in through the login screen." %>
   <% unless user.new_record? %>
-    <p class="ss-form-check">
-      <%= f.check_box :force_password_change %>
-      <%= f.label :force_password_change, "Require password change on next login" %>
-    </p>
+    <%= render "shared/forms/checkbox", f: f, record: user, field: :force_password_change,
+               label: "Require password change on next login" %>
   <% end %>
-</fieldset>
+<% end %>
 
 <% if user.new_record? %>
-  <fieldset class="ss-form-section">
-    <legend>Initial password</legend>
-    <%= label_tag "user[password]", "Password" %>
-    <%= password_field_tag "user[password]" %>
-  </fieldset>
+  <%= render layout: "shared/forms/section", locals: { title: "Initial Password" } do %>
+    <div class="ss-form-grid">
+      <div class="ss-field">
+        <%= label_tag "user[password]", "Password", class: "ss-label" %>
+        <%= password_field_tag "user[password]" %>
+      </div>
+    </div>
+  <% end %>
 <% end %>

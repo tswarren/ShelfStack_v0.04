@@ -1,0 +1,15 @@
+<h1>Store Display Locations <%= link_to "New", new_setup_store_display_location_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Store</th><th>Location</th><th>Linear Feet</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @store_display_locations.each do |record| %>
+      <tr>
+        <td><%= record.store.name %></td>
+        <td><%= record.display_location.name %></td>
+        <td><%= record.linear_feet %></td>
+        <td><span class="<%= status_class(record.active?) %>"><%= status_label(record.active?) %></span></td>
+        <td><%= link_to "View", setup_store_display_location_path(record) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

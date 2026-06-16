@@ -1,0 +1,46 @@
+<% if item.product.blank? %>
+  <p>No selling setup exists yet for this item.</p>
+<% else %>
+  <% item_flow = { return_to: "item" } %>
+  <dl class="ss-summary">
+    <dt>Product name</dt><dd><%= item.product.name %></dd>
+    <dt>SKU</dt><dd><%= item.product.sku %></dd>
+    <dt>List price</dt><dd><%= format_cents(item.product.list_price_cents) %></dd>
+    <dt>Variation type</dt><dd><%= humanize_controlled_value(item.product.variation_type) %></dd>
+  </dl>
+
+  <h2><%= items_user_facing_label("product_variants") %> Matrix</h2>
+  <% if variants.any? %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Condition</th>
+          <th>SKU Suffix</th>
+          <th>Generated SKU</th>
+          <th>Name</th>
+          <th>Price</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% variants.each do |variant| %>
+          <tr class="<%= "ss-table-row--highlight" if local_assigns[:highlight_variant]&.id == variant.id %>">
+            <td><%= variant.condition&.short_name || "—" %></td>
+            <td><%= variant.condition&.sku_component.presence || "—" %></td>
+            <td><%= variant.sku %></td>
+            <td><%= variant.name %></td>
+            <td><%= format_cents(variant.selling_price_cents) %></td>
+            <td><%= link_to "Edit", edit_items_product_variant_path(variant, item_flow) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No active sellable SKUs yet.</p>
+  <% end %>
+
+  <div class="ss-catalog-actions">
+    <%= link_to "Edit product", edit_items_product_path(item.product, item_flow), class: "ss-btn" %>
+    <%= link_to "New sellable SKUs", new_items_product_variant_path(product_id: item.product.id, **item_flow), class: "ss-btn ss-btn-secondary" %>
+  </div>
+<% end %>

@@ -1,0 +1,17 @@
+<div class="ss-item-classification-block">
+  <dl class="ss-summary ss-summary-compact">
+    <dt>Subdepartment</dt><dd><%= summary[:sub_department].presence || "—" %></dd>
+    <dt>Store category</dt><dd><%= summary[:store_category].presence || "—" %></dd>
+    <dt>Condition</dt><dd><%= summary[:condition].presence || "—" %></dd>
+    <dt>Display location</dt><dd><%= summary[:display_location].presence || "—" %></dd>
+    <dt>Tax category</dt><dd><%= defaults.tax_category&.name || "—" %></dd>
+    <dt>Sales account</dt><dd><%= defaults.sales_account_code.presence || "—" %></dd>
+  </dl>
+  <% if defaults.warnings.any? %>
+    <ul class="ss-form-errors">
+      <% defaults.warnings.each do |warning| %>
+        <li><%= warning %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

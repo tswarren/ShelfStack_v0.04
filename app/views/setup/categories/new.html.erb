@@ -1,5 +1,12 @@
-<h1>New Category</h1>
-<%= form_with model: @category, url: setup_categories_path, class: "ss-form" do |f| %>
-  <%= render "form", f: f, category: @category, departments: @departments, tax_categories: @tax_categories %>
-  <%= f.submit "Create Category", class: "ss-btn" %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Category",
+           description: "Categories classify sellable SKUs and provide defaults for pricing and tax behavior." %>
+
+<%= form_with model: @category, url: setup_categories_path, class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, category: @category, departments: @departments, tax_categories: @tax_categories, sub_departments: @sub_departments %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Category", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_categories_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

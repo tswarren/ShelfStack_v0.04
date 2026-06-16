@@ -1,0 +1,47 @@
+<%= render "shared/forms/errors", record: product_condition %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Condition Details",
+  description: "Conditions drive SKU suffixes, variant names, and used-book pricing factors."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :condition_key, required: true } do %>
+      <%= f.text_field :condition_key %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :sku_component, label: "SKU component", help: "Leave blank for new condition (no SKU suffix)." } do %>
+      <%= f.text_field :sku_component, maxlength: 5 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :sort_order } do %>
+      <%= f.number_field :sort_order %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :description } do %>
+      <%= f.text_area :description, rows: 3 %>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: product_condition, field: :new_condition,
+             help: "New conditions use full list price factor by default." %>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Pricing Factor" } do %>
+  <div class="ss-form-grid ss-form-grid--2" data-controller="basis-points-preview">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product_condition, field: :default_list_price_factor_bps, label: "List price factor (bps)" } do %>
+      <%= f.number_field :default_list_price_factor_bps,
+          data: { basis_points_preview_target: "input", action: "input->basis-points-preview#update" } %>
+    <% end %>
+    <div class="ss-field">
+      <span class="ss-label">Factor preview</span>
+      <p class="ss-hint" data-basis-points-preview-target="output"><%= format_basis_points(product_condition.default_list_price_factor_bps) %></p>
+    </div>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: product_condition, field: :active,
+             help: "Inactive conditions remain for history but cannot be selected for new variants." %>
+<% end %>

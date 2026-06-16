@@ -6,6 +6,24 @@
   <dt>Description</dt><dd><%= @department.description.presence || "—" %></dd>
   <dt>Status</dt><dd><span class="<%= status_class(@department.active?) %>"><%= status_label(@department.active?) %></span></dd>
 </dl>
+<h2>Subdepartments</h2>
+<% if @sub_departments.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Name</th><th>Key</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @sub_departments.each do |sub_department| %>
+        <tr>
+          <td><%= sub_department.name %></td>
+          <td><%= sub_department.sub_department_key %></td>
+          <td><span class="<%= status_class(sub_department.active?) %>"><%= status_label(sub_department.active?) %></span></td>
+          <td><%= link_to "View", setup_sub_department_path(sub_department) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No subdepartments linked to this department yet.</p>
+<% end %>
 <div class="ss-detail-actions">
   <%= link_to "Edit", edit_setup_department_path(@department), class: "ss-btn" %>
   <% if @department.active? %>

@@ -1,0 +1,15 @@
+<h1>Vendors <%= link_to "New", new_setup_vendor_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Name</th><th>Parent</th><th>Pricing Model</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @vendors.each do |vendor| %>
+      <tr>
+        <td><%= vendor.name %></td>
+        <td><%= vendor.parent_vendor&.name || "—" %></td>
+        <td><%= vendor.default_pricing_model ? humanize_controlled_value(vendor.default_pricing_model) : "—" %></td>
+        <td><span class="<%= status_class(vendor.active?) %>"><%= status_label(vendor.active?) %></span></td>
+        <td><%= link_to "View", setup_vendor_path(vendor) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

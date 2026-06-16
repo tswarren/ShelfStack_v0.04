@@ -1,0 +1,24 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Add Item",
+           title: "Add Catalog-Linked Item — Item Details",
+           description: "Enter catalog metadata. You can finish after this step or continue to selling setup." %>
+
+<%= form_with url: items_add_item_path(step: "item_details"), method: :post, class: "ss-form ss-form--wide" do %>
+  <%= fields_for :catalog_item, @catalog_item do |f| %>
+    <%= render "items/catalog_items/form",
+          f: f,
+          catalog_item: @catalog_item,
+          formats: @formats,
+          include_identifier: true,
+          primary_bisac_category_node_id: @primary_bisac_category_node_id,
+          primary_bisac_category_node_label: @primary_bisac_category_node_label,
+          bisac_category_node_ids: @bisac_category_node_ids,
+          bisac_scheme_loaded: @bisac_scheme_loaded,
+          store_category_nodes: @store_category_nodes %>
+  <% end %>
+  <footer class="ss-form-actions">
+    <%= submit_tag "Create Selling Setup", class: "ss-btn" %>
+    <%= submit_tag "Done", name: "commit", class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

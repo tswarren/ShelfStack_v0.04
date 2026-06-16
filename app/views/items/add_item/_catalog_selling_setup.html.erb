@@ -1,0 +1,15 @@
+<%= form_with model: product, url: items_add_item_path(step: "selling_setup"), method: :post, class: "ss-form ss-form--wide", html: { multipart: true } do |f| %>
+  <%= render "shared/forms/errors", record: product %>
+  <%= render "items/shared/product_forms/catalog_linked",
+             f: f,
+             product: product,
+             catalog_item: catalog_item,
+             sub_departments: sub_departments,
+             display_locations: display_locations %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Continue to Sellable SKU", class: "ss-btn" %>
+    <%= link_to "Cancel", items_item_path(catalog_item_id: catalog_item.id), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>
+
+<p><%= link_to "Back", items_add_item_path(step: "item_details") %></p>

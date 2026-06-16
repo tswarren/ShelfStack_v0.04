@@ -1,23 +1,46 @@
-<% if category.errors.any? %>
-  <div class="flash flash-alert">
-    <%= category.errors.full_messages.to_sentence %>
+<%= render "shared/forms/errors", record: category %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Basic Details",
+  description: "Legacy Phase 2 categories bridge department reporting buckets to subdepartments."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :department_id, label: "Department", required: true } do %>
+      <%= f.collection_select :department_id, departments, :id, ->(d) { "#{d.department_number} — #{d.name}" }, { include_blank: "Select department" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :sub_department_id, label: "Subdepartment" } do %>
+      <%= f.collection_select :sub_department_id, sub_departments, :id, :name, include_blank: "Select subdepartment" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :sort_order } do %>
+      <%= f.number_field :sort_order, step: 1 %>
+    <% end %>
   </div>
+  <%= render "shared/forms/checkbox", f: f, record: category, field: :active,
+             help: "Inactive categories remain for history but cannot be selected for new sellable SKUs." %>
 <% end %>
 
-<fieldset class="ss-form-section">
-  <legend>Category</legend>
-  <%= f.label :department_id, "Department" %>
-  <%= f.collection_select :department_id, departments, :id, ->(d) { "#{d.department_number} — #{d.name}" }, { include_blank: "Select department" } %>
-  <%= f.label :name %><%= f.text_field :name %>
-  <%= f.label :short_name %><%= f.text_field :short_name, maxlength: 20 %>
-  <%= f.label :sort_order %><%= f.number_field :sort_order, step: 1 %>
-  <%= f.label :default_pricing_model, "Default pricing model" %>
-  <%= f.select :default_pricing_model, Category::PRICING_MODELS.map { |m| [m.humanize, m] }, { include_blank: "None" } %>
-  <%= f.label :default_margin_target_bps, "Default margin target (bps)" %>
-  <%= f.number_field :default_margin_target_bps, step: 1, min: 0, max: 10000 %>
-  <%= f.label :default_supplier_discount_bps, "Default supplier discount (bps)" %>
-  <%= f.number_field :default_supplier_discount_bps, step: 1, min: 0, max: 10000 %>
-  <%= f.label :default_tax_category_id, "Default tax category" %>
-  <%= f.collection_select :default_tax_category_id, tax_categories, :id, :name, { include_blank: "Select tax category" } %>
-  <%= f.label :active %><%= f.check_box :active %>
-</fieldset>
+<%= render layout: "shared/forms/section", locals: {
+  title: "Defaults for Future SKUs",
+  description: "These values are copied or suggested when creating sellable SKUs."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :default_pricing_model, label: "Default pricing model" } do %>
+      <%= f.select :default_pricing_model, Category::PRICING_MODELS.map { |m| [m.humanize, m] }, { include_blank: "None" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :default_tax_category_id, label: "Default tax category", required: true } do %>
+      <%= f.collection_select :default_tax_category_id, tax_categories, :id, :name, { include_blank: "Select tax category" } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :default_margin_target_bps, label: "Default margin target (bps)" } do %>
+      <%= f.number_field :default_margin_target_bps, step: 1, min: 0, max: 10000 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: category, field: :default_supplier_discount_bps, label: "Default supplier discount (bps)" } do %>
+      <%= f.number_field :default_supplier_discount_bps, step: 1, min: 0, max: 10000 %>
+    <% end %>
+  </div>
+<% end %>

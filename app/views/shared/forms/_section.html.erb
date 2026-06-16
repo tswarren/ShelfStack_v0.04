@@ -1,0 +1,10 @@
+<%# locals: title:, description: nil %>
+<section class="ss-form-card">
+  <header class="ss-form-card-header">
+    <h2><%= title %></h2>
+    <% if local_assigns.fetch(:description, nil).present? %>
+      <p><%= description %></p>
+    <% end %>
+  </header>
+  <%= yield %>
+</section>

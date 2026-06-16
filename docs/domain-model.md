@@ -77,6 +77,45 @@ Store + Tax Category + Date → Store Tax Category Rate → Store Tax Rate
 * Store tax category rates define which rate applies to each tax category at each store during a date range.
 * For a given store, tax category, and date, tax lookup must return exactly one applicable rate.
 
+## Phase 3B transitional mapping
+
+Phase 3B separates merchandise behavior, topic classification, and accounting mapping while keeping legacy Phase 2 structures working.
+
+**Target model (decisions and migration plan):**
+
+```text
+docs/specifications/classification-target-spec.md
+```
+
+**Current transition notes (partially superseded):**
+
+```text
+docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-domain-mapping.md
+```
+
+| Legacy / transitional | Target concept |
+| --- | --- |
+| `Category` | `SubDepartment` (operational defaults), not store category `CategoryNode` |
+| `MerchandiseClass` | **`SubDepartment`** (rename) |
+| `CategoryScheme` / `CategoryNode` / `Categorization` | Store categories (`store_categories` scheme), BISAC, future subject schemes |
+| `AccountingMapping` | Frozen/simplified; GL at department level for now |
+| `product_variants.category_id` | **`product_variants.sub_department_id`** (required after migration Phase D) |
+| `catalog_items` | add **`store_category_id`** (catalog items only) |
+
+**Implemented (classification target migration):** Phase A–D on `phase-3-catalog-products-variants`. See checklist in `classification-target-spec.md`. Reference trees ship via TSV (`db/seeds/data/store_categories.tsv`, `display_locations.tsv`) with ~70 store category nodes and ~33 display locations; expand toward full bookstore fidelity in a follow-up.
+
+Default resolution order for operational defaults (target):
+
+```text
+variant override → variant.sub_department → product defaults → store category defaults (catalog path)
+```
+
+GL (for now):
+
+```text
+variant.sub_department → department.gl_account_code
+```
+
 ---
 
 # 3. Catalog Domain

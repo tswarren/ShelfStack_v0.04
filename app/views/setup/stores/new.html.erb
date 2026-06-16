@@ -1,5 +1,12 @@
-<h1>New Store</h1>
-<%= form_with model: @store, url: setup_stores_path, class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Store",
+           description: "Stores define the physical locations where ShelfStack operates." %>
+
+<%= form_with model: @store, url: setup_stores_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, store: @store %>
-  <%= f.submit "Create Store", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Store", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_stores_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

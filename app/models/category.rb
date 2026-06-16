@@ -1,19 +1,12 @@
 # frozen_string_literal: true
 
 class Category < ApplicationRecord
-  PRICING_MODELS = %w[
-    trade_discount
-    trade_discount_returnable
-    short_discount
-    net_cost_markup
-    blended_lot_cost
-    buyback_resale
-    recipe_cost
-    pass_through
-    markdown
-  ].freeze
+  include PricingModels
+
+  PRICING_MODELS = PricingModels::PRICING_MODELS
 
   belongs_to :department
+  belongs_to :sub_department, optional: true
   belongs_to :default_tax_category, class_name: "TaxCategory"
 
   validates :name, presence: true, uniqueness: { scope: :department_id }
@@ -28,6 +21,7 @@ class Category < ApplicationRecord
             allow_nil: true
   validate :department_must_be_active
   validate :default_tax_category_must_be_active
+  validate :sub_department_department_must_match
 
   scope :active_records, -> { where(active: true) }
 
@@ -58,5 +52,12 @@ class Category < ApplicationRecord
     return if default_tax_category.blank? || default_tax_category.active?
 
     errors.add(:default_tax_category, "must be active")
+  end
+
+  def sub_department_department_must_match
+    return if sub_department.blank? || department.blank?
+    return if sub_department.department_id == department_id
+
+    errors.add(:sub_department, "must belong to the same department")
   end
 end

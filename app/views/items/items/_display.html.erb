@@ -1,0 +1,63 @@
+<% if item.product.blank? %>
+  <p>Display and vendor links require a product.</p>
+<% else %>
+  <section class="ss-item-display-section">
+    <h3>Product display defaults</h3>
+    <dl class="ss-summary">
+      <dt>Default display location</dt>
+      <dd class="ss-summary-with-action">
+        <span><%= item.product.default_display_location&.name || "—" %></span>
+        <%= link_to "Edit", edit_items_product_path(item.product, anchor: "product_default_display_location_id") %>
+      </dd>
+    </dl>
+  </section>
+
+  <% if item.variants.any? %>
+    <section class="ss-item-display-section">
+      <h3>Variant display locations</h3>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Variant</th>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Display location</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% item.variants.each do |variant| %>
+            <tr>
+              <td><%= variant.condition&.short_name || variant.name %></td>
+              <td><%= variant.sku %></td>
+              <td><%= variant.sub_department&.name || "—" %></td>
+              <td><%= variant.display_location&.name || "—" %></td>
+              <td><%= link_to "Edit", edit_items_product_variant_path(variant, return_to: "item") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+  <% end %>
+
+  <% if current_store.present? %>
+    <% location_ids = [item.product.default_display_location_id, *item.variants.map(&:display_location_id)].compact.uniq %>
+    <% store_locations = StoreDisplayLocation.active_records.joins(:display_location).where(store: current_store, display_location_id: location_ids).order("display_locations.sort_order", "display_locations.name") %>
+    <% if store_locations.any? %>
+      <section class="ss-item-display-section">
+        <h3>Store display locations (<%= current_store.name %>)</h3>
+        <ul class="ss-item-subjects">
+          <% store_locations.each do |store_location| %>
+            <li><%= store_location.display_location.name %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  <% end %>
+
+  <section class="ss-item-display-section">
+    <h3>Vendors</h3>
+    <p class="ss-muted">Vendor-product sourcing links will appear in a future phase.</p>
+    <p><%= link_to "Manage vendors in Setup", setup_vendors_path %></p>
+  </section>
+<% end %>

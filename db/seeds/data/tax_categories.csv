@@ -1,0 +1,10 @@
+name,short_name,sort_order
+General Merchandise,Gen Merch,10
+Books,Book,20
+Periodicals,Periodical,30
+Media,Media,40
+Digital Media,Digital,50
+Packaged Food,Pkg Food,60
+Prepared Food,Food/Bev,70
+Services,Service,80
+Non-Merchandise,Non Merch,90

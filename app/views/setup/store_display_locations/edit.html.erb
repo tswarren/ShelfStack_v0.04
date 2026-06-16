@@ -1,0 +1,12 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Store Display Location",
+           description: "Link a global display location to a store with optional linear feet." %>
+
+<%= form_with model: [:setup, @store_display_location], class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, store_display_location: @store_display_location, stores: @stores, display_locations: @display_locations %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Update Store Display Location", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_store_display_location_path(@store_display_location), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

@@ -1,5 +1,12 @@
-<h1>New User</h1>
-<%= form_with model: @user, url: setup_users_path, class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New User",
+           description: "Create an interactive user account with optional default store context." %>
+
+<%= form_with model: @user, url: setup_users_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, user: @user, stores: @stores %>
-  <%= f.submit "Create User", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create User", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_users_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
 <% end %>

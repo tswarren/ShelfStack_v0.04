@@ -1,0 +1,12 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Format",
+           description: "Formats describe the physical or digital form of catalog items." %>
+
+<%= form_with model: @format, url: setup_formats_path, class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, format: @format %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Format", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_formats_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

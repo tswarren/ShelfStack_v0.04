@@ -1,0 +1,29 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "New Product",
+           description: "Create a store-facing product and define base pricing and variation settings." %>
+
+<%= form_with model: [:items, @product], class: "ss-form ss-form--wide", html: { multipart: true } do |f| %>
+  <%= render "items/shared/return_to_item" %>
+  <% if @product.catalog_item.present? || @product.catalog_item_id.present? %>
+    <% catalog_item = @product.catalog_item || CatalogItem.find(@product.catalog_item_id) %>
+    <%= f.hidden_field :catalog_item_id, value: catalog_item.id %>
+    <%= render "items/shared/product_forms/catalog_linked",
+               f: f,
+               product: @product,
+               catalog_item: catalog_item,
+               sub_departments: @sub_departments,
+               display_locations: @display_locations %>
+  <% else %>
+    <%= render "items/shared/product_forms/non_catalog",
+               f: f,
+               product: @product,
+               sub_departments: @sub_departments,
+               display_locations: @display_locations,
+               require_sku: true %>
+  <% end %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Product", class: "ss-btn" %>
+    <%= link_to "Cancel", item_flow_cancel_path(@product.catalog_item || @product, tab: @product.catalog_item.present? ? "selling" : "overview"), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

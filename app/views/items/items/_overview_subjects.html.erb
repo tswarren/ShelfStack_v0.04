@@ -1,0 +1,14 @@
+<% if item.subject_groups.any? %>
+  <section class="ss-item-sidebar-section ss-item-subjects-section">
+    <% item.subject_groups.each do |group| %>
+      <div class="ss-item-subject-group">
+        <h3 class="ss-item-subject-group-label"><%= group[:label] %></h3>
+        <ul class="ss-item-subject-list">
+          <% group[:headings].each do |heading| %>
+            <li><%= heading %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </section>
+<% end %>

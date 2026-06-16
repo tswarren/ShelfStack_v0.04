@@ -6,6 +6,8 @@ This specification defines the functional behavior for ShelfStack Phase 2.
 
 Phase 2 establishes the classification and tax setup layer used by later product, inventory, and POS workflows.
 
+> **Phase 3B note:** Parts of this specification are superseded in part by the Phase 3B merchandise classification rework. Legacy `Category` semantics, default resolution, and UI labels are described in `docs/roadmap/phase-3-rework-merchandise-classification-structure/transitional-domain-mapping.md`.
+
 For schema details, see:
 
 ```text

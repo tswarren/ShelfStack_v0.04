@@ -16,6 +16,7 @@ module Setup
 
     def show
       @audit_events = AuditEvent.for_auditable(@department).limit(50)
+      @sub_departments = @department.sub_departments.order(:name)
     end
 
     def new
@@ -45,7 +46,7 @@ module Setup
     end
 
     def destroy
-      if @department.categories.exists?
+      if @department.categories.exists? || @department.sub_departments.exists?
         redirect_to setup_department_path(@department), alert: "Department cannot be deleted. Inactivate instead."
       else
         @department.destroy

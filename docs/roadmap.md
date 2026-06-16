@@ -477,16 +477,18 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 **Phase 1 (Foundation) is complete** as of 2025-06-10.
 
+**Phase 2 (Departments, Categories, and Taxes) is complete** as of 2025-06-10.
+
+**Phase 3 (Catalog, Products, and Product Variants) is complete** as of 2026-06-10 (manual QA sign-off).
+
 ```text
-Phase 1 ✓  →  Phase 2 (active)  →  Phase 3
+Phase 1 ✓  →  Phase 2 ✓  →  Phase 3 ✓  →  Phase 4 (inventory foundation) ← current priority
 ```
 
-Implementation record: [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md).
+Implementation records:
 
-Once Phase 3 is complete, the next major design decision is whether to proceed with:
+- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md)
+- [docs/implementation/phase-2-completion.md](implementation/phase-2-completion.md)
+- [docs/implementation/phase-3-completion.md](implementation/phase-3-completion.md)
 
-1. Inventory ledger foundation, or
-2. Purchasing/receiving foundation, or
-3. Minimal POS foundation.
-
-The recommended next phase is **Inventory Foundation**, because purchasing, receiving, and POS all depend on reliable stock movement behavior.
+**Next phase:** **Inventory Foundation** — purchasing, receiving, and POS all depend on reliable stock movement behavior. See [Phase 4: Inventory Foundation](#phase-4-inventory-foundation) in this document.

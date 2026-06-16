@@ -1,0 +1,17 @@
+<h1>Display Locations <%= link_to "New", new_setup_display_location_path, class: "ss-btn" %></h1>
+<table class="ss-table ss-table--tree">
+  <thead><tr><th>Name</th><th>Short Name</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @display_location_rows.each do |row| %>
+      <% location = row.record %>
+      <tr class="<%= "ss-tree-row--root" if row.depth.zero? %>">
+        <td class="ss-tree-name-cell" style="--tree-depth: <%= row.depth %>">
+          <%= location.name %>
+        </td>
+        <td><%= location.short_name %></td>
+        <td><span class="<%= status_class(location.active?) %>"><%= status_label(location.active?) %></span></td>
+        <td><%= link_to "View", setup_display_location_path(location) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

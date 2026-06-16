@@ -1,0 +1,9 @@
+<%= form_with url: add_identifier_items_catalog_item_path(catalog_item, return_to: local_assigns[:return_to]), method: :post do |f| %>
+  <%= f.label :identifier_type, "Type" %>
+  <%= f.select :identifier_type, CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] } %>
+  <%= f.label :identifier_value, "Value" %>
+  <%= f.text_field :identifier_value, required: true, autofocus: true %>
+  <%= f.label :primary, "Set as primary" %>
+  <%= f.check_box :primary %>
+  <%= f.submit "Add Identifier", class: "ss-btn" %>
+<% end %>

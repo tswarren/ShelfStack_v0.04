@@ -17,6 +17,68 @@ Rails.application.routes.draw do
 
   root "dashboard#show"
 
+  namespace :items do
+    root to: "home#show"
+    get "locked_out", to: "home#locked_out"
+    get "search", to: "search#index"
+    get "item", to: "items#show", as: :item
+
+    get "add_item", to: "add_item#show", as: :add_item
+    post "add_item", to: "add_item#create"
+    get "add_item/new", to: "add_item#new", as: :new_add_item
+
+    get "ingram_import", to: "ingram_import#show", as: :ingram_import
+    post "ingram_import/preview", to: "ingram_import#preview", as: :ingram_import_preview
+    post "ingram_import", to: "ingram_import#create", as: :ingram_import_run
+
+    get "bisac_subjects/search", to: "bisac_subject_searches#index", as: :bisac_subjects_search
+    get "identifier_preview", to: "identifier_previews#show", as: :identifier_preview
+
+    resources :catalog_items do
+      member do
+        patch :inactivate
+        patch :reactivate
+        post :add_identifier
+        get :new_identifier
+        post :generate_local_identifier
+        patch :set_primary_identifier
+        get :edit_identifier
+        patch :update_identifier
+        delete :destroy_identifier
+      end
+    end
+    resources :products do
+      member do
+        patch :inactivate
+        patch :reactivate
+        patch :regenerate_name
+      end
+    end
+    resources :product_variants do
+      member do
+        patch :inactivate
+        patch :reactivate
+        patch :regenerate_name
+      end
+    end
+  end
+
+  # Legacy redirects
+  get "/catalog", to: redirect("/items")
+  get "/catalog/*path", to: redirect { |params, _req| "/items/#{params[:path]}" }
+  get "/products", to: redirect("/items")
+  get "/products/*path", to: redirect { |params, _req| "/items/#{params[:path]}" }
+
+  namespace :catalog do
+    root to: redirect("/items")
+    get "locked_out", to: redirect("/items/locked_out")
+  end
+
+  namespace :products do
+    root to: redirect("/items")
+    get "locked_out", to: redirect("/items/locked_out")
+  end
+
   namespace :setup do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"
@@ -76,6 +138,63 @@ Rails.application.routes.draw do
       end
     end
     resources :categories do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :sub_departments do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :category_schemes do
+      resources :category_nodes do
+        member do
+          patch :inactivate
+          patch :reactivate
+        end
+      end
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :accounting_mappings do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resource :bisac_subjects, only: %i[show] do
+      post :import, on: :member
+    end
+    resources :formats do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :product_conditions do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :display_locations do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :store_display_locations do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :vendors do
       member do
         patch :inactivate
         patch :reactivate

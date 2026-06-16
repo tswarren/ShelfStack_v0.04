@@ -1,0 +1,37 @@
+<%= form_with model: [:setup, @accounting_mapping], class: "ss-form ss-form--standard" do |f| %>
+  <%= render "shared/forms/errors", record: @accounting_mapping %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :sub_department_id, label: "Subdepartment" } do %>
+      <%= f.collection_select :sub_department_id, @sub_departments, :id, :name, include_blank: "Any" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :condition_id, label: "Condition" } do %>
+      <%= f.collection_select :condition_id, @conditions, :id, :name, include_blank: "Any" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :category_node_id, label: "Store category node" } do %>
+      <%= f.collection_select :category_node_id, @category_nodes, :id, :breadcrumb_label, include_blank: "Any" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :product_type, label: "Product type" } do %>
+      <%= f.select :product_type, Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] }, include_blank: "Any" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :sales_account_code, label: "Sales account code", required: true } do %>
+      <%= f.text_field :sales_account_code, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :reporting_bucket, label: "Reporting bucket" } do %>
+      <%= f.text_field :reporting_bucket, maxlength: 50 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :gl_export_code, label: "GL export code" } do %>
+      <%= f.text_field :gl_export_code, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :sort_order } do %>
+      <%= f.number_field :sort_order, min: 0, step: 1 %>
+    <% end %>
+  </div>
+  <%= render layout: "shared/forms/field", locals: { f: f, record: @accounting_mapping, field: :description } do %>
+    <%= f.text_area :description, rows: 3 %>
+  <% end %>
+  <%= render "shared/forms/checkbox", f: f, record: @accounting_mapping, field: :active %>
+  <footer class="ss-form-actions">
+    <%= f.submit class: "ss-btn" %>
+    <%= link_to "Cancel", setup_accounting_mappings_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

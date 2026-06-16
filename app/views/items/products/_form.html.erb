@@ -1,0 +1,73 @@
+<%= render "shared/forms/errors", record: product %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Cover Image" } do %>
+  <% if product.cover_image.attached? %>
+    <div class="ss-cover-preview">
+      <%= product_cover_image_tag(product.cover_image, size: :hero, alt: "Current cover image for #{product.name}") %>
+    </div>
+    <%= render "shared/forms/checkbox", f: f, record: product, field: :remove_cover_image, label: "Remove cover image" %>
+  <% end %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :cover_image, label: product.cover_image.attached? ? "Replace cover image" : "Cover image" } do %>
+      <%= f.file_field :cover_image, accept: Product::ALLOWED_COVER_IMAGE_TYPES.join(",") %>
+      <p class="ss-hint">JPEG, PNG, WebP, or GIF up to 5 MB. Shown on the item overview and product lists.</p>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Product Name & SKU" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :catalog_item_id, label: "Catalog item" } do %>
+      <%= f.collection_select :catalog_item_id, catalog_items, :id, :title, include_blank: "Non-catalog product" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name_override, label: "Name override" } do %>
+      <%= f.text_field :name_override %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :short_name, label: "Short name" } do %>
+      <%= f.text_field :short_name, maxlength: 40 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU (leave blank for catalog default)" } do %>
+      <%= f.text_field :sku, maxlength: 50 %>
+      <% if product.catalog_item&.primary_identifier %>
+        <p class="ss-hint">Source: catalog primary identifier (<%= product.catalog_item.primary_identifier.normalized_identifier %>)</p>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Product Type & Variation" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
+      <%= f.select :product_type, Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variation_type, label: "Variation type" } do %>
+      <%= f.select :variation_type, Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variant1_label, label: "Variant 1 label" } do %>
+      <%= f.text_field :variant1_label %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :variant2_label, label: "Variant 2 label" } do %>
+      <%= f.text_field :variant2_label %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Price & Display" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
+      <%= f.number_field :list_price_cents, min: 0 %>
+      <p class="ss-hint">List price preview: <%= format_cents(product.list_price_cents) %></p>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_display_location_id, label: "Default display location" } do %>
+      <%= tree_collection_select(f, :default_display_location_id, display_locations, include_blank: true, html_options: { id: "product_default_display_location_id" }) %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_sub_department_id, label: "Default subdepartment" } do %>
+      <%= f.collection_select :default_sub_department_id, sub_departments, :id, :name, include_blank: true %>
+      <p class="ss-hint">Default subdepartment for sellable SKUs created for this product.</p>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: product, field: :active %>
+<% end %>

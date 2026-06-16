@@ -1,0 +1,23 @@
+<%= render "shared/forms/errors", record: display_location %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Location Details", description: "Display locations organize where items appear on the sales floor." } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: display_location, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: display_location, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name, maxlength: 20 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: display_location, field: :parent_id, label: "Parent location" } do %>
+      <%= tree_collection_select(f, :parent_id, parents, include_blank: true) %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: display_location, field: :sort_order } do %>
+      <%= f.number_field :sort_order %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: display_location, field: :active,
+             help: "Inactive locations remain for history but cannot be selected for new variants." %>
+<% end %>

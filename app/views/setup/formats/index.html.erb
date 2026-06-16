@@ -1,0 +1,16 @@
+<h1>Formats <%= link_to "New", new_setup_format_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Key</th><th>Name</th><th>Short Name</th><th>Virtual</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @formats.each do |format| %>
+      <tr>
+        <td><%= format.format_key %></td>
+        <td><%= format.name %></td>
+        <td><%= format.short_name %></td>
+        <td><%= format.virtual? ? "Yes" : "No" %></td>
+        <td><span class="<%= status_class(format.active?) %>"><%= status_label(format.active?) %></span></td>
+        <td><%= link_to "View", setup_format_path(format) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

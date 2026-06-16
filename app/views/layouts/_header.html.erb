@@ -9,7 +9,12 @@
       <%= current_store.name %> · <%= current_workstation&.name || "No workstation" %>
     </div>
   <% end %>
-  <div class="ss-search-placeholder">Search / scan (coming soon)</div>
+  <div class="ss-search-form">
+    <%= form_with url: items_search_path, method: :get, local: true do %>
+      <%= text_field_tag :q, params[:q], placeholder: "Search / scan items…", aria: { label: "Search items" } %>
+      <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
   <div class="ss-header-actions">
     <% if current_user %>
       <div class="ss-user-menu">

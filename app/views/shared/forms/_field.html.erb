@@ -1,0 +1,10 @@
+<%# locals: f, record, field, label: nil, required: false, help: nil %>
+<div class="<%= ss_field_css(record, field) %>">
+  <% label_text = local_assigns.fetch(:label, nil) || field.to_s.humanize %>
+  <%= f.label field, (local_assigns.fetch(:required, false) ? ss_required_label(label_text) : label_text), class: "ss-label" %>
+  <%= yield %>
+  <% if local_assigns.fetch(:help, nil).present? %>
+    <p class="ss-help"><%= help %></p>
+  <% end %>
+  <%= ss_field_error(record, field) %>
+</div>

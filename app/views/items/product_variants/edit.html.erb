@@ -1,0 +1,23 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "Edit Product Variant",
+           description: "Update SKU identity, condition attributes, pricing, and availability." %>
+
+<%= form_with model: [:items, @product_variant], class: "ss-form ss-form--wide" do |f| %>
+  <%= hidden_field_tag :return_to, "item" %>
+  <%= render "form",
+             f: f,
+             product_variant: @product_variant,
+             products: @products,
+             sub_departments: @sub_departments,
+             conditions: @conditions,
+             display_locations: @display_locations,
+             category_nodes: @category_nodes,
+             primary_category_node_id: @primary_category_node_id,
+             classification_defaults: @classification_defaults,
+             show_advanced: true %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Update Variant", class: "ss-btn" %>
+    <%= link_to "Cancel", item_flow_cancel_path(@product_variant.product, tab: "selling", variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

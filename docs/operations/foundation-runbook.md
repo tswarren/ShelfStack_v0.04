@@ -95,12 +95,29 @@ Log out and back in afterward.
 
 If the admin password is unknown and re-seed should not be used:
 
+```bash
+./dev/rails-docker bin/rails shelfstack:password:reset USERNAME=admin PASSWORD='NewPassword123!' FORCE_PASSWORD_CHANGE=false
+```
+
+Omit `PASSWORD` to generate a random temporary password (printed once):
+
+```bash
+./dev/rails-docker bin/rails shelfstack:password:reset USERNAME=admin
+```
+
+Environment variables:
+
+| Variable | Default | Purpose |
+| -------- | ------- | ------- |
+| `USERNAME` | required | Target user |
+| `PASSWORD` | generated | New password |
+| `FORCE_PASSWORD_CHANGE` | `true` | Require change on next login |
+| `UNLOCK` | `true` | Clear lockout counters |
+
+Rails console alternative:
+
 ```ruby
-admin = User.find_by!(username: "admin")
-admin.password = "NewPassword123!"
-admin.password_confirmation = "NewPassword123!"
-admin.force_password_change = false
-admin.save!
+UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_password_change: false)
 ```
 
 ---

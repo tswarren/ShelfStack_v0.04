@@ -1,0 +1,7 @@
+<h1><%= @category_node.name %></h1>
+<dl class="ss-summary">
+  <dt>Node key</dt><dd><%= @category_node.node_key %></dd>
+  <dt>Parent</dt><dd><%= @category_node.parent&.name || "Top level" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@category_node.active?) %>"><%= status_label(@category_node.active?) %></span></dd>
+</dl>
+<%= link_to "Edit", edit_setup_category_scheme_category_node_path(@category_scheme, @category_node), class: "ss-btn" %>

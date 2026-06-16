@@ -1,0 +1,12 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Vendor",
+           description: "Vendors supply products and may provide default pricing terms." %>
+
+<%= form_with model: [:setup, @vendor], class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, vendor: @vendor, parent_vendors: @parent_vendors %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Vendor", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_vendors_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>
