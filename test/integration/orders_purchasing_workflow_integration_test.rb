@@ -40,7 +40,7 @@ class OrdersPurchasingWorkflowIntegrationTest < ActionDispatch::IntegrationTest
       store: @store,
       vendor: @vendor,
       created_by_user: @user,
-      purchase_request_lines: [request_line]
+      purchase_request_lines: [ request_line ]
     )
     Purchasing::SubmitPurchaseOrder.call(purchase_order: order, submitted_by_user: @user)
     po_line = order.purchase_order_lines.first
@@ -72,7 +72,7 @@ class OrdersPurchasingWorkflowIntegrationTest < ActionDispatch::IntegrationTest
     rtv = create_return_to_vendor!(
       store: @store,
       vendor: @vendor,
-      lines: [{ product_variant: @variant, quantity: 3 }]
+      lines: [ { product_variant: @variant, quantity: 3 } ]
     )
     Purchasing::PostReturnToVendor.call(return_to_vendor: rtv, posted_by_user: @user)
 
@@ -86,7 +86,7 @@ class OrdersPurchasingWorkflowIntegrationTest < ActionDispatch::IntegrationTest
     order = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      lines: [create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 2)]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 2) ]
     )
 
     patch submit_orders_purchase_order_path(order)

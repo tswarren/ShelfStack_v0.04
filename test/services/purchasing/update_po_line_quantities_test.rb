@@ -15,7 +15,7 @@ class Purchasing::UpdatePoLineQuantitiesTest < ActiveSupport::TestCase
     @order = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      lines: [create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 10)]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 10) ]
     )
     Purchasing::SubmitPurchaseOrder.call(purchase_order: @order, submitted_by_user: @user)
     @po_line = @order.purchase_order_lines.first

@@ -20,7 +20,7 @@ class Purchasing::ClosePurchaseOrderTest < ActiveSupport::TestCase
     @order = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      lines: [create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5)]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5) ]
     )
     Purchasing::SubmitPurchaseOrder.call(purchase_order: @order, submitted_by_user: @user)
     @line = @order.purchase_order_lines.first
@@ -63,7 +63,7 @@ class Purchasing::ClosePurchaseOrderTest < ActiveSupport::TestCase
     draft = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      lines: [create_purchase_order_line_attrs(variant: @variant, vendor: @vendor)]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor) ]
     )
 
     assert_raises(Purchasing::ClosePurchaseOrder::CloseError) do

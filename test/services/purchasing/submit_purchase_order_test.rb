@@ -21,7 +21,7 @@ class Purchasing::SubmitPurchaseOrderTest < ActiveSupport::TestCase
     @order = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      lines: [create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5)]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5) ]
     )
   end
 

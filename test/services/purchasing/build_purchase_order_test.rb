@@ -24,7 +24,7 @@ class Purchasing::BuildPurchaseOrderTest < ActiveSupport::TestCase
       store: @store,
       vendor: @vendor,
       created_by_user: @user,
-      purchase_request_lines: [request_line]
+      purchase_request_lines: [ request_line ]
     )
 
     assert_equal "draft", order.status

@@ -16,7 +16,7 @@ class PurchaseOrderTest < ActiveSupport::TestCase
       store: @store,
       vendor: @vendor,
       attrs: { status: "submitted", submitted_at: Time.current, submitted_by_user: @user },
-      lines: [create_purchase_order_line_attrs(variant: @variant, vendor: @vendor)]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor) ]
     )
     line = order.purchase_order_lines.first
 

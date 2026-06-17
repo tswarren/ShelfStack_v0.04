@@ -18,7 +18,7 @@ class Purchasing::PostReturnToVendorTest < ActiveSupport::TestCase
     rtv = create_return_to_vendor!(
       store: @store,
       vendor: @vendor,
-      lines: [{ product_variant: @variant, quantity: 3 }]
+      lines: [ { product_variant: @variant, quantity: 3 } ]
     )
 
     Purchasing::PostReturnToVendor.call(return_to_vendor: rtv, posted_by_user: @user)
@@ -39,7 +39,7 @@ class Purchasing::PostReturnToVendorTest < ActiveSupport::TestCase
     rtv = create_return_to_vendor!(
       store: @store,
       vendor: @vendor,
-      lines: [{ product_variant: @variant, quantity: 1 }]
+      lines: [ { product_variant: @variant, quantity: 1 } ]
     )
 
     error = assert_raises(Purchasing::PostReturnToVendor::PostingError) do
