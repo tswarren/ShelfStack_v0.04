@@ -243,9 +243,15 @@ Rails.application.routes.draw do
     resources :purchase_requests do
       member do
         patch :cancel
+        get :build_purchase_order
+        post :create_purchase_order
       end
     end
     resources :purchase_orders do
+      collection do
+        get :from_tbo
+        post :create_from_tbo
+      end
       member do
         patch :submit
         patch :cancel

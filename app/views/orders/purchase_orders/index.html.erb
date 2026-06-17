@@ -1,4 +1,7 @@
-<h1>Purchase Orders <%= link_to "New", new_orders_purchase_order_path, class: "ss-btn" %></h1>
+<h1>Purchase Orders
+  <%= link_to "New", new_orders_purchase_order_path, class: "ss-btn" %>
+  <%= link_to "Build from TBO", from_tbo_orders_purchase_orders_path, class: "ss-btn" %>
+</h1>
 
 <table class="ss-table">
   <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Submitted</th><th></th></tr></thead>

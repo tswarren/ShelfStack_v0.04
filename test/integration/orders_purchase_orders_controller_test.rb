@@ -147,4 +147,59 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "closed", @purchase_order.reload.status
     assert_equal "closed", @purchase_order.purchase_order_lines.first.status
   end
+
+  test "from tbo lists buildable lines for selected vendor" do
+    variant_two = create_product_variant!(sub_department: @sub_department, inventory_behavior: "standard_physical")
+    request_one = PurchaseRequest.create!(store: @store, status: "open")
+    line_one = request_one.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+    request_two = PurchaseRequest.create!(store: @store, status: "open")
+    line_two = request_two.purchase_request_lines.create!(
+      product_variant: variant_two,
+      requested_quantity: 5,
+      status: "open"
+    )
+
+    get from_tbo_orders_purchase_orders_path(vendor_id: @vendor.id)
+
+    assert_response :success
+    assert_match @variant.sku, response.body
+    assert_match variant_two.sku, response.body
+    assert_match "purchase_request_line_#{line_one.id}", response.body
+    assert_match "purchase_request_line_#{line_two.id}", response.body
+  end
+
+  test "create from tbo combines lines from multiple purchase requests" do
+    variant_two = create_product_variant!(sub_department: @sub_department, inventory_behavior: "standard_physical")
+    request_one = PurchaseRequest.create!(store: @store, status: "open")
+    line_one = request_one.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+    request_two = PurchaseRequest.create!(store: @store, status: "open")
+    line_two = request_two.purchase_request_lines.create!(
+      product_variant: variant_two,
+      requested_quantity: 5,
+      status: "open"
+    )
+
+    post create_from_tbo_orders_purchase_orders_path, params: {
+      vendor_id: @vendor.id,
+      purchase_request_line_ids: [ line_one.id, line_two.id ],
+      notes: "Combined TBO"
+    }
+
+    purchase_order = PurchaseOrder.order(:id).last
+    assert_redirected_to orders_purchase_order_path(purchase_order)
+    assert_equal "Combined TBO", purchase_order.notes
+    assert_equal 2, purchase_order.purchase_order_lines.count
+    assert_equal "added_to_po", line_one.reload.status
+    assert_equal "added_to_po", line_two.reload.status
+    assert_equal "added_to_po", request_one.reload.status
+    assert_equal "added_to_po", request_two.reload.status
+  end
 end

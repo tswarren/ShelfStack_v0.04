@@ -2,9 +2,10 @@
 
 module Orders
   class PurchaseRequestsController < BaseController
-    before_action :set_purchase_request, only: %i[show edit update cancel]
-    before_action -> { authorize!("orders.purchase_requests.view") }, only: %i[index show]
+    before_action :set_purchase_request, only: %i[show edit update cancel build_purchase_order create_purchase_order]
+    before_action -> { authorize!("orders.purchase_requests.view") }, only: %i[index show build_purchase_order]
     before_action -> { authorize!("orders.purchase_requests.create") }, only: %i[new create edit update]
+    before_action -> { authorize!("orders.purchase_orders.create") }, only: %i[build_purchase_order create_purchase_order]
     before_action -> { authorize!("orders.purchase_requests.cancel") }, only: :cancel
 
     def index
@@ -16,6 +17,45 @@ module Orders
 
     def show
       @audit_events = AuditEvent.for_auditable(@purchase_request).limit(50)
+      @buildable = @purchase_request.buildable?
+    end
+
+    def build_purchase_order
+      unless @purchase_request.buildable?
+        redirect_to orders_purchase_request_path(@purchase_request), alert: "No lines are ready to add to a purchase order."
+        return
+      end
+
+      @buildable_lines = @purchase_request.buildable_lines
+      @vendors = Vendor.active_records.order(:name)
+      @notes = @purchase_request.notes
+    end
+
+    def create_purchase_order
+      unless @purchase_request.buildable?
+        redirect_to orders_purchase_request_path(@purchase_request), alert: "No lines are ready to add to a purchase order."
+        return
+      end
+
+      vendor = Vendor.active_records.find_by(id: params[:vendor_id])
+      if vendor.blank?
+        redirect_to build_purchase_order_orders_purchase_request_path(@purchase_request), alert: "Vendor is required."
+        return
+      end
+
+      lines = @purchase_request.buildable_lines
+      purchase_order = Purchasing::BuildPurchaseOrder.call(
+        store: orders_store,
+        vendor: vendor,
+        created_by_user: current_user,
+        purchase_request_lines: lines,
+        notes: params[:notes].presence
+      )
+      PurchaseRequest.refresh_statuses_for_lines!(lines)
+
+      redirect_to orders_purchase_order_path(purchase_order), notice: "Draft purchase order created from purchase request."
+    rescue Purchasing::BuildPurchaseOrder::BuildError => e
+      redirect_to build_purchase_order_orders_purchase_request_path(@purchase_request), alert: e.message
     end
 
     def new

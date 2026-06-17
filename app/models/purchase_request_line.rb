@@ -18,6 +18,15 @@ class PurchaseRequestLine < ApplicationRecord
 
   before_validation :assign_line_number, on: :create
 
+  scope :buildable, -> { where(status: PurchaseRequest::BUILDABLE_LINE_STATUSES) }
+
+  scope :buildable_for_store, lambda { |store|
+    buildable
+      .joins(:purchase_request)
+      .where(purchase_requests: { store_id: store.id })
+      .where.not(purchase_requests: { status: PurchaseRequest::CLOSED_STATUSES })
+  }
+
   private
 
   def assign_line_number

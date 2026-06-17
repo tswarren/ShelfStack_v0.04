@@ -20,6 +20,34 @@ class PurchaseRequest < ApplicationRecord
 
   scope :open_requests, -> { where(status: %w[open sourcing_needed ready_to_order]) }
 
+  BUILDABLE_LINE_STATUSES = %w[open sourcing_needed ready_to_order partially_ordered].freeze
+  CLOSED_STATUSES = %w[cancelled closed].freeze
+
+  def buildable_lines
+    purchase_request_lines.select { |line| BUILDABLE_LINE_STATUSES.include?(line.status) }
+  end
+
+  def buildable?
+    CLOSED_STATUSES.exclude?(status) && buildable_lines.any?
+  end
+
+  def refresh_status_from_lines!
+    lines = purchase_request_lines.reload
+    return if lines.empty?
+
+    if lines.all? { |line| line.status == "added_to_po" }
+      update!(status: "added_to_po") unless status == "added_to_po"
+    elsif lines.any? { |line| line.status == "added_to_po" }
+      update!(status: "partially_ordered") unless status == "partially_ordered"
+    end
+  end
+
+  def self.refresh_statuses_for_lines!(lines)
+    Array(lines).filter_map(&:purchase_request_id).uniq.each do |request_id|
+      find(request_id).refresh_status_from_lines!
+    end
+  end
+
   private
 
   def store_must_be_active

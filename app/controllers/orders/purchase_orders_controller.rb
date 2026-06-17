@@ -3,8 +3,8 @@
 module Orders
   class PurchaseOrdersController < BaseController
     before_action :set_purchase_order, only: %i[show edit update submit cancel close]
-    before_action -> { authorize!("orders.purchase_orders.view") }, only: %i[index show]
-    before_action -> { authorize!("orders.purchase_orders.create") }, only: %i[new create edit update]
+    before_action -> { authorize!("orders.purchase_orders.view") }, only: %i[index show from_tbo]
+    before_action -> { authorize!("orders.purchase_orders.create") }, only: %i[new create edit update from_tbo create_from_tbo]
     before_action -> { authorize!("orders.purchase_orders.submit") }, only: :submit
     before_action -> { authorize!("orders.purchase_orders.cancel") }, only: :cancel
     before_action -> { authorize!("orders.purchase_orders.close") }, only: :close
@@ -97,6 +97,54 @@ module Orders
       redirect_to orders_purchase_order_path(@purchase_order), notice: "Purchase order closed."
     rescue Purchasing::ClosePurchaseOrder::CloseError => e
       redirect_to orders_purchase_order_path(@purchase_order), alert: e.message
+    end
+
+    def from_tbo
+      load_form_collections
+      @vendor = Vendor.active_records.find_by(id: params[:vendor_id])
+      @sourced_only = ActiveModel::Type::Boolean.new.cast(params[:sourced_only])
+      @tbo_rows = if @vendor.present?
+        Purchasing::BuildableTboLinesQuery.call(
+          store: orders_store,
+          vendor: @vendor,
+          sourced_only: @sourced_only
+        )
+      else
+        []
+      end
+    end
+
+    def create_from_tbo
+      vendor = Vendor.active_records.find_by(id: params[:vendor_id])
+      if vendor.blank?
+        redirect_to from_tbo_orders_purchase_orders_path, alert: "Vendor is required."
+        return
+      end
+
+      line_ids = Array(params[:purchase_request_line_ids]).map(&:to_i).uniq
+      request_lines = PurchaseRequestLine
+        .buildable_for_store(orders_store)
+        .where(id: line_ids)
+        .includes(:product_variant, :purchase_request)
+
+      if request_lines.empty?
+        redirect_to from_tbo_orders_purchase_orders_path(vendor_id: vendor.id), alert: "Select at least one TBO line."
+        return
+      end
+
+      purchase_order = Purchasing::BuildPurchaseOrder.call(
+        store: orders_store,
+        vendor: vendor,
+        created_by_user: current_user,
+        purchase_request_lines: request_lines,
+        notes: params[:notes].presence
+      )
+      PurchaseRequest.refresh_statuses_for_lines!(request_lines)
+
+      redirect_to orders_purchase_order_path(purchase_order),
+        notice: "Draft purchase order created from #{request_lines.size} TBO #{"line".pluralize(request_lines.size)}."
+    rescue Purchasing::BuildPurchaseOrder::BuildError => e
+      redirect_to from_tbo_orders_purchase_orders_path(vendor_id: params[:vendor_id]), alert: e.message
     end
 
     private

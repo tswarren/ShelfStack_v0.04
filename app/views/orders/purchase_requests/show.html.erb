@@ -28,6 +28,9 @@
 <div class="ss-actions">
   <% unless %w[cancelled closed].include?(@purchase_request.status) %>
     <%= link_to "Edit", edit_orders_purchase_request_path(@purchase_request), class: "ss-btn" %>
+    <% if @buildable && Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) %>
+      <%= link_to "Build Purchase Order", build_purchase_order_orders_purchase_request_path(@purchase_request), class: "ss-btn" %>
+    <% end %>
     <%= button_to "Cancel", cancel_orders_purchase_request_path(@purchase_request), method: :patch, class: "ss-btn" %>
   <% end %>
   <%= link_to "Back", orders_purchase_requests_path %>

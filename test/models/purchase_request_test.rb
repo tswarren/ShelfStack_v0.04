@@ -25,4 +25,36 @@ class PurchaseRequestTest < ActiveSupport::TestCase
     assert_equal 0, InventoryBalance.where(store: @store, product_variant: @variant).count
     assert_equal 0, InventoryPosting.count
   end
+
+  test "buildable lines exclude added_to_po and cancelled" do
+    request = PurchaseRequest.create!(store: @store, status: "open")
+    open_line = request.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+    other_variant = create_product_variant!(sub_department: @variant.sub_department, inventory_behavior: "standard_physical")
+    added_line = request.purchase_request_lines.create!(
+      product_variant: other_variant,
+      requested_quantity: 1,
+      status: "added_to_po"
+    )
+
+    assert request.buildable?
+    assert_includes request.buildable_lines, open_line
+    assert_not_includes request.buildable_lines, added_line
+  end
+
+  test "refresh_status_from_lines updates header when all lines added_to_po" do
+    request = PurchaseRequest.create!(store: @store, status: "open")
+    request.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 1,
+      status: "added_to_po"
+    )
+
+    request.refresh_status_from_lines!
+
+    assert_equal "added_to_po", request.reload.status
+  end
 end

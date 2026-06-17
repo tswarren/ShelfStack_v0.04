@@ -1,0 +1,88 @@
+<h1>Build Purchase Order from TBO</h1>
+<p class="ss-muted">Select a vendor, then choose open TBO lines from one or more purchase requests.</p>
+
+<%= form_with url: from_tbo_orders_purchase_orders_path, method: :get, class: "ss-form-inline" do %>
+  <div class="ss-field">
+    <%= label_tag :vendor_id, "Vendor" %>
+    <%= collection_select nil, :vendor_id, @vendors, :id, :name,
+          { selected: @vendor&.id, include_blank: "Select vendor…" },
+          { onchange: "this.form.requestSubmit()" } %>
+  </div>
+
+  <% if @vendor.present? %>
+    <div class="ss-field">
+      <%= check_box_tag :sourced_only, "1", @sourced_only, onchange: "this.form.requestSubmit()" %>
+      <%= label_tag :sourced_only, "Show only lines sourced for this vendor" %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if @vendor.blank? %>
+  <p class="ss-muted">Choose a vendor to see available TBO lines.</p>
+<% elsif @tbo_rows.empty? %>
+  <p class="ss-muted">No open TBO lines match this filter for <%= @vendor.name %>.</p>
+<% else %>
+  <%= form_with url: create_from_tbo_orders_purchase_orders_path, method: :post do %>
+    <%= hidden_field_tag :vendor_id, @vendor.id %>
+
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th><%= check_box_tag "select_all", "1", false, id: "select_all_tbo_lines" %></th>
+          <th>Request</th>
+          <th>#</th>
+          <th>SKU</th>
+          <th>Variant</th>
+          <th class="ss-num">Qty</th>
+          <th>Reason</th>
+          <th>Sourced</th>
+          <th>Vendor item #</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @tbo_rows.each do |row| %>
+          <% line = row.line %>
+          <% sourcing = row.sourcing %>
+          <tr class="<%= "ss-table-row--highlight" unless sourcing.sourcing_record_present %>">
+            <td>
+              <%= check_box_tag "purchase_request_line_ids[]", line.id, false,
+                    id: "purchase_request_line_#{line.id}",
+                    class: "tbo-line-checkbox" %>
+            </td>
+            <td><%= link_to "##{line.purchase_request_id}", orders_purchase_request_path(line.purchase_request) %></td>
+            <td><%= line.line_number %></td>
+            <td><%= line.product_variant.sku %></td>
+            <td><%= line.product_variant.name %></td>
+            <td class="ss-num"><%= line.requested_quantity %></td>
+            <td><%= line.request_reason || "—" %></td>
+            <td><%= sourcing.sourcing_record_present ? "Yes" : "No" %></td>
+            <td><%= sourcing.vendor_item_number || "—" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <div class="ss-field">
+      <%= label_tag :notes, "PO notes" %>
+      <%= text_area_tag :notes, params[:notes] %>
+    </div>
+
+    <div class="ss-actions">
+      <%= submit_tag "Create Draft Purchase Order", class: "ss-btn" %>
+      <%= link_to "Cancel", orders_purchase_orders_path, class: "ss-btn ss-btn-secondary" %>
+    </div>
+  <% end %>
+<% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectAll = document.getElementById("select_all_tbo_lines");
+    if (!selectAll) return;
+
+    selectAll.addEventListener("change", function () {
+      document.querySelectorAll(".tbo-line-checkbox").forEach(function (checkbox) {
+        checkbox.checked = selectAll.checked;
+      });
+    });
+  });
+</script>
