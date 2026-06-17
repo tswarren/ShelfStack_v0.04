@@ -129,4 +129,22 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to orders_purchase_order_path(@purchase_order)
     assert_equal 1, @purchase_order.reload.purchase_order_lines.count
   end
+
+  test "close marks submitted purchase order closed" do
+    ProductVendor.create!(
+      product: @variant.product,
+      vendor: @vendor,
+      vendor_item_number: "VEND-1",
+      supplier_discount_bps: 4000,
+      returnability_status: "returnable",
+      active: true
+    )
+    Purchasing::SubmitPurchaseOrder.call(purchase_order: @purchase_order, submitted_by_user: @user)
+
+    patch close_orders_purchase_order_path(@purchase_order)
+
+    assert_redirected_to orders_purchase_order_path(@purchase_order)
+    assert_equal "closed", @purchase_order.reload.status
+    assert_equal "closed", @purchase_order.purchase_order_lines.first.status
+  end
 end

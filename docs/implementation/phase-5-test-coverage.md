@@ -25,6 +25,8 @@ Matrix mapping [phase-5-test-plan.md](../specifications/phase-5-test-plan.md) re
 | `Purchasing::PostReturnToVendor` | `test/services/purchasing/post_return_to_vendor_test.rb` | Covered |
 | `Purchasing::BuildPurchaseOrder` | `test/services/purchasing/build_purchase_order_test.rb` | Covered |
 | `Purchasing::SubmitPurchaseOrder` | `test/services/purchasing/submit_purchase_order_test.rb` | Covered |
+| `Purchasing::ClosePurchaseOrder` | `test/services/purchasing/close_purchase_order_test.rb` | Covered |
+| `Purchasing::SourcingWarnings` | `test/services/purchasing/sourcing_warnings_test.rb` | Covered |
 | `Purchasing::SourcingLookup` | `test/services/purchasing/sourcing_lookup_test.rb` | Covered |
 | `Purchasing::UpdatePoLineQuantities` | `test/services/purchasing/update_po_line_quantities_test.rb` | Covered |
 | `Purchasing::OrderQuantityLookup` | `test/services/purchasing/order_quantity_lookup_test.rb` | Covered |
@@ -47,6 +49,7 @@ Matrix mapping [phase-5-test-plan.md](../specifications/phase-5-test-plan.md) re
 | RTV reduces on-hand | `post_return_to_vendor_test`, workflow integration | Covered |
 | PO submit snapshots (HTTP) | `orders_purchasing_workflow_integration_test` | Covered |
 | PO line removal on update | `test/integration/orders_purchase_orders_controller_test.rb` | Covered |
+| PO close workflow (HTTP) | `orders_purchase_orders_controller_test` | Covered |
 | Receipt controller flows | `test/integration/orders_receipts_controller_test.rb` | Covered |
 
 ## Seeds

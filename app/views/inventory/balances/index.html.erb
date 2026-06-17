@@ -16,8 +16,15 @@
 
 <%= form_with url: inventory_root_path, method: :get, class: "ss-form-inline" do %>
   <%= text_field_tag :q, params[:q], placeholder: "Search SKU or name" %>
+  <%= hidden_field_tag :stock, params[:stock] if params[:stock].present? %>
   <%= submit_tag "Search", class: "ss-btn" %>
 <% end %>
+
+<p class="ss-actions">
+  <%= link_to "All stock", inventory_root_path(q: params[:q]), class: (@stock_filter.blank? ? "ss-btn" : "ss-btn ss-btn-secondary") %>
+  <%= link_to "Zero stock", inventory_root_path(q: params[:q], stock: "zero"), class: (@stock_filter == "zero" ? "ss-btn" : "ss-btn ss-btn-secondary") %>
+  <%= link_to "Low stock", inventory_root_path(q: params[:q], stock: "low"), class: (@stock_filter == "low" ? "ss-btn" : "ss-btn ss-btn-secondary") %>
+</p>
 
 <p class="ss-muted">
   On hand: <%= @totals[:quantity_on_hand] %> |

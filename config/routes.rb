@@ -249,6 +249,7 @@ Rails.application.routes.draw do
       member do
         patch :submit
         patch :cancel
+        patch :close
       end
     end
     resources :receipts do

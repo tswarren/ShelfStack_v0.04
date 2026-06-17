@@ -48,6 +48,8 @@ Migration: `db/migrate/20250620120000_create_phase5_purchasing_and_receiving.rb`
 | `Purchasing::SourcingLookup` | Resolve preferred vendor source for a variant |
 | `Purchasing::BuildPurchaseOrder` | Build draft PO from TBO lines or manual line attrs |
 | `Purchasing::SubmitPurchaseOrder` | Lock PO line snapshots at submit |
+| `Purchasing::ClosePurchaseOrder` | Close submitted/partial/received POs; resolve open lines |
+| `Purchasing::SourcingWarnings` | Warn on PO lines missing vendor sourcing for selected vendor |
 | `Purchasing::UpdatePoLineQuantities` | PO line/header status after receive |
 | `Purchasing::OrderQuantityLookup` | On-order and pending qty from open PO lines |
 | `Purchasing::PostReceipt` | Post accepted qty via `Inventory::Post` (`receiving`) |
@@ -66,7 +68,7 @@ Extended Phase 4 services:
 
 - Home with cards for purchase requests, purchase orders, receipts, returns to vendor
 - Purchase request list/create/show/cancel
-- Purchase order draft/edit/submit/show
+- Purchase order draft/edit/submit/show/**close**
 - Receipt draft/post workflow (PO-backed and direct)
 - Return to vendor draft/post workflow
 - `orders.access` permission gate and locked-out page
@@ -76,7 +78,11 @@ Extended Phase 4 services:
 - Product vendor and product variant vendor CRUD under Setup
 - Vendor forms cleaned up (supplier discount only; pricing model removed)
 - Variant show: Mark TBO link, vendor sourcing context
-- Inventory balances: shortcuts into Orders
+- Items selling tab: Mark TBO per variant row
+- Inventory balances: shortcuts into Orders, on-order/pending columns, zero/low stock filters, Mark TBO
+- Inventory negative on-hand: Mark TBO link
+- Items Display tab: product vendor sourcing list with Setup links
+- PO forms/show: sourcing warnings when lines lack vendor sourcing records
 
 ### Permissions and audit
 
@@ -87,6 +93,7 @@ Representative audit events:
 ```text
 purchase_request.created
 purchase_order.submitted
+purchase_order.closed
 receipt.posted
 return_to_vendor.posted
 product_vendor.created
@@ -134,4 +141,3 @@ Per roadmap:
 * Receiving discrepancy UI is service-backed but minimal in Orders views
 * Reserved / special-order quantities not shown on Items surfaces yet
 * Items index search results do not include stock or on-order columns
-* Display & Vendors tab still uses placeholder copy for product vendor sourcing (setup CRUD exists)

@@ -34,4 +34,23 @@ class Inventory::BalancesQueryTest < ActiveSupport::TestCase
     result = Inventory::BalancesQuery.call(store: @store, query: target.sku)
     assert_equal 1, result.total_count
   end
+
+  test "filters zero stock" do
+    balances = InventoryBalance.for_store(@store).to_a
+    balances.first.update_column(:quantity_on_hand, 0)
+    balances.second.update_column(:quantity_on_hand, -1)
+
+    result = Inventory::BalancesQuery.call(store: @store, stock_filter: "zero")
+    assert_equal 2, result.total_count
+  end
+
+  test "filters low stock" do
+    balances = InventoryBalance.for_store(@store).to_a
+    balances[0].update_column(:quantity_on_hand, 3)
+    balances[1].update_column(:quantity_on_hand, 5)
+    balances[2].update_column(:quantity_on_hand, 10)
+
+    result = Inventory::BalancesQuery.call(store: @store, stock_filter: "low")
+    assert_equal 2, result.total_count
+  end
 end

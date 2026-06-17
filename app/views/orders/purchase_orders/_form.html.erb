@@ -2,6 +2,7 @@
 
 <%= form_with model: purchase_order, url: (purchase_order.persisted? ? orders_purchase_order_path(purchase_order) : orders_purchase_orders_path) do |f| %>
   <%= render "shared/forms/errors", record: purchase_order %>
+  <%= render "sourcing_warnings", sourcing_warnings: @sourcing_warnings %>
 
   <div class="ss-field">
     <%= f.label :vendor_id, "Vendor" %>

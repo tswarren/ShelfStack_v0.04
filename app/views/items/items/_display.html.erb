@@ -57,7 +57,36 @@
 
   <section class="ss-item-display-section">
     <h3>Vendors</h3>
-    <p class="ss-muted">Vendor-product sourcing links will appear in a future phase.</p>
-    <p><%= link_to "Manage vendors in Setup", setup_vendors_path %></p>
+    <% if item.product.present? %>
+      <% product_vendors = ProductVendor.active_records.includes(:vendor).where(product: item.product).order("vendors.name") %>
+      <% if product_vendors.any? %>
+        <table class="ss-table">
+          <thead>
+            <tr>
+              <th>Vendor</th>
+              <th>Item #</th>
+              <th>Discount</th>
+              <th>Preferred</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% product_vendors.each do |product_vendor| %>
+              <tr>
+                <td><%= product_vendor.vendor.name %></td>
+                <td><%= product_vendor.vendor_item_number || "—" %></td>
+                <td><%= product_vendor.supplier_discount_bps ? format_basis_points(product_vendor.supplier_discount_bps) : "—" %></td>
+                <td><%= product_vendor.preferred? ? "Yes" : "No" %></td>
+                <td><%= link_to "View", setup_product_vendor_path(product_vendor) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <p><%= link_to "Manage product vendors in Setup", setup_product_vendors_path %></p>
+      <% else %>
+        <p class="ss-muted">No product vendor sourcing records yet.</p>
+        <p><%= link_to "Add product vendor in Setup", new_setup_product_vendor_path %></p>
+      <% end %>
+    <% end %>
   </section>
 <% end %>

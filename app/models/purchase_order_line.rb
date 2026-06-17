@@ -23,7 +23,7 @@ class PurchaseOrderLine < ApplicationRecord
   validates :returnability_status_snapshot,
             inclusion: { in: ReturnabilityStatus::RETURNABILITY_STATUSES },
             allow_nil: true
-  validate :purchase_order_must_be_draft, on: :update, unless: :receiving_update?
+  validate :purchase_order_must_be_draft, on: :update, unless: :operational_line_update?
   validate :product_variant_must_be_active
   validate :vendor_must_be_active
   validate :quantity_received_cannot_exceed_ordered
@@ -31,10 +31,18 @@ class PurchaseOrderLine < ApplicationRecord
   before_validation :assign_line_number, on: :create
   before_validation :apply_price_defaults, if: :draft_purchase_order_line?
 
-  attr_accessor :receiving_update
+  attr_accessor :receiving_update, :closure_update
 
   def receiving_update?
     receiving_update == true
+  end
+
+  def closure_update?
+    closure_update == true
+  end
+
+  def operational_line_update?
+    receiving_update? || closure_update?
   end
 
   private

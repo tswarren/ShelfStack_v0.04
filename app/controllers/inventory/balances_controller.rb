@@ -8,7 +8,8 @@ module Inventory
       result = Inventory::BalancesQuery.call(
         store: inventory_store,
         query: params[:q],
-        page: params[:page]
+        page: params[:page],
+        stock_filter: params[:stock]
       )
 
       @balances = result.balances
@@ -17,6 +18,7 @@ module Inventory
       @per_page = result.per_page
       @total_pages = [ (@total_count.to_f / @per_page).ceil, 1 ].max
       @totals = Inventory::Valuation.store_totals(store: inventory_store)
+      @stock_filter = params[:stock].presence
       @order_quantities = Purchasing::OrderQuantityLookup.for_variants(
         store: inventory_store,
         variant_ids: @balances.map(&:product_variant_id)

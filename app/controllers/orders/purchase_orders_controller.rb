@@ -2,11 +2,12 @@
 
 module Orders
   class PurchaseOrdersController < BaseController
-    before_action :set_purchase_order, only: %i[show edit update submit cancel]
+    before_action :set_purchase_order, only: %i[show edit update submit cancel close]
     before_action -> { authorize!("orders.purchase_orders.view") }, only: %i[index show]
     before_action -> { authorize!("orders.purchase_orders.create") }, only: %i[new create edit update]
     before_action -> { authorize!("orders.purchase_orders.submit") }, only: :submit
     before_action -> { authorize!("orders.purchase_orders.cancel") }, only: :cancel
+    before_action -> { authorize!("orders.purchase_orders.close") }, only: :close
 
     def index
       @purchase_orders = PurchaseOrder
@@ -17,12 +18,18 @@ module Orders
 
     def show
       @audit_events = AuditEvent.for_auditable(@purchase_order).limit(50)
+      @sourcing_warnings = Purchasing::SourcingWarnings.for_purchase_order(@purchase_order)
+      @closable = Purchasing::ClosePurchaseOrder.new(
+        purchase_order: @purchase_order,
+        closed_by_user: current_user
+      ).closable?
     end
 
     def new
       @purchase_order = PurchaseOrder.new(store: orders_store, status: "draft")
       build_initial_line
       load_form_collections
+      @sourcing_warnings = []
     end
 
     def create
@@ -37,6 +44,7 @@ module Orders
         redirect_to orders_purchase_order_path(@purchase_order), notice: "Draft purchase order created."
       else
         load_form_collections
+        @sourcing_warnings = Purchasing::SourcingWarnings.for_purchase_order(@purchase_order)
         render :new, status: :unprocessable_entity
       end
     end
@@ -44,6 +52,7 @@ module Orders
     def edit
       redirect_to orders_purchase_order_path(@purchase_order), alert: "Submitted purchase orders cannot be edited." unless @purchase_order.draft?
       load_form_collections
+      @sourcing_warnings = Purchasing::SourcingWarnings.for_purchase_order(@purchase_order)
     end
 
     def update
@@ -60,6 +69,7 @@ module Orders
         redirect_to orders_purchase_order_path(@purchase_order), notice: "Draft purchase order updated."
       else
         load_form_collections
+        @sourcing_warnings = Purchasing::SourcingWarnings.for_purchase_order(@purchase_order)
         render :edit, status: :unprocessable_entity
       end
     end
@@ -80,6 +90,13 @@ module Orders
       @purchase_order.update!(status: "cancelled")
       record_audit!("purchase_order.cancelled", @purchase_order)
       redirect_to orders_purchase_orders_path, notice: "Purchase order cancelled."
+    end
+
+    def close
+      Purchasing::ClosePurchaseOrder.call(purchase_order: @purchase_order, closed_by_user: current_user)
+      redirect_to orders_purchase_order_path(@purchase_order), notice: "Purchase order closed."
+    rescue Purchasing::ClosePurchaseOrder::CloseError => e
+      redirect_to orders_purchase_order_path(@purchase_order), alert: e.message
     end
 
     private

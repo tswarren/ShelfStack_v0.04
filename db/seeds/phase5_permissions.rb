@@ -5,7 +5,7 @@ module Seeds
     ORDERS_RESOURCES = %w[purchase_requests purchase_orders receipts returns_to_vendor].freeze
     ORDERS_ACTIONS = {
       "purchase_requests" => %w[view create update cancel],
-      "purchase_orders" => %w[view create update submit cancel],
+      "purchase_orders" => %w[view create update submit cancel close],
       "receipts" => %w[view create update post cancel],
       "returns_to_vendor" => %w[view create update post cancel]
     }.freeze
