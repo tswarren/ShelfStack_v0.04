@@ -85,4 +85,28 @@ class Purchasing::PostReceiptTest < ActiveSupport::TestCase
     end
     assert_match(/accepted quantity/i, error.message)
   end
+
+  test "records discrepancy when received differs from expected" do
+    receipt = create_receipt!(
+      store: @store,
+      vendor: @vendor,
+      lines: [
+        {
+          product_variant: @variant,
+          line_number: 1,
+          quantity_expected: 5,
+          quantity_received: 3,
+          quantity_accepted: 3,
+          quantity_rejected: 0,
+          unit_cost_cents: 800
+        }
+      ]
+    )
+
+    Purchasing::PostReceipt.call(receipt: receipt, posted_by_user: @user)
+
+    discrepancy = receipt.receipt_lines.first.receiving_discrepancies.first
+    assert_equal "short", discrepancy.discrepancy_type
+    assert_equal(-2, discrepancy.quantity_delta)
+  end
 end

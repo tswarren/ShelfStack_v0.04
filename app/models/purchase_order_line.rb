@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class PurchaseOrderLine < ApplicationRecord
+  include NestedLineNumberUniqueness
+
   STATUSES = %w[open partially_received received backordered cancelled closed_short closed].freeze
 
   belongs_to :purchase_order
@@ -11,7 +13,7 @@ class PurchaseOrderLine < ApplicationRecord
   has_many :receipt_lines, dependent: :restrict_with_error
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  validates :line_number, uniqueness: { scope: :purchase_order_id }
+  validates_nested_line_number_uniqueness :purchase_order, foreign_key: :purchase_order_id
   validates :quantity_ordered, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :quantity_received, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :status, presence: true, inclusion: { in: STATUSES }
@@ -27,6 +29,7 @@ class PurchaseOrderLine < ApplicationRecord
   validate :quantity_received_cannot_exceed_ordered
 
   before_validation :assign_line_number, on: :create
+  before_validation :apply_price_defaults, if: :draft_purchase_order_line?
 
   attr_accessor :receiving_update
 
@@ -35,6 +38,15 @@ class PurchaseOrderLine < ApplicationRecord
   end
 
   private
+
+  def draft_purchase_order_line?
+    purchase_order&.draft?
+  end
+
+  def apply_price_defaults
+    self.vendor = purchase_order.vendor if vendor.blank? && purchase_order&.vendor.present?
+    Purchasing::LinePriceDefaults.apply!(self)
+  end
 
   def assign_line_number
     return if line_number.present? || purchase_order.blank?

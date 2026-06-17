@@ -52,9 +52,10 @@ module Orders
         return
       end
 
+      @purchase_order.assign_attributes(purchase_order_params)
       assign_purchase_order_line_defaults(@purchase_order)
 
-      if @purchase_order.update(purchase_order_params)
+      if @purchase_order.save
         record_audit!("purchase_order.updated", @purchase_order)
         redirect_to orders_purchase_order_path(@purchase_order), notice: "Draft purchase order updated."
       else

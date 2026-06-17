@@ -2,13 +2,14 @@
 
 module Inventory
   class VariantLookupPresenter
-    def self.as_json(result, store:)
-      new(result, store:).as_json
+    def self.as_json(result, store:, vendor: nil)
+      new(result, store:, vendor:).as_json
     end
 
-    def initialize(result, store:)
+    def initialize(result, store:, vendor: nil)
       @result = result
       @store = store
+      @vendor = vendor
     end
 
     def as_json
@@ -21,11 +22,11 @@ module Inventory
 
     private
 
-    attr_reader :result, :store
+    attr_reader :result, :store, :vendor
 
     def variant_json(variant)
       balance = InventoryBalance.find_by(store: store, product_variant: variant)
-      {
+      json = {
         id: variant.id,
         sku: variant.sku,
         name: variant.name,
@@ -34,6 +35,15 @@ module Inventory
         eligible: Inventory::Eligibility.eligible?(variant),
         quantity_on_hand: balance&.quantity_on_hand || 0
       }
+
+      if vendor.present?
+        defaults = Purchasing::LinePriceDefaults.resolve(variant: variant, vendor: vendor)
+        json[:unit_list_price_cents] = defaults.unit_list_price_cents
+        json[:supplier_discount_bps] = defaults.supplier_discount_bps
+        json[:unit_cost_cents] = defaults.unit_cost_cents
+      end
+
+      json
     end
   end
 end

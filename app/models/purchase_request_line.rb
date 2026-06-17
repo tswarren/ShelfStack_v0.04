@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class PurchaseRequestLine < ApplicationRecord
+  include NestedLineNumberUniqueness
+
   STATUSES = %w[
     open sourcing_needed ready_to_order added_to_po partially_ordered cancelled closed
   ].freeze
@@ -9,7 +11,7 @@ class PurchaseRequestLine < ApplicationRecord
   belongs_to :product_variant
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  validates :line_number, uniqueness: { scope: :purchase_request_id }
+  validates_nested_line_number_uniqueness :purchase_request, foreign_key: :purchase_request_id
   validates :requested_quantity, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :status, presence: true, inclusion: { in: STATUSES }
   validate :product_variant_must_be_active

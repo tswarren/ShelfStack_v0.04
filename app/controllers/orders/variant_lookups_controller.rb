@@ -10,7 +10,8 @@ module Orders
         mode: params[:mode].presence || :exact,
         eligible_only: ActiveModel::Type::Boolean.new.cast(params.fetch(:eligible_only, true))
       )
-      render json: Inventory::VariantLookupPresenter.as_json(result, store: orders_store)
+      vendor = Vendor.find_by(id: params[:vendor_id]) if params[:vendor_id].present?
+      render json: Inventory::VariantLookupPresenter.as_json(result, store: orders_store, vendor: vendor)
     end
   end
 end

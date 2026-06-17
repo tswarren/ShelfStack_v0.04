@@ -25,7 +25,7 @@ export default class extends Controller {
     const destroyField = line.querySelector("[data-nested-form-lines-target='destroy']")
     if (destroyField) {
       destroyField.value = "1"
-      line.hidden = true
+      line.style.display = "none"
     } else {
       line.remove()
     }

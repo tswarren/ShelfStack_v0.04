@@ -14,10 +14,12 @@
 
 <div data-controller="nested-form-lines">
   <div data-nested-form-lines-target="container">
-    <%= f.fields_for association do |line_form| %>
-      <% variant = line_form.object.product_variant %>
+    <% f.object.public_send(association).reject(&:marked_for_destruction?).each do |line| %>
+      <% variant = line.product_variant %>
       <% balance = variant && store ? InventoryBalance.find_by(store: store, product_variant: variant) : nil %>
-      <%= render line_partial, line_form: line_form, variant: variant, balance: balance, store: store, **line_locals %>
+      <%= f.fields_for association, line do |line_form| %>
+        <%= render line_partial, line_form: line_form, variant: variant, balance: balance, store: store, **line_locals %>
+      <% end %>
     <% end %>
   </div>
 

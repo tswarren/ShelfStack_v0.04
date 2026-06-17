@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Receipt < ApplicationRecord
+  include NestedLineRenumbering
+
   RECEIPT_TYPES = %w[po_backed direct].freeze
   STATUSES = %w[draft posted cancelled].freeze
 
@@ -74,12 +76,11 @@ class Receipt < ApplicationRecord
   def normalize_line_numbers
     return if posted?
 
-    receipt_lines.reject(&:marked_for_destruction?).each_with_index do |line, index|
-      line.line_number = index + 1
-    end
+    renumber_nested_lines(receipt_lines)
   end
 
   def reject_blank_receipt_line?(attributes)
+    return false if ActiveModel::Type::Boolean.new.cast(attributes["_destroy"])
     return false if attributes["id"].present?
 
     attributes["product_variant_id"].blank?

@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 class ReturnToVendorLine < ApplicationRecord
+  include NestedLineNumberUniqueness
+
   belongs_to :return_to_vendor
   belongs_to :product_variant
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  validates :line_number, uniqueness: { scope: :return_to_vendor_id }
+  validates_nested_line_number_uniqueness :return_to_vendor, foreign_key: :return_to_vendor_id
   validates :quantity, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :supplier_discount_bps,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 10_000 },

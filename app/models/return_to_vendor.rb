@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ReturnToVendor < ApplicationRecord
+  include NestedLineRenumbering
+
   self.table_name = "returns_to_vendor"
 
   STATUSES = %w[draft posted cancelled credited closed].freeze
@@ -12,7 +14,7 @@ class ReturnToVendor < ApplicationRecord
 
   has_many :return_to_vendor_lines, -> { order(:line_number) }, dependent: :destroy, inverse_of: :return_to_vendor
 
-  accepts_nested_attributes_for :return_to_vendor_lines, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :return_to_vendor_lines, allow_destroy: true, reject_if: :reject_blank_return_to_vendor_line?
 
   before_validation :normalize_line_numbers
 
@@ -58,11 +60,16 @@ class ReturnToVendor < ApplicationRecord
     errors.add(:base, "posted returns to vendor are immutable")
   end
 
+  def reject_blank_return_to_vendor_line?(attributes)
+    return false if ActiveModel::Type::Boolean.new.cast(attributes["_destroy"])
+    return false if attributes["id"].present?
+
+    attributes["product_variant_id"].blank?
+  end
+
   def normalize_line_numbers
     return if posted?
 
-    return_to_vendor_lines.reject(&:marked_for_destruction?).each_with_index do |line, index|
-      line.line_number = index + 1
-    end
+    renumber_nested_lines(return_to_vendor_lines)
   end
 end

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class PurchaseOrder < ApplicationRecord
+  include NestedLineRenumbering
+
   STATUSES = %w[draft submitted partially_received received cancelled closed].freeze
 
   belongs_to :store
@@ -10,7 +12,7 @@ class PurchaseOrder < ApplicationRecord
   has_many :purchase_order_lines, -> { order(:line_number) }, dependent: :destroy, inverse_of: :purchase_order
   has_many :receipts, dependent: :restrict_with_error
 
-  accepts_nested_attributes_for :purchase_order_lines, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :purchase_order_lines, allow_destroy: true, reject_if: :reject_blank_purchase_order_line?
 
   before_validation :normalize_line_numbers
 
@@ -58,14 +60,19 @@ class PurchaseOrder < ApplicationRecord
   end
 
   def only_status_changed?
-    (changed_attribute_names - %w[updated_at]).sort == %w[status]
+    (changes_to_save.keys - %w[updated_at]).sort == %w[status]
+  end
+
+  def reject_blank_purchase_order_line?(attributes)
+    return false if ActiveModel::Type::Boolean.new.cast(attributes["_destroy"])
+    return false if attributes["id"].present?
+
+    attributes["product_variant_id"].blank?
   end
 
   def normalize_line_numbers
     return unless draft?
 
-    purchase_order_lines.reject(&:marked_for_destruction?).each_with_index do |line, index|
-      line.line_number = index + 1
-    end
+    renumber_nested_lines(purchase_order_lines)
   end
 end

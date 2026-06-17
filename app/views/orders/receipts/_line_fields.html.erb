@@ -4,6 +4,7 @@
   data-controller="inventory-variant-lookup"
   data-inventory-variant-lookup-url-value="<%= orders_variant_lookup_path %>"
   data-inventory-variant-lookup-require-eligible-value="true"
+  data-inventory-variant-lookup-form-vendor-select-id-value="<%= vendor_field_id %>"
   <% if variant %>
     data-inventory-variant-lookup-initial-sku-value="<%= variant.sku %>"
     data-inventory-variant-lookup-initial-variant-id-value="<%= variant.id %>"
@@ -34,8 +35,20 @@
     <%= line_form.number_field :quantity_rejected, min: 0, step: 1 %>
   </div>
   <div class="ss-field">
+    <%= line_form.label :unit_list_price_cents, "List price (cents)" %>
+    <%= line_form.number_field :unit_list_price_cents, min: 0, step: 1,
+          data: { inventory_variant_lookup_target: "listPrice" } %>
+    <p class="ss-hint">Defaults from product list price or PO line when blank.</p>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :supplier_discount_bps, "Discount (bps)" %>
+    <%= line_form.number_field :supplier_discount_bps, min: 0, max: 10_000, step: 1,
+          data: { inventory_variant_lookup_target: "discountBps" } %>
+  </div>
+  <div class="ss-field">
     <%= line_form.label :unit_cost_cents, "Unit cost (cents)" %>
-    <%= line_form.number_field :unit_cost_cents, min: 0, step: 1 %>
+    <%= line_form.number_field :unit_cost_cents, min: 0, step: 1,
+          data: { inventory_variant_lookup_target: "unitCost" } %>
   </div>
   <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#removeLine">Remove line</button>
 </fieldset>

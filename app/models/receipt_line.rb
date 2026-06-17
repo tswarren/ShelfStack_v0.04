@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ReceiptLine < ApplicationRecord
+  include NestedLineNumberUniqueness
+
   belongs_to :receipt
   belongs_to :product_variant
   belongs_to :purchase_order_line, optional: true
@@ -8,7 +10,7 @@ class ReceiptLine < ApplicationRecord
   has_many :receiving_discrepancies, dependent: :destroy
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  validates :line_number, uniqueness: { scope: :receipt_id }
+  validates_nested_line_number_uniqueness :receipt, foreign_key: :receipt_id
   validates :quantity_expected, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :quantity_received, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :quantity_accepted, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
@@ -23,11 +25,16 @@ class ReceiptLine < ApplicationRecord
 
   before_validation :assign_line_number, on: :create
   before_validation :reconcile_quantities, if: :receipt_draft?
+  before_validation :apply_price_defaults, if: :receipt_draft?
 
   private
 
   def receipt_draft?
     receipt&.draft?
+  end
+
+  def apply_price_defaults
+    Purchasing::LinePriceDefaults.apply!(self)
   end
 
   def reconcile_quantities

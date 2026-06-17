@@ -23,7 +23,8 @@
         association: :receipt_lines,
         line_object: ReceiptLine.new,
         line_partial: "orders/receipts/line_fields",
-        store: orders_store %>
+        store: orders_store,
+        line_locals: { vendor_field_id: "receipt_vendor_id" } %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>

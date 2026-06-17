@@ -44,23 +44,18 @@ module Purchasing
     attr_reader :purchase_order, :submitted_by_user
 
     def snapshot_line!(line)
-      variant = line.product_variant
-      sourcing = SourcingLookup.for(variant: variant, vendor: line.vendor)
-      list_price = variant.product.list_price_cents
-      discount_bps = sourcing.supplier_discount_bps
+      Purchasing::LinePriceDefaults.apply!(line)
+      sourcing = SourcingLookup.for(variant: line.product_variant, vendor: line.vendor)
 
       line.update!(
-        variant_sku_snapshot: variant.sku,
-        variant_name_snapshot: variant.name,
+        variant_sku_snapshot: line.product_variant.sku,
+        variant_name_snapshot: line.product_variant.name,
         vendor_item_number_snapshot: sourcing.vendor_item_number,
-        unit_list_price_cents: list_price,
-        supplier_discount_bps: discount_bps,
-        unit_cost_cents: VendorCostCalculator.unit_cost_cents(
-          unit_list_price_cents: list_price,
-          supplier_discount_bps: discount_bps
-        ),
-        returnability_status_snapshot: ReturnabilityResolver.resolve(variant: variant, vendor: line.vendor),
-        product_variant_vendor: sourcing.product_variant_vendor
+        unit_list_price_cents: line.unit_list_price_cents,
+        supplier_discount_bps: line.supplier_discount_bps,
+        unit_cost_cents: line.unit_cost_cents,
+        returnability_status_snapshot: ReturnabilityResolver.resolve(variant: line.product_variant, vendor: line.vendor),
+        product_variant_vendor: line.product_variant_vendor
       )
     end
   end
