@@ -22,8 +22,28 @@ class ReceiptLine < ApplicationRecord
   validate :purchase_order_line_must_match
 
   before_validation :assign_line_number, on: :create
+  before_validation :reconcile_quantities, if: :receipt_draft?
 
   private
+
+  def receipt_draft?
+    receipt&.draft?
+  end
+
+  def reconcile_quantities
+    return if quantity_received.nil?
+
+    received = quantity_received.to_i
+    self.quantity_rejected = quantity_rejected.to_i.clamp(0, received)
+    max_accepted = received - quantity_rejected
+    accepted = quantity_accepted.to_i
+
+    if accepted > max_accepted
+      self.quantity_accepted = max_accepted
+    elsif accepted.zero? && max_accepted.positive?
+      self.quantity_accepted = max_accepted
+    end
+  end
 
   def assign_line_number
     return if line_number.present? || receipt.blank?

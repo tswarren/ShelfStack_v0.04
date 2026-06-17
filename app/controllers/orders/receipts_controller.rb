@@ -25,7 +25,7 @@ module Orders
         receipt_type: params[:receipt_type].presence || "direct",
         status: "draft"
       )
-      @receipt.receipt_lines.build
+      build_initial_line
       load_form_collections
     end
 
@@ -91,7 +91,24 @@ module Orders
       @vendors = Vendor.active_records.order(:name)
       @purchase_orders = PurchaseOrder.where(store: orders_store).where.not(status: %w[cancelled closed]).order(created_at: :desc)
       @receipt_type_options = Receipt::RECEIPT_TYPES
-      @variants = ProductVariant.active_records.includes(:product).order(:sku).limit(500)
+    end
+
+    def build_initial_line
+      if params[:product_variant_id].present?
+        variant = ProductVariant.active_records.find_by(id: params[:product_variant_id])
+        if variant
+          @receipt.receipt_lines.build(
+            product_variant: variant,
+            quantity_expected: 0,
+            quantity_received: 0,
+            quantity_accepted: 0,
+            quantity_rejected: 0
+          )
+          return
+        end
+      end
+
+      @receipt.receipt_lines.build
     end
 
     def receipt_params

@@ -27,32 +27,35 @@ module Purchasing
 
       posting = nil
       Receipt.transaction do
+        normalize_accepted_quantities!
         record_discrepancies!
 
         postable_lines = receipt.receipt_lines.select { |line| line.quantity_accepted.positive? }
-        if postable_lines.any?
-          lines = postable_lines.map do |line|
-            Inventory::Post::LinePayload.new(
-              product_variant: line.product_variant,
-              quantity_delta: line.quantity_accepted,
-              movement_type: "received",
-              manual_unit_cost_cents: line.unit_cost_cents,
-              cost_source: line.unit_cost_cents.present? ? "receipt_cost" : nil,
-              inventory_location: nil,
-              inventory_reason_code: nil
-            )
-          end
+        if postable_lines.empty?
+          raise PostingError, "At least one line must have accepted quantity greater than zero."
+        end
 
-          posting = Inventory::Post.call(
-            store: receipt.store,
-            posted_by_user: posted_by_user,
-            posting_type: "receiving",
-            source: receipt,
-            lines: lines,
-            idempotency_key: "receipt:#{receipt.id}",
-            notes: nil
+        lines = postable_lines.map do |line|
+          Inventory::Post::LinePayload.new(
+            product_variant: line.product_variant,
+            quantity_delta: line.quantity_accepted,
+            movement_type: "received",
+            manual_unit_cost_cents: line.unit_cost_cents,
+            cost_source: line.unit_cost_cents.present? ? "receipt_cost" : nil,
+            inventory_location: nil,
+            inventory_reason_code: nil
           )
         end
+
+        posting = Inventory::Post.call(
+          store: receipt.store,
+          posted_by_user: posted_by_user,
+          posting_type: "receiving",
+          source: receipt,
+          lines: lines,
+          idempotency_key: "receipt:#{receipt.id}",
+          notes: nil
+        )
 
         UpdatePoLineQuantities.call(receipt: receipt)
 
@@ -80,6 +83,10 @@ module Purchasing
     private
 
     attr_reader :receipt, :posted_by_user
+
+    def normalize_accepted_quantities!
+      receipt.receipt_lines.each(&:valid?)
+    end
 
     def record_discrepancies!
       receipt.receipt_lines.each do |line|

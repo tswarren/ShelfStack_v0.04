@@ -15,7 +15,8 @@ export default class extends Controller {
     initialSku: String,
     initialVariantId: String,
     initialLabel: String,
-    initialOnHand: String
+    initialOnHand: String,
+    requireEligible: { type: Boolean, default: true }
   }
 
   connect() {
@@ -105,7 +106,7 @@ export default class extends Controller {
   }
 
   selectVariant(variant) {
-    if (!variant.eligible) {
+    if (this.requireEligibleValue && !variant.eligible) {
       this.variantIdTarget.value = ""
       this.previewTarget.textContent = ""
       this.messageTarget.textContent = `Variant ${variant.sku} is not inventory-eligible (${variant.inventory_behavior}).`

@@ -21,7 +21,7 @@ module Orders
 
     def new
       @purchase_order = PurchaseOrder.new(store: orders_store, status: "draft")
-      @purchase_order.purchase_order_lines.build
+      build_initial_line
       load_form_collections
     end
 
@@ -89,7 +89,6 @@ module Orders
 
     def load_form_collections
       @vendors = Vendor.active_records.order(:name)
-      @variants = ProductVariant.active_records.includes(:product).order(:sku).limit(500)
     end
 
     def assign_purchase_order_line_defaults(purchase_order)
@@ -98,6 +97,21 @@ module Orders
         line.status ||= "open"
         line.quantity_received ||= 0
       end
+    end
+
+    def build_initial_line
+      if params[:product_variant_id].present?
+        variant = ProductVariant.active_records.find_by(id: params[:product_variant_id])
+        if variant
+          @purchase_order.purchase_order_lines.build(
+            product_variant: variant,
+            quantity_ordered: 1
+          )
+          return
+        end
+      end
+
+      @purchase_order.purchase_order_lines.build
     end
 
     def purchase_order_params

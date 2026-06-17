@@ -239,6 +239,7 @@ Rails.application.routes.draw do
   namespace :orders do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"
+    resource :variant_lookup, only: %i[show]
     resources :purchase_requests do
       member do
         patch :cancel

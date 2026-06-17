@@ -10,30 +10,13 @@
     <%= f.text_area :notes %>
   </div>
 
-  <h2>Lines</h2>
-  <%= f.fields_for :purchase_request_lines do |line_form| %>
-    <fieldset class="ss-fieldset">
-      <div class="ss-field">
-        <%= line_form.label :product_variant_id, "Variant ID" %>
-        <%= line_form.number_field :product_variant_id %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :requested_quantity %>
-        <%= line_form.number_field :requested_quantity, min: 1 %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :request_reason %>
-        <%= line_form.text_field :request_reason %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :status %>
-        <%= line_form.select :status, @line_status_options %>
-      </div>
-      <%= line_form.hidden_field :id %>
-      <%= line_form.hidden_field :line_number %>
-      <%= line_form.check_box :_destroy %> Remove line
-    </fieldset>
-  <% end %>
+  <%= render "shared/forms/nested_lines",
+        f: f,
+        association: :purchase_request_lines,
+        line_object: PurchaseRequestLine.new,
+        line_partial: "orders/purchase_requests/line_fields",
+        store: orders_store,
+        line_locals: { line_status_options: @line_status_options } %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>

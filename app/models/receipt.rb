@@ -12,7 +12,7 @@ class Receipt < ApplicationRecord
 
   has_many :receipt_lines, -> { order(:line_number) }, dependent: :destroy, inverse_of: :receipt
 
-  accepts_nested_attributes_for :receipt_lines, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :receipt_lines, allow_destroy: true, reject_if: :reject_blank_receipt_line?
 
   before_validation :normalize_line_numbers
 
@@ -77,5 +77,11 @@ class Receipt < ApplicationRecord
     receipt_lines.reject(&:marked_for_destruction?).each_with_index do |line, index|
       line.line_number = index + 1
     end
+  end
+
+  def reject_blank_receipt_line?(attributes)
+    return false if attributes["id"].present?
+
+    attributes["product_variant_id"].blank?
   end
 end

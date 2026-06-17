@@ -15,26 +15,13 @@
     <%= f.text_area :notes %>
   </div>
 
-  <h2>Lines</h2>
-  <p class="ss-hint">Scan or type a SKU or barcode, then press Enter. Type at least 2 characters to search by name or SKU prefix.</p>
-
-  <div data-controller="inventory-adjustment-lines">
-    <div data-inventory-adjustment-lines-target="container">
-      <%= f.fields_for :inventory_adjustment_lines do |line_form| %>
-        <% variant = line_form.object.product_variant %>
-        <% balance = variant ? InventoryBalance.find_by(store: inventory_store, product_variant: variant) : nil %>
-        <%= render "line_fields", f: f, line_form: line_form, variant: variant, balance: balance, reason_codes: @reason_codes, locations: @locations %>
-      <% end %>
-    </div>
-
-    <template data-inventory-adjustment-lines-target="template">
-      <%= f.fields_for :inventory_adjustment_lines, InventoryAdjustmentLine.new, child_index: "NEW_RECORD" do |line_form| %>
-        <%= render "line_fields", f: f, line_form: line_form, variant: nil, balance: nil, reason_codes: @reason_codes, locations: @locations %>
-      <% end %>
-    </template>
-
-    <button type="button" class="ss-btn ss-btn-secondary" data-action="inventory-adjustment-lines#addLine">Add line</button>
-  </div>
+  <%= render "shared/forms/nested_lines",
+        f: f,
+        association: :inventory_adjustment_lines,
+        line_object: InventoryAdjustmentLine.new,
+        line_partial: "inventory/adjustments/line_fields",
+        store: inventory_store,
+        line_locals: { reason_codes: @reason_codes, locations: @locations } %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>

@@ -1,9 +1,7 @@
 <h1><%= receipt.persisted? ? "Edit" : "New" %> Receipt</h1>
 
 <%= form_with model: receipt, url: (receipt.persisted? ? orders_receipt_path(receipt) : orders_receipts_path) do |f| %>
-  <% if receipt.errors.any? %>
-    <div class="ss-errors"><%= receipt.errors.full_messages.to_sentence %></div>
-  <% end %>
+  <%= render "shared/forms/errors", record: receipt %>
 
   <div class="ss-field">
     <%= f.label :vendor_id, "Vendor" %>
@@ -20,38 +18,12 @@
     <%= f.select :receipt_type, @receipt_type_options %>
   </div>
 
-  <h2>Lines</h2>
-  <%= f.fields_for :receipt_lines do |line_form| %>
-    <fieldset class="ss-fieldset">
-      <div class="ss-field">
-        <%= line_form.label :product_variant_id, "Variant ID" %>
-        <%= line_form.number_field :product_variant_id %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :quantity_expected %>
-        <%= line_form.number_field :quantity_expected, min: 0 %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :quantity_received %>
-        <%= line_form.number_field :quantity_received, min: 0 %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :quantity_accepted %>
-        <%= line_form.number_field :quantity_accepted, min: 0 %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :quantity_rejected %>
-        <%= line_form.number_field :quantity_rejected, min: 0 %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :unit_cost_cents, "Unit cost (cents)" %>
-        <%= line_form.number_field :unit_cost_cents, min: 0 %>
-      </div>
-      <%= line_form.hidden_field :id %>
-      <%= line_form.hidden_field :line_number %>
-      <%= line_form.check_box :_destroy %> Remove line
-    </fieldset>
-  <% end %>
+  <%= render "shared/forms/nested_lines",
+        f: f,
+        association: :receipt_lines,
+        line_object: ReceiptLine.new,
+        line_partial: "orders/receipts/line_fields",
+        store: orders_store %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>

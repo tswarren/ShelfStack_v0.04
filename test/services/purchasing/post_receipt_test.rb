@@ -38,4 +38,51 @@ class Purchasing::PostReceiptTest < ActiveSupport::TestCase
     assert_equal 800, balance.moving_average_unit_cost_cents
     assert AuditEvent.exists?(event_name: "receipt.posted", auditable: receipt)
   end
+
+  test "defaults accepted from received when posting" do
+    receipt = create_receipt!(
+      store: @store,
+      vendor: @vendor,
+      lines: [
+        {
+          product_variant: @variant,
+          line_number: 1,
+          quantity_expected: 0,
+          quantity_received: 5,
+          quantity_accepted: 0,
+          quantity_rejected: 0,
+          unit_cost_cents: 800
+        }
+      ]
+    )
+
+    Purchasing::PostReceipt.call(receipt: receipt, posted_by_user: @user)
+
+    balance = InventoryBalance.find_by!(store: @store, product_variant: @variant)
+    assert_equal 5, balance.quantity_on_hand
+    assert_equal 5, receipt.receipt_lines.first.reload.quantity_accepted
+  end
+
+  test "rejects post when no accepted quantity remains" do
+    receipt = create_receipt!(
+      store: @store,
+      vendor: @vendor,
+      lines: [
+        {
+          product_variant: @variant,
+          line_number: 1,
+          quantity_expected: 0,
+          quantity_received: 5,
+          quantity_accepted: 0,
+          quantity_rejected: 5,
+          unit_cost_cents: 800
+        }
+      ]
+    )
+
+    error = assert_raises(Purchasing::PostReceipt::PostingError) do
+      Purchasing::PostReceipt.call(receipt: receipt, posted_by_user: @user)
+    end
+    assert_match(/accepted quantity/i, error.message)
+  end
 end

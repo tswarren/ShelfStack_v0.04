@@ -1,6 +1,11 @@
 <h1>Receipt #<%= @receipt.id %></h1>
 <p>Vendor: <%= @receipt.vendor.name %> | Type: <%= @receipt.receipt_type %> | Status: <%= @receipt.status %></p>
 <% if @receipt.purchase_order %><p>PO: <%= link_to "##{@receipt.purchase_order.id}", orders_purchase_order_path(@receipt.purchase_order) %></p><% end %>
+<% if @receipt.inventory_posting %>
+  <p>Inventory posting: <%= link_to "##{@receipt.inventory_posting.id}", inventory_variant_path(@receipt.receipt_lines.first.product_variant) if @receipt.receipt_lines.any? %></p>
+<% elsif @receipt.posted? %>
+  <p class="ss-hint ss-hint--warning">This receipt posted with no accepted quantity, so on-hand was not changed.</p>
+<% end %>
 
 <table class="ss-table">
   <thead>

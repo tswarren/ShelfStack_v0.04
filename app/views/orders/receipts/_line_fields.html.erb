@@ -2,7 +2,7 @@
   class="ss-adjustment-line"
   data-nested-form-lines-target="line"
   data-controller="inventory-variant-lookup"
-  data-inventory-variant-lookup-url-value="<%= inventory_variant_lookup_path %>"
+  data-inventory-variant-lookup-url-value="<%= orders_variant_lookup_path %>"
   data-inventory-variant-lookup-require-eligible-value="true"
   <% if variant %>
     data-inventory-variant-lookup-initial-sku-value="<%= variant.sku %>"
@@ -17,20 +17,25 @@
   <%= render "shared/forms/variant_lookup_field", line_form: line_form, variant: variant %>
 
   <div class="ss-field">
-    <%= line_form.label :quantity_delta %>
-    <%= line_form.number_field :quantity_delta, step: 1 %>
+    <%= line_form.label :quantity_expected %>
+    <%= line_form.number_field :quantity_expected, min: 0, step: 1 %>
   </div>
   <div class="ss-field">
-    <%= line_form.label :unit_cost_cents, "Manual unit cost (cents)" %>
+    <%= line_form.label :quantity_received %>
+    <%= line_form.number_field :quantity_received, min: 0, step: 1 %>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :quantity_accepted %>
+    <%= line_form.number_field :quantity_accepted, min: 0, step: 1 %>
+    <p class="ss-hint">Accepted quantity posts to inventory. Defaults to received when rejected is zero.</p>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :quantity_rejected %>
+    <%= line_form.number_field :quantity_rejected, min: 0, step: 1 %>
+  </div>
+  <div class="ss-field">
+    <%= line_form.label :unit_cost_cents, "Unit cost (cents)" %>
     <%= line_form.number_field :unit_cost_cents, min: 0, step: 1 %>
-  </div>
-  <div class="ss-field">
-    <%= line_form.label :inventory_reason_code_id, "Reason" %>
-    <%= line_form.collection_select :inventory_reason_code_id, reason_codes, :id, :name, include_blank: true %>
-  </div>
-  <div class="ss-field">
-    <%= line_form.label :inventory_location_id, "Location" %>
-    <%= line_form.collection_select :inventory_location_id, locations, :id, :name, include_blank: true %>
   </div>
   <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#removeLine">Remove line</button>
 </fieldset>

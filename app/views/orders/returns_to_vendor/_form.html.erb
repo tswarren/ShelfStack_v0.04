@@ -15,30 +15,12 @@
     <%= f.text_area :notes %>
   </div>
 
-  <h2>Lines</h2>
-  <%= f.fields_for :return_to_vendor_lines do |line_form| %>
-    <fieldset class="ss-fieldset">
-      <div class="ss-field">
-        <%= line_form.label :product_variant_id, "Variant ID" %>
-        <%= line_form.number_field :product_variant_id %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :quantity %>
-        <%= line_form.number_field :quantity, min: 1 %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :unit_cost_cents, "Unit cost (cents)" %>
-        <%= line_form.number_field :unit_cost_cents, min: 0 %>
-      </div>
-      <div class="ss-field">
-        <%= line_form.label :credit_amount_cents, "Credit (cents)" %>
-        <%= line_form.number_field :credit_amount_cents, min: 0 %>
-      </div>
-      <%= line_form.hidden_field :id %>
-      <%= line_form.hidden_field :line_number %>
-      <%= line_form.check_box :_destroy %> Remove line
-    </fieldset>
-  <% end %>
+  <%= render "shared/forms/nested_lines",
+        f: f,
+        association: :return_to_vendor_lines,
+        line_object: ReturnToVendorLine.new,
+        line_partial: "orders/returns_to_vendor/line_fields",
+        store: orders_store %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>
