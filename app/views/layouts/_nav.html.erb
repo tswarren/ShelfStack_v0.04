@@ -7,7 +7,11 @@
     <span class="disabled">Inventory</span>
   <% end %>
   <%= link_to "Items", items_root_path, class: (request.path.start_with?("/items") ? "active" : nil) %>
-  <span class="disabled">Orders</span>
+  <% if Authorization.allowed?(user: current_user, permission_key: "orders.access", store: current_store) %>
+    <%= link_to "Orders", orders_root_path, class: (request.path.start_with?("/orders") ? "active" : nil) %>
+  <% else %>
+    <span class="disabled">Orders</span>
+  <% end %>
   <span class="disabled">Customers</span>
   <span class="disabled">Reports</span>
   <%= link_to "Setup", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>

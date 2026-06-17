@@ -4,12 +4,14 @@ class Vendor < ApplicationRecord
   belongs_to :parent_vendor, class_name: "Vendor", optional: true
   has_many :child_vendors, class_name: "Vendor", foreign_key: :parent_vendor_id, dependent: :restrict_with_error,
            inverse_of: :parent_vendor
+  has_many :product_vendors, dependent: :restrict_with_error
+  has_many :product_variant_vendors, dependent: :restrict_with_error
+  has_many :vendor_terms, dependent: :restrict_with_error
+  has_many :purchase_orders, dependent: :restrict_with_error
+  has_many :receipts, dependent: :restrict_with_error
+  has_many :returns_to_vendor, class_name: "ReturnToVendor", dependent: :restrict_with_error
 
   validates :name, presence: true
-  validates :default_pricing_model, inclusion: { in: PricingModels::PRICING_MODELS }, allow_blank: true
-  validates :default_margin_target_bps,
-            numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 10_000 },
-            allow_nil: true
   validates :default_supplier_discount_bps,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 10_000 },
             allow_nil: true

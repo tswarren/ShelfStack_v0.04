@@ -1,0 +1,17 @@
+<h1>Variant Vendors <%= link_to "New", new_setup_product_variant_vendor_path, class: "ss-btn" %></h1>
+
+<table class="ss-table">
+  <thead><tr><th>SKU</th><th>Vendor</th><th>Item #</th><th>Preferred</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @product_variant_vendors.each do |product_variant_vendor| %>
+      <tr>
+        <td><%= product_variant_vendor.product_variant.sku %></td>
+        <td><%= product_variant_vendor.vendor.name %></td>
+        <td><%= product_variant_vendor.vendor_item_number || "—" %></td>
+        <td><%= product_variant_vendor.preferred? ? "Yes" : "No" %></td>
+        <td><%= status_label(product_variant_vendor.active?) %></td>
+        <td><%= link_to "View", setup_product_variant_vendor_path(product_variant_vendor) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -4,14 +4,15 @@ module Inventory
   class CostEstimator
     Result = Data.define(:unit_cost_cents, :total_cost_cents, :unit_retail_cents, :total_retail_cents, :cost_source, :retail_source)
 
-    def self.estimate(variant:, quantity_delta:, manual_unit_cost_cents: nil)
-      new(variant:, quantity_delta:, manual_unit_cost_cents:).estimate
+    def self.estimate(variant:, quantity_delta:, manual_unit_cost_cents: nil, cost_source: nil)
+      new(variant:, quantity_delta:, manual_unit_cost_cents:, cost_source:).estimate
     end
 
-    def initialize(variant:, quantity_delta:, manual_unit_cost_cents: nil)
+    def initialize(variant:, quantity_delta:, manual_unit_cost_cents: nil, cost_source: nil)
       @variant = variant
       @quantity_delta = quantity_delta
       @manual_unit_cost_cents = manual_unit_cost_cents
+      @cost_source = cost_source
     end
 
     def estimate
@@ -30,7 +31,7 @@ module Inventory
 
     private
 
-    attr_reader :variant, :quantity_delta, :manual_unit_cost_cents
+    attr_reader :variant, :quantity_delta, :manual_unit_cost_cents, :cost_source
 
     def retail_snapshot
       unit = variant.selling_price_cents
@@ -54,7 +55,7 @@ module Inventory
         return {
           unit_cost_cents: manual_unit_cost_cents,
           total_cost_cents: manual_unit_cost_cents * quantity_delta.abs,
-          cost_source: "manual"
+          cost_source: cost_source.presence || "manual"
         }
       end
 

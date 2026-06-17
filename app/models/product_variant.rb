@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ProductVariant < ApplicationRecord
+  include ReturnabilityStatus
+
   INVENTORY_BEHAVIORS = %w[
     standard_physical digital_asset drop_ship composite_recipe
     capacitated_service pure_financial non_inventory
@@ -12,12 +14,14 @@ class ProductVariant < ApplicationRecord
   belongs_to :display_location, optional: true
 
   has_many :categorizations, as: :categorizable, dependent: :destroy
+  has_many :product_variant_vendors, dependent: :restrict_with_error
 
   validates :name, presence: true
   validates :sku, presence: true, uniqueness: true, length: { maximum: 50 }
   validates :short_name, length: { maximum: 40 }, allow_blank: true
   validates :selling_price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :inventory_behavior, presence: true, inclusion: { in: INVENTORY_BEHAVIORS }
+  validates :returnability_status, presence: true, inclusion: { in: ReturnabilityStatus::RETURNABILITY_STATUSES }
   validates :pricing_model_override, inclusion: { in: PricingModels::PRICING_MODELS }, allow_blank: true
   validates :attribute1_sku_component, length: { maximum: 5 }, allow_blank: true
   validates :attribute2_sku_component, length: { maximum: 5 }, allow_blank: true

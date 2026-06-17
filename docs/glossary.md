@@ -615,13 +615,41 @@ force_ended
 
 ---
 
+# P
+
+## Purchase Order (PO)
+
+A committed order to a vendor with line-level snapshots of SKU, name, vendor item number, list price, discount, unit cost, and returnability at submit time.
+
+## Purchase Request (TBO)
+
+A store-level “to be ordered” demand signal. Purchase requests do not affect inventory until received through a receipt.
+
+---
+
+# R
+
+## Receipt
+
+A receiving document that records quantities received and accepted from a vendor. Only `quantity_accepted` posts to inventory via `Inventory::Post` with `posting_type: receiving`.
+
+## Return to Vendor (RTV)
+
+A posted document that removes inventory for items returned to a vendor. Posts via `Inventory::Post` with `posting_type: vendor_return`.
+
+---
+
 # V
 
 ## Vendor
 
 Supplier or source organization.
 
-Phase 3 includes the vendor directory. Vendor-product sourcing is deferred.
+Phase 3 includes the vendor directory. Phase 5 adds product and variant vendor sourcing, purchase orders, receiving, and returns to vendor.
+
+## Vendor Item Number
+
+The supplier's catalog or stock number for a product or variant, stored on sourcing records and snapshotted on purchase order and receipt lines.
 
 ---
 

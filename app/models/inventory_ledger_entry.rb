@@ -7,7 +7,7 @@ class InventoryLedgerEntry < ApplicationRecord
   ].freeze
 
   PHASE4_MOVEMENT_TYPES = %w[opening_balance manual_adjustment correction recount_adjustment].freeze
-  COST_SOURCES = %w[manual margin_estimate unknown].freeze
+  COST_SOURCES = %w[manual margin_estimate unknown receipt_cost moving_average].freeze
   RETAIL_SOURCES = %w[variant_selling_price unknown].freeze
 
   belongs_to :inventory_posting

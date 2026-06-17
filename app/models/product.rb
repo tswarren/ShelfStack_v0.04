@@ -8,6 +8,7 @@ class Product < ApplicationRecord
   belongs_to :default_display_location, class_name: "DisplayLocation", optional: true
   belongs_to :default_sub_department, class_name: "SubDepartment", optional: true
   has_many :product_variants, dependent: :restrict_with_error
+  has_many :product_vendors, dependent: :restrict_with_error
   has_one_attached :cover_image
 
   ALLOWED_COVER_IMAGE_TYPES = %w[image/jpeg image/png image/webp image/gif].freeze

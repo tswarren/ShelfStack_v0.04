@@ -318,7 +318,7 @@ For every new table, confirm:
 
 # Deferred Schema Areas
 
-These are expected future schema areas (beyond Phase 4):
+These are expected future schema areas (beyond Phase 5):
 
 ```text
 inventory_location_balances
@@ -326,16 +326,30 @@ inventory_location_movements
 inventory_transfers
 inventory_transfer_lines
 inventory_reservations
-product_variant_vendors
-purchase_orders
-purchase_order_lines
-receipts
-receipt_lines
 sales
 sale_lines
 sale_tenders
 sale_taxes
 cycle_counts
+```
+
+Phase 5 tables (implemented):
+
+```text
+product_vendors
+product_variant_vendors
+vendor_terms
+purchase_requests
+purchase_request_lines
+purchase_orders
+purchase_order_lines
+receipts
+receipt_lines
+receiving_discrepancies
+returns_to_vendor
+return_to_vendor_lines
+inventory_balances.moving_average_unit_cost_cents
+product_variants.returnability_status
 ```
 
 These should not be added until their workflows are defined.

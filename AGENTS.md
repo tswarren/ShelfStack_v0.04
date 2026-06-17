@@ -100,6 +100,15 @@ docs/specifications/phase-4-data-model.md
 docs/specifications/phase-4-test-plan.md
 ```
 
+## Phase 5 Documents
+
+```text
+docs/roadmap/phase-5-purchasing-and-receiving.md
+docs/specifications/phase-5-purchasing-and-receiving-spec.md
+docs/specifications/phase-5-data-model.md
+docs/specifications/phase-5-test-plan.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -126,7 +135,9 @@ Phase 3 was completed on 2025-06-10. See [docs/implementation/phase-3-completion
 
 Phase 4 was completed on 2026-06-16. See [docs/implementation/phase-4-completion.md](docs/implementation/phase-4-completion.md).
 
-## Phase 5: Purchasing and Receiving — **Next**
+## Phase 5: Purchasing and Receiving — **Complete**
+
+Phase 5 was completed on 2026-06-10. See [docs/implementation/phase-5-completion.md](docs/implementation/phase-5-completion.md).
 
 Do not jump ahead to POS or reporting tables unless the user explicitly asks to design that phase.
 
@@ -152,6 +163,7 @@ Use services for:
 * Product/variant name rendering
 * Metadata parsing
 * Inventory posting, eligibility, cost estimation, and balance updates
+* Purchasing: returnability, vendor cost, sourcing lookup, receipt and RTV posting, moving average cost
 
 ## Centralize business rules
 
@@ -175,6 +187,14 @@ Inventory::Post
 Inventory::BalanceUpdater
 Inventory::RebuildBalances
 Inventory::BalanceIntegrityCheck
+Purchasing::ReturnabilityResolver
+Purchasing::VendorCostCalculator
+Purchasing::SourcingLookup
+Purchasing::BuildPurchaseOrder
+Purchasing::SubmitPurchaseOrder
+Purchasing::PostReceipt
+Purchasing::PostReturnToVendor
+Purchasing::MovingAverageCost
 ```
 
 ## Preserve auditability
@@ -441,6 +461,15 @@ product_variants.sub_department_id → sub_departments.id
 * Inventory locations are context only; they do not maintain authoritative balances.
 * Cost fallback order: manual line cost → subdepartment margin estimate → unknown.
 * Phase 4 restores `sub_departments.default_margin_target_bps` for margin estimation.
+
+## Phase 5 Rules
+
+* Purchasing grain is product variant; multi-vendor via `product_vendors` and `product_variant_vendors`.
+* Only `quantity_accepted` on receipt lines posts to inventory (`posting_type: receiving`, `movement_type: received`).
+* PO lines snapshot SKU, name, vendor item number, list price, discount, unit cost, and returnability at submit.
+* Returnability precedence: `product_variant_vendors` → `product_vendors` → `product_variants.returnability_status`.
+* Receipt cost updates moving average on `inventory_balances`; vendor returns post via `vendor_return`.
+* TBO (purchase requests) does not affect inventory.
 
 ---
 

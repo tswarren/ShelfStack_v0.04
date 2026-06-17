@@ -1,0 +1,42 @@
+<h1>Receipt #<%= @receipt.id %></h1>
+<p>Vendor: <%= @receipt.vendor.name %> | Type: <%= @receipt.receipt_type %> | Status: <%= @receipt.status %></p>
+<% if @receipt.purchase_order %><p>PO: <%= link_to "##{@receipt.purchase_order.id}", orders_purchase_order_path(@receipt.purchase_order) %></p><% end %>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>SKU</th>
+      <th class="ss-num">Expected</th>
+      <th class="ss-num">Received</th>
+      <th class="ss-num">Accepted</th>
+      <th class="ss-num">Rejected</th>
+      <th class="ss-num">Unit Cost</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @receipt.receipt_lines.each do |line| %>
+      <tr>
+        <td><%= line.line_number %></td>
+        <td><%= line.product_variant.sku %></td>
+        <td class="ss-num"><%= line.quantity_expected %></td>
+        <td class="ss-num"><%= line.quantity_received %></td>
+        <td class="ss-num"><%= line.quantity_accepted %></td>
+        <td class="ss-num"><%= line.quantity_rejected %></td>
+        <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<div class="ss-actions">
+  <% if @receipt.draft? %>
+    <%= link_to "Edit", edit_orders_receipt_path(@receipt), class: "ss-btn" %>
+    <%= button_to "Post", post_orders_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
+    <%= button_to "Cancel", cancel_orders_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= link_to "Back", orders_receipts_path %>
+</div>
+
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

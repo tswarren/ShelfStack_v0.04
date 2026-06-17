@@ -1,0 +1,57 @@
+<h1><%= receipt.persisted? ? "Edit" : "New" %> Receipt</h1>
+
+<%= form_with model: receipt, url: (receipt.persisted? ? orders_receipt_path(receipt) : orders_receipts_path) do |f| %>
+  <% if receipt.errors.any? %>
+    <div class="ss-errors"><%= receipt.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="ss-field">
+    <%= f.label :vendor_id, "Vendor" %>
+    <%= f.collection_select :vendor_id, @vendors, :id, :name, include_blank: true %>
+  </div>
+
+  <div class="ss-field">
+    <%= f.label :purchase_order_id, "Purchase order" %>
+    <%= f.collection_select :purchase_order_id, @purchase_orders, :id, :id, include_blank: true %>
+  </div>
+
+  <div class="ss-field">
+    <%= f.label :receipt_type %>
+    <%= f.select :receipt_type, @receipt_type_options %>
+  </div>
+
+  <h2>Lines</h2>
+  <%= f.fields_for :receipt_lines do |line_form| %>
+    <fieldset class="ss-fieldset">
+      <div class="ss-field">
+        <%= line_form.label :product_variant_id, "Variant ID" %>
+        <%= line_form.number_field :product_variant_id %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :quantity_expected %>
+        <%= line_form.number_field :quantity_expected, min: 0 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :quantity_received %>
+        <%= line_form.number_field :quantity_received, min: 0 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :quantity_accepted %>
+        <%= line_form.number_field :quantity_accepted, min: 0 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :quantity_rejected %>
+        <%= line_form.number_field :quantity_rejected, min: 0 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :unit_cost_cents, "Unit cost (cents)" %>
+        <%= line_form.number_field :unit_cost_cents, min: 0 %>
+      </div>
+      <%= line_form.hidden_field :id %>
+      <%= line_form.hidden_field :line_number %>
+      <%= line_form.check_box :_destroy %> Remove line
+    </fieldset>
+  <% end %>
+
+  <%= f.submit class: "ss-btn" %>
+<% end %>

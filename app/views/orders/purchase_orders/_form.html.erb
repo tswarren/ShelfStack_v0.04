@@ -1,0 +1,48 @@
+<h1><%= purchase_order.persisted? ? "Edit" : "New" %> Purchase Order</h1>
+
+<%= form_with model: purchase_order, url: (purchase_order.persisted? ? orders_purchase_order_path(purchase_order) : orders_purchase_orders_path) do |f| %>
+  <% if purchase_order.errors.any? %>
+    <div class="ss-errors"><%= purchase_order.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="ss-field">
+    <%= f.label :vendor_id, "Vendor" %>
+    <%= f.collection_select :vendor_id, @vendors, :id, :name, include_blank: true %>
+  </div>
+
+  <div class="ss-field">
+    <%= f.label :notes %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <h2>Lines</h2>
+  <%= f.fields_for :purchase_order_lines do |line_form| %>
+    <fieldset class="ss-fieldset">
+      <div class="ss-field">
+        <%= line_form.label :product_variant_id, "Variant ID" %>
+        <%= line_form.number_field :product_variant_id %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :quantity_ordered %>
+        <%= line_form.number_field :quantity_ordered, min: 1 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :unit_list_price_cents, "List price (cents)" %>
+        <%= line_form.number_field :unit_list_price_cents, min: 0 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :supplier_discount_bps, "Discount (bps)" %>
+        <%= line_form.number_field :supplier_discount_bps, min: 0, max: 10_000 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :unit_cost_cents, "Unit cost (cents)" %>
+        <%= line_form.number_field :unit_cost_cents, min: 0 %>
+      </div>
+      <%= line_form.hidden_field :id %>
+      <%= line_form.hidden_field :line_number %>
+      <%= line_form.check_box :_destroy %> Remove line
+    </fieldset>
+  <% end %>
+
+  <%= f.submit class: "ss-btn" %>
+<% end %>

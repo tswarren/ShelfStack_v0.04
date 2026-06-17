@@ -1,0 +1,16 @@
+<h1>Returns to Vendor <%= link_to "New", new_orders_return_to_vendor_path, class: "ss-btn" %></h1>
+
+<table class="ss-table">
+  <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Posted</th><th></th></tr></thead>
+  <tbody>
+    <% @returns_to_vendor.each do |return_to_vendor| %>
+      <tr>
+        <td><%= return_to_vendor.id %></td>
+        <td><%= return_to_vendor.vendor.name %></td>
+        <td><%= return_to_vendor.status %></td>
+        <td><%= return_to_vendor.posted_at ? display_time(return_to_vendor.posted_at) : "—" %></td>
+        <td><%= link_to "View", orders_return_to_vendor_path(return_to_vendor) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

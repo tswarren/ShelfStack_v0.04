@@ -35,6 +35,15 @@ module Inventory
         balance.inventory_retail_value_cents += retail_delta
       end
 
+      if valuation.cost_source == "receipt_cost" && quantity_delta.positive?
+        Purchasing::MovingAverageCost.apply!(
+          balance: balance,
+          prior_on_hand: prior_on_hand,
+          quantity_received: quantity_delta,
+          unit_cost_cents: valuation.unit_cost_cents
+        )
+      end
+
       balance.save!
       record_negative_transitions!(balance, prior_on_hand)
       balance

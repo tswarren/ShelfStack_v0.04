@@ -1,0 +1,37 @@
+<h1>Purchase Request #<%= @purchase_request.id %></h1>
+<p>Status: <%= @purchase_request.status %></p>
+<% if @purchase_request.notes.present? %><p><%= @purchase_request.notes %></p><% end %>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>SKU</th>
+      <th class="ss-num">Qty</th>
+      <th>Reason</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @purchase_request.purchase_request_lines.each do |line| %>
+      <tr>
+        <td><%= line.line_number %></td>
+        <td><%= line.product_variant.sku %></td>
+        <td class="ss-num"><%= line.requested_quantity %></td>
+        <td><%= line.request_reason || "—" %></td>
+        <td><%= line.status %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<div class="ss-actions">
+  <% unless %w[cancelled closed].include?(@purchase_request.status) %>
+    <%= link_to "Edit", edit_orders_purchase_request_path(@purchase_request), class: "ss-btn" %>
+    <%= button_to "Cancel", cancel_orders_purchase_request_path(@purchase_request), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= link_to "Back", orders_purchase_requests_path %>
+</div>
+
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

@@ -1,0 +1,20 @@
+<%= render "setup/shared/back_link", path: setup_product_vendors_path, label: "Product Vendors" %>
+<h1><%= @product_vendor.product.name %> — <%= @product_vendor.vendor.name %></h1>
+<dl class="ss-summary">
+  <dt>Vendor item number</dt><dd><%= @product_vendor.vendor_item_number || "—" %></dd>
+  <dt>Supplier discount</dt><dd><%= format_basis_points(@product_vendor.supplier_discount_bps) %></dd>
+  <dt>Returnability</dt><dd><%= @product_vendor.returnability_status ? humanize_controlled_value(@product_vendor.returnability_status) : "—" %></dd>
+  <dt>Preferred</dt><dd><%= @product_vendor.preferred? ? "Yes" : "No" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@product_vendor.active?) %>"><%= status_label(@product_vendor.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_product_vendor_path(@product_vendor), class: "ss-btn" %>
+  <% if @product_vendor.active? %>
+    <%= button_to "Inactivate", inactivate_setup_product_vendor_path(@product_vendor), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_product_vendor_path(@product_vendor), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= button_to "Delete", setup_product_vendor_path(@product_vendor), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this product vendor?" } %>
+</div>
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

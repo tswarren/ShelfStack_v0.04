@@ -1,0 +1,44 @@
+<h1><%= return_to_vendor.persisted? ? "Edit" : "New" %> Return to Vendor</h1>
+
+<%= form_with model: return_to_vendor, url: (return_to_vendor.persisted? ? orders_return_to_vendor_path(return_to_vendor) : orders_returns_to_vendor_path) do |f| %>
+  <% if return_to_vendor.errors.any? %>
+    <div class="ss-errors"><%= return_to_vendor.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="ss-field">
+    <%= f.label :vendor_id, "Vendor" %>
+    <%= f.collection_select :vendor_id, @vendors, :id, :name, include_blank: true %>
+  </div>
+
+  <div class="ss-field">
+    <%= f.label :notes %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <h2>Lines</h2>
+  <%= f.fields_for :return_to_vendor_lines do |line_form| %>
+    <fieldset class="ss-fieldset">
+      <div class="ss-field">
+        <%= line_form.label :product_variant_id, "Variant ID" %>
+        <%= line_form.number_field :product_variant_id %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :quantity %>
+        <%= line_form.number_field :quantity, min: 1 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :unit_cost_cents, "Unit cost (cents)" %>
+        <%= line_form.number_field :unit_cost_cents, min: 0 %>
+      </div>
+      <div class="ss-field">
+        <%= line_form.label :credit_amount_cents, "Credit (cents)" %>
+        <%= line_form.number_field :credit_amount_cents, min: 0 %>
+      </div>
+      <%= line_form.hidden_field :id %>
+      <%= line_form.hidden_field :line_number %>
+      <%= line_form.check_box :_destroy %> Remove line
+    </fieldset>
+  <% end %>
+
+  <%= f.submit class: "ss-btn" %>
+<% end %>

@@ -7,6 +7,7 @@ module Inventory
       :quantity_delta,
       :movement_type,
       :manual_unit_cost_cents,
+      :cost_source,
       :inventory_location,
       :inventory_reason_code
     )
@@ -59,7 +60,8 @@ module Inventory
           valuation = CostEstimator.estimate(
             variant: line.product_variant,
             quantity_delta: line.quantity_delta,
-            manual_unit_cost_cents: line.manual_unit_cost_cents
+            manual_unit_cost_cents: line.manual_unit_cost_cents,
+            cost_source: line.cost_source
           )
 
           InventoryLedgerEntry.create!(

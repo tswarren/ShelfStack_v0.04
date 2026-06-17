@@ -1,0 +1,11 @@
+<h1>Orders</h1>
+<p class="ss-muted">Store: <%= orders_store.name %></p>
+
+<section class="ss-setup-section">
+  <div class="ss-card-grid">
+    <%= link_to orders_purchase_requests_path do %><div class="ss-card">Purchase Requests (TBO)</div><% end %>
+    <%= link_to orders_purchase_orders_path do %><div class="ss-card">Purchase Orders</div><% end %>
+    <%= link_to orders_receipts_path do %><div class="ss-card">Receipts</div><% end %>
+    <%= link_to orders_returns_to_vendor_index_path do %><div class="ss-card">Returns to Vendor</div><% end %>
+  </div>
+</section>

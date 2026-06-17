@@ -5,6 +5,7 @@ require_relative "seeds/phase2_permissions"
 require_relative "seeds/phase3_permissions"
 require_relative "seeds/phase3b_permissions"
 require_relative "seeds/phase4_permissions"
+require_relative "seeds/phase5_permissions"
 require_relative "seeds/phase2_classification_tax"
 require_relative "seeds/phase3_catalog_products"
 require_relative "seeds/phase3b_sub_departments"
@@ -13,6 +14,7 @@ require_relative "seeds/phase3b_category_schemes"
 require_relative "seeds/phase3b_bisac"
 require_relative "seeds/phase3b_templates"
 require_relative "seeds/phase4_inventory"
+require_relative "seeds/phase5_inventory"
 
 puts "Seeding Phase 1 foundation..."
 
@@ -21,6 +23,7 @@ Seeds::Phase2Permissions.seed!
 Seeds::Phase3Permissions.seed!
 Seeds::Phase3bPermissions.seed!
 Seeds::Phase4Permissions.seed!
+Seeds::Phase5Permissions.seed!
 
 system_user = User.find_or_initialize_by(username: "system")
 system_user.assign_attributes(
@@ -149,3 +152,7 @@ puts "Phase 3B seed complete."
 puts "Seeding Phase 4 inventory..."
 Seeds::Phase4Inventory.seed!
 puts "Phase 4 seed complete."
+
+puts "Seeding Phase 5 purchasing..."
+Seeds::Phase5Inventory.seed!
+puts "Phase 5 seed complete."
