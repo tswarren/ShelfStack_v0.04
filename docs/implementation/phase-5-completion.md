@@ -49,6 +49,7 @@ Migration: `db/migrate/20250620120000_create_phase5_purchasing_and_receiving.rb`
 | `Purchasing::BuildPurchaseOrder` | Build draft PO from TBO lines or manual line attrs |
 | `Purchasing::SubmitPurchaseOrder` | Lock PO line snapshots at submit |
 | `Purchasing::UpdatePoLineQuantities` | PO line/header status after receive |
+| `Purchasing::OrderQuantityLookup` | On-order and pending qty from open PO lines |
 | `Purchasing::PostReceipt` | Post accepted qty via `Inventory::Post` (`receiving`) |
 | `Purchasing::MovingAverageCost` | Update balance MAC on receive |
 | `Purchasing::PostReturnToVendor` | Post vendor return via `Inventory::Post` (`vendor_return`) |
@@ -92,6 +93,13 @@ product_vendor.created
 product_variant_vendor.created
 ```
 
+### Items and inventory read surfaces
+
+- `Purchasing::OrderQuantityLookup` — derives on-order (submitted PO) and pending (draft PO) per variant
+- Items overview stock sidebar: Avail., Pending, Order columns
+- Variant detail: on hand, on order, pending
+- Inventory balances index: on order and pending columns
+
 ### Seeds
 
 `db/seeds/phase5_inventory.rb` — idempotent demo sourcing rows for Ingram + first catalog variants.
@@ -124,4 +132,6 @@ Per roadmap:
 
 * Vendor terms setup UI is schema-only (no CRUD screens yet)
 * Receiving discrepancy UI is service-backed but minimal in Orders views
-* Broader integration test coverage for full TBO → PO → receive → RTV flows
+* Reserved / special-order quantities not shown on Items surfaces yet
+* Items index search results do not include stock or on-order columns
+* Display & Vendors tab still uses placeholder copy for product vendor sourcing (setup CRUD exists)

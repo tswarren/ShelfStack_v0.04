@@ -32,6 +32,8 @@
       <th>Variant</th>
       <th class="ss-num">On Hand</th>
       <th class="ss-num">Available</th>
+      <th class="ss-num">On Order</th>
+      <th class="ss-num">Pending</th>
       <th class="ss-num">Retail Value</th>
       <th class="ss-num">Cost Value</th>
       <th></th>
@@ -39,11 +41,14 @@
   </thead>
   <tbody>
     <% @balances.each do |balance| %>
+      <% order_qty = @order_quantities[balance.product_variant_id] %>
       <tr>
         <td><%= balance.product_variant.sku %></td>
         <td><%= balance.product_variant.name %></td>
         <td class="ss-num"><%= balance.quantity_on_hand %></td>
         <td class="ss-num"><%= balance.quantity_available %></td>
+        <td class="ss-num"><%= order_qty&.on_order || 0 %></td>
+        <td class="ss-num"><%= order_qty&.pending || 0 %></td>
         <td class="ss-num"><%= format_cents(balance.inventory_retail_value_cents) %></td>
         <td class="ss-num"><%= format_cents(balance.inventory_cost_value_cents) %></td>
         <td>

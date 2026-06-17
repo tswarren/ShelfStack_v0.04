@@ -27,6 +27,7 @@ Matrix mapping [phase-5-test-plan.md](../specifications/phase-5-test-plan.md) re
 | `Purchasing::SubmitPurchaseOrder` | `test/services/purchasing/submit_purchase_order_test.rb` | Covered |
 | `Purchasing::SourcingLookup` | `test/services/purchasing/sourcing_lookup_test.rb` | Covered |
 | `Purchasing::UpdatePoLineQuantities` | `test/services/purchasing/update_po_line_quantities_test.rb` | Covered |
+| `Purchasing::OrderQuantityLookup` | `test/services/purchasing/order_quantity_lookup_test.rb` | Covered |
 
 ## Authorization
 

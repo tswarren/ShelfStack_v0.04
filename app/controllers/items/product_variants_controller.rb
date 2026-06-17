@@ -16,6 +16,12 @@ module Items
 
     def show
       @audit_events = AuditEvent.for_auditable(@product_variant).limit(50)
+      if current_store.present? && Inventory::Eligibility.eligible?(@product_variant)
+        @order_quantity = Purchasing::OrderQuantityLookup.for_variant(
+          store: current_store,
+          variant: @product_variant
+        )
+      end
     end
 
     def new

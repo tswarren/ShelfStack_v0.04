@@ -108,7 +108,7 @@
 
     <section class="ss-item-section">
       <h2>Location &amp; Availability</h2>
-      <p class="ss-muted ss-item-future-note">Reserved and on-order quantities are not tracked in Phase 4.</p>
+      <p class="ss-muted ss-item-future-note">On-order and pending quantities come from purchase orders. Reserved quantities are not tracked yet.</p>
     </section>
   </div>
 
@@ -116,9 +116,16 @@
     <section class="ss-item-sidebar-section">
       <h3>Stock</h3>
       <% inventory_visible = Authorization.allowed?(user: current_user, permission_key: "inventory.access", store: current_store) && Authorization.allowed?(user: current_user, permission_key: "inventory.balances.view", store: current_store) %>
+      <% order_quantities = local_assigns.fetch(:order_quantities, {}) %>
       <% if item.variants.any? %>
         <% if inventory_visible && item.product %>
-          <p class="ss-muted">Total on hand: <%= Inventory::Availability.product_on_hand(store: current_store, product: item.product) %></p>
+          <% total_on_order = item.variants.sum { |variant| order_quantities.dig(variant.id)&.on_order || 0 } %>
+          <% total_pending = item.variants.sum { |variant| order_quantities.dig(variant.id)&.pending || 0 } %>
+          <p class="ss-muted">
+            Total on hand: <%= Inventory::Availability.product_on_hand(store: current_store, product: item.product) %>
+            <% if total_on_order.positive? %> | Total on order: <%= total_on_order %><% end %>
+            <% if total_pending.positive? %> | Total pending: <%= total_pending %><% end %>
+          </p>
         <% end %>
         <table class="ss-table ss-item-table ss-item-table-compact">
           <thead>
@@ -127,11 +134,13 @@
               <th class="ss-num">Price</th>
               <th class="ss-num">Avail.</th>
               <th class="ss-num">Res.</th>
+              <th class="ss-num">Pending</th>
               <th class="ss-num">Order</th>
             </tr>
           </thead>
           <tbody>
             <% item.variants.each do |variant| %>
+              <% order_qty = order_quantities[variant.id] %>
               <tr>
                 <td><%= variant.condition&.short_name || "—" %></td>
                 <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
@@ -143,7 +152,20 @@
                   <% end %>
                 </td>
                 <td class="ss-num ss-muted">—</td>
-                <td class="ss-num ss-muted">—</td>
+                <td class="ss-num<%= " ss-muted" if inventory_visible && (order_qty&.pending || 0).zero? %>">
+                  <% if inventory_visible && Inventory::Eligibility.eligible?(variant) %>
+                    <%= order_qty&.pending || 0 %>
+                  <% else %>
+                    <span class="ss-muted" title="<%= inventory_visible ? "Not inventory-tracked" : "Inventory access required" %>">—</span>
+                  <% end %>
+                </td>
+                <td class="ss-num<%= " ss-muted" if inventory_visible && (order_qty&.on_order || 0).zero? %>">
+                  <% if inventory_visible && Inventory::Eligibility.eligible?(variant) %>
+                    <%= order_qty&.on_order || 0 %>
+                  <% else %>
+                    <span class="ss-muted" title="<%= inventory_visible ? "Not inventory-tracked" : "Inventory access required" %>">—</span>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>

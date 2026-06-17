@@ -38,6 +38,8 @@ module Items
 
     def load_tab_data
       case @tab
+      when "overview"
+        load_order_quantities
       when "catalog"
         @identifiers = @item.catalog_item&.catalog_item_identifiers&.active_records
           &.order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc) || []
@@ -64,6 +66,15 @@ module Items
       return if params[:variant_id].blank? || @item.product.blank?
 
       @item.variants.find_by(id: params[:variant_id])
+    end
+
+    def load_order_quantities
+      return unless current_store.present? && @item.variants.any?
+
+      @order_quantities = Purchasing::OrderQuantityLookup.for_variants(
+        store: current_store,
+        variant_ids: @item.variants.map(&:id)
+      )
     end
   end
 end

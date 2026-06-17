@@ -12,6 +12,12 @@
   <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.balances.view", store: current_store) %>
     <dt>On hand (<%= current_store.name %>)</dt>
     <dd><%= Inventory::Availability.on_hand(store: current_store, variant: @product_variant) %></dd>
+    <% if @order_quantity %>
+      <dt>On order (<%= current_store.name %>)</dt>
+      <dd><%= @order_quantity.on_order %></dd>
+      <dt>Pending (<%= current_store.name %>)</dt>
+      <dd><%= @order_quantity.pending %></dd>
+    <% end %>
   <% end %>
   <dt>Status</dt><dd><span class="<%= status_class(@product_variant.active?) %>"><%= status_label(@product_variant.active?) %></span></dd>
 </dl>
