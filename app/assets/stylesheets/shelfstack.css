@@ -152,6 +152,53 @@ a:hover {
   font-weight: 600;
 }
 
+.ss-purchasing-table .ss-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.25rem 0.35rem;
+  font-size: 0.8125rem;
+}
+
+.ss-purchasing-table__scan {
+  min-width: 8rem;
+}
+
+.ss-purchasing-table__qty {
+  max-width: 4.5rem;
+}
+
+.ss-purchasing-table__money {
+  max-width: 5.5rem;
+}
+
+.ss-purchasing-table__choices {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.ss-purchasing-table__warnings {
+  font-size: 0.75rem;
+  color: #b45309;
+  max-width: 8rem;
+}
+
+.ss-purchasing-table__totals td {
+  background: var(--color-base-200);
+  font-weight: 600;
+}
+
+.ss-btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .ss-table tbody tr:hover {
   background: rgba(245, 243, 239, 0.6);
 }

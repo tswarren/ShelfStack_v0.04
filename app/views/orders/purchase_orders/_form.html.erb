@@ -6,7 +6,7 @@
 
   <div class="ss-field">
     <%= f.label :vendor_id, "Vendor" %>
-    <%= f.collection_select :vendor_id, @vendors, :id, :name, include_blank: true %>
+    <%= f.collection_select :vendor_id, @vendors, :id, :name, { include_blank: true }, { id: "purchase_order_vendor_id" } %>
   </div>
 
   <div class="ss-field">
@@ -14,13 +14,31 @@
     <%= f.text_area :notes %>
   </div>
 
-  <%= render "shared/forms/nested_lines",
+  <%= render "shared/forms/purchasing_line_table",
         f: f,
         association: :purchase_order_lines,
         line_object: PurchaseOrderLine.new,
-        line_partial: "orders/purchase_orders/line_fields",
+        line_partial: "orders/purchase_orders/line_row",
         store: orders_store,
-        line_locals: { vendor_field_id: "purchase_order_vendor_id" } %>
+        line_locals: { vendor_field_id: "purchase_order_vendor_id" },
+        lookup_context: "order",
+        vendor_field_id: "purchase_order_vendor_id",
+        quantity_field: "quantity_ordered",
+        footer_mode: "po",
+        table_headers: [
+          { label: "Scan" },
+          { label: "Variant" },
+          { label: "Vendor item #" },
+          { label: "On hand", class: "ss-num" },
+          { label: "On order", class: "ss-num" },
+          { label: "TBO", class: "ss-num" },
+          { label: "Qty", class: "ss-num" },
+          { label: "List ¢", class: "ss-num" },
+          { label: "Disc bps", class: "ss-num" },
+          { label: "Cost ¢", class: "ss-num" },
+          { label: "Warnings" },
+          { label: "" }
+        ] %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>

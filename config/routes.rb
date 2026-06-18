@@ -240,6 +240,7 @@ Rails.application.routes.draw do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"
     resource :variant_lookup, only: %i[show]
+    resource :line_lookup, only: %i[show]
     resources :purchase_requests do
       member do
         patch :cancel
@@ -256,6 +257,7 @@ Rails.application.routes.draw do
         patch :submit
         patch :cancel
         patch :close
+        post :receive
       end
     end
     resources :receipts do

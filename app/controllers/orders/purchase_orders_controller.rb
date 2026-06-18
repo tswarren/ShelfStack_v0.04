@@ -2,12 +2,13 @@
 
 module Orders
   class PurchaseOrdersController < BaseController
-    before_action :set_purchase_order, only: %i[show edit update submit cancel close]
+    before_action :set_purchase_order, only: %i[show edit update submit cancel close receive]
     before_action -> { authorize!("orders.purchase_orders.view") }, only: %i[index show from_tbo]
     before_action -> { authorize!("orders.purchase_orders.create") }, only: %i[new create edit update from_tbo create_from_tbo]
     before_action -> { authorize!("orders.purchase_orders.submit") }, only: :submit
     before_action -> { authorize!("orders.purchase_orders.cancel") }, only: :cancel
     before_action -> { authorize!("orders.purchase_orders.close") }, only: :close
+    before_action -> { authorize!("orders.receipts.create") }, only: :receive
 
     def index
       @purchase_orders = PurchaseOrder
@@ -17,12 +18,14 @@ module Orders
     end
 
     def show
+      @order_summary = Purchasing::PurchaseOrderSummary.call(@purchase_order)
       @audit_events = AuditEvent.for_auditable(@purchase_order).limit(50)
       @sourcing_warnings = Purchasing::SourcingWarnings.for_purchase_order(@purchase_order)
       @closable = Purchasing::ClosePurchaseOrder.new(
         purchase_order: @purchase_order,
         closed_by_user: current_user
       ).closable?
+      @receivable = @purchase_order.receivable?
     end
 
     def new
@@ -99,6 +102,16 @@ module Orders
       redirect_to orders_purchase_order_path(@purchase_order), alert: e.message
     end
 
+    def receive
+      receipt = Purchasing::BuildReceiptFromPurchaseOrder.call(
+        purchase_order: @purchase_order,
+        created_by_user: current_user
+      )
+      redirect_to edit_orders_receipt_path(receipt), notice: "Draft receipt created from purchase order."
+    rescue Purchasing::BuildReceiptFromPurchaseOrder::BuildError => e
+      redirect_to orders_purchase_order_path(@purchase_order), alert: e.message
+    end
+
     def from_tbo
       load_form_collections
       @vendor = Vendor.active_records.find_by(id: params[:vendor_id])
@@ -150,7 +163,9 @@ module Orders
     private
 
     def set_purchase_order
-      @purchase_order = PurchaseOrder.where(store: orders_store).find(params[:id])
+      relation = PurchaseOrder.where(store: orders_store)
+      relation = relation.includes(purchase_order_lines: :product_variant) if action_name == "show"
+      @purchase_order = relation.find(params[:id])
     end
 
     def load_form_collections

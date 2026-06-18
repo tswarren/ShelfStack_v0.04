@@ -1,0 +1,56 @@
+<tr data-purchasing-line-table-target="line"
+    data-controller="purchasing-line-row"
+    data-purchasing-line-row-url-value="<%= orders_line_lookup_path %>"
+    data-purchasing-line-row-context-value="<%= lookup_context %>"
+    data-purchasing-line-row-vendor-field-id-value="<%= vendor_field_id %>"
+    data-purchasing-line-row-quantity-field-value="<%= quantity_field %>"
+    data-purchasing-line-row-require-eligible-value="false"
+    data-blank-row="<%= blank_row ? "true" : "false" %>"
+    <% if variant %>
+    data-purchasing-line-row-initial-sku-value="<%= variant.sku %>"
+    data-purchasing-line-row-initial-variant-id-value="<%= variant.id %>"
+    <% end %>>
+  <%= line_form.hidden_field :id if line_form.object.persisted? %>
+  <%= line_form.hidden_field :_destroy, value: false, data: { purchasing_line_table_target: "destroy" } %>
+
+  <td>
+    <input type="text"
+           class="ss-input ss-purchasing-table__scan"
+           placeholder="Scan…"
+           autocomplete="off"
+           value="<%= variant&.sku %>"
+           data-purchasing-line-row-target="lookupInput"
+           data-action="keydown->purchasing-line-row#lookupExact input->purchasing-line-row#search" />
+    <%= line_form.hidden_field :product_variant_id, data: { purchasing_line_row_target: "variantId" } %>
+    <div data-purchasing-line-row-target="choices" class="ss-purchasing-table__choices"></div>
+    <p class="ss-hint" data-purchasing-line-row-target="message"></p>
+  </td>
+  <td data-purchasing-line-row-target="title"><%= variant&.name %></td>
+  <td class="ss-num" data-purchasing-line-row-target="vendorItem">—</td>
+  <td class="ss-num" data-purchasing-line-row-target="onHand"><%= balance&.quantity_on_hand || 0 %></td>
+  <td class="ss-num" data-purchasing-line-row-target="onOrder">0</td>
+  <td class="ss-num" data-purchasing-line-row-target="tboQty">0</td>
+  <td class="ss-num">
+    <%= line_form.number_field :quantity_ordered, min: 1, step: 1, class: "ss-input ss-purchasing-table__qty",
+          data: {
+            purchasing_line_row_target: "quantityOrdered",
+            action: "keydown->purchasing-line-row#quantityKeydown input->purchasing-line-row#quantityChanged"
+          } %>
+  </td>
+  <td class="ss-num">
+    <%= line_form.number_field :unit_list_price_cents, min: 0, step: 1, class: "ss-input ss-purchasing-table__money",
+          data: { purchasing_line_row_target: "listPrice", action: "input->purchasing-line-row#pricingFieldChanged" } %>
+  </td>
+  <td class="ss-num">
+    <%= line_form.number_field :supplier_discount_bps, min: 0, max: 10_000, step: 1, class: "ss-input ss-purchasing-table__money",
+          data: { purchasing_line_row_target: "discountBps", action: "input->purchasing-line-row#pricingFieldChanged" } %>
+  </td>
+  <td class="ss-num">
+    <%= line_form.number_field :unit_cost_cents, min: 0, step: 1, class: "ss-input ss-purchasing-table__money",
+          data: { purchasing_line_row_target: "unitCost", action: "input->purchasing-line-row#pricingFieldChanged" } %>
+  </td>
+  <td class="ss-purchasing-table__warnings" data-purchasing-line-row-target="warnings"></td>
+  <td>
+    <button type="button" class="ss-btn-link" data-action="purchasing-line-table#removeLine">Remove</button>
+  </td>
+</tr>

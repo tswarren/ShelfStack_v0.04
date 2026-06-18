@@ -3,28 +3,58 @@
 <%= form_with model: receipt, url: (receipt.persisted? ? orders_receipt_path(receipt) : orders_receipts_path) do |f| %>
   <%= render "shared/forms/errors", record: receipt %>
 
-  <div class="ss-field">
-    <%= f.label :vendor_id, "Vendor" %>
-    <%= f.collection_select :vendor_id, @vendors, :id, :name, include_blank: true %>
-  </div>
+  <% po_locked = receipt.po_backed? && receipt.purchase_order_id.present? %>
+  <% lookup_context = po_locked ? "receive" : (receipt.receipt_type == "direct" ? "direct_receive" : "order") %>
 
-  <div class="ss-field">
-    <%= f.label :purchase_order_id, "Purchase order" %>
-    <%= f.collection_select :purchase_order_id, @purchase_orders, :id, :id, include_blank: true %>
-  </div>
+  <% if po_locked %>
+    <p class="ss-muted">Vendor: <%= receipt.vendor.name %> | Purchase order #<%= receipt.purchase_order_id %></p>
+    <%= f.hidden_field :vendor_id %>
+    <%= f.hidden_field :purchase_order_id %>
+    <%= f.hidden_field :receipt_type %>
+  <% else %>
+    <div class="ss-field">
+      <%= f.label :vendor_id, "Vendor" %>
+      <%= f.collection_select :vendor_id, @vendors, :id, :name, { include_blank: true }, { id: "receipt_vendor_id" } %>
+    </div>
 
-  <div class="ss-field">
-    <%= f.label :receipt_type %>
-    <%= f.select :receipt_type, @receipt_type_options %>
-  </div>
+    <div class="ss-field">
+      <%= f.label :purchase_order_id, "Purchase order" %>
+      <%= f.collection_select :purchase_order_id, @purchase_orders, :id, :id, { include_blank: true }, { id: "receipt_purchase_order_id" } %>
+    </div>
 
-  <%= render "shared/forms/nested_lines",
+    <div class="ss-field">
+      <%= f.label :receipt_type %>
+      <%= f.select :receipt_type, @receipt_type_options %>
+    </div>
+  <% end %>
+
+  <%= render "shared/forms/purchasing_line_table",
         f: f,
         association: :receipt_lines,
         line_object: ReceiptLine.new,
-        line_partial: "orders/receipts/line_fields",
+        line_partial: "orders/receipts/line_row",
         store: orders_store,
-        line_locals: { vendor_field_id: "receipt_vendor_id" } %>
+        line_locals: {
+          vendor_field_id: "receipt_vendor_id",
+          purchase_order_field_id: "receipt_purchase_order_id"
+        },
+        lookup_context: lookup_context,
+        vendor_field_id: "receipt_vendor_id",
+        purchase_order_field_id: "receipt_purchase_order_id",
+        quantity_field: "quantity_received",
+        merge_duplicates: !po_locked,
+        footer_mode: "receipt",
+        show_receive_all: po_locked,
+        table_headers: [
+          { label: "Scan" },
+          { label: "Variant" },
+          { label: "Expected", class: "ss-num" },
+          { label: "Received", class: "ss-num" },
+          { label: "Accepted", class: "ss-num" },
+          { label: "Cost ¢", class: "ss-num" },
+          { label: "Warnings" },
+          { label: "" }
+        ] %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>

@@ -7,7 +7,7 @@
 
   <div class="ss-field">
     <%= f.label :vendor_id, "Vendor" %>
-    <%= f.collection_select :vendor_id, @vendors, :id, :name, include_blank: true %>
+    <%= f.collection_select :vendor_id, @vendors, :id, :name, { include_blank: true }, { id: "return_to_vendor_vendor_id" } %>
   </div>
 
   <div class="ss-field">
@@ -15,12 +15,29 @@
     <%= f.text_area :notes %>
   </div>
 
-  <%= render "shared/forms/nested_lines",
+  <%= render "shared/forms/purchasing_line_table",
         f: f,
         association: :return_to_vendor_lines,
         line_object: ReturnToVendorLine.new,
-        line_partial: "orders/returns_to_vendor/line_fields",
-        store: orders_store %>
+        line_partial: "orders/returns_to_vendor/line_row",
+        store: orders_store,
+        line_locals: { vendor_field_id: "return_to_vendor_vendor_id" },
+        lookup_context: "direct_receive",
+        vendor_field_id: "return_to_vendor_vendor_id",
+        quantity_field: "quantity",
+        cost_mode: "credit",
+        footer_mode: "rtv",
+        table_headers: [
+          { label: "Scan" },
+          { label: "Variant" },
+          { label: "On hand", class: "ss-num" },
+          { label: "Returnability" },
+          { label: "Qty", class: "ss-num" },
+          { label: "Cost ¢", class: "ss-num" },
+          { label: "Credit ¢", class: "ss-num" },
+          { label: "Warnings" },
+          { label: "" }
+        ] %>
 
   <%= f.submit class: "ss-btn" %>
 <% end %>

@@ -202,4 +202,47 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "added_to_po", request_one.reload.status
     assert_equal "added_to_po", request_two.reload.status
   end
+
+  test "show displays order summary and variant names" do
+    @line_to_keep.update!(
+      unit_list_price_cents: 2000,
+      unit_cost_cents: 1200,
+      variant_name_snapshot: @variant.name
+    )
+    @line_to_remove.destroy!
+
+    get orders_purchase_order_path(@purchase_order)
+
+    assert_response :success
+    assert_match "Order Summary", response.body
+    assert_match "Total units", response.body
+    assert_match @variant.name, response.body
+    assert_match "$24.00", response.body
+    assert_match "$40.00", response.body
+  end
+
+  test "receive creates draft receipt from submitted purchase order" do
+    ProductVendor.create!(
+      product: @variant.product,
+      vendor: @vendor,
+      vendor_item_number: "VEND-1",
+      supplier_discount_bps: 4000,
+      returnability_status: "returnable",
+      active: true
+    )
+    order = create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 4) ]
+    )
+    Purchasing::SubmitPurchaseOrder.call(purchase_order: order, submitted_by_user: @user)
+
+    post receive_orders_purchase_order_path(order)
+
+    receipt = Receipt.order(:id).last
+    assert_redirected_to edit_orders_receipt_path(receipt)
+    assert_equal "po_backed", receipt.receipt_type
+    assert_equal 1, receipt.receipt_lines.count
+    assert_equal 4, receipt.receipt_lines.first.quantity_expected
+  end
 end

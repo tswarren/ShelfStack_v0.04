@@ -52,6 +52,10 @@ Migration: `db/migrate/20250620120000_create_phase5_purchasing_and_receiving.rb`
 | `Purchasing::SourcingWarnings` | Warn on PO lines missing vendor sourcing for selected vendor |
 | `Purchasing::UpdatePoLineQuantities` | PO line/header status after receive |
 | `Purchasing::OrderQuantityLookup` | On-order and pending qty from open PO lines |
+| `Purchasing::LineLookup` | Purchasing-aware scan/search (SKU, ISBN, vendor item #, PO line in receive context) |
+| `Purchasing::LineLookupPresenter` | Enriched lookup JSON (sourcing, on-hand, on-order, TBO, costs) |
+| `Purchasing::BuildableTboLinesQuery` | Open TBO lines for vendor-first PO building |
+| `Purchasing::BuildReceiptFromPurchaseOrder` | Draft PO-backed receipt with open lines preloaded |
 | `Purchasing::PostReceipt` | Post accepted qty via `Inventory::Post` (`receiving`) |
 | `Purchasing::MovingAverageCost` | Update balance MAC on receive |
 | `Purchasing::PostReturnToVendor` | Post vendor return via `Inventory::Post` (`vendor_return`) |
@@ -68,9 +72,12 @@ Extended Phase 4 services:
 
 - Home with cards for purchase requests, purchase orders, receipts, returns to vendor
 - Purchase request list/create/show/cancel
-- Purchase order draft/edit/submit/show/**close**
-- Receipt draft/post workflow (PO-backed and direct)
+- Purchase order draft/edit/submit/show/**close**/**receive**
+- Purchase order **Build from TBO** (multi-request vendor workbench)
+- Receipt draft/post workflow (PO-backed and direct); **Receive** from PO preloads open lines
 - Return to vendor draft/post workflow
+- **Purchasing line table** workpad on PO, receipt, and RTV forms (scan entry, totals, duplicate merge)
+- `GET /orders/line_lookup` — enriched purchasing line lookup API
 - `orders.access` permission gate and locked-out page
 
 ### Setup and Items integration
@@ -139,5 +146,6 @@ Per roadmap:
 
 * Vendor terms setup UI is schema-only (no CRUD screens yet)
 * Receiving discrepancy UI is service-backed but minimal in Orders views
+* Dollar/percent form inputs for list price and discount (cents/bps in table cells for now)
 * Reserved / special-order quantities not shown on Items surfaces yet
 * Items index search results do not include stock or on-order columns

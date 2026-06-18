@@ -25,12 +25,30 @@ class PurchaseOrder < ApplicationRecord
   scope :drafts, -> { where(status: "draft") }
   scope :submitted_records, -> { where.not(status: "draft") }
 
+  OPEN_FOR_RECEIVE_LINE_STATUSES = %w[open partially_received backordered].freeze
+  RECEIVABLE_PO_STATUSES = %w[submitted partially_received].freeze
+
   def draft?
     status == "draft"
   end
 
   def submitted?
     !draft? && status != "cancelled"
+  end
+
+  def receivable?
+    RECEIVABLE_PO_STATUSES.include?(status) && open_lines_for_receiving.any?
+  end
+
+  def open_lines_for_receiving
+    purchase_order_lines.select do |line|
+      OPEN_FOR_RECEIVE_LINE_STATUSES.include?(line.status) &&
+        line.quantity_ordered - line.quantity_received > 0
+    end
+  end
+
+  def open_quantity_for_line(line)
+    [ line.quantity_ordered - line.quantity_received, 0 ].max
   end
 
   private
