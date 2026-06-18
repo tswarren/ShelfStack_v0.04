@@ -53,7 +53,7 @@
 <% end %>
 
 <% if @results.any? %>
-  <%= render "items/index/results_table", results: @results %>
+  <%= render "items/index/results_table", results: @results, operational_summaries: @operational_summaries %>
   <%= render "items/index/pagination" %>
 <% else %>
   <p class="ss-empty-state">

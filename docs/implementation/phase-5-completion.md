@@ -124,6 +124,7 @@ product_variant_vendor.created
 ### Items and inventory read surfaces
 
 - `Purchasing::OrderQuantityLookup` — derives on-order (submitted PO) and pending (draft PO) per variant
+- Items workspace revamp progress: [items-workspace-revamp.md](items-workspace-revamp.md)
 - Items overview stock sidebar: Avail., Pending, Order columns
 - Variant detail: on hand, on order, pending
 - Inventory balances index: on order and pending columns
@@ -162,4 +163,4 @@ Per roadmap:
 * Receiving discrepancy resolution workflow (record display on document hubs; no resolution UI yet)
 * Dollar/percent form inputs for list price and discount (cents/bps in table cells for now)
 * Reserved / special-order quantities not shown on Items surfaces yet
-* Items index search results do not include stock or on-order columns
+* Items index operational column requires inventory balance view permissions

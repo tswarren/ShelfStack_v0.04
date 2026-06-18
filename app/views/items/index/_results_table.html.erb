@@ -6,12 +6,16 @@
       <th>Product SKU</th>
       <th>Variants</th>
       <th>Price</th>
+      <% if operational_summaries.present? %>
+        <th>Stock / Orders</th>
+      <% end %>
       <th>Actions</th>
     </tr>
   </thead>
   <tbody>
     <% results.each do |result| %>
       <% item = result.presenter %>
+      <% summary = operational_summaries[item] %>
       <tr>
         <td>
           <div class="ss-search-item-cell">
@@ -30,8 +34,27 @@
         <td><%= item.product_sku || "—" %></td>
         <td><%= item.variant_summary_label %></td>
         <td><%= item.price_range_label %></td>
+        <% if operational_summaries.present? %>
+          <td class="ss-num">
+            <% if summary.present? %>
+              <div>Avail. <%= summary.available %></div>
+              <div>TBO <%= summary.open_tbo %> · Order <%= summary.on_order %></div>
+              <% if summary.last_received_at.present? %>
+                <div class="ss-muted">Rcvd <%= l(summary.last_received_at.to_date) %></div>
+              <% end %>
+            <% else %>
+              —
+            <% end %>
+          </td>
+        <% end %>
         <td class="ss-search-action-cell">
-          <%= link_to "View Item", item.show_path, class: "ss-search-view-link" %>
+          <% if summary&.actions.present? %>
+            <% summary.actions.each do |action| %>
+              <%= link_to action.label, action.url, class: "ss-search-view-link" %>
+            <% end %>
+          <% else %>
+            <%= link_to "View Item", item.show_path, class: "ss-search-view-link" %>
+          <% end %>
         </td>
       </tr>
     <% end %>

@@ -102,6 +102,21 @@ module Items
       actions.select { |action| allowed_action?(action) }
     end
 
+    def receivable_purchase_order_for_item
+      return nil unless item.product.present?
+
+      PurchaseOrder
+        .joins(:purchase_order_lines)
+        .where(store: store, status: %w[submitted partially_received])
+        .where(purchase_order_lines: {
+          product_variant_id: item.variants.map(&:id),
+          status: Purchasing::OrderQuantityLookup::OPEN_LINE_STATUSES
+        })
+        .distinct
+        .order(:id)
+        .first
+    end
+
     def variant_actions(variant)
       actions = []
       if inventory_eligible?(variant) && allowed?("orders.purchase_requests.create")
@@ -195,21 +210,6 @@ module Items
           status: Purchasing::OrderQuantityLookup::OPEN_LINE_STATUSES
         })
         .distinct
-        .first
-    end
-
-    def receivable_purchase_order_for_item
-      return nil unless item.product.present?
-
-      PurchaseOrder
-        .joins(:purchase_order_lines)
-        .where(store: store, status: %w[submitted partially_received])
-        .where(purchase_order_lines: {
-          product_variant_id: item.variants.map(&:id),
-          status: Purchasing::OrderQuantityLookup::OPEN_LINE_STATUSES
-        })
-        .distinct
-        .order(:id)
         .first
     end
 
