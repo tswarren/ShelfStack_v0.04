@@ -1,6 +1,10 @@
 <% operations_tab = local_assigns[:operations_tab] %>
 <% operations = local_assigns[:operations] %>
 
+<% if local_assigns[:attention_items].present? %>
+  <%= render "orders/shared/attention_panel", items: attention_items %>
+<% end %>
+
 <% if operations_tab&.metrics&.any? %>
   <%= render "orders/shared/metric_strip", metrics: operations_tab.metrics %>
 <% end %>

@@ -188,4 +188,38 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Variant operations", response.body
     assert_match "No operational documents yet", response.body
   end
+
+  test "activity tab renders document trail and collapsed audit timeline" do
+    seed_phase5_reference_data!
+    grant_all_phase5_permissions!(@user, store: @store)
+    grant_permission!(@user, "inventory.ledger.view", store: @store)
+    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 1,
+      status: "open"
+    )
+
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "activity")
+    assert_response :success
+    assert_match "TBO #", response.body
+    assert_match "Audit timeline", response.body
+    assert_match "ss-collapsible-panel", response.body
+  end
+
+  test "overview shows attention panel when open tbo exists" do
+    seed_phase5_reference_data!
+    grant_all_phase5_permissions!(@user, store: @store)
+    grant_permission!(@user, "inventory.access", store: @store)
+    grant_permission!(@user, "inventory.balances.view", store: @store)
+    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "overview")
+    assert_response :success
+    assert_match "Needs Attention", response.body
+    assert_match "open TBO", response.body
+  end
 end

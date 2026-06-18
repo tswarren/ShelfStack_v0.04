@@ -14,6 +14,7 @@ module Items
       load_tab_data
       load_operations_presenter if @tab.in?(%w[overview operations])
       load_operations_tab_presenter if @tab == "operations"
+      load_attention_items if @tab.in?(%w[overview operations])
     end
 
     private
@@ -51,6 +52,8 @@ module Items
         load_display_vendor_data
       when "activity"
         @audit_events = merged_audit_events
+        @trail_nodes = ItemDocumentTrailBuilder.for(item: @item, store: current_store)
+        @ledger_entries = load_ledger_entries
       end
     end
 
@@ -100,6 +103,32 @@ module Items
         user: current_user,
         highlight_variant: @highlight_variant
       )
+    end
+
+    def load_attention_items
+      return unless current_store.present?
+
+      @attention_items = ItemAttentionPresenter.for(
+        item: @item,
+        store: current_store,
+        user: current_user,
+        operations: @operations
+      )
+    end
+
+    def load_ledger_entries
+      return [] unless ledger_visible? && @item.variants.any?
+
+      InventoryLedgerEntry
+        .includes(:product_variant, :inventory_posting)
+        .where(store: current_store, product_variant_id: @item.variants.map(&:id))
+        .order(occurred_at: :desc, id: :desc)
+        .limit(50)
+        .to_a
+    end
+
+    def ledger_visible?
+      Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store)
     end
 
     def load_display_vendor_data

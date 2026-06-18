@@ -72,6 +72,10 @@
       </div>
     <% end %>
 
+    <% if local_assigns[:attention_items].present? %>
+      <%= render "orders/shared/attention_panel", items: attention_items %>
+    <% end %>
+
     <% if operations&.rollup_metrics&.any? %>
       <%= render "orders/shared/metric_strip",
             metrics: operations.rollup_metrics.map { |metric| { label: metric.label, value: metric.value, class: metric.class_name } } %>
