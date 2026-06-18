@@ -1,3 +1,5 @@
+<% operations = local_assigns[:operations] %>
+<% overview_matrix_colspan = operations&.inventory_visible? ? 7 : 5 %>
 <div class="ss-item-catalog">
   <div class="ss-item-main">
     <header class="ss-item-hero">
@@ -62,6 +64,31 @@
       </div>
     </header>
 
+    <% if local_assigns[:attention_items].present? %>
+      <%= render "orders/shared/attention_panel", items: attention_items %>
+    <% end %>
+
+    <% if operations&.rollup_metrics&.any? || operations&.header_actions&.any? %>
+      <section class="ss-item-ops-summary" aria-label="Operational summary">
+        <div class="ss-item-ops-summary__toolbar">
+          <% if operations&.rollup_metrics&.any? %>
+            <%= render "orders/shared/metric_strip",
+                  metrics: operations.rollup_metrics.map { |metric| { label: metric.label, value: metric.value, class: metric.class_name } } %>
+          <% end %>
+          <% if operations&.header_actions&.any? %>
+            <div class="ss-item-ops-summary__actions">
+              <% operations.header_actions.each do |action| %>
+                <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        <% if operations&.rollup_metrics&.any? %>
+          <p class="ss-hint ss-item-ops-summary__hint">Available equals on hand until reservations are tracked.</p>
+        <% end %>
+      </section>
+    <% end %>
+
     <section class="ss-item-section">
       <h2><%= items_user_facing_label("product_variants") %></h2>
       <% if item.variants.any? %>
@@ -72,11 +99,17 @@
               <th>SKU</th>
               <th>Location</th>
               <th class="ss-num">Price</th>
-              <th></th>
+              <% if operations&.inventory_visible? %>
+                <th class="ss-num">Available</th>
+                <th>Last received</th>
+              <% end %>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
+            <% rows = operations&.variant_rows || [] %>
             <% item.variants.each do |variant| %>
+              <% row = rows.find { |entry| entry.variant.id == variant.id } %>
               <% classification = item.classification_summary_for(variant) %>
               <% defaults = classification[:defaults] %>
               <tr>
@@ -84,15 +117,38 @@
                 <td><%= variant.sku %></td>
                 <td><%= item.variant_location_label(variant) %></td>
                 <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
-                <td><%= link_to "Details", edit_items_product_variant_path(variant, return_to: "item") %></td>
+                <% if operations&.inventory_visible? %>
+                  <td class="ss-num"><%= row&.available.nil? ? "—" : row.available %></td>
+                  <td>
+                    <% if row&.last_received.present? %>
+                      <%= l(row.last_received.received_at.to_date) %>
+                    <% else %>
+                      —
+                    <% end %>
+                  </td>
+                <% end %>
+                <td>
+                  <% if row&.actions&.any? %>
+                    <% row.actions.each_with_index do |action, index| %>
+                      <% if index.positive? %> | <% end %>
+                      <%= link_to action.label, action.url %>
+                    <% end %>
+                  <% else %>
+                    <%= link_to "Details", edit_items_product_variant_path(variant, return_to: "item") %>
+                  <% end %>
+                </td>
               </tr>
               <tr class="ss-item-variant-defaults-row">
-                <td colspan="5">
+                <td colspan="<%= overview_matrix_colspan %>">
                   <details class="ss-item-variant-defaults">
                     <summary class="ss-item-variant-defaults-summary">
-                      <span class="ss-item-variant-defaults-hint"><%= item.classification_summary_label(variant) %></span>
+                      <span class="ss-item-variant-defaults-hint">Details</span>
+                      <span class="ss-item-variant-defaults-meta"><%= item.classification_summary_label(variant) %></span>
                     </summary>
-                    <%= render "items/items/overview_classification_body",
+                    <%= render "items/items/overview_variant_details",
+                          variant: variant,
+                          row: row,
+                          operations: operations,
                           summary: classification,
                           defaults: defaults %>
                   </details>
@@ -105,76 +161,9 @@
         <p class="ss-muted">No sellable SKUs yet.</p>
       <% end %>
     </section>
-
-    <section class="ss-item-section">
-      <h2>Location &amp; Availability</h2>
-      <p class="ss-muted ss-item-future-note">On-order and pending quantities come from purchase orders. Reserved quantities are not tracked yet.</p>
-    </section>
   </div>
 
   <aside class="ss-item-sidebar">
-    <section class="ss-item-sidebar-section">
-      <h3>Stock</h3>
-      <% inventory_visible = Authorization.allowed?(user: current_user, permission_key: "inventory.access", store: current_store) && Authorization.allowed?(user: current_user, permission_key: "inventory.balances.view", store: current_store) %>
-      <% order_quantities = local_assigns.fetch(:order_quantities, {}) %>
-      <% if item.variants.any? %>
-        <% if inventory_visible && item.product %>
-          <% total_on_order = item.variants.sum { |variant| order_quantities.dig(variant.id)&.on_order || 0 } %>
-          <% total_pending = item.variants.sum { |variant| order_quantities.dig(variant.id)&.pending || 0 } %>
-          <p class="ss-muted">
-            Total on hand: <%= Inventory::Availability.product_on_hand(store: current_store, product: item.product) %>
-            <% if total_on_order.positive? %> | Total on order: <%= total_on_order %><% end %>
-            <% if total_pending.positive? %> | Total pending: <%= total_pending %><% end %>
-          </p>
-        <% end %>
-        <table class="ss-table ss-item-table ss-item-table-compact">
-          <thead>
-            <tr>
-              <th>Variant</th>
-              <th class="ss-num">Price</th>
-              <th class="ss-num">Avail.</th>
-              <th class="ss-num">Res.</th>
-              <th class="ss-num">Pending</th>
-              <th class="ss-num">Order</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% item.variants.each do |variant| %>
-              <% order_qty = order_quantities[variant.id] %>
-              <tr>
-                <td><%= variant.condition&.short_name || "—" %></td>
-                <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
-                <td class="ss-num">
-                  <% if inventory_visible && Inventory::Eligibility.eligible?(variant) %>
-                    <%= Inventory::Availability.available(store: current_store, variant: variant) %>
-                  <% else %>
-                    <span class="ss-muted" title="<%= inventory_visible ? "Not inventory-tracked" : "Inventory access required" %>">—</span>
-                  <% end %>
-                </td>
-                <td class="ss-num ss-muted">—</td>
-                <td class="ss-num<%= " ss-muted" if inventory_visible && (order_qty&.pending || 0).zero? %>">
-                  <% if inventory_visible && Inventory::Eligibility.eligible?(variant) %>
-                    <%= order_qty&.pending || 0 %>
-                  <% else %>
-                    <span class="ss-muted" title="<%= inventory_visible ? "Not inventory-tracked" : "Inventory access required" %>">—</span>
-                  <% end %>
-                </td>
-                <td class="ss-num<%= " ss-muted" if inventory_visible && (order_qty&.on_order || 0).zero? %>">
-                  <% if inventory_visible && Inventory::Eligibility.eligible?(variant) %>
-                    <%= order_qty&.on_order || 0 %>
-                  <% else %>
-                    <span class="ss-muted" title="<%= inventory_visible ? "Not inventory-tracked" : "Inventory access required" %>">—</span>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        <p class="ss-muted">No stock yet.</p>
-      <% end %>
-    </section>
-
     <%= render "items/items/overview_subjects", item: item %>
 
     <% if item.description_text.present? %>

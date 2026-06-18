@@ -1,0 +1,41 @@
+<%# locals: variant, row, operations, summary, defaults %>
+<div class="ss-item-variant-details">
+  <% if operations.present? %>
+    <div class="ss-item-variant-details__section">
+      <h4>Orders & sourcing</h4>
+      <dl class="ss-summary ss-summary-compact">
+        <dt>TBO</dt>
+        <dd class="ss-num"><%= row&.open_tbo || 0 %></dd>
+        <% if operations.inventory_visible? %>
+          <dt>Pending PO</dt>
+          <dd class="ss-num"><%= row&.pending_po.nil? ? "—" : row.pending_po %></dd>
+          <dt>On order</dt>
+          <dd class="ss-num"><%= row&.on_order.nil? ? "—" : row.on_order %></dd>
+        <% end %>
+        <dt>Vendor</dt>
+        <dd>
+          <% if row&.preferred_vendor_name.present? %>
+            <%= row.preferred_vendor_name %>
+          <% elsif item_vendor_sourcing_editable? %>
+            <%= link_to "Assign", item_vendor_sourcing_path(variant) %>
+          <% else %>
+            —
+          <% end %>
+        </dd>
+        <% if row&.vendor_item_number.present? %>
+          <dt>Vendor item #</dt>
+          <dd><%= row.vendor_item_number %></dd>
+        <% end %>
+        <dt>Returnability</dt>
+        <dd><%= row&.returnability_status.present? ? row.returnability_status.humanize : "—" %></dd>
+      </dl>
+    </div>
+  <% end %>
+
+  <div class="ss-item-variant-details__section">
+    <h4>Classification</h4>
+    <%= render "items/items/overview_classification_body",
+          summary: summary,
+          defaults: defaults %>
+  </div>
+</div>

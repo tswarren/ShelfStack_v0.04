@@ -153,4 +153,17 @@ module ItemsHelper
   def item_flow_path_options
     item_flow? ? { return_to: "item" } : {}
   end
+
+  def item_vendor_sourcing_editable?
+    return false unless current_store.present?
+
+    Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.create", store: current_store) ||
+      Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.update", store: current_store) ||
+      Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.create", store: current_store) ||
+      Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.update", store: current_store)
+  end
+
+  def item_vendor_sourcing_path(variant)
+    Items::VendorSourcingPath.for(variant)
+  end
 end

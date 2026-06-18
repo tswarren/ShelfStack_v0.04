@@ -11,9 +11,18 @@
 <div class="ss-tab-content">
   <% case @tab %>
   <% when "overview" %>
-    <%= render "items/items/overview", item: @item, statuses: @statuses, variant: @highlight_variant, order_quantities: @order_quantities %>
+    <%= render "items/items/overview",
+          item: @item,
+          statuses: @statuses,
+          variant: @highlight_variant,
+          operations: @operations,
+          attention_items: @attention_items %>
   <% when "operations" %>
-    <%= render "items/items/operations", item: @item %>
+    <%= render "items/items/operations",
+          item: @item,
+          operations: @operations,
+          operations_tab: @operations_tab,
+          attention_items: @attention_items %>
   <% when "item_setup" %>
     <%= render "items/items/item_setup",
           item: @item,
@@ -21,7 +30,11 @@
           variants: @variants,
           highlight_variant: @highlight_variant %>
   <% when "activity" %>
-    <%= render "shared/audit_timeline", audit_events: @audit_events %>
+    <%= render "items/items/activity",
+          item: @item,
+          audit_events: @audit_events,
+          ledger_entries: @ledger_entries,
+          trail_nodes: @trail_nodes %>
   <% end %>
 </div>
 

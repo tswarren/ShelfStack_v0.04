@@ -31,6 +31,7 @@ class ItemsProductVariantVendorsControllerTest < ActionDispatch::IntegrationTest
     variant_vendor = ProductVariantVendor.order(:id).last
     assert_response :redirect
     assert_includes response.location, "tab=item_setup"
+    assert_includes response.location, "#vendor-sourcing"
     assert_includes response.location, "variant_id=#{@variant.id}"
     assert_equal "ITEMS-VV-1", variant_vendor.vendor_item_number
     assert AuditEvent.exists?(event_name: "product_variant_vendor.created", auditable: variant_vendor)

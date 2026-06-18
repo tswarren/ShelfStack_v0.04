@@ -12,6 +12,9 @@ module Items
       @statuses = @item.full_statuses
       @highlight_variant = load_highlight_variant
       load_tab_data
+      load_operations_presenter if @tab.in?(%w[overview operations])
+      load_operations_tab_presenter if @tab == "operations"
+      load_attention_items if @tab.in?(%w[overview operations])
     end
 
     private
@@ -39,7 +42,7 @@ module Items
     def load_tab_data
       case @tab
       when "overview"
-        load_order_quantities
+        nil
       when "operations"
         nil
       when "item_setup"
@@ -49,6 +52,8 @@ module Items
         load_display_vendor_data
       when "activity"
         @audit_events = merged_audit_events
+        @trail_nodes = ItemDocumentTrailBuilder.for(item: @item, store: current_store)
+        @ledger_entries = load_ledger_entries
       end
     end
 
@@ -77,6 +82,53 @@ module Items
         store: current_store,
         variant_ids: @item.variants.map(&:id)
       )
+    end
+
+    def load_operations_presenter
+      return unless current_store.present?
+
+      @operations = ItemOperationsPresenter.new(
+        item: @item,
+        store: current_store,
+        user: current_user
+      )
+    end
+
+    def load_operations_tab_presenter
+      return unless current_store.present?
+
+      @operations_tab = ItemOperationsTabPresenter.new(
+        item: @item,
+        store: current_store,
+        user: current_user,
+        highlight_variant: @highlight_variant
+      )
+    end
+
+    def load_attention_items
+      return unless current_store.present?
+
+      @attention_items = ItemAttentionPresenter.for(
+        item: @item,
+        store: current_store,
+        user: current_user,
+        operations: @operations
+      )
+    end
+
+    def load_ledger_entries
+      return [] unless ledger_visible? && @item.variants.any?
+
+      InventoryLedgerEntry
+        .includes(:product_variant, :inventory_posting)
+        .where(store: current_store, product_variant_id: @item.variants.map(&:id))
+        .order(occurred_at: :desc, id: :desc)
+        .limit(50)
+        .to_a
+    end
+
+    def ledger_visible?
+      Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store)
     end
 
     def load_display_vendor_data

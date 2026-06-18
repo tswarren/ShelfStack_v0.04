@@ -1,0 +1,38 @@
+<%# locals: item, audit_events:, ledger_entries:, trail_nodes:, attention_items: %>
+<%= render "orders/shared/attention_panel", items: attention_items if local_assigns[:attention_items].present? %>
+
+<% if trail_nodes.present? %>
+  <%= render "orders/shared/document_trail", nodes: trail_nodes %>
+<% end %>
+
+<% if ledger_entries.present? %>
+  <h2>Inventory movements</h2>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Type</th>
+        <th>Variant</th>
+        <th class="ss-num">Qty</th>
+        <th class="ss-num">Cost</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% ledger_entries.each do |entry| %>
+        <tr>
+          <td><%= l(entry.occurred_at, format: :short) %></td>
+          <td><%= entry.movement_type %></td>
+          <td><%= entry.product_variant.sku %></td>
+          <td class="ss-num"><%= entry.quantity_delta %></td>
+          <td class="ss-num"><%= entry.unit_cost_cents ? format_cents(entry.unit_cost_cents) : "—" %></td>
+          <td><%= entry.inventory_posting_id ? "Posting ##{entry.inventory_posting_id}" : "—" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
+  <%= render "shared/audit_timeline", audit_events: audit_events %>
+<% end %>

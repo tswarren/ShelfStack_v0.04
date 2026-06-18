@@ -1,0 +1,19 @@
+<h1>Edit Product Vendor</h1>
+<p><%= @product.name %> — <%= @product_vendor.vendor.name %></p>
+
+<%= form_with model: @product_vendor,
+      url: items_product_product_vendor_path(@product, @product_vendor),
+      method: :patch do |f| %>
+  <%= render "shared/forms/product_vendor_fields",
+        f: f,
+        product_vendor: @product_vendor,
+        lock_product: true %>
+  <%= f.submit class: "ss-btn" %>
+  <%= link_to "Cancel",
+        Items::ReturnPath.for(
+          record: @product,
+          return_to: "item",
+          tab: "item_setup",
+          anchor: "vendor-sourcing"
+        ) %>
+<% end %>

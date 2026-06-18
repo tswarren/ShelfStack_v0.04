@@ -74,12 +74,7 @@ module Purchasing
     end
 
     def last_received_cost_cents(variant)
-      ReceiptLine
-        .joins(:receipt)
-        .where(receipts: { store_id: store.id, status: "posted" }, product_variant_id: variant.id)
-        .order("receipts.posted_at DESC")
-        .limit(1)
-        .pick(:unit_cost_cents)
+      Purchasing::LastReceivedLookup.for_variant(store: store, variant: variant)&.unit_cost_cents
     end
   end
 end

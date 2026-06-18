@@ -23,6 +23,7 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     assert_match "Items", response.body
     assert_match "Add Item", response.body
     assert_match "View Item", response.body
+    assert_match items_item_path(catalog_item_id: @item.id), response.body
   end
 
   test "search returns matching item with lifecycle status" do
@@ -58,6 +59,28 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Edit Catalog", response.body
     assert_no_match "Edit SKUs", response.body
     assert_no_match "Sell New", response.body
+  end
+
+  test "index shows stock and orders column when inventory permissions granted" do
+    seed_phase5_reference_data!
+    grant_all_phase5_permissions!(@user, store: @store)
+    grant_permission!(@user, "inventory.access", store: @store)
+    grant_permission!(@user, "inventory.balances.view", store: @store)
+    product = create_product!(catalog_item: @item)
+    variant = create_product_variant!(product: product, selling_price_cents: 1899)
+    InventoryBalance.create!(
+      store: @store,
+      product_variant: variant,
+      quantity_on_hand: 5,
+      quantity_available: 5
+    )
+
+    get items_root_path, params: { q: @item.title }
+    assert_response :success
+    assert_match "Stock / Orders", response.body
+    assert_match "Avail. 5", response.body
+    assert_match "TBO", response.body
+    assert_match ">View<", response.body
   end
 
   test "filter by format narrows results" do

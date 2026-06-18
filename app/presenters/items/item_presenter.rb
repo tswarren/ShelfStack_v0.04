@@ -332,15 +332,16 @@ module Items
       basic_statuses.first
     end
 
-    def show_path(helper: self, tab: nil, variant_id: nil)
+    def show_path(helper: self, tab: nil, variant_id: nil, anchor: nil)
       params = route_params.dup
       params[:tab] = tab if tab.present? && tab != "overview"
       params[:variant_id] = variant_id if variant_id.present?
-      helper.items_item_path(params)
+      path = helper.items_item_path(params)
+      anchor.present? ? "#{path}##{anchor}" : path
     end
 
-    def tab_path(tab, helper: self, variant_id: nil)
-      show_path(helper: helper, tab: tab, variant_id: variant_id)
+    def tab_path(tab, helper: self, variant_id: nil, anchor: nil)
+      show_path(helper: helper, tab: tab, variant_id: variant_id, anchor: anchor)
     end
 
     def context_actions(helper: self)
