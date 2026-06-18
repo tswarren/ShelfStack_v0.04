@@ -5,7 +5,7 @@ module Purchasing
     Match = Data.define(:variant, :purchase_order_line)
     Result = Data.define(:status, :matches, :message)
 
-    CONTEXTS = %i[order receive direct_receive].freeze
+    CONTEXTS = %i[order receive direct_receive rtv].freeze
     OPEN_FOR_RECEIVE_LINE_STATUSES = %w[open partially_received backordered].freeze
 
     def self.call(store:, query:, mode: :exact, vendor: nil, context: :order, purchase_order: nil, eligible_only: false)

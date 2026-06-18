@@ -37,7 +37,7 @@ class PurchaseRequest < ApplicationRecord
 
     if lines.all? { |line| line.status == "added_to_po" }
       update!(status: "added_to_po") unless status == "added_to_po"
-    elsif lines.any? { |line| line.status == "added_to_po" }
+    elsif lines.any? { |line| %w[added_to_po partially_ordered].include?(line.status) }
       update!(status: "partially_ordered") unless status == "partially_ordered"
     end
   end

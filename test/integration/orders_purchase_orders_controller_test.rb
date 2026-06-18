@@ -9,6 +9,7 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     @workstation = create_workstation!(store: @store)
     @user = create_user!
     grant_all_phase5_permissions!(@user, store: @store)
+    grant_permission!(@user, "items.catalog_items.view", store: @store)
     login_user!(@user, workstation: @workstation)
 
     @vendor = create_vendor!
@@ -170,6 +171,52 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_match variant_two.sku, response.body
     assert_match "purchase_request_line_#{line_one.id}", response.body
     assert_match "purchase_request_line_#{line_two.id}", response.body
+    assert_match "On hand", response.body
+    assert_match "On order", response.body
+    assert_match "Order qty", response.body
+  end
+
+  test "from tbo suggested view groups lines by suggested vendor" do
+    ProductVendor.create!(
+      product: @variant.product,
+      vendor: @vendor,
+      vendor_item_number: "VEND-1",
+      active: true,
+      preferred: true
+    )
+    request = PurchaseRequest.create!(store: @store, status: "open")
+    request.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+
+    get from_tbo_orders_purchase_orders_path(view: "suggested")
+
+    assert_response :success
+    assert_match @vendor.name, response.body
+    assert_match "Suggested vendor view", response.body
+  end
+
+  test "create from tbo supports partial order quantity" do
+    request = PurchaseRequest.create!(store: @store, status: "open")
+    line = request.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 10,
+      status: "open"
+    )
+
+    post create_from_tbo_orders_purchase_orders_path, params: {
+      vendor_id: @vendor.id,
+      purchase_request_line_ids: [ line.id ],
+      line_quantities: { line.id => 4 }
+    }
+
+    purchase_order = PurchaseOrder.order(:id).last
+    assert_redirected_to orders_purchase_order_path(purchase_order)
+    assert_equal 4, purchase_order.purchase_order_lines.first.quantity_ordered
+    assert_equal "partially_ordered", line.reload.status
+    assert_equal "partially_ordered", request.reload.status
   end
 
   test "create from tbo combines lines from multiple purchase requests" do

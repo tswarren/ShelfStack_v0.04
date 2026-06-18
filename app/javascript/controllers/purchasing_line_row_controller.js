@@ -18,6 +18,11 @@ export default class extends Controller {
     "quantityExpected",
     "quantityReceived",
     "quantityAccepted",
+    "quantityRejected",
+    "acceptingDisplay",
+    "exceptionPanel",
+    "exceptionToggle",
+    "exceptionReason",
     "listPrice",
     "discountBps",
     "unitCost",
@@ -31,18 +36,37 @@ export default class extends Controller {
     vendorFieldId: String,
     purchaseOrderFieldId: String,
     quantityField: String,
-    requireEligible: { type: Boolean, default: false }
+    requireEligible: { type: Boolean, default: false },
+    refreshOnVendorChange: { type: Boolean, default: false }
   }
 
   connect() {
+    this.lastMatch = null
+    this.quantityOnHand = parseInt(this.element.dataset.purchasingLineRowInitialOnHandValue, 10) || 0
+
     if (this.hasVariantIdTarget && this.variantIdTarget.value) {
       this.element.dataset.blankRow = "false"
       if (this.hasLookupInputTarget && !this.lookupInputTarget.value) {
         this.lookupInputTarget.value = this.element.dataset.purchasingLineRowInitialSkuValue || ""
       }
-      if (this.hasTitleTarget && !this.titleTarget.textContent) {
-        this.titleTarget.textContent = this.element.dataset.purchasingLineRowInitialLabelValue || ""
+      const initialReturnability = this.element.dataset.purchasingLineRowInitialReturnabilityValue
+      if (this.hasReturnabilityTarget && initialReturnability) {
+        this.returnabilityTarget.textContent = this.formatReturnability(initialReturnability)
       }
+    }
+
+    if (this.refreshOnVendorChangeValue && this.hasVendorFieldIdValue) {
+      this.vendorChangeHandler = () => this.refreshFromVendorChange()
+      document.getElementById(this.vendorFieldIdValue)?.addEventListener("change", this.vendorChangeHandler)
+    }
+
+    this.reconcileAcceptedDisplay()
+    this.updateInventoryWarnings()
+  }
+
+  disconnect() {
+    if (this.vendorChangeHandler && this.hasVendorFieldIdValue) {
+      document.getElementById(this.vendorFieldIdValue)?.removeEventListener("change", this.vendorChangeHandler)
     }
   }
 
@@ -156,6 +180,8 @@ export default class extends Controller {
     if (this.hasLookupInputTarget) this.lookupInputTarget.value = match.sku
 
     this.updateDisplays(match)
+    this.lastMatch = match
+    this.quantityOnHand = match.quantity_on_hand ?? 0
     this.applyPricingDefaults(match)
     this.applyQuantityDefaults(match)
     this.updateWarnings(match)
@@ -179,7 +205,12 @@ export default class extends Controller {
     if (this.hasOnHandTarget) this.onHandTarget.textContent = match.quantity_on_hand ?? 0
     if (this.hasOnOrderTarget) this.onOrderTarget.textContent = match.quantity_on_order ?? 0
     if (this.hasTboQtyTarget) this.tboQtyTarget.textContent = match.open_tbo_quantity ?? 0
-    if (this.hasReturnabilityTarget) this.returnabilityTarget.textContent = match.returnability_status || "—"
+    if (this.hasReturnabilityTarget) this.returnabilityTarget.textContent = this.formatReturnability(match.returnability_status)
+  }
+
+  formatReturnability(status) {
+    if (!status) return "—"
+    return status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
   }
 
   applyPricingDefaults(match) {
@@ -189,8 +220,11 @@ export default class extends Controller {
     if (this.hasDiscountBpsTarget && !this.discountBpsTarget.value && match.supplier_discount_bps != null) {
       this.discountBpsTarget.value = match.supplier_discount_bps
     }
-    if (this.hasUnitCostTarget && !this.unitCostTarget.value && match.unit_cost_cents != null) {
-      this.unitCostTarget.value = match.unit_cost_cents
+    if (this.hasUnitCostTarget && !this.unitCostTarget.value) {
+      const cost = this.contextValue === "rtv"
+        ? (match.moving_average_unit_cost_cents ?? match.unit_cost_cents)
+        : match.unit_cost_cents
+      if (cost != null) this.unitCostTarget.value = cost
     }
     if (this.hasCreditAmountTarget && !this.creditAmountTarget.value && match.unit_cost_cents != null) {
       const qty = parseInt(this.quantityInput()?.value, 10) || 1
@@ -208,12 +242,11 @@ export default class extends Controller {
     if (this.hasQuantityReceivedTarget && match.quantity_expected != null && !this.quantityReceivedTarget.value) {
       this.quantityReceivedTarget.value = match.quantity_expected
     }
-    if (this.hasQuantityAcceptedTarget && match.quantity_expected != null && !this.quantityAcceptedTarget.value) {
-      this.quantityAcceptedTarget.value = match.quantity_expected
-    }
     if (this.hasQuantityOrderedTarget && !this.quantityOrderedTarget.value) {
       this.quantityOrderedTarget.value = 1
     }
+    this.clearExceptionFields()
+    this.reconcileAcceptedDisplay()
   }
 
   updateWarnings(match) {
@@ -221,7 +254,35 @@ export default class extends Controller {
     const warnings = []
     if (!match.sourcing_record_present) warnings.push("No vendor source")
     if (match.returnability_status === "non_returnable") warnings.push("Non-returnable")
+    if (this.contextValue === "rtv") {
+      const onHand = match.quantity_on_hand ?? this.quantityOnHand ?? 0
+      const qty = parseInt(this.quantityInput()?.value, 10) || 0
+      if (onHand <= 0) warnings.push("Zero on hand")
+      if (qty > onHand) warnings.push("Exceeds on hand")
+    }
     this.warningsTarget.textContent = warnings.join(" · ")
+  }
+
+  updateInventoryWarnings() {
+    if (this.contextValue !== "rtv" || !this.hasWarningsTarget) return
+    if (this.lastMatch) {
+      this.updateWarnings(this.lastMatch)
+      return
+    }
+
+    const warnings = []
+    const onHand = this.quantityOnHand ?? 0
+    const qty = parseInt(this.quantityInput()?.value, 10) || 0
+    const returnability = this.element.dataset.purchasingLineRowInitialReturnabilityValue
+    if (returnability === "non_returnable") warnings.push("Non-returnable")
+    if (onHand <= 0) warnings.push("Zero on hand")
+    if (qty > onHand) warnings.push("Exceeds on hand")
+    this.warningsTarget.textContent = warnings.join(" · ")
+  }
+
+  refreshFromVendorChange() {
+    if (!this.variantIdTarget?.value || !this.lookupInputTarget?.value?.trim()) return
+    this.fetchLookup({ q: this.lookupInputTarget.value.trim(), mode: "exact" })
   }
 
   dispatchCommitted(quantity) {
@@ -245,8 +306,78 @@ export default class extends Controller {
   }
 
   quantityChanged() {
+    this.reconcileAcceptedDisplay()
     this.syncCreditFromCostAndQuantity()
+    this.updateInventoryWarnings()
     this.dispatchRecalculate()
+  }
+
+  exceptionChanged() {
+    this.reconcileAcceptedDisplay()
+    this.dispatchRecalculate()
+  }
+
+  toggleException(event) {
+    event.preventDefault()
+    if (!this.hasExceptionPanelTarget) return
+
+    const visible = this.hasExceptionPanelTarget && !this.exceptionPanelTarget.hidden
+    if (visible) {
+      this.clearExceptionFields()
+      this.reconcileAcceptedDisplay()
+      this.dispatchRecalculate()
+      return
+    }
+
+    this.exceptionPanelTarget.hidden = false
+    if (this.hasExceptionToggleTarget) {
+      this.exceptionToggleTarget.textContent = "Edit exception"
+    }
+    if (this.hasQuantityRejectedTarget && !this.quantityRejectedTarget.value) {
+      this.quantityRejectedTarget.value = 1
+    }
+    if (this.hasExceptionReasonTarget && !this.exceptionReasonTarget.value) {
+      this.exceptionReasonTarget.value = "rejected"
+    }
+    this.reconcileAcceptedDisplay()
+    this.dispatchRecalculate()
+  }
+
+  clearException(event) {
+    if (event) event.preventDefault()
+    this.clearExceptionFields()
+    this.reconcileAcceptedDisplay()
+    this.dispatchRecalculate()
+  }
+
+  clearExceptionFields() {
+    if (this.hasQuantityRejectedTarget) this.quantityRejectedTarget.value = 0
+    if (this.hasExceptionReasonTarget) this.exceptionReasonTarget.value = ""
+    if (this.hasExceptionPanelTarget) this.exceptionPanelTarget.hidden = true
+    if (this.hasExceptionToggleTarget) {
+      this.exceptionToggleTarget.textContent = "Add exception"
+    }
+  }
+
+  reconcileAcceptedDisplay() {
+    if (!this.hasQuantityReceivedTarget) return
+
+    const received = parseInt(this.quantityReceivedTarget.value, 10) || 0
+    let rejected = 0
+    if (this.hasQuantityRejectedTarget) {
+      rejected = Math.min(parseInt(this.quantityRejectedTarget.value, 10) || 0, received)
+      if (this.quantityRejectedTarget.value !== String(rejected)) {
+        this.quantityRejectedTarget.value = rejected
+      }
+    }
+
+    const accepting = Math.max(received - rejected, 0)
+    if (this.hasAcceptingDisplayTarget) {
+      this.acceptingDisplayTarget.textContent = accepting
+    }
+    if (this.hasQuantityAcceptedTarget) {
+      this.quantityAcceptedTarget.value = accepting
+    }
   }
 
   pricingFieldChanged(event) {

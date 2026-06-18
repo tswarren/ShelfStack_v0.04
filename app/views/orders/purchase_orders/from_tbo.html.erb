@@ -1,14 +1,35 @@
 <h1>Build Purchase Order from TBO</h1>
-<p class="ss-muted">Select a vendor, then choose open TBO lines from one or more purchase requests.</p>
+<p class="ss-muted">Review open TBO demand, then build a vendor PO from selected lines.</p>
+
+<div class="ss-actions">
+  <%= link_to "Vendor-first view",
+        from_tbo_orders_purchase_orders_path(@from_tbo_filters.merge(view: "vendor")),
+        class: "ss-btn ss-btn-secondary#{ " ss-btn--active" if @view_mode == "vendor" }" %>
+  <%= link_to "Suggested vendor view",
+        from_tbo_orders_purchase_orders_path(@from_tbo_filters.merge(view: "suggested")),
+        class: "ss-btn ss-btn-secondary#{ " ss-btn--active" if @view_mode == "suggested" }" %>
+</div>
 
 <%= form_with url: from_tbo_orders_purchase_orders_path, method: :get, class: "ss-form-inline" do %>
+  <%= hidden_field_tag :view, @view_mode %>
+  <div class="ss-field">
+    <%= label_tag :department_id, "Department" %>
+    <%= collection_select nil, :department_id, @departments, :id, :name,
+          { selected: @department_id, include_blank: "All departments" },
+          { onchange: "this.form.requestSubmit()" } %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :format_id, "Format" %>
+    <%= collection_select nil, :format_id, @formats, :id, :name,
+          { selected: @format_id, include_blank: "All formats" },
+          { onchange: "this.form.requestSubmit()" } %>
+  </div>
   <div class="ss-field">
     <%= label_tag :vendor_id, "Vendor" %>
     <%= collection_select nil, :vendor_id, @vendors, :id, :name,
-          { selected: @vendor&.id, include_blank: "Select vendor…" },
+          { selected: @vendor&.id, include_blank: @view_mode == "suggested" ? "All vendors (browse)" : "Select vendor…" },
           { onchange: "this.form.requestSubmit()" } %>
   </div>
-
   <% if @vendor.present? %>
     <div class="ss-field">
       <%= check_box_tag :sourced_only, "1", @sourced_only, onchange: "this.form.requestSubmit()" %>
@@ -17,72 +38,76 @@
   <% end %>
 <% end %>
 
-<% if @vendor.blank? %>
-  <p class="ss-muted">Choose a vendor to see available TBO lines.</p>
+<% if @view_mode == "vendor" && @vendor.blank? %>
+  <p class="ss-muted">Choose a vendor to see available TBO lines for that vendor.</p>
 <% elsif @tbo_rows.empty? %>
-  <p class="ss-muted">No open TBO lines match this filter for <%= @vendor.name %>.</p>
-<% else %>
-  <%= form_with url: create_from_tbo_orders_purchase_orders_path, method: :post do %>
-    <%= hidden_field_tag :vendor_id, @vendor.id %>
-
-    <table class="ss-table">
-      <thead>
-        <tr>
-          <th><%= check_box_tag "select_all", "1", false, id: "select_all_tbo_lines" %></th>
-          <th>Request</th>
-          <th>#</th>
-          <th>SKU</th>
-          <th>Variant</th>
-          <th class="ss-num">Qty</th>
-          <th>Reason</th>
-          <th>Sourced</th>
-          <th>Vendor item #</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @tbo_rows.each do |row| %>
-          <% line = row.line %>
-          <% sourcing = row.sourcing %>
-          <tr class="<%= "ss-table-row--highlight" unless sourcing.sourcing_record_present %>">
-            <td>
-              <%= check_box_tag "purchase_request_line_ids[]", line.id, false,
-                    id: "purchase_request_line_#{line.id}",
-                    class: "tbo-line-checkbox" %>
-            </td>
-            <td><%= link_to "##{line.purchase_request_id}", orders_purchase_request_path(line.purchase_request) %></td>
-            <td><%= line.line_number %></td>
-            <td><%= line.product_variant.sku %></td>
-            <td><%= line.product_variant.name %></td>
-            <td class="ss-num"><%= line.requested_quantity %></td>
-            <td><%= line.request_reason || "—" %></td>
-            <td><%= sourcing.sourcing_record_present ? "Yes" : "No" %></td>
-            <td><%= sourcing.vendor_item_number || "—" %></td>
+  <p class="ss-muted">No open TBO lines match this filter.</p>
+<% elsif @view_mode == "suggested" %>
+  <% @tbo_groups.each do |vendor_key, rows| %>
+    <% group_vendor = vendor_key == :unassigned ? nil : Vendor.find_by(id: vendor_key) %>
+    <h2><%= group_vendor&.name || "Unassigned" %></h2>
+    <% if group_vendor.present? %>
+      <%= render "orders/purchase_orders/tbo_table",
+            tbo_rows: rows,
+            vendor: group_vendor,
+            from_tbo_filters: @from_tbo_filters.merge(view: "suggested"),
+            show_suggested: true,
+            form_url: create_from_tbo_orders_purchase_orders_path,
+            form_vendor: group_vendor %>
+    <% else %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Request</th>
+            <th>#</th>
+            <th>Item</th>
+            <th class="ss-num">On hand</th>
+            <th class="ss-num">On order</th>
+            <th class="ss-num">Open TBO</th>
+            <th class="ss-num">Remaining</th>
+            <th>Reason</th>
+            <th>Suggested vendor</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-
-    <div class="ss-field">
-      <%= label_tag :notes, "PO notes" %>
-      <%= text_area_tag :notes, params[:notes] %>
-    </div>
-
-    <div class="ss-actions">
-      <%= submit_tag "Create Draft Purchase Order", class: "ss-btn" %>
-      <%= link_to "Cancel", orders_purchase_orders_path, class: "ss-btn ss-btn-secondary" %>
-    </div>
+        </thead>
+        <tbody>
+          <% rows.each do |row| %>
+            <tr>
+              <td><%= link_to "##{row.line.purchase_request_id}", orders_purchase_request_path(row.line.purchase_request) %></td>
+              <td><%= row.line.line_number %></td>
+              <td><%= render "orders/shared/variant_identity", variant: row.line.product_variant %></td>
+              <td class="ss-num"><%= row.quantity_on_hand %></td>
+              <td class="ss-num"><%= row.quantity_on_order %></td>
+              <td class="ss-num"><%= row.open_tbo_quantity %></td>
+              <td class="ss-num"><%= row.remaining_quantity %></td>
+              <td><%= row.line.request_reason || "—" %></td>
+              <td>Unassigned</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <p class="ss-muted">Add vendor sourcing in Items before ordering unassigned lines.</p>
+    <% end %>
   <% end %>
+<% else %>
+  <%= render "orders/purchase_orders/tbo_table",
+        tbo_rows: @tbo_rows,
+        vendor: @vendor,
+        from_tbo_filters: @from_tbo_filters,
+        show_suggested: false,
+        form_url: create_from_tbo_orders_purchase_orders_path,
+        form_vendor: @vendor %>
 <% end %>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const selectAll = document.getElementById("select_all_tbo_lines");
-    if (!selectAll) return;
-
-    selectAll.addEventListener("change", function () {
-      document.querySelectorAll(".tbo-line-checkbox").forEach(function (checkbox) {
-        checkbox.checked = selectAll.checked;
-      });
-    });
-  });
+    document.querySelectorAll(".select-all-tbo-lines").forEach(function (selectAll) {
+      selectAll.addEventListener("change", function () {
+        const table = selectAll.closest("table")
+        if (!table) return
+        table.querySelectorAll(".tbo-line-checkbox").forEach(function (checkbox) {
+          checkbox.checked = selectAll.checked
+        })
+      })
+    })
+  })
 </script>

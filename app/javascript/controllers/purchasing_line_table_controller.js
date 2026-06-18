@@ -130,10 +130,20 @@ export default class extends Controller {
       if (row.style.display === "none" || row.dataset.blankRow === "true") return
       const expected = row.querySelector("[data-purchasing-line-row-target='quantityExpected']")
       const received = row.querySelector("[data-purchasing-line-row-target='quantityReceived']")
-      const accepted = row.querySelector("[data-purchasing-line-row-target='quantityAccepted']")
-      if (!expected || !received || !accepted) return
+      if (!expected || !received) return
       received.value = expected.value
-      accepted.value = expected.value
+
+      const rejected = row.querySelector("[data-purchasing-line-row-target='quantityRejected']")
+      const reason = row.querySelector("[data-purchasing-line-row-target='exceptionReason']")
+      const panel = row.querySelector("[data-purchasing-line-row-target='exceptionPanel']")
+      const toggle = row.querySelector("[data-purchasing-line-row-target='exceptionToggle']")
+      if (rejected) rejected.value = 0
+      if (reason) reason.value = ""
+      panel.hidden = true
+      if (toggle) toggle.textContent = "Add exception"
+
+      const controller = this.application.getControllerForElementAndIdentifier(row, "purchasing-line-row")
+      controller?.reconcileAcceptedDisplay()
     })
     this.updateTotals()
   }
@@ -162,7 +172,9 @@ export default class extends Controller {
 
       expected += parseInt(row.querySelector("[name*='[quantity_expected]']")?.value, 10) || 0
       received += parseInt(row.querySelector("[name*='[quantity_received]']")?.value, 10) || 0
-      accepted += parseInt(row.querySelector("[name*='[quantity_accepted]']")?.value, 10) || 0
+      const rowReceived = parseInt(row.querySelector("[name*='[quantity_received]']")?.value, 10) || 0
+      const rowRejected = parseInt(row.querySelector("[name*='[quantity_rejected]']")?.value, 10) || 0
+      accepted += Math.max(rowReceived - rowRejected, 0)
     })
 
     if (this.hasTotalUnitsTarget) this.totalUnitsTarget.textContent = units

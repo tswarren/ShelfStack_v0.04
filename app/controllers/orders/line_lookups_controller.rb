@@ -29,7 +29,7 @@ module Orders
     private
 
     def eligible_only_for_context(context)
-      context.to_s == "direct_receive"
+      %w[direct_receive rtv].include?(context.to_s)
     end
   end
 end

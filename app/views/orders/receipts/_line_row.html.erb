@@ -15,6 +15,7 @@
   <%= line_form.hidden_field :id if line_form.object.persisted? %>
   <%= line_form.hidden_field :_destroy, value: false, data: { purchasing_line_table_target: "destroy" } %>
   <%= line_form.hidden_field :purchase_order_line_id, data: { purchasing_line_row_target: "purchaseOrderLineId" } %>
+  <%= line_form.hidden_field :quantity_accepted, data: { purchasing_line_row_target: "quantityAccepted" } %>
 
   <td>
     <input type="text"
@@ -30,8 +31,13 @@
   </td>
   <td data-purchasing-line-row-target="title"><%= variant&.name %></td>
   <td class="ss-num">
-    <%= line_form.number_field :quantity_expected, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
-          data: { purchasing_line_row_target: "quantityExpected", action: "input->purchasing-line-row#quantityChanged" } %>
+    <% if local_assigns.fetch(:po_locked, false) %>
+      <%= line_form.object.quantity_expected %>
+      <%= line_form.hidden_field :quantity_expected, data: { purchasing_line_row_target: "quantityExpected" } %>
+    <% else %>
+      <%= line_form.number_field :quantity_expected, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
+            data: { purchasing_line_row_target: "quantityExpected", action: "input->purchasing-line-row#quantityChanged" } %>
+    <% end %>
   </td>
   <td class="ss-num">
     <%= line_form.number_field :quantity_received, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
@@ -40,11 +46,38 @@
             action: "keydown->purchasing-line-row#quantityKeydown input->purchasing-line-row#quantityChanged"
           } %>
   </td>
-  <td class="ss-num">
-    <%= line_form.number_field :quantity_accepted, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
-          data: { purchasing_line_row_target: "quantityAccepted", action: "input->purchasing-line-row#quantityChanged" } %>
+  <td class="ss-num" data-purchasing-line-row-target="acceptingDisplay"><%= line_form.object.quantity_accepted %></td>
+  <td class="ss-purchasing-table__exception">
+    <% has_exception = line_form.object.quantity_rejected.to_i.positive? %>
+    <button type="button"
+            class="ss-btn-link"
+            data-purchasing-line-row-target="exceptionToggle"
+            data-action="purchasing-line-row#toggleException">
+      <%= has_exception ? "Edit exception" : "Add exception" %>
+    </button>
+    <div data-purchasing-line-row-target="exceptionPanel"
+         class="ss-purchasing-table__exception-panel"
+         <%= "hidden" unless has_exception %>>
+      <%= line_form.number_field :quantity_rejected, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
+            data: {
+              purchasing_line_row_target: "quantityRejected",
+              action: "input->purchasing-line-row#exceptionChanged"
+            } %>
+      <%= line_form.select :exception_reason,
+            options_for_select(
+              ReceiptLine::EXCEPTION_REASONS.map { |reason| [ reason.humanize, reason ] },
+              line_form.object.exception_reason
+            ),
+            { include_blank: "Reason…" },
+            class: "ss-input",
+            data: { purchasing_line_row_target: "exceptionReason", action: "change->purchasing-line-row#exceptionChanged" } %>
+      <button type="button"
+              class="ss-btn-link"
+              data-action="purchasing-line-row#clearException">
+        Remove
+      </button>
+    </div>
   </td>
-  <%= line_form.hidden_field :quantity_rejected, value: line_form.object.quantity_rejected || 0 %>
   <td class="ss-num">
     <%= line_form.number_field :unit_cost_cents, min: 0, step: 1, class: "ss-input ss-purchasing-table__money",
           data: { purchasing_line_row_target: "unitCost", action: "input->purchasing-line-row#quantityChanged" } %>

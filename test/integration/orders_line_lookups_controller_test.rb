@@ -31,4 +31,17 @@ class OrdersLineLookupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "HTTP-VEND-1", body["matches"].first["vendor_item_number"]
     assert body["matches"].first["sourcing_record_present"]
   end
+
+  test "rtv context filters ineligible variants" do
+    ineligible = create_product_variant!(
+      sub_department: @variant.sub_department,
+      inventory_behavior: "non_inventory",
+      sku: "NONINV-RTV-LOOKUP"
+    )
+
+    get orders_line_lookup_path, params: { q: ineligible.sku, vendor_id: @vendor.id, context: "rtv" }
+
+    body = JSON.parse(response.body)
+    assert_equal "ineligible", body["status"]
+  end
 end

@@ -9,6 +9,7 @@ class PurchaseRequestLine < ApplicationRecord
 
   belongs_to :purchase_request
   belongs_to :product_variant
+  has_one :purchase_order_line, dependent: :nullify
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates_nested_line_number_uniqueness :purchase_request, foreign_key: :purchase_request_id
@@ -26,6 +27,25 @@ class PurchaseRequestLine < ApplicationRecord
       .where(purchase_requests: { store_id: store.id })
       .where.not(purchase_requests: { status: PurchaseRequest::CLOSED_STATUSES })
   }
+
+  def ordered_quantity
+    self.class.ordered_quantities_for([ id ]).fetch(id, 0)
+  end
+
+  def remaining_quantity
+    requested_quantity - ordered_quantity
+  end
+
+  def self.ordered_quantities_for(line_ids)
+    return {} if line_ids.blank?
+
+    PurchaseOrderLine
+      .joins(:purchase_order)
+      .where(purchase_request_line_id: line_ids)
+      .where.not(purchase_orders: { status: "cancelled" })
+      .group(:purchase_request_line_id)
+      .sum(:quantity_ordered)
+  end
 
   private
 

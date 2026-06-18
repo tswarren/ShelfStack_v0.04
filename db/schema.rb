@@ -498,6 +498,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "product_variant_id", null: false
     t.bigint "product_variant_vendor_id"
     t.bigint "purchase_order_id", null: false
+    t.bigint "purchase_request_line_id"
     t.integer "quantity_ordered", null: false
     t.integer "quantity_received", default: 0, null: false
     t.string "returnability_status_snapshot"
@@ -514,6 +515,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_variant_vendor_id"], name: "index_purchase_order_lines_on_product_variant_vendor_id"
     t.index ["purchase_order_id", "line_number"], name: "idx_purchase_order_lines_order_line_number", unique: true
     t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
+    t.index ["purchase_request_line_id"], name: "index_purchase_order_lines_on_purchase_request_line_id"
     t.index ["vendor_id"], name: "index_purchase_order_lines_on_vendor_id"
     t.check_constraint "quantity_ordered > 0", name: "chk_purchase_order_lines_quantity_ordered"
     t.check_constraint "quantity_received >= 0", name: "chk_purchase_order_lines_quantity_received"
@@ -563,6 +565,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
 
   create_table "receipt_lines", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "exception_reason"
     t.integer "line_number", null: false
     t.bigint "product_variant_id", null: false
     t.bigint "purchase_order_line_id"
@@ -965,6 +968,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "purchase_order_lines", "product_variant_vendors"
   add_foreign_key "purchase_order_lines", "product_variants"
   add_foreign_key "purchase_order_lines", "purchase_orders"
+  add_foreign_key "purchase_order_lines", "purchase_request_lines"
   add_foreign_key "purchase_order_lines", "vendors"
   add_foreign_key "purchase_orders", "stores"
   add_foreign_key "purchase_orders", "users", column: "submitted_by_user_id"

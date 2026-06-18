@@ -40,7 +40,9 @@ class OrdersPurchaseRequestsControllerTest < ActionDispatch::IntegrationTest
   test "create purchase order builds draft po and marks request lines added_to_po" do
     post create_purchase_order_orders_purchase_request_path(@purchase_request), params: {
       vendor_id: @vendor.id,
-      notes: "From TBO"
+      notes: "From TBO",
+      purchase_request_line_ids: [ @request_line.id ],
+      line_quantities: { @request_line.id => 4 }
     }
 
     purchase_order = PurchaseOrder.order(:id).last

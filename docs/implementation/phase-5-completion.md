@@ -31,8 +31,8 @@ Migration: `db/migrate/20250620120000_create_phase5_purchasing_and_receiving.rb`
 | `product_variant_vendors` | Variant-level vendor overrides |
 | `vendor_terms` | Vendor payment terms |
 | `purchase_requests` / `purchase_request_lines` | TBO demand (no inventory impact) |
-| `purchase_orders` / `purchase_order_lines` | Committed vendor orders with snapshots |
-| `receipts` / `receipt_lines` | Receiving workflow |
+| `purchase_orders` / `purchase_order_lines` | Committed vendor orders with snapshots; optional `purchase_request_line_id` links TBO lines |
+| `receipts` / `receipt_lines` | Receiving workflow; `exception_reason` on receipt lines for exception-first UX |
 | `receiving_discrepancies` | Over/short/damage tracking |
 | `returns_to_vendor` / `return_to_vendor_lines` | Vendor returns |
 | `product_variants.returnability_status` | Variant default returnability |
@@ -55,7 +55,13 @@ Migration: `db/migrate/20250620120000_create_phase5_purchasing_and_receiving.rb`
 | `Purchasing::LineLookup` | Purchasing-aware scan/search (SKU, ISBN, vendor item #, PO line in receive context) |
 | `Purchasing::LineLookupPresenter` | Enriched lookup JSON (sourcing, on-hand, on-order, TBO, costs) |
 | `Purchasing::BuildableTboLinesQuery` | Open TBO lines for vendor-first PO building |
+| `Purchasing::TboQueueRowBuilder` | TBO queue rows with on-hand, on-order, remaining qty, filters |
+| `Purchasing::SuggestedVendorResolver` | Preferred vendor suggestion per variant for TBO grouping |
 | `Purchasing::BuildReceiptFromPurchaseOrder` | Draft PO-backed receipt with open lines preloaded |
+| `Purchasing::PurchaseOrderSummary` | PO show totals (units, cost, retail, net discount) |
+| `Purchasing::PurchaseOrderDocumentHub` | PO show cross-refs (TBO, receipts, discrepancies, line activity) |
+| `Purchasing::ReceiptDocumentHub` | Receipt show cross-refs (PO alignment, discrepancies, posting) |
+| `Purchasing::PurchaseRequestDocumentHub` | Purchase request show cross-refs (linked POs per line) |
 | `Purchasing::PostReceipt` | Post accepted qty via `Inventory::Post` (`receiving`) |
 | `Purchasing::MovingAverageCost` | Update balance MAC on receive |
 | `Purchasing::PostReturnToVendor` | Post vendor return via `Inventory::Post` (`vendor_return`) |
@@ -72,11 +78,14 @@ Extended Phase 4 services:
 
 - Home with cards for purchase requests, purchase orders, receipts, returns to vendor
 - Purchase request list/create/show/cancel
-- Purchase order draft/edit/submit/show/**close**/**receive**
-- Purchase order **Build from TBO** (multi-request vendor workbench)
-- Receipt draft/post workflow (PO-backed and direct); **Receive** from PO preloads open lines
+- Purchase order draft/edit/submit/show/**close**/**receive** with **document hub** (receive progress, related TBO/receipts, discrepancies, line activity)
+- Purchase request show with **document hub** (linked purchase orders per line)
+- Receipt show with **document hub** (PO alignment, discrepancies, inventory posting)
+- Purchase order **Build from TBO** (multi-request vendor workbench with on-hand/on-order columns, editable order qty, department/format filters, suggested-vendor grouping, inline sourcing links)
+- Receipt draft/post workflow (PO-backed and direct); **exception-first receiving** (received qty primary, optional exception qty/reason, derived accepting); **Receive** from PO preloads open lines
 - Return to vendor draft/post workflow
 - **Purchasing line table** workpad on PO, receipt, and RTV forms (scan entry, totals, duplicate merge)
+- RTV workpad is **inventory-aware**: on-hand and returnability per line, `rtv` lookup context, vendor-change refresh, qty vs on-hand warnings (posting still allows negative on-hand per Phase 4)
 - `GET /orders/line_lookup` — enriched purchasing line lookup API
 - `orders.access` permission gate and locked-out page
 
@@ -88,7 +97,7 @@ Extended Phase 4 services:
 - Items selling tab: Mark TBO per variant row
 - Inventory balances: shortcuts into Orders, on-order/pending columns, zero/low stock filters, Mark TBO
 - Inventory negative on-hand: Mark TBO link
-- Items Display tab: product vendor sourcing list with Setup links
+- Items Display tab: product vendor sourcing list with Setup links; **variant vendor overrides** with add/edit from Items (returns to display tab)
 - PO forms/show: sourcing warnings when lines lack vendor sourcing records
 
 ### Permissions and audit
@@ -145,7 +154,7 @@ Per roadmap:
 ## Known Gaps / Follow-ups
 
 * Vendor terms setup UI is schema-only (no CRUD screens yet)
-* Receiving discrepancy UI is service-backed but minimal in Orders views
+* Receiving discrepancy resolution workflow (record display on document hubs; no resolution UI yet)
 * Dollar/percent form inputs for list price and discount (cents/bps in table cells for now)
 * Reserved / special-order quantities not shown on Items surfaces yet
 * Items index search results do not include stock or on-order columns

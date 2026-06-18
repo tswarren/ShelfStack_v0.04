@@ -89,4 +89,58 @@
       <% end %>
     <% end %>
   </section>
+
+  <section class="ss-item-display-section">
+    <h3>Variant vendor overrides</h3>
+    <% if item.variants.any? %>
+      <% if defined?(@variant_vendor_overrides) && @variant_vendor_overrides.any? %>
+        <table class="ss-table">
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>Vendor</th>
+              <th>Item #</th>
+              <th>Discount</th>
+              <th>Returnability</th>
+              <th>Preferred</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @variant_vendor_overrides.each do |variant_vendor| %>
+              <tr class="<%= "ss-table-row--highlight" if local_assigns[:highlight_variant]&.id == variant_vendor.product_variant_id %>">
+                <td><%= variant_vendor.product_variant.sku %></td>
+                <td><%= variant_vendor.vendor.name %></td>
+                <td><%= variant_vendor.vendor_item_number || "—" %></td>
+                <td><%= variant_vendor.supplier_discount_bps ? format_basis_points(variant_vendor.supplier_discount_bps) : "—" %></td>
+                <td><%= variant_vendor.returnability_status ? humanize_controlled_value(variant_vendor.returnability_status) : "—" %></td>
+                <td><%= variant_vendor.preferred? ? "Yes" : "No" %></td>
+                <td>
+                  <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.update", store: current_store) %>
+                    <%= link_to "Edit", edit_items_product_variant_product_variant_vendor_path(variant_vendor.product_variant, variant_vendor) %>
+                  <% else %>
+                    <%= link_to "View", setup_product_variant_vendor_path(variant_vendor) %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="ss-muted">No variant-level vendor overrides yet. Product-level vendors may still apply.</p>
+      <% end %>
+
+      <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.create", store: current_store) %>
+        <div class="ss-catalog-actions">
+          <% item.variants.each do |variant| %>
+            <%= link_to "Add vendor for #{variant.sku}",
+                  new_items_product_variant_product_variant_vendor_path(variant),
+                  class: "ss-btn ss-btn-secondary" %>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="ss-muted">Add sellable SKUs before creating variant vendor overrides.</p>
+    <% end %>
+  </section>
 <% end %>

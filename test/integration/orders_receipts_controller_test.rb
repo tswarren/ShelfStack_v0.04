@@ -75,4 +75,30 @@ class OrdersReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 8, @line.reload.quantity_received
     assert_equal 1, @receipt.receipt_lines.count
   end
+
+  test "update applies exception quantity and reason" do
+    patch orders_receipt_path(@receipt), params: {
+      receipt: {
+        vendor_id: @vendor.id,
+        receipt_type: "direct",
+        receipt_lines_attributes: {
+          "0" => {
+            id: @line.id,
+            product_variant_id: @variant.id,
+            quantity_expected: 0,
+            quantity_received: 10,
+            quantity_accepted: 0,
+            quantity_rejected: 2,
+            exception_reason: "damaged"
+          }
+        }
+      }
+    }
+
+    assert_redirected_to orders_receipt_path(@receipt)
+    @line.reload
+    assert_equal 8, @line.quantity_accepted
+    assert_equal 2, @line.quantity_rejected
+    assert_equal "damaged", @line.exception_reason
+  end
 end

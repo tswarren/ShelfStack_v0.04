@@ -1,0 +1,16 @@
+<%# locals: progress %>
+<% if progress.present? %>
+  <div class="ss-summary">
+    <h2>Receive Progress</h2>
+    <dl>
+      <dt>Ordered</dt><dd class="ss-num"><%= progress.ordered %></dd>
+      <dt>Received</dt><dd class="ss-num"><%= progress.received %></dd>
+      <dt>Open</dt><dd class="ss-num"><%= progress.open %></dd>
+      <dt>Summary</dt>
+      <dd>
+        <%= progress.received %> of <%= progress.ordered %> units received;
+        <%= progress.open %> open
+      </dd>
+    </dl>
+  </div>
+<% end %>

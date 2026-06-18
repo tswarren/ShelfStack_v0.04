@@ -1,6 +1,6 @@
 <h1><%= return_to_vendor.persisted? ? "Edit" : "New" %> Return to Vendor</h1>
 
-<%= form_with model: return_to_vendor, url: (return_to_vendor.persisted? ? orders_return_to_vendor_path(return_to_vendor) : orders_returns_to_vendor_path) do |f| %>
+<%= form_with model: return_to_vendor, url: (return_to_vendor.persisted? ? orders_returns_to_vendor_path(return_to_vendor) : orders_returns_to_vendor_index_path) do |f| %>
   <% if return_to_vendor.errors.any? %>
     <div class="ss-errors"><%= return_to_vendor.errors.full_messages.to_sentence %></div>
   <% end %>
@@ -8,6 +8,7 @@
   <div class="ss-field">
     <%= f.label :vendor_id, "Vendor" %>
     <%= f.collection_select :vendor_id, @vendors, :id, :name, { include_blank: true }, { id: "return_to_vendor_vendor_id" } %>
+    <p class="ss-hint">Select vendor before scanning. Changing vendor refreshes returnability on existing lines.</p>
   </div>
 
   <div class="ss-field">
@@ -21,15 +22,15 @@
         line_object: ReturnToVendorLine.new,
         line_partial: "orders/returns_to_vendor/line_row",
         store: orders_store,
-        line_locals: { vendor_field_id: "return_to_vendor_vendor_id" },
-        lookup_context: "direct_receive",
+        line_locals: { vendor_field_id: "return_to_vendor_vendor_id", vendor: return_to_vendor.vendor },
+        lookup_context: "rtv",
         vendor_field_id: "return_to_vendor_vendor_id",
         quantity_field: "quantity",
         cost_mode: "credit",
         footer_mode: "rtv",
         table_headers: [
           { label: "Scan" },
-          { label: "Variant" },
+          { label: "Item" },
           { label: "On hand", class: "ss-num" },
           { label: "Returnability" },
           { label: "Qty", class: "ss-num" },

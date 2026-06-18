@@ -16,6 +16,7 @@ module Orders
     end
 
     def show
+      @document_hub = Purchasing::ReceiptDocumentHub.call(@receipt)
       @audit_events = AuditEvent.for_auditable(@receipt).limit(50)
     end
 
@@ -84,7 +85,15 @@ module Orders
     private
 
     def set_receipt
-      @receipt = Receipt.where(store: orders_store).find(params[:id])
+      relation = Receipt.where(store: orders_store)
+      if action_name == "show"
+        relation = relation.includes(
+          :purchase_order,
+          :inventory_posting,
+          receipt_lines: [ :product_variant, :purchase_order_line, :receiving_discrepancies ]
+        )
+      end
+      @receipt = relation.find(params[:id])
     end
 
     def load_form_collections
@@ -118,7 +127,7 @@ module Orders
         :receipt_type,
         receipt_lines_attributes: %i[
           id line_number product_variant_id purchase_order_line_id
-          quantity_expected quantity_received quantity_accepted quantity_rejected
+          quantity_expected quantity_received quantity_accepted quantity_rejected exception_reason
           unit_list_price_cents supplier_discount_bps unit_cost_cents _destroy
         ]
       )

@@ -34,7 +34,13 @@ Matrix mapping [phase-5-test-plan.md](../specifications/phase-5-test-plan.md) re
 | `Purchasing::LineLookup` | `test/services/purchasing/line_lookup_test.rb` | Covered |
 | `Purchasing::LineLookupPresenter` | `test/services/purchasing/line_lookup_presenter_test.rb` | Covered |
 | `Purchasing::BuildableTboLinesQuery` | `test/services/purchasing/buildable_tbo_lines_query_test.rb` | Covered |
+| `Purchasing::TboQueueRowBuilder` | `test/services/purchasing/tbo_queue_row_builder_test.rb` | Covered |
+| `Purchasing::SuggestedVendorResolver` | `test/services/purchasing/suggested_vendor_resolver_test.rb` | Covered |
 | `Purchasing::BuildReceiptFromPurchaseOrder` | `test/services/purchasing/build_receipt_from_purchase_order_test.rb` | Covered |
+| `Purchasing::PurchaseOrderSummary` | `test/services/purchasing/purchase_order_summary_test.rb` | Covered |
+| `Purchasing::PurchaseOrderDocumentHub` | `test/services/purchasing/purchase_order_document_hub_test.rb` | Covered |
+| `Purchasing::ReceiptDocumentHub` | `test/services/purchasing/receipt_document_hub_test.rb` | Covered |
+| `Purchasing::PurchaseRequestDocumentHub` | `test/services/purchasing/purchase_request_document_hub_test.rb` | Covered |
 
 ## Authorization
 
@@ -59,7 +65,12 @@ Matrix mapping [phase-5-test-plan.md](../specifications/phase-5-test-plan.md) re
 | Purchasing line lookup API | `test/integration/orders_line_lookups_controller_test.rb` | Covered |
 | TBO build PO / from_tbo | `orders_purchase_requests_controller_test`, `orders_purchase_orders_controller_test` | Covered |
 | Purchasing workbench UI | `test/integration/orders_purchasing_workbench_integration_test.rb` | Covered |
-| Receipt controller flows | `test/integration/orders_receipts_controller_test.rb` | Covered |
+| Orders document hub show pages | `test/integration/orders_document_hub_integration_test.rb` | Covered |
+| RTV inventory-aware workpad | `orders_returns_to_vendor_controller_test`, `orders_line_lookups_controller_test` | Covered |
+| Receipt line exception_reason | `test/models/receipt_line_test.rb` | Covered |
+| Receipt exception-first controller | `test/integration/orders_receipts_controller_test.rb` | Covered |
+| TBO partial qty / suggested view / queue columns | `orders_purchase_orders_controller_test` | Covered |
+| Items variant vendor return to from_tbo | `items_product_variant_vendors_controller_test` | Covered |
 
 ## Seeds
 

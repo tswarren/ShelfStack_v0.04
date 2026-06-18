@@ -3,6 +3,8 @@
 class ReceiptLine < ApplicationRecord
   include NestedLineNumberUniqueness
 
+  EXCEPTION_REASONS = %w[rejected damaged other].freeze
+
   belongs_to :receipt
   belongs_to :product_variant
   belongs_to :purchase_order_line, optional: true
@@ -22,8 +24,10 @@ class ReceiptLine < ApplicationRecord
   validate :product_variant_must_be_active
   validate :accepted_plus_rejected_cannot_exceed_received
   validate :purchase_order_line_must_match
+  validates :exception_reason, inclusion: { in: EXCEPTION_REASONS }, allow_nil: true
 
   before_validation :assign_line_number, on: :create
+  before_validation :normalize_exception_fields, if: :receipt_draft?
   before_validation :reconcile_quantities, if: :receipt_draft?
   before_validation :apply_price_defaults, if: :receipt_draft?
 
@@ -35,6 +39,14 @@ class ReceiptLine < ApplicationRecord
 
   def apply_price_defaults
     Purchasing::LinePriceDefaults.apply!(self)
+  end
+
+  def normalize_exception_fields
+    if quantity_rejected.to_i.zero?
+      self.exception_reason = nil
+    elsif exception_reason.blank?
+      self.exception_reason = "rejected"
+    end
   end
 
   def reconcile_quantities

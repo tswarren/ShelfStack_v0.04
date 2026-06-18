@@ -62,4 +62,46 @@ class ReceiptLineTest < ActiveSupport::TestCase
     assert line.valid?
     assert_equal 2, line.quantity_accepted
   end
+
+  test "clears exception_reason when rejected is zero" do
+    line = @receipt.receipt_lines.build(
+      product_variant: @variant,
+      quantity_expected: 0,
+      quantity_received: 5,
+      quantity_accepted: 0,
+      quantity_rejected: 0,
+      exception_reason: "damaged"
+    )
+
+    assert line.valid?
+    assert_nil line.exception_reason
+  end
+
+  test "defaults exception_reason when rejected is positive" do
+    line = @receipt.receipt_lines.build(
+      product_variant: @variant,
+      quantity_expected: 0,
+      quantity_received: 5,
+      quantity_accepted: 0,
+      quantity_rejected: 2
+    )
+
+    assert line.valid?
+    assert_equal "rejected", line.exception_reason
+    assert_equal 3, line.quantity_accepted
+  end
+
+  test "validates exception_reason inclusion" do
+    line = @receipt.receipt_lines.build(
+      product_variant: @variant,
+      quantity_expected: 0,
+      quantity_received: 5,
+      quantity_accepted: 0,
+      quantity_rejected: 1,
+      exception_reason: "invalid"
+    )
+
+    assert_not line.valid?
+    assert_includes line.errors[:exception_reason], "is not included in the list"
+  end
 end

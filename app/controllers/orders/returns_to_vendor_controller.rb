@@ -32,7 +32,7 @@ module Orders
 
       if @return_to_vendor.save
         record_audit!("return_to_vendor.created", @return_to_vendor)
-        redirect_to orders_return_to_vendor_path(@return_to_vendor), notice: "Draft return to vendor created."
+        redirect_to orders_returns_to_vendor_path(@return_to_vendor), notice: "Draft return to vendor created."
       else
         load_form_collections
         render :new, status: :unprocessable_entity
@@ -40,19 +40,19 @@ module Orders
     end
 
     def edit
-      redirect_to orders_return_to_vendor_path(@return_to_vendor), alert: "Posted returns cannot be edited." unless @return_to_vendor.draft?
+      redirect_to orders_returns_to_vendor_path(@return_to_vendor), alert: "Posted returns cannot be edited." unless @return_to_vendor.draft?
       load_form_collections
     end
 
     def update
       unless @return_to_vendor.draft?
-        redirect_to orders_return_to_vendor_path(@return_to_vendor), alert: "Posted returns cannot be edited."
+        redirect_to orders_returns_to_vendor_path(@return_to_vendor), alert: "Posted returns cannot be edited."
         return
       end
 
       if @return_to_vendor.update(return_to_vendor_params)
         record_audit!("return_to_vendor.updated", @return_to_vendor)
-        redirect_to orders_return_to_vendor_path(@return_to_vendor), notice: "Draft return to vendor updated."
+        redirect_to orders_returns_to_vendor_path(@return_to_vendor), notice: "Draft return to vendor updated."
       else
         load_form_collections
         render :edit, status: :unprocessable_entity
@@ -61,14 +61,14 @@ module Orders
 
     def post
       Purchasing::PostReturnToVendor.call(return_to_vendor: @return_to_vendor, posted_by_user: current_user)
-      redirect_to orders_return_to_vendor_path(@return_to_vendor), notice: "Return to vendor posted."
+      redirect_to orders_returns_to_vendor_path(@return_to_vendor), notice: "Return to vendor posted."
     rescue Purchasing::PostReturnToVendor::PostingError => e
-      redirect_to orders_return_to_vendor_path(@return_to_vendor), alert: e.message
+      redirect_to orders_returns_to_vendor_path(@return_to_vendor), alert: e.message
     end
 
     def cancel
       unless @return_to_vendor.draft?
-        redirect_to orders_return_to_vendor_path(@return_to_vendor), alert: "Only draft returns can be cancelled."
+        redirect_to orders_returns_to_vendor_path(@return_to_vendor), alert: "Only draft returns can be cancelled."
         return
       end
 

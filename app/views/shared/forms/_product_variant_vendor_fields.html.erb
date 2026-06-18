@@ -1,0 +1,41 @@
+<% if product_variant_vendor.errors.any? %>
+  <div class="ss-errors"><%= product_variant_vendor.errors.full_messages.to_sentence %></div>
+<% end %>
+
+<% if local_assigns.fetch(:lock_variant, false) %>
+  <%= f.hidden_field :product_variant_id %>
+  <div class="ss-field">
+    <span class="ss-label">Variant</span>
+    <p><%= product_variant_vendor.product_variant&.sku %> — <%= product_variant_vendor.product_variant&.name %></p>
+  </div>
+<% else %>
+  <div class="ss-field">
+    <%= f.label :product_variant_id, "Variant" %>
+    <%= f.collection_select :product_variant_id, @product_variants, :id, :sku, include_blank: true %>
+  </div>
+<% end %>
+
+<div class="ss-field">
+  <%= f.label :vendor_id, "Vendor" %>
+  <%= f.collection_select :vendor_id, @vendors, :id, :name, include_blank: true %>
+</div>
+<div class="ss-field">
+  <%= f.label :vendor_item_number %>
+  <%= f.text_field :vendor_item_number %>
+</div>
+<div class="ss-field">
+  <%= f.label :supplier_discount_bps, "Supplier discount (bps)" %>
+  <%= f.number_field :supplier_discount_bps, min: 0, max: 10_000 %>
+</div>
+<div class="ss-field">
+  <%= f.label :returnability_status %>
+  <%= f.select :returnability_status, @returnability_options.map { |s| [humanize_controlled_value(s), s] }, include_blank: true %>
+</div>
+<div class="ss-field">
+  <%= f.label :preferred %>
+  <%= f.check_box :preferred %>
+</div>
+<div class="ss-field">
+  <%= f.label :active %>
+  <%= f.check_box :active %>
+</div>

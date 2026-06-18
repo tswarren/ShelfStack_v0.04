@@ -16,6 +16,7 @@ module Orders
     end
 
     def show
+      @document_hub = Purchasing::PurchaseRequestDocumentHub.call(@purchase_request)
       @audit_events = AuditEvent.for_auditable(@purchase_request).limit(50)
       @buildable = @purchase_request.buildable?
     end
@@ -26,7 +27,17 @@ module Orders
         return
       end
 
-      @buildable_lines = @purchase_request.buildable_lines
+      @buildable_lines = @purchase_request.buildable_lines.filter_map do |line|
+        remaining = line.remaining_quantity
+        next if remaining <= 0
+
+        OpenStruct.new(line: line, remaining_quantity: remaining)
+      end
+
+      if @buildable_lines.empty?
+        redirect_to orders_purchase_request_path(@purchase_request), alert: "No lines have remaining quantity to order."
+        return
+      end
       @vendors = Vendor.active_records.order(:name)
       @notes = @purchase_request.notes
     end
@@ -43,13 +54,23 @@ module Orders
         return
       end
 
-      lines = @purchase_request.buildable_lines
+      line_ids = Array(params[:purchase_request_line_ids]).map(&:to_i).uniq
+      lines = @purchase_request.purchase_request_lines.where(id: line_ids).select do |line|
+        PurchaseRequest::BUILDABLE_LINE_STATUSES.include?(line.status) && line.remaining_quantity.positive?
+      end
+
+      if lines.empty?
+        redirect_to build_purchase_order_orders_purchase_request_path(@purchase_request), alert: "No lines are ready to add to a purchase order."
+        return
+      end
+
       purchase_order = Purchasing::BuildPurchaseOrder.call(
         store: orders_store,
         vendor: vendor,
         created_by_user: current_user,
         purchase_request_lines: lines,
-        notes: params[:notes].presence
+        notes: params[:notes].presence,
+        line_quantities: params.fetch(:line_quantities, {}).to_unsafe_h
       )
       PurchaseRequest.refresh_statuses_for_lines!(lines)
 
@@ -115,7 +136,13 @@ module Orders
     private
 
     def set_purchase_request
-      @purchase_request = PurchaseRequest.where(store: orders_store).find(params[:id])
+      relation = PurchaseRequest.where(store: orders_store)
+      if action_name == "show"
+        relation = relation.includes(
+          purchase_request_lines: [ :product_variant, { purchase_order_line: :purchase_order } ]
+        )
+      end
+      @purchase_request = relation.find(params[:id])
     end
 
     def purchase_request_closed?(purchase_request)

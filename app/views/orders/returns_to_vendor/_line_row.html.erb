@@ -5,10 +5,15 @@
     data-purchasing-line-row-vendor-field-id-value="<%= vendor_field_id %>"
     data-purchasing-line-row-quantity-field-value="<%= quantity_field %>"
     data-purchasing-line-row-require-eligible-value="true"
+    data-purchasing-line-row-refresh-on-vendor-change-value="true"
     data-blank-row="<%= blank_row ? "true" : "false" %>"
     <% if variant %>
     data-purchasing-line-row-initial-sku-value="<%= variant.sku %>"
     data-purchasing-line-row-initial-variant-id-value="<%= variant.id %>"
+    data-purchasing-line-row-initial-on-hand-value="<%= balance&.quantity_on_hand || 0 %>"
+    <% if local_assigns[:vendor].present? %>
+    data-purchasing-line-row-initial-returnability-value="<%= Purchasing::ReturnabilityResolver.resolve(variant: variant, vendor: local_assigns[:vendor]) %>"
+    <% end %>
     <% end %>>
   <%= line_form.hidden_field :id if line_form.object.persisted? %>
   <%= line_form.hidden_field :_destroy, value: false, data: { purchasing_line_table_target: "destroy" } %>
@@ -25,9 +30,21 @@
     <div data-purchasing-line-row-target="choices" class="ss-purchasing-table__choices"></div>
     <p class="ss-hint" data-purchasing-line-row-target="message"></p>
   </td>
-  <td data-purchasing-line-row-target="title"><%= variant&.name %></td>
+  <td>
+    <% if variant %>
+      <%= render "orders/shared/variant_identity", variant: variant %>
+    <% else %>
+      <span data-purchasing-line-row-target="title"></span>
+    <% end %>
+  </td>
   <td class="ss-num" data-purchasing-line-row-target="onHand"><%= balance&.quantity_on_hand || 0 %></td>
-  <td data-purchasing-line-row-target="returnability">—</td>
+  <td data-purchasing-line-row-target="returnability">
+    <% if variant && local_assigns[:vendor].present? %>
+      <%= Purchasing::ReturnabilityResolver.resolve(variant: variant, vendor: local_assigns[:vendor]).humanize %>
+    <% else %>
+      —
+    <% end %>
+  </td>
   <td class="ss-num">
     <%= line_form.number_field :quantity, min: 1, step: 1, class: "ss-input ss-purchasing-table__qty",
           data: {

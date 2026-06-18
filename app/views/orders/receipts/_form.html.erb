@@ -36,7 +36,8 @@
         store: orders_store,
         line_locals: {
           vendor_field_id: "receipt_vendor_id",
-          purchase_order_field_id: "receipt_purchase_order_id"
+          purchase_order_field_id: "receipt_purchase_order_id",
+          po_locked: po_locked
         },
         lookup_context: lookup_context,
         vendor_field_id: "receipt_vendor_id",
@@ -47,10 +48,11 @@
         show_receive_all: po_locked,
         table_headers: [
           { label: "Scan" },
-          { label: "Variant" },
+          { label: "Item" },
           { label: "Expected", class: "ss-num" },
           { label: "Received", class: "ss-num" },
-          { label: "Accepted", class: "ss-num" },
+          { label: "Accepting", class: "ss-num" },
+          { label: "Exception" },
           { label: "Cost ¢", class: "ss-num" },
           { label: "Warnings" },
           { label: "" }

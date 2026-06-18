@@ -9,6 +9,7 @@ class PurchaseOrderLine < ApplicationRecord
   belongs_to :product_variant
   belongs_to :vendor
   belongs_to :product_variant_vendor, optional: true
+  belongs_to :purchase_request_line, optional: true
 
   has_many :receipt_lines, dependent: :restrict_with_error
 

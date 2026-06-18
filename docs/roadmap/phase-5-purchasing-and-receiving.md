@@ -142,6 +142,8 @@ closed
 
 TBO does not affect inventory.
 
+The **Build from TBO** queue supports vendor-first and suggested-vendor views, on-hand/on-order context, editable order quantities (partial PO builds), department/format filters, and inline sourcing creation from unsourced rows.
+
 **Purchase Orders**
 
 PO lines may reference either:
@@ -201,6 +203,8 @@ quantity_rejected
 ```
 
 Only `quantity_accepted` posts to inventory.
+
+Receiving workpad UX is **exception-first**: staff enter received quantity; accepting is derived unless an explicit exception (rejected/damaged/other label on `quantity_rejected`) is recorded.
 
 Receiving creates:
 

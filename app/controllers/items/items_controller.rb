@@ -45,6 +45,8 @@ module Items
           &.order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc) || []
       when "selling"
         @variants = @item.variants
+      when "display"
+        load_display_vendor_data
       when "activity"
         @audit_events = merged_audit_events
       end
@@ -75,6 +77,17 @@ module Items
         store: current_store,
         variant_ids: @item.variants.map(&:id)
       )
+    end
+
+    def load_display_vendor_data
+      return if @item.product.blank?
+
+      variant_ids = @item.variants.map(&:id)
+      @variant_vendor_overrides = ProductVariantVendor
+        .includes(:vendor, :product_variant)
+        .joins(:product_variant, :vendor)
+        .where(product_variant_id: variant_ids)
+        .order("product_variants.sku", "vendors.name")
     end
   end
 end

@@ -63,6 +63,7 @@ Rails.application.routes.draw do
         patch :reactivate
         patch :regenerate_name
       end
+      resources :product_variant_vendors, only: %i[new create edit update]
     end
   end
 
