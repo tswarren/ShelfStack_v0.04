@@ -17,7 +17,10 @@
           variant: @highlight_variant,
           operations: @operations %>
   <% when "operations" %>
-    <%= render "items/items/operations", item: @item, operations: @operations %>
+    <%= render "items/items/operations",
+          item: @item,
+          operations: @operations,
+          operations_tab: @operations_tab %>
   <% when "item_setup" %>
     <%= render "items/items/item_setup",
           item: @item,

@@ -13,6 +13,7 @@ module Items
       @highlight_variant = load_highlight_variant
       load_tab_data
       load_operations_presenter if @tab.in?(%w[overview operations])
+      load_operations_tab_presenter if @tab == "operations"
     end
 
     private
@@ -87,6 +88,17 @@ module Items
         item: @item,
         store: current_store,
         user: current_user
+      )
+    end
+
+    def load_operations_tab_presenter
+      return unless current_store.present?
+
+      @operations_tab = ItemOperationsTabPresenter.new(
+        item: @item,
+        store: current_store,
+        user: current_user,
+        highlight_variant: @highlight_variant
       )
     end
 

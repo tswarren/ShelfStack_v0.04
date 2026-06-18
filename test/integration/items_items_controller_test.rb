@@ -185,6 +185,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
   test "operations tab renders placeholder" do
     get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "operations")
     assert_response :success
-    assert_match "Operational purchasing and inventory details", response.body
+    assert_match "Variant operations", response.body
+    assert_match "No operational documents yet", response.body
   end
 end
