@@ -52,4 +52,35 @@ module OrdersHelper
       from_tbo_format_id: from_tbo_filters[:format_id]
     )
   end
+
+  def orders_status_badge(status)
+    css_class = orders_status_badge_class(status)
+    tag.span(status.to_s.tr("_", " ").titleize, class: "ss-status-badge #{css_class}")
+  end
+
+  def orders_status_badge_class(status)
+    case status.to_s
+    when "draft", "open", "sourcing_needed"
+      "status-draft"
+    when "submitted", "posted", "added_to_po", "ready_to_order"
+      "status-submitted"
+    when "partially_received", "partially_ordered", "partially_received"
+      "status-partial"
+    when "cancelled", "closed", "credited"
+      "status-cancelled"
+    else
+      "status-inactive"
+    end
+  end
+
+  def orders_format_metric(value, format: :number)
+    case format
+    when :cents
+      format_cents(value)
+    when :bps
+      format_basis_points(value)
+    else
+      value
+    end
+  end
 end

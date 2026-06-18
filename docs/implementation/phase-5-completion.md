@@ -62,6 +62,10 @@ Migration: `db/migrate/20250620120000_create_phase5_purchasing_and_receiving.rb`
 | `Purchasing::PurchaseOrderDocumentHub` | PO show cross-refs (TBO, receipts, discrepancies, line activity) |
 | `Purchasing::ReceiptDocumentHub` | Receipt show cross-refs (PO alignment, discrepancies, posting) |
 | `Purchasing::PurchaseRequestDocumentHub` | Purchase request show cross-refs (linked POs per line) |
+| `Purchasing::ReturnToVendorDocumentHub` | RTV show totals and inventory posting reference |
+| `Purchasing::DocumentTrailBuilder` | Vertical document trail nodes for PO/receipt/PR/RTV show sidebars |
+| `Purchasing::DocumentAttention` | Needs-attention items for order document show pages |
+| `Orders::*ShowPresenter` | View presenters for document show metrics, trail, and flags |
 | `Purchasing::PostReceipt` | Post accepted qty via `Inventory::Post` (`receiving`) |
 | `Purchasing::MovingAverageCost` | Update balance MAC on receive |
 | `Purchasing::PostReturnToVendor` | Post vendor return via `Inventory::Post` (`vendor_return`) |
@@ -78,13 +82,14 @@ Extended Phase 4 services:
 
 - Home with cards for purchase requests, purchase orders, receipts, returns to vendor
 - Purchase request list/create/show/cancel
-- Purchase order draft/edit/submit/show/**close**/**receive** with **document hub** (receive progress, related TBO/receipts, discrepancies, line activity)
-- Purchase request show with **document hub** (linked purchase orders per line)
-- Receipt show with **document hub** (PO alignment, discrepancies, inventory posting)
+- Purchase order draft/edit/submit/show/**close**/**receive** with **progressive-disclosure document show** (metric strip, attention panel, lines-first layout, sidebar document trail, collapsible activity/discrepancies/audit)
+- Purchase request show with **document hub** (linked purchase orders per line); same progressive-disclosure skeleton
+- Receipt show with **document hub** (PO alignment, discrepancies, inventory posting); same progressive-disclosure skeleton
+- Return to vendor show with **document hub** (totals, attention, posting sidebar); same progressive-disclosure skeleton
 - Purchase order **Build from TBO** (multi-request vendor workbench with on-hand/on-order columns, editable order qty, department/format filters, suggested-vendor grouping, inline sourcing links)
 - Receipt draft/post workflow (PO-backed and direct); **exception-first receiving** (received qty primary, optional exception qty/reason, derived accepting); **Receive** from PO preloads open lines
 - Return to vendor draft/post workflow
-- **Purchasing line table** workpad on PO, receipt, and RTV forms (scan entry, totals, duplicate merge)
+- **Purchasing line table** workpad on PO, receipt, and RTV forms (scan entry, totals, duplicate merge); **primary columns** with collapsible per-line **details** row (vendor item, on-hand, list/discount, etc.); user-facing labels (Unit cost, Credit, Discount %, List price)
 - RTV workpad is **inventory-aware**: on-hand and returnability per line, `rtv` lookup context, vendor-change refresh, qty vs on-hand warnings (posting still allows negative on-hand per Phase 4)
 - `GET /orders/line_lookup` — enriched purchasing line lookup API
 - `orders.access` permission gate and locked-out page

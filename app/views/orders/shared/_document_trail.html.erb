@@ -1,0 +1,23 @@
+<%# locals: nodes %>
+<% if nodes.present? %>
+  <div class="ss-sidebar-card">
+    <h2>Document Trail</h2>
+    <ul class="ss-document-trail">
+      <% nodes.each_with_index do |node, index| %>
+        <li>
+          <% if index.positive? %>
+            <span class="ss-document-trail__connector">↓</span>
+          <% end %>
+          <% if node.href.present? %>
+            <%= link_to node.label, node.href %>
+          <% else %>
+            <%= node.label %>
+          <% end %>
+          <% if node.meta.present? %>
+            <span class="ss-document-trail__meta"><%= node.meta %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

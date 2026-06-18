@@ -1,0 +1,16 @@
+<%# locals: items %>
+<% if items.present? %>
+  <div class="ss-attention-panel">
+    <h2>Needs Attention</h2>
+    <ul>
+      <% items.each do |item| %>
+        <li>
+          <%= item.message %>
+          <% if item.link_path.present? && item.link_label.present? %>
+            <%= link_to item.link_label, item.link_path %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

@@ -20,8 +20,14 @@ module Orders
     def show
       @order_summary = Purchasing::PurchaseOrderSummary.call(@purchase_order)
       @document_hub = Purchasing::PurchaseOrderDocumentHub.call(@purchase_order)
-      @audit_events = AuditEvent.for_auditable(@purchase_order).limit(50)
       @sourcing_warnings = Purchasing::SourcingWarnings.for_purchase_order(@purchase_order)
+      @show_presenter = Orders::PurchaseOrderShowPresenter.new(
+        purchase_order: @purchase_order,
+        document_hub: @document_hub,
+        order_summary: @order_summary,
+        sourcing_warnings: @sourcing_warnings
+      )
+      @audit_events = AuditEvent.for_auditable(@purchase_order).limit(50)
       @closable = Purchasing::ClosePurchaseOrder.new(
         purchase_order: @purchase_order,
         closed_by_user: current_user

@@ -1,0 +1,17 @@
+<%# locals: title, status, metadata_lines: [] %>
+<header class="ss-document-header">
+  <div class="ss-document-header__top">
+    <h1><%= title %></h1>
+    <% if local_assigns[:status].present? %>
+      <%= render "orders/shared/status_badge", status: status %>
+    <% end %>
+  </div>
+  <% Array(local_assigns[:metadata_lines]).each do |line| %>
+    <p class="ss-document-header__meta"><%= line %></p>
+  <% end %>
+  <% if block_given? %>
+    <div class="ss-detail-actions">
+      <%= yield %>
+    </div>
+  <% end %>
+</header>

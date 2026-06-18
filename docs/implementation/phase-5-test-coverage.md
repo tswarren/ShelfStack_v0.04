@@ -41,6 +41,10 @@ Matrix mapping [phase-5-test-plan.md](../specifications/phase-5-test-plan.md) re
 | `Purchasing::PurchaseOrderDocumentHub` | `test/services/purchasing/purchase_order_document_hub_test.rb` | Covered |
 | `Purchasing::ReceiptDocumentHub` | `test/services/purchasing/receipt_document_hub_test.rb` | Covered |
 | `Purchasing::PurchaseRequestDocumentHub` | `test/services/purchasing/purchase_request_document_hub_test.rb` | Covered |
+| `Purchasing::ReturnToVendorDocumentHub` | `test/services/purchasing/return_to_vendor_document_hub_test.rb` | Covered |
+| `Purchasing::DocumentTrailBuilder` | `test/services/purchasing/document_trail_builder_test.rb` | Covered |
+| `Purchasing::DocumentAttention` | `test/services/purchasing/document_attention_test.rb` | Covered |
+| `Orders::PurchaseOrderShowPresenter` | `test/presenters/orders/purchase_order_show_presenter_test.rb` | Covered |
 
 ## Authorization
 
@@ -64,8 +68,9 @@ Matrix mapping [phase-5-test-plan.md](../specifications/phase-5-test-plan.md) re
 | PO receive → preloaded receipt (HTTP) | `orders_purchase_orders_controller_test` | Covered |
 | Purchasing line lookup API | `test/integration/orders_line_lookups_controller_test.rb` | Covered |
 | TBO build PO / from_tbo | `orders_purchase_requests_controller_test`, `orders_purchase_orders_controller_test` | Covered |
-| Purchasing workbench UI | `test/integration/orders_purchasing_workbench_integration_test.rb` | Covered |
-| Orders document hub show pages | `test/integration/orders_document_hub_integration_test.rb` | Covered |
+| Purchasing workbench UI | `test/integration/orders_purchasing_workbench_integration_test.rb` | Covered — primary columns, details toggle, user-facing price labels |
+| Orders document hub show pages | `test/integration/orders_document_hub_integration_test.rb` | Covered — progressive disclosure layout (metric strip, lines-first, collapsible audit) |
+| RTV show progressive disclosure | `orders_returns_to_vendor_controller_test` | Covered |
 | RTV inventory-aware workpad | `orders_returns_to_vendor_controller_test`, `orders_line_lookups_controller_test` | Covered |
 | Receipt line exception_reason | `test/models/receipt_line_test.rb` | Covered |
 | Receipt exception-first controller | `test/integration/orders_receipts_controller_test.rb` | Covered |

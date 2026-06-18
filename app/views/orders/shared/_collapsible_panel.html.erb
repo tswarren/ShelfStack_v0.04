@@ -1,0 +1,7 @@
+<%# locals: title, open: false %>
+<details class="ss-collapsible-panel"<%= " open" if local_assigns.fetch(:open, false) %>>
+  <summary><%= title %></summary>
+  <div class="ss-collapsible-panel__body">
+    <%= yield %>
+  </div>
+</details>

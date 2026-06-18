@@ -17,6 +17,10 @@ module Orders
 
     def show
       @document_hub = Purchasing::PurchaseRequestDocumentHub.call(@purchase_request)
+      @show_presenter = Orders::PurchaseRequestShowPresenter.new(
+        purchase_request: @purchase_request,
+        document_hub: @document_hub
+      )
       @audit_events = AuditEvent.for_auditable(@purchase_request).limit(50)
       @buildable = @purchase_request.buildable?
     end

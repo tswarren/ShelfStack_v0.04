@@ -317,6 +317,13 @@ export default class extends Controller {
     this.dispatchRecalculate()
   }
 
+  toggleDetails(event) {
+    event.preventDefault()
+    const detailsRow = this.element.nextElementSibling
+    if (!detailsRow?.hasAttribute("data-purchasing-line-row-details")) return
+    detailsRow.hidden = !detailsRow.hidden
+  }
+
   toggleException(event) {
     event.preventDefault()
     if (!this.hasExceptionPanelTarget) return

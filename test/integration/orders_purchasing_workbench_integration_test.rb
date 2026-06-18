@@ -31,6 +31,8 @@ class OrdersPurchasingWorkbenchIntegrationTest < ActionDispatch::IntegrationTest
     assert_match "ss-purchasing-table", response.body
     assert_match "purchasing-line-table", response.body
     assert_match "Scan", response.body
+    assert_match "Unit cost", response.body
+    assert_match "toggleDetails", response.body
     assert_match "pricingFieldChanged", response.body
   end
 

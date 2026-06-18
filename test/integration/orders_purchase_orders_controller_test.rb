@@ -250,7 +250,7 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "added_to_po", request_two.reload.status
   end
 
-  test "show displays order summary and variant names" do
+  test "show displays metric strip and variant names" do
     @line_to_keep.update!(
       unit_list_price_cents: 2000,
       unit_cost_cents: 1200,
@@ -261,11 +261,11 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     get orders_purchase_order_path(@purchase_order)
 
     assert_response :success
-    assert_match "Order Summary", response.body
-    assert_match "Total units", response.body
+    assert_select ".ss-metric-strip"
+    assert_match "Total cost", response.body
     assert_match @variant.name, response.body
     assert_match "$24.00", response.body
-    assert_match "$40.00", response.body
+    assert_match "40.00%", response.body
   end
 
   test "receive creates draft receipt from submitted purchase order" do

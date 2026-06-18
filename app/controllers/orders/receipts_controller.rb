@@ -17,6 +17,10 @@ module Orders
 
     def show
       @document_hub = Purchasing::ReceiptDocumentHub.call(@receipt)
+      @show_presenter = Orders::ReceiptShowPresenter.new(
+        receipt: @receipt,
+        document_hub: @document_hub
+      )
       @audit_events = AuditEvent.for_auditable(@receipt).limit(50)
     end
 

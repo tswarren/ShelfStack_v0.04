@@ -16,6 +16,11 @@ module Orders
     end
 
     def show
+      @document_hub = Purchasing::ReturnToVendorDocumentHub.call(@return_to_vendor)
+      @show_presenter = Orders::ReturnToVendorShowPresenter.new(
+        return_to_vendor: @return_to_vendor,
+        document_hub: @document_hub
+      )
       @audit_events = AuditEvent.for_auditable(@return_to_vendor).limit(50)
     end
 

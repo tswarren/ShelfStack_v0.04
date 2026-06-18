@@ -1,8 +1,9 @@
-<h1>Purchase Order #<%= @purchase_order.id %></h1>
-<p>Vendor: <%= @purchase_order.vendor.name %> | Status: <%= @purchase_order.status %></p>
-<% if @purchase_order.notes.present? %><p><%= @purchase_order.notes %></p><% end %>
+<% presenter = @show_presenter %>
 
-<div class="ss-detail-actions">
+<%= render "orders/shared/document_header",
+      title: presenter.title,
+      status: presenter.status,
+      metadata_lines: presenter.metadata_lines do %>
   <% if @purchase_order.draft? %>
     <%= link_to "Edit", edit_orders_purchase_order_path(@purchase_order), class: "ss-btn" %>
     <%= button_to "Submit", submit_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn" %>
@@ -18,39 +19,70 @@
           data: { turbo_confirm: "Close this purchase order? Open lines will be marked closed or closed short." } %>
   <% end %>
   <%= link_to "Back", orders_purchase_orders_path %>
-</div>
+<% end %>
 
-<%= render "sourcing_warnings", sourcing_warnings: @sourcing_warnings %>
+<%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
+<%= render "orders/shared/attention_panel", items: presenter.attention_items %>
 
-<h2>Order Summary</h2>
-<dl class="ss-summary">
-  <dt>Total units</dt><dd class="ss-num"><%= @order_summary.total_units %></dd>
-  <dt>Total cost</dt><dd class="ss-num"><%= format_cents(@order_summary.total_cost_cents) %></dd>
-  <dt>Total retail</dt><dd class="ss-num"><%= format_cents(@order_summary.total_retail_cents) %></dd>
-  <dt>Net discount</dt>
-  <dd class="ss-num">
-    <%= format_cents(@order_summary.net_discount_cents) %>
-    <% if @order_summary.net_discount_bps %>
-      (<%= format_basis_points(@order_summary.net_discount_bps) %>)
-    <% end %>
-  </dd>
-</dl>
-
-<%= render "orders/shared/receive_progress_panel", progress: @document_hub.receive_progress %>
-
-<% if @document_hub.purchase_requests.any? %>
-  <div class="ss-summary">
-    <h2>Related Purchase Requests</h2>
-    <table class="ss-table">
-      <thead>
+<%= render layout: "orders/shared/document_layout" do %>
+  <h2>Lines</h2>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th>Vendor #</th>
+        <th class="ss-num">Ordered</th>
+        <th class="ss-num">Received</th>
+        <th class="ss-num">Open</th>
+        <th class="ss-num">Cost</th>
+        <th>Status</th>
+        <th>Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @purchase_order.purchase_order_lines.each do |line| %>
         <tr>
-          <th>Request</th>
-          <th>Status</th>
-          <th class="ss-num">Lines</th>
-          <th></th>
+          <td><%= line.line_number %></td>
+          <td>
+            <%= render "orders/shared/variant_identity",
+                  variant: line.product_variant,
+                  sku_snapshot: line.variant_sku_snapshot,
+                  name_snapshot: line.variant_name_snapshot %>
+          </td>
+          <td><%= line.vendor_item_number_snapshot || "—" %></td>
+          <td class="ss-num"><%= line.quantity_ordered %></td>
+          <td class="ss-num"><%= line.quantity_received %></td>
+          <td class="ss-num"><%= @purchase_order.open_quantity_for_line(line) %></td>
+          <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
+          <td><%= render "orders/shared/status_badge", status: line.status %></td>
+          <td>
+            <% flags = presenter.line_flags(line) %>
+            <%= flags.any? ? flags.join(" · ") : "—" %>
+          </td>
         </tr>
-      </thead>
-      <tbody>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% content_for :document_sidebar do %>
+    <%= render "orders/shared/document_trail", nodes: presenter.trail_nodes %>
+    <%= render "orders/shared/sidebar_facts", facts: presenter.sidebar_facts %>
+  <% end %>
+<% end %>
+
+<% if presenter.show_related_detail? %>
+  <%= render "orders/shared/collapsible_panel", title: "Related documents (detail)" do %>
+    <% if @document_hub.purchase_requests.any? %>
+      <%= render "orders/shared/related_records_panel",
+            title: "Related Purchase Requests",
+            records: @document_hub.purchase_requests,
+            headers: [
+              { label: "Request" },
+              { label: "Status" },
+              { label: "Lines", class: "ss-num" },
+              { label: "" }
+            ] do %>
         <% @document_hub.purchase_requests.each do |entry| %>
           <tr>
             <td>Purchase Request #<%= entry.purchase_request.id %></td>
@@ -59,26 +91,20 @@
             <td><%= link_to "View", orders_purchase_request_path(entry.purchase_request) %></td>
           </tr>
         <% end %>
-      </tbody>
-    </table>
-  </div>
-<% end %>
-
-<% if @document_hub.receipts.any? %>
-  <div class="ss-summary">
-    <h2>Related Receipts</h2>
-    <table class="ss-table">
-      <thead>
-        <tr>
-          <th>Receipt</th>
-          <th>Status</th>
-          <th>Type</th>
-          <th class="ss-num">Lines</th>
-          <th class="ss-num">Accepted</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
+      <% end %>
+    <% end %>
+    <% if @document_hub.receipts.any? %>
+      <%= render "orders/shared/related_records_panel",
+            title: "Related Receipts",
+            records: @document_hub.receipts,
+            headers: [
+              { label: "Receipt" },
+              { label: "Status" },
+              { label: "Type" },
+              { label: "Lines", class: "ss-num" },
+              { label: "Accepted", class: "ss-num" },
+              { label: "" }
+            ] do %>
         <% @document_hub.receipts.each do |entry| %>
           <tr>
             <td>Receipt #<%= entry.receipt.id %></td>
@@ -89,48 +115,23 @@
             <td><%= link_to "View", orders_receipt_path(entry.receipt) %></td>
           </tr>
         <% end %>
-      </tbody>
-    </table>
-  </div>
+      <% end %>
+    <% end %>
+  <% end %>
 <% end %>
 
-<%= render "orders/shared/discrepancies_panel", discrepancies: @document_hub.discrepancies %>
-<%= render "orders/shared/line_activity_panel", line_activity: @document_hub.line_activity %>
+<% if presenter.show_line_activity? %>
+  <%= render "orders/shared/collapsible_panel", title: "Line receipt activity" do %>
+    <%= render "orders/shared/line_activity_panel", line_activity: @document_hub.line_activity %>
+  <% end %>
+<% end %>
 
-<h2>Lines</h2>
-<table class="ss-table">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Item</th>
-      <th>Vendor item #</th>
-      <th class="ss-num">Ordered</th>
-      <th class="ss-num">Received</th>
-      <th class="ss-num">Open</th>
-      <th class="ss-num">Unit Cost</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @purchase_order.purchase_order_lines.each do |line| %>
-      <tr>
-        <td><%= line.line_number %></td>
-        <td>
-          <%= render "orders/shared/variant_identity",
-                variant: line.product_variant,
-                sku_snapshot: line.variant_sku_snapshot,
-                name_snapshot: line.variant_name_snapshot %>
-        </td>
-        <td><%= line.vendor_item_number_snapshot || "—" %></td>
-        <td class="ss-num"><%= line.quantity_ordered %></td>
-        <td class="ss-num"><%= line.quantity_received %></td>
-        <td class="ss-num"><%= @purchase_order.open_quantity_for_line(line) %></td>
-        <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
-        <td><%= line.status %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% if presenter.show_discrepancies? %>
+  <%= render "orders/shared/collapsible_panel", title: "Receiving discrepancies" do %>
+    <%= render "orders/shared/discrepancies_panel", discrepancies: @document_hub.discrepancies %>
+  <% end %>
+<% end %>
 
-<h2>Audit Timeline</h2>
-<%= render "shared/audit_timeline", audit_events: @audit_events %>
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

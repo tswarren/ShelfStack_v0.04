@@ -37,11 +37,14 @@ export default class extends Controller {
     const row = event.target.closest("[data-purchasing-line-table-target='line']")
     if (!row) return
 
+    const detailsRow = this.detailsRowFor(row)
     const destroyField = row.querySelector("[data-purchasing-line-table-target='destroy']")
     if (destroyField) {
       destroyField.value = "1"
       row.style.display = "none"
+      if (detailsRow) detailsRow.style.display = "none"
     } else {
+      detailsRow?.remove()
       row.remove()
     }
 
@@ -91,7 +94,10 @@ export default class extends Controller {
     if (destroyField) {
       destroyField.value = "1"
       currentRow.style.display = "none"
+      const detailsRow = this.detailsRowFor(currentRow)
+      if (detailsRow) detailsRow.style.display = "none"
     } else {
+      this.detailsRowFor(currentRow)?.remove()
       currentRow.remove()
     }
 
@@ -114,8 +120,16 @@ export default class extends Controller {
     if (blankRows.length === 0) {
       this.insertRowFromTemplate()
     } else if (blankRows.length > 1) {
-      blankRows.slice(1).forEach((row) => row.remove())
+      blankRows.slice(1).forEach((row) => {
+        this.detailsRowFor(row)?.remove()
+        row.remove()
+      })
     }
+  }
+
+  detailsRowFor(row) {
+    const detailsRow = row.nextElementSibling
+    return detailsRow?.hasAttribute("data-purchasing-line-row-details") ? detailsRow : null
   }
 
   focusBlankScan() {

@@ -1,3 +1,4 @@
+<% primary_columns = 8 %>
 <tr data-purchasing-line-table-target="line"
     data-controller="purchasing-line-row"
     data-purchasing-line-row-url-value="<%= orders_line_lookup_path %>"
@@ -17,28 +18,8 @@
   <%= line_form.hidden_field :purchase_order_line_id, data: { purchasing_line_row_target: "purchaseOrderLineId" } %>
   <%= line_form.hidden_field :quantity_accepted, data: { purchasing_line_row_target: "quantityAccepted" } %>
 
-  <td>
-    <input type="text"
-           class="ss-input ss-purchasing-table__scan"
-           placeholder="Scan…"
-           autocomplete="off"
-           value="<%= variant&.sku %>"
-           data-purchasing-line-row-target="lookupInput"
-           data-action="keydown->purchasing-line-row#lookupExact input->purchasing-line-row#search" />
-    <%= line_form.hidden_field :product_variant_id, data: { purchasing_line_row_target: "variantId" } %>
-    <div data-purchasing-line-row-target="choices" class="ss-purchasing-table__choices"></div>
-    <p class="ss-hint" data-purchasing-line-row-target="message"></p>
-  </td>
+  <%= render "orders/shared/scan_lookup_cell", line_form: line_form, variant: variant %>
   <td data-purchasing-line-row-target="title"><%= variant&.name %></td>
-  <td class="ss-num">
-    <% if local_assigns.fetch(:po_locked, false) %>
-      <%= line_form.object.quantity_expected %>
-      <%= line_form.hidden_field :quantity_expected, data: { purchasing_line_row_target: "quantityExpected" } %>
-    <% else %>
-      <%= line_form.number_field :quantity_expected, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
-            data: { purchasing_line_row_target: "quantityExpected", action: "input->purchasing-line-row#quantityChanged" } %>
-    <% end %>
-  </td>
   <td class="ss-num">
     <%= line_form.number_field :quantity_received, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
           data: {
@@ -83,7 +64,23 @@
           data: { purchasing_line_row_target: "unitCost", action: "input->purchasing-line-row#quantityChanged" } %>
   </td>
   <td class="ss-purchasing-table__warnings" data-purchasing-line-row-target="warnings"></td>
-  <td>
-    <button type="button" class="ss-btn-link" data-action="purchasing-line-table#removeLine">Remove</button>
+  <%= render "orders/shared/line_remove_cell" %>
+</tr>
+<tr class="ss-purchasing-table__details" hidden data-purchasing-line-row-details>
+  <td colspan="<%= primary_columns %>">
+    <dl class="ss-purchasing-table__details-grid">
+      <div>
+        <dt>Expected</dt>
+        <dd class="ss-num">
+          <% if local_assigns.fetch(:po_locked, false) %>
+            <%= line_form.object.quantity_expected %>
+            <%= line_form.hidden_field :quantity_expected, data: { purchasing_line_row_target: "quantityExpected" } %>
+          <% else %>
+            <%= line_form.number_field :quantity_expected, min: 0, step: 1, class: "ss-input ss-purchasing-table__qty",
+                  data: { purchasing_line_row_target: "quantityExpected", action: "input->purchasing-line-row#quantityChanged" } %>
+          <% end %>
+        </dd>
+      </div>
+    </dl>
   </td>
 </tr>

@@ -56,37 +56,58 @@ class OrdersDocumentHubIntegrationTest < ActionDispatch::IntegrationTest
     )
   end
 
-  test "purchase order show renders document hub panels" do
+  test "purchase order show uses progressive disclosure layout" do
     get orders_purchase_order_path(@purchase_order)
 
     assert_response :success
-    assert_match "Receive Progress", response.body
-    assert_match "Related Purchase Requests", response.body
-    assert_match "Related Receipts", response.body
-    assert_match "Receiving Discrepancies", response.body
-    assert_match "Line Receipt Activity", response.body
+    assert_select ".ss-metric-strip"
+    assert_select ".ss-document-layout"
+    assert_select ".ss-document-trail"
+    assert_match "Ordered", response.body
+    assert_match "Open", response.body
+    assert_match "Related documents (detail)", response.body
+    assert_match "Line receipt activity", response.body
+    assert_match "Receiving discrepancies", response.body
     assert_match @variant.name, response.body
     assert_match "href=\"/items/item", response.body
+    assert_lines_before_collapsible_audit
   end
 
-  test "receipt show renders document hub panels" do
+  test "receipt show uses progressive disclosure layout" do
     get orders_receipt_path(@receipt)
 
     assert_response :success
-    assert_match "Receipt Totals", response.body
-    assert_match "Purchase Order", response.body
-    assert_match "PO Line Alignment", response.body
-    assert_match "Receiving Discrepancies", response.body
+    assert_select ".ss-metric-strip"
+    assert_select ".ss-document-layout"
+    assert_match "Expected", response.body
+    assert_match "Accepting", response.body
+    assert_match "PO line alignment", response.body
+    assert_match "Receiving discrepancies", response.body
     assert_match @variant.name, response.body
+    assert_lines_before_collapsible_audit
   end
 
-  test "purchase request show renders document hub panels" do
+  test "purchase request show uses progressive disclosure layout" do
     get orders_purchase_request_path(@purchase_request)
 
     assert_response :success
-    assert_match "Request Summary", response.body
-    assert_match "Related Purchase Orders", response.body
+    assert_select ".ss-metric-strip"
+    assert_select ".ss-document-layout"
+    assert_match "Buildable", response.body
+    assert_match "Open demand", response.body
+    assert_match "Related documents (detail)", response.body
     assert_match @variant.name, response.body
     assert_match "PO ##{@purchase_order.id}", response.body
+    assert_lines_before_collapsible_audit
+  end
+
+  private
+
+  def assert_lines_before_collapsible_audit
+    lines_index = response.body.index("<h2>Lines</h2>")
+    audit_index = response.body.index('class="ss-collapsible-panel"')
+    assert lines_index, "expected Lines heading"
+    assert audit_index, "expected collapsible audit panel"
+    assert_operator lines_index, :<, audit_index
   end
 end
