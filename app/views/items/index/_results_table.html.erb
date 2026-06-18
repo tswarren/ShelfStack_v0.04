@@ -21,7 +21,7 @@
           <div class="ss-search-item-cell">
             <%= item_cover_thumbnail(item, size: :search) %>
             <div>
-              <strong><%= item.title %></strong><br>
+              <strong><%= link_to item.title, item.show_path, class: "ss-search-item-title" %></strong><br>
               <span class="ss-muted"><%= item.creator_line %> · <%= item.format_name %> · <%= item.primary_identifier_display %></span>
             </div>
           </div>

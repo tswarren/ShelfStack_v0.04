@@ -23,6 +23,7 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     assert_match "Items", response.body
     assert_match "Add Item", response.body
     assert_match "View Item", response.body
+    assert_match items_item_path(catalog_item_id: @item.id), response.body
   end
 
   test "search returns matching item with lifecycle status" do

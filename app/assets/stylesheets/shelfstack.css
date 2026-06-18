@@ -1482,6 +1482,16 @@ h2 {
   align-items: flex-start;
 }
 
+.ss-search-item-title {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ss-search-item-title:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
 .ss-search-action-cell {
   white-space: nowrap;
   width: 1%;
