@@ -1,0 +1,119 @@
+<% presenter = @show_presenter %>
+
+<%= render "orders/shared/document_header",
+      title: presenter.title,
+      status: presenter.status,
+      metadata_lines: presenter.metadata_lines do %>
+  <% if @receipt.draft? %>
+    <%= link_to "Edit", edit_orders_receipt_path(@receipt), class: "ss-btn" %>
+    <%= button_to "Post", post_orders_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
+    <%= button_to "Cancel", cancel_orders_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= link_to "Back", orders_receipts_path %>
+<% end %>
+
+<%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
+<%= render "orders/shared/attention_panel", items: presenter.attention_items %>
+
+<% if @receipt.posted? && @document_hub.inventory_posting.blank? %>
+  <p class="ss-hint ss-hint--warning">This receipt posted with no accepted quantity, so on-hand was not changed.</p>
+<% end %>
+
+<%= render layout: "orders/shared/document_layout" do %>
+  <h2>Lines</h2>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th class="ss-num">Expected</th>
+        <th class="ss-num">Received</th>
+        <th class="ss-num">Accepted</th>
+        <th class="ss-num">Exception</th>
+        <th class="ss-num">Unit cost</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @receipt.receipt_lines.each do |line| %>
+        <tr>
+          <td><%= line.line_number %></td>
+          <td><%= render "orders/shared/variant_identity", variant: line.product_variant %></td>
+          <td class="ss-num"><%= line.quantity_expected %></td>
+          <td class="ss-num"><%= line.quantity_received %></td>
+          <td class="ss-num"><%= line.quantity_accepted %></td>
+          <td class="ss-num">
+            <% if line.quantity_rejected.positive? %>
+              <%= line.quantity_rejected %>
+              <% if line.exception_reason.present? %>
+                <span class="ss-muted">(<%= line.exception_reason.humanize %>)</span>
+              <% end %>
+            <% else %>
+              —
+            <% end %>
+          </td>
+          <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% content_for :document_sidebar do %>
+    <%= render "orders/shared/document_trail", nodes: presenter.trail_nodes %>
+    <%= render "orders/shared/sidebar_facts", facts: presenter.sidebar_facts %>
+    <% if @document_hub.inventory_posting.present? && @receipt.receipt_lines.any? && Authorization.allowed?(user: current_user, permission_key: "inventory.access", store: current_store) %>
+      <div class="ss-sidebar-card">
+        <h2>Inventory</h2>
+        <p>
+          <%= link_to "View posting ##{@document_hub.inventory_posting.id}",
+                inventory_variant_path(@receipt.receipt_lines.first.product_variant) %>
+        </p>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if presenter.show_po_alignment? %>
+  <%= render "orders/shared/collapsible_panel", title: "PO line alignment" do %>
+    <% if @document_hub.po_receive_progress.present? %>
+      <dl class="ss-summary-compact">
+        <dt>Ordered</dt><dd class="ss-num"><%= @document_hub.po_receive_progress.ordered %></dd>
+        <dt>Received on PO</dt><dd class="ss-num"><%= @document_hub.po_receive_progress.received %></dd>
+        <dt>Open on PO</dt><dd class="ss-num"><%= @document_hub.po_receive_progress.open %></dd>
+      </dl>
+    <% end %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Receipt line</th>
+          <th>Item</th>
+          <th>PO line</th>
+          <th class="ss-num">Ordered</th>
+          <th class="ss-num">Received on PO</th>
+          <th class="ss-num">Open on PO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @document_hub.po_line_matches.each do |match| %>
+          <tr>
+            <td><%= match.receipt_line.line_number %></td>
+            <td><%= render "orders/shared/variant_identity", variant: match.receipt_line.product_variant %></td>
+            <td><%= match.purchase_order_line ? "##{match.purchase_order_line.line_number}" : "—" %></td>
+            <td class="ss-num"><%= match.ordered || "—" %></td>
+            <td class="ss-num"><%= match.received_on_po || "—" %></td>
+            <td class="ss-num"><%= match.open_on_po || "—" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+<% end %>
+
+<% if presenter.show_discrepancies? %>
+  <%= render "orders/shared/collapsible_panel", title: "Receiving discrepancies" do %>
+    <%= render "orders/shared/receipt_discrepancies_detail", discrepancies: @document_hub.discrepancies %>
+  <% end %>
+<% end %>
+
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

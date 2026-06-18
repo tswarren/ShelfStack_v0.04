@@ -63,6 +63,7 @@ Rails.application.routes.draw do
         patch :reactivate
         patch :regenerate_name
       end
+      resources :product_variant_vendors, only: %i[new create edit update]
     end
   end
 
@@ -191,6 +192,18 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
+    resources :product_vendors do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :product_variant_vendors do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
     resources :inventory_reason_codes do
       member do
         patch :inactivate
@@ -221,6 +234,44 @@ Rails.application.routes.draw do
     resource :admin, only: %i[show], controller: "admin" do
       post :rebuild_balances
       post :integrity_check
+    end
+  end
+
+  namespace :orders do
+    root to: "home#show"
+    get "locked_out", to: "home#locked_out"
+    resource :variant_lookup, only: %i[show]
+    resource :line_lookup, only: %i[show]
+    resources :purchase_requests do
+      member do
+        patch :cancel
+        get :build_purchase_order
+        post :create_purchase_order
+      end
+    end
+    resources :purchase_orders do
+      collection do
+        get :from_tbo
+        post :create_from_tbo
+      end
+      member do
+        patch :submit
+        patch :cancel
+        patch :close
+        post :receive
+      end
+    end
+    resources :receipts do
+      member do
+        patch :post, action: :post
+        patch :cancel
+      end
+    end
+    resources :returns_to_vendor do
+      member do
+        patch :post, action: :post
+        patch :cancel
+      end
     end
   end
 end

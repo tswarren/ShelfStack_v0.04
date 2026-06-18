@@ -1,0 +1,98 @@
+<%
+  association = local_assigns.fetch(:association)
+  line_partial = local_assigns.fetch(:line_partial)
+  line_object = local_assigns.fetch(:line_object)
+  store = local_assigns[:store]
+  line_locals = local_assigns.fetch(:line_locals, {})
+  lookup_context = local_assigns.fetch(:lookup_context, "order")
+  vendor_field_id = local_assigns[:vendor_field_id]
+  purchase_order_field_id = local_assigns[:purchase_order_field_id]
+  quantity_field = local_assigns.fetch(:quantity_field, "quantity_ordered")
+  merge_duplicates = local_assigns.fetch(:merge_duplicates, true)
+  cost_mode = local_assigns.fetch(:cost_mode, "unit")
+  show_receive_all = local_assigns.fetch(:show_receive_all, false)
+  table_headers = local_assigns.fetch(:table_headers)
+  footer_mode = local_assigns.fetch(:footer_mode, "po")
+%>
+<h2>Lines</h2>
+<p class="ss-hint">Scan or type a SKU, vendor item number, or ISBN. Press Enter in scan or quantity to advance.</p>
+
+<% if show_receive_all %>
+  <p class="ss-actions">
+    <button type="button" class="ss-btn ss-btn-secondary" data-action="purchasing-line-table#receiveAllAsExpected">Receive all as expected</button>
+  </p>
+<% end %>
+
+<div data-controller="purchasing-line-table"
+     data-purchasing-line-table-quantity-field-value="<%= quantity_field %>"
+     data-purchasing-line-table-merge-duplicates-value="<%= merge_duplicates %>"
+     data-purchasing-line-table-cost-mode-value="<%= cost_mode %>"
+     data-action="purchasing-line-row:committed->purchasing-line-table#rowCommitted purchasing-line-table:recalculate->purchasing-line-table#updateTotals">
+  <table class="ss-table ss-purchasing-table">
+    <thead>
+      <tr>
+        <% table_headers.each do |header| %>
+          <th class="<%= header[:class] %>"><%= header[:label] %></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody data-purchasing-line-table-target="body">
+      <% f.object.public_send(association).reject(&:marked_for_destruction?).each do |line| %>
+        <% variant = line.product_variant %>
+        <% balance = variant && store ? InventoryBalance.find_by(store: store, product_variant: variant) : nil %>
+        <%= f.fields_for association, line do |line_form| %>
+          <%= render line_partial,
+                line_form: line_form,
+                variant: variant,
+                balance: balance,
+                store: store,
+                blank_row: false,
+                lookup_context: lookup_context,
+                vendor_field_id: vendor_field_id,
+                purchase_order_field_id: purchase_order_field_id,
+                quantity_field: quantity_field,
+                **line_locals %>
+        <% end %>
+      <% end %>
+    </tbody>
+    <tfoot>
+      <tr class="ss-purchasing-table__totals">
+        <% if footer_mode == "po" %>
+          <td colspan="<%= table_headers.size - 3 %>"><strong>Totals</strong></td>
+          <td class="ss-num" data-purchasing-line-table-target="totalUnits">0</td>
+          <td class="ss-num" data-purchasing-line-table-target="totalCost">$0.00</td>
+          <td></td>
+        <% elsif footer_mode == "receipt" %>
+          <td colspan="<%= table_headers.size - 4 %>"><strong>Totals</strong></td>
+          <td class="ss-num" data-purchasing-line-table-target="totalExpected">0</td>
+          <td class="ss-num" data-purchasing-line-table-target="totalReceived">0</td>
+          <td class="ss-num" data-purchasing-line-table-target="totalAccepted">0</td>
+          <td></td>
+        <% elsif footer_mode == "rtv" %>
+          <td colspan="<%= table_headers.size - 3 %>"><strong>Totals</strong></td>
+          <td class="ss-num" data-purchasing-line-table-target="totalUnits">0</td>
+          <td class="ss-num" data-purchasing-line-table-target="totalCredit">$0.00</td>
+          <td></td>
+        <% end %>
+      </tr>
+    </tfoot>
+  </table>
+
+  <template data-purchasing-line-table-target="template">
+    <%= f.fields_for association, line_object, child_index: "NEW_RECORD" do |line_form| %>
+      <%= render line_partial,
+            line_form: line_form,
+            variant: nil,
+            balance: nil,
+            store: store,
+            blank_row: true,
+            lookup_context: lookup_context,
+            vendor_field_id: vendor_field_id,
+            purchase_order_field_id: purchase_order_field_id,
+            quantity_field: quantity_field,
+            **line_locals %>
+    <% end %>
+  </template>
+
+  <button type="button" class="ss-btn ss-btn-secondary" data-action="purchasing-line-table#addLine">Add line</button>
+</div>

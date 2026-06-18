@@ -38,6 +38,7 @@ module Inventory
           quantity_delta: line.quantity_delta,
           movement_type: movement_type,
           manual_unit_cost_cents: line.unit_cost_cents,
+          cost_source: nil,
           inventory_location: line.inventory_location,
           inventory_reason_code: line.inventory_reason_code
         )

@@ -269,48 +269,22 @@ docs/specifications/phase-4-test-plan.md
 
 ---
 
-# Phase 5: Purchasing and Receiving
+# Phase 5: Purchasing and Receiving — **Complete**
 
-## Purpose
+Phase 5 was completed on 2026-06-10. See [docs/implementation/phase-5-completion.md](docs/implementation/phase-5-completion.md).
 
-Phase 5 should establish vendor purchasing, receiving, supplier costs, and returns to vendor.
-
-It should answer:
-
-> How does inventory enter the store, what did it cost, and which vendor supplied it?
-
-## Expected Capabilities
-
-* Vendor-product sourcing
-* Vendor item numbers
-* Purchase orders
-* Purchase order lines
-* Receiving
-* Receiving discrepancies
-* Supplier discount/cost defaults
-* Returnability
-* Vendor terms
-* Returns to vendor
-* Receiving audit events
-
-## Expected Design Direction
-
-Purchasing and receiving should operate at the product variant level.
-
-Vendor relationships should not be stored directly on products or variants as a single fixed vendor because many products may be available from multiple suppliers.
-
-## Possible Tables
+Normative requirements:
 
 ```text
-product_variant_vendors
-purchase_orders
-purchase_order_lines
-receipts
-receipt_lines
-vendor_terms
-returns_to_vendor
-return_to_vendor_lines
+docs/roadmap/phase-5-purchasing-and-receiving.md
+docs/specifications/phase-5-purchasing-and-receiving-spec.md
+docs/specifications/phase-5-data-model.md
+docs/specifications/phase-5-test-plan.md
 ```
+
+Delivered: vendor sourcing, purchase requests (TBO), purchase orders, receiving with moving average cost, returns to vendor, Orders workspace (`/orders`), setup sourcing CRUD, permissions, audit events, and seeds.
+
+---
 
 ## Major Risks
 

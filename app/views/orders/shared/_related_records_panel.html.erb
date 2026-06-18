@@ -1,0 +1,30 @@
+<%# locals: title, records, empty_message %>
+<% if records.present? %>
+  <div class="ss-summary">
+    <h2><%= title %></h2>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <% if local_assigns[:headers] %>
+            <% headers.each do |header| %>
+              <th class="<%= header[:class] %>"><%= header[:label] %></th>
+            <% end %>
+          <% else %>
+            <th>Document</th>
+            <th>Status</th>
+            <th class="ss-num">Lines</th>
+            <th></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <%= yield %>
+      </tbody>
+    </table>
+  </div>
+<% elsif local_assigns[:empty_message].present? %>
+  <div class="ss-summary">
+    <h2><%= title %></h2>
+    <p class="ss-hint"><%= empty_message %></p>
+  </div>
+<% end %>

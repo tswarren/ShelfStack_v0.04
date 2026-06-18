@@ -1,0 +1,36 @@
+<%# locals: discrepancies %>
+<% if discrepancies.present? %>
+  <div class="ss-summary">
+    <h2>Receiving Discrepancies</h2>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Receipt</th>
+          <th>Item</th>
+          <th>Type</th>
+          <th class="ss-num">Qty delta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% discrepancies.each do |row| %>
+          <% po_line = row.purchase_order_line %>
+          <tr>
+            <td><%= link_to "Receipt ##{row.receipt.id}", orders_receipt_path(row.receipt) %></td>
+            <td>
+              <% if po_line&.product_variant.present? %>
+                <%= render "orders/shared/variant_identity",
+                      variant: po_line.product_variant,
+                      sku_snapshot: po_line.variant_sku_snapshot,
+                      name_snapshot: po_line.variant_name_snapshot %>
+              <% else %>
+                <%= row.sku %>
+              <% end %>
+            </td>
+            <td><%= row.discrepancy_type %></td>
+            <td class="ss-num"><%= row.quantity_delta %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

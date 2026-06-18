@@ -1142,6 +1142,8 @@ Vendor order history
 
 Purchase order and receiving screens should feel like controlled workpads with live totals and automatic row continuation.
 
+**Document show layout (Phase 5):** PO, receipt, purchase request, and return-to-vendor show pages use a single-scroll progressive-disclosure pattern: document header and actions, metric strip, optional needs-attention panel, lines table in the main column, document trail and facts in a sidebar, and collapsible panels for secondary reference (line activity, PO alignment, discrepancies, audit timeline closed by default). Purchasing form line tables show primary columns daily; per-line details (vendor item, on-hand, list/discount, etc.) expand on demand.
+
 ---
 
 # 23. Customer Workspace: Future Direction

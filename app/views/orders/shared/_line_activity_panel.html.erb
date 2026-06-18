@@ -1,0 +1,44 @@
+<%# locals: line_activity %>
+<% if line_activity.any? { |entry| entry.receipt_lines.any? } %>
+  <div class="ss-summary">
+    <h2>Line Receipt Activity</h2>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>PO line</th>
+          <th>Item</th>
+          <th class="ss-num">Open</th>
+          <th>Receipt</th>
+          <th class="ss-num">Expected</th>
+          <th class="ss-num">Received</th>
+          <th class="ss-num">Accepted</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% line_activity.each do |entry| %>
+          <% po_line = entry.purchase_order_line %>
+          <% if entry.receipt_lines.any? %>
+            <% entry.receipt_lines.each_with_index do |activity, index| %>
+              <tr>
+                <% if index.zero? %>
+                  <td rowspan="<%= entry.receipt_lines.size %>"><%= po_line.line_number %></td>
+                  <td rowspan="<%= entry.receipt_lines.size %>">
+                    <%= render "orders/shared/variant_identity",
+                          variant: po_line.product_variant,
+                          sku_snapshot: po_line.variant_sku_snapshot,
+                          name_snapshot: po_line.variant_name_snapshot %>
+                  </td>
+                  <td class="ss-num" rowspan="<%= entry.receipt_lines.size %>"><%= entry.open_quantity %></td>
+                <% end %>
+                <td><%= link_to "Receipt ##{activity.receipt.id}", orders_receipt_path(activity.receipt) %></td>
+                <td class="ss-num"><%= activity.quantity_expected %></td>
+                <td class="ss-num"><%= activity.quantity_received %></td>
+                <td class="ss-num"><%= activity.quantity_accepted %></td>
+              </tr>
+            <% end %>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

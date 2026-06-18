@@ -1,0 +1,33 @@
+<%
+  association = local_assigns.fetch(:association)
+  line_partial = local_assigns.fetch(:line_partial)
+  line_object = local_assigns.fetch(:line_object)
+  store = local_assigns[:store]
+  line_locals = local_assigns.fetch(:line_locals, {})
+  hint = local_assigns.fetch(
+    :hint,
+    "Scan or type a SKU or barcode, then press Enter. Type at least 2 characters to search by name or SKU prefix."
+  )
+%>
+<h2>Lines</h2>
+<p class="ss-hint"><%= hint %></p>
+
+<div data-controller="nested-form-lines">
+  <div data-nested-form-lines-target="container">
+    <% f.object.public_send(association).reject(&:marked_for_destruction?).each do |line| %>
+      <% variant = line.product_variant %>
+      <% balance = variant && store ? InventoryBalance.find_by(store: store, product_variant: variant) : nil %>
+      <%= f.fields_for association, line do |line_form| %>
+        <%= render line_partial, line_form: line_form, variant: variant, balance: balance, store: store, **line_locals %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <template data-nested-form-lines-target="template">
+    <%= f.fields_for association, line_object, child_index: "NEW_RECORD" do |line_form| %>
+      <%= render line_partial, line_form: line_form, variant: nil, balance: nil, store: store, **line_locals %>
+    <% end %>
+  </template>
+
+  <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#addLine">Add line</button>
+</div>

@@ -1,0 +1,10 @@
+<div class="ss-document-layout">
+  <div class="ss-document-main">
+    <%= yield %>
+  </div>
+  <% if content_for?(:document_sidebar) %>
+    <aside class="ss-document-sidebar">
+      <%= yield :document_sidebar %>
+    </aside>
+  <% end %>
+</div>

@@ -4,18 +4,26 @@ module Items
   class ReturnPath
     include Rails.application.routes.url_helpers
 
-    def self.for(record:, return_to: nil, tab: nil, variant_id: nil)
-      new(record: record, return_to: return_to, tab: tab, variant_id: variant_id).call
+    def self.for(record:, return_to: nil, tab: nil, variant_id: nil, from_tbo_filters: {})
+      new(
+        record: record,
+        return_to: return_to,
+        tab: tab,
+        variant_id: variant_id,
+        from_tbo_filters: from_tbo_filters
+      ).call
     end
 
-    def initialize(record:, return_to: nil, tab: nil, variant_id: nil)
+    def initialize(record:, return_to: nil, tab: nil, variant_id: nil, from_tbo_filters: {})
       @record = record
       @return_to = return_to.to_s
       @tab = tab
       @variant_id = variant_id
+      @from_tbo_filters = from_tbo_filters.to_h.symbolize_keys
     end
 
     def call
+      return from_tbo_path if from_tbo_flow?
       return legacy_path unless item_flow?
 
       item_tab_path
@@ -25,7 +33,15 @@ module Items
       @return_to == "item"
     end
 
+    def from_tbo_flow?
+      @return_to == "from_tbo"
+    end
+
     private
+
+    def from_tbo_path
+      from_tbo_orders_purchase_orders_path(@from_tbo_filters.compact)
+    end
 
     def item_tab_path
       presenter = presenter_for_record

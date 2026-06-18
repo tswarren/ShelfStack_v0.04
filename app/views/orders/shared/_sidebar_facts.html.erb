@@ -1,0 +1,18 @@
+<%# locals: facts %>
+<% if facts.present? %>
+  <div class="ss-sidebar-card">
+    <h2>Document Facts</h2>
+    <dl class="ss-summary-compact">
+      <% facts.each do |fact| %>
+        <dt><%= fact[:label] %></dt>
+        <dd>
+          <% if fact[:href].present? %>
+            <%= link_to fact[:value], fact[:href] %>
+          <% else %>
+            <%= fact[:value] %>
+          <% end %>
+        </dd>
+      <% end %>
+    </dl>
+  </div>
+<% end %>

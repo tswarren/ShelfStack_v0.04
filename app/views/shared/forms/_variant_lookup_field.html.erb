@@ -1,0 +1,14 @@
+<div class="ss-field">
+  <%= line_form.label :product_variant_id, "SKU / barcode" %>
+  <%= text_field_tag nil, variant&.sku, class: "ss-input",
+        placeholder: "Scan or enter SKU, ISBN, UPC…",
+        autocomplete: "off",
+        data: {
+          inventory_variant_lookup_target: "lookupInput",
+          action: "keydown->inventory-variant-lookup#lookupExact input->inventory-variant-lookup#search"
+        } %>
+  <%= line_form.hidden_field :product_variant_id, data: { inventory_variant_lookup_target: "variantId" } %>
+  <p class="ss-hint" data-inventory-variant-lookup-target="preview"></p>
+  <p class="ss-hint" data-inventory-variant-lookup-target="message"></p>
+  <div data-inventory-variant-lookup-target="choices"></div>
+</div>

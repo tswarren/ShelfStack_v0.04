@@ -6,13 +6,14 @@ module Inventory
 
     Result = Data.define(:status, :variants, :message)
 
-    def self.call(query:, mode: :exact)
-      new(query:, mode:).call
+    def self.call(query:, mode: :exact, eligible_only: true)
+      new(query:, mode:, eligible_only:).call
     end
 
-    def initialize(query:, mode: :exact)
+    def initialize(query:, mode: :exact, eligible_only: true)
       @query = query.to_s.strip
       @mode = mode.to_sym
+      @eligible_only = eligible_only
     end
 
     def call
@@ -28,7 +29,7 @@ module Inventory
 
     private
 
-    attr_reader :query, :mode
+    attr_reader :query, :mode, :eligible_only
 
     def resolve_exact
       sku_matches = find_by_variant_sku
@@ -86,7 +87,7 @@ module Inventory
         Result.new(status: :not_found, variants: [], message: "No matching SKU or barcode found.")
       elsif variants.size == 1
         variant = variants.first
-        if Inventory::Eligibility.eligible?(variant)
+        if !eligible_only || Inventory::Eligibility.eligible?(variant)
           Result.new(status: :found, variants: variants, message: nil)
         else
           Result.new(

@@ -1,0 +1,22 @@
+<h1><%= purchase_request.persisted? ? "Edit" : "New" %> Purchase Request</h1>
+
+<%= form_with model: purchase_request, url: (purchase_request.persisted? ? orders_purchase_request_path(purchase_request) : orders_purchase_requests_path) do |f| %>
+  <% if purchase_request.errors.any? %>
+    <div class="ss-errors"><%= purchase_request.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <div class="ss-field">
+    <%= f.label :notes %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <%= render "shared/forms/nested_lines",
+        f: f,
+        association: :purchase_request_lines,
+        line_object: PurchaseRequestLine.new,
+        line_partial: "orders/purchase_requests/line_fields",
+        store: orders_store,
+        line_locals: { line_status_options: @line_status_options } %>
+
+  <%= f.submit class: "ss-btn" %>
+<% end %>

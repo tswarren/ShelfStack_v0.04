@@ -1,0 +1,13 @@
+<%# locals: line_form, variant:, value: nil %>
+<td>
+  <input type="text"
+         class="ss-input ss-purchasing-table__scan"
+         placeholder="Scan…"
+         autocomplete="off"
+         value="<%= local_assigns[:value] || variant&.sku %>"
+         data-purchasing-line-row-target="lookupInput"
+         data-action="keydown->purchasing-line-row#lookupExact input->purchasing-line-row#search" />
+  <%= line_form.hidden_field :product_variant_id, data: { purchasing_line_row_target: "variantId" } %>
+  <div data-purchasing-line-row-target="choices" class="ss-purchasing-table__choices"></div>
+  <p class="ss-hint" data-purchasing-line-row-target="message"></p>
+</td>

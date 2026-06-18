@@ -268,6 +268,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "inventory_cost_value_cents", default: 0, null: false
     t.integer "inventory_retail_value_cents", default: 0, null: false
     t.bigint "last_posting_id"
+    t.integer "moving_average_unit_cost_cents"
     t.bigint "product_variant_id", null: false
     t.integer "quantity_available", default: 0, null: false
     t.integer "quantity_on_hand", default: 0, null: false
@@ -281,6 +282,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["store_id", "product_variant_id"], name: "index_inventory_balances_on_store_id_and_product_variant_id", unique: true
     t.index ["store_id", "quantity_on_hand"], name: "idx_inventory_balances_store_quantity_on_hand"
     t.index ["store_id"], name: "index_inventory_balances_on_store_id"
+    t.check_constraint "moving_average_unit_cost_cents IS NULL OR moving_average_unit_cost_cents >= 0", name: "chk_inventory_balances_moving_average_unit_cost_cents"
   end
 
   create_table "inventory_ledger_entries", force: :cascade do |t|
@@ -395,6 +397,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.check_constraint "default_list_price_factor_bps >= 0 AND default_list_price_factor_bps <= 10000", name: "chk_product_conditions_list_price_factor"
   end
 
+  create_table "product_variant_vendors", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.boolean "preferred", default: false, null: false
+    t.bigint "product_variant_id", null: false
+    t.string "returnability_status"
+    t.integer "supplier_discount_bps"
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.string "vendor_item_number"
+    t.index ["active"], name: "index_product_variant_vendors_on_active"
+    t.index ["product_variant_id", "vendor_id"], name: "idx_product_variant_vendors_variant_vendor", unique: true
+    t.index ["product_variant_id"], name: "index_product_variant_vendors_on_product_variant_id"
+    t.index ["vendor_id"], name: "index_product_variant_vendors_on_vendor_id"
+    t.check_constraint "returnability_status IS NULL OR (returnability_status::text = ANY (ARRAY['returnable'::character varying, 'non_returnable'::character varying, 'conditional'::character varying, 'unknown'::character varying]::text[]))", name: "chk_product_variant_vendors_returnability_status"
+    t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_product_variant_vendors_supplier_discount_bps"
+  end
+
   create_table "product_variants", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "attribute1_sku_component", limit: 5
@@ -409,6 +429,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "name_override"
     t.string "pricing_model_override"
     t.bigint "product_id", null: false
+    t.string "returnability_status", default: "unknown", null: false
     t.integer "selling_price_cents", default: 0, null: false
     t.string "short_name", limit: 40
     t.string "sku", limit: 50, null: false
@@ -422,7 +443,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_id"], name: "index_product_variants_on_product_id"
     t.index ["sku"], name: "index_product_variants_on_sku", unique: true
     t.index ["sub_department_id"], name: "index_product_variants_on_sub_department_id"
+    t.check_constraint "returnability_status::text = ANY (ARRAY['returnable'::character varying, 'non_returnable'::character varying, 'conditional'::character varying, 'unknown'::character varying]::text[])", name: "chk_product_variants_returnability_status"
     t.check_constraint "selling_price_cents >= 0", name: "chk_product_variants_selling_price_cents"
+  end
+
+  create_table "product_vendors", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.boolean "preferred", default: false, null: false
+    t.bigint "product_id", null: false
+    t.string "returnability_status"
+    t.integer "supplier_discount_bps"
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.string "vendor_item_number"
+    t.index ["active"], name: "index_product_vendors_on_active"
+    t.index ["product_id", "vendor_id"], name: "index_product_vendors_on_product_id_and_vendor_id", unique: true
+    t.index ["product_id"], name: "index_product_vendors_on_product_id"
+    t.index ["vendor_id"], name: "index_product_vendors_on_vendor_id"
+    t.check_constraint "returnability_status IS NULL OR (returnability_status::text = ANY (ARRAY['returnable'::character varying, 'non_returnable'::character varying, 'conditional'::character varying, 'unknown'::character varying]::text[]))", name: "chk_product_vendors_returnability_status"
+    t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_product_vendors_supplier_discount_bps"
   end
 
   create_table "products", force: :cascade do |t|
@@ -450,6 +490,168 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["sku"], name: "index_products_on_sku", unique: true
     t.index ["variation_type"], name: "index_products_on_variation_type"
     t.check_constraint "list_price_cents >= 0", name: "chk_products_list_price_cents"
+  end
+
+  create_table "purchase_order_lines", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "line_number", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "product_variant_vendor_id"
+    t.bigint "purchase_order_id", null: false
+    t.bigint "purchase_request_line_id"
+    t.integer "quantity_ordered", null: false
+    t.integer "quantity_received", default: 0, null: false
+    t.string "returnability_status_snapshot"
+    t.string "status", default: "open", null: false
+    t.integer "supplier_discount_bps"
+    t.integer "unit_cost_cents"
+    t.integer "unit_list_price_cents"
+    t.datetime "updated_at", null: false
+    t.string "variant_name_snapshot"
+    t.string "variant_sku_snapshot"
+    t.bigint "vendor_id", null: false
+    t.string "vendor_item_number_snapshot"
+    t.index ["product_variant_id"], name: "index_purchase_order_lines_on_product_variant_id"
+    t.index ["product_variant_vendor_id"], name: "index_purchase_order_lines_on_product_variant_vendor_id"
+    t.index ["purchase_order_id", "line_number"], name: "idx_purchase_order_lines_order_line_number", unique: true
+    t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
+    t.index ["purchase_request_line_id"], name: "index_purchase_order_lines_on_purchase_request_line_id"
+    t.index ["vendor_id"], name: "index_purchase_order_lines_on_vendor_id"
+    t.check_constraint "quantity_ordered > 0", name: "chk_purchase_order_lines_quantity_ordered"
+    t.check_constraint "quantity_received >= 0", name: "chk_purchase_order_lines_quantity_received"
+    t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_purchase_order_lines_supplier_discount_bps"
+  end
+
+  create_table "purchase_orders", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.string "status", default: "draft", null: false
+    t.bigint "store_id", null: false
+    t.datetime "submitted_at"
+    t.bigint "submitted_by_user_id"
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["store_id", "status"], name: "index_purchase_orders_on_store_id_and_status"
+    t.index ["store_id"], name: "index_purchase_orders_on_store_id"
+    t.index ["submitted_by_user_id"], name: "index_purchase_orders_on_submitted_by_user_id"
+    t.index ["vendor_id", "status"], name: "index_purchase_orders_on_vendor_id_and_status"
+    t.index ["vendor_id"], name: "index_purchase_orders_on_vendor_id"
+  end
+
+  create_table "purchase_request_lines", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "line_number", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "purchase_request_id", null: false
+    t.string "request_reason"
+    t.integer "requested_quantity", null: false
+    t.string "status", default: "open", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_variant_id"], name: "index_purchase_request_lines_on_product_variant_id"
+    t.index ["purchase_request_id", "line_number"], name: "idx_purchase_request_lines_request_line_number", unique: true
+    t.index ["purchase_request_id"], name: "index_purchase_request_lines_on_purchase_request_id"
+    t.check_constraint "requested_quantity > 0", name: "chk_purchase_request_lines_requested_quantity"
+  end
+
+  create_table "purchase_requests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.string "status", default: "open", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["store_id", "status"], name: "index_purchase_requests_on_store_id_and_status"
+    t.index ["store_id"], name: "index_purchase_requests_on_store_id"
+  end
+
+  create_table "receipt_lines", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "exception_reason"
+    t.integer "line_number", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "purchase_order_line_id"
+    t.integer "quantity_accepted", default: 0, null: false
+    t.integer "quantity_expected", default: 0, null: false
+    t.integer "quantity_received", default: 0, null: false
+    t.integer "quantity_rejected", default: 0, null: false
+    t.bigint "receipt_id", null: false
+    t.integer "supplier_discount_bps"
+    t.integer "unit_cost_cents"
+    t.integer "unit_list_price_cents"
+    t.datetime "updated_at", null: false
+    t.index ["product_variant_id"], name: "index_receipt_lines_on_product_variant_id"
+    t.index ["purchase_order_line_id"], name: "index_receipt_lines_on_purchase_order_line_id"
+    t.index ["receipt_id", "line_number"], name: "idx_receipt_lines_receipt_line_number", unique: true
+    t.index ["receipt_id"], name: "index_receipt_lines_on_receipt_id"
+    t.check_constraint "quantity_accepted >= 0", name: "chk_receipt_lines_quantity_accepted"
+    t.check_constraint "quantity_expected >= 0", name: "chk_receipt_lines_quantity_expected"
+    t.check_constraint "quantity_received >= 0", name: "chk_receipt_lines_quantity_received"
+    t.check_constraint "quantity_rejected >= 0", name: "chk_receipt_lines_quantity_rejected"
+    t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_receipt_lines_supplier_discount_bps"
+  end
+
+  create_table "receipts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "inventory_posting_id"
+    t.datetime "posted_at"
+    t.bigint "posted_by_user_id"
+    t.bigint "purchase_order_id"
+    t.string "receipt_type", null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["inventory_posting_id"], name: "index_receipts_on_inventory_posting_id"
+    t.index ["posted_by_user_id"], name: "index_receipts_on_posted_by_user_id"
+    t.index ["purchase_order_id"], name: "index_receipts_on_purchase_order_id"
+    t.index ["receipt_type"], name: "index_receipts_on_receipt_type"
+    t.index ["store_id", "status"], name: "index_receipts_on_store_id_and_status"
+    t.index ["store_id"], name: "index_receipts_on_store_id"
+    t.index ["vendor_id"], name: "index_receipts_on_vendor_id"
+  end
+
+  create_table "receiving_discrepancies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "discrepancy_type", null: false
+    t.text "notes"
+    t.integer "quantity_delta", null: false
+    t.bigint "receipt_line_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["receipt_line_id"], name: "index_receiving_discrepancies_on_receipt_line_id"
+  end
+
+  create_table "return_to_vendor_lines", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "credit_amount_cents"
+    t.integer "line_number", null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity", null: false
+    t.bigint "return_to_vendor_id", null: false
+    t.integer "supplier_discount_bps"
+    t.integer "unit_cost_cents"
+    t.integer "unit_list_price_cents"
+    t.datetime "updated_at", null: false
+    t.index ["product_variant_id"], name: "index_return_to_vendor_lines_on_product_variant_id"
+    t.index ["return_to_vendor_id", "line_number"], name: "idx_return_to_vendor_lines_rtv_line_number", unique: true
+    t.index ["return_to_vendor_id"], name: "index_return_to_vendor_lines_on_return_to_vendor_id"
+    t.check_constraint "quantity > 0", name: "chk_return_to_vendor_lines_quantity"
+    t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_return_to_vendor_lines_supplier_discount_bps"
+  end
+
+  create_table "returns_to_vendor", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "inventory_posting_id"
+    t.text "notes"
+    t.datetime "posted_at"
+    t.bigint "posted_by_user_id"
+    t.string "status", default: "draft", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["inventory_posting_id"], name: "index_returns_to_vendor_on_inventory_posting_id"
+    t.index ["posted_by_user_id"], name: "index_returns_to_vendor_on_posted_by_user_id"
+    t.index ["store_id", "status"], name: "index_returns_to_vendor_on_store_id_and_status"
+    t.index ["store_id"], name: "index_returns_to_vendor_on_store_id"
+    t.index ["vendor_id"], name: "index_returns_to_vendor_on_vendor_id"
   end
 
   create_table "role_permissions", force: :cascade do |t|
@@ -658,17 +860,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  create_table "vendor_terms", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "net_days"
+    t.jsonb "terms_data", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["active"], name: "index_vendor_terms_on_active"
+    t.index ["vendor_id", "name"], name: "index_vendor_terms_on_vendor_id_and_name", unique: true
+    t.index ["vendor_id"], name: "index_vendor_terms_on_vendor_id"
+  end
+
   create_table "vendors", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
-    t.integer "default_margin_target_bps"
-    t.string "default_pricing_model"
     t.integer "default_supplier_discount_bps"
     t.string "name", null: false
     t.bigint "parent_vendor_id"
     t.datetime "updated_at", null: false
     t.index ["active"], name: "index_vendors_on_active"
-    t.index ["default_pricing_model"], name: "index_vendors_on_default_pricing_model"
     t.index ["name"], name: "index_vendors_on_name"
     t.index ["parent_vendor_id"], name: "index_vendors_on_parent_vendor_id"
   end
@@ -742,13 +954,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "inventory_postings", "stores"
   add_foreign_key "inventory_postings", "users", column: "posted_by_user_id"
   add_foreign_key "inventory_postings", "workstations"
+  add_foreign_key "product_variant_vendors", "product_variants"
+  add_foreign_key "product_variant_vendors", "vendors"
   add_foreign_key "product_variants", "display_locations"
   add_foreign_key "product_variants", "product_conditions", column: "condition_id"
   add_foreign_key "product_variants", "products"
   add_foreign_key "product_variants", "sub_departments"
+  add_foreign_key "product_vendors", "products"
+  add_foreign_key "product_vendors", "vendors"
   add_foreign_key "products", "catalog_items"
   add_foreign_key "products", "display_locations", column: "default_display_location_id"
   add_foreign_key "products", "sub_departments", column: "default_sub_department_id"
+  add_foreign_key "purchase_order_lines", "product_variant_vendors"
+  add_foreign_key "purchase_order_lines", "product_variants"
+  add_foreign_key "purchase_order_lines", "purchase_orders"
+  add_foreign_key "purchase_order_lines", "purchase_request_lines"
+  add_foreign_key "purchase_order_lines", "vendors"
+  add_foreign_key "purchase_orders", "stores"
+  add_foreign_key "purchase_orders", "users", column: "submitted_by_user_id"
+  add_foreign_key "purchase_orders", "vendors"
+  add_foreign_key "purchase_request_lines", "product_variants"
+  add_foreign_key "purchase_request_lines", "purchase_requests"
+  add_foreign_key "purchase_requests", "stores"
+  add_foreign_key "receipt_lines", "product_variants"
+  add_foreign_key "receipt_lines", "purchase_order_lines"
+  add_foreign_key "receipt_lines", "receipts"
+  add_foreign_key "receipts", "inventory_postings"
+  add_foreign_key "receipts", "purchase_orders"
+  add_foreign_key "receipts", "stores"
+  add_foreign_key "receipts", "users", column: "posted_by_user_id"
+  add_foreign_key "receipts", "vendors"
+  add_foreign_key "receiving_discrepancies", "receipt_lines"
+  add_foreign_key "return_to_vendor_lines", "product_variants"
+  add_foreign_key "return_to_vendor_lines", "returns_to_vendor", column: "return_to_vendor_id"
+  add_foreign_key "returns_to_vendor", "inventory_postings"
+  add_foreign_key "returns_to_vendor", "stores"
+  add_foreign_key "returns_to_vendor", "users", column: "posted_by_user_id"
+  add_foreign_key "returns_to_vendor", "vendors"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "store_display_locations", "display_locations"
@@ -768,6 +1010,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "user_sessions", "users", column: "ended_by_user_id"
   add_foreign_key "user_sessions", "workstations"
   add_foreign_key "users", "stores", column: "default_store_id"
+  add_foreign_key "vendor_terms", "vendors"
   add_foreign_key "vendors", "vendors", column: "parent_vendor_id"
   add_foreign_key "workstation_assignments", "users", column: "assigned_by_user_id"
   add_foreign_key "workstation_assignments", "workstations"

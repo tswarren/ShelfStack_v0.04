@@ -1,0 +1,55 @@
+<h1>Build Purchase Order</h1>
+<p class="ss-muted">From purchase request #<%= @purchase_request.id %></p>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Item</th>
+      <th class="ss-num">Requested</th>
+      <th class="ss-num">Order qty</th>
+      <th>Reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @buildable_lines.each do |entry| %>
+      <% line = entry.line %>
+      <tr>
+        <td><%= line.line_number %></td>
+        <td><%= render "orders/shared/variant_identity", variant: line.product_variant %></td>
+        <td class="ss-num"><%= line.requested_quantity %></td>
+        <td class="ss-num"><%= entry.remaining_quantity %></td>
+        <td><%= line.request_reason || "—" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= form_with url: create_purchase_order_orders_purchase_request_path(@purchase_request), method: :post do %>
+  <% @buildable_lines.each do |entry| %>
+    <%= hidden_field_tag "purchase_request_line_ids[]", entry.line.id %>
+    <div class="ss-field">
+      <%= label_tag "line_quantities_#{entry.line.id}", "Order qty for line ##{entry.line.line_number}" %>
+      <%= number_field_tag "line_quantities[#{entry.line.id}]",
+            entry.remaining_quantity,
+            min: 1,
+            max: entry.remaining_quantity,
+            step: 1,
+            class: "ss-input ss-purchasing-table__qty" %>
+      <span class="ss-muted">Remaining of <%= entry.line.requested_quantity %> requested</span>
+    </div>
+  <% end %>
+
+  <div class="ss-field">
+    <%= label_tag :vendor_id, "Vendor" %>
+    <%= collection_select nil, :vendor_id, @vendors, :id, :name, { include_blank: true }, { required: true } %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :notes, "PO notes" %>
+    <%= text_area_tag :notes, @notes %>
+  </div>
+
+  <%= submit_tag "Create Draft Purchase Order", class: "ss-btn" %>
+  <%= link_to "Cancel", orders_purchase_request_path(@purchase_request), class: "ss-btn ss-btn-secondary" %>
+<% end %>

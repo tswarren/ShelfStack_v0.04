@@ -1,0 +1,10 @@
+<% if sourcing_warnings.present? %>
+  <div class="ss-hint ss-hint--warning">
+    <p><strong>Sourcing warnings</strong></p>
+    <ul>
+      <% sourcing_warnings.each do |warning| %>
+        <li><%= warning %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

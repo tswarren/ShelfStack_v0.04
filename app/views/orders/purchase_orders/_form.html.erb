@@ -1,0 +1,38 @@
+<h1><%= purchase_order.persisted? ? "Edit" : "New" %> Purchase Order</h1>
+
+<%= form_with model: purchase_order, url: (purchase_order.persisted? ? orders_purchase_order_path(purchase_order) : orders_purchase_orders_path) do |f| %>
+  <%= render "shared/forms/errors", record: purchase_order %>
+  <%= render "sourcing_warnings", sourcing_warnings: @sourcing_warnings %>
+
+  <div class="ss-field">
+    <%= f.label :vendor_id, "Vendor" %>
+    <%= f.collection_select :vendor_id, @vendors, :id, :name, { include_blank: true }, { id: "purchase_order_vendor_id" } %>
+  </div>
+
+  <div class="ss-field">
+    <%= f.label :notes %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <%= render "shared/forms/purchasing_line_table",
+        f: f,
+        association: :purchase_order_lines,
+        line_object: PurchaseOrderLine.new,
+        line_partial: "orders/purchase_orders/line_row",
+        store: orders_store,
+        line_locals: { vendor_field_id: "purchase_order_vendor_id" },
+        lookup_context: "order",
+        vendor_field_id: "purchase_order_vendor_id",
+        quantity_field: "quantity_ordered",
+        footer_mode: "po",
+        table_headers: [
+          { label: "Scan" },
+          { label: "Item" },
+          { label: "Qty", class: "ss-num" },
+          { label: "Unit cost", class: "ss-num" },
+          { label: "Warnings" },
+          { label: "" }
+        ] %>
+
+  <%= f.submit class: "ss-btn" %>
+<% end %>

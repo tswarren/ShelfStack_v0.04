@@ -1,0 +1,47 @@
+<%# locals: row, vendor:, from_tbo_filters:, show_suggested: false %>
+<% line = row.line %>
+<% sourcing = row.sourcing %>
+<tr class="<%= "ss-table-row--highlight" if vendor.present? && sourcing && !sourcing.sourcing_record_present %>">
+  <td>
+    <%= check_box_tag "purchase_request_line_ids[]", line.id, false,
+          id: "purchase_request_line_#{line.id}",
+          class: "tbo-line-checkbox" %>
+  </td>
+  <td><%= link_to "##{line.purchase_request_id}", orders_purchase_request_path(line.purchase_request) %></td>
+  <td><%= line.line_number %></td>
+  <td><%= render "orders/shared/variant_identity", variant: line.product_variant %></td>
+  <td class="ss-num"><%= row.quantity_on_hand %></td>
+  <td class="ss-num"><%= row.quantity_on_order %></td>
+  <td class="ss-num"><%= row.open_tbo_quantity %></td>
+  <td class="ss-num">
+    <%= number_field_tag "line_quantities[#{line.id}]",
+          row.remaining_quantity,
+          min: 1,
+          max: row.remaining_quantity,
+          step: 1,
+          class: "ss-input ss-purchasing-table__qty" %>
+    <span class="ss-muted">/ <%= line.requested_quantity %></span>
+  </td>
+  <td><%= line.request_reason || "—" %></td>
+  <% if show_suggested %>
+    <td><%= row.suggested_vendor.vendor&.name || "Unassigned" %></td>
+  <% end %>
+  <td>
+    <% if vendor.present? %>
+      <%= sourcing&.sourcing_record_present ? "Yes" : "No" %>
+    <% else %>
+      —
+    <% end %>
+  </td>
+  <td><%= sourcing&.vendor_item_number || "—" %></td>
+  <td>
+    <% if vendor.present? && sourcing && !sourcing.sourcing_record_present %>
+      <% sourcing_path = orders_tbo_sourcing_path(line.product_variant, vendor: vendor, from_tbo_filters: from_tbo_filters) %>
+      <% if sourcing_path %>
+        <%= link_to "Add sourcing", sourcing_path, class: "ss-btn-link" %>
+      <% end %>
+    <% else %>
+      —
+    <% end %>
+  </td>
+</tr>

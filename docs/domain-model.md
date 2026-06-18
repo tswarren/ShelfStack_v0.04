@@ -218,11 +218,44 @@ Product Variant → Inventory Posting → Inventory Ledger Entries → Inventory
 
 Posted ledger entries are immutable. Balances update only through `Inventory::Post` (and rebuild tooling).
 
-Phase 4 defers purchasing, receiving, POS, transfers, holds, location balances, and accounting-grade average cost.
+Phase 4 defers POS, transfers, holds, location balances, and full accounting beyond moving-average receipt cost.
 
 ---
 
-# 6. Future POS Domain
+# 6. Purchasing Domain (Phase 5)
+
+Phase 5 implements vendor sourcing, purchase requests (TBO), purchase orders, receiving, and returns to vendor at the product variant grain.
+
+## Core Concepts
+
+| Concept | Meaning |
+| --- | --- |
+| Product Vendor | Product-level vendor sourcing defaults (item number, discount, returnability). |
+| Product Variant Vendor | Variant-level vendor overrides; highest precedence for returnability. |
+| Purchase Request (TBO) | Store demand signal; does not affect inventory. |
+| Purchase Order | Committed order to a vendor with line snapshots at submit time. |
+| Receipt | Posted receiving document; only `quantity_accepted` posts to inventory. |
+| Return to Vendor (RTV) | Posted vendor return; negative quantity via inventory ledger. |
+| Moving Average Cost | `inventory_balances.moving_average_unit_cost_cents` updated on receive. |
+
+## Returnability Precedence
+
+```text
+product_variant_vendors → product_vendors → product_variants.returnability_status
+```
+
+## Design Direction
+
+```text
+Purchase Request → Purchase Order → Receipt → Inventory::Post (receiving)
+Return to Vendor → Inventory::Post (vendor_return)
+```
+
+Purchasing documents are sources; inventory changes only through `Inventory::Post`.
+
+---
+
+# 7. Future POS Domain
 
 The POS domain is not yet implemented in early phases, but the model prepares for it.
 

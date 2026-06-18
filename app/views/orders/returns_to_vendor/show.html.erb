@@ -1,0 +1,60 @@
+<% presenter = @show_presenter %>
+
+<%= render "orders/shared/document_header",
+      title: presenter.title,
+      status: presenter.status,
+      metadata_lines: presenter.metadata_lines do %>
+  <% if @return_to_vendor.draft? %>
+    <%= link_to "Edit", edit_orders_returns_to_vendor_path(@return_to_vendor), class: "ss-btn" %>
+    <%= button_to "Post", post_orders_returns_to_vendor_path(@return_to_vendor), method: :patch, class: "ss-btn" %>
+    <%= button_to "Cancel", cancel_orders_returns_to_vendor_path(@return_to_vendor), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= link_to "Back", orders_returns_to_vendor_index_path %>
+<% end %>
+
+<%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
+<%= render "orders/shared/attention_panel", items: presenter.attention_items %>
+
+<%= render layout: "orders/shared/document_layout" do %>
+  <h2>Lines</h2>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th class="ss-num">Qty</th>
+        <th class="ss-num">Unit cost</th>
+        <th class="ss-num">Credit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @return_to_vendor.return_to_vendor_lines.each do |line| %>
+        <tr>
+          <td><%= line.line_number %></td>
+          <td><%= render "orders/shared/variant_identity", variant: line.product_variant %></td>
+          <td class="ss-num"><%= line.quantity %></td>
+          <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
+          <td class="ss-num"><%= line.credit_amount_cents ? format_cents(line.credit_amount_cents) : "—" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% content_for :document_sidebar do %>
+    <%= render "orders/shared/document_trail", nodes: presenter.trail_nodes %>
+    <%= render "orders/shared/sidebar_facts", facts: presenter.sidebar_facts %>
+    <% if @document_hub.inventory_posting.present? && @return_to_vendor.return_to_vendor_lines.any? && Authorization.allowed?(user: current_user, permission_key: "inventory.access", store: current_store) %>
+      <div class="ss-sidebar-card">
+        <h2>Inventory</h2>
+        <p>
+          <%= link_to "View posting ##{@document_hub.inventory_posting.id}",
+                inventory_variant_path(@return_to_vendor.return_to_vendor_lines.first.product_variant) %>
+        </p>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

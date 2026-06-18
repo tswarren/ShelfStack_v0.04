@@ -30,7 +30,12 @@
             <td><%= variant.sku %></td>
             <td><%= variant.name %></td>
             <td><%= format_cents(variant.selling_price_cents) %></td>
-            <td><%= link_to "Edit", edit_items_product_variant_path(variant, item_flow) %></td>
+            <td>
+              <%= link_to "Edit", edit_items_product_variant_path(variant, item_flow) %>
+              <% if Inventory::Eligibility.eligible?(variant) && Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
+                | <%= link_to "Mark TBO", new_orders_purchase_request_path(product_variant_id: variant.id) %>
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>

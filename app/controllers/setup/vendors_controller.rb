@@ -78,8 +78,7 @@ module Setup
 
     def vendor_params
       params.require(:vendor).permit(
-        :name, :parent_vendor_id, :default_pricing_model, :default_margin_target_bps,
-        :default_supplier_discount_bps, :active
+        :name, :parent_vendor_id, :default_supplier_discount_bps, :active
       )
     end
   end

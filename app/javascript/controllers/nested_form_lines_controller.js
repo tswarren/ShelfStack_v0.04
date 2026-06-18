@@ -19,13 +19,13 @@ export default class extends Controller {
 
   removeLine(event) {
     event.preventDefault()
-    const line = event.target.closest("[data-inventory-adjustment-lines-target='line']")
+    const line = event.target.closest("[data-nested-form-lines-target='line']")
     if (!line) return
 
-    const destroyField = line.querySelector("[data-inventory-adjustment-lines-target='destroy']")
+    const destroyField = line.querySelector("[data-nested-form-lines-target='destroy']")
     if (destroyField) {
       destroyField.value = "1"
-      line.hidden = true
+      line.style.display = "none"
     } else {
       line.remove()
     }

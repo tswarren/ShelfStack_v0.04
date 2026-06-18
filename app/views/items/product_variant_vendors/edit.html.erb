@@ -1,0 +1,13 @@
+<h1>Edit Variant Vendor</h1>
+<p><%= @product_variant.sku %> — <%= @product_variant.name %></p>
+
+<%= form_with model: @product_variant_vendor,
+      url: items_product_variant_product_variant_vendor_path(@product_variant, @product_variant_vendor),
+      method: :patch do |f| %>
+  <%= render "shared/forms/product_variant_vendor_fields",
+        f: f,
+        product_variant_vendor: @product_variant_vendor,
+        lock_variant: true %>
+  <%= f.submit class: "ss-btn" %>
+  <%= link_to "Cancel", Items::ReturnPath.for(record: @product_variant, return_to: "item", tab: "display", variant_id: @product_variant.id) %>
+<% end %>

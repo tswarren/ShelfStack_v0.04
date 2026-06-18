@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class InventoryAdjustment < ApplicationRecord
+  include NestedLineRenumbering
+
   ADJUSTMENT_TYPES = %w[opening_inventory manual_adjustment balance_correction].freeze
   STATUSES = %w[draft posted cancelled].freeze
 
@@ -64,8 +66,6 @@ class InventoryAdjustment < ApplicationRecord
   def normalize_line_numbers
     return if posted?
 
-    inventory_adjustment_lines.reject(&:marked_for_destruction?).each_with_index do |line, index|
-      line.line_number = index + 1
-    end
+    renumber_nested_lines(inventory_adjustment_lines)
   end
 end

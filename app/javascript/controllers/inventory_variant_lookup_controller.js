@@ -7,7 +7,10 @@ export default class extends Controller {
     "preview",
     "message",
     "choices",
-    "line"
+    "line",
+    "listPrice",
+    "discountBps",
+    "unitCost"
   ]
 
   static values = {
@@ -15,7 +18,9 @@ export default class extends Controller {
     initialSku: String,
     initialVariantId: String,
     initialLabel: String,
-    initialOnHand: String
+    initialOnHand: String,
+    requireEligible: { type: Boolean, default: true },
+    formVendorSelectId: String
   }
 
   connect() {
@@ -57,6 +62,8 @@ export default class extends Controller {
   fetchLookup(params) {
     const lookupUrl = new URL(this.urlValue, window.location.origin)
     Object.entries(params).forEach(([key, value]) => lookupUrl.searchParams.set(key, value))
+    const vendorId = this.vendorIdFromForm()
+    if (vendorId) lookupUrl.searchParams.set("vendor_id", vendorId)
 
     fetch(lookupUrl)
       .then((response) => response.json())
@@ -105,7 +112,7 @@ export default class extends Controller {
   }
 
   selectVariant(variant) {
-    if (!variant.eligible) {
+    if (this.requireEligibleValue && !variant.eligible) {
       this.variantIdTarget.value = ""
       this.previewTarget.textContent = ""
       this.messageTarget.textContent = `Variant ${variant.sku} is not inventory-eligible (${variant.inventory_behavior}).`
@@ -117,6 +124,7 @@ export default class extends Controller {
     this.variantIdTarget.value = variant.id
     this.lookupInputTarget.value = variant.sku
     this.renderSelected(variant)
+    this.applyPricingDefaults(variant)
     this.clearChoices()
     this.messageTarget.textContent = ""
     this.messageTarget.className = "ss-hint"
@@ -124,7 +132,30 @@ export default class extends Controller {
 
   renderSelected(variant) {
     const onHand = variant.quantity_on_hand ?? this.initialOnHandValue ?? "0"
-    this.previewTarget.textContent = `${variant.sku} — ${variant.name}${variant.condition ? ` (${variant.condition})` : ""} | On hand: ${onHand}`
+    let preview = `${variant.sku} — ${variant.name}${variant.condition ? ` (${variant.condition})` : ""} | On hand: ${onHand}`
+    if (variant.unit_cost_cents != null) {
+      preview += ` | Cost: ${variant.unit_cost_cents}c`
+    }
+    this.previewTarget.textContent = preview
+  }
+
+  applyPricingDefaults(variant) {
+    if (this.hasListPriceTarget && !this.listPriceTarget.value && variant.unit_list_price_cents != null) {
+      this.listPriceTarget.value = variant.unit_list_price_cents
+    }
+    if (this.hasDiscountBpsTarget && !this.discountBpsTarget.value && variant.supplier_discount_bps != null) {
+      this.discountBpsTarget.value = variant.supplier_discount_bps
+    }
+    if (this.hasUnitCostTarget && !this.unitCostTarget.value && variant.unit_cost_cents != null) {
+      this.unitCostTarget.value = variant.unit_cost_cents
+    }
+  }
+
+  vendorIdFromForm() {
+    if (!this.hasFormVendorSelectIdValue) return null
+
+    const select = document.getElementById(this.formVendorSelectIdValue)
+    return select?.value || null
   }
 
   variantLabel(variant) {

@@ -38,11 +38,15 @@ module Items
 
     def load_tab_data
       case @tab
+      when "overview"
+        load_order_quantities
       when "catalog"
         @identifiers = @item.catalog_item&.catalog_item_identifiers&.active_records
           &.order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc) || []
       when "selling"
         @variants = @item.variants
+      when "display"
+        load_display_vendor_data
       when "activity"
         @audit_events = merged_audit_events
       end
@@ -64,6 +68,26 @@ module Items
       return if params[:variant_id].blank? || @item.product.blank?
 
       @item.variants.find_by(id: params[:variant_id])
+    end
+
+    def load_order_quantities
+      return unless current_store.present? && @item.variants.any?
+
+      @order_quantities = Purchasing::OrderQuantityLookup.for_variants(
+        store: current_store,
+        variant_ids: @item.variants.map(&:id)
+      )
+    end
+
+    def load_display_vendor_data
+      return if @item.product.blank?
+
+      variant_ids = @item.variants.map(&:id)
+      @variant_vendor_overrides = ProductVariantVendor
+        .includes(:vendor, :product_variant)
+        .joins(:product_variant, :vendor)
+        .where(product_variant_id: variant_ids)
+        .order("product_variants.sku", "vendors.name")
     end
   end
 end

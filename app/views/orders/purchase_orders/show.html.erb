@@ -1,0 +1,137 @@
+<% presenter = @show_presenter %>
+
+<%= render "orders/shared/document_header",
+      title: presenter.title,
+      status: presenter.status,
+      metadata_lines: presenter.metadata_lines do %>
+  <% if @purchase_order.draft? %>
+    <%= link_to "Edit", edit_orders_purchase_order_path(@purchase_order), class: "ss-btn" %>
+    <%= button_to "Submit", submit_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn" %>
+    <%= button_to "Cancel", cancel_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn" %>
+  <% elsif @purchase_order.status == "submitted" %>
+    <%= button_to "Cancel", cancel_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <% if @receivable && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.create", store: current_store) %>
+    <%= button_to "Receive", receive_orders_purchase_order_path(@purchase_order), method: :post, class: "ss-btn" %>
+  <% end %>
+  <% if @closable %>
+    <%= button_to "Close", close_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn",
+          data: { turbo_confirm: "Close this purchase order? Open lines will be marked closed or closed short." } %>
+  <% end %>
+  <%= link_to "Back", orders_purchase_orders_path %>
+<% end %>
+
+<%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
+<%= render "orders/shared/attention_panel", items: presenter.attention_items %>
+
+<%= render layout: "orders/shared/document_layout" do %>
+  <h2>Lines</h2>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th>Vendor #</th>
+        <th class="ss-num">Ordered</th>
+        <th class="ss-num">Received</th>
+        <th class="ss-num">Open</th>
+        <th class="ss-num">Cost</th>
+        <th>Status</th>
+        <th>Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @purchase_order.purchase_order_lines.each do |line| %>
+        <tr>
+          <td><%= line.line_number %></td>
+          <td>
+            <%= render "orders/shared/variant_identity",
+                  variant: line.product_variant,
+                  sku_snapshot: line.variant_sku_snapshot,
+                  name_snapshot: line.variant_name_snapshot %>
+          </td>
+          <td><%= line.vendor_item_number_snapshot || "—" %></td>
+          <td class="ss-num"><%= line.quantity_ordered %></td>
+          <td class="ss-num"><%= line.quantity_received %></td>
+          <td class="ss-num"><%= @purchase_order.open_quantity_for_line(line) %></td>
+          <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
+          <td><%= render "orders/shared/status_badge", status: line.status %></td>
+          <td>
+            <% flags = presenter.line_flags(line) %>
+            <%= flags.any? ? flags.join(" · ") : "—" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% content_for :document_sidebar do %>
+    <%= render "orders/shared/document_trail", nodes: presenter.trail_nodes %>
+    <%= render "orders/shared/sidebar_facts", facts: presenter.sidebar_facts %>
+  <% end %>
+<% end %>
+
+<% if presenter.show_related_detail? %>
+  <%= render "orders/shared/collapsible_panel", title: "Related documents (detail)" do %>
+    <% if @document_hub.purchase_requests.any? %>
+      <%= render "orders/shared/related_records_panel",
+            title: "Related Purchase Requests",
+            records: @document_hub.purchase_requests,
+            headers: [
+              { label: "Request" },
+              { label: "Status" },
+              { label: "Lines", class: "ss-num" },
+              { label: "" }
+            ] do %>
+        <% @document_hub.purchase_requests.each do |entry| %>
+          <tr>
+            <td>Purchase Request #<%= entry.purchase_request.id %></td>
+            <td><%= entry.purchase_request.status %></td>
+            <td class="ss-num"><%= entry.line_count %></td>
+            <td><%= link_to "View", orders_purchase_request_path(entry.purchase_request) %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    <% end %>
+    <% if @document_hub.receipts.any? %>
+      <%= render "orders/shared/related_records_panel",
+            title: "Related Receipts",
+            records: @document_hub.receipts,
+            headers: [
+              { label: "Receipt" },
+              { label: "Status" },
+              { label: "Type" },
+              { label: "Lines", class: "ss-num" },
+              { label: "Accepted", class: "ss-num" },
+              { label: "" }
+            ] do %>
+        <% @document_hub.receipts.each do |entry| %>
+          <tr>
+            <td>Receipt #<%= entry.receipt.id %></td>
+            <td><%= entry.receipt.status %></td>
+            <td><%= entry.receipt.receipt_type %></td>
+            <td class="ss-num"><%= entry.line_count %></td>
+            <td class="ss-num"><%= entry.accepted_quantity %></td>
+            <td><%= link_to "View", orders_receipt_path(entry.receipt) %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if presenter.show_line_activity? %>
+  <%= render "orders/shared/collapsible_panel", title: "Line receipt activity" do %>
+    <%= render "orders/shared/line_activity_panel", line_activity: @document_hub.line_activity %>
+  <% end %>
+<% end %>
+
+<% if presenter.show_discrepancies? %>
+  <%= render "orders/shared/collapsible_panel", title: "Receiving discrepancies" do %>
+    <%= render "orders/shared/discrepancies_panel", discrepancies: @document_hub.discrepancies %>
+  <% end %>
+<% end %>
+
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

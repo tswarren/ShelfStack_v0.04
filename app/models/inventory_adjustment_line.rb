@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 class InventoryAdjustmentLine < ApplicationRecord
+  include NestedLineNumberUniqueness
+
   belongs_to :inventory_adjustment
   belongs_to :product_variant
   belongs_to :inventory_location, optional: true
   belongs_to :inventory_reason_code, optional: true
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  validates :line_number, uniqueness: { scope: :inventory_adjustment_id }
+  validates_nested_line_number_uniqueness :inventory_adjustment, foreign_key: :inventory_adjustment_id
   validates :quantity_delta, presence: true, numericality: { only_integer: true }
   validates :unit_cost_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate :adjustment_must_be_draft, on: :update

@@ -14,6 +14,9 @@ class InventoryBalance < ApplicationRecord
   validates :inventory_retail_value_cents, presence: true, numericality: { only_integer: true }
   validates :store_id, uniqueness: { scope: :product_variant_id }
   validates :unit_cost_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :moving_average_unit_cost_cents,
+            numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+            allow_nil: true
   validates :unit_retail_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :cost_source, inclusion: { in: COST_SOURCES }, allow_nil: true
   validates :retail_source, inclusion: { in: RETAIL_SOURCES }, allow_nil: true

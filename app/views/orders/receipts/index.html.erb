@@ -1,0 +1,17 @@
+<h1>Receipts <%= link_to "New", new_orders_receipt_path, class: "ss-btn" %></h1>
+
+<table class="ss-table">
+  <thead><tr><th>ID</th><th>Vendor</th><th>Type</th><th>Status</th><th>Posted</th><th></th></tr></thead>
+  <tbody>
+    <% @receipts.each do |receipt| %>
+      <tr>
+        <td><%= receipt.id %></td>
+        <td><%= receipt.vendor.name %></td>
+        <td><%= receipt.receipt_type %></td>
+        <td><%= receipt.status %></td>
+        <td><%= receipt.posted_at ? display_time(receipt.posted_at) : "—" %></td>
+        <td><%= link_to "View", orders_receipt_path(receipt) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

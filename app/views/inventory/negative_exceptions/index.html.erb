@@ -11,7 +11,12 @@
         <td><%= balance.product_variant.sku %></td>
         <td><%= balance.product_variant.name %></td>
         <td class="ss-num"><%= balance.quantity_on_hand %></td>
-        <td><%= link_to "Ledger", inventory_variant_path(balance.product_variant) %></td>
+        <td>
+          <%= link_to "Ledger", inventory_variant_path(balance.product_variant) %>
+          <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
+            | <%= link_to "Mark TBO", new_orders_purchase_request_path(product_variant_id: balance.product_variant_id) %>
+          <% end %>
+        </td>
       </tr>
     <% end %>
   </tbody>

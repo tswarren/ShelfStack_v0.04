@@ -16,8 +16,15 @@
 
 <%= form_with url: inventory_root_path, method: :get, class: "ss-form-inline" do %>
   <%= text_field_tag :q, params[:q], placeholder: "Search SKU or name" %>
+  <%= hidden_field_tag :stock, params[:stock] if params[:stock].present? %>
   <%= submit_tag "Search", class: "ss-btn" %>
 <% end %>
+
+<p class="ss-actions">
+  <%= link_to "All stock", inventory_root_path(q: params[:q]), class: (@stock_filter.blank? ? "ss-btn" : "ss-btn ss-btn-secondary") %>
+  <%= link_to "Zero stock", inventory_root_path(q: params[:q], stock: "zero"), class: (@stock_filter == "zero" ? "ss-btn" : "ss-btn ss-btn-secondary") %>
+  <%= link_to "Low stock", inventory_root_path(q: params[:q], stock: "low"), class: (@stock_filter == "low" ? "ss-btn" : "ss-btn ss-btn-secondary") %>
+</p>
 
 <p class="ss-muted">
   On hand: <%= @totals[:quantity_on_hand] %> |
@@ -32,6 +39,8 @@
       <th>Variant</th>
       <th class="ss-num">On Hand</th>
       <th class="ss-num">Available</th>
+      <th class="ss-num">On Order</th>
+      <th class="ss-num">Pending</th>
       <th class="ss-num">Retail Value</th>
       <th class="ss-num">Cost Value</th>
       <th></th>
@@ -39,17 +48,23 @@
   </thead>
   <tbody>
     <% @balances.each do |balance| %>
+      <% order_qty = @order_quantities[balance.product_variant_id] %>
       <tr>
         <td><%= balance.product_variant.sku %></td>
         <td><%= balance.product_variant.name %></td>
         <td class="ss-num"><%= balance.quantity_on_hand %></td>
         <td class="ss-num"><%= balance.quantity_available %></td>
+        <td class="ss-num"><%= order_qty&.on_order || 0 %></td>
+        <td class="ss-num"><%= order_qty&.pending || 0 %></td>
         <td class="ss-num"><%= format_cents(balance.inventory_retail_value_cents) %></td>
         <td class="ss-num"><%= format_cents(balance.inventory_cost_value_cents) %></td>
         <td>
           <%= link_to "Ledger", inventory_variant_path(balance.product_variant) %>
           <% if Authorization.allowed?(user: current_user, permission_key: "inventory.adjustments.create", store: current_store) %>
             | <%= link_to "Adjust", new_inventory_adjustment_path(product_variant_id: balance.product_variant_id) %>
+          <% end %>
+          <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
+            | <%= link_to "Mark TBO", new_orders_purchase_request_path(product_variant_id: balance.product_variant_id) %>
           <% end %>
         </td>
       </tr>

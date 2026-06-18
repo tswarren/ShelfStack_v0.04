@@ -1,0 +1,47 @@
+<%# locals: tbo_rows, vendor:, from_tbo_filters:, show_suggested: false, form_url:, form_vendor: %>
+<%= form_with url: form_url, method: :post do %>
+  <%= hidden_field_tag :vendor_id, form_vendor.id if form_vendor.present? %>
+  <% from_tbo_filters.each do |key, value| %>
+    <%= hidden_field_tag key, value if value.present? %>
+  <% end %>
+
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th><%= check_box_tag "select_all", "1", false, class: "select-all-tbo-lines" %></th>
+        <th>Request</th>
+        <th>#</th>
+        <th>Item</th>
+        <th class="ss-num">On hand</th>
+        <th class="ss-num">On order</th>
+        <th class="ss-num">Open TBO</th>
+        <th class="ss-num">Order qty</th>
+        <th>Reason</th>
+        <% if show_suggested %><th>Suggested vendor</th><% end %>
+        <th>Sourced</th>
+        <th>Vendor item #</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% tbo_rows.each do |row| %>
+        <%= render "orders/purchase_orders/tbo_row",
+              row: row,
+              vendor: vendor,
+              from_tbo_filters: from_tbo_filters,
+              show_suggested: show_suggested %>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div class="ss-field">
+    <%= label_tag :notes, "PO notes" %>
+    <%= text_area_tag :notes, params[:notes] %>
+  </div>
+
+  <div class="ss-actions">
+    <%= submit_tag form_vendor ? "Create Draft Purchase Order for #{form_vendor.name}" : "Create Draft Purchase Order",
+          class: "ss-btn" %>
+    <%= link_to "Cancel", orders_purchase_orders_path, class: "ss-btn ss-btn-secondary" %>
+  </div>
+<% end %>

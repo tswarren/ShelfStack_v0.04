@@ -1,0 +1,10 @@
+<%# locals: variant, sku_snapshot: nil, name_snapshot: nil, tab: "selling" %>
+<% sku_snapshot = local_assigns.fetch(:sku_snapshot, nil) %>
+<% name_snapshot = local_assigns.fetch(:name_snapshot, nil) %>
+<% tab = local_assigns.fetch(:tab, "selling") %>
+<% if variant.blank? %>
+  —
+<% else %>
+  <%= orders_variant_sku_link(variant, sku_snapshot: sku_snapshot, tab: tab) %>
+  <br><span class="ss-muted"><%= orders_variant_display_name(variant, name_snapshot: name_snapshot) %></span>
+<% end %>
