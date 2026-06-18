@@ -19,7 +19,11 @@ module Setup
     end
 
     def new
-      @product_vendor = ProductVendor.new(active: true, preferred: false)
+      @product_vendor = ProductVendor.new(
+        product_id: params[:product_id],
+        active: true,
+        preferred: false
+      )
       load_form_collections
     end
 

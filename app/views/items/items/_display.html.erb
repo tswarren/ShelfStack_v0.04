@@ -55,8 +55,8 @@
     <% end %>
   <% end %>
 
-  <section class="ss-item-display-section">
-    <h3>Vendors</h3>
+  <section class="ss-item-display-section" id="product-vendors">
+    <h3>Product vendors</h3>
     <% if item.product.present? %>
       <% product_vendors = ProductVendor.active_records.includes(:vendor).where(product: item.product).order("vendors.name") %>
       <% if product_vendors.any? %>
@@ -77,20 +77,30 @@
                 <td><%= product_vendor.vendor_item_number || "—" %></td>
                 <td><%= product_vendor.supplier_discount_bps ? format_basis_points(product_vendor.supplier_discount_bps) : "—" %></td>
                 <td><%= product_vendor.preferred? ? "Yes" : "No" %></td>
-                <td><%= link_to "View", setup_product_vendor_path(product_vendor) %></td>
+                <td>
+                  <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.update", store: current_store) %>
+                    <%= link_to "Edit", edit_items_product_product_vendor_path(item.product, product_vendor) %>
+                  <% else %>
+                    <%= link_to "View", setup_product_vendor_path(product_vendor) %>
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>
         </table>
-        <p><%= link_to "Manage product vendors in Setup", setup_product_vendors_path %></p>
       <% else %>
         <p class="ss-muted">No product vendor sourcing records yet.</p>
-        <p><%= link_to "Add product vendor in Setup", new_setup_product_vendor_path %></p>
+      <% end %>
+
+      <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.create", store: current_store) %>
+        <p class="ss-catalog-actions">
+          <%= link_to "Add product vendor", new_items_product_product_vendor_path(item.product), class: "ss-btn ss-btn-secondary ss-btn-small" %>
+        </p>
       <% end %>
     <% end %>
   </section>
 
-  <section class="ss-item-display-section">
+  <section class="ss-item-display-section" id="variant-vendors">
     <h3>Variant vendor overrides</h3>
     <% if item.variants.any? %>
       <% if defined?(@variant_vendor_overrides) && @variant_vendor_overrides.any? %>
@@ -135,7 +145,7 @@
           <% item.variants.each do |variant| %>
             <%= link_to "Add vendor for #{variant.sku}",
                   new_items_product_variant_product_variant_vendor_path(variant),
-                  class: "ss-btn ss-btn-secondary" %>
+                  class: "ss-btn ss-btn-secondary ss-btn-small" %>
           <% end %>
         </div>
       <% end %>

@@ -172,12 +172,15 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "item setup tab shows variant display locations and product vendor sourcing links" do
+    grant_permission!(@user, "setup.product_vendors.create", store: @store)
+    grant_permission!(@user, "setup.product_variant_vendors.create", store: @store)
+
     get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
     assert_response :success
     assert_match "Variant display locations", response.body
     assert_match @variant.sku, response.body
     assert_match "No product vendor sourcing records yet", response.body
-    assert_match new_setup_product_vendor_path, response.body
+    assert_match new_items_product_product_vendor_path(@product), response.body
     assert_match edit_items_product_path(@product, anchor: "product_default_display_location_id"), response.body
     assert_match edit_items_product_variant_path(@variant), response.body
   end

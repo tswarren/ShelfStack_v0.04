@@ -139,6 +139,17 @@ a:hover {
   overflow: hidden;
 }
 
+.ss-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ss-table-scroll > .ss-table {
+  width: max-content;
+  min-width: 100%;
+}
+
 .ss-table th,
 .ss-table td {
   padding: 0.5rem 0.75rem;
@@ -1231,7 +1242,75 @@ h2 {
   grid-template-columns: minmax(0, 1fr) 7rem;
   gap: 1.5rem;
   align-items: start;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.ss-item-ops-summary {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.85rem;
+  border: var(--border) solid var(--color-base-300);
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+}
+
+.ss-item-ops-summary__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.ss-item-ops-summary .ss-metric-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.85rem;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ss-item-ops-summary .ss-metric-card {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+.ss-item-ops-summary .ss-metric-card__label {
+  display: inline;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #78716c;
+}
+
+.ss-item-ops-summary .ss-metric-card__label::after {
+  content: ":";
+}
+
+.ss-item-ops-summary .ss-metric-card__value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ss-item-ops-summary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.ss-item-ops-summary__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
 }
 
 .ss-item-hero-text {
@@ -1574,6 +1653,34 @@ h2 {
   color: var(--color-primary);
 }
 
+.ss-item-variant-defaults-meta {
+  margin-left: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #78716c;
+}
+
+.ss-item-variant-details {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.35rem 0 0.15rem 0.85rem;
+  border-left: 2px solid var(--color-base-300);
+}
+
+.ss-item-variant-details__section h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #78716c;
+}
+
+.ss-item-variant-details .ss-item-classification-block {
+  padding: 0;
+  border-left: none;
+}
+
 .ss-item-classification-block {
   padding: 0.35rem 0 0.15rem 0.85rem;
   border-left: 2px solid var(--color-base-300);
@@ -1667,6 +1774,10 @@ h2 {
   gap: 0.5rem;
   padding-top: 0.5rem;
   border-top: var(--border) solid var(--color-base-300);
+}
+
+.ss-item-sidebar {
+  min-width: 0;
 }
 
 .ss-item-sidebar-section {

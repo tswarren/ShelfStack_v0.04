@@ -4,21 +4,23 @@ module Items
   class ReturnPath
     include Rails.application.routes.url_helpers
 
-    def self.for(record:, return_to: nil, tab: nil, variant_id: nil, from_tbo_filters: {})
+    def self.for(record:, return_to: nil, tab: nil, variant_id: nil, anchor: nil, from_tbo_filters: {})
       new(
         record: record,
         return_to: return_to,
         tab: tab,
         variant_id: variant_id,
+        anchor: anchor,
         from_tbo_filters: from_tbo_filters
       ).call
     end
 
-    def initialize(record:, return_to: nil, tab: nil, variant_id: nil, from_tbo_filters: {})
+    def initialize(record:, return_to: nil, tab: nil, variant_id: nil, anchor: nil, from_tbo_filters: {})
       @record = record
       @return_to = return_to.to_s
       @tab = tab
       @variant_id = variant_id
+      @anchor = anchor
       @from_tbo_filters = from_tbo_filters.to_h.symbolize_keys
     end
 
@@ -47,7 +49,8 @@ module Items
       presenter = presenter_for_record
       params = presenter.route_params.merge(tab: resolved_tab)
       params[:variant_id] = @variant_id if @variant_id.present?
-      items_item_path(params)
+      path = items_item_path(params)
+      @anchor.present? ? "#{path}##{@anchor}" : path
     end
 
     def resolved_tab

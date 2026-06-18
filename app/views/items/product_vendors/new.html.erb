@@ -1,8 +1,8 @@
-<h1>Add Variant Vendor</h1>
-<p><%= @product_variant.sku %> — <%= @product_variant.name %></p>
+<h1>Add Product Vendor</h1>
+<p><%= @product.name %></p>
 
-<%= form_with model: @product_variant_vendor,
-      url: items_product_variant_product_variant_vendors_path(@product_variant) do |f| %>
+<%= form_with model: @product_vendor,
+      url: items_product_product_vendors_path(@product) do |f| %>
   <% if params[:return_to] == "from_tbo" %>
     <%= hidden_field_tag :return_to, "from_tbo" %>
     <%= hidden_field_tag :from_tbo_view, params[:from_tbo_view] %>
@@ -11,17 +11,16 @@
     <%= hidden_field_tag :from_tbo_department_id, params[:from_tbo_department_id] %>
     <%= hidden_field_tag :from_tbo_format_id, params[:from_tbo_format_id] %>
   <% end %>
-  <%= render "shared/forms/product_variant_vendor_fields",
+  <%= render "shared/forms/product_vendor_fields",
         f: f,
-        product_variant_vendor: @product_variant_vendor,
-        lock_variant: true %>
+        product_vendor: @product_vendor,
+        lock_product: true %>
   <%= f.submit class: "ss-btn" %>
   <%= link_to "Cancel",
         Items::ReturnPath.for(
-          record: @product_variant,
+          record: @product,
           return_to: params[:return_to].presence || "item",
           tab: params[:return_to] == "from_tbo" ? nil : "item_setup",
-          variant_id: @product_variant.id,
           anchor: params[:return_to] == "from_tbo" ? nil : "vendor-sourcing",
           from_tbo_filters: {
             view: params[:from_tbo_view],

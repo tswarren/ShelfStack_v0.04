@@ -1,5 +1,5 @@
 <% operations = local_assigns[:operations] %>
-<% matrix_colspan = 12 %>
+<% overview_matrix_colspan = operations&.inventory_visible? ? 7 : 5 %>
 <div class="ss-item-catalog">
   <div class="ss-item-main">
     <header class="ss-item-hero">
@@ -64,22 +64,29 @@
       </div>
     </header>
 
-    <% if operations&.header_actions&.any? %>
-      <div class="ss-detail-actions ss-item-header-actions">
-        <% operations.header_actions.each do |action| %>
-          <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary" %>
-        <% end %>
-      </div>
-    <% end %>
-
     <% if local_assigns[:attention_items].present? %>
       <%= render "orders/shared/attention_panel", items: attention_items %>
     <% end %>
 
-    <% if operations&.rollup_metrics&.any? %>
-      <%= render "orders/shared/metric_strip",
-            metrics: operations.rollup_metrics.map { |metric| { label: metric.label, value: metric.value, class: metric.class_name } } %>
-      <p class="ss-hint">Available equals on hand until reservations are tracked.</p>
+    <% if operations&.rollup_metrics&.any? || operations&.header_actions&.any? %>
+      <section class="ss-item-ops-summary" aria-label="Operational summary">
+        <div class="ss-item-ops-summary__toolbar">
+          <% if operations&.rollup_metrics&.any? %>
+            <%= render "orders/shared/metric_strip",
+                  metrics: operations.rollup_metrics.map { |metric| { label: metric.label, value: metric.value, class: metric.class_name } } %>
+          <% end %>
+          <% if operations&.header_actions&.any? %>
+            <div class="ss-item-ops-summary__actions">
+              <% operations.header_actions.each do |action| %>
+                <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        <% if operations&.rollup_metrics&.any? %>
+          <p class="ss-hint ss-item-ops-summary__hint">Available equals on hand until reservations are tracked.</p>
+        <% end %>
+      </section>
     <% end %>
 
     <section class="ss-item-section">
@@ -94,12 +101,7 @@
               <th class="ss-num">Price</th>
               <% if operations&.inventory_visible? %>
                 <th class="ss-num">Available</th>
-                <th class="ss-num">TBO</th>
-                <th class="ss-num">Pending PO</th>
-                <th class="ss-num">On order</th>
                 <th>Last received</th>
-                <th>Vendor</th>
-                <th>Returnability</th>
               <% end %>
               <th>Actions</th>
             </tr>
@@ -117,9 +119,6 @@
                 <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
                 <% if operations&.inventory_visible? %>
                   <td class="ss-num"><%= row&.available.nil? ? "—" : row.available %></td>
-                  <td class="ss-num"><%= row&.open_tbo || 0 %></td>
-                  <td class="ss-num"><%= row&.pending_po.nil? ? "—" : row.pending_po %></td>
-                  <td class="ss-num"><%= row&.on_order.nil? ? "—" : row.on_order %></td>
                   <td>
                     <% if row&.last_received.present? %>
                       <%= l(row.last_received.received_at.to_date) %>
@@ -127,8 +126,6 @@
                       —
                     <% end %>
                   </td>
-                  <td><%= row&.preferred_vendor_name || "—" %></td>
-                  <td><%= row&.returnability_status.present? ? row.returnability_status.humanize : "—" %></td>
                 <% end %>
                 <td>
                   <% if row&.actions&.any? %>
@@ -142,12 +139,16 @@
                 </td>
               </tr>
               <tr class="ss-item-variant-defaults-row">
-                <td colspan="<%= operations&.inventory_visible? ? matrix_colspan : 5 %>">
+                <td colspan="<%= overview_matrix_colspan %>">
                   <details class="ss-item-variant-defaults">
                     <summary class="ss-item-variant-defaults-summary">
-                      <span class="ss-item-variant-defaults-hint"><%= item.classification_summary_label(variant) %></span>
+                      <span class="ss-item-variant-defaults-hint">Details</span>
+                      <span class="ss-item-variant-defaults-meta"><%= item.classification_summary_label(variant) %></span>
                     </summary>
-                    <%= render "items/items/overview_classification_body",
+                    <%= render "items/items/overview_variant_details",
+                          variant: variant,
+                          row: row,
+                          operations: operations,
                           summary: classification,
                           defaults: defaults %>
                   </details>

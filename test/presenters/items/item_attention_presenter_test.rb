@@ -26,4 +26,24 @@ class Items::ItemAttentionPresenterTest < ActiveSupport::TestCase
     assert items.any? { |item| item.message.include?("open TBO") }
     assert items.any? { |item| item.message.include?("missing a selling price") }
   end
+
+  test "does not flag vendor without item number when vendor is assigned" do
+    ProductVendor.create!(
+      product: @product,
+      vendor: create_vendor!,
+      vendor_item_number: nil,
+      active: true,
+      preferred: true
+    )
+
+    items = Items::ItemAttentionPresenter.for(item: @item, store: @store, user: @user)
+
+    assert items.none? { |item| item.message.include?("no vendor assigned") }
+  end
+
+  test "flags missing vendor assignment" do
+    items = Items::ItemAttentionPresenter.for(item: @item, store: @store, user: @user)
+
+    assert items.any? { |item| item.message.include?("no vendor assigned") }
+  end
 end

@@ -44,12 +44,12 @@ module Items
 
     def sourcing_items
       operations.variant_rows.filter_map do |row|
-        next if row.preferred_vendor_name.present? && row.vendor_item_number.present?
+        next if row.preferred_vendor_name.present?
 
         AttentionItem.new(
-          message: "#{row.variant.sku} has no complete vendor source.",
-          link_path: item.tab_path("item_setup"),
-          link_label: "Item setup"
+          message: "#{row.variant.sku} has no vendor assigned.",
+          link_path: Items::VendorSourcingPath.for(row.variant),
+          link_label: "Assign vendor"
         )
       end
     end
@@ -88,7 +88,7 @@ module Items
 
         AttentionItem.new(
           message: "#{row.variant.sku} has #{row.returnability_status.humanize.downcase} returnability.",
-          link_path: item.tab_path("item_setup"),
+          link_path: Items::VendorSourcingPath.for(row.variant),
           link_label: "Review sourcing"
         )
       end
