@@ -12,6 +12,7 @@ module Items
       @statuses = @item.full_statuses
       @highlight_variant = load_highlight_variant
       load_tab_data
+      load_operations_presenter if @tab.in?(%w[overview operations])
     end
 
     private
@@ -39,7 +40,7 @@ module Items
     def load_tab_data
       case @tab
       when "overview"
-        load_order_quantities
+        nil
       when "operations"
         nil
       when "item_setup"
@@ -76,6 +77,16 @@ module Items
       @order_quantities = Purchasing::OrderQuantityLookup.for_variants(
         store: current_store,
         variant_ids: @item.variants.map(&:id)
+      )
+    end
+
+    def load_operations_presenter
+      return unless current_store.present?
+
+      @operations = ItemOperationsPresenter.new(
+        item: @item,
+        store: current_store,
+        user: current_user
       )
     end
 

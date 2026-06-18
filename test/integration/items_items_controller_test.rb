@@ -22,9 +22,9 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     get items_item_path(catalog_item_id: @product.catalog_item.id)
     assert_response :success
     assert_match @product.catalog_item.title, response.body
-    assert_match "Location &amp; Availability", response.body
+    assert_no_match "Location &amp; Availability", response.body
     assert_match @variant.sku, response.body
-    assert_match "Stock", response.body
+    assert_match "Sellable SKUs", response.body
     assert_match "ss-item-subject-list", response.body
     assert_match ">Subjects<", response.body
     assert_match "ss-item-variant-defaults", response.body

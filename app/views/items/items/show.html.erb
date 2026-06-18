@@ -11,9 +11,13 @@
 <div class="ss-tab-content">
   <% case @tab %>
   <% when "overview" %>
-    <%= render "items/items/overview", item: @item, statuses: @statuses, variant: @highlight_variant, order_quantities: @order_quantities %>
+    <%= render "items/items/overview",
+          item: @item,
+          statuses: @statuses,
+          variant: @highlight_variant,
+          operations: @operations %>
   <% when "operations" %>
-    <%= render "items/items/operations", item: @item %>
+    <%= render "items/items/operations", item: @item, operations: @operations %>
   <% when "item_setup" %>
     <%= render "items/items/item_setup",
           item: @item,
