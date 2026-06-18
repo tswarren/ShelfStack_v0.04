@@ -5,7 +5,7 @@ module Items
     before_action -> { authorize!("items.catalog_items.view") }
     before_action :set_item_presenter
 
-    VALID_TABS = %w[overview catalog selling display activity].freeze
+    VALID_TABS = %w[overview operations item_setup activity].freeze
 
     def show
       @tab = VALID_TABS.include?(params[:tab]) ? params[:tab] : "overview"
@@ -40,12 +40,12 @@ module Items
       case @tab
       when "overview"
         load_order_quantities
-      when "catalog"
+      when "operations"
+        nil
+      when "item_setup"
         @identifiers = @item.catalog_item&.catalog_item_identifiers&.active_records
           &.order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc) || []
-      when "selling"
         @variants = @item.variants
-      when "display"
         load_display_vendor_data
       when "activity"
         @audit_events = merged_audit_events

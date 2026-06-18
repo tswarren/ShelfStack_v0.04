@@ -9,7 +9,7 @@ module OrdersHelper
     )
   end
 
-  def orders_item_path_for_variant(variant, tab: "selling")
+  def orders_item_path_for_variant(variant, tab: "overview")
     params = Items::ItemPresenter.from_product_variant(variant).route_params.merge(tab: tab)
     items_item_path(params)
   end
@@ -22,7 +22,7 @@ module OrdersHelper
     name_snapshot.presence || variant&.name
   end
 
-  def orders_variant_sku_link(variant, sku_snapshot: nil, tab: "selling")
+  def orders_variant_sku_link(variant, sku_snapshot: nil, tab: "overview")
     sku = orders_variant_display_sku(variant, sku_snapshot: sku_snapshot)
     return "—" if sku.blank?
 

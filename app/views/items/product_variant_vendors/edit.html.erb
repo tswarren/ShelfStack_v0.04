@@ -9,5 +9,5 @@
         product_variant_vendor: @product_variant_vendor,
         lock_variant: true %>
   <%= f.submit class: "ss-btn" %>
-  <%= link_to "Cancel", Items::ReturnPath.for(record: @product_variant, return_to: "item", tab: "display", variant_id: @product_variant.id) %>
+  <%= link_to "Cancel", Items::ReturnPath.for(record: @product_variant, return_to: "item", tab: "item_setup", variant_id: @product_variant.id) %>
 <% end %>

@@ -65,7 +65,7 @@ module Items
       redirect_to Items::ReturnPath.for(
         record: product,
         return_to: params[:return_to].presence || "item",
-        tab: "selling"
+        tab: "item_setup"
       ), notice: "Product variant deleted."
     end
 
@@ -118,7 +118,7 @@ module Items
       Items::ReturnPath.for(
         record: variant.product,
         return_to: params[:return_to].presence || "item",
-        tab: "selling",
+        tab: "item_setup",
         variant_id: variant.id
       )
     end

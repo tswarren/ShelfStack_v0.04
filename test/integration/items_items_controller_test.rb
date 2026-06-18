@@ -36,6 +36,8 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "ss-item-footer-actions", response.body
     assert_no_match "ss-breadcrumbs", response.body
     assert_match "Sellable", response.body
+    assert_match "Item setup", response.body
+    assert_match "Operations", response.body
   end
 
   test "overview shows cover image when product has attachment" do
@@ -83,9 +85,12 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_operator eyebrow.index("Shelf A"), :<, eyebrow.index("Biography")
   end
 
-  test "selling tab shows variant matrix and selling actions" do
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "selling")
+  test "item setup tab shows variant matrix and selling actions" do
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
     assert_response :success
+    assert_match "Catalog metadata", response.body
+    assert_match "Product setup", response.body
+    assert_match "Display and vendor sourcing", response.body
     assert_match @variant.sku, response.body
     assert_match edit_items_product_path(@product, return_to: "item"), response.body
     assert_match "product_variants/new?product_id=#{@product.id}", response.body
@@ -96,10 +101,10 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "ss-context-actions", response.body
   end
 
-  test "selling tab highlights variant row when variant_id param present" do
+  test "item setup tab highlights variant row when variant_id param present" do
     get items_item_path(
       catalog_item_id: @product.catalog_item.id,
-      tab: "selling",
+      tab: "item_setup",
       variant_id: @variant.id
     )
 
@@ -107,7 +112,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "ss-table-row--highlight", response.body
   end
 
-  test "catalog tab shows primary badge and identifier row actions" do
+  test "item setup tab shows primary badge and identifier row actions" do
     grant_permission!(@user, "items.catalog_items.update")
     primary = @product.catalog_item.primary_identifier
     secondary = CatalogIdentifierService.add_identifier!(
@@ -117,7 +122,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       primary: false
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "catalog")
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
     assert_response :success
     assert_match "ss-status-badge status-active\">Primary", response.body
     assert_no_match "<th>Primary</th>", response.body
@@ -133,7 +138,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "ss-context-actions", response.body
   end
 
-  test "catalog tab shows invalid identifier badge on invalid barcodes" do
+  test "item setup tab shows invalid identifier badge on invalid barcodes" do
     grant_permission!(@user, "items.catalog_items.update")
     CatalogIdentifierService.add_identifier!(
       catalog_item: @product.catalog_item,
@@ -142,13 +147,13 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       primary: false
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "catalog")
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
     assert_response :success
     assert_match "Invalid identifier", response.body
     assert_no_match "Invalid Identifier Warning", response.body
   end
 
-  test "catalog tab lists primary identifier before other identifiers" do
+  test "item setup tab lists primary identifier before other identifiers" do
     grant_permission!(@user, "items.catalog_items.update")
     primary = @product.catalog_item.primary_identifier
     secondary = CatalogIdentifierService.add_identifier!(
@@ -158,7 +163,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       primary: false
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "catalog")
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
     assert_response :success
 
     primary_pos = response.body.index("identifier_id=#{primary.id}")
@@ -166,8 +171,8 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert primary_pos < secondary_pos
   end
 
-  test "display tab shows variant display locations and product vendor sourcing links" do
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "display")
+  test "item setup tab shows variant display locations and product vendor sourcing links" do
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
     assert_response :success
     assert_match "Variant display locations", response.body
     assert_match @variant.sku, response.body
@@ -175,5 +180,11 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match new_setup_product_vendor_path, response.body
     assert_match edit_items_product_path(@product, anchor: "product_default_display_location_id"), response.body
     assert_match edit_items_product_variant_path(@variant), response.body
+  end
+
+  test "operations tab renders placeholder" do
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "operations")
+    assert_response :success
+    assert_match "Operational purchasing and inventory details", response.body
   end
 end

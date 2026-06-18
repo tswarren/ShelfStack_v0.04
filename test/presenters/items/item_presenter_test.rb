@@ -46,7 +46,7 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     product = create_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
-    assert_equal "/items/item?catalog_item_id=#{product.catalog_item.id}&tab=selling", presenter.tab_path("selling")
+    assert_equal "/items/item?catalog_item_id=#{product.catalog_item.id}&tab=item_setup", presenter.tab_path("item_setup")
     assert_equal "/items/item?catalog_item_id=#{product.catalog_item.id}", presenter.tab_path("overview")
   end
 

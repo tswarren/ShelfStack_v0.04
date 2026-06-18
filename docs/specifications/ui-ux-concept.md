@@ -450,17 +450,14 @@ Edit and create flows launched from item tabs (catalog, selling, identifiers) pa
 
 Tabs:
   Overview
-  Catalog Details
-  Selling / SKUs
-  Display & Vendors
+  Operations
+  Item setup
   Activity
 ```
 
 Future tabs may include:
 
 ```text
-Inventory
-Purchasing
 Sales History
 ```
 

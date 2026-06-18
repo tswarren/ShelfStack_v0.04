@@ -11,6 +11,17 @@ module ItemsHelper
     "display_locations" => "Shelf/Display Locations"
   }.freeze
 
+  ITEM_TAB_LABELS = {
+    "overview" => "Overview",
+    "operations" => "Operations",
+    "item_setup" => "Item setup",
+    "activity" => "Activity"
+  }.freeze
+
+  def items_tab_label(tab)
+    ITEM_TAB_LABELS.fetch(tab.to_s, tab.to_s.titleize)
+  end
+
   def items_user_facing_label(resource_key)
     USER_FACING_LABELS.fetch(resource_key.to_s) { resource_key.to_s.tr("_", " ").titleize }
   end

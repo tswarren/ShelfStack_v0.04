@@ -96,7 +96,7 @@ module Items
         record_audit!("catalog_item.updated", @catalog_item)
         apply_bisac_sync_notice!(bisac_result)
         apply_store_category_sync_notice!(store_category_result)
-        redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item updated."
+        redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "Catalog item updated."
       else
         load_bisac_form_state(@catalog_item)
         load_store_category_collections
@@ -106,7 +106,7 @@ module Items
 
     def destroy
       if @catalog_item.products.exists?
-        redirect_to item_return_path(@catalog_item, tab: "catalog"),
+        redirect_to item_return_path(@catalog_item, tab: "item_setup"),
                     alert: "Catalog item cannot be deleted. Inactivate instead."
       else
         @catalog_item.destroy
@@ -118,13 +118,13 @@ module Items
     def inactivate
       @catalog_item.inactivate!
       record_audit!("catalog_item.inactivated", @catalog_item)
-      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item inactivated."
+      redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "Catalog item inactivated."
     end
 
     def reactivate
       @catalog_item.reactivate!
       record_audit!("catalog_item.reactivated", @catalog_item)
-      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Catalog item reactivated."
+      redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "Catalog item reactivated."
     end
 
     def add_identifier
@@ -148,13 +148,13 @@ module Items
     def generate_local_identifier
       identifier = CatalogIdentifierService.generate_local!(catalog_item: @catalog_item, actor: current_user)
       record_audit!("catalog_item_identifier.created", identifier)
-      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Local identifier generated."
+      redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "Local identifier generated."
     end
 
     def set_primary_identifier
       identifier = @catalog_item.catalog_item_identifiers.find(params[:identifier_id])
       CatalogIdentifierService.set_primary!(identifier: identifier, actor: current_user)
-      redirect_to item_return_path(@catalog_item, tab: "catalog"), notice: "Primary identifier updated."
+      redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "Primary identifier updated."
     end
 
     def edit_identifier
@@ -227,7 +227,7 @@ module Items
     end
 
     def identifier_return_path
-      item_return_path(@catalog_item, tab: "catalog")
+      item_return_path(@catalog_item, tab: "item_setup")
     end
   end
 end

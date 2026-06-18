@@ -1,7 +1,7 @@
-<%# locals: variant, sku_snapshot: nil, name_snapshot: nil, tab: "selling" %>
+<%# locals: variant, sku_snapshot: nil, name_snapshot: nil, tab: "overview" %>
 <% sku_snapshot = local_assigns.fetch(:sku_snapshot, nil) %>
 <% name_snapshot = local_assigns.fetch(:name_snapshot, nil) %>
-<% tab = local_assigns.fetch(:tab, "selling") %>
+<% tab = local_assigns.fetch(:tab, "overview") %>
 <% if variant.blank? %>
   —
 <% else %>

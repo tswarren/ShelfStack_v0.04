@@ -54,8 +54,7 @@ module Items
       return @tab if @tab.present?
 
       case @record
-      when CatalogItem then "catalog"
-      when Product, ProductVariant then "selling"
+      when CatalogItem, Product, ProductVariant then "item_setup"
       else "overview"
       end
     end

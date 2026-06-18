@@ -68,7 +68,7 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to items_item_path(catalog_item_id: product.catalog_item_id, tab: "selling")
+    assert_redirected_to items_item_path(catalog_item_id: product.catalog_item_id, tab: "item_setup")
     assert_equal 2499, product.reload.list_price_cents
   end
 
@@ -87,7 +87,7 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to items_item_path(catalog_item_id: product.catalog_item_id, tab: "selling")
+    assert_redirected_to items_item_path(catalog_item_id: product.catalog_item_id, tab: "item_setup")
     assert_equal "matrix", product.reload.variation_type
     assert_equal "Size", product.variant1_label
     assert_equal "Color", product.variant2_label

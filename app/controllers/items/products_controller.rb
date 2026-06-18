@@ -42,7 +42,7 @@ module Items
       load_form_collections
       if @product.save
         record_audit!("product.created", @product)
-        redirect_to item_return_path(@product, tab: "selling"), notice: "Product created."
+        redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product created."
       else
         render :new, status: :unprocessable_entity
       end
@@ -58,7 +58,7 @@ module Items
       if @product.update(product_params)
         regenerate_catalog_linked_name!
         record_audit!("product.updated", @product)
-        redirect_to item_return_path(@product, tab: "selling"), notice: "Product updated."
+        redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product updated."
       else
         render :edit, status: :unprocessable_entity
       end
@@ -66,7 +66,7 @@ module Items
 
     def destroy
       if @product.product_variants.exists?
-        redirect_to item_return_path(@product, tab: "selling"),
+        redirect_to item_return_path(@product, tab: "item_setup"),
                     alert: "Product cannot be deleted. Inactivate instead."
       else
         @product.destroy
@@ -78,19 +78,19 @@ module Items
     def inactivate
       @product.inactivate!
       record_audit!("product.inactivated", @product)
-      redirect_to item_return_path(@product, tab: "selling"), notice: "Product inactivated."
+      redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product inactivated."
     end
 
     def reactivate
       @product.reactivate!
       record_audit!("product.reactivated", @product)
-      redirect_to item_return_path(@product, tab: "selling"), notice: "Product reactivated."
+      redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product reactivated."
     end
 
     def regenerate_name
       @product.update!(name: ProductNameRenderer.product_name(@product))
       record_audit!("product.name_regenerated", @product)
-      redirect_to item_return_path(@product, tab: "selling"), notice: "Product name regenerated."
+      redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product name regenerated."
     end
 
     private

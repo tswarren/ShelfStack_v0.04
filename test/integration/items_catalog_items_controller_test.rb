@@ -59,7 +59,7 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
     patch update_identifier_items_catalog_item_path(item, identifier_id: identifier.id, return_to: "item"),
           params: { identifier_value: "9780306406157" }
 
-    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
+    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "item_setup")
     assert_equal "9780306406157", identifier.reload.normalized_identifier
   end
 
@@ -75,7 +75,7 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
 
     delete destroy_identifier_items_catalog_item_path(item, identifier_id: secondary.id, return_to: "item")
 
-    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
+    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "item_setup")
     assert_not secondary.reload.active?
     assert primary.reload.primary_identifier?
   end
@@ -89,7 +89,7 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
       primary: "0"
     }
 
-    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
+    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "item_setup")
     assert CatalogItemIdentifier.exists?(catalog_item: item, normalized_identifier: "NEWID99")
   end
 
@@ -106,7 +106,7 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
+    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "item_setup")
     assert_equal "Updated Return Path Title", item.reload.title
   end
 
@@ -115,7 +115,7 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
 
     patch inactivate_items_catalog_item_path(item, return_to: "item")
 
-    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "catalog")
+    assert_redirected_to items_item_path(catalog_item_id: item.id, tab: "item_setup")
     assert_not item.reload.active?
   end
 

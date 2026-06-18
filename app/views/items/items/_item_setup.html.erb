@@ -1,0 +1,19 @@
+<section class="ss-item-setup-section">
+  <h2>Catalog metadata</h2>
+  <%= render "items/items/catalog", item: item, identifiers: identifiers %>
+</section>
+
+<section class="ss-item-setup-section">
+  <h2>Product setup</h2>
+  <%= render "items/items/selling",
+        item: item,
+        variants: variants,
+        highlight_variant: local_assigns[:highlight_variant] %>
+</section>
+
+<section class="ss-item-setup-section">
+  <h2>Display and vendor sourcing</h2>
+  <%= render "items/items/display",
+        item: item,
+        highlight_variant: local_assigns[:highlight_variant] %>
+</section>
