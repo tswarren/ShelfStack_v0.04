@@ -18,6 +18,6 @@
              show_advanced: true %>
   <footer class="ss-form-actions">
     <%= f.submit "Update Variant", class: "ss-btn" %>
-    <%= link_to "Cancel", item_flow_cancel_path(@product_variant.product, tab: "selling", variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", item_flow_cancel_path(@product_variant.product, tab: "item_setup", variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>

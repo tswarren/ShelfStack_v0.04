@@ -11,27 +11,27 @@ class ItemsReturnPathTest < ActiveSupport::TestCase
     @variant = create_product_variant!(product: @product)
   end
 
-  test "item flow returns catalog tab path for catalog item" do
-    path = Items::ReturnPath.for(record: @catalog_item, return_to: "item", tab: "catalog")
+  test "item flow returns item setup tab path for catalog item" do
+    path = Items::ReturnPath.for(record: @catalog_item, return_to: "item", tab: "item_setup")
 
-    assert_equal "/items/item?catalog_item_id=#{@catalog_item.id}&tab=catalog", path
+    assert_equal "/items/item?catalog_item_id=#{@catalog_item.id}&tab=item_setup", path
   end
 
-  test "item flow returns selling tab path for product" do
-    path = Items::ReturnPath.for(record: @product, return_to: "item", tab: "selling")
+  test "item flow returns item setup tab path for product" do
+    path = Items::ReturnPath.for(record: @product, return_to: "item", tab: "item_setup")
 
-    assert_equal "/items/item?catalog_item_id=#{@catalog_item.id}&tab=selling", path
+    assert_equal "/items/item?catalog_item_id=#{@catalog_item.id}&tab=item_setup", path
   end
 
   test "item flow includes variant_id when provided" do
     path = Items::ReturnPath.for(
       record: @variant,
       return_to: "item",
-      tab: "selling",
+      tab: "item_setup",
       variant_id: @variant.id
     )
 
-    assert_equal "/items/item?catalog_item_id=#{@catalog_item.id}&tab=selling&variant_id=#{@variant.id}", path
+    assert_equal "/items/item?catalog_item_id=#{@catalog_item.id}&tab=item_setup&variant_id=#{@variant.id}", path
   end
 
   test "legacy flow returns resource show path" do
@@ -53,8 +53,14 @@ class ItemsReturnPathTest < ActiveSupport::TestCase
       active: true
     )
 
-    path = Items::ReturnPath.for(record: standalone, return_to: "item", tab: "selling")
+    path = Items::ReturnPath.for(record: standalone, return_to: "item", tab: "item_setup")
 
-    assert_equal "/items/item?product_id=#{standalone.id}&tab=selling", path
+    assert_equal "/items/item?product_id=#{standalone.id}&tab=item_setup", path
+  end
+
+  test "defaults to item setup tab when tab omitted" do
+    path = Items::ReturnPath.for(record: @product, return_to: "item")
+
+    assert_equal "/items/item?catalog_item_id=#{@catalog_item.id}&tab=item_setup", path
   end
 end

@@ -55,7 +55,7 @@ Product cover images use Active Storage (`Product#cover_image`) and appear on th
 Items workspace (`/items/*`):
 
 - Unified search with lifecycle statuses
-- Unified item detail (tabs: Overview, Catalog Details, Selling/SKUs, Display, Activity)
+- Unified item detail (tabs: Overview, Operations, Item setup, Activity)
 - Add Item wizard (identify → type → catalog → selling → default SKU)
 - Item Details, Selling Setup, and Sellable SKUs CRUD (user-facing labels)
 
@@ -128,7 +128,7 @@ Aligned with [ui-ux-concept.md](../specifications/ui-ux-concept.md):
 | ---- | ----- | ----- |
 | Items index | `/items` | Browse + keyword search, filters, pagination; Add Item and Ingram Import toolbar |
 | Legacy search redirect | `/items/search` | Redirects to `/items` with preserved params |
-| Unified item detail | `/items/item?catalog_item_id=` or `?product_id=` | Overview, Catalog, Selling/SKUs, Display, Activity tabs |
+| Unified item detail | `/items/item?catalog_item_id=` or `?product_id=` | Overview, Operations, Item setup, Activity tabs |
 | Item Details CRUD | `/items/catalog_items` | User-facing label: Item Details |
 | Selling Setup CRUD | `/items/products` | User-facing label: Selling Setup |
 | Sellable SKUs CRUD | `/items/product_variants` | User-facing label: Sellable SKUs |

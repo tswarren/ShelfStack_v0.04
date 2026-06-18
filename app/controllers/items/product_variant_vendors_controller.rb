@@ -71,7 +71,7 @@ module Items
       Items::ReturnPath.for(
         record: @product_variant,
         return_to: params[:return_to].presence || "item",
-        tab: params[:return_to] == "from_tbo" ? nil : "display",
+        tab: params[:return_to] == "from_tbo" ? nil : "item_setup",
         variant_id: @product_variant.id,
         from_tbo_filters: from_tbo_return_filters
       )

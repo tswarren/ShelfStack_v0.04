@@ -39,7 +39,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     assert_equal expected_sku, variant.sku
     assert_redirected_to items_item_path(
       catalog_item_id: @product.catalog_item_id,
-      tab: "selling",
+      tab: "item_setup",
       variant_id: variant.id
     )
   end
@@ -60,7 +60,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to items_item_path(
       catalog_item_id: @product.catalog_item_id,
-      tab: "selling",
+      tab: "item_setup",
       variant_id: variant.id
     )
     assert_equal 1299, variant.reload.selling_price_cents
@@ -91,7 +91,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to items_item_path(
       catalog_item_id: @product.catalog_item_id,
-      tab: "selling",
+      tab: "item_setup",
       variant_id: variant.id
     )
   end
@@ -111,7 +111,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     get items_product_variant_path(variant)
 
     assert_response :success
-    assert_match "tab=selling", response.body
+    assert_match "tab=item_setup", response.body
     assert_match "variant_id=#{variant.id}", response.body
     assert_match "Back to Item", response.body
   end
