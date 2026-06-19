@@ -1,0 +1,25 @@
+<div class="ss-pos-modal" data-controller="pos-supervisor-auth" data-action="pos:authorization-request@document->pos-supervisor-auth#open" data-pos-supervisor-auth-url-value="<%= pos_authorizations_path %>" hidden>
+  <div class="ss-pos-modal__backdrop" data-action="click->pos-supervisor-auth#close"></div>
+  <div class="ss-pos-modal__panel" role="dialog" aria-labelledby="pos-supervisor-auth-title">
+    <h2 id="pos-supervisor-auth-title">Supervisor authorization</h2>
+    <p data-pos-supervisor-auth-target="message">A manager must approve this action.</p>
+    <%= form_with url: pos_authorizations_path, method: :post, html: { data: { pos_supervisor_auth_target: "form", action: "submit->pos-supervisor-auth#submit" } } do %>
+      <%= hidden_field_tag :authorization_type, nil, data: { pos_supervisor_auth_target: "authorizationType" } %>
+      <%= hidden_field_tag :pos_transaction_id, nil, data: { pos_supervisor_auth_target: "transactionId" } %>
+      <%= hidden_field_tag :pos_register_session_id, nil, data: { pos_supervisor_auth_target: "registerSessionId" } %>
+      <div class="ss-field">
+        <%= label_tag :manager_username, "Manager username" %>
+        <%= text_field_tag :manager_username, nil, autocomplete: "username", data: { pos_supervisor_auth_target: "managerUsername" } %>
+      </div>
+      <div class="ss-field">
+        <%= label_tag :manager_pin, "Manager PIN" %>
+        <%= password_field_tag :manager_pin, nil, autocomplete: "current-password", data: { pos_supervisor_auth_target: "managerPin" } %>
+      </div>
+      <p class="ss-hint ss-hint--warning" data-pos-supervisor-auth-target="error" hidden></p>
+      <div class="ss-form-actions">
+        <%= submit_tag "Authorize", class: "ss-btn" %>
+        <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-supervisor-auth#close">Cancel</button>
+      </div>
+    <% end %>
+  </div>
+</div>

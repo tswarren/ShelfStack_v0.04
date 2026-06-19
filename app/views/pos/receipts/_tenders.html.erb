@@ -1,0 +1,24 @@
+<section class="ss-pos-receipt-tenders">
+  <h2>Tenders</h2>
+  <dl class="ss-pos-totals-list">
+    <% transaction.pos_tenders.each do |tender| %>
+      <div>
+        <dt><%= pos_tender_receipt_label(tender) %></dt>
+        <dd><%= pos_money(pos_tender_receipt_amount_cents(tender)) %></dd>
+      </div>
+      <% if tender.tender_type == "cash" && tender.amount_cents != pos_tender_receipt_amount_cents(tender) %>
+        <div>
+          <dt>Cash applied</dt>
+          <dd><%= pos_money(tender.amount_cents) %></dd>
+        </div>
+      <% end %>
+    <% end %>
+    <% change_cents = pos_receipt_change_cents(transaction) %>
+    <% if change_cents.positive? %>
+      <div class="ss-pos-totals-list__total">
+        <dt>Change</dt>
+        <dd><%= pos_money(change_cents) %></dd>
+      </div>
+    <% end %>
+  </dl>
+</section>

@@ -25,7 +25,8 @@ module Inventory
       idempotency_key:,
       notes: nil,
       workstation: Current.workstation,
-      posted_at: Time.current
+      posted_at: Time.current,
+      reversal_of_posting: nil
     )
       @store = store
       @posted_by_user = posted_by_user
@@ -36,6 +37,7 @@ module Inventory
       @notes = notes
       @workstation = workstation
       @posted_at = posted_at
+      @reversal_of_posting = reversal_of_posting
     end
 
     def call
@@ -53,8 +55,11 @@ module Inventory
           posted_by_user: posted_by_user,
           workstation: workstation,
           idempotency_key: idempotency_key,
-          notes: notes
+          notes: notes,
+          reversal_of_posting: reversal_of_posting
         )
+
+        reversal_of_posting&.update!(reversed_by_posting: posting)
 
         lines.each_with_index do |line, index|
           valuation = CostEstimator.estimate(
@@ -108,6 +113,6 @@ module Inventory
     private
 
     attr_reader :store, :posted_by_user, :posting_type, :source, :lines,
-                :idempotency_key, :notes, :workstation, :posted_at
+                :idempotency_key, :notes, :workstation, :posted_at, :reversal_of_posting
   end
 end

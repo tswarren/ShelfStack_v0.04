@@ -2007,3 +2007,234 @@ h2 {
   margin-top: 1.5rem;
   color: #5c5347;
 }
+
+/* POS register workspace */
+.ss-pos-body .ss-main {
+  max-width: none;
+}
+
+.ss-pos-main {
+  padding-bottom: 2rem;
+}
+
+.ss-pos-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1.5rem;
+  background: #2c2419;
+  color: #faf8f5;
+}
+
+.ss-pos-banner__primary,
+.ss-pos-banner__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ss-pos-banner__link {
+  color: #faf8f5;
+  text-decoration: underline;
+}
+
+.ss-pos-dashboard,
+.ss-pos-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.ss-pos-layout {
+  grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+}
+
+.ss-pos-layout__sidebar {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.ss-pos-panel {
+  padding: 1rem;
+  border: 1px solid #e2ddd4;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.ss-pos-panel--highlight {
+  background: #f5f9f2;
+  border-color: #c8dcc0;
+}
+
+.ss-pos-panel--warning {
+  background: #fff8eb;
+  border-color: #ecd9a8;
+}
+
+.ss-pos-stats,
+.ss-pos-totals-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ss-pos-stats div,
+.ss-pos-totals-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ss-pos-totals-list__total {
+  font-weight: 700;
+  border-top: 1px solid #e2ddd4;
+  padding-top: 0.5rem;
+}
+
+.ss-pos-scan-row,
+.ss-pos-actions,
+.ss-pos-tender-actions,
+.ss-pos-secondary-actions,
+.ss-pos-open-ring-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ss-pos-scan-input {
+  min-width: 14rem;
+  flex: 1 1 14rem;
+}
+
+.ss-pos-qty-input {
+  width: 5rem;
+}
+
+.ss-pos-money-input {
+  width: 7rem;
+}
+
+.ss-pos-table .ss-pos-inline-form {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ss-pos-choices,
+.ss-pos-return-line {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.ss-pos-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  background: #eef4fb;
+  border: 1px solid #c5d9ef;
+}
+
+.ss-pos-alert--error {
+  background: #fdeeee;
+  border-color: #efb4b4;
+}
+
+.ss-pos-alert--warning {
+  background: #fff8eb;
+  border-color: #ecd9a8;
+}
+
+.ss-pos-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.ss-pos-modal[hidden] {
+  display: none;
+}
+
+.ss-pos-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.ss-pos-modal__panel {
+  position: relative;
+  max-width: 24rem;
+  margin: 10vh auto;
+  padding: 1.25rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ss-pos-line-tax {
+  min-width: 5rem;
+}
+
+.ss-pos-tax-indicator {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ss-pos-tax-amount {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.ss-pos-receipt-tenders {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #d8d2c8;
+}
+
+.ss-pos-receipt-tenders h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.ss-pos-discount-amount {
+  color: #8a4b12;
+  font-weight: 600;
+}
+
+.ss-pos-discount-breakdown {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.ss-pos-gross-amount {
+  display: block;
+  text-decoration: line-through;
+  color: #5c5347;
+  font-size: 0.75rem;
+}
+
+@media print {
+  .ss-header,
+  .ss-nav,
+  .ss-pos-banner,
+  .ss-footer,
+  .ss-pos-no-print {
+    display: none !important;
+  }
+
+  .ss-pos-receipt {
+    font-size: 12pt;
+  }
+}
+
+@media (max-width: 960px) {
+  .ss-pos-layout {
+    grid-template-columns: 1fr;
+  }
+}

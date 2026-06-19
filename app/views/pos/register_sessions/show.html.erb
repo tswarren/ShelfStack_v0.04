@@ -1,0 +1,87 @@
+<h1>Register Session</h1>
+
+<dl class="ss-pos-stats">
+  <div><dt>Business date</dt><dd><%= @register_session.business_date %></dd></div>
+  <div><dt>Status</dt><dd><%= @register_session.status %></dd></div>
+  <div><dt>Opening cash</dt><dd><%= pos_money(@register_session.opening_cash_cents) %></dd></div>
+  <div><dt>Expected closing</dt><dd><%= pos_money(@summary.expected_closing_cash_cents) %></dd></div>
+  <div><dt>Completed transactions</dt><dd><%= @summary.completed_transaction_count %></dd></div>
+  <div><dt>Suspended on workstation</dt><dd><%= @summary.suspended_transaction_count %></dd></div>
+</dl>
+
+<section class="ss-pos-panel">
+  <h2>Session activity</h2>
+  <h3>Cash movements</h3>
+  <table class="ss-table ss-pos-table">
+    <thead>
+      <tr><th>Type</th><th>Amount</th><th>Reason</th><th>Recorded</th></tr>
+    </thead>
+    <tbody>
+      <% @cash_movements.each do |movement| %>
+        <tr>
+          <td><%= movement.movement_type.humanize %></td>
+          <td><%= pos_money(movement.amount_cents) %></td>
+          <td><%= movement.reason_code %></td>
+          <td><%= movement.recorded_at %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <h3>Completed transactions</h3>
+  <table class="ss-table ss-pos-table">
+    <thead>
+      <tr><th>Number</th><th>Type</th><th>Total</th><th>Completed</th></tr>
+    </thead>
+    <tbody>
+      <% @completed_transactions.each do |transaction| %>
+        <tr>
+          <td><%= link_to transaction.transaction_number, pos_transaction_path(transaction) %></td>
+          <td><%= transaction.transaction_type %></td>
+          <td><%= pos_money(transaction.total_cents) %></td>
+          <td><%= transaction.completed_at %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<section class="ss-pos-panel">
+  <h2>Cash movement</h2>
+  <%= form_with url: pos_register_session_cash_movements_path(@register_session), class: "ss-form" do %>
+    <%= select_tag :movement_type, options_for_select([["Paid in", "paid_in"], ["Paid out", "paid_out"]]) %>
+    <%= pos_money_field :amount_dollars, nil, min: 0.01, placeholder: "Amount" %>
+    <%= text_field_tag :reason_code, nil, placeholder: "Reason" %>
+    <%= submit_tag "Record", class: "ss-btn" %>
+  <% end %>
+</section>
+
+<% if @register_session.open? %>
+  <section class="ss-pos-panel" data-controller="pos-transaction-edit" data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId">
+    <h2>Close session</h2>
+    <p>Expected cash: <strong><%= pos_money(@summary.expected_closing_cash_cents) %></strong></p>
+
+    <%= form_with url: close_pos_register_session_path(@register_session), method: :patch, class: "ss-form" do %>
+      <%= label_tag :expected_closing_cash_dollars, "Expected closing cash" %>
+      <%= pos_money_field :expected_closing_cash_dollars, @summary.expected_closing_cash_cents %>
+      <%= label_tag :counted_closing_cash_dollars, "Counted closing cash" %>
+      <%= pos_money_field :counted_closing_cash_dollars, nil, required: true %>
+      <% variance = 0 %>
+      <%= submit_tag "Close register", class: "ss-btn" %>
+    <% end %>
+
+    <%= form_with url: force_close_pos_register_session_path(@register_session), method: :patch, class: "ss-form" do %>
+      <%= hidden_field_tag :pos_authorization_id, nil, data: { pos_transaction_edit_target: "authorizationId" } %>
+      <%= pos_money_field :expected_closing_cash_dollars, @summary.expected_closing_cash_cents %>
+      <%= pos_money_field :counted_closing_cash_dollars, nil %>
+      <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-transaction-edit#requestAuth" data-authorization-type="force_close_register" data-register-session-id="<%= @register_session.id %>" data-authorization-message="Force close requires manager approval.">
+        Authorize force close
+      </button>
+      <%= submit_tag "Force close", class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Force close this register session?" } %>
+    <% end %>
+  </section>
+<% else %>
+  <% if @register_session.expected_closing_cash_cents && @register_session.counted_closing_cash_cents %>
+    <p>Variance: <%= pos_money(@register_session.counted_closing_cash_cents - @register_session.expected_closing_cash_cents) %></p>
+  <% end %>
+<% end %>

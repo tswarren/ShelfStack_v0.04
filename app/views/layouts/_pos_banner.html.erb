@@ -1,0 +1,24 @@
+<div class="ss-pos-banner">
+  <div class="ss-pos-banner__primary">
+    <strong>POS</strong>
+    <% if current_workstation %>
+      <span><%= current_workstation.name %> (<%= current_workstation.workstation_number %>)</span>
+    <% end %>
+    <% if current_register_session %>
+      <span class="ss-status-badge status-active">Register open</span>
+      <span>Business date: <%= current_register_session.business_date %></span>
+    <% else %>
+      <span class="ss-status-badge status-warning">No register session</span>
+    <% end %>
+  </div>
+  <div class="ss-pos-banner__actions">
+    <%= link_to "Register", pos_root_path, class: "ss-pos-banner__link" %>
+    <%= link_to "New sale", pos_transactions_path, data: { turbo_method: :post, turbo_confirm: nil }, class: "ss-pos-banner__link" %>
+    <%= link_to "Reports", pos_reports_path, class: "ss-pos-banner__link" %>
+    <% if current_register_session %>
+      <%= link_to "Session", pos_register_session_path(current_register_session), class: "ss-pos-banner__link" %>
+    <% else %>
+      <%= link_to "Open register", new_pos_register_session_path, class: "ss-pos-banner__link" %>
+    <% end %>
+  </div>
+</div>

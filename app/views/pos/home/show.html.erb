@@ -1,0 +1,58 @@
+<div class="ss-pos-dashboard">
+  <h1>Register</h1>
+
+  <% if @register_session %>
+    <section class="ss-pos-panel ss-pos-panel--highlight">
+      <h2>Register session open</h2>
+      <dl class="ss-pos-stats">
+        <div><dt>Business date</dt><dd><%= @register_session.business_date %></dd></div>
+        <div><dt>Opening cash</dt><dd><%= pos_money(@register_session.opening_cash_cents) %></dd></div>
+        <div><dt>Workstation</dt><dd><%= current_workstation.name %></dd></div>
+      </dl>
+      <%= link_to "Manage session", pos_register_session_path(@register_session), class: "ss-btn" %>
+    </section>
+  <% else %>
+    <section class="ss-pos-panel ss-pos-panel--warning">
+      <h2>No register session</h2>
+      <p>Open the register before completing sales. Draft transactions can still be started.</p>
+      <%= link_to "Open register", new_pos_register_session_path, class: "ss-btn" %>
+    </section>
+  <% end %>
+
+  <section class="ss-pos-panel">
+    <h2>Start transaction</h2>
+    <div class="ss-pos-actions">
+      <%= button_to "New sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn" %>
+      <%= button_to "New return", pos_transactions_path, method: :post, params: { mode: "return" }, class: "ss-btn ss-btn-secondary" %>
+      <%= link_to "Drawer report", drawer_pos_reports_path, class: "ss-btn ss-btn-secondary" %>
+    </div>
+  </section>
+
+  <% if @draft_transactions.any? %>
+    <section class="ss-pos-panel">
+      <h2>Draft transactions</h2>
+      <ul class="ss-pos-list">
+        <% @draft_transactions.each do |transaction| %>
+          <li>
+            Draft #<%= transaction.id %>
+            <%= link_to "Continue", edit_pos_transaction_path(transaction), class: "ss-btn ss-btn-secondary ss-btn--small" %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% if @suspended_transactions.any? %>
+    <section class="ss-pos-panel">
+      <h2>Suspended transactions</h2>
+      <ul class="ss-pos-list">
+        <% @suspended_transactions.each do |transaction| %>
+          <li>
+            Suspended #<%= transaction.id %> (cashier <%= transaction.cashier_user.username %>)
+            <%= link_to "Resume", resume_pos_transaction_path(transaction), data: { turbo_method: :patch }, class: "ss-btn ss-btn-secondary ss-btn--small" %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+</div>

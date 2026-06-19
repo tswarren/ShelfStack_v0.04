@@ -1,0 +1,15 @@
+<h1>New Transaction</h1>
+
+<section class="ss-panel">
+  <p>Start a draft sale, return, or exchange on this workstation.</p>
+
+  <% unless current_register_session %>
+    <p class="ss-alert">No register session is open. You can build a draft now, but you must open the register before completing.</p>
+    <%= link_to "Open register", new_pos_register_session_path, class: "ss-btn" %>
+  <% end %>
+
+  <p>
+    <%= button_to "Start transaction", pos_transactions_path, method: :post, class: "ss-btn" %>
+    <%= link_to "Cancel", pos_root_path, class: "ss-btn" %>
+  </p>
+</section>

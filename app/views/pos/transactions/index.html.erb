@@ -1,0 +1,34 @@
+<h1>Recent Transactions</h1>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>ID / Number</th>
+      <th>Status</th>
+      <th>Type</th>
+      <th>Total</th>
+      <th>Updated</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @transactions.each do |transaction| %>
+      <tr>
+        <td>
+          <%= link_to(
+                transaction.transaction_number.presence || "##{transaction.id}",
+                pos_transaction_path(transaction)
+              ) %>
+        </td>
+        <td><%= transaction.status %></td>
+        <td><%= transaction.transaction_type || "—" %></td>
+        <td><%= number_to_currency(transaction.total_cents / 100.0) %></td>
+        <td><%= transaction.updated_at %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p>
+  <%= link_to "New transaction", new_pos_transaction_path, class: "ss-btn" %>
+  <%= link_to "Back to POS", pos_root_path, class: "ss-btn" %>
+</p>

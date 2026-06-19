@@ -1,0 +1,12 @@
+<td class="ss-pos-line-discount">
+  <% total_discount = pos_line_total_discount_cents(line) %>
+  <% if total_discount.positive? %>
+    <span class="ss-pos-discount-amount">−<%= pos_money(total_discount) %></span>
+    <% breakdown = pos_line_discount_breakdown(line) %>
+    <% if breakdown.present? %>
+      <span class="ss-hint ss-pos-discount-breakdown"><%= breakdown %></span>
+    <% end %>
+  <% else %>
+    —
+  <% end %>
+</td>

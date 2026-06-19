@@ -376,6 +376,192 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["permission_key"], name: "index_permissions_on_permission_key", unique: true
   end
 
+  create_table "pos_authorizations", force: :cascade do |t|
+    t.string "authorization_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "denied_at"
+    t.jsonb "details", default: {}, null: false
+    t.datetime "granted_at"
+    t.bigint "granted_by_user_id"
+    t.bigint "pos_register_session_id"
+    t.bigint "pos_transaction_id"
+    t.bigint "requested_by_user_id", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["granted_by_user_id"], name: "index_pos_authorizations_on_granted_by_user_id"
+    t.index ["pos_register_session_id"], name: "index_pos_authorizations_on_pos_register_session_id"
+    t.index ["pos_transaction_id"], name: "index_pos_authorizations_on_pos_transaction_id"
+    t.index ["requested_by_user_id"], name: "index_pos_authorizations_on_requested_by_user_id"
+    t.index ["store_id"], name: "index_pos_authorizations_on_store_id"
+  end
+
+  create_table "pos_cash_movements", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "movement_type", null: false
+    t.text "notes"
+    t.bigint "pos_register_session_id", null: false
+    t.string "reason_code"
+    t.datetime "recorded_at", null: false
+    t.bigint "recorded_by_user_id", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pos_register_session_id"], name: "index_pos_cash_movements_on_pos_register_session_id"
+    t.index ["recorded_by_user_id"], name: "index_pos_cash_movements_on_recorded_by_user_id"
+    t.index ["store_id"], name: "index_pos_cash_movements_on_store_id"
+  end
+
+  create_table "pos_receipts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "issued_at", null: false
+    t.bigint "pos_transaction_id", null: false
+    t.string "receipt_number", null: false
+    t.integer "reprint_count", default: 0, null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pos_transaction_id"], name: "index_pos_receipts_on_pos_transaction_id", unique: true
+    t.index ["receipt_number"], name: "index_pos_receipts_on_receipt_number", unique: true
+    t.index ["store_id"], name: "index_pos_receipts_on_store_id"
+  end
+
+  create_table "pos_register_sessions", force: :cascade do |t|
+    t.date "business_date", null: false
+    t.datetime "closed_at"
+    t.bigint "closed_by_user_id"
+    t.integer "counted_closing_cash_cents"
+    t.datetime "created_at", null: false
+    t.integer "expected_closing_cash_cents"
+    t.boolean "force_closed", default: false, null: false
+    t.text "notes"
+    t.datetime "opened_at", null: false
+    t.bigint "opened_by_user_id", null: false
+    t.integer "opening_cash_cents", default: 0, null: false
+    t.string "status", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workstation_id", null: false
+    t.index ["closed_by_user_id"], name: "index_pos_register_sessions_on_closed_by_user_id"
+    t.index ["opened_by_user_id"], name: "index_pos_register_sessions_on_opened_by_user_id"
+    t.index ["store_id", "business_date"], name: "index_pos_register_sessions_on_store_id_and_business_date"
+    t.index ["store_id"], name: "index_pos_register_sessions_on_store_id"
+    t.index ["workstation_id", "opened_at"], name: "index_pos_register_sessions_on_workstation_id_and_opened_at"
+    t.index ["workstation_id"], name: "index_pos_register_sessions_on_workstation_id"
+    t.index ["workstation_id"], name: "index_pos_register_sessions_one_open_per_workstation", unique: true, where: "((status)::text = 'open'::text)"
+  end
+
+  create_table "pos_tenders", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.bigint "pos_transaction_id", null: false
+    t.string "reference_number"
+    t.bigint "reverses_tender_id"
+    t.string "tender_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pos_transaction_id"], name: "index_pos_tenders_on_pos_transaction_id"
+    t.index ["reverses_tender_id"], name: "index_pos_tenders_on_reverses_tender_id"
+  end
+
+  create_table "pos_transaction_lines", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "extended_price_cents", default: 0, null: false
+    t.string "inventory_behavior_snapshot"
+    t.integer "line_discount_cents", default: 0, null: false
+    t.integer "line_number", null: false
+    t.string "line_type", null: false
+    t.string "open_ring_description"
+    t.bigint "pos_transaction_id", null: false
+    t.bigint "product_id"
+    t.string "product_name_snapshot"
+    t.string "product_sku_snapshot"
+    t.bigint "product_variant_id"
+    t.integer "quantity", null: false
+    t.string "return_disposition"
+    t.integer "source_sold_quantity_snapshot"
+    t.bigint "source_transaction_id"
+    t.bigint "source_transaction_line_id"
+    t.bigint "store_tax_rate_id"
+    t.string "store_tax_rate_short_name_snapshot"
+    t.bigint "sub_department_id"
+    t.bigint "tax_category_id"
+    t.integer "tax_cents", default: 0, null: false
+    t.string "tax_identifier_snapshot", limit: 1
+    t.integer "tax_rate_bps"
+    t.integer "unit_price_cents", null: false
+    t.datetime "updated_at", null: false
+    t.string "variant_name_snapshot"
+    t.string "variant_sku_snapshot"
+    t.index ["pos_transaction_id", "line_number"], name: "index_pos_transaction_lines_on_transaction_and_line_number", unique: true
+    t.index ["pos_transaction_id"], name: "index_pos_transaction_lines_on_pos_transaction_id"
+    t.index ["product_id"], name: "index_pos_transaction_lines_on_product_id"
+    t.index ["product_variant_id"], name: "index_pos_transaction_lines_on_product_variant_id"
+    t.index ["source_transaction_id"], name: "index_pos_transaction_lines_on_source_transaction_id"
+    t.index ["source_transaction_line_id"], name: "index_pos_transaction_lines_on_source_transaction_line_id"
+    t.index ["store_tax_rate_id"], name: "index_pos_transaction_lines_on_store_tax_rate_id"
+    t.index ["sub_department_id"], name: "index_pos_transaction_lines_on_sub_department_id"
+    t.index ["tax_category_id"], name: "index_pos_transaction_lines_on_tax_category_id"
+  end
+
+  create_table "pos_transactions", force: :cascade do |t|
+    t.date "business_date"
+    t.bigint "cashier_user_id", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.integer "discount_cents", default: 0, null: false
+    t.text "notes"
+    t.bigint "pos_register_session_id"
+    t.integer "rounding_cents", default: 0, null: false
+    t.string "status", null: false
+    t.bigint "store_id", null: false
+    t.integer "subtotal_cents", default: 0, null: false
+    t.datetime "suspended_at"
+    t.integer "tax_cents", default: 0, null: false
+    t.integer "total_cents", default: 0, null: false
+    t.string "transaction_number"
+    t.string "transaction_type"
+    t.datetime "updated_at", null: false
+    t.bigint "user_session_id"
+    t.datetime "voided_at"
+    t.bigint "workstation_id", null: false
+    t.index ["cashier_user_id"], name: "index_pos_transactions_on_cashier_user_id"
+    t.index ["pos_register_session_id"], name: "index_pos_transactions_on_pos_register_session_id"
+    t.index ["store_id", "business_date", "status"], name: "idx_on_store_id_business_date_status_0fa1c34368"
+    t.index ["store_id", "completed_at"], name: "index_pos_transactions_on_store_id_and_completed_at"
+    t.index ["store_id"], name: "index_pos_transactions_on_store_id"
+    t.index ["transaction_number"], name: "index_pos_transactions_on_transaction_number", unique: true, where: "(transaction_number IS NOT NULL)"
+    t.index ["user_session_id"], name: "index_pos_transactions_on_user_session_id"
+    t.index ["workstation_id", "transaction_number"], name: "index_pos_transactions_on_workstation_and_number", unique: true, where: "(transaction_number IS NOT NULL)"
+    t.index ["workstation_id"], name: "index_pos_transactions_on_workstation_id"
+  end
+
+  create_table "pos_voids", force: :cascade do |t|
+    t.date "business_date", null: false
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.bigint "pos_authorization_id"
+    t.bigint "pos_register_session_id", null: false
+    t.bigint "pos_transaction_id", null: false
+    t.string "reason_code"
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "voided_at", null: false
+    t.bigint "voided_by_user_id", null: false
+    t.bigint "workstation_id", null: false
+    t.index ["pos_authorization_id"], name: "index_pos_voids_on_pos_authorization_id"
+    t.index ["pos_register_session_id"], name: "index_pos_voids_on_pos_register_session_id"
+    t.index ["pos_transaction_id"], name: "index_pos_voids_on_pos_transaction_id", unique: true
+    t.index ["store_id"], name: "index_pos_voids_on_store_id"
+    t.index ["voided_by_user_id"], name: "index_pos_voids_on_voided_by_user_id"
+    t.index ["workstation_id"], name: "index_pos_voids_on_workstation_id"
+  end
+
+  create_table "pos_workstation_sequences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "last_sequence", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workstation_id", null: false
+    t.index ["workstation_id"], name: "index_pos_workstation_sequences_on_workstation_id", unique: true
+  end
+
   create_table "product_conditions", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "condition_key", null: false
@@ -954,6 +1140,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "inventory_postings", "stores"
   add_foreign_key "inventory_postings", "users", column: "posted_by_user_id"
   add_foreign_key "inventory_postings", "workstations"
+  add_foreign_key "pos_authorizations", "pos_register_sessions"
+  add_foreign_key "pos_authorizations", "pos_transactions"
+  add_foreign_key "pos_authorizations", "stores"
+  add_foreign_key "pos_authorizations", "users", column: "granted_by_user_id"
+  add_foreign_key "pos_authorizations", "users", column: "requested_by_user_id"
+  add_foreign_key "pos_cash_movements", "pos_register_sessions"
+  add_foreign_key "pos_cash_movements", "stores"
+  add_foreign_key "pos_cash_movements", "users", column: "recorded_by_user_id"
+  add_foreign_key "pos_receipts", "pos_transactions"
+  add_foreign_key "pos_receipts", "stores"
+  add_foreign_key "pos_register_sessions", "stores"
+  add_foreign_key "pos_register_sessions", "users", column: "closed_by_user_id"
+  add_foreign_key "pos_register_sessions", "users", column: "opened_by_user_id"
+  add_foreign_key "pos_register_sessions", "workstations"
+  add_foreign_key "pos_tenders", "pos_tenders", column: "reverses_tender_id"
+  add_foreign_key "pos_tenders", "pos_transactions"
+  add_foreign_key "pos_transaction_lines", "pos_transaction_lines", column: "source_transaction_line_id"
+  add_foreign_key "pos_transaction_lines", "pos_transactions"
+  add_foreign_key "pos_transaction_lines", "pos_transactions", column: "source_transaction_id"
+  add_foreign_key "pos_transaction_lines", "product_variants"
+  add_foreign_key "pos_transaction_lines", "products"
+  add_foreign_key "pos_transaction_lines", "store_tax_rates"
+  add_foreign_key "pos_transaction_lines", "sub_departments"
+  add_foreign_key "pos_transaction_lines", "tax_categories"
+  add_foreign_key "pos_transactions", "pos_register_sessions"
+  add_foreign_key "pos_transactions", "stores"
+  add_foreign_key "pos_transactions", "user_sessions"
+  add_foreign_key "pos_transactions", "users", column: "cashier_user_id"
+  add_foreign_key "pos_transactions", "workstations"
+  add_foreign_key "pos_voids", "pos_authorizations"
+  add_foreign_key "pos_voids", "pos_register_sessions"
+  add_foreign_key "pos_voids", "pos_transactions"
+  add_foreign_key "pos_voids", "stores"
+  add_foreign_key "pos_voids", "users", column: "voided_by_user_id"
+  add_foreign_key "pos_voids", "workstations"
+  add_foreign_key "pos_workstation_sequences", "workstations"
   add_foreign_key "product_variant_vendors", "product_variants"
   add_foreign_key "product_variant_vendors", "vendors"
   add_foreign_key "product_variants", "display_locations"

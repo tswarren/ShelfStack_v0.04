@@ -33,7 +33,7 @@ ShelfStack is a bookstore-focused catalog, inventory, stock, and point-of-sale m
 
 Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to the task.
 
-**Phases 1–3 are implemented.** See completion records under [implementation/](implementation/). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data (formats, conditions, tax, users, etc.). **Phase 4** (inventory foundation) is in progress — see [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md) and [specifications/phase-4-inventory-foundation-spec.md](specifications/phase-4-inventory-foundation-spec.md).
+**Phases 1–6 are implemented.** See completion records under [implementation/](implementation/). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data; **Inventory** (`/inventory`) and **Orders** (`/orders`) cover Phase 4–5 workflows.
 
 ---
 
@@ -44,6 +44,9 @@ Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to th
 | Phase 1 | Complete | [implementation/phase-1-completion.md](implementation/phase-1-completion.md) |
 | Phase 2 | Complete | [implementation/phase-2-completion.md](implementation/phase-2-completion.md) |
 | Phase 3 | Complete | [implementation/phase-3-completion.md](implementation/phase-3-completion.md) |
+| Phase 4 | Complete | [implementation/phase-4-completion.md](implementation/phase-4-completion.md) |
+| Phase 5 | Complete | [implementation/phase-5-completion.md](implementation/phase-5-completion.md) |
+| Phase 6 | Complete | [implementation/phase-6-completion.md](implementation/phase-6-completion.md) |
 
 Operational tasks (login, workstation assignment, PIN/password onboarding, sessions, admin recovery): [operations/foundation-runbook.md](operations/foundation-runbook.md).
 
@@ -81,6 +84,8 @@ Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/p
 | [roadmap/phase-2-departments-categories-taxes.md](roadmap/phase-2-departments-categories-taxes.md) | Departments, subdepartments, tax categories, store tax rates |
 | [roadmap/phase-3-catalog-products-variants.md](roadmap/phase-3-catalog-products-variants.md) | Catalog items, products, variants, SKUs, vendors |
 | [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md) | Inventory ledger, balances, adjustments, valuation |
+| [roadmap/phase-5-purchasing-and-receiving.md](roadmap/phase-5-purchasing-and-receiving.md) | Purchasing, receiving, RTV |
+| [roadmap/phase-6-pos-foundation.md](roadmap/phase-6-pos-foundation.md) | Register sessions, POS transactions, voids, receipts |
 
 ---
 
@@ -119,6 +124,22 @@ Each phase has three companion documents: functional specification, data model, 
 | [specifications/phase-4-inventory-foundation-spec.md](specifications/phase-4-inventory-foundation-spec.md) | Ledger, balances, adjustments, valuation, read surfaces |
 | [specifications/phase-4-data-model.md](specifications/phase-4-data-model.md) | Phase 4 tables, indexes, constraints, and seed data |
 | [specifications/phase-4-test-plan.md](specifications/phase-4-test-plan.md) | Required Phase 4 test coverage |
+
+### Phase 5: Purchasing and Receiving
+
+| Document | Purpose |
+| -------- | ------- |
+| [specifications/phase-5-purchasing-and-receiving-spec.md](specifications/phase-5-purchasing-and-receiving-spec.md) | PO, receiving, RTV, returnability |
+| [specifications/phase-5-data-model.md](specifications/phase-5-data-model.md) | Phase 5 tables, indexes, constraints |
+| [specifications/phase-5-test-plan.md](specifications/phase-5-test-plan.md) | Required Phase 5 test coverage |
+
+### Phase 6: POS Foundation
+
+| Document | Purpose |
+| -------- | ------- |
+| [specifications/phase-6-pos-foundation-spec.md](specifications/phase-6-pos-foundation-spec.md) | Register sessions, transactions, tax, tenders, voids, receipts |
+| [specifications/phase-6-data-model.md](specifications/phase-6-data-model.md) | Phase 6 `pos_*` tables and inventory posting types |
+| [specifications/phase-6-test-plan.md](specifications/phase-6-test-plan.md) | Required Phase 6 test coverage |
 
 ---
 

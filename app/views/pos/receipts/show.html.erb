@@ -1,0 +1,49 @@
+<div class="ss-pos-receipt">
+  <h1>Receipt <%= @receipt.receipt_number %></h1>
+  <p>Issued: <%= @receipt.issued_at %></p>
+  <p>Cashier: <%= @transaction.cashier_user.display_name %></p>
+
+  <table class="ss-table ss-pos-table ss-pos-receipt-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Discount</th>
+        <th>Tax</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @transaction.pos_transaction_lines.each do |line| %>
+        <tr>
+          <td><%= line.variant_name_snapshot || line.open_ring_description || line.product_variant&.name %></td>
+          <td><%= line.quantity %></td>
+          <td><%= pos_money(line.unit_price_cents) %></td>
+          <%= render "pos/transactions/line_discount", line: line %>
+          <%= render "pos/transactions/line_tax", line: line %>
+          <td><%= pos_money(line.extended_price_cents + line.tax_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <dl class="ss-pos-totals-list">
+    <div><dt>Subtotal</dt><dd><%= pos_money(@transaction.subtotal_cents) %></dd></div>
+    <% if @transaction.discount_cents.to_i.positive? %>
+      <div><dt>Order discount</dt><dd>−<%= pos_money(@transaction.discount_cents) %></dd></div>
+    <% end %>
+    <%= render "pos/transactions/tax_totals", transaction: @transaction %>
+    <% if @transaction.rounding_cents.to_i.nonzero? %>
+      <div><dt>Rounding</dt><dd><%= pos_money(@transaction.rounding_cents) %></dd></div>
+    <% end %>
+    <div class="ss-pos-totals-list__total"><dt>Total</dt><dd><%= pos_money(@transaction.total_cents) %></dd></div>
+  </dl>
+
+  <%= render "pos/receipts/tenders", transaction: @transaction %>
+
+  <div class="ss-pos-no-print">
+    <%= button_to "Reprint", print_pos_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
+    <%= link_to "Print", "#", onclick: "window.print(); return false;", class: "ss-btn ss-btn-secondary" %>
+  </div>
+</div>
