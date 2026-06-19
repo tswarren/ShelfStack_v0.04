@@ -486,6 +486,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "tax_cents", default: 0, null: false
     t.string "tax_identifier_snapshot", limit: 1
     t.integer "tax_rate_bps"
+    t.integer "transaction_discount_cents", default: 0, null: false
     t.integer "unit_price_cents", null: false
     t.datetime "updated_at", null: false
     t.string "variant_name_snapshot"

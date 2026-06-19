@@ -36,7 +36,7 @@ class Phase6AuthorizationTest < ActionDispatch::IntegrationTest
     )
     complete_pos_sale!(transaction: transaction, user: @user, register_session: session)
 
-    patch void_pos_transaction_path(transaction)
+    patch void_pos_transaction_path(transaction), params: { reason_code: "cashier_error" }
     assert_redirected_to pos_root_path
     follow_redirect!
     assert_match(/not authorized/i, flash[:alert].to_s)

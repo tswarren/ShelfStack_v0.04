@@ -9,13 +9,21 @@ export default class extends Controller {
     "variantId",
     "quantity",
     "unitPrice",
-    "form"
+    "form",
+    "entryActionField"
   ]
 
   static values = {
     url: String,
     addUrl: String,
-    mode: { type: String, default: "sale" }
+    mode: { type: String, default: "sale" },
+    autoAdd: { type: Boolean, default: true }
+  }
+
+  connect() {
+    if (this.hasLookupInputTarget) {
+      this.lookupInputTarget.focus()
+    }
   }
 
   lookupExact(event) {
@@ -28,10 +36,12 @@ export default class extends Controller {
       return
     }
 
+    this.exactLookup = true
     this.fetchLookup({ q: query, mode: "exact" })
   }
 
   search() {
+    this.exactLookup = false
     const query = this.lookupInputTarget.value.trim()
     if (query.length < 2) {
       this.clearChoices()
@@ -53,7 +63,7 @@ export default class extends Controller {
 
   renderResult(data) {
     if (data.status === "found") {
-      this.selectVariant(data.variants[0])
+      this.selectVariant(data.variants[0], { autoAdd: this.exactLookup })
       return
     }
 
@@ -74,20 +84,30 @@ export default class extends Controller {
       button.type = "button"
       button.className = "ss-btn ss-btn-secondary ss-pos-choice"
       button.textContent = this.variantLabel(variant)
-      button.addEventListener("click", () => this.selectVariant(variant))
+      button.addEventListener("click", () => this.selectVariant(variant, { autoAdd: true }))
       this.choicesTarget.appendChild(button)
     })
   }
 
-  selectVariant(variant) {
+  selectVariant(variant, { autoAdd = false } = {}) {
     this.variantIdTarget.value = variant.id
     this.lookupInputTarget.value = variant.sku
     if (this.hasUnitPriceTarget && !this.unitPriceTarget.value) {
       this.unitPriceTarget.value = (variant.selling_price_cents / 100).toFixed(2)
     }
-    this.previewTarget.textContent = `${variant.sku} — ${variant.name} | On hand: ${variant.quantity_on_hand ?? 0} | ${variant.selling_price_cents}c`
+    this.previewTarget.innerHTML = this.formatPreview(variant)
     this.clearChoices()
     this.showMessage("")
+
+    if (autoAdd && this.autoAddValue && this.hasFormTarget) {
+      this.formTarget.requestSubmit()
+    }
+  }
+
+  formatPreview(variant) {
+    const price = `$${(variant.selling_price_cents / 100).toFixed(2)}`
+    const onHand = variant.quantity_on_hand ?? 0
+    return `${variant.sku} — ${variant.name}<br><span class="ss-pos-preview-meta">On hand: ${onHand} · ${price}</span>`
   }
 
   submitLine(event) {

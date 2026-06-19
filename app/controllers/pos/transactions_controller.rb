@@ -47,9 +47,16 @@ module Pos
 
     def edit
       @mode = pos_mode
+      @entry_action = helpers.pos_initial_entry_action(@mode)
       @inactive_warnings = Pos::SellabilityValidator.warnings_for(@transaction)
       @complete_error = flash[:complete_error]
       @sub_departments = SubDepartment.active_records.order(:name)
+      @readiness = Pos::CompletionReadiness.check(
+        transaction: @transaction,
+        register_session: current_register_session,
+        confirmed_inactive: params[:confirm_inactive].present?,
+        pos_authorization_id: params[:pos_authorization_id]
+      )
     end
 
     def update
@@ -59,18 +66,19 @@ module Pos
 
       @transaction.update!(attrs)
       Pos::RecalculateTransaction.call!(@transaction)
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), notice: "Transaction updated."
+      redirect_to edit_pos_transaction_path(@transaction), notice: "Transaction updated."
     end
 
     def add_line
+      entry_action = line_entry_action
       variant = ProductVariant.find(params[:product_variant_id])
       quantity = params[:quantity].to_i
       quantity = 1 if quantity.zero?
-      quantity = -quantity.abs if pos_mode == "return" && quantity.positive?
+      quantity = -quantity.abs if entry_action == "return_no_receipt" && quantity.positive?
 
-      if pos_mode == "return" && params[:source_transaction_line_id].blank?
+      if entry_action == "return_no_receipt" && params[:source_transaction_line_id].blank?
         unless Authorization.allowed?(user: current_user, permission_key: "pos.returns.no_receipt", store: pos_store)
-          redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), alert: "No-receipt returns require permission."
+          redirect_to edit_pos_transaction_path(@transaction), alert: "No-receipt returns require permission."
           return
         end
       end
@@ -87,11 +95,11 @@ module Pos
         line_discount_cents: 0,
         extended_price_cents: 0,
         tax_cents: 0,
-        return_disposition: (pos_mode == "return" ? "return_to_stock" : nil)
+        return_disposition: (entry_action == "return_no_receipt" ? "return_to_stock" : nil)
       )
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), notice: "Line added."
+      redirect_to edit_pos_transaction_path(@transaction), notice: "Line added."
     end
 
     def add_return_line
@@ -121,9 +129,9 @@ module Pos
 
       Pos::ReturnLinePricing.apply!(line)
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction, mode: "return"), notice: "Return line added."
+      redirect_to edit_pos_transaction_path(@transaction), notice: "Return line added."
     rescue ActiveRecord::RecordNotFound
-      redirect_to edit_pos_transaction_path(@transaction, mode: "return"), alert: "Source sale line not found."
+      redirect_to edit_pos_transaction_path(@transaction), alert: "Source sale line not found."
     end
 
     def add_open_ring_line
@@ -162,9 +170,9 @@ module Pos
       )
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), notice: "Open-ring line added."
+      redirect_to edit_pos_transaction_path(@transaction), notice: "Open-ring line added."
     rescue Pos::TaxCalculator::MissingTaxError => e
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), alert: e.message
+      redirect_to edit_pos_transaction_path(@transaction), alert: e.message
     end
 
     def update_line
@@ -179,29 +187,33 @@ module Pos
       attrs[:return_disposition] = params[:return_disposition] if params.key?(:return_disposition)
       line.update!(attrs)
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), notice: "Line updated."
+      redirect_to edit_pos_transaction_path(@transaction), notice: "Line updated."
     end
 
     def remove_line
       line = @transaction.pos_transaction_lines.find(params[:line_id])
       line.destroy!
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), notice: "Line removed."
+      redirect_to edit_pos_transaction_path(@transaction), notice: "Line removed."
     end
 
     def sync_tenders
       result = Pos::TenderSync.call!(transaction: @transaction, tender_inputs: params[:tenders])
       notice = ["Tenders updated.", result.message].compact.join(" ")
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), notice: notice
+      redirect_to edit_pos_transaction_path(@transaction), notice: notice
     rescue Pos::TenderSync::Error => e
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), alert: e.message
+      redirect_to edit_pos_transaction_path(@transaction), alert: e.message
     end
 
     def complete
       register_session = current_register_session
       if register_session.blank?
-        redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode), alert: "Open a register session before completing."
+        redirect_to edit_pos_transaction_path(@transaction), alert: "Open a register session before completing."
         return
+      end
+
+      if params[:tenders].present?
+        Pos::TenderSync.call!(transaction: @transaction, tender_inputs: params[:tenders])
       end
 
       Pos::CompleteTransaction.call!(
@@ -212,9 +224,12 @@ module Pos
         pos_authorization_id: params[:pos_authorization_id]
       )
       redirect_to pos_transaction_path(@transaction), notice: "Transaction completed."
+    rescue Pos::TenderSync::Error => e
+      flash[:complete_error] = e.message
+      redirect_to edit_pos_transaction_path(@transaction, confirm_inactive: params[:confirm_inactive])
     rescue StandardError => e
       flash[:complete_error] = e.message
-      redirect_to edit_pos_transaction_path(@transaction, mode: pos_mode, confirm_inactive: params[:confirm_inactive])
+      redirect_to edit_pos_transaction_path(@transaction, confirm_inactive: params[:confirm_inactive])
     end
 
     def suspend
@@ -234,6 +249,11 @@ module Pos
     end
 
     def void
+      if params[:reason_code].blank?
+        redirect_to pos_transaction_path(@transaction), alert: "Void reason is required."
+        return
+      end
+
       register_session = current_register_session
       Pos::VoidTransaction.call!(
         transaction: @transaction,
@@ -269,6 +289,12 @@ module Pos
       @transaction.pos_transaction_lines.maximum(:line_number).to_i + 1
     end
 
+    def line_entry_action
+      action = params[:entry_action].presence
+      return action if PosHelper::ENTRY_ACTIONS.include?(action)
+
+      pos_mode == "return" ? "return_no_receipt" : "sale"
+    end
 
     def transaction_params
       params.require(:pos_transaction).permit(

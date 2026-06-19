@@ -6,7 +6,9 @@ export default class extends Controller {
     "tenderRow",
     "amountField",
     "authorizationId",
-    "changeHint"
+    "changeHint",
+    "remainingHint",
+    "completeButton"
   ]
 
   connect() {
@@ -50,14 +52,8 @@ export default class extends Controller {
   }
 
   updateChange() {
-    if (!this.hasChangeHintTarget) return
-
     const totalCents = parseInt(this.totalTarget.dataset.totalCents, 10)
-    if (Number.isNaN(totalCents) || totalCents <= 0) {
-      this.changeHintTarget.hidden = true
-      this.changeHintTarget.textContent = ""
-      return
-    }
+    if (Number.isNaN(totalCents)) return
 
     let nonCashCents = 0
     let cashTenderedCents = 0
@@ -71,6 +67,41 @@ export default class extends Controller {
         nonCashCents += cents
       }
     })
+
+    if (this.hasRemainingHintTarget) {
+      if (totalCents > 0) {
+        const remainingCents = totalCents - nonCashCents - Math.min(cashTenderedCents, Math.max(totalCents - nonCashCents, 0))
+        if (remainingCents > 0) {
+          this.remainingHintTarget.textContent = `Remaining due: ${this.formatMoney(remainingCents)}`
+          this.remainingHintTarget.hidden = false
+        } else {
+          this.remainingHintTarget.hidden = true
+          this.remainingHintTarget.textContent = ""
+        }
+      } else if (totalCents < 0) {
+        const tenderTotal = nonCashCents + cashTenderedCents
+        const remainingCents = totalCents - tenderTotal
+        if (remainingCents !== 0) {
+          this.remainingHintTarget.textContent = remainingCents < 0 ?
+            `Refund exceeds due by ${this.formatMoney(Math.abs(remainingCents))}` :
+            `Refund still due: ${this.formatMoney(Math.abs(remainingCents))}`
+          this.remainingHintTarget.hidden = false
+        } else {
+          this.remainingHintTarget.hidden = true
+          this.remainingHintTarget.textContent = ""
+        }
+      } else {
+        this.remainingHintTarget.hidden = true
+      }
+    }
+
+    if (!this.hasChangeHintTarget) return
+
+    if (totalCents <= 0) {
+      this.changeHintTarget.hidden = true
+      this.changeHintTarget.textContent = ""
+      return
+    }
 
     const remainingCents = totalCents - nonCashCents
     const changeCents = cashTenderedCents - remainingCents

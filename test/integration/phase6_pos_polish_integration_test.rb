@@ -26,19 +26,19 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     post add_line_pos_transaction_path(transaction, mode: "sale"), params: {
       product_variant_id: @variant.id,
-      quantity: 1
+      quantity: 1,
+      entry_action: "sale"
     }
-    assert_redirected_to edit_pos_transaction_path(transaction, mode: "sale")
+    assert_redirected_to edit_pos_transaction_path(transaction)
 
     transaction.reload
     Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
     total = transaction.total_cents
 
-    patch sync_tenders_pos_transaction_path(transaction, mode: "sale"), params: {
+    patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
+      confirm_inactive: 1,
       tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
     }
-
-    patch complete_pos_transaction_path(transaction, mode: "sale"), params: { confirm_inactive: 1 }
     assert_redirected_to pos_transaction_path(transaction)
 
     transaction.reload
@@ -73,11 +73,10 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     total = return_txn.total_cents
     assert total.negative?, "return total should be negative so cash refund reduces drawer"
 
-    patch sync_tenders_pos_transaction_path(return_txn, mode: "return"), params: {
+    patch complete_pos_transaction_path(return_txn, mode: "return"), params: {
+      confirm_inactive: 1,
       tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
     }
-
-    patch complete_pos_transaction_path(return_txn, mode: "return"), params: { confirm_inactive: 1 }
     assert_redirected_to pos_transaction_path(return_txn)
     assert_equal "return", return_txn.reload.transaction_type
   end
@@ -94,11 +93,10 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     return_txn.reload
     Pos::RecalculateTransaction.call!(return_txn, business_date: @register_session.business_date)
     total = return_txn.total_cents
-    patch sync_tenders_pos_transaction_path(return_txn, mode: "return"), params: {
+    patch complete_pos_transaction_path(return_txn, mode: "return"), params: {
+      confirm_inactive: 1,
       tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
     }
-
-    patch complete_pos_transaction_path(return_txn, mode: "return"), params: { confirm_inactive: 1 }
     assert_response :redirect
     assert_match %r{/pos/transactions/\d+/edit}, response.redirect_url
     follow_redirect!
@@ -115,7 +113,8 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     patch complete_pos_transaction_path(return_txn, mode: "return"), params: {
       confirm_inactive: 1,
-      pos_authorization_id: authorization_id
+      pos_authorization_id: authorization_id,
+      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", return_txn.total_cents / 100.0) }]
     }
     assert_redirected_to pos_transaction_path(return_txn)
     assert return_txn.reload.completed?

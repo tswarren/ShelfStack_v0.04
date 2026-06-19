@@ -20,6 +20,7 @@ module Pos
       raise Error, "Only completed transactions can be voided." unless transaction.completed?
       raise Error, "Transaction is already voided." if transaction.voided?
       raise Error, "Register session must be open." unless register_session&.open?
+      raise Error, "Void reason is required." if reason_code.blank?
 
       PosTransaction.transaction do
         pos_void = PosVoid.create!(

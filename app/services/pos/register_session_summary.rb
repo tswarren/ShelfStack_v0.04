@@ -4,6 +4,8 @@ module Pos
   class RegisterSessionSummary
     Summary = Data.define(
       :opening_cash_cents,
+      :cash_sales_cents,
+      :cash_refunds_cents,
       :paid_in_cents,
       :paid_out_cents,
       :net_cash_tender_cents,
@@ -23,14 +25,18 @@ module Pos
     def call
       paid_in = session.pos_cash_movements.where(movement_type: "paid_in").sum(:amount_cents)
       paid_out = session.pos_cash_movements.where(movement_type: "paid_out").sum(:amount_cents)
-      net_cash = PosTender
+      cash_tenders = PosTender
         .joins(:pos_transaction)
         .where(pos_transactions: { pos_register_session_id: session.id, status: "completed" })
         .where(tender_type: "cash")
-        .sum(:amount_cents)
+      cash_sales = cash_tenders.where("amount_cents > 0").sum(:amount_cents)
+      cash_refunds = cash_tenders.where("amount_cents < 0").sum(:amount_cents)
+      net_cash = cash_sales + cash_refunds
 
       Summary.new(
         opening_cash_cents: session.opening_cash_cents,
+        cash_sales_cents: cash_sales,
+        cash_refunds_cents: cash_refunds,
         paid_in_cents: paid_in,
         paid_out_cents: paid_out,
         net_cash_tender_cents: net_cash,

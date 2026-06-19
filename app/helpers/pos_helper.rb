@@ -2,9 +2,100 @@
 
 module PosHelper
   POS_MODES = %w[sale return exchange].freeze
+  ENTRY_ACTIONS = %w[sale return_receipt return_no_receipt open_ring].freeze
+
+  VOID_REASON_CODES = [
+    ["Cashier error", "cashier_error"],
+    ["Customer changed mind", "customer_changed_mind"],
+    ["Duplicate transaction", "duplicate"],
+    ["Other", "other"]
+  ].freeze
 
   def pos_mode_label(mode)
     mode.to_s.humanize
+  end
+
+  def pos_initial_entry_action(mode)
+    mode.to_s == "return" ? "return_receipt" : "sale"
+  end
+
+  def pos_derived_transaction_type(transaction)
+    transaction.transaction_type.presence || Pos::DeriveTransactionType.call(transaction)
+  end
+
+  def pos_draft_type_label(transaction)
+    type = pos_derived_transaction_type(transaction)
+    return "Draft transaction" if type.blank?
+
+    case type
+    when "exchange" then "Exchange"
+    else "Draft #{type}"
+    end
+  end
+
+  def pos_complete_button_label(transaction, confirm_inactive: false)
+    type = pos_derived_transaction_type(transaction)
+    prefix = confirm_inactive ? "Complete (confirm inactive)" : "Complete"
+    case type
+    when "return" then "#{prefix} return"
+    when "exchange" then "#{prefix} exchange"
+    else "#{prefix} sale"
+    end
+  end
+
+  ExchangeSummary = Data.define(:return_total_cents, :sale_total_cents, :amount_due_cents)
+
+  def pos_exchange_summary(transaction)
+    return nil unless pos_derived_transaction_type(transaction) == "exchange"
+
+    sale_total = 0
+    return_total = 0
+    transaction.pos_transaction_lines.each do |line|
+      next if line.quantity.zero?
+
+      line_total = pos_line_total_cents(line)
+      if line.quantity.positive?
+        sale_total += line_total
+      else
+        return_total += line_total
+      end
+    end
+
+    ExchangeSummary.new(
+      return_total_cents: return_total,
+      sale_total_cents: sale_total,
+      amount_due_cents: transaction.total_cents
+    )
+  end
+
+  def pos_line_total_cents(line)
+    amount = line.extended_price_cents.to_i + line.tax_cents.to_i
+    line.quantity.negative? ? -amount.abs : amount
+  end
+
+  def pos_line_display_title(line)
+    line.variant_name_snapshot.presence ||
+      line.product_variant&.name ||
+      line.open_ring_description ||
+      "Item"
+  end
+
+  def pos_line_display_sku(line)
+    line.variant_sku_snapshot.presence ||
+      line.product_variant&.sku ||
+      "Open ring"
+  end
+
+  def pos_lookup_preview_text(variant)
+    price = pos_money(variant[:selling_price_cents] || variant["selling_price_cents"])
+    on_hand = variant[:quantity_on_hand] || variant["quantity_on_hand"] || 0
+    sku = variant[:sku] || variant["sku"]
+    name = variant[:name] || variant["name"]
+    "#{sku} — #{name}\nOn hand: #{on_hand} · #{price}"
+  end
+
+  def pos_void_reason_options
+    VOID_REASON_CODES
   end
 
   def pos_money(cents)
@@ -37,6 +128,8 @@ module PosHelper
   end
 
   def pos_line_transaction_discount_cents(line)
+    return line.transaction_discount_cents if line.transaction_discount_cents.to_i.positive?
+
     base = [pos_line_gross_cents(line) - line.line_discount_cents.to_i, 0].max
     [base - line.extended_price_cents, 0].max
   end
@@ -121,5 +214,58 @@ module PosHelper
     else
       tender.amount_cents
     end
+  end
+
+  def pos_receipt_money(cents)
+    content_tag(:span, pos_money(cents), class: "ss-receipt-money")
+  end
+
+  def pos_receipt_store_address(store)
+    parts = [store.city, store.region_code, store.postal_code].compact_blank
+    parts.join(", ")
+  end
+
+  ReceiptTaxSubtotal = Data.define(:label, :tax_cents)
+
+  def pos_receipt_tax_subtotals(transaction)
+    grouped = transaction.pos_transaction_lines.group_by do |line|
+      identifier = pos_line_tax_identifier(line).presence || "—"
+      short_name = pos_line_tax_short_name(line)
+      "#{identifier} - #{short_name}"
+    end
+
+    grouped.filter_map do |label, lines|
+      tax_cents = lines.sum { |line| line.quantity.negative? ? -line.tax_cents : line.tax_cents }
+      next if tax_cents.zero? && lines.all? { |line| line.tax_cents.zero? }
+
+      ReceiptTaxSubtotal.new(label: label, tax_cents: tax_cents)
+    end.sort_by(&:label)
+  end
+
+  def pos_receipt_item_discounts_total(transaction)
+    transaction.pos_transaction_lines.sum do |line|
+      amount = line.line_discount_cents.to_i
+      line.quantity.negative? ? -amount : amount
+    end
+  end
+
+  def pos_receipt_savings_total(transaction)
+    item_total = pos_receipt_item_discounts_total(transaction).abs
+    order_total = transaction.discount_cents.to_i
+    item_total + order_total
+  end
+
+  def pos_receipt_signed_cents(cents, negative: false)
+    negative ? -cents.abs : cents
+  end
+
+  def pos_receipt_line_gross_cents(line)
+    amount = pos_line_gross_cents(line)
+    line.return_line? ? -amount : amount
+  end
+
+  def pos_receipt_line_net_cents(line)
+    amount = line.extended_price_cents.to_i
+    line.return_line? ? -amount.abs : amount
   end
 end

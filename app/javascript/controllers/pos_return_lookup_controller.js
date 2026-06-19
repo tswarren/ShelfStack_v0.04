@@ -49,8 +49,16 @@ export default class extends Controller {
       const form = document.createElement("form")
       form.method = "post"
       form.action = this.addUrlValue
+      form.setAttribute("data-turbo", "false")
+
+      const token = document.querySelector("meta[name='csrf-token']")?.getAttribute("content")
+      if (!token) {
+        this.showMessage("Session expired. Refresh the page and try again.")
+        return
+      }
+
       form.innerHTML = `
-        <input type="hidden" name="authenticity_token" value="${document.querySelector("meta[name='csrf-token']").content}">
+        <input type="hidden" name="authenticity_token" value="${token}">
         <input type="hidden" name="source_transaction_line_id" value="${line.id}">
         <span>${line.sku} — ${line.name} (sold ${line.sold_quantity}, remaining ${line.remaining_quantity})</span>
         <label>Qty <input type="number" name="quantity" value="1" min="1" max="${line.remaining_quantity}"></label>

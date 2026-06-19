@@ -1,0 +1,16 @@
+<header class="ss-receipt-header">
+  <h1><%= store.name %></h1>
+  <% if store.address_line1.present? %>
+    <p><%= store.address_line1 %></p>
+  <% end %>
+  <% address = pos_receipt_store_address(store) %>
+  <% if address.present? %>
+    <p><%= address %></p>
+  <% end %>
+  <% if store.phone.present? %>
+    <p><%= store.phone %></p>
+  <% end %>
+  <% if store.website_url.present? %>
+    <p><%= store.website_url %></p>
+  <% end %>
+</header>

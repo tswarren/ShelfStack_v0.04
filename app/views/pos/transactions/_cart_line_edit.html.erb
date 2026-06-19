@@ -1,0 +1,29 @@
+<tr class="ss-pos-cart-line-edit" data-pos-cart-line-target="editRow" data-line-id="<%= line.id %>" hidden>
+  <td colspan="7">
+    <%= form_with url: update_line_pos_transaction_path(transaction), method: :patch, class: "ss-pos-line-edit-form" do %>
+      <%= hidden_field_tag :line_id, line.id %>
+      <div class="ss-pos-line-edit-form__fields">
+        <div class="ss-field">
+          <%= label_tag "quantity_#{line.id}", "Qty" %>
+          <%= number_field_tag :quantity, line.quantity, id: "quantity_#{line.id}", class: "ss-pos-qty-input" %>
+        </div>
+        <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) %>
+          <div class="ss-field">
+            <%= label_tag "line_discount_#{line.id}", "Line discount" %>
+            <%= pos_money_field :line_discount, line.line_discount_cents, id: "line_discount_#{line.id}", min: 0, class: "ss-pos-money-input" %>
+          </div>
+        <% end %>
+        <% if line.return_line? %>
+          <div class="ss-field">
+            <%= label_tag "return_disposition_#{line.id}", "Disposition" %>
+            <%= select_tag :return_disposition, options_for_select(pos_return_disposition_options, line.return_disposition), id: "return_disposition_#{line.id}" %>
+          </div>
+        <% end %>
+      </div>
+      <div class="ss-pos-line-edit-form__actions">
+        <%= submit_tag "Save", class: "ss-btn" %>
+        <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-cart-line#cancel" data-line-id="<%= line.id %>">Cancel</button>
+      </div>
+    <% end %>
+  </td>
+</tr>

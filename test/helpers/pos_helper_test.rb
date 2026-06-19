@@ -11,12 +11,35 @@ class PosHelperTest < ActionView::TestCase
       quantity: 1,
       unit_price_cents: 1000,
       line_discount_cents: 100,
-      extended_price_cents: 820
+      extended_price_cents: 820,
+      transaction_discount_cents: 80
     )
 
     assert_equal 180, pos_line_total_discount_cents(line)
     assert_equal 80, pos_line_transaction_discount_cents(line)
     assert_equal "line $1.00, order $0.80", pos_line_discount_breakdown(line)
+  end
+
+  test "receipt tax subtotals use identifier and short name label" do
+    transaction = PosTransaction.new
+    transaction.pos_transaction_lines.build(
+      quantity: 1,
+      tax_cents: 30,
+      tax_identifier_snapshot: "T",
+      store_tax_rate_short_name_snapshot: "Sales Tax"
+    )
+
+    subtotals = pos_receipt_tax_subtotals(transaction)
+    assert_equal 1, subtotals.size
+    assert_equal "T - Sales Tax", subtotals.first.label
+    assert_equal 30, subtotals.first.tax_cents
+  end
+
+  test "receipt savings total sums item and order discounts" do
+    transaction = PosTransaction.new(discount_cents: 200)
+    transaction.pos_transaction_lines.build(quantity: 1, line_discount_cents: 100)
+
+    assert_equal 300, pos_receipt_savings_total(transaction)
   end
 
   test "tax indicator uses store tax rate identifier" do

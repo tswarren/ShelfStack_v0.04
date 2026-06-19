@@ -1,0 +1,16 @@
+<div class="ss-pos-entry-switch" role="tablist" aria-label="Item entry mode">
+  <% [
+    ["Sale item", "sale"],
+    ["Return from receipt", "return_receipt"],
+    ["No-receipt return", "return_no_receipt"],
+    ["Open-ring", "open_ring"]
+  ].each do |label, action| %>
+    <button type="button"
+            class="ss-pos-entry-switch__btn"
+            data-entry-action="<%= action %>"
+            data-action="pos-register-workspace#selectAction"
+            aria-pressed="false">
+      <%= label %>
+    </button>
+  <% end %>
+</div>

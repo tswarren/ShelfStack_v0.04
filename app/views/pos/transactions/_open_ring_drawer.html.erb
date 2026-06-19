@@ -1,0 +1,12 @@
+<% if Authorization.allowed?(user: current_user, permission_key: "pos.lines.add.open_ring", store: current_store) %>
+  <section class="ss-pos-panel ss-pos-drawer" data-pos-register-workspace-target="openRingDrawer" hidden>
+    <h2 class="ss-pos-panel__title">Open-ring item</h2>
+    <%= form_with url: add_open_ring_line_pos_transaction_path(transaction), method: :post, class: "ss-form ss-pos-open-ring-form" do %>
+      <%= text_field_tag :description, nil, placeholder: "Description", required: true %>
+      <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment", required: true %>
+      <%= pos_money_field :unit_price, nil, placeholder: "Unit price", required: true, min: 0 %>
+      <%= number_field_tag :quantity, 1, min: 1 %>
+      <%= submit_tag "Add open-ring line", class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </section>
+<% end %>

@@ -1,4 +1,4 @@
-<h1 class="ss-pos-title">Transaction #<%= @transaction.id %> — <%= pos_mode_label(@mode) %></h1>
+<%= render "pos/transactions/register_header", transaction: @transaction %>
 
 <% unless current_register_session %>
   <div class="ss-pos-alert">No register session is open. Complete will be blocked until you <%= link_to "open the register", new_pos_register_session_path %>.</div>
@@ -19,194 +19,22 @@
   </div>
 <% end %>
 
-<div class="ss-pos-layout" data-controller="pos-transaction-edit" data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId">
+<div class="ss-pos-layout"
+     data-controller="pos-register-workspace pos-transaction-edit pos-cart-line"
+     data-pos-register-workspace-initial-action-value="<%= @entry_action %>"
+     data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId">
   <div class="ss-pos-layout__main">
-    <% unless @mode == "return" %>
-      <section class="ss-pos-panel" data-controller="pos-line-entry" data-pos-line-entry-url-value="<%= pos_line_lookup_path %>" data-pos-line-entry-mode-value="<%= @mode %>">
-        <h2>Scan or enter SKU</h2>
-        <%= form_with url: add_line_pos_transaction_path(@transaction, mode: @mode), method: :post, class: "ss-pos-scan-form", data: { pos_line_entry_target: "form" } do %>
-          <%= hidden_field_tag :product_variant_id, nil, data: { pos_line_entry_target: "variantId" } %>
-          <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
-          <div class="ss-pos-scan-row">
-            <%= text_field_tag :sku_lookup, nil, placeholder: "Scan SKU or barcode", autocomplete: "off", class: "ss-pos-scan-input", data: { pos_line_entry_target: "lookupInput", action: "keydown->pos-line-entry#lookupExact input->pos-line-entry#search" } %>
-            <%= number_field_tag :quantity, (@mode == "return" ? -1 : 1), step: 1, class: "ss-pos-qty-input", data: { pos_line_entry_target: "quantity" } %>
-            <%= pos_money_field :unit_price, nil, placeholder: "Price", class: "ss-pos-money-input", data: { pos_line_entry_target: "unitPrice" } %>
-            <%= button_tag "Add line", type: "button", class: "ss-btn", data: { action: "pos-line-entry#submitLine" } %>
-          </div>
-          <p class="ss-hint" data-pos-line-entry-target="preview"></p>
-          <p class="ss-hint ss-hint--warning" data-pos-line-entry-target="message" hidden></p>
-          <div data-pos-line-entry-target="choices" class="ss-pos-choices"></div>
-        <% end %>
-      </section>
-    <% end %>
-
-    <% if @mode == "return" %>
-      <section class="ss-pos-panel" data-controller="pos-return-lookup" data-pos-return-lookup-url-value="<%= pos_return_lookup_path %>" data-pos-return-lookup-add-url-value="<%= add_return_line_pos_transaction_path(@transaction) %>">
-        <h2>Receipt lookup</h2>
-        <div class="ss-pos-scan-row">
-          <%= text_field_tag :receipt_number, nil, placeholder: "Receipt / transaction number", class: "ss-pos-scan-input", data: { pos_return_lookup_target: "input", action: "keydown->pos-return-lookup#lookup" } %>
-          <%= button_tag "Find receipt", type: "button", class: "ss-btn ss-btn-secondary", data: { action: "pos-return-lookup#lookup" } %>
-        </div>
-        <p class="ss-hint ss-hint--warning" data-pos-return-lookup-target="message" hidden></p>
-        <div data-pos-return-lookup-target="results"></div>
-
-        <h3>No-receipt return</h3>
-        <p class="ss-hint">Scan items below with negative quantity. Requires supervisor authorization at completion.</p>
-        <div data-controller="pos-line-entry" data-pos-line-entry-url-value="<%= pos_line_lookup_path %>" data-pos-line-entry-mode-value="return">
-          <%= form_with url: add_line_pos_transaction_path(@transaction, mode: "return"), method: :post, class: "ss-pos-scan-form", data: { pos_line_entry_target: "form" } do %>
-            <%= hidden_field_tag :product_variant_id, nil, data: { pos_line_entry_target: "variantId" } %>
-            <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id] %>
-            <div class="ss-pos-scan-row">
-              <%= text_field_tag :sku_lookup, nil, placeholder: "Scan SKU", class: "ss-pos-scan-input", data: { pos_line_entry_target: "lookupInput", action: "keydown->pos-line-entry#lookupExact input->pos-line-entry#search" } %>
-              <%= number_field_tag :quantity, -1, class: "ss-pos-qty-input" %>
-              <%= button_tag "Add no-receipt line", type: "button", class: "ss-btn ss-btn-secondary", data: { action: "pos-line-entry#submitLine" } %>
-            </div>
-            <div data-pos-line-entry-target="choices" class="ss-pos-choices"></div>
-          <% end %>
-        </div>
-      </section>
-    <% end %>
-
-    <% if Authorization.allowed?(user: current_user, permission_key: "pos.lines.add.open_ring", store: current_store) %>
-      <section class="ss-pos-panel">
-        <h2>Open-ring item</h2>
-        <%= form_with url: add_open_ring_line_pos_transaction_path(@transaction, mode: @mode), method: :post, class: "ss-form ss-pos-open-ring-form" do %>
-          <%= text_field_tag :description, nil, placeholder: "Description", required: true %>
-          <%= select_tag :sub_department_id, options_from_collection_for_select(SubDepartment.active_records.order(:name), :id, :name), include_blank: "Subdepartment", required: true %>
-          <%= pos_money_field :unit_price, nil, placeholder: "Unit price", required: true, min: 0 %>
-          <%= number_field_tag :quantity, 1, min: 1 %>
-          <%= submit_tag "Add open-ring line", class: "ss-btn ss-btn-secondary" %>
-        <% end %>
-      </section>
-    <% end %>
-
-    <section class="ss-pos-panel">
-      <h2>Lines</h2>
-      <table class="ss-table ss-pos-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Unit</th>
-            <th>Discount</th>
-            <th>Extended</th>
-            <th>Tax</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @transaction.pos_transaction_lines.each do |line| %>
-            <tr>
-              <td><%= line.line_number %></td>
-              <td>
-                <%= line.variant_sku_snapshot || line.product_variant&.sku || line.open_ring_description %>
-                <% if line.return_line? %>
-                  <span class="ss-status-badge status-warning">Return</span>
-                <% end %>
-              </td>
-              <td>
-                <%= form_with url: update_line_pos_transaction_path(@transaction, mode: @mode), method: :patch, class: "ss-pos-inline-form" do %>
-                  <%= hidden_field_tag :line_id, line.id %>
-                  <%= number_field_tag :quantity, line.quantity, class: "ss-pos-qty-input" %>
-                  <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) %>
-                    <%= pos_money_field :line_discount, line.line_discount_cents, min: 0, class: "ss-pos-money-input", placeholder: "Disc." %>
-                  <% end %>
-                  <% if line.return_line? %>
-                    <%= select_tag :return_disposition, options_for_select(pos_return_disposition_options, line.return_disposition) %>
-                  <% end %>
-                  <%= submit_tag "Update", class: "ss-btn ss-btn-secondary ss-btn--small" %>
-                <% end %>
-              </td>
-              <td><%= pos_money(line.unit_price_cents) %></td>
-              <%= render "pos/transactions/line_discount", line: line %>
-              <td>
-                <% if pos_line_total_discount_cents(line).positive? %>
-                  <span class="ss-pos-gross-amount"><%= pos_money(pos_line_gross_cents(line)) %></span>
-                <% end %>
-                <%= pos_money(line.extended_price_cents) %>
-              </td>
-              <td><%= render "pos/transactions/line_tax", line: line %></td>
-              <td>
-                <%= button_to "Remove", remove_line_pos_transaction_path(@transaction, mode: @mode, line_id: line.id), method: :delete, class: "ss-btn ss-btn-secondary ss-btn--small", form: { data: { turbo_confirm: "Remove this line?" } } %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </section>
+    <%= render "pos/transactions/entry_switch" %>
+    <%= render "pos/transactions/scan_entry", transaction: @transaction, entry_action: @entry_action %>
+    <%= render "pos/transactions/return_receipt_drawer", transaction: @transaction %>
+    <%= render "pos/transactions/open_ring_drawer", transaction: @transaction, sub_departments: @sub_departments %>
+    <%= render "pos/transactions/cart", transaction: @transaction %>
   </div>
 
   <aside class="ss-pos-layout__sidebar">
-    <section class="ss-pos-panel ss-pos-totals" data-pos-transaction-edit-target="total" data-total-cents="<%= @transaction.total_cents %>">
-      <h2>Totals</h2>
-      <dl class="ss-pos-totals-list">
-        <div><dt>Subtotal</dt><dd><%= pos_money(@transaction.subtotal_cents) %></dd></div>
-        <div><dt>Discount</dt><dd><%= pos_money(@transaction.discount_cents) %></dd></div>
-        <%= render "pos/transactions/tax_totals", transaction: @transaction %>
-        <div><dt>Rounding</dt><dd><%= pos_money(@transaction.rounding_cents) %></dd></div>
-        <div class="ss-pos-totals-list__total"><dt>Total</dt><dd><%= pos_money(@transaction.total_cents) %></dd></div>
-      </dl>
-    </section>
-
-    <section class="ss-pos-panel">
-      <h2>Adjustments</h2>
-      <%= form_with model: @transaction, url: pos_transaction_path(@transaction, mode: @mode), method: :patch, class: "ss-form" do |f| %>
-        <div class="ss-field">
-          <%= label_tag :pos_transaction_discount_dollars, "Transaction discount" %>
-          <%= pos_money_field "pos_transaction[discount_dollars]", @transaction.discount_cents, min: 0 %>
-        </div>
-        <div class="ss-field">
-          <%= label_tag :pos_transaction_rounding_dollars, "Cash rounding" %>
-          <%= pos_money_field "pos_transaction[rounding_dollars]", @transaction.rounding_cents %>
-        </div>
-        <%= f.submit "Recalculate", class: "ss-btn ss-btn-secondary" %>
-      <% end %>
-    </section>
-
-    <section class="ss-pos-panel">
-      <h2>Tenders</h2>
-      <%= form_with url: sync_tenders_pos_transaction_path(@transaction, mode: @mode), method: :patch, class: "ss-form", data: { action: "input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange" } do %>
-        <% PosTender::PHASE6_ALLOWED_TYPES.first(3).each do |tender_type| %>
-          <% existing = @transaction.pos_tenders.find { |t| t.tender_type == tender_type } %>
-          <% display_cents = tender_type == "cash" ? pos_tendered_display_cents(existing) : existing&.amount_cents %>
-          <div class="ss-field" data-tender-type="<%= tender_type %>">
-            <%= label_tag "tenders_#{tender_type}", tender_type == "cash" && @transaction.total_cents.positive? ? "Cash tendered" : tender_type.humanize %>
-            <%= pos_money_field "tenders[][amount_dollars]", display_cents, data: { pos_transaction_edit_target: "amountField" } %>
-            <%= hidden_field_tag "tenders[][tender_type]", tender_type %>
-          </div>
-        <% end %>
-        <p class="ss-hint" data-pos-transaction-edit-target="changeHint" hidden></p>
-        <div class="ss-pos-tender-actions">
-          <%= submit_tag "Save tenders", class: "ss-btn ss-btn-secondary" %>
-          <%= button_tag "Fill cash", type: "button", class: "ss-btn", data: { action: "pos-transaction-edit#fillCash" } %>
-        </div>
-      <% end %>
-    </section>
-
-    <section class="ss-pos-panel ss-pos-complete">
-      <% complete_params = { mode: @mode } %>
-      <% complete_params[:confirm_inactive] = 1 if params[:confirm_inactive].present? %>
-      <%= form_with url: complete_pos_transaction_path(@transaction, complete_params), method: :patch do %>
-        <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
-        <% if @inactive_warnings.any? && params[:confirm_inactive].blank? %>
-          <%= hidden_field_tag :confirm_inactive, 1 %>
-          <%= submit_tag "Complete (confirm inactive)", class: "ss-btn" %>
-        <% else %>
-          <%= submit_tag "Complete", class: "ss-btn" %>
-        <% end %>
-      <% end %>
-
-      <% if @transaction.discount_cents.to_i > Pos::AuthorizationRequest::TRANSACTION_DISCOUNT_LIMIT_CENTS %>
-        <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-transaction-edit#requestAuth" data-authorization-type="discount_over_limit" data-transaction-id="<%= @transaction.id %>" data-authorization-message="Discount exceeds limit. Manager approval required.">
-          Authorize discount
-        </button>
-      <% end %>
-
-      <div class="ss-pos-secondary-actions">
-        <%= button_to "Suspend", suspend_pos_transaction_path(@transaction), method: :patch, class: "ss-btn ss-btn-secondary" %>
-        <%= button_to "Cancel", cancel_pos_transaction_path(@transaction), method: :patch, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Cancel this draft?" } %>
-      </div>
-    </section>
+    <%= render "pos/transactions/sidebar",
+          transaction: @transaction,
+          readiness: @readiness,
+          inactive_warnings: @inactive_warnings %>
   </aside>
 </div>

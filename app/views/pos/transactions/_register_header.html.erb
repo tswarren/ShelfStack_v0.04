@@ -1,0 +1,32 @@
+<header class="ss-pos-register-header">
+  <div class="ss-pos-register-header__primary">
+    <h1 class="ss-pos-title"><%= pos_draft_type_label(transaction) %> #<%= transaction.id %></h1>
+    <% exchange = pos_exchange_summary(transaction) %>
+    <% if exchange %>
+      <p class="ss-pos-register-header__exchange">
+        Return total: <%= pos_money(exchange.return_total_cents) %>
+        · New sale total: <%= pos_money(exchange.sale_total_cents) %>
+        · Amount due: <%= pos_money(exchange.amount_due_cents) %>
+      </p>
+    <% end %>
+  </div>
+  <dl class="ss-pos-register-header__meta">
+    <div>
+      <dt>Register</dt>
+      <dd>
+        <% if current_register_session %>
+          <span class="ss-status-badge status-active">Open</span>
+        <% else %>
+          <span class="ss-status-badge status-warning">Closed</span>
+        <% end %>
+      </dd>
+    </div>
+    <% if current_register_session %>
+      <div><dt>Business date</dt><dd><%= current_register_session.business_date %></dd></div>
+    <% end %>
+    <div><dt>Cashier</dt><dd><%= transaction.cashier_user.username %></dd></div>
+    <% if current_workstation %>
+      <div><dt>Workstation</dt><dd><%= current_workstation.name %></dd></div>
+    <% end %>
+  </dl>
+</header>

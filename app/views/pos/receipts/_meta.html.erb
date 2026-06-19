@@ -1,0 +1,18 @@
+<section class="ss-receipt-meta">
+  <div class="ss-receipt-row">
+    <span>Receipt</span>
+    <strong><%= receipt.receipt_number %></strong>
+  </div>
+  <div class="ss-receipt-row">
+    <span>Issued</span>
+    <strong><%= l(receipt.issued_at, format: :short) %></strong>
+  </div>
+  <div class="ss-receipt-row">
+    <span>Cashier</span>
+    <strong><%= transaction.cashier_user.display_name %></strong>
+  </div>
+  <div class="ss-receipt-row">
+    <span>Register</span>
+    <strong><%= transaction.workstation.workstation_number %></strong>
+  </div>
+</section>

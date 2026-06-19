@@ -25,7 +25,8 @@ class Pos::VoidTransactionTest < ActiveSupport::TestCase
     pos_void = Pos::VoidTransaction.call!(
       transaction: @transaction,
       voided_by_user: @user,
-      register_session: @register_session
+      register_session: @register_session,
+      reason_code: "cashier_error"
     )
 
     @transaction.reload

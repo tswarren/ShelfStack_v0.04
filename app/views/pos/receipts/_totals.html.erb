@@ -1,0 +1,48 @@
+<section class="ss-receipt-totals">
+  <div class="ss-receipt-row">
+    <span>Subtotal</span>
+    <strong><%= pos_receipt_money(transaction.subtotal_cents) %></strong>
+  </div>
+
+  <% item_discounts = pos_receipt_item_discounts_total(transaction) %>
+  <% if item_discounts.nonzero? %>
+    <div class="ss-receipt-row">
+      <span>Item discounts</span>
+      <strong>−<%= pos_receipt_money(item_discounts.abs) %></strong>
+    </div>
+  <% end %>
+
+  <% if transaction.discount_cents.to_i.positive? %>
+    <div class="ss-receipt-row">
+      <span>Order discount</span>
+      <strong>−<%= pos_receipt_money(transaction.discount_cents) %></strong>
+    </div>
+  <% end %>
+
+  <% pos_receipt_tax_subtotals(transaction).each do |tax| %>
+    <div class="ss-receipt-row">
+      <span>Tax <%= tax.label %></span>
+      <strong><%= pos_receipt_money(tax.tax_cents) %></strong>
+    </div>
+  <% end %>
+
+  <% if transaction.rounding_cents.to_i.nonzero? %>
+    <div class="ss-receipt-row">
+      <span>Rounding</span>
+      <strong><%= pos_receipt_money(transaction.rounding_cents) %></strong>
+    </div>
+  <% end %>
+
+  <div class="ss-receipt-row ss-receipt-row--total">
+    <span>Amount due</span>
+    <strong><%= pos_receipt_money(transaction.total_cents) %></strong>
+  </div>
+
+  <% savings = pos_receipt_savings_total(transaction) %>
+  <% if savings.positive? %>
+    <div class="ss-receipt-row ss-receipt-row--savings">
+      <span>You saved</span>
+      <strong><%= pos_receipt_money(savings) %></strong>
+    </div>
+  <% end %>
+</section>

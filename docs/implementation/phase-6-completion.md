@@ -49,6 +49,27 @@ pos_workstation_sequences
 - Drawer/sales/returns reports with CSV export and printable receipt CSS
 - Default POS role bundles: `pos_cashier`, `pos_lead`, `pos_manager`
 
+### Phase 6.2 Register UX (delivered)
+
+- Cashier-first register workspace on transaction edit: scan/cart left, sticky totals/tender/complete right
+- Unified entry switch for sale, receipt return, no-receipt return, and open-ring drawers
+- Scan-first flow: autofocus, auto-add on exact match, friendly preview formatting
+- Cart display rows with edit expansion (no inline table-cell forms)
+- One-step complete with embedded tenders (`Pos::CompletionReadiness` checklist)
+- Derived draft type header (sale/return/exchange) from signed lines
+- Enriched POS home draft/suspended queues with totals and timestamps
+- Guided register close reconciliation breakdown; force close behind advanced disclosure
+- Void modal with required reason codes
+- POS-specific CSS: wider layout, sticky sidebar, return/void styling
+
+### 80mm receipt print (delivered)
+
+- Dedicated thermal receipt layout (`ss-receipt-80mm`) with item blocks and label/value rows
+- Print CSS: `@page size: 80mm auto`, visibility isolation, tabular-nums on money
+- Tax indicator letter on line headers; tax totals grouped as `T - Sales Tax` at bottom
+- Receipt renders from completion snapshots only
+- Persisted `pos_transaction_lines.transaction_discount_cents` for per-line order discount share
+
 ### Services
 
 ```text
@@ -70,6 +91,9 @@ Pos::LineLookupPresenter
 Pos::ReturnLookup
 Pos::RegisterSessionSummary
 Pos::AuthorizationRequest
+Pos::CompletionReadiness
+Pos::TenderSync
+Pos::ReturnLinePricing
 ```
 
 ---
@@ -117,7 +141,6 @@ full GL / accounting export
 
 ## Known Gaps / Follow-ups
 
-- POS line entry UI uses variant ID in form; integrate JSON line lookup picker in a future polish pass
-- Supervisor authorization UI for `pos_authorizations` is minimal
-- Open-ring line entry screen not fully built (model/service rules supported)
+- Turbo Stream cart updates (optional; full-page redirect + autofocus used in 6.2)
+- `cash_drop` movement type not modeled; reconciliation uses paid in/out only
 - Card tender is stub/manual reference only

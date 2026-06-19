@@ -3,8 +3,6 @@
 <dl class="ss-pos-stats">
   <div><dt>Business date</dt><dd><%= @register_session.business_date %></dd></div>
   <div><dt>Status</dt><dd><%= @register_session.status %></dd></div>
-  <div><dt>Opening cash</dt><dd><%= pos_money(@register_session.opening_cash_cents) %></dd></div>
-  <div><dt>Expected closing</dt><dd><%= pos_money(@summary.expected_closing_cash_cents) %></dd></div>
   <div><dt>Completed transactions</dt><dd><%= @summary.completed_transaction_count %></dd></div>
   <div><dt>Suspended on workstation</dt><dd><%= @summary.suspended_transaction_count %></dd></div>
 </dl>
@@ -46,7 +44,7 @@
   </table>
 </section>
 
-<section class="ss-pos-panel">
+<section class="ss-pos-panel" id="cash-movement">
   <h2>Cash movement</h2>
   <%= form_with url: pos_register_session_cash_movements_path(@register_session), class: "ss-form" do %>
     <%= select_tag :movement_type, options_for_select([["Paid in", "paid_in"], ["Paid out", "paid_out"]]) %>
@@ -57,28 +55,48 @@
 </section>
 
 <% if @register_session.open? %>
-  <section class="ss-pos-panel" data-controller="pos-transaction-edit" data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId">
-    <h2>Close session</h2>
-    <p>Expected cash: <strong><%= pos_money(@summary.expected_closing_cash_cents) %></strong></p>
+  <section class="ss-pos-panel ss-pos-close-panel" id="close-register"
+           data-controller="pos-register-close pos-transaction-edit"
+           data-pos-register-close-expected-cents-value="<%= @summary.expected_closing_cash_cents %>"
+           data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId">
+    <h2>Close register</h2>
 
-    <%= form_with url: close_pos_register_session_path(@register_session), method: :patch, class: "ss-form" do %>
-      <%= label_tag :expected_closing_cash_dollars, "Expected closing cash" %>
-      <%= pos_money_field :expected_closing_cash_dollars, @summary.expected_closing_cash_cents %>
-      <%= label_tag :counted_closing_cash_dollars, "Counted closing cash" %>
-      <%= pos_money_field :counted_closing_cash_dollars, nil, required: true %>
-      <% variance = 0 %>
+    <table class="ss-table ss-pos-reconciliation-table">
+      <tbody>
+        <tr><th scope="row">Opening cash</th><td class="ss-pos-money-col"><%= pos_money(@summary.opening_cash_cents) %></td></tr>
+        <tr><th scope="row">Cash sales</th><td class="ss-pos-money-col"><%= pos_money(@summary.cash_sales_cents) %></td></tr>
+        <tr><th scope="row">Cash refunds</th><td class="ss-pos-money-col"><%= pos_money(@summary.cash_refunds_cents) %></td></tr>
+        <tr><th scope="row">Paid in</th><td class="ss-pos-money-col"><%= pos_money(@summary.paid_in_cents) %></td></tr>
+        <tr><th scope="row">Paid out</th><td class="ss-pos-money-col">−<%= pos_money(@summary.paid_out_cents) %></td></tr>
+        <tr class="ss-pos-reconciliation-table__total"><th scope="row">Expected drawer</th><td class="ss-pos-money-col"><strong><%= pos_money(@summary.expected_closing_cash_cents) %></strong></td></tr>
+      </tbody>
+    </table>
+
+    <%= form_with url: close_pos_register_session_path(@register_session), method: :patch, class: "ss-form ss-pos-close-form" do %>
+      <%= hidden_field_tag :expected_closing_cash_dollars, format("%.2f", @summary.expected_closing_cash_cents / 100.0) %>
+      <div class="ss-field">
+        <%= label_tag :counted_closing_cash_dollars, "Counted cash" %>
+        <%= pos_money_field :counted_closing_cash_dollars, nil, required: true, data: { pos_register_close_target: "countedField", action: "input->pos-register-close#updateVariance change->pos-register-close#updateVariance" } %>
+      </div>
+      <p class="ss-pos-variance">Variance: <span data-pos-register-close-target="varianceDisplay"><%= pos_money(0) %></span></p>
       <%= submit_tag "Close register", class: "ss-btn" %>
     <% end %>
 
-    <%= form_with url: force_close_pos_register_session_path(@register_session), method: :patch, class: "ss-form" do %>
-      <%= hidden_field_tag :pos_authorization_id, nil, data: { pos_transaction_edit_target: "authorizationId" } %>
-      <%= pos_money_field :expected_closing_cash_dollars, @summary.expected_closing_cash_cents %>
-      <%= pos_money_field :counted_closing_cash_dollars, nil %>
-      <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-transaction-edit#requestAuth" data-authorization-type="force_close_register" data-register-session-id="<%= @register_session.id %>" data-authorization-message="Force close requires manager approval.">
-        Authorize force close
-      </button>
-      <%= submit_tag "Force close", class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Force close this register session?" } %>
-    <% end %>
+    <details class="ss-pos-advanced-actions">
+      <summary>Advanced / Manager actions</summary>
+      <div class="ss-pos-advanced-actions__panel">
+        <p class="ss-hint">Force close requires manager approval and should only be used when normal close is blocked.</p>
+        <%= form_with url: force_close_pos_register_session_path(@register_session), method: :patch, class: "ss-form" do %>
+          <%= hidden_field_tag :pos_authorization_id, nil, data: { pos_transaction_edit_target: "authorizationId" } %>
+          <%= hidden_field_tag :expected_closing_cash_dollars, format("%.2f", @summary.expected_closing_cash_cents / 100.0) %>
+          <%= pos_money_field :counted_closing_cash_dollars, nil %>
+          <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-transaction-edit#requestAuth" data-authorization-type="force_close_register" data-register-session-id="<%= @register_session.id %>" data-authorization-message="Force close requires manager approval.">
+            Authorize force close
+          </button>
+          <%= submit_tag "Force close register", class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Force close this register session?" } %>
+        <% end %>
+      </div>
+    </details>
   </section>
 <% else %>
   <% if @register_session.expected_closing_cash_cents && @register_session.counted_closing_cash_cents %>

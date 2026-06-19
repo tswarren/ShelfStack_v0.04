@@ -13,21 +13,6 @@ class Pos::RegisterSessionSummaryTest < ActiveSupport::TestCase
     @session = open_register_session!(store: @store, workstation: @workstation, user: @user, opening_cash_cents: 5000)
   end
 
-  test "includes opening cash and net cash tenders" do
-    transaction = create_pos_transaction!(
-      store: @store,
-      workstation: @workstation,
-      user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
-    )
-    complete_pos_sale!(transaction: transaction, user: @user, register_session: @session)
-
-    summary = Pos::RegisterSessionSummary.for(@session)
-    assert_equal 5000, summary.opening_cash_cents
-    assert summary.net_cash_tender_cents.positive?
-    assert_equal summary.opening_cash_cents + summary.net_cash_tender_cents, summary.expected_closing_cash_cents
-  end
-
   test "cash refund on return reduces expected closing cash" do
     sale = create_pos_transaction!(
       store: @store,
@@ -64,5 +49,22 @@ class Pos::RegisterSessionSummaryTest < ActiveSupport::TestCase
     after_return = Pos::RegisterSessionSummary.for(@session)
     assert after_return.net_cash_tender_cents < after_sale.net_cash_tender_cents
     assert after_return.expected_closing_cash_cents < after_sale.expected_closing_cash_cents
+  end
+
+  test "includes cash sales and cash refunds breakdown" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+    )
+    complete_pos_sale!(transaction: transaction, user: @user, register_session: @session)
+
+    summary = Pos::RegisterSessionSummary.for(@session)
+    assert_equal 5000, summary.opening_cash_cents
+    assert summary.cash_sales_cents.positive?
+    assert_equal 0, summary.cash_refunds_cents
+    assert summary.net_cash_tender_cents.positive?
+    assert_equal summary.opening_cash_cents + summary.net_cash_tender_cents, summary.expected_closing_cash_cents
   end
 end

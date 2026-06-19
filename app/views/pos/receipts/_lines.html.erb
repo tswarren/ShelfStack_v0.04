@@ -1,0 +1,5 @@
+<section class="ss-receipt-lines">
+  <% transaction.pos_transaction_lines.order(:line_number).each do |line| %>
+    <%= render "pos/receipts/line", line: line %>
+  <% end %>
+</section>

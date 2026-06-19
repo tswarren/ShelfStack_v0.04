@@ -3,13 +3,18 @@
 
   <% if @register_session %>
     <section class="ss-pos-panel ss-pos-panel--highlight">
-      <h2>Register session open</h2>
+      <h2>Register open</h2>
       <dl class="ss-pos-stats">
         <div><dt>Business date</dt><dd><%= @register_session.business_date %></dd></div>
-        <div><dt>Opening cash</dt><dd><%= pos_money(@register_session.opening_cash_cents) %></dd></div>
         <div><dt>Workstation</dt><dd><%= current_workstation.name %></dd></div>
+        <div><dt>Cashier</dt><dd><%= current_user.username %></dd></div>
+        <div><dt>Opening cash</dt><dd><%= pos_money(@register_session.opening_cash_cents) %></dd></div>
+        <% if @session_summary %>
+          <div><dt>Expected cash</dt><dd><%= pos_money(@session_summary.expected_closing_cash_cents) %></dd></div>
+        <% end %>
       </dl>
-      <%= link_to "Manage session", pos_register_session_path(@register_session), class: "ss-btn" %>
+      <%= link_to "Manage session", pos_register_session_path(@register_session), class: "ss-btn ss-btn-secondary" %>
+      <%= link_to "Close drawer", pos_register_session_path(@register_session, anchor: "close-register"), class: "ss-btn" %>
     </section>
   <% else %>
     <section class="ss-pos-panel ss-pos-panel--warning">
@@ -20,21 +25,27 @@
   <% end %>
 
   <section class="ss-pos-panel">
-    <h2>Start transaction</h2>
+    <h2>Primary actions</h2>
     <div class="ss-pos-actions">
       <%= button_to "New sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn" %>
-      <%= button_to "New return", pos_transactions_path, method: :post, params: { mode: "return" }, class: "ss-btn ss-btn-secondary" %>
+      <%= button_to "Return / exchange", pos_transactions_path, method: :post, params: { mode: "return" }, class: "ss-btn ss-btn-secondary" %>
+      <%= link_to "Paid in/out", (@register_session ? pos_register_session_path(@register_session, anchor: "cash-movement") : new_pos_register_session_path), class: "ss-btn ss-btn-secondary" %>
       <%= link_to "Drawer report", drawer_pos_reports_path, class: "ss-btn ss-btn-secondary" %>
     </div>
   </section>
 
   <% if @draft_transactions.any? %>
     <section class="ss-pos-panel">
-      <h2>Draft transactions</h2>
-      <ul class="ss-pos-list">
+      <h2>Draft queue</h2>
+      <ul class="ss-pos-queue">
         <% @draft_transactions.each do |transaction| %>
-          <li>
-            Draft #<%= transaction.id %>
+          <li class="ss-pos-queue__item">
+            <div class="ss-pos-queue__summary">
+              <strong>Draft #<%= transaction.id %></strong>
+              · <%= transaction.pos_transaction_lines.size %> <%= "item".pluralize(transaction.pos_transaction_lines.size) %>
+              · <%= pos_money(transaction.total_cents) %>
+              · started <%= transaction.updated_at.strftime("%-I:%M %p") %>
+            </div>
             <%= link_to "Continue", edit_pos_transaction_path(transaction), class: "ss-btn ss-btn-secondary ss-btn--small" %>
           </li>
         <% end %>
@@ -44,11 +55,19 @@
 
   <% if @suspended_transactions.any? %>
     <section class="ss-pos-panel">
-      <h2>Suspended transactions</h2>
-      <ul class="ss-pos-list">
+      <h2>Suspended queue</h2>
+      <ul class="ss-pos-queue">
         <% @suspended_transactions.each do |transaction| %>
-          <li>
-            Suspended #<%= transaction.id %> (cashier <%= transaction.cashier_user.username %>)
+          <li class="ss-pos-queue__item">
+            <div class="ss-pos-queue__summary">
+              <strong>Suspended #<%= transaction.id %></strong>
+              · cashier <%= transaction.cashier_user.username %>
+              · <%= transaction.pos_transaction_lines.size %> <%= "item".pluralize(transaction.pos_transaction_lines.size) %>
+              · <%= pos_money(transaction.total_cents) %>
+              <% if transaction.suspended_at %>
+                · <%= transaction.suspended_at.strftime("%-I:%M %p") %>
+              <% end %>
+            </div>
             <%= link_to "Resume", resume_pos_transaction_path(transaction), data: { turbo_method: :patch }, class: "ss-btn ss-btn-secondary ss-btn--small" %>
           </li>
         <% end %>

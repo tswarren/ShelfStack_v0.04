@@ -177,6 +177,7 @@ UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_pas
 2. Scan or type a SKU in the line entry field; press Enter or pick from ambiguous matches.
 3. Review totals in the sidebar; use **Fill cash** to set the cash tender to the remaining balance.
 4. **Complete** the transaction (register session must be open).
+5. Open **View receipt** from the completed transaction and use **Print** for 80mm thermal output.
 
 ### Return
 
