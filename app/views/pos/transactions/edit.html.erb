@@ -1,5 +1,9 @@
 <%= render "pos/transactions/register_header", transaction: @transaction %>
 
+<div id="pos_flash">
+  <%= render "pos/transactions/flash" %>
+</div>
+
 <% unless current_register_session %>
   <div class="ss-pos-alert">No register session is open. Complete will be blocked until you <%= link_to "open the register", new_pos_register_session_path %>.</div>
 <% end %>
@@ -8,27 +12,18 @@
   <div class="ss-pos-alert ss-pos-alert--error"><%= @complete_error %></div>
 <% end %>
 
-<% if @inactive_warnings.any? && params[:confirm_inactive].blank? %>
-  <div class="ss-pos-alert ss-pos-alert--warning">
-    Inactive items on this transaction:
-    <ul>
-      <% @inactive_warnings.each do |warning| %>
-        <li><%= warning.message %></li>
-      <% end %>
-    </ul>
-  </div>
-<% end %>
-
 <div class="ss-pos-layout"
-     data-controller="pos-register-workspace pos-transaction-edit pos-cart-line"
-     data-pos-register-workspace-initial-action-value="<%= @entry_action %>"
+     data-controller="pos-transaction-edit pos-cart-line"
+     data-pos-transaction-edit-readiness-url-value="<%= readiness_preview_pos_transaction_path(@transaction) %>"
+     data-pos-transaction-edit-transaction-id-value="<%= @transaction.id %>"
      data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId">
   <div class="ss-pos-layout__main">
-    <%= render "pos/transactions/entry_switch" %>
-    <%= render "pos/transactions/scan_entry", transaction: @transaction, entry_action: @entry_action %>
-    <%= render "pos/transactions/return_receipt_drawer", transaction: @transaction %>
-    <%= render "pos/transactions/open_ring_drawer", transaction: @transaction, sub_departments: @sub_departments %>
-    <%= render "pos/transactions/cart", transaction: @transaction %>
+    <%= render "pos/transactions/command_bar",
+          transaction: @transaction,
+          sub_departments: @sub_departments %>
+    <div id="pos_cart">
+      <%= render "pos/transactions/cart", transaction: @transaction %>
+    </div>
   </div>
 
   <aside class="ss-pos-layout__sidebar">
@@ -38,3 +33,5 @@
           inactive_warnings: @inactive_warnings %>
   </aside>
 </div>
+
+<div id="pos_workspace_events" hidden aria-hidden="true"></div>

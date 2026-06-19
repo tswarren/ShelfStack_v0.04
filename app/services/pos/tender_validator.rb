@@ -30,11 +30,10 @@ module Pos
       cash_refund = transaction.pos_tenders.select { |t| t.tender_type == "cash" && t.amount_cents.negative? }.sum(&:amount_cents).abs
       return unless cash_refund > CASH_REFUND_THRESHOLD_CENTS
 
-      authorization = PosAuthorization.find_by(id: pos_authorization_id)
-      return if AuthorizationRequest.valid_for?(
-        authorization: authorization,
+      return if AuthorizationRequest.granted_for_transaction?(
+        transaction: transaction,
         authorization_type: "cash_refund_over_threshold",
-        pos_transaction: transaction
+        pos_authorization_id: pos_authorization_id
       )
 
       raise Error, "Cash refund exceeds threshold; supervisor authorization required."

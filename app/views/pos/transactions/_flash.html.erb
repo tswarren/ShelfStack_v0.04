@@ -1,0 +1,8 @@
+<div id="pos_flash">
+  <% if flash[:notice].present? || flash.now[:notice].present? %>
+    <div class="ss-pos-alert"><%= flash[:notice] || flash.now[:notice] %></div>
+  <% end %>
+  <% if flash[:alert].present? || flash.now[:alert].present? %>
+    <div class="ss-pos-alert ss-pos-alert--error"><%= flash[:alert] || flash.now[:alert] %></div>
+  <% end %>
+</div>

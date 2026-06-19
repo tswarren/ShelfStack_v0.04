@@ -2102,6 +2102,7 @@ h2 {
 .ss-pos-actions,
 .ss-pos-tender-actions,
 .ss-pos-secondary-actions,
+.ss-pos-auth-actions,
 .ss-pos-open-ring-form {
   display: flex;
   gap: 0.5rem;
@@ -2342,12 +2343,6 @@ h2 {
   list-style: none;
 }
 
-.ss-pos-readiness-list__item {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.35rem;
-}
-
 .ss-pos-readiness--ready {
   border-color: #c8dcc0;
   background: #f5f9f2;
@@ -2356,6 +2351,126 @@ h2 {
 .ss-pos-readiness--blocked {
   border-color: #ecd9a8;
   background: #fff8eb;
+}
+
+.ss-pos-readiness--pending {
+  border-color: #d4dbe8;
+  background: #f7f9fc;
+}
+
+.ss-pos-readiness-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ss-pos-readiness-list__content {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ss-pos-readiness-list__action {
+  flex-shrink: 0;
+}
+
+.ss-pos-confirm-inactive {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.ss-pos-command-bar__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-return-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.ss-pos-choice-card {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem;
+  border: 1px solid #e2ddd4;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.ss-pos-choice-card__sku {
+  font-family: var(--ss-font-mono, monospace);
+}
+
+.ss-pos-choice-card__meta {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.ss-pos-choice-card__warn {
+  color: #9a3412;
+  font-size: 0.875rem;
+}
+
+.ss-pos-choices {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ss-pos-qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ss-pos-cart-line__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ss-pos-cart-line__badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #9a3412;
+}
+
+.ss-pos-cart-line__tax-letter {
+  font-weight: 700;
+}
+
+.ss-pos-hero .ss-pos-actions {
+  margin-top: 0.75rem;
+}
+
+.ss-pos-drawer--inline {
+  margin-top: 0.75rem;
+  border-top: 1px solid #e2ddd4;
+  padding-top: 0.75rem;
+}
+
+.ss-pos-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-drawer__header .ss-pos-panel__title {
+  margin: 0;
 }
 
 .ss-pos-readiness-list__item--block {

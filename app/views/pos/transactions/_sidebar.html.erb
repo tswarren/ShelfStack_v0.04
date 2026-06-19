@@ -1,33 +1,10 @@
-<% confirm_inactive = params[:confirm_inactive].present? %>
-<% complete_label = pos_complete_button_label(transaction, confirm_inactive: confirm_inactive && inactive_warnings.any?) %>
+<div id="pos_readiness">
+  <%= render "pos/transactions/readiness_panel", transaction: transaction, readiness: readiness %>
+</div>
 
-<section class="ss-pos-panel ss-pos-readiness <%= readiness.ready? ? 'ss-pos-readiness--ready' : 'ss-pos-readiness--blocked' %>">
-  <h2 class="ss-pos-panel__title"><%= readiness.ready? ? "Ready to complete" : "Cannot complete yet" %></h2>
-  <ul class="ss-pos-readiness-list">
-    <% readiness.checks.each do |check| %>
-      <li class="ss-pos-readiness-list__item ss-pos-readiness-list__item--<%= check.status %>">
-        <% if check.status == :ok %>
-          <span aria-hidden="true">✓</span>
-        <% else %>
-          <span aria-hidden="true">•</span>
-        <% end %>
-        <%= check.message %>
-      </li>
-    <% end %>
-  </ul>
-</section>
-
-<section class="ss-pos-panel ss-pos-totals" data-pos-transaction-edit-target="total" data-total-cents="<%= transaction.total_cents %>">
-  <h2 class="ss-pos-panel__title">Totals</h2>
-  <p class="ss-pos-amount-due"><%= pos_money(transaction.total_cents) %></p>
-  <dl class="ss-pos-totals-list">
-    <div><dt>Subtotal</dt><dd><%= pos_money(transaction.subtotal_cents) %></dd></div>
-    <div><dt>Discount</dt><dd><%= pos_money(transaction.discount_cents) %></dd></div>
-    <%= render "pos/transactions/tax_totals", transaction: transaction %>
-    <div><dt>Rounding</dt><dd><%= pos_money(transaction.rounding_cents) %></dd></div>
-    <div class="ss-pos-totals-list__total"><dt>Amount due</dt><dd><%= pos_money(transaction.total_cents) %></dd></div>
-  </dl>
-</section>
+<div id="pos_totals">
+  <%= render "pos/transactions/totals_panel", transaction: transaction %>
+</div>
 
 <details class="ss-pos-panel ss-pos-adjustments">
   <summary>Adjustments</summary>
@@ -44,59 +21,9 @@
   <% end %>
 </details>
 
-<section class="ss-pos-panel ss-pos-tenders-complete">
-  <% complete_params = {} %>
-  <% complete_params[:confirm_inactive] = 1 if confirm_inactive %>
-  <%= form_with url: complete_pos_transaction_path(transaction, complete_params), method: :patch, class: "ss-form", data: { action: "input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange" } do %>
-    <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
-    <% if inactive_warnings.any? && !confirm_inactive %>
-      <%= hidden_field_tag :confirm_inactive, 1 %>
-    <% end %>
-
-    <h2 class="ss-pos-panel__title">Tender</h2>
-    <% PosTender::PHASE6_ALLOWED_TYPES.first(3).each do |tender_type| %>
-      <% existing = transaction.pos_tenders.find { |t| t.tender_type == tender_type } %>
-      <% display_cents = tender_type == "cash" ? pos_tendered_display_cents(existing) : existing&.amount_cents %>
-      <div class="ss-field" data-tender-type="<%= tender_type %>">
-        <%= label_tag "tenders_#{tender_type}", tender_type == "cash" && transaction.total_cents.positive? ? "Cash" : tender_type.humanize %>
-        <%= pos_money_field "tenders[][amount_dollars]", display_cents, data: { pos_transaction_edit_target: "amountField" } %>
-        <%= hidden_field_tag "tenders[][tender_type]", tender_type %>
-      </div>
-    <% end %>
-
-    <p class="ss-hint" data-pos-transaction-edit-target="remainingHint" hidden></p>
-    <p class="ss-hint ss-pos-change-hint" data-pos-transaction-edit-target="changeHint" hidden></p>
-
-    <div class="ss-pos-tender-actions">
-      <%= button_tag "Fill cash", type: "button", class: "ss-btn ss-btn-secondary", data: { action: "pos-transaction-edit#fillCash" } %>
-      <%= submit_tag complete_label, class: "ss-btn ss-pos-complete-btn", disabled: readiness.blocked?, data: { pos_transaction_edit_target: "completeButton" } %>
-    </div>
-  <% end %>
-
-  <details class="ss-pos-advanced-tenders">
-    <summary>Save tenders only</summary>
-    <%= form_with url: sync_tenders_pos_transaction_path(transaction), method: :patch, class: "ss-form" do %>
-      <% PosTender::PHASE6_ALLOWED_TYPES.first(3).each do |tender_type| %>
-        <% existing = transaction.pos_tenders.find { |t| t.tender_type == tender_type } %>
-        <% display_cents = tender_type == "cash" ? pos_tendered_display_cents(existing) : existing&.amount_cents %>
-        <div class="ss-field" data-tender-type="<%= tender_type %>">
-          <%= label_tag "sync_tenders_#{tender_type}", tender_type.humanize %>
-          <%= pos_money_field "tenders[][amount_dollars]", display_cents %>
-          <%= hidden_field_tag "tenders[][tender_type]", tender_type %>
-        </div>
-      <% end %>
-      <%= submit_tag "Save tenders", class: "ss-btn ss-btn-secondary" %>
-    <% end %>
-  </details>
-
-  <% if transaction.discount_cents.to_i > Pos::AuthorizationRequest::TRANSACTION_DISCOUNT_LIMIT_CENTS %>
-    <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-transaction-edit#requestAuth" data-authorization-type="discount_over_limit" data-transaction-id="<%= transaction.id %>" data-authorization-message="Discount exceeds limit. Manager approval required.">
-      Authorize discount
-    </button>
-  <% end %>
-
-  <div class="ss-pos-secondary-actions">
-    <%= button_to "Suspend", suspend_pos_transaction_path(transaction), method: :patch, class: "ss-btn ss-btn-secondary" %>
-    <%= button_to "Cancel", cancel_pos_transaction_path(transaction), method: :patch, class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Cancel this draft?" } %>
-  </div>
-</section>
+<div id="pos_tender_panel">
+  <%= render "pos/transactions/tender_panel",
+        transaction: transaction,
+        readiness: readiness,
+        inactive_warnings: inactive_warnings %>
+</div>

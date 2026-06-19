@@ -1,0 +1,11 @@
+<section class="ss-pos-panel ss-pos-totals" data-pos-transaction-edit-target="total" data-total-cents="<%= transaction.total_cents %>">
+  <h2 class="ss-pos-panel__title">Totals</h2>
+  <p class="ss-pos-amount-due"><%= pos_money(transaction.total_cents) %></p>
+  <dl class="ss-pos-totals-list">
+    <div><dt>Subtotal</dt><dd><%= pos_money(transaction.subtotal_cents) %></dd></div>
+    <div><dt>Discount</dt><dd><%= pos_money(transaction.discount_cents) %></dd></div>
+    <%= render "pos/transactions/tax_totals", transaction: transaction %>
+    <div><dt>Rounding</dt><dd><%= pos_money(transaction.rounding_cents) %></dd></div>
+    <div class="ss-pos-totals-list__total"><dt>Amount due</dt><dd><%= pos_money(transaction.total_cents) %></dd></div>
+  </dl>
+</section>

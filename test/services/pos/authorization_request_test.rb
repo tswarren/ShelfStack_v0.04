@@ -36,4 +36,25 @@ class Pos::AuthorizationRequestTest < ActiveSupport::TestCase
       )
     end
   end
+
+  test "granted_for_transaction finds persisted authorization without param id" do
+    workstation = create_workstation!(store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: workstation, user: @requester, lines: [])
+
+    authorization = Pos::AuthorizationRequest.grant!(
+      authorization_type: "no_receipt_return",
+      requested_by: @requester,
+      manager_username: @manager.username,
+      manager_pin: "4321",
+      store: @store,
+      pos_transaction: transaction
+    )
+
+    found = Pos::AuthorizationRequest.granted_for_transaction(
+      transaction: transaction,
+      authorization_type: "no_receipt_return"
+    )
+
+    assert_equal authorization.id, found.id
+  end
 end

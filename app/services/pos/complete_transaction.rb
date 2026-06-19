@@ -26,7 +26,9 @@ module Pos
       raise Error, "Transaction is not editable." unless transaction.editable?
       raise Error, "Register session must be open." unless register_session&.open?
       raise Error, "Transaction must have at least one line." if transaction.pos_transaction_lines.empty?
-      raise Error, "Transaction must have at least one tender." if transaction.pos_tenders.empty?
+      if transaction.pos_tenders.empty? && !transaction.total_cents.zero?
+        raise Error, "Transaction must have at least one tender."
+      end
 
       transaction.pos_transaction_lines.each { |line| ReturnQuantityValidator.call!(line) }
       SellabilityValidator.validate!(transaction, confirmed_inactive: confirmed_inactive)
@@ -88,11 +90,10 @@ module Pos
     end
 
     def require_authorization!(authorization_type, message)
-      authorization = PosAuthorization.find_by(id: pos_authorization_id)
-      return if AuthorizationRequest.valid_for?(
-        authorization: authorization,
-        authorization_type: authorization_type.to_s,
-        pos_transaction: transaction
+      return if AuthorizationRequest.granted_for_transaction?(
+        transaction: transaction,
+        authorization_type: authorization_type,
+        pos_authorization_id: pos_authorization_id
       )
 
       raise Error, message
@@ -100,21 +101,35 @@ module Pos
 
     def snapshot_lines!
       transaction.pos_transaction_lines.each do |line|
-        next unless line.variant_line? && line.product_variant.present?
-
-        variant = line.product_variant
-        product = variant.product
-        line.assign_attributes(
-          product: product,
-          product_sku_snapshot: product.sku,
-          variant_sku_snapshot: variant.sku,
-          product_name_snapshot: product.name,
-          variant_name_snapshot: variant.name,
-          inventory_behavior_snapshot: variant.inventory_behavior,
-          sub_department: variant.sub_department
-        )
-        line.save!
+        if line.variant_line? && line.product_variant.present?
+          snapshot_variant_line!(line)
+        elsif line.open_ring_line?
+          snapshot_open_ring_line!(line)
+        end
       end
+    end
+
+    def snapshot_variant_line!(line)
+      variant = line.product_variant
+      product = variant.product
+      line.assign_attributes(
+        product: product,
+        product_sku_snapshot: product.sku,
+        variant_sku_snapshot: variant.sku,
+        product_name_snapshot: product.name,
+        variant_name_snapshot: variant.name,
+        inventory_behavior_snapshot: variant.inventory_behavior,
+        sub_department: variant.sub_department,
+        sub_department_name_snapshot: variant.sub_department&.name
+      )
+      line.save!
+    end
+
+    def snapshot_open_ring_line!(line)
+      line.assign_attributes(
+        sub_department_name_snapshot: line.sub_department&.name
+      )
+      line.save!
     end
   end
 end

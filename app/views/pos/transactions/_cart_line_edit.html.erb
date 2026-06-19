@@ -1,12 +1,18 @@
 <tr class="ss-pos-cart-line-edit" data-pos-cart-line-target="editRow" data-line-id="<%= line.id %>" hidden>
-  <td colspan="7">
-    <%= form_with url: update_line_pos_transaction_path(transaction), method: :patch, class: "ss-pos-line-edit-form" do %>
+  <td colspan="6">
+    <%= form_with url: update_line_pos_transaction_path(transaction), method: :patch, class: "ss-pos-line-edit-form", data: { turbo_stream: true } do %>
       <%= hidden_field_tag :line_id, line.id %>
       <div class="ss-pos-line-edit-form__fields">
         <div class="ss-field">
           <%= label_tag "quantity_#{line.id}", "Qty" %>
           <%= number_field_tag :quantity, line.quantity, id: "quantity_#{line.id}", class: "ss-pos-qty-input" %>
         </div>
+        <% if pos_line_price_editable?(line) %>
+          <div class="ss-field">
+            <%= label_tag "unit_price_#{line.id}", "Unit price" %>
+            <%= pos_money_field :unit_price, line.unit_price_cents, id: "unit_price_#{line.id}", min: 0, class: "ss-pos-money-input" %>
+          </div>
+        <% end %>
         <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) %>
           <div class="ss-field">
             <%= label_tag "line_discount_#{line.id}", "Line discount" %>

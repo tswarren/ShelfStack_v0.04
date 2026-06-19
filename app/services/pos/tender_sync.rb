@@ -18,6 +18,13 @@ module Pos
       tender.reference_number.delete_prefix(TENDERED_REFERENCE_PREFIX).to_i
     end
 
+    def self.normalize_refund_amount_cents(transaction, amount_cents)
+      return amount_cents unless transaction.total_cents.negative?
+      return amount_cents if amount_cents.negative?
+
+      -amount_cents.abs
+    end
+
     def initialize(transaction:, tender_inputs:)
       @transaction = transaction
       @tender_inputs = Array(tender_inputs)
@@ -110,7 +117,9 @@ module Pos
           attrs[:amount_cents].to_i
         end
 
-        next if amount_cents.zero?
+        next if amount_cents.zero? && !zero_total_tender_input?(attrs, amount_cents)
+
+        amount_cents = self.class.normalize_refund_amount_cents(transaction, amount_cents)
 
         {
           tender_type: attrs[:tender_type],
@@ -138,6 +147,12 @@ module Pos
 
     def format_money(cents)
       format("$%.2f", cents / 100.0)
+    end
+
+    def zero_total_tender_input?(attrs, amount_cents)
+      transaction.total_cents.zero? &&
+        amount_cents.zero? &&
+        (attrs[:amount_dollars].present? || attrs.key?(:amount_cents))
     end
   end
 end

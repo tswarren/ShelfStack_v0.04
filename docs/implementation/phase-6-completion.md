@@ -139,8 +139,23 @@ full GL / accounting export
 
 ---
 
+## Phase 6.3 Register UX Epic (delivered)
+
+Cashier-first register workspace refactor on the existing Phase 6 model:
+
+- **Unified command bar** — single scan/enter field with Return toggle; routes SKU/ISBN lookup before receipt numbers, then open-ring offer (`Pos::CommandBarRouter`)
+- **Turbo Stream workspace** — line add/update/remove and tender sync update cart, totals, readiness, and tender panel without full-page reload
+- **Tender / complete flow** — `structural_blocked?` vs `tender_ready?` / `complete_ready?`; live `POST readiness_preview`; dynamic complete labels; positive refund amounts in UI (normalized to negative internally)
+- **Actionable readiness** — inline actions per blocker (open register, scan focus, fill cash, supervisor auth, inactive confirm checkbox)
+- **Cart polish** — +/- qty, return source metadata, tax letter on line, open-ring subdepartment as SKU
+- **Rich lookup cards** — condition, on-hand, price, inventory behavior, inactive warning
+- **Open-ring receipt returns** — receipted returns copy open-ring line type and snapshots
+- **Open-ring receipt SKU** — `sub_department_name_snapshot` on lines; subdepartment name in receipt/cart SKU slot, description as title
+- **Register-first home** — closed vs open hero states with clear CTAs
+
+---
+
 ## Known Gaps / Follow-ups
 
-- Turbo Stream cart updates (optional; full-page redirect + autofocus used in 6.2)
 - `cash_drop` movement type not modeled; reconciliation uses paid in/out only
 - Card tender is stub/manual reference only

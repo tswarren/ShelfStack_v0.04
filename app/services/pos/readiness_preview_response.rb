@@ -1,0 +1,108 @@
+# frozen_string_literal: true
+
+module Pos
+  class ReadinessPreviewResponse
+    def self.build(readiness:, transaction:, confirm_inactive: false, tender_inputs: nil)
+      new(readiness:, transaction:, confirm_inactive:, tender_inputs:).build
+    end
+
+    def initialize(readiness:, transaction:, confirm_inactive: false, tender_inputs: nil)
+      @readiness = readiness
+      @transaction = transaction
+      @confirm_inactive = confirm_inactive
+      @tender_inputs = tender_inputs
+    end
+
+    def build
+      change_cents, remaining_cents = tender_amounts
+
+      {
+        checks: readiness.checks.map { |check| serialize_check(check) },
+        structural_blocked: readiness.structural_blocked?,
+        tender_ready: readiness.tender_ready?,
+        complete_ready: readiness.complete_ready?,
+        complete_label: complete_label(change_cents, remaining_cents),
+        change_cents: change_cents,
+        remaining_cents: remaining_cents
+      }
+    end
+
+    private
+
+    attr_reader :readiness, :transaction, :confirm_inactive, :tender_inputs
+
+    def serialize_check(check)
+      payload = {
+        key: check.key,
+        status: check.status,
+        message: check.message,
+        action_key: check.action_key,
+        action_label: check.action_label
+      }
+
+      if check.action_key == :supervisor_auth
+        payload[:authorization_type] = authorization_type_for(check.key)
+      end
+
+      payload
+    end
+
+    def authorization_type_for(key)
+      case key
+      when :discount_auth then "discount_over_limit"
+      when :no_receipt_return then "no_receipt_return"
+      when :cash_refund_auth then "cash_refund_over_threshold"
+      end
+    end
+
+    def complete_label(change_cents, remaining_cents)
+      ApplicationController.helpers.pos_complete_button_label(
+        transaction,
+        confirm_inactive: confirm_inactive,
+        change_cents: change_cents,
+        remaining_cents: remaining_cents
+      )
+    end
+
+    def tender_amounts
+      total = transaction.total_cents
+      parsed = parse_tender_inputs
+
+      if total.positive?
+        non_cash = parsed.reject { |t| t[:tender_type] == "cash" }
+        cash = parsed.find { |t| t[:tender_type] == "cash" }
+        non_cash_sum = non_cash.sum { |t| t[:amount_cents] }
+        remaining = total - non_cash_sum
+        cash_tendered = cash&.dig(:amount_cents).to_i
+        change = cash_tendered.positive? ? [cash_tendered - remaining, 0].max : 0
+        still_due = remaining.positive? ? [remaining - cash_tendered, 0].max : 0
+        [change, still_due]
+      elsif total.negative?
+        tender_total = parsed.sum { |t| t[:amount_cents] }
+        still_due = (total - tender_total).abs
+        [0, still_due]
+      else
+        [0, 0]
+      end
+    end
+
+    def parse_tender_inputs
+      Array(tender_inputs).filter_map do |attrs|
+        amount_cents = if attrs[:amount_dollars].present?
+          (BigDecimal(attrs[:amount_dollars].to_s) * 100).round.to_i
+        else
+          attrs[:amount_cents].to_i
+        end
+
+        next if amount_cents.zero?
+
+        amount_cents = TenderSync.normalize_refund_amount_cents(transaction, amount_cents)
+
+        {
+          tender_type: attrs[:tender_type],
+          amount_cents: amount_cents
+        }
+      end
+    end
+  end
+end

@@ -10,5 +10,5 @@ class PosTender < ApplicationRecord
                                inverse_of: :reverses_tender, dependent: :nullify
 
   validates :tender_type, presence: true, inclusion: { in: TENDER_TYPES }
-  validates :amount_cents, numericality: { only_integer: true, other_than: 0 }
+  validates :amount_cents, numericality: { only_integer: true }
 end

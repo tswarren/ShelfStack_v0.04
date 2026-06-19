@@ -46,6 +46,31 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal "sale", transaction.transaction_type
   end
 
+  test "update line unit price on scanned cart line" do
+    post pos_transactions_path, params: { mode: "sale" }
+    transaction = PosTransaction.order(:id).last
+
+    post add_line_pos_transaction_path(transaction, mode: "sale"), params: {
+      product_variant_id: @variant.id,
+      quantity: 1,
+      entry_action: "sale"
+    }
+
+    line = transaction.reload.pos_transaction_lines.first
+    assert_equal 1500, line.unit_price_cents
+
+    patch update_line_pos_transaction_path(transaction), params: {
+      line_id: line.id,
+      unit_price: "12.50"
+    }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+
+    line.reload
+    assert_equal 1250, line.unit_price_cents
+    assert_equal 1250, line.extended_price_cents
+    assert_operator transaction.reload.total_cents, :>, 0
+  end
+
   test "line lookup presenter returns on hand quantity" do
     get pos_line_lookup_path, params: { q: @variant.sku, mode: "exact" }, as: :json
 
@@ -101,6 +126,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     assert_match %r{/pos/transactions/\d+/edit}, response.redirect_url
     follow_redirect!
     assert_match(/supervisor authorization/i, response.body)
+    assert_match(/Manager sign-in/i, response.body)
 
     post pos_authorizations_path, params: {
       authorization_type: "no_receipt_return",
@@ -118,6 +144,96 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to pos_transaction_path(return_txn)
     assert return_txn.reload.completed?
+  end
+
+  test "no receipt return edit shows authorize button when blocked" do
+    post pos_transactions_path, params: { mode: "return" }
+    return_txn = PosTransaction.order(:id).last
+
+    post add_line_pos_transaction_path(return_txn, mode: "return"), params: {
+      product_variant_id: @variant.id,
+      quantity: -1
+    }
+
+    return_txn.reload
+    Pos::RecalculateTransaction.call!(return_txn, business_date: @register_session.business_date)
+
+    get edit_pos_transaction_path(return_txn, mode: "return")
+    assert_response :success
+    assert_match(/Manager sign-in/i, response.body)
+    assert_match(/No-receipt return requires manager approval/i, response.body)
+  end
+
+  test "no receipt return authorization persists after line changes without param id" do
+    post pos_transactions_path, params: { mode: "return" }
+    return_txn = PosTransaction.order(:id).last
+
+    post add_line_pos_transaction_path(return_txn, mode: "return"), params: {
+      product_variant_id: @variant.id,
+      quantity: -1
+    }
+
+    post pos_authorizations_path, params: {
+      authorization_type: "no_receipt_return",
+      manager_username: @manager.username,
+      manager_pin: "9999",
+      pos_transaction_id: return_txn.id
+    }, as: :json
+    assert_response :success
+
+    post add_line_pos_transaction_path(return_txn, mode: "return"), params: {
+      product_variant_id: @variant.id,
+      quantity: -1,
+      entry_action: "return_no_receipt"
+    }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+
+    return_txn.reload
+    readiness = Pos::CompletionReadiness.check(
+      transaction: return_txn,
+      register_session: @register_session
+    )
+
+    refute readiness.structural_blockers.any? { |check| check.key == :no_receipt_return && check.status == :block }
+    assert readiness.checks.any? { |check| check.key == :no_receipt_return && check.status == :ok }
+  end
+
+  test "completes even exchange with zero cash tender sync" do
+    post pos_transactions_path, params: { mode: "exchange" }
+    exchange_txn = PosTransaction.order(:id).last
+
+    post add_line_pos_transaction_path(exchange_txn, mode: "sale"), params: {
+      product_variant_id: @variant.id,
+      quantity: 1,
+      entry_action: "sale"
+    }
+    post add_line_pos_transaction_path(exchange_txn, mode: "return"), params: {
+      product_variant_id: @variant.id,
+      quantity: -1,
+      entry_action: "return_no_receipt"
+    }
+
+    exchange_txn.reload
+    Pos::RecalculateTransaction.call!(exchange_txn, business_date: @register_session.business_date)
+    assert exchange_txn.total_cents.zero?
+
+    post pos_authorizations_path, params: {
+      authorization_type: "no_receipt_return",
+      manager_username: @manager.username,
+      manager_pin: "9999",
+      pos_transaction_id: exchange_txn.id
+    }, as: :json
+    assert_response :success
+
+    patch complete_pos_transaction_path(exchange_txn, mode: "exchange"), params: {
+      confirm_inactive: 1,
+      tenders: [{ tender_type: "cash", amount_dollars: "0.00" }]
+    }
+    assert_redirected_to pos_transaction_path(exchange_txn)
+
+    exchange_txn.reload
+    assert exchange_txn.completed?
+    assert_equal "exchange", exchange_txn.transaction_type
   end
 
   test "register session summary computes expected closing cash" do

@@ -4,8 +4,8 @@ module Pos
   class TransactionsController < BaseController
     before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show]
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
-    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders]
-    before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line]
+    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview]
+    before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line route_command]
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: %i[add_open_ring_line]
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
     before_action -> { authorize_pos!("pos.lines.remove") }, only: %i[remove_line]
@@ -17,11 +17,12 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.cancel") }, only: %i[cancel]
     before_action :set_transaction, only: %i[
       show edit update add_line add_open_ring_line add_return_line update_line remove_line
-      sync_tenders complete suspend resume void cancel
+      sync_tenders complete suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
-      edit update add_line add_open_ring_line add_return_line update_line remove_line sync_tenders
+      edit update add_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command
     ]
+    before_action :load_edit_context, only: %i[edit add_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command]
 
     def index
       @transactions = PosTransaction.where(store: pos_store).order(updated_at: :desc).limit(50)
@@ -46,17 +47,6 @@ module Pos
     end
 
     def edit
-      @mode = pos_mode
-      @entry_action = helpers.pos_initial_entry_action(@mode)
-      @inactive_warnings = Pos::SellabilityValidator.warnings_for(@transaction)
-      @complete_error = flash[:complete_error]
-      @sub_departments = SubDepartment.active_records.order(:name)
-      @readiness = Pos::CompletionReadiness.check(
-        transaction: @transaction,
-        register_session: current_register_session,
-        confirmed_inactive: params[:confirm_inactive].present?,
-        pos_authorization_id: params[:pos_authorization_id]
-      )
     end
 
     def update
@@ -69,19 +59,38 @@ module Pos
       redirect_to edit_pos_transaction_path(@transaction), notice: "Transaction updated."
     end
 
+    def readiness_preview
+      readiness = build_readiness(tender_inputs: params[:tenders])
+      payload = Pos::ReadinessPreviewResponse.build(
+        readiness: readiness,
+        transaction: @transaction,
+        confirm_inactive: params[:confirm_inactive].present?,
+        tender_inputs: params[:tenders]
+      )
+
+      render json: payload
+    end
+
+    def route_command
+      route = Pos::CommandBarRouter.call(
+        store: pos_store,
+        input: params[:input],
+        return_mode: ActiveModel::Type::Boolean.new.cast(params[:return_mode])
+      )
+
+      render json: {
+        action: route.action,
+        payload: serialize_route_payload(route.payload),
+        message: route.message
+      }
+    end
+
     def add_line
       entry_action = line_entry_action
       variant = ProductVariant.find(params[:product_variant_id])
       quantity = params[:quantity].to_i
       quantity = 1 if quantity.zero?
-      quantity = -quantity.abs if entry_action == "return_no_receipt" && quantity.positive?
-
-      if entry_action == "return_no_receipt" && params[:source_transaction_line_id].blank?
-        unless Authorization.allowed?(user: current_user, permission_key: "pos.returns.no_receipt", store: pos_store)
-          redirect_to edit_pos_transaction_path(@transaction), alert: "No-receipt returns require permission."
-          return
-        end
-      end
+      quantity = -quantity.abs if negative_line_entry?(entry_action) && quantity.positive?
 
       unit_price_cents = parse_dollar_param(params[:unit_price]) || variant.selling_price_cents
 
@@ -95,11 +104,11 @@ module Pos
         line_discount_cents: 0,
         extended_price_cents: 0,
         tax_cents: 0,
-        return_disposition: (entry_action == "return_no_receipt" ? "return_to_stock" : nil)
+        return_disposition: (negative_line_entry?(entry_action) ? "return_to_stock" : nil)
       )
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction), notice: "Line added."
+      respond_to_workspace(notice: "Line added.")
     end
 
     def add_return_line
@@ -111,11 +120,8 @@ module Pos
       quantity = -params[:quantity].to_i.abs
       quantity = -1 if quantity.zero?
 
-      line = @transaction.pos_transaction_lines.create!(
+      line_attrs = {
         line_number: next_line_number,
-        line_type: "variant",
-        product_variant: source_line.product_variant,
-        product: source_line.product,
         quantity: quantity,
         unit_price_cents: 0,
         line_discount_cents: 0,
@@ -125,13 +131,36 @@ module Pos
         source_transaction_line: source_line,
         source_sold_quantity_snapshot: source_line.quantity.abs,
         return_disposition: params[:return_disposition].presence || "return_to_stock"
-      )
+      }
+
+      if source_line.open_ring_line?
+        line_attrs.merge!(
+          line_type: "open_ring",
+          open_ring_description: source_line.open_ring_description,
+          sub_department: source_line.sub_department,
+          sub_department_name_snapshot: source_line.sub_department_name_snapshot.presence || source_line.sub_department&.name,
+          tax_category: source_line.tax_category,
+          tax_rate_bps: source_line.tax_rate_bps,
+          store_tax_rate: source_line.store_tax_rate,
+          tax_identifier_snapshot: source_line.tax_identifier_snapshot,
+          store_tax_rate_short_name_snapshot: source_line.store_tax_rate_short_name_snapshot,
+          inventory_behavior_snapshot: source_line.inventory_behavior_snapshot
+        )
+      else
+        line_attrs.merge!(
+          line_type: "variant",
+          product_variant: source_line.product_variant,
+          product: source_line.product
+        )
+      end
+
+      line = @transaction.pos_transaction_lines.create!(line_attrs)
 
       Pos::ReturnLinePricing.apply!(line)
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction), notice: "Return line added."
+      respond_to_workspace(notice: "Return line added.")
     rescue ActiveRecord::RecordNotFound
-      redirect_to edit_pos_transaction_path(@transaction), alert: "Source sale line not found."
+      respond_to_workspace(alert: "Source sale line not found.", status: :unprocessable_entity)
     end
 
     def add_open_ring_line
@@ -161,6 +190,7 @@ module Pos
         tax_cents: tax.tax_cents,
         open_ring_description: params[:description].presence || "Open ring item",
         sub_department: sub_department,
+        sub_department_name_snapshot: sub_department.name,
         tax_category: tax.tax_category,
         tax_rate_bps: tax.tax_rate_bps,
         store_tax_rate: tax.store_tax_rate,
@@ -170,39 +200,56 @@ module Pos
       )
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction), notice: "Open-ring line added."
+      respond_to_workspace(notice: "Open-ring line added.")
     rescue Pos::TaxCalculator::MissingTaxError => e
-      redirect_to edit_pos_transaction_path(@transaction), alert: e.message
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
     def update_line
       line = @transaction.pos_transaction_lines.find(params[:line_id])
       attrs = {}
-      attrs[:quantity] = params[:quantity].to_i if params.key?(:quantity)
-      attrs[:unit_price_cents] = parse_dollar_param(params[:unit_price]) if params[:unit_price].present?
+
+      if params[:quantity_delta].present?
+        delta = params[:quantity_delta].to_i
+        attrs[:quantity] = if line.quantity.negative?
+          line.quantity - delta
+        else
+          line.quantity + delta
+        end
+      elsif params.key?(:quantity)
+        attrs[:quantity] = params[:quantity].to_i
+      end
+
+      attrs[:unit_price_cents] = parse_dollar_param(params[:unit_price]) if params[:unit_price].present? && line_price_editable?(line)
       if params[:line_discount].present?
         authorize_pos!("pos.discounts.line.apply")
         attrs[:line_discount_cents] = parse_dollar_param(params[:line_discount])
       end
       attrs[:return_disposition] = params[:return_disposition] if params.key?(:return_disposition)
-      line.update!(attrs)
+
+      if attrs.key?(:quantity) && attrs[:quantity].to_i.zero?
+        line.destroy!
+      elsif attrs.any?
+        line.update!(attrs)
+      end
+
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction), notice: "Line updated."
+      respond_to_workspace(notice: "Line updated.")
     end
 
     def remove_line
       line = @transaction.pos_transaction_lines.find(params[:line_id])
       line.destroy!
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      redirect_to edit_pos_transaction_path(@transaction), notice: "Line removed."
+      respond_to_workspace(notice: "Line removed.")
     end
 
     def sync_tenders
       result = Pos::TenderSync.call!(transaction: @transaction, tender_inputs: params[:tenders])
       notice = ["Tenders updated.", result.message].compact.join(" ")
-      redirect_to edit_pos_transaction_path(@transaction), notice: notice
+      respond_to_workspace(notice: notice)
     rescue Pos::TenderSync::Error => e
-      redirect_to edit_pos_transaction_path(@transaction), alert: e.message
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
     def complete
@@ -285,6 +332,54 @@ module Pos
       redirect_to pos_transaction_path(@transaction), alert: "Transaction is not editable."
     end
 
+    def load_edit_context
+      @mode = pos_mode
+      @entry_action = helpers.pos_initial_entry_action(@mode)
+      @inactive_warnings = Pos::SellabilityValidator.warnings_for(@transaction)
+      @complete_error = flash[:complete_error]
+      @sub_departments = SubDepartment.active_records.order(:name)
+      @readiness = build_readiness
+    end
+
+    def build_readiness(tender_inputs: nil)
+      Pos::CompletionReadiness.check(
+        transaction: @transaction.reload,
+        register_session: current_register_session,
+        tender_inputs: tender_inputs,
+        confirmed_inactive: params[:confirm_inactive].present?,
+        pos_authorization_id: params[:pos_authorization_id]
+      )
+    end
+
+    def respond_to_workspace(notice: nil, alert: nil, status: :ok)
+      load_edit_context
+      flash.now[:notice] = notice if notice.present?
+      flash.now[:alert] = alert if alert.present?
+
+      respond_to do |format|
+        format.turbo_stream { render :update_workspace, status: status }
+        format.html do
+          if alert.present?
+            redirect_to edit_pos_transaction_path(@transaction), alert: alert
+          else
+            redirect_to edit_pos_transaction_path(@transaction), notice: notice
+          end
+        end
+      end
+    end
+
+    def serialize_route_payload(payload)
+      return payload unless payload[:variants]
+
+      lookup_result = Pos::LineLookup::Result.new(
+        status: payload[:status] || :found,
+        variants: payload[:variants],
+        message: nil
+      )
+      presented = Pos::LineLookupPresenter.as_json(lookup_result, store: pos_store)
+      payload.merge(variants: presented[:variants])
+    end
+
     def next_line_number
       @transaction.pos_transaction_lines.maximum(:line_number).to_i + 1
     end
@@ -293,7 +388,19 @@ module Pos
       action = params[:entry_action].presence
       return action if PosHelper::ENTRY_ACTIONS.include?(action)
 
-      pos_mode == "return" ? "return_no_receipt" : "sale"
+      if ActiveModel::Type::Boolean.new.cast(params[:return_mode])
+        "return_no_receipt"
+      else
+        pos_mode == "return" ? "return_no_receipt" : "sale"
+      end
+    end
+
+    def negative_line_entry?(entry_action)
+      entry_action == "return_no_receipt" || ActiveModel::Type::Boolean.new.cast(params[:return_mode])
+    end
+
+    def line_price_editable?(line)
+      !(line.return_line? && line.source_transaction_line_id.present?)
     end
 
     def transaction_params

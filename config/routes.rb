@@ -302,6 +302,8 @@ Rails.application.routes.draw do
         patch :update_line
         delete :remove_line
         patch :sync_tenders
+        post :readiness_preview
+        post :route_command
       end
     end
     resources :receipts, only: %i[show] do

@@ -79,4 +79,18 @@ class PosHelperTest < ActionView::TestCase
 
     assert_equal 410, pos_receipt_change_cents(transaction)
   end
+
+  test "price editable for sale lines and no receipt returns but not receipted returns" do
+    sale_line = PosTransactionLine.new(quantity: 1, line_type: "variant")
+    no_receipt_return = PosTransactionLine.new(quantity: -1, line_type: "variant")
+    receipted_return = PosTransactionLine.new(
+      quantity: -1,
+      line_type: "variant",
+      source_transaction_line_id: 99
+    )
+
+    assert pos_line_price_editable?(sale_line)
+    assert pos_line_price_editable?(no_receipt_return)
+    refute pos_line_price_editable?(receipted_return)
+  end
 end

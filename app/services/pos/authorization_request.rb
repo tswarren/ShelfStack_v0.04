@@ -72,6 +72,41 @@ module Pos
       true
     end
 
+    def self.granted_for_transaction(transaction:, authorization_type:, pos_authorization_id: nil)
+      type = authorization_type.to_s
+      candidates = []
+
+      if pos_authorization_id.present?
+        candidates << PosAuthorization.find_by(id: pos_authorization_id)
+      end
+
+      if transaction.present?
+        candidates.concat(
+          transaction.pos_authorizations
+            .where(authorization_type: type)
+            .where.not(granted_at: nil)
+            .order(granted_at: :desc)
+            .to_a
+        )
+      end
+
+      candidates.compact.uniq.find do |authorization|
+        valid_for?(
+          authorization: authorization,
+          authorization_type: type,
+          pos_transaction: transaction
+        )
+      end
+    end
+
+    def self.granted_for_transaction?(transaction:, authorization_type:, pos_authorization_id: nil)
+      granted_for_transaction(
+        transaction: transaction,
+        authorization_type: authorization_type,
+        pos_authorization_id: pos_authorization_id
+      ).present?
+    end
+
     private
 
     attr_reader :authorization_type, :requested_by, :manager_username, :manager_pin, :store,

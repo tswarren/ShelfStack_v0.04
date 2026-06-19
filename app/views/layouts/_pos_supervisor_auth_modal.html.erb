@@ -1,8 +1,8 @@
 <div class="ss-pos-modal" data-controller="pos-supervisor-auth" data-action="pos:authorization-request@document->pos-supervisor-auth#open" data-pos-supervisor-auth-url-value="<%= pos_authorizations_path %>" hidden>
   <div class="ss-pos-modal__backdrop" data-action="click->pos-supervisor-auth#close"></div>
-  <div class="ss-pos-modal__panel" role="dialog" aria-labelledby="pos-supervisor-auth-title">
-    <h2 id="pos-supervisor-auth-title">Supervisor authorization</h2>
-    <p data-pos-supervisor-auth-target="message">A manager must approve this action.</p>
+  <div class="ss-pos-modal__panel" role="dialog" aria-labelledby="pos-supervisor-auth-title" aria-modal="true">
+    <h2 id="pos-supervisor-auth-title">Manager approval</h2>
+    <p class="ss-hint" data-pos-supervisor-auth-target="message">A manager must enter their username and PIN to approve this action.</p>
     <%= form_with url: pos_authorizations_path, method: :post, html: { data: { pos_supervisor_auth_target: "form", action: "submit->pos-supervisor-auth#submit" } } do %>
       <%= hidden_field_tag :authorization_type, nil, data: { pos_supervisor_auth_target: "authorizationType" } %>
       <%= hidden_field_tag :pos_transaction_id, nil, data: { pos_supervisor_auth_target: "transactionId" } %>

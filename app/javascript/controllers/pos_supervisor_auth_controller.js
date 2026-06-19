@@ -2,7 +2,6 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
-    "modal",
     "message",
     "error",
     "form",
@@ -37,12 +36,13 @@ export default class extends Controller {
       this.messageTarget.textContent = message || "A manager must approve this action."
     }
     this.errorTarget.hidden = true
-    this.modalTarget.hidden = false
+    this.element.hidden = false
+    this.managerUsernameTarget?.focus()
   }
 
   close(event) {
     if (event) event.preventDefault()
-    this.modalTarget.hidden = true
+    this.element.hidden = true
     this.formTarget.reset()
   }
 

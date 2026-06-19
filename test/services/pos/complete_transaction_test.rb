@@ -40,4 +40,77 @@ class Pos::CompleteTransactionTest < ActiveSupport::TestCase
     assert_equal 1, posting.inventory_ledger_entries.count
     assert_equal "sold", posting.inventory_ledger_entries.first.movement_type
   end
+
+  test "completes even exchange without tenders when total is zero" do
+    @transaction.pos_transaction_lines.create!(
+      line_number: 2,
+      line_type: "variant",
+      product_variant: @variant,
+      product: @variant.product,
+      quantity: -1,
+      unit_price_cents: 1000,
+      extended_price_cents: -1000
+    )
+    Pos::RecalculateTransaction.call!(@transaction, business_date: @register_session.business_date)
+    assert @transaction.total_cents.zero?
+    grant_no_receipt_return_authorization!(@transaction)
+
+    Pos::CompleteTransaction.call!(
+      transaction: @transaction.reload,
+      completed_by_user: @user,
+      register_session: @register_session,
+      confirmed_inactive: true
+    )
+
+    @transaction.reload
+    assert @transaction.completed?
+    assert_equal "exchange", @transaction.transaction_type
+    assert_empty @transaction.pos_tenders
+  end
+
+  test "completes even exchange with explicit zero cash tender" do
+    @transaction.pos_transaction_lines.create!(
+      line_number: 2,
+      line_type: "variant",
+      product_variant: @variant,
+      product: @variant.product,
+      quantity: -1,
+      unit_price_cents: 1000,
+      extended_price_cents: -1000
+    )
+    Pos::RecalculateTransaction.call!(@transaction, business_date: @register_session.business_date)
+
+    grant_no_receipt_return_authorization!(@transaction)
+    Pos::TenderSync.call!(
+      transaction: @transaction,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: "0.00" }]
+    )
+
+    Pos::CompleteTransaction.call!(
+      transaction: @transaction.reload,
+      completed_by_user: @user,
+      register_session: @register_session,
+      confirmed_inactive: true
+    )
+
+    @transaction.reload
+    assert @transaction.completed?
+    assert_equal "exchange", @transaction.transaction_type
+    assert_equal 0, @transaction.pos_tenders.sum(&:amount_cents)
+  end
+
+  private
+
+  def grant_no_receipt_return_authorization!(transaction)
+    manager = create_user!(username: "manager-#{SecureRandom.hex(4)}", pin: "4321")
+    grant_permission!(manager, "pos.authorizations.grant", store: @store)
+    Pos::AuthorizationRequest.grant!(
+      authorization_type: "no_receipt_return",
+      requested_by: @user,
+      manager_username: manager.username,
+      manager_pin: "4321",
+      store: @store,
+      pos_transaction: transaction
+    )
+  end
 end

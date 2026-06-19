@@ -482,6 +482,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "store_tax_rate_id"
     t.string "store_tax_rate_short_name_snapshot"
     t.bigint "sub_department_id"
+    t.string "sub_department_name_snapshot"
     t.bigint "tax_category_id"
     t.integer "tax_cents", default: 0, null: false
     t.string "tax_identifier_snapshot", limit: 1

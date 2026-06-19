@@ -1,0 +1,59 @@
+<% confirm_inactive = params[:confirm_inactive].present? %>
+<% complete_label = pos_complete_button_label(transaction, confirm_inactive: confirm_inactive && inactive_warnings.any?) %>
+
+<section class="ss-pos-panel ss-pos-tenders-complete">
+  <% complete_params = {} %>
+  <% complete_params[:confirm_inactive] = 1 if confirm_inactive %>
+  <%= form_with url: complete_pos_transaction_path(transaction, complete_params), method: :patch, class: "ss-form", data: {
+        action: "input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange",
+        pos_transaction_edit_readiness_url_value: readiness_preview_pos_transaction_path(transaction),
+        pos_transaction_edit_transaction_id_value: transaction.id
+      } do %>
+    <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
+    <%= hidden_field_tag :confirm_inactive, 1, data: { pos_transaction_edit_target: "confirmInactiveField" }, disabled: !confirm_inactive, id: nil %>
+
+    <h2 class="ss-pos-panel__title">Tender</h2>
+    <% PosTender::PHASE6_ALLOWED_TYPES.first(3).each do |tender_type| %>
+      <% existing = transaction.pos_tenders.find { |t| t.tender_type == tender_type } %>
+      <% display_cents = tender_type == "cash" ? pos_tendered_display_cents(existing) : existing&.amount_cents %>
+      <% if transaction.total_cents.negative? && display_cents.to_i.negative? %>
+        <% display_cents = display_cents.abs %>
+      <% end %>
+      <div class="ss-field" data-tender-type="<%= tender_type %>">
+        <%= label_tag "tenders_#{tender_type}", pos_tender_field_label(tender_type, transaction) %>
+        <%= pos_money_field "tenders[][amount_dollars]", display_cents, min: 0, data: { pos_transaction_edit_target: "amountField" } %>
+        <%= hidden_field_tag "tenders[][tender_type]", tender_type %>
+      </div>
+    <% end %>
+
+    <p class="ss-hint" data-pos-transaction-edit-target="remainingHint" hidden></p>
+    <p class="ss-hint ss-pos-change-hint" data-pos-transaction-edit-target="changeHint" hidden></p>
+
+    <div class="ss-pos-tender-actions">
+      <%= button_tag "Fill cash", type: "button", class: "ss-btn ss-btn-secondary", data: { action: "pos-transaction-edit#fillCash" } %>
+      <%= submit_tag complete_label, class: "ss-btn ss-pos-complete-btn", disabled: readiness.structural_blocked?, data: { pos_transaction_edit_target: "completeButton" } %>
+    </div>
+  <% end %>
+
+  <details class="ss-pos-advanced-tenders">
+    <summary>Advanced</summary>
+    <%= form_with url: sync_tenders_pos_transaction_path(transaction), method: :patch, class: "ss-form", data: { turbo_stream: true } do %>
+      <% PosTender::PHASE6_ALLOWED_TYPES.first(3).each do |tender_type| %>
+        <% existing = transaction.pos_tenders.find { |t| t.tender_type == tender_type } %>
+        <% display_cents = tender_type == "cash" ? pos_tendered_display_cents(existing) : existing&.amount_cents %>
+        <% display_cents = display_cents.abs if transaction.total_cents.negative? && display_cents.to_i.negative? %>
+        <div class="ss-field" data-tender-type="<%= tender_type %>">
+          <%= label_tag "sync_tenders_#{tender_type}", pos_tender_field_label(tender_type, transaction) %>
+          <%= pos_money_field "tenders[][amount_dollars]", display_cents, min: 0 %>
+          <%= hidden_field_tag "tenders[][tender_type]", tender_type %>
+        </div>
+      <% end %>
+      <%= submit_tag "Save tenders only", class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </details>
+
+  <div class="ss-pos-secondary-actions">
+    <%= button_to "Suspend", suspend_pos_transaction_path(transaction), method: :patch, class: "ss-btn ss-btn-secondary" %>
+    <%= button_to "Cancel", cancel_pos_transaction_path(transaction), method: :patch, class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Cancel this draft?" } %>
+  </div>
+</section>

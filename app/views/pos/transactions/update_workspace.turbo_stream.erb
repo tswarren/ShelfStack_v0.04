@@ -1,0 +1,26 @@
+<%= turbo_stream.update "pos_flash" do %>
+  <%= render "pos/transactions/flash" %>
+<% end %>
+
+<%= turbo_stream.update "pos_cart" do %>
+  <%= render "pos/transactions/cart", transaction: @transaction %>
+<% end %>
+
+<%= turbo_stream.update "pos_readiness" do %>
+  <%= render "pos/transactions/readiness_panel", transaction: @transaction, readiness: @readiness %>
+<% end %>
+
+<%= turbo_stream.update "pos_totals" do %>
+  <%= render "pos/transactions/totals_panel", transaction: @transaction %>
+<% end %>
+
+<%= turbo_stream.update "pos_tender_panel" do %>
+  <%= render "pos/transactions/tender_panel",
+        transaction: @transaction,
+        readiness: @readiness,
+        inactive_warnings: @inactive_warnings %>
+<% end %>
+
+<%= turbo_stream.append "pos_workspace_events" do %>
+  <div data-controller="pos-workspace-focus"></div>
+<% end %>

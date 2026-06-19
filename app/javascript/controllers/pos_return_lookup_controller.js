@@ -41,7 +41,7 @@ export default class extends Controller {
     this.resultsTarget.appendChild(heading)
 
     data.lines.forEach((line) => {
-      if (line.remaining_quantity <= 0) return
+      if (!line.returnable || line.remaining_quantity <= 0) return
 
       const row = document.createElement("div")
       row.className = "ss-pos-return-line"
@@ -49,7 +49,7 @@ export default class extends Controller {
       const form = document.createElement("form")
       form.method = "post"
       form.action = this.addUrlValue
-      form.setAttribute("data-turbo", "false")
+      form.setAttribute("data-turbo-stream", "true")
 
       const token = document.querySelector("meta[name='csrf-token']")?.getAttribute("content")
       if (!token) {
@@ -71,9 +71,34 @@ export default class extends Controller {
         </select>
         <button type="submit" class="ss-btn ss-btn-secondary">Add return line</button>
       `
+      form.addEventListener("submit", (event) => this.submitReturnLine(event))
       row.appendChild(form)
       this.resultsTarget.appendChild(row)
     })
+  }
+
+  submitReturnLine(event) {
+    event.preventDefault()
+    const form = event.currentTarget
+    const body = new FormData(form)
+
+    fetch(form.action, {
+      method: "POST",
+      headers: {
+        "X-CSRF-Token": body.get("authenticity_token"),
+        Accept: "text/vnd.turbo-stream.html"
+      },
+      body
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Add return line failed (${response.status})`)
+        return response.text()
+      })
+      .then((html) => {
+        window.Turbo.renderStreamMessage(html)
+        document.querySelector(".ss-pos-scan-input")?.focus()
+      })
+      .catch(() => this.showMessage("Unable to add return line."))
   }
 
   showMessage(message) {

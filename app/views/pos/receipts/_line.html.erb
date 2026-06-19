@@ -1,7 +1,7 @@
 <% line_class = line.return_line? ? "ss-receipt-line is-return" : "ss-receipt-line" %>
 <article class="<%= line_class %>">
   <div class="ss-receipt-line__header ss-receipt-row">
-    <span class="ss-receipt-line__sku"><%= line.variant_sku_snapshot || line.open_ring_description || "Item" %></span>
+    <span class="ss-receipt-line__sku"><%= pos_receipt_line_sku(line) %></span>
     <strong>
       <%= pos_receipt_money(pos_receipt_line_gross_cents(line)) %>
       <% indicator = pos_line_tax_indicator(line) %>
@@ -12,7 +12,7 @@
   </div>
 
   <div class="ss-receipt-line__name">
-    <%= line.variant_name_snapshot || line.open_ring_description || "Item" %>
+    <%= pos_line_display_title(line) %>
   </div>
 
   <% if line.return_line? %>

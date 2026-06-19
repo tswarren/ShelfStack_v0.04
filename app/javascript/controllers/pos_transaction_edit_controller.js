@@ -3,16 +3,74 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "total",
-    "tenderRow",
     "amountField",
     "authorizationId",
+    "confirmInactive",
+    "confirmInactiveField",
     "changeHint",
     "remainingHint",
     "completeButton"
   ]
 
+  static values = {
+    readinessUrl: String,
+    transactionId: String
+  }
+
   connect() {
+    this.previewTimer = null
     this.updateChange()
+    this.refreshReadiness()
+  }
+
+  updateChange() {
+    this.updateHints()
+    this.scheduleReadinessPreview()
+  }
+
+  scheduleReadinessPreview() {
+    clearTimeout(this.previewTimer)
+    this.previewTimer = setTimeout(() => this.refreshReadiness(), 150)
+  }
+
+  refreshReadiness() {
+    if (!this.hasReadinessUrlValue) return
+
+    const body = new FormData()
+    this.amountFieldTargets.forEach((field) => {
+      const row = field.closest("[data-tender-type]")
+      body.append("tenders[][amount_dollars]", field.value || "0")
+      body.append("tenders[][tender_type]", row?.dataset.tenderType || "cash")
+    })
+
+    if (this.hasAuthorizationIdTarget && this.authorizationIdTarget.value) {
+      body.append("pos_authorization_id", this.authorizationIdTarget.value)
+    }
+
+    if (this.hasConfirmInactiveFieldTarget && !this.confirmInactiveFieldTarget.disabled) {
+      body.append("confirm_inactive", "1")
+    }
+
+    fetch(this.readinessUrlValue, {
+      method: "POST",
+      headers: {
+        "X-CSRF-Token": this.csrfToken,
+        Accept: "application/json"
+      },
+      body
+    })
+      .then((response) => response.json())
+      .then((data) => this.applyPreview(data))
+      .catch(() => {})
+  }
+
+  applyPreview(data) {
+    if (!this.hasCompleteButtonTarget) return
+
+    this.completeButtonTarget.disabled = !data.complete_ready
+    if (data.complete_label) {
+      this.completeButtonTarget.value = data.complete_label
+    }
   }
 
   requestAuth(event) {
@@ -22,7 +80,7 @@ export default class extends Controller {
       detail: {
         authorizationType: button.dataset.authorizationType,
         message: button.dataset.authorizationMessage,
-        transactionId: button.dataset.transactionId,
+        transactionId: button.dataset.transactionId || this.transactionIdValue,
         registerSessionId: button.dataset.registerSessionId
       }
     }))
@@ -40,18 +98,32 @@ export default class extends Controller {
       }
     })
 
-    const remaining = (totalCents - otherTotal) / 100
+    const remainingCents = totalCents - otherTotal
+    const displayCents = totalCents < 0 ? Math.abs(remainingCents) : remainingCents
+
     this.amountFieldTargets.forEach((field) => {
       const row = field.closest("[data-tender-type]")
       if (row?.dataset.tenderType === "cash") {
-        field.value = remaining.toFixed(2)
+        field.value = (displayCents / 100).toFixed(2)
       }
     })
 
     this.updateChange()
   }
 
-  updateChange() {
+  focusScan(event) {
+    event?.preventDefault()
+    document.querySelector(".ss-pos-scan-input")?.focus()
+  }
+
+  confirmInactive(event) {
+    if (!this.hasConfirmInactiveFieldTarget) return
+
+    this.confirmInactiveFieldTarget.disabled = !event.target.checked
+    this.refreshReadiness()
+  }
+
+  updateHints() {
     const totalCents = parseInt(this.totalTarget.dataset.totalCents, 10)
     if (Number.isNaN(totalCents)) return
 
@@ -76,30 +148,28 @@ export default class extends Controller {
           this.remainingHintTarget.hidden = false
         } else {
           this.remainingHintTarget.hidden = true
-          this.remainingHintTarget.textContent = ""
         }
       } else if (totalCents < 0) {
         const tenderTotal = nonCashCents + cashTenderedCents
-        const remainingCents = totalCents - tenderTotal
-        if (remainingCents !== 0) {
-          this.remainingHintTarget.textContent = remainingCents < 0 ?
-            `Refund exceeds due by ${this.formatMoney(Math.abs(remainingCents))}` :
-            `Refund still due: ${this.formatMoney(Math.abs(remainingCents))}`
+        const remainingCents = Math.abs(totalCents) - tenderTotal
+        if (remainingCents > 0) {
+          this.remainingHintTarget.textContent = `Refund still due: ${this.formatMoney(remainingCents)}`
+          this.remainingHintTarget.hidden = false
+        } else if (remainingCents < 0) {
+          this.remainingHintTarget.textContent = `Refund exceeds due by ${this.formatMoney(Math.abs(remainingCents))}`
           this.remainingHintTarget.hidden = false
         } else {
           this.remainingHintTarget.hidden = true
-          this.remainingHintTarget.textContent = ""
         }
       } else {
         this.remainingHintTarget.hidden = true
       }
     }
 
-    if (!this.hasChangeHintTarget) return
-
-    if (totalCents <= 0) {
-      this.changeHintTarget.hidden = true
-      this.changeHintTarget.textContent = ""
+    if (!this.hasChangeHintTarget || totalCents <= 0) {
+      if (this.hasChangeHintTarget) {
+        this.changeHintTarget.hidden = true
+      }
       return
     }
 
@@ -114,18 +184,27 @@ export default class extends Controller {
       this.changeHintTarget.hidden = false
     } else {
       this.changeHintTarget.hidden = true
-      this.changeHintTarget.textContent = ""
     }
   }
 
   setAuthorizationId(event) {
     const { authorizationId } = event.detail
-    if (this.hasAuthorizationIdTarget) {
-      this.authorizationIdTarget.value = authorizationId
-    }
+    if (!authorizationId) return
+
+    this.authorizationIdTargets.forEach((field) => {
+      field.value = authorizationId
+    })
+
+    const url = new URL(window.location.href)
+    url.searchParams.set("pos_authorization_id", authorizationId)
+    window.Turbo.visit(url.toString())
   }
 
   formatMoney(cents) {
     return `$${(cents / 100).toFixed(2)}`
+  }
+
+  get csrfToken() {
+    return document.querySelector("meta[name='csrf-token']")?.content
   }
 }

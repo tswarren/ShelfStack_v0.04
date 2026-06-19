@@ -2,8 +2,8 @@
   <h1>Register</h1>
 
   <% if @register_session %>
-    <section class="ss-pos-panel ss-pos-panel--highlight">
-      <h2>Register open</h2>
+    <section class="ss-pos-panel ss-pos-panel--highlight ss-pos-hero">
+      <h2>Register open — ready to sell</h2>
       <dl class="ss-pos-stats">
         <div><dt>Business date</dt><dd><%= @register_session.business_date %></dd></div>
         <div><dt>Workstation</dt><dd><%= current_workstation.name %></dd></div>
@@ -13,25 +13,35 @@
           <div><dt>Expected cash</dt><dd><%= pos_money(@session_summary.expected_closing_cash_cents) %></dd></div>
         <% end %>
       </dl>
-      <%= link_to "Manage session", pos_register_session_path(@register_session), class: "ss-btn ss-btn-secondary" %>
-      <%= link_to "Close drawer", pos_register_session_path(@register_session, anchor: "close-register"), class: "ss-btn" %>
+      <div class="ss-pos-actions">
+        <% if @draft_transactions.any? %>
+          <%= link_to "Continue selling", edit_pos_transaction_path(@draft_transactions.first), class: "ss-btn" %>
+        <% else %>
+          <%= button_to "New sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn" %>
+        <% end %>
+        <%= link_to "Manage session", pos_register_session_path(@register_session), class: "ss-btn ss-btn-secondary" %>
+        <%= link_to "Close drawer", pos_register_session_path(@register_session, anchor: "close-register"), class: "ss-btn ss-btn-secondary" %>
+      </div>
     </section>
   <% else %>
-    <section class="ss-pos-panel ss-pos-panel--warning">
-      <h2>No register session</h2>
-      <p>Open the register before completing sales. Draft transactions can still be started.</p>
+    <section class="ss-pos-panel ss-pos-panel--warning ss-pos-hero">
+      <h2>Register is closed</h2>
+      <p>Open the register to begin selling.</p>
       <%= link_to "Open register", new_pos_register_session_path, class: "ss-btn" %>
     </section>
   <% end %>
 
   <section class="ss-pos-panel">
-    <h2>Primary actions</h2>
+    <h2>Other actions</h2>
     <div class="ss-pos-actions">
-      <%= button_to "New sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn" %>
-      <%= button_to "Return / exchange", pos_transactions_path, method: :post, params: { mode: "return" }, class: "ss-btn ss-btn-secondary" %>
+      <%= button_to "Draft sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn ss-btn-secondary", title: "Register must be open to complete" %>
+      <%= button_to "Draft return / exchange", pos_transactions_path, method: :post, params: { mode: "return" }, class: "ss-btn ss-btn-secondary", title: "Register must be open to complete" %>
       <%= link_to "Paid in/out", (@register_session ? pos_register_session_path(@register_session, anchor: "cash-movement") : new_pos_register_session_path), class: "ss-btn ss-btn-secondary" %>
       <%= link_to "Drawer report", drawer_pos_reports_path, class: "ss-btn ss-btn-secondary" %>
     </div>
+    <% unless @register_session %>
+      <p class="ss-hint">Draft transactions can be started without an open register, but completion requires an open session.</p>
+    <% end %>
   </section>
 
   <% if @draft_transactions.any? %>

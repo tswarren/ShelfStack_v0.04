@@ -74,4 +74,88 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     assert result.blocked?
     assert result.blockers.any? { |check| check.key == :tenders }
   end
+
+  test "structural blocked without register but tender not structural" do
+    result = Pos::CompletionReadiness.check(
+      transaction: @transaction,
+      register_session: nil,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: "1.00" }]
+    )
+
+    assert result.structural_blocked?
+    refute result.tender_ready?
+    refute result.complete_ready?
+  end
+
+  test "complete ready with matching tender inputs and open register" do
+    result = Pos::CompletionReadiness.check(
+      transaction: @transaction,
+      register_session: @session,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", @transaction.total_cents / 100.0) }]
+    )
+
+    assert result.tender_ready?
+    assert result.complete_ready?
+  end
+
+  test "normalizes positive refund tender inputs" do
+    return_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [{ product_variant: @variant, quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000 }]
+    )
+    Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
+    total = return_txn.total_cents.abs
+
+    result = Pos::CompletionReadiness.check(
+      transaction: return_txn,
+      register_session: @session,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+    )
+
+    assert result.tender_ready?
+  end
+
+  test "ready for even exchange without tender rows when total is zero" do
+    exchange = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 },
+        { product_variant: @variant, quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000 }
+      ]
+    )
+    Pos::RecalculateTransaction.call!(exchange, business_date: @session.business_date)
+
+    result = Pos::CompletionReadiness.check(
+      transaction: exchange,
+      register_session: @session
+    )
+
+    assert exchange.total_cents.zero?
+    assert result.tender_ready?
+  end
+
+  test "evaluates explicit zero cash tender input on even exchange" do
+    exchange = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 },
+        { product_variant: @variant, quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000 }
+      ]
+    )
+    Pos::RecalculateTransaction.call!(exchange, business_date: @session.business_date)
+
+    result = Pos::CompletionReadiness.check(
+      transaction: exchange,
+      register_session: @session,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: "0.00" }]
+    )
+
+    assert result.tender_ready?
+  end
 end

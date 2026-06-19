@@ -58,4 +58,46 @@ class Pos::TenderSyncTest < ActiveSupport::TestCase
 
     assert_match(/insufficient cash/i, error.message)
   end
+
+  test "accepts zero cash tender on even exchange" do
+    @transaction.pos_transaction_lines.create!(
+      line_number: 2,
+      line_type: "variant",
+      product_variant: @variant,
+      product: @variant.product,
+      quantity: -1,
+      unit_price_cents: 1500,
+      extended_price_cents: -1500
+    )
+    Pos::RecalculateTransaction.call!(@transaction)
+
+    assert @transaction.total_cents.zero?
+
+    Pos::TenderSync.call!(
+      transaction: @transaction,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: "0.00" }]
+    )
+
+    cash = @transaction.pos_tenders.find_by!(tender_type: "cash")
+    assert_equal 0, cash.amount_cents
+    Pos::TenderValidator.validate!(@transaction)
+  end
+
+  test "allows empty tenders when transaction total is zero" do
+    @transaction.pos_transaction_lines.create!(
+      line_number: 2,
+      line_type: "variant",
+      product_variant: @variant,
+      product: @variant.product,
+      quantity: -1,
+      unit_price_cents: 1500,
+      extended_price_cents: -1500
+    )
+    Pos::RecalculateTransaction.call!(@transaction)
+
+    Pos::TenderSync.call!(transaction: @transaction, tender_inputs: [])
+
+    assert_empty @transaction.pos_tenders
+    Pos::TenderValidator.validate!(@transaction)
+  end
 end

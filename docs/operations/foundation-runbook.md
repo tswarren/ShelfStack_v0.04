@@ -183,7 +183,7 @@ UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_pas
 
 1. Start **New return** from the dashboard.
 2. **Receipted:** enter receipt number, choose lines and quantities, set disposition.
-3. **No-receipt:** scan items (requires `pos.returns.no_receipt` and supervisor authorization at complete).
+3. **No-receipt:** scan items into the draft cart (any cashier with line-add permission). Supervisor authorization is required at **complete**; `pos.returns.no_receipt` no longer blocks adding draft lines.
 4. Add refund tenders (negative totals use negative cash tender amounts for refunds).
 5. Complete the return transaction.
 

@@ -1,0 +1,4 @@
+<span class="ss-pos-tax-indicator"><%= pos_line_tax_indicator(line) %></span>
+<% if line.tax_cents.to_i.positive? && local_assigns.fetch(:show_amount, false) %>
+  <span class="ss-hint ss-pos-tax-amount"><%= pos_money(line.tax_cents) %></span>
+<% end %>

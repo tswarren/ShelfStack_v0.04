@@ -1,6 +1,1 @@
-<td class="ss-pos-line-tax">
-  <span class="ss-pos-tax-indicator"><%= pos_line_tax_indicator(line) %></span>
-  <% if line.tax_cents.to_i.positive? %>
-    <span class="ss-hint ss-pos-tax-amount"><%= pos_money(line.tax_cents) %></span>
-  <% end %>
-</td>
+<%= render "pos/transactions/line_tax_cell", line: line %>

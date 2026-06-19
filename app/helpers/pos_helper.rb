@@ -33,13 +33,20 @@ module PosHelper
     end
   end
 
-  def pos_complete_button_label(transaction, confirm_inactive: false)
+  def pos_complete_button_label(transaction, confirm_inactive: false, change_cents: nil, remaining_cents: nil)
     type = pos_derived_transaction_type(transaction)
-    prefix = confirm_inactive ? "Complete (confirm inactive)" : "Complete"
-    case type
-    when "return" then "#{prefix} return"
-    when "exchange" then "#{prefix} exchange"
-    else "#{prefix} sale"
+    base = case type
+           when "return" then confirm_inactive ? "Complete (confirm inactive) return" : "Refund customer"
+           when "exchange" then confirm_inactive ? "Complete (confirm inactive) exchange" : "Complete exchange"
+           else confirm_inactive ? "Complete (confirm inactive) sale" : "Complete sale"
+           end
+
+    if change_cents.to_i.positive?
+      "#{base} — #{pos_money(change_cents)} change due"
+    elsif remaining_cents.to_i.positive?
+      "#{base} — #{pos_money(remaining_cents)} still due"
+    else
+      base
     end
   end
 
@@ -74,16 +81,88 @@ module PosHelper
   end
 
   def pos_line_display_title(line)
+    if line.open_ring_line?
+      return line.open_ring_description.presence || "Open ring item"
+    end
+
     line.variant_name_snapshot.presence ||
       line.product_variant&.name ||
-      line.open_ring_description ||
+      "Item"
+  end
+
+  def pos_open_ring_line_sku(line)
+    line.sub_department_name_snapshot.presence ||
+      line.sub_department&.name ||
+      "Open ring"
+  end
+
+  def pos_receipt_line_sku(line)
+    return pos_open_ring_line_sku(line) if line.open_ring_line?
+
+    line.variant_sku_snapshot.presence ||
+      line.product_variant&.sku ||
       "Item"
   end
 
   def pos_line_display_sku(line)
+    return pos_open_ring_line_sku(line) if line.open_ring_line?
+
     line.variant_sku_snapshot.presence ||
       line.product_variant&.sku ||
-      "Open ring"
+      "Item"
+  end
+
+  def pos_line_return_source_label(line)
+    return unless line.return_line? && line.source_transaction.present?
+
+    "From receipt #{line.source_transaction.transaction_number}"
+  end
+
+  def pos_line_price_editable?(line)
+    !(line.return_line? && line.source_transaction_line_id.present?)
+  end
+
+  def pos_tender_field_label(tender_type, transaction)
+    if transaction.total_cents.negative?
+      case tender_type
+      when "cash" then "Refund amount"
+      when "card" then "Card refund"
+      else "#{tender_type.humanize} refund"
+      end
+    elsif tender_type == "cash" && transaction.total_cents.positive?
+      "Cash"
+    else
+      tender_type.humanize
+    end
+  end
+
+  def pos_readiness_panel_class(readiness)
+    if readiness.complete_ready?
+      "ss-pos-readiness--ready"
+    elsif readiness.structural_blocked?
+      "ss-pos-readiness--blocked"
+    else
+      "ss-pos-readiness--pending"
+    end
+  end
+
+  def pos_readiness_panel_title(readiness)
+    if readiness.complete_ready?
+      "Ready to complete"
+    elsif readiness.structural_blocked?
+      "Cannot complete yet"
+    else
+      "Enter tender to complete"
+    end
+  end
+
+  def pos_supervisor_auth_message(check)
+    case check.key
+    when :discount_auth then "This discount exceeds the cashier limit. A manager must enter their username and PIN to approve."
+    when :no_receipt_return then "This return has no receipt. A manager must enter their username and PIN to approve."
+    when :cash_refund_auth then "This cash refund exceeds the limit. A manager must enter their username and PIN to approve."
+    else "A manager must enter their username and PIN to approve this action."
+    end
   end
 
   def pos_lookup_preview_text(variant)

@@ -30,14 +30,22 @@ module Pos
           .sum(:quantity)
           .abs
 
+        remaining = line.quantity.abs - returned_qty
+        returnable = remaining.positive?
+
         {
           id: line.id,
           line_number: line.line_number,
-          sku: line.variant_sku_snapshot || line.product_variant&.sku,
-          name: line.variant_name_snapshot || line.open_ring_description || line.product_variant&.name,
+          line_type: line.line_type,
+          sku: line_sku(line),
+          name: line_name(line),
+          open_ring_description: line.open_ring_description,
+          sub_department_id: line.sub_department_id,
+          sub_department_name: line.sub_department_name_snapshot.presence || line.sub_department&.name,
           sold_quantity: line.quantity.abs,
           returned_quantity: returned_qty,
-          remaining_quantity: line.quantity.abs - returned_qty,
+          remaining_quantity: remaining,
+          returnable: returnable,
           unit_price_cents: line.unit_price_cents,
           effective_unit_price_cents: ReturnLinePricing.effective_unit_extended_cents(line),
           extended_price_cents: line.extended_price_cents,
@@ -51,5 +59,21 @@ module Pos
     private
 
     attr_reader :store, :transaction_number
+
+    def line_sku(line)
+      if line.open_ring_line?
+        line.sub_department_name_snapshot.presence || line.sub_department&.name || "Open ring"
+      else
+        line.variant_sku_snapshot || line.product_variant&.sku
+      end
+    end
+
+    def line_name(line)
+      if line.open_ring_line?
+        line.open_ring_description
+      else
+        line.variant_name_snapshot || line.product_variant&.name
+      end
+    end
   end
 end
