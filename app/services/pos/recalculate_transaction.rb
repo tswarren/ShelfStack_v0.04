@@ -50,7 +50,7 @@ module Pos
 
       base = line.unit_price_cents * line.quantity.abs
       line.extended_price_cents = [base - line.line_discount_cents.to_i, 0].max
-      line.transaction_discount_cents = 0 unless sourced_return_line?(line)
+      line.transaction_discount_cents = 0 if line.return_line?
     end
 
     def sourced_return_line?(line)

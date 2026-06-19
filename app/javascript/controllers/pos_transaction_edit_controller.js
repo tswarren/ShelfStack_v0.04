@@ -86,29 +86,47 @@ export default class extends Controller {
     }))
   }
 
-  fillCash(event) {
+  fillTender(event) {
     event.preventDefault()
-    const totalCents = parseInt(this.totalTarget.dataset.totalCents, 10)
-    let otherTotal = 0
+    const tenderType = event.currentTarget.dataset.tenderType
+    if (!tenderType) return
 
+    const totalCents = parseInt(this.totalTarget.dataset.totalCents, 10)
+    if (Number.isNaN(totalCents)) return
+
+    let otherTotal = 0
     this.amountFieldTargets.forEach((field) => {
       const row = field.closest("[data-tender-type]")
-      if (row?.dataset.tenderType !== "cash") {
+      if (row?.dataset.tenderType !== tenderType) {
         otherTotal += Math.round(parseFloat(field.value || "0") * 100)
       }
     })
 
-    const remainingCents = totalCents - otherTotal
-    const displayCents = totalCents < 0 ? Math.abs(remainingCents) : remainingCents
+    let displayCents
+    if (totalCents < 0) {
+      displayCents = Math.abs(totalCents) - otherTotal
+    } else {
+      displayCents = totalCents - otherTotal
+      if (tenderType !== "cash") {
+        displayCents = Math.max(0, displayCents)
+      }
+    }
+
+    displayCents = Math.max(0, displayCents)
 
     this.amountFieldTargets.forEach((field) => {
       const row = field.closest("[data-tender-type]")
-      if (row?.dataset.tenderType === "cash") {
+      if (row?.dataset.tenderType === tenderType) {
         field.value = (displayCents / 100).toFixed(2)
       }
     })
 
     this.updateChange()
+  }
+
+  fillCash(event) {
+    event.currentTarget.dataset.tenderType = "cash"
+    this.fillTender(event)
   }
 
   focusScan(event) {

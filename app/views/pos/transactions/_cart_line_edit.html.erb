@@ -13,11 +13,13 @@
             <%= pos_money_field :unit_price, line.unit_price_cents, id: "unit_price_#{line.id}", min: 0, class: "ss-pos-money-input" %>
           </div>
         <% end %>
-        <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) %>
-          <div class="ss-field">
-            <%= label_tag "line_discount_#{line.id}", "Line discount" %>
-            <%= pos_money_field :line_discount, line.line_discount_cents, id: "line_discount_#{line.id}", min: 0, class: "ss-pos-money-input" %>
-          </div>
+        <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) && !line.return_line? %>
+          <%= render "pos/transactions/discount_fields",
+                label: "Line discount",
+                cents_value: line.line_discount_cents,
+                id_prefix: "line_discount_#{line.id}",
+                type_name: :line_discount_type,
+                value_name: :line_discount_value %>
         <% end %>
         <% if line.return_line? %>
           <div class="ss-field">

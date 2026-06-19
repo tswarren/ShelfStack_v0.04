@@ -188,6 +188,14 @@ module PosHelper
     number_field_tag(name, dollar_value, { step: 0.01, min: options.delete(:min) }.merge(options))
   end
 
+  def pos_discount_type_options
+    [["Amount ($)", "amount"], ["Percent (%)", "percent"]]
+  end
+
+  def pos_discount_amount_display(cents)
+    format("%.2f", cents.to_i / 100.0)
+  end
+
   def pos_return_disposition_options
     PosTransactionLine::RETURN_DISPOSITIONS.map { |value| [value.humanize, value] }
   end
@@ -346,5 +354,35 @@ module PosHelper
   def pos_receipt_line_net_cents(line)
     amount = line.extended_price_cents.to_i
     line.return_line? ? -amount.abs : amount
+  end
+
+  def pos_receipt_line_header_amount_cents(line)
+    pos_receipt_line_net_cents(line)
+  end
+
+  def pos_receipt_line_list_amount_cents(line)
+    pos_receipt_line_gross_cents(line)
+  end
+
+  def pos_receipt_line_item_discount_display_cents(line)
+    line.line_discount_cents.to_i.abs
+  end
+
+  def pos_receipt_line_show_list_detail?(line)
+    return false if line.return_line?
+
+    pos_receipt_line_list_amount_cents(line) != pos_receipt_line_header_amount_cents(line)
+  end
+
+  def pos_receipt_line_show_item_discount_detail?(line)
+    return false if line.return_line?
+
+    line.line_discount_cents.to_i.positive?
+  end
+
+  def pos_receipt_discounted_subtotal_cents(transaction)
+    transaction.pos_transaction_lines.sum do |line|
+      pos_receipt_line_net_cents(line)
+    end
   end
 end

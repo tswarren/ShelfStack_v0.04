@@ -1,0 +1,10 @@
+<tr class="<%= "ss-pos-report-table__total" if local_assigns[:emphasis] %>">
+  <th scope="row"><%= label %></th>
+  <td class="ss-num"><%= metrics.transaction_count %></td>
+  <td class="ss-num ss-pos-money-col"><%= pos_report_signed_money(metrics.sales_cents) %></td>
+  <td class="ss-num ss-pos-money-col"><%= pos_report_signed_money(metrics.refunds_cents) %></td>
+  <td class="ss-num ss-pos-money-col"><%= pos_report_signed_money(metrics.adjustments_cents) %></td>
+  <td class="ss-num ss-pos-money-col"><%= pos_report_signed_money(metrics.discounts_cents) %></td>
+  <td class="ss-num ss-pos-money-col"><%= pos_report_signed_money(metrics.net_sales_cents) %></td>
+  <td class="ss-num"><%= metrics.void_count %></td>
+</tr>

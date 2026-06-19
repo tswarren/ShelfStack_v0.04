@@ -31,6 +31,7 @@ module Pos
       line.unit_price_cents = self.class.effective_unit_extended_cents(source_line)
       line.line_discount_cents = prorate(source_line.line_discount_cents, return_quantity, sold_quantity)
       line.extended_price_cents = prorate(source_line.extended_price_cents, return_quantity, sold_quantity)
+      line.transaction_discount_cents = 0
       line.tax_cents = prorate(source_line.tax_cents, return_quantity, sold_quantity)
       line.tax_category_id = source_line.tax_category_id
       line.tax_rate_bps = source_line.tax_rate_bps

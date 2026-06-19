@@ -316,6 +316,8 @@ Rails.application.routes.draw do
         get :sales
         get :returns
         get :drawer
+        get :summary
+        get :register_summary
       end
     end
   end

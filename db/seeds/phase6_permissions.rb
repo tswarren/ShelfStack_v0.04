@@ -15,7 +15,7 @@ module Seeds
     CASH_ACTIONS = %w[view create large_amount].freeze
     AUTHORIZATION_ACTIONS = %w[grant self_grant].freeze
     RECEIPT_ACTIONS = %w[view print email].freeze
-    REPORT_ACTIONS = %w[view drawer sales returns export].freeze
+    REPORT_ACTIONS = %w[view drawer sales returns summary register_summary export].freeze
 
     def self.permission_attrs(group, key_suffix, name, description)
       {

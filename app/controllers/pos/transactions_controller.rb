@@ -51,12 +51,16 @@ module Pos
 
     def update
       attrs = transaction_params
-      attrs[:discount_cents] = parse_dollar_param(params.dig(:pos_transaction, :discount_dollars)) if params.dig(:pos_transaction, :discount_dollars).present?
-      attrs[:rounding_cents] = parse_dollar_param(params.dig(:pos_transaction, :rounding_dollars)) if params.dig(:pos_transaction, :rounding_dollars).present?
+      if params.dig(:pos_transaction, :rounding_dollars).present?
+        attrs[:rounding_cents] = parse_dollar_param(params.dig(:pos_transaction, :rounding_dollars))
+      end
+      apply_transaction_discount_attrs!(attrs)
 
       @transaction.update!(attrs)
       Pos::RecalculateTransaction.call!(@transaction)
       redirect_to edit_pos_transaction_path(@transaction), notice: "Transaction updated."
+    rescue Pos::DiscountInput::Error => e
+      redirect_to edit_pos_transaction_path(@transaction), alert: e.message
     end
 
     def readiness_preview
@@ -167,6 +171,7 @@ module Pos
       sub_department = SubDepartment.active_records.find(params[:sub_department_id])
       quantity = params[:quantity].to_i
       quantity = 1 if quantity.zero?
+      quantity = -quantity.abs if negative_line_entry?(params[:entry_action])
       unit_price_cents = parse_dollar_param(params[:unit_price]) || 0
 
       tax = Pos::TaxCalculator.snapshot_for_subdepartment!(
@@ -177,6 +182,7 @@ module Pos
       )
 
       variant = params[:product_variant_id].presence && ProductVariant.find_by(id: params[:product_variant_id])
+      return_line = quantity.negative?
 
       @transaction.pos_transaction_lines.create!(
         line_number: next_line_number,
@@ -196,11 +202,12 @@ module Pos
         store_tax_rate: tax.store_tax_rate,
         tax_identifier_snapshot: tax.store_tax_rate&.tax_identifier,
         store_tax_rate_short_name_snapshot: tax.store_tax_rate&.short_name,
-        inventory_behavior_snapshot: variant&.inventory_behavior
+        inventory_behavior_snapshot: variant&.inventory_behavior,
+        return_disposition: (return_line ? "return_to_stock" : nil)
       )
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
-      respond_to_workspace(notice: "Open-ring line added.")
+      respond_to_workspace(notice: return_line ? "Open-ring return line added." : "Open-ring line added.")
     rescue Pos::TaxCalculator::MissingTaxError => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
@@ -221,10 +228,7 @@ module Pos
       end
 
       attrs[:unit_price_cents] = parse_dollar_param(params[:unit_price]) if params[:unit_price].present? && line_price_editable?(line)
-      if params[:line_discount].present?
-        authorize_pos!("pos.discounts.line.apply")
-        attrs[:line_discount_cents] = parse_dollar_param(params[:line_discount])
-      end
+      apply_line_discount_attrs!(line, attrs)
       attrs[:return_disposition] = params[:return_disposition] if params.key?(:return_disposition)
 
       if attrs.key?(:quantity) && attrs[:quantity].to_i.zero?
@@ -235,6 +239,8 @@ module Pos
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
       respond_to_workspace(notice: "Line updated.")
+    rescue Pos::DiscountInput::Error => e
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
     def remove_line
@@ -401,6 +407,27 @@ module Pos
 
     def line_price_editable?(line)
       !(line.return_line? && line.source_transaction_line_id.present?)
+    end
+
+    def apply_transaction_discount_attrs!(attrs)
+      return unless params.dig(:pos_transaction)&.key?(:discount_value)
+
+      attrs[:discount_cents] = Pos::DiscountInput.resolve_cents(
+        value: params.dig(:pos_transaction, :discount_value),
+        input_type: params.dig(:pos_transaction, :discount_type),
+        base_cents: Pos::DiscountInput.discountable_transaction_base_cents(@transaction)
+      )
+    end
+
+    def apply_line_discount_attrs!(line, attrs)
+      return unless params.key?(:line_discount_value)
+
+      authorize_pos!("pos.discounts.line.apply")
+      attrs[:line_discount_cents] = Pos::DiscountInput.resolve_cents(
+        value: params[:line_discount_value],
+        input_type: params[:line_discount_type],
+        base_cents: Pos::DiscountInput.line_base_cents(line)
+      )
     end
 
     def transaction_params

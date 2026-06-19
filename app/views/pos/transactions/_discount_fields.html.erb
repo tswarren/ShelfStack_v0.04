@@ -1,0 +1,24 @@
+<% field_id = local_assigns[:id_prefix].presence || "discount" %>
+<% cents_value = local_assigns.fetch(:cents_value, 0) %>
+<% type_name = local_assigns.fetch(:type_name, "pos_transaction[discount_type]") %>
+<% value_name = local_assigns.fetch(:value_name, "pos_transaction[discount_value]") %>
+
+<div class="ss-field ss-pos-discount-field"
+     data-controller="pos-discount-input"
+     data-pos-discount-input-amount-label-value="$ Amount"
+     data-pos-discount-input-percent-label-value="% Percent">
+  <%= label_tag "#{field_id}_discount_value", local_assigns.fetch(:label, "Discount") %>
+  <div class="ss-pos-discount-field__row">
+    <%= select_tag type_name,
+          options_for_select(pos_discount_type_options, "amount"),
+          id: "#{field_id}_discount_type",
+          data: { pos_discount_input_target: "type", action: "change->pos-discount-input#updateMode" } %>
+    <%= number_field_tag value_name,
+          pos_discount_amount_display(cents_value),
+          id: "#{field_id}_discount_value",
+          min: 0,
+          step: 0.01,
+          class: "ss-pos-discount-input",
+          data: { pos_discount_input_target: "value" } %>
+  </div>
+</div>

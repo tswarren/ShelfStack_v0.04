@@ -93,4 +93,63 @@ class PosHelperTest < ActionView::TestCase
     assert pos_line_price_editable?(no_receipt_return)
     refute pos_line_price_editable?(receipted_return)
   end
+
+  test "receipt line header uses net extended price" do
+    line = PosTransactionLine.new(
+      quantity: 1,
+      unit_price_cents: 450,
+      line_discount_cents: 45,
+      extended_price_cents: 405
+    )
+
+    assert_equal 405, pos_receipt_line_header_amount_cents(line)
+    assert_equal 450, pos_receipt_line_list_amount_cents(line)
+  end
+
+  test "receipt line detail flags distinguish list and item discount" do
+    undiscounted = PosTransactionLine.new(quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000)
+    line_discount = PosTransactionLine.new(
+      quantity: 1,
+      unit_price_cents: 450,
+      line_discount_cents: 45,
+      extended_price_cents: 405
+    )
+    order_discount_only = PosTransactionLine.new(
+      quantity: 1,
+      unit_price_cents: 1000,
+      line_discount_cents: 0,
+      extended_price_cents: 900,
+      transaction_discount_cents: 100
+    )
+    return_line = PosTransactionLine.new(quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000)
+
+    refute pos_receipt_line_show_list_detail?(undiscounted)
+    refute pos_receipt_line_show_item_discount_detail?(undiscounted)
+
+    assert pos_receipt_line_show_list_detail?(line_discount)
+    assert pos_receipt_line_show_item_discount_detail?(line_discount)
+
+    assert pos_receipt_line_show_list_detail?(order_discount_only)
+    refute pos_receipt_line_show_item_discount_detail?(order_discount_only)
+
+    refute pos_receipt_line_show_list_detail?(return_line)
+    refute pos_receipt_line_show_item_discount_detail?(return_line)
+  end
+
+  test "receipt discounted subtotal sums signed extended prices" do
+    transaction = PosTransaction.new(subtotal_cents: 3000, discount_cents: 300)
+    transaction.pos_transaction_lines.build(
+      quantity: 1,
+      unit_price_cents: 2000,
+      line_discount_cents: 100,
+      extended_price_cents: 1700
+    )
+    transaction.pos_transaction_lines.build(
+      quantity: -1,
+      unit_price_cents: 1000,
+      extended_price_cents: -1000
+    )
+
+    assert_equal 700, pos_receipt_discounted_subtotal_cents(transaction)
+  end
 end

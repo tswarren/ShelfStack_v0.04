@@ -13,6 +13,7 @@
                     turbo_stream: true,
                     action: "turbo:submit-end->pos-command-bar#openRingSubmitted"
                   } do %>
+      <%= hidden_field_tag :return_mode, 0, data: { pos_command_bar_target: "openRingReturnMode" } %>
       <%= text_field_tag :description, nil, placeholder: "Description", required: true %>
       <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment", required: true %>
       <%= pos_money_field :unit_price, nil, placeholder: "Unit price", required: true, min: 0 %>

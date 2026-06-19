@@ -1,4 +1,7 @@
 <h1>Register Session</h1>
+<p class="ss-pos-no-print">
+  <%= link_to "Register summary", register_summary_pos_reports_path(register_session_id: @register_session.id), class: "ss-link" %>
+</p>
 
 <dl class="ss-pos-stats">
   <div><dt>Business date</dt><dd><%= @register_session.business_date %></dd></div>

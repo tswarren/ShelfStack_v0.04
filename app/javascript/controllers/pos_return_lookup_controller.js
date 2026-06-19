@@ -33,7 +33,7 @@ export default class extends Controller {
       return
     }
 
-    this.showMessage("")
+    this.showMessage(data.message || "")
     this.resultsTarget.innerHTML = ""
 
     const heading = document.createElement("p")

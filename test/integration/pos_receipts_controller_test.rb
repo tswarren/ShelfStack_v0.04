@@ -40,5 +40,83 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "RCP-ISBN-001"
     assert_not_includes response.body, "ss-pos-receipt-table"
     assert_includes response.body, "Thank you for shopping with us."
+    assert_includes response.body, "Items at list"
+    assert_not_includes response.body, ">Net<"
+  end
+
+  test "show renders discounted sale with clear line and totals layout" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      attrs: { discount_cents: 100 },
+      lines: [{
+        product_variant: @variant,
+        quantity: 1,
+        unit_price_cents: 1500,
+        line_discount_cents: 150,
+        extended_price_cents: 1250
+      }]
+    )
+    Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
+    complete_pos_sale!(transaction: transaction.reload, user: @cashier, register_session: @register_session)
+    receipt = transaction.reload.pos_receipt
+
+    get pos_receipt_path(receipt)
+    assert_response :success
+    assert_includes response.body, "List price"
+    assert_includes response.body, "Item discount"
+    assert_includes response.body, "Items at list"
+    assert_includes response.body, "Subtotal"
+    assert_includes response.body, "Order discount"
+    assert_not_includes response.body, ">Net<"
+    assert_not_includes response.body, ">Orig<"
+  end
+
+  test "show renders return line with single header amount and detail text" do
+    sale = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      lines: [{
+        product_variant: @variant,
+        quantity: 1,
+        unit_price_cents: 1500,
+        extended_price_cents: 1500
+      }]
+    )
+    Pos::RecalculateTransaction.call!(sale, business_date: @register_session.business_date)
+    complete_pos_sale!(transaction: sale, user: @cashier, register_session: @register_session)
+
+    return_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      lines: [{
+        product_variant: @variant,
+        quantity: -1,
+        unit_price_cents: 1500,
+        extended_price_cents: -1500,
+        return_disposition: "return_to_stock",
+        source_transaction: sale,
+        source_transaction_line: sale.pos_transaction_lines.first
+      }]
+    )
+    Pos::RecalculateTransaction.call!(return_txn, business_date: @register_session.business_date)
+    complete_pos_sale!(
+      transaction: return_txn.reload,
+      user: @cashier,
+      register_session: @register_session,
+      tenders: [{ tender_type: "cash", amount_cents: return_txn.total_cents }]
+    )
+    receipt = return_txn.reload.pos_receipt
+
+    get pos_receipt_path(receipt)
+    assert_response :success
+    assert_includes response.body, "Return"
+    assert_includes response.body, "Return to stock"
+    assert_includes response.body, "From receipt #{sale.transaction_number}"
+    assert_not_includes response.body, "Return value"
+    assert_not_includes response.body, "Original price"
   end
 end

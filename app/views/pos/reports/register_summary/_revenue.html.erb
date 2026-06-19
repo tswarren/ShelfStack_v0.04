@@ -1,0 +1,14 @@
+<section class="report-section ss-pos-register-summary__box">
+  <h2 class="ss-pos-register-summary__box-title">Sales &amp; Revenue</h2>
+  <table class="ss-pos-register-summary__kv">
+    <tbody>
+      <tr><th scope="row">Gross sales</th><td><%= pos_report_signed_money(revenue.gross_sales_cents) %></td></tr>
+      <tr><th scope="row">Returns</th><td><%= pos_report_signed_money(revenue.refunds_cents) %></td></tr>
+      <tr><th scope="row">Line disc.</th><td><%= pos_report_signed_money(revenue.line_discount_cents) %></td></tr>
+      <tr><th scope="row">Order disc.</th><td><%= pos_report_signed_money(revenue.order_discount_cents) %></td></tr>
+      <tr class="is-emphasis"><th scope="row">Net sales</th><td><%= pos_report_signed_money(revenue.net_sales_cents) %></td></tr>
+      <tr><th scope="row">Tax collected</th><td><%= pos_report_signed_money(revenue.taxes_cents) %></td></tr>
+      <tr class="is-total"><th scope="row">Total sales</th><td><%= pos_report_signed_money(revenue.total_sales_cents) %></td></tr>
+    </tbody>
+  </table>
+</section>

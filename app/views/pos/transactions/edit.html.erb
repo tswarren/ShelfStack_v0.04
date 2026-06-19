@@ -24,6 +24,9 @@
     <div id="pos_cart">
       <%= render "pos/transactions/cart", transaction: @transaction %>
     </div>
+    <div id="pos_readiness">
+      <%= render "pos/transactions/readiness_panel", transaction: @transaction, readiness: @readiness %>
+    </div>
   </div>
 
   <aside class="ss-pos-layout__sidebar">

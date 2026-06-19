@@ -33,7 +33,7 @@ module Seeds
           pos.register_sessions.view pos.register_sessions.open pos.register_sessions.close
           pos.cash_movements.view pos.cash_movements.create
           pos.receipts.view pos.receipts.print
-          pos.reports.view pos.reports.drawer pos.reports.sales pos.reports.returns
+          pos.reports.view pos.reports.drawer pos.reports.sales pos.reports.returns pos.reports.summary pos.reports.register_summary
           pos.returns.receipted pos.returns.partial pos.returns.no_receipt
           pos.lines.sell_inactive
         ]

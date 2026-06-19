@@ -1,0 +1,41 @@
+<div class="ss-pos-report">
+  <header class="ss-pos-report__header">
+    <div>
+      <h1>Sales &amp; Revenue Summary</h1>
+      <% if @report %>
+        <p class="ss-pos-report__scope"><%= @report.scope.label %></p>
+        <p class="ss-pos-report__print-meta"><%= pos_store.name %> · Printed <%= l(Time.current, format: :long) %></p>
+      <% end %>
+    </div>
+    <% if @report %>
+      <div class="ss-pos-report__actions ss-pos-no-print">
+        <%= link_to "Print", "#", onclick: "window.print(); return false;", class: "ss-btn" %>
+        <%= link_to "Export CSV", summary_pos_reports_path(request.query_parameters.merge(format: :csv)), class: "ss-btn ss-btn-secondary" %>
+      </div>
+    <% end %>
+  </header>
+
+  <div class="ss-pos-no-print">
+    <%= render "filter", sessions: @sessions %>
+  </div>
+
+  <% if @scope.blank? && params.except(:controller, :action).present? %>
+    <p class="ss-hint ss-hint--warning ss-pos-no-print">Choose a valid filter and run the report.</p>
+  <% elsif @report %>
+    <div class="ss-pos-report__grid">
+      <%= render "revenue_summary", summary: @report.revenue_summary %>
+      <%= render "clerk_breakdown", rows: @report.by_clerk, totals: @report.revenue_summary %>
+    </div>
+
+    <div class="ss-pos-report__grid">
+      <%= render "payments_by_type", rows: @report.by_tender %>
+      <%= render "hourly_breakdown", rows: @report.by_hour %>
+    </div>
+
+    <% if @report.drawer.available %>
+      <%= render "drawer_reconciliation", drawer: @report.drawer %>
+    <% elsif !@scope.register_session? %>
+      <p class="ss-hint ss-pos-no-print">Drawer reconciliation is available when filtering by register session.</p>
+    <% end %>
+  <% end %>
+</div>

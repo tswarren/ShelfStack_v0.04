@@ -39,4 +39,27 @@ class Pos::DiscountCalculatorTest < ActiveSupport::TestCase
     lines = @transaction.pos_transaction_lines.order(:line_number)
     assert lines.all? { |line| line.transaction_discount_cents.zero? }
   end
+
+  test "does not apply transaction discount to return lines" do
+    @transaction.pos_transaction_lines.create!(
+      line_number: 3,
+      line_type: "variant",
+      product_variant: @variant_one,
+      product: @variant_one.product,
+      quantity: -1,
+      unit_price_cents: 1000,
+      line_discount_cents: 0,
+      extended_price_cents: 1000,
+      return_disposition: "return_to_stock"
+    )
+
+    Pos::DiscountCalculator.apply_transaction_discount!(@transaction.reload)
+
+    sale_lines = @transaction.pos_transaction_lines.reject(&:return_line?).sort_by(&:line_number)
+    return_line = @transaction.pos_transaction_lines.find(&:return_line?)
+
+    assert_equal [100, 200], sale_lines.map(&:transaction_discount_cents)
+    assert_equal 0, return_line.transaction_discount_cents
+    assert_equal 1000, return_line.extended_price_cents
+  end
 end

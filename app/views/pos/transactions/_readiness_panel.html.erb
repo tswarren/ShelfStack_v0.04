@@ -19,7 +19,10 @@
             <% when :focus_scan %>
               <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-transaction-edit#focusScan"><%= check.action_label %></button>
             <% when :fill_cash %>
-              <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-transaction-edit#fillCash"><%= check.action_label %></button>
+              <button type="button"
+                      class="ss-btn ss-btn-secondary ss-btn--small"
+                      data-action="pos-transaction-edit#fillTender"
+                      data-tender-type="cash"><%= check.action_label %></button>
             <% when :confirm_inactive %>
               <label class="ss-pos-confirm-inactive">
                 <%= check_box_tag :confirm_inactive_checkbox, 1, params[:confirm_inactive].present?, data: { action: "change->pos-transaction-edit#confirmInactive", pos_transaction_edit_target: "confirmInactive" } %>

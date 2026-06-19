@@ -4,6 +4,7 @@ module Pos
   class BaseController < ApplicationController
     before_action :require_active_session
     before_action :require_pos_access
+    around_action :use_store_time_zone
 
     layout "pos"
 
@@ -43,6 +44,10 @@ module Pos
       return nil if value.blank?
 
       (BigDecimal(value.to_s) * 100).round.to_i
+    end
+
+    def use_store_time_zone
+      Time.use_zone(Current.time_zone) { yield }
     end
 
     def record_audit!(event_name, auditable, details: {})

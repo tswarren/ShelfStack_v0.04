@@ -1,0 +1,25 @@
+<section class="ss-pos-panel ss-pos-report-section">
+  <h2 class="ss-pos-panel__title">By clerk</h2>
+  <div class="ss-pos-report-table-wrap">
+    <table class="ss-table ss-pos-report-table">
+      <thead>
+        <tr>
+          <th>Clerk</th>
+          <th class="ss-num">Transactions</th>
+          <th class="ss-num">Sales</th>
+          <th class="ss-num">Refunds</th>
+          <th class="ss-num">Adjustments</th>
+          <th class="ss-num">Discounts</th>
+          <th class="ss-num">Net Sales</th>
+          <th class="ss-num">Voids</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% rows.each do |row| %>
+          <%= render "metrics_row", label: row.clerk_name, metrics: row.metrics %>
+        <% end %>
+        <%= render "metrics_row", label: "Total", metrics: totals, emphasis: true %>
+      </tbody>
+    </table>
+  </div>
+</section>

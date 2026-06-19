@@ -1,0 +1,13 @@
+<section class="ss-pos-panel ss-pos-report-section">
+  <h2 class="ss-pos-panel__title">Payments by type</h2>
+  <table class="ss-table ss-pos-report-table ss-pos-report-table--summary">
+    <tbody>
+      <% rows.each do |row| %>
+        <tr class="<%= "ss-pos-report-table__total" if row.tender_type == "total" %>">
+          <th scope="row"><%= row.label %></th>
+          <td class="ss-pos-money-col"><%= pos_report_signed_money(row.amount_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

@@ -1,0 +1,15 @@
+<section class="report-section ss-pos-register-summary__box ss-pos-register-summary__box--wide">
+  <h2 class="ss-pos-register-summary__box-title">Drawer Reconciliation</h2>
+  <table class="ss-pos-register-summary__kv">
+    <tbody>
+      <tr><th scope="row">Starting bank</th><td><%= pos_money(drawer.starting_bank_cents) %></td></tr>
+      <tr><th scope="row">+ Cash sales</th><td><%= pos_money(drawer.cash_sales_cents) %></td></tr>
+      <tr><th scope="row">− Cash refunds</th><td><%= pos_report_signed_money(drawer.cash_refunds_cents) %></td></tr>
+      <tr><th scope="row">+ Paid in</th><td><%= pos_money(drawer.paid_in_cents) %></td></tr>
+      <tr><th scope="row">− Paid out</th><td><%= pos_report_signed_money(-drawer.paid_out_cents) %></td></tr>
+      <tr class="is-emphasis"><th scope="row">Expected cash</th><td><%= pos_money(drawer.expected_cash_cents) %></td></tr>
+      <tr><th scope="row">Actual cash</th><td><%= drawer.actual_cash_cents.present? ? pos_money(drawer.actual_cash_cents) : "—" %></td></tr>
+      <tr class="is-total"><th scope="row">Variance</th><td><%= drawer.variance_cents.present? ? pos_report_signed_money(drawer.variance_cents) : "—" %></td></tr>
+    </tbody>
+  </table>
+</section>

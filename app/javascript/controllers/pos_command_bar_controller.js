@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode"]
   static values = {
     routeUrl: String
   }
@@ -13,6 +13,13 @@ export default class extends Controller {
   toggleReturnMode() {
     const returnMode = this.returnToggleTarget.checked
     this.element.dataset.posLineEntryReturnModeValue = returnMode ? "true" : "false"
+    this.syncOpenRingReturnMode(returnMode)
+  }
+
+  syncOpenRingReturnMode(returnMode = this.returnToggleTarget.checked) {
+    if (!this.hasOpenRingReturnModeTarget) return
+
+    this.openRingReturnModeTarget.value = returnMode ? "1" : "0"
   }
 
   submit(event) {
@@ -68,6 +75,7 @@ export default class extends Controller {
   }
 
   showOpenRingPanel(payload) {
+    this.syncOpenRingReturnMode()
     this.openRingPanelTarget.hidden = false
     const priceField = this.openRingPanelTarget.querySelector("[name='unit_price']")
     if (priceField && payload.amount_cents) {

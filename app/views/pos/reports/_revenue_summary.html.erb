@@ -1,0 +1,14 @@
+<section class="ss-pos-panel ss-pos-report-section">
+  <h2 class="ss-pos-panel__title">Sales &amp; Revenue</h2>
+  <table class="ss-table ss-pos-report-table ss-pos-report-table--summary">
+    <tbody>
+      <tr><th scope="row">Gross Sales</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.gross_sales_cents) %></td></tr>
+      <tr><th scope="row">Returns/Refunds</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.refunds_cents) %></td></tr>
+      <tr><th scope="row">Discounts Applied</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.discounts_cents) %></td></tr>
+      <tr class="ss-pos-report-table__emphasis"><th scope="row">Net Sales</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.net_sales_cents) %></td></tr>
+      <tr><th scope="row">Taxes Collected</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.taxes_cents) %></td></tr>
+      <tr><th scope="row">Gift Cards</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.gift_card_cents) %></td></tr>
+      <tr class="ss-pos-report-table__total"><th scope="row">Total Sales</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.total_sales_cents) %></td></tr>
+    </tbody>
+  </table>
+</section>

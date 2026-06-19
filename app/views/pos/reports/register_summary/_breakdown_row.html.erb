@@ -1,0 +1,10 @@
+<tr class="<%= "is-total" if local_assigns[:total] %>">
+  <th scope="row"><%= row.label %></th>
+  <td class="ss-num"><%= row.transaction_count %></td>
+  <td class="ss-num"><%= row.units_sold %></td>
+  <td class="ss-num"><%= pos_report_signed_money(row.metrics.sales_cents) %></td>
+  <td class="ss-num"><%= pos_report_signed_money(row.metrics.refunds_cents) %></td>
+  <td class="ss-num"><%= pos_report_breakdown_discounts(row.metrics) %></td>
+  <td class="ss-num"><%= pos_report_signed_money(row.metrics.net_sales_cents) %></td>
+  <td class="ss-num"><%= row.void_count %></td>
+</tr>

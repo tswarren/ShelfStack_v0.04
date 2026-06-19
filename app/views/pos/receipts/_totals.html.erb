@@ -1,6 +1,6 @@
 <section class="ss-receipt-totals">
   <div class="ss-receipt-row">
-    <span>Subtotal</span>
+    <span>Items at list</span>
     <strong><%= pos_receipt_money(transaction.subtotal_cents) %></strong>
   </div>
 
@@ -18,6 +18,11 @@
       <strong>−<%= pos_receipt_money(transaction.discount_cents) %></strong>
     </div>
   <% end %>
+
+  <div class="ss-receipt-row">
+    <span>Subtotal</span>
+    <strong><%= pos_receipt_money(pos_receipt_discounted_subtotal_cents(transaction)) %></strong>
+  </div>
 
   <% pos_receipt_tax_subtotals(transaction).each do |tax| %>
     <div class="ss-receipt-row">

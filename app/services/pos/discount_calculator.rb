@@ -11,12 +11,12 @@ module Pos
     end
 
     def apply_transaction_discount!
-      lines = transaction.pos_transaction_lines.reject do |line|
-        line.return_line? && line.source_transaction_line_id.present?
-      end
+      clear_return_line_transaction_discounts!
+
+      lines = discountable_lines
       return if lines.empty?
 
-      discountable_total = lines.sum { |line| [line.unit_price_cents * line.quantity.abs - line.line_discount_cents, 0].max }
+      discountable_total = lines.sum { |line| discountable_line_base(line) }
       transaction_discount = transaction.discount_cents.to_i
       if transaction_discount.zero? || discountable_total.zero?
         lines.each { |line| line.update!(transaction_discount_cents: 0) }
@@ -25,7 +25,7 @@ module Pos
 
       remaining_discount = transaction_discount
       lines.each_with_index do |line, index|
-        line_base = [line.unit_price_cents * line.quantity.abs - line.line_discount_cents, 0].max
+        line_base = discountable_line_base(line)
         share = if index == lines.length - 1
                   remaining_discount
                 else
@@ -42,5 +42,21 @@ module Pos
     private
 
     attr_reader :transaction
+
+    def discountable_lines
+      transaction.pos_transaction_lines.reject(&:return_line?)
+    end
+
+    def discountable_line_base(line)
+      [line.unit_price_cents * line.quantity.abs - line.line_discount_cents, 0].max
+    end
+
+    def clear_return_line_transaction_discounts!
+      transaction.pos_transaction_lines.select(&:return_line?).each do |line|
+        next if line.transaction_discount_cents.zero?
+
+        line.update!(transaction_discount_cents: 0)
+      end
+    end
   end
 end

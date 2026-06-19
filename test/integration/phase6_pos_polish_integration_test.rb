@@ -44,6 +44,41 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     transaction.reload
     assert transaction.completed?
     assert_equal "sale", transaction.transaction_type
+
+    follow_redirect!
+    assert_response :success
+    assert_match(/View receipt/i, response.body)
+    assert_match(/New sale/i, response.body)
+    assert_match(/Void transaction/i, response.body)
+    refute_match(/Change due/i, response.body)
+  end
+
+  test "completed sale show page highlights change due when cash overpaid" do
+    post pos_transactions_path, params: { mode: "sale" }
+    transaction = PosTransaction.order(:id).last
+
+    post add_line_pos_transaction_path(transaction, mode: "sale"), params: {
+      product_variant_id: @variant.id,
+      quantity: 1,
+      entry_action: "sale"
+    }
+
+    transaction.reload
+    Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
+    total = transaction.total_cents
+
+    patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
+      confirm_inactive: 1,
+      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", (total + 500) / 100.0) }]
+    }
+    assert_redirected_to pos_transaction_path(transaction)
+
+    follow_redirect!
+    assert_response :success
+    assert_match(/Change due/i, response.body)
+    assert_match(/\$5\.00/, response.body)
+    assert_match(/View receipt/i, response.body)
+    assert_match(/New sale/i, response.body)
   end
 
   test "update line unit price on scanned cart line" do
@@ -69,6 +104,27 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal 1250, line.unit_price_cents
     assert_equal 1250, line.extended_price_cents
     assert_operator transaction.reload.total_cents, :>, 0
+  end
+
+  test "open ring line respects return mode checkbox" do
+    post pos_transactions_path, params: { mode: "return" }
+    transaction = PosTransaction.order(:id).last
+    sub_department = @variant.sub_department
+
+    post add_open_ring_line_pos_transaction_path(transaction), params: {
+      description: "Gift wrap return",
+      sub_department_id: sub_department.id,
+      unit_price: "5.00",
+      quantity: 1,
+      return_mode: "1"
+    }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+
+    line = transaction.reload.pos_transaction_lines.first
+    assert line.open_ring_line?
+    assert_equal(-1, line.quantity)
+    assert_equal "return_to_stock", line.return_disposition
+    assert_operator transaction.total_cents, :<, 0
   end
 
   test "line lookup presenter returns on hand quantity" do
@@ -104,6 +160,21 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to pos_transaction_path(return_txn)
     assert_equal "return", return_txn.reload.transaction_type
+
+    get pos_return_lookup_path, params: { transaction_number: sale.transaction_number }, as: :json
+    assert_response :success
+    body = response.parsed_body
+    line = body["lines"].sole
+    assert_equal 0, line["remaining_quantity"]
+    refute line["returnable"]
+
+    get pos_return_lookup_path, params: { transaction_number: return_txn.transaction_number }, as: :json
+    assert_response :success
+    body = response.parsed_body
+    assert_equal sale.transaction_number, body["transaction"]["transaction_number"]
+    line = body["lines"].sole
+    assert_equal 0, line["remaining_quantity"]
+    refute line["returnable"]
   end
 
   test "no receipt return requires supervisor authorization at complete" do
