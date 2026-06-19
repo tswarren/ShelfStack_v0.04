@@ -2,6 +2,8 @@
 
 module Orders
   class PurchaseRequestsController < BaseController
+    BuildableLineEntry = Data.define(:line, :remaining_quantity)
+
     before_action :set_purchase_request, only: %i[show edit update cancel build_purchase_order create_purchase_order]
     before_action -> { authorize!("orders.purchase_requests.view") }, only: %i[index show build_purchase_order]
     before_action -> { authorize!("orders.purchase_requests.create") }, only: %i[new create edit update]
@@ -35,7 +37,7 @@ module Orders
         remaining = line.remaining_quantity
         next if remaining <= 0
 
-        OpenStruct.new(line: line, remaining_quantity: remaining)
+        BuildableLineEntry.new(line: line, remaining_quantity: remaining)
       end
 
       if @buildable_lines.empty?
