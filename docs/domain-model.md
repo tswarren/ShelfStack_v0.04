@@ -255,40 +255,67 @@ Purchasing documents are sources; inventory changes only through `Inventory::Pos
 
 ---
 
-# 7. Future POS Domain
+# 7. POS Domain (Phase 6)
 
-The POS domain is not yet implemented in early phases, but the model prepares for it.
+Phase 6 implements point-of-sale using `pos_*` tables. Inventory changes only through `Inventory::Post`.
 
-## Expected Concepts
+## Core Concepts
 
-| Concept        | Meaning                                 |
-| -------------- | --------------------------------------- |
-| Sale           | POS transaction.                        |
-| Sale Line      | Product variant sold.                   |
-| Tender         | Payment method used.                    |
-| Tax Line       | Tax amount applied.                     |
-| Receipt        | Customer-facing sale document.          |
-| Return         | Reversal or return transaction.         |
-| Drawer Session | Register/cash drawer operating session. |
+| Concept              | Meaning                                              |
+| -------------------- | ---------------------------------------------------- |
+| Register Session     | Drawer/register period on a workstation (`business_date`). |
+| POS Transaction      | Sale, return, or exchange document (`pos_transactions`). |
+| Transaction Line     | Variant or open-ring line with signed quantity.      |
+| Tender               | Payment or refund row (`pos_tenders`).               |
+| Receipt              | Customer-facing document (`pos_receipts`).          |
+| Void                 | Reversal of a completed transaction (`pos_voids`).   |
+| Authorization        | Supervisor override record (`pos_authorizations`).   |
 
-## Design Direction
+## Transaction Types
 
-Future POS sale lines should snapshot important mutable data:
+`transaction_type` is stored on the header and derived at completion from signed merchandise lines (`variant`, `open_ring`):
 
-* Product variant SKU
-* Product name
-* Variant name
-* Price
-* Tax rate
-* Tax identifier
-* Department/category
-* Store/workstation/user context
+* all positive → `sale`
+* all negative → `return`
+* mixed → `exchange`
 
-This prevents later setup changes from rewriting transaction history.
+## Inventory Posting
+
+Completed transaction:
+
+```text
+inventory_postings.posting_type = pos_transaction
+inventory_postings.source = PosTransaction
+inventory_ledger_entries.movement_type = sold | customer_return
+```
+
+Completed void:
+
+```text
+inventory_postings.posting_type = pos_void
+inventory_postings.source = PosVoid
+(reversal_of_posting_id links to original transaction posting)
+```
+
+Only `standard_physical` lines with `product_variant_id` post. Open-ring lines without a variant do not post.
+
+Do not store `inventory_posting_id` on `pos_transactions`.
+
+## Snapshotting
+
+POS lines snapshot SKU, name, price, tax category, tax rate, and classification context at completion so later catalog or tax setup changes do not rewrite history.
+
+## Related Documents
+
+```text
+docs/roadmap/phase-6-pos-foundation.md
+docs/specifications/phase-6-pos-foundation-spec.md
+docs/specifications/phase-6-data-model.md
+```
 
 ---
 
-# 7. Conceptual Flow
+# 8. Conceptual Flow
 
 ShelfStack’s core data flow can be summarized as:
 

@@ -1,0 +1,28 @@
+<section class="ss-pos-panel ss-pos-transaction-show__summary">
+  <h2 class="ss-pos-panel__title">Summary</h2>
+  <dl class="ss-pos-totals-list">
+    <div><dt>Subtotal</dt><dd><%= pos_money(transaction.subtotal_cents) %></dd></div>
+    <% savings = pos_receipt_savings_total(transaction) %>
+    <% if savings.positive? %>
+      <div><dt>Discounts</dt><dd>−<%= pos_money(savings) %></dd></div>
+    <% end %>
+    <% pos_receipt_tax_subtotals(transaction).each do |tax| %>
+      <div><dt>Tax <%= tax.label %></dt><dd><%= pos_money(tax.tax_cents) %></dd></div>
+    <% end %>
+    <% if pos_receipt_tax_subtotals(transaction).empty? && transaction.tax_cents.to_i.nonzero? %>
+      <div><dt>Tax</dt><dd><%= pos_money(transaction.tax_cents) %></dd></div>
+    <% end %>
+    <% if transaction.rounding_cents.to_i.nonzero? %>
+      <div><dt>Rounding</dt><dd><%= pos_money(transaction.rounding_cents) %></dd></div>
+    <% end %>
+    <div class="ss-pos-totals-list__total"><dt>Total due</dt><dd><%= pos_money(transaction.total_cents) %></dd></div>
+    <% transaction.pos_tenders.reject(&:reverses_tender_id).each do |tender| %>
+      <div><dt><%= pos_tender_receipt_label(tender) %></dt><dd><%= pos_money(pos_tender_receipt_amount_cents(tender)) %></dd></div>
+      <% if tender.tender_type == "cash" && tender.amount_cents != pos_tender_receipt_amount_cents(tender) %>
+        <div><dt>Cash applied</dt><dd><%= pos_money(tender.amount_cents) %></dd></div>
+      <% end %>
+    <% end %>
+    <div><dt>Items sold</dt><dd><%= pos_transaction_items_sold_count(transaction) %></dd></div>
+    <div><dt>Items returned</dt><dd><%= pos_transaction_items_returned_count(transaction) %></dd></div>
+  </dl>
+</section>

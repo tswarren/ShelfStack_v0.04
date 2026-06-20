@@ -1,0 +1,23 @@
+<section class="report-section ss-pos-register-summary__table-section <%= "ss-pos-register-summary__table-section--hourly" if local_assigns[:compact] %>">
+  <h2 class="ss-pos-register-summary__box-title"><%= title %></h2>
+  <table class="ss-pos-register-summary__table">
+    <thead>
+      <tr>
+        <th><%= title == "By hour" ? "Hour" : "Clerk" %></th>
+        <th class="ss-num">Txns</th>
+        <th class="ss-num">Units</th>
+        <th class="ss-num">Gross</th>
+        <th class="ss-num">Returns</th>
+        <th class="ss-num">Discounts</th>
+        <th class="ss-num">Net</th>
+        <th class="ss-num">Voids</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.each do |row| %>
+        <%= render "pos/reports/register_summary/breakdown_row", row: row %>
+      <% end %>
+      <%= render "pos/reports/register_summary/breakdown_row", row: total_row, total: true %>
+    </tbody>
+  </table>
+</section>

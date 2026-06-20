@@ -1,0 +1,9 @@
+<div class="ss-pos-home">
+  <h1 class="ss-pos-home__title">Point of Sale</h1>
+
+  <% if @register_session %>
+    <%= render "open_dashboard" %>
+  <% else %>
+    <%= render "closed_dashboard" %>
+  <% end %>
+</div>

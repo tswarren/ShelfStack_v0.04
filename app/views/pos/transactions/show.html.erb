@@ -1,0 +1,71 @@
+<div class="ss-pos-transaction-show" data-controller="pos-void" data-pos-void-transaction-id-value="<%= @transaction.id %>">
+  <% if @transaction.completed? %>
+    <header class="ss-pos-transaction-show__header">
+      <%= render "completion_header", transaction: @transaction %>
+    </header>
+
+    <%= render "completion_change", transaction: @transaction %>
+    <%= render "completion_actions", transaction: @transaction %>
+    <%= render "completion_summary", transaction: @transaction %>
+    <%= render "completion_lines", transaction: @transaction %>
+
+    <% if !@transaction.voided? %>
+      <div class="ss-pos-confirmation__void">
+        <button type="button" class="ss-btn ss-btn--danger ss-btn--small" data-action="pos-void#open">Void transaction</button>
+      </div>
+    <% end %>
+  <% else %>
+    <header class="ss-pos-transaction-show__header">
+      <div class="ss-pos-transaction-show__heading">
+        <h1 class="ss-pos-transaction-show__title">Transaction #<%= @transaction.id %></h1>
+        <p class="ss-pos-transaction-show__meta">
+          Status: <%= @transaction.status.humanize %>
+          <% if @transaction.transaction_type.present? %>
+            · <%= @transaction.transaction_type.humanize %>
+          <% end %>
+        </p>
+      </div>
+    </header>
+
+    <p>Status: <%= @transaction.status %></p>
+    <% if @transaction.transaction_type.present? %>
+      <p>Type: <%= @transaction.transaction_type %></p>
+    <% end %>
+
+    <dl class="ss-pos-totals-list">
+      <div><dt>Subtotal</dt><dd><%= pos_money(@transaction.subtotal_cents) %></dd></div>
+      <% if @transaction.discount_cents.to_i.positive? %>
+        <div><dt>Order discount</dt><dd>−<%= pos_money(@transaction.discount_cents) %></dd></div>
+      <% end %>
+      <%= render "pos/transactions/tax_totals", transaction: @transaction %>
+      <div class="ss-pos-totals-list__total"><dt>Total</dt><dd><%= pos_money(@transaction.total_cents) %></dd></div>
+    </dl>
+
+    <%= render "completion_lines", transaction: @transaction %>
+  <% end %>
+
+  <% if @transaction.completed? && !@transaction.voided? %>
+    <div class="ss-pos-modal" data-pos-void-target="modal" hidden>
+      <div class="ss-pos-modal__backdrop" data-action="click->pos-void#close"></div>
+      <div class="ss-pos-modal__panel">
+        <h2>Void transaction <%= @transaction.transaction_number %></h2>
+        <%= form_with url: void_pos_transaction_path(@transaction), method: :patch, data: { pos_void_target: "form", action: "submit->pos-void#submit" } do %>
+          <%= hidden_field_tag :pos_authorization_id, nil, data: { pos_void_target: "authorizationId" } %>
+          <div class="ss-field">
+            <%= label_tag :reason_code, "Reason" %>
+            <%= select_tag :reason_code, options_for_select(pos_void_reason_options), include_blank: "Select a reason", required: true, data: { pos_void_target: "reasonField" } %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :notes, "Notes" %>
+            <%= text_area_tag :notes, nil, rows: 3, placeholder: "Optional notes", data: { pos_void_target: "notesField" } %>
+          </div>
+          <p class="ss-hint">This will reverse inventory and tenders. Original receipt remains in history.</p>
+          <div class="ss-pos-modal__actions">
+            <%= submit_tag "Void transaction", class: "ss-btn ss-btn--danger" %>
+            <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-void#close">Cancel</button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

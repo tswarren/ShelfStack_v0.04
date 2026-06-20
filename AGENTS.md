@@ -109,6 +109,15 @@ docs/specifications/phase-5-data-model.md
 docs/specifications/phase-5-test-plan.md
 ```
 
+## Phase 6 Documents
+
+```text
+docs/roadmap/phase-6-pos-foundation.md
+docs/specifications/phase-6-pos-foundation-spec.md
+docs/specifications/phase-6-data-model.md
+docs/specifications/phase-6-test-plan.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -139,7 +148,11 @@ Phase 4 was completed on 2026-06-16. See [docs/implementation/phase-4-completion
 
 Phase 5 was completed on 2026-06-10. See [docs/implementation/phase-5-completion.md](docs/implementation/phase-5-completion.md).
 
-Do not jump ahead to POS or reporting tables unless the user explicitly asks to design that phase.
+## Phase 6: POS Foundation — **Complete**
+
+Phase 6 was completed on 2026-06-10. See [docs/implementation/phase-6-completion.md](docs/implementation/phase-6-completion.md).
+
+Do not jump ahead to gift-card/store-credit ledgers, offline POS, or full GL unless explicitly requested.
 
 ---
 
@@ -164,6 +177,7 @@ Use services for:
 * Metadata parsing
 * Inventory posting, eligibility, cost estimation, and balance updates
 * Purchasing: returnability, vendor cost, sourcing lookup, receipt and RTV posting, moving average cost
+* POS: line lookup, transaction type derivation, return quantity validation, tax/discount/tender calculators, complete and void workflows, register session lifecycle, inventory posting via `pos_transaction` / `pos_void`
 
 ## Centralize business rules
 
@@ -471,6 +485,25 @@ product_variants.sub_department_id → sub_departments.id
 * Receipt cost updates moving average on `inventory_balances`; vendor returns post via `vendor_return`.
 * TBO (purchase requests) does not affect inventory.
 
+## Phase 6 Rules
+
+* POS uses `pos_*` tables; inventory only via `Inventory::Post`.
+* Completed transaction: one posting with `posting_type: pos_transaction`, `source: PosTransaction`; ledger lines use `movement_type: sold` or `customer_return`.
+* Only `inventory_behavior = standard_physical` lines with `product_variant_id` post; open-ring without variant does not post.
+* Do not store `inventory_posting_id` on `pos_transactions`.
+* `pos_sale` and `customer_return` posting types are reserved on the enum; do not use for new POS postings.
+* Completed void: `pos_voids` source, `posting_type: pos_void`, reversal FKs; reversing `pos_tenders`; original transaction immutable.
+* `transaction_type` derived at completion from variant/open_ring lines only; draft type may be provisional.
+* `receipt_number == transaction_number` in Phase 6; separate columns.
+* Transaction number assigned at completion; sequence per workstation.
+* Suspended transactions may complete under a later register session and `business_date`.
+* `ClassificationDefaultsResolver` + `TaxRateLookup` use transaction `business_date`; missing tax/subdepartment blocks completion.
+* Inactive sell: warn + confirm; $0 allowed with price prompt.
+* `Pos::ReturnQuantityValidator`: cumulative returns ≤ original sold qty via `source_transaction_line_id`.
+* `Pos::TenderValidator` rejects `gift_card` and `store_credit` in Phase 6.
+* Lookup ranking: variant SKU → product SKU → catalog identifier.
+* Gift-card and store-credit **ledgers** deferred; store credit is a future tender on normal return/exchange transactions.
+
 ---
 
 # Testing Expectations
@@ -538,6 +571,22 @@ Use tests for:
 * Adjustment draft/post/cancel workflows
 * Store-scoped inventory authorization
 * Balance rebuild and integrity checks
+
+### Phase 5
+
+* Returnability precedence and RTV posting
+* Receipt posts only accepted qty; moving average cost
+* TBO does not affect inventory
+
+### Phase 6
+
+* Lookup ranking and transaction type derivation
+* Return quantity validation across partial returns
+* Inventory posting eligibility and void reversal FKs
+* Register session business_date and suspended completion
+* Tender validation and reversing tenders on void
+* Workstation-scoped transaction numbering
+* Full `pos.*` permission enforcement
 
 ---
 

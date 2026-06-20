@@ -1,0 +1,14 @@
+<section class="ss-pos-panel ss-pos-report-section">
+  <h2 class="ss-pos-panel__title">Drawer reconciliation</h2>
+  <table class="ss-table ss-pos-report-table ss-pos-report-table--summary">
+    <tbody>
+      <tr><th scope="row">Starting bank</th><td class="ss-pos-money-col"><%= pos_money(drawer.starting_bank_cents) %></td></tr>
+      <tr><th scope="row">+ Cash sales</th><td class="ss-pos-money-col"><%= pos_money(drawer.cash_sales_cents) %></td></tr>
+      <tr><th scope="row">+ Paid in</th><td class="ss-pos-money-col"><%= pos_money(drawer.paid_in_cents) %></td></tr>
+      <tr><th scope="row">− Paid out</th><td class="ss-pos-money-col">−<%= pos_money(drawer.paid_out_cents) %></td></tr>
+      <tr class="ss-pos-report-table__emphasis"><th scope="row">Expected cash</th><td class="ss-pos-money-col"><%= pos_money(drawer.expected_cash_cents) %></td></tr>
+      <tr><th scope="row">Actual cash</th><td class="ss-pos-money-col"><%= drawer.actual_cash_cents.present? ? pos_money(drawer.actual_cash_cents) : "—" %></td></tr>
+      <tr class="ss-pos-report-table__total"><th scope="row">Variance</th><td class="ss-pos-money-col"><%= drawer.variance_cents.present? ? pos_report_signed_money(drawer.variance_cents) : "—" %></td></tr>
+    </tbody>
+  </table>
+</section>

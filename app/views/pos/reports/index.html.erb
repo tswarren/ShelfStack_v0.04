@@ -1,0 +1,8 @@
+<h1>POS Reports</h1>
+<ul>
+  <li><%= link_to "Sales & register summary (print)", register_summary_pos_reports_path(register_session_id: current_register_session&.id) %></li>
+  <li><%= link_to "Sales & revenue summary", summary_pos_reports_path %></li>
+  <li><%= link_to "Sales", sales_pos_reports_path %></li>
+  <li><%= link_to "Returns", returns_pos_reports_path %></li>
+  <li><%= link_to "Drawer sessions", drawer_pos_reports_path %></li>
+</ul>

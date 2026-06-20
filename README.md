@@ -10,7 +10,7 @@ ShelfStack separates descriptive catalog metadata from store-facing products and
 
 ## Project Status
 
-ShelfStack has **complete Phase 1–5 implementations** and complete Phase 1–5 **documentation**. Active development priority is **Phase 6** (POS, per roadmap).
+ShelfStack has **complete Phase 1–5 implementations** and complete Phase 1–5 **documentation**. **Phase 6** (POS foundation) is **complete**. See [Phase 6 completion record](docs/implementation/phase-6-completion.md).
 
 | Phase         | Focus                                                                                                                                         | Documentation | Implementation |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- |
@@ -19,9 +19,10 @@ ShelfStack has **complete Phase 1–5 implementations** and complete Phase 1–5
 | Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      | **Complete**   |
 | Phase 4       | Inventory foundation: ledger, balances, adjustments, valuation, read surfaces, and integrity tooling.                                          | Complete      | **Complete**   |
 | Phase 5       | Purchasing and receiving: vendor sourcing, TBO, purchase orders, receiving, moving average cost, and returns to vendor.                        | Complete      | **Complete**   |
-| Future phases | POS, reporting, and accounting workflows.                                                                                                        | Roadmap only  | Not started    |
+| Phase 6       | POS foundation: register sessions, transactions, tax/tenders, inventory posting, void reversals, receipts, and reports.                       | Complete      | **Complete**   |
+| Future phases | Advanced store operations, reporting, and accounting.                                                                                          | Roadmap only  | Not started    |
 
-Completion records: [Phase 1](docs/implementation/phase-1-completion.md) · [Phase 2](docs/implementation/phase-2-completion.md) · [Phase 3](docs/implementation/phase-3-completion.md) · [Phase 4](docs/implementation/phase-4-completion.md) · [Phase 5](docs/implementation/phase-5-completion.md).
+Completion records: [Phase 1](docs/implementation/phase-1-completion.md) · [Phase 2](docs/implementation/phase-2-completion.md) · [Phase 3](docs/implementation/phase-3-completion.md) · [Phase 4](docs/implementation/phase-4-completion.md) · [Phase 5](docs/implementation/phase-5-completion.md) · [Phase 6](docs/implementation/phase-6-completion.md).
 
 ---
 
@@ -143,9 +144,9 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 
 Current design and implementation focus:
 
-1. **Phase 6** — point of sale (next, per roadmap)
+1. **Phase 7+** — advanced store operations and reporting (per roadmap)
 
-Operational catalog work uses **Items** (`/items`); admin reference data uses **Setup** (`/setup`); store inventory uses **Inventory** (`/inventory`); purchasing uses **Orders** (`/orders`).
+Operational catalog work uses **Items** (`/items`); admin reference data uses **Setup** (`/setup`); store inventory uses **Inventory** (`/inventory`); purchasing uses **Orders** (`/orders`); point of sale uses **POS** (`/pos`).
 
 ---
 

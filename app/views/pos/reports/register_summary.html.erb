@@ -1,0 +1,60 @@
+<div class="report-print ss-pos-register-summary">
+  <header class="ss-pos-register-summary__header">
+    <div class="ss-pos-register-summary__title-row">
+      <h1>Sales &amp; Register Summary</h1>
+      <% if @report %>
+        <span class="ss-pos-register-summary__printed">Printed <%= pos_store_local_time(Time.current) %></span>
+      <% end %>
+    </div>
+    <% if @report %>
+      <p class="ss-pos-register-summary__subtitle"><%= pos_register_summary_subtitle(@report) %></p>
+    <% end %>
+  </header>
+
+  <div class="ss-pos-no-print ss-pos-register-summary__filter">
+    <%= form_with url: register_summary_pos_reports_path, method: :get, class: "ss-form" do %>
+      <div class="ss-field">
+        <%= label_tag :register_session_id, "Register session" %>
+        <%= select_tag :register_session_id,
+                       options_for_select(pos_report_session_options(@sessions), params[:register_session_id] || current_register_session&.id),
+                       include_blank: "Select a session" %>
+      </div>
+      <%= submit_tag "Run report", class: "ss-btn" %>
+      <% if @report %>
+        <%= link_to "Print", "#", onclick: "window.print(); return false;", class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @scope.blank? && params[:register_session_id].present? %>
+    <p class="ss-hint ss-hint--warning ss-pos-no-print">Choose a valid register session.</p>
+  <% elsif @report %>
+    <div class="report-grid ss-pos-register-summary__top-grid">
+      <%= render "pos/reports/register_summary/revenue", revenue: @report.revenue %>
+      <%= render "pos/reports/register_summary/transaction_mix", rows: @report.transaction_mix %>
+      <%= render "pos/reports/register_summary/payments", rows: @report.payments %>
+    </div>
+
+    <div class="report-grid ss-pos-register-summary__middle-grid">
+      <%= render "pos/reports/register_summary/taxes", rows: @report.taxes %>
+      <%= render "pos/reports/register_summary/drawer", drawer: @report.drawer %>
+    </div>
+
+    <div class="ss-pos-register-summary__breakdown-grid">
+      <%= render "pos/reports/register_summary/breakdown",
+                 title: "By clerk",
+                 rows: @report.by_clerk,
+                 total_row: @report.breakdown_total %>
+
+      <%= render "pos/reports/register_summary/breakdown",
+                 title: "By hour",
+                 rows: @report.by_hour.reject { |row| row.label == "Total" },
+                 total_row: @report.breakdown_total,
+                 compact: true %>
+    </div>
+
+    <footer class="report-section ss-pos-register-summary__exceptions">
+      <strong>Exceptions:</strong> <%= pos_report_exceptions_summary(@report.exceptions) %>
+    </footer>
+  <% end %>
+</div>

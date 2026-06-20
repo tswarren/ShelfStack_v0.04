@@ -162,6 +162,65 @@ UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_pas
 
 ---
 
+## POS Register Operations (Phase 6.1)
+
+### Open register
+
+1. Log in with POS access (`pos.access`) on a register workstation.
+2. Go to **POS** (`/pos`).
+3. If no session is open, choose **Open register** and enter business date and opening cash.
+4. The banner shows register status, business date, and workstation.
+
+### Sale
+
+1. From the register dashboard, start **New sale**.
+2. Scan or type a SKU in the line entry field; press Enter or pick from ambiguous matches.
+3. Review totals in the sidebar; use **Fill cash** to set the cash tender to the remaining balance.
+4. **Complete** the transaction (register session must be open).
+5. Open **View receipt** from the completed transaction and use **Print** for 80mm thermal output.
+
+### Return
+
+1. Start **New return** from the dashboard.
+2. **Receipted:** enter receipt number, choose lines and quantities, set disposition.
+3. **No-receipt:** scan items into the draft cart (any cashier with line-add permission). Supervisor authorization is required at **complete**; `pos.returns.no_receipt` no longer blocks adding draft lines.
+4. Add refund tenders (negative totals use negative cash tender amounts for refunds).
+5. Complete the return transaction.
+
+### Suspend and resume
+
+- **Suspend** saves the draft on the workstation suspended list.
+- **Resume** returns it to editable draft (other cashiers need `pos.transactions.resume.other_cashier`).
+
+### Void
+
+Completed transactions can be voided from the transaction detail screen (`pos.transactions.void`). Void reverses inventory via `pos_void` posting.
+
+### Close register
+
+1. Open the register session page from the banner or dashboard.
+2. Review session activity (cash movements and completed transactions).
+3. Expected closing cash is precomputed from opening cash, paid in/out, and net cash tenders.
+4. Enter counted cash and **Close register**.
+5. **Force close** requires supervisor authorization (`pos.register_sessions.force_close` plus manager PIN grant).
+
+### Reports
+
+- **Drawer report:** session totals and recent sessions (`/pos/reports/drawer`).
+- **Sales / returns:** list views with CSV export (`pos.reports.export`).
+
+### Default POS roles (seeded)
+
+| Role key | Purpose |
+| -------- | ------- |
+| `pos_cashier` | Standard sale, receipted returns, close register |
+| `pos_lead` | Open-ring, no-receipt returns, resume other cashier |
+| `pos_manager` | Full POS permissions including authorizations and export |
+
+Assign roles in Setup → Users. Managers granting authorizations need `pos.authorizations.grant` and a PIN.
+
+---
+
 ## Related Documents
 
 - [../implementation/phase-1-completion.md](../implementation/phase-1-completion.md)

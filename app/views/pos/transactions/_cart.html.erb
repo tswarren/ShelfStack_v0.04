@@ -1,0 +1,25 @@
+<section class="ss-pos-panel ss-pos-cart">
+  <h2 class="ss-pos-panel__title">Cart</h2>
+  <% if transaction.pos_transaction_lines.empty? %>
+    <p class="ss-hint">Scan an item to begin.</p>
+  <% else %>
+    <table class="ss-table ss-pos-table ss-pos-cart-table">
+      <thead>
+        <tr>
+          <th>Qty</th>
+          <th>Item</th>
+          <th class="ss-pos-money-col">Unit</th>
+          <th class="ss-pos-money-col">Discount</th>
+          <th class="ss-pos-money-col">Line total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% transaction.pos_transaction_lines.order(:line_number).each do |line| %>
+          <%= render "pos/transactions/cart_line", transaction: transaction, line: line %>
+          <%= render "pos/transactions/cart_line_edit", transaction: transaction, line: line %>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</section>

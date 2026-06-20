@@ -1,0 +1,40 @@
+<%= render "pos/transactions/register_header", transaction: @transaction %>
+
+<div id="pos_flash">
+  <%= render "pos/transactions/flash" %>
+</div>
+
+<% unless current_register_session %>
+  <div class="ss-pos-alert">No register session is open. Complete will be blocked until you <%= link_to "open the register", new_pos_register_session_path %>.</div>
+<% end %>
+
+<% if @complete_error.present? %>
+  <div class="ss-pos-alert ss-pos-alert--error"><%= @complete_error %></div>
+<% end %>
+
+<div class="ss-pos-layout"
+     data-controller="pos-transaction-edit pos-cart-line"
+     data-pos-transaction-edit-readiness-url-value="<%= readiness_preview_pos_transaction_path(@transaction) %>"
+     data-pos-transaction-edit-transaction-id-value="<%= @transaction.id %>"
+     data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange">
+  <div class="ss-pos-layout__main">
+    <%= render "pos/transactions/command_bar",
+          transaction: @transaction,
+          sub_departments: @sub_departments %>
+    <div id="pos_cart">
+      <%= render "pos/transactions/cart", transaction: @transaction %>
+    </div>
+    <div id="pos_readiness">
+      <%= render "pos/transactions/readiness_panel", transaction: @transaction, readiness: @readiness %>
+    </div>
+  </div>
+
+  <aside class="ss-pos-layout__sidebar">
+    <%= render "pos/transactions/sidebar",
+          transaction: @transaction,
+          readiness: @readiness,
+          inactive_warnings: @inactive_warnings %>
+  </aside>
+</div>
+
+<div id="pos_workspace_events" hidden aria-hidden="true"></div>

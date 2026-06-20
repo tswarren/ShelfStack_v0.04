@@ -2007,3 +2007,1469 @@ h2 {
   margin-top: 1.5rem;
   color: #5c5347;
 }
+
+/* POS register workspace */
+.ss-pos-body .ss-main {
+  max-width: none;
+}
+
+.ss-pos-main {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.ss-pos-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1.5rem;
+  background: #2c2419;
+  color: #faf8f5;
+}
+
+.ss-pos-banner__primary,
+.ss-pos-banner__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ss-pos-banner__link {
+  color: #faf8f5;
+  text-decoration: underline;
+}
+
+.ss-pos-dashboard,
+.ss-pos-home,
+.ss-pos-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.ss-pos-home__title {
+  margin: 0;
+}
+
+.ss-pos-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-action-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ss-pos-action-grid__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.ss-pos-action-grid form {
+  display: contents;
+}
+
+.ss-pos-action-grid form .ss-pos-action-grid__btn {
+  width: 100%;
+}
+
+.ss-pos-home__footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.ss-pos-home__footer--closed {
+  grid-template-columns: 1fr;
+}
+
+.ss-pos-home__footer-column {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.ss-pos-home__queues {
+  min-width: 0;
+}
+
+.ss-pos-home__queue-panel {
+  margin-bottom: 0;
+}
+
+.ss-pos-home__session-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.ss-pos-home__empty {
+  color: #5c5348;
+  font-style: italic;
+  text-align: center;
+}
+
+.ss-pos-table--compact th,
+.ss-pos-table--compact td {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .ss-pos-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ss-pos-action-grid--three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ss-pos-home__footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .ss-pos-action-grid,
+  .ss-pos-action-grid--three {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ss-pos-layout {
+  grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+}
+
+.ss-pos-layout__main {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.ss-pos-layout__sidebar {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+.ss-pos-panel {
+  padding: 1rem;
+  border: 1px solid #e2ddd4;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.ss-pos-panel--highlight {
+  background: #f5f9f2;
+  border-color: #c8dcc0;
+}
+
+.ss-pos-panel--warning {
+  background: #fff8eb;
+  border-color: #ecd9a8;
+}
+
+.ss-pos-stats,
+.ss-pos-totals-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ss-pos-stats div,
+.ss-pos-totals-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ss-pos-totals-list__total {
+  font-weight: 700;
+  border-top: 1px solid #e2ddd4;
+  padding-top: 0.5rem;
+}
+
+.ss-pos-scan-row,
+.ss-pos-actions,
+.ss-pos-tender-actions,
+.ss-pos-secondary-actions,
+.ss-pos-auth-actions,
+.ss-pos-open-ring-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ss-pos-transaction-show__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-transaction-show__heading {
+  min-width: 0;
+}
+
+.ss-pos-transaction-show__title {
+  margin: 0 0 0.25rem;
+}
+
+.ss-pos-transaction-show__meta {
+  margin: 0;
+  color: #5c5348;
+}
+
+.ss-pos-transaction-show__change,
+.ss-pos-confirmation__change {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid #2f6b2f;
+  border-radius: 0.5rem;
+  background: #f5f9f2;
+}
+
+.ss-pos-transaction-show__change-label,
+.ss-pos-confirmation__change-label {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ss-pos-transaction-show__change-amount,
+.ss-pos-confirmation__change-amount {
+  font-size: 1.75rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-confirmation__void {
+  margin-top: 1rem;
+}
+
+.ss-receipt-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.ss-receipt-actions__print {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ss-receipt-actions__secondary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ss-receipt-actions__secondary .ss-btn,
+.ss-receipt-actions__secondary form {
+  width: 100%;
+}
+
+.ss-receipt-actions__secondary form .ss-btn {
+  width: 100%;
+}
+
+@media (max-width: 540px) {
+  .ss-receipt-actions__secondary {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ss-pos-transaction-show__summary,
+.ss-pos-transaction-show__lines {
+  margin-bottom: 1rem;
+}
+
+.ss-pos-transaction-show__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-transaction-show__back {
+  margin: 1rem 0 0;
+}
+
+.ss-pos-report__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-report__header h1 {
+  margin: 0;
+}
+
+.ss-pos-report__scope {
+  margin: 0 0 0.25rem;
+  color: #5c5348;
+}
+
+.ss-pos-report__print-meta {
+  display: none;
+  margin: 0;
+  color: #5c5348;
+  font-size: 0.9rem;
+}
+
+.ss-pos-report__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ss-pos-report__grid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 960px) {
+  .ss-pos-report__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ss-pos-report-filter__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border: 0;
+  padding: 0;
+}
+
+.ss-pos-report-filter__types label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ss-pos-report-filter__fields {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-report-filter__range {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.ss-pos-report-table-wrap {
+  overflow-x: auto;
+}
+
+.ss-pos-report-table th,
+.ss-pos-report-table td {
+  white-space: nowrap;
+}
+
+.ss-pos-report-table .ss-num,
+.ss-pos-report-table .ss-pos-money-col,
+.ss-pos-report-table th.ss-num,
+.ss-pos-report-table td.ss-pos-money-col {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-report-table--summary td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-report-table--summary th {
+  width: 60%;
+  text-align: left;
+}
+
+.ss-pos-report-table__emphasis th,
+.ss-pos-report-table__emphasis td {
+  font-weight: 700;
+}
+
+.ss-pos-report-table__total th,
+.ss-pos-report-table__total td {
+  font-weight: 700;
+  border-top: 2px solid #c8c0b4;
+}
+
+.ss-pos-report-money {
+  display: inline-block;
+  min-width: 4.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-report-money.is-negative {
+  color: #8a2f2f;
+}
+
+.report-print.ss-pos-register-summary {
+  max-width: 8.5in;
+}
+
+.ss-pos-register-summary__header {
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-register-summary__title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ss-pos-register-summary__title-row h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.ss-pos-register-summary__printed {
+  color: #5c5348;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.ss-pos-register-summary__subtitle {
+  margin: 0.25rem 0 0;
+  color: #5c5348;
+  font-size: 0.875rem;
+}
+
+.ss-pos-register-summary__filter {
+  margin-bottom: 1rem;
+}
+
+.ss-pos-register-summary__filter .ss-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.report-grid.ss-pos-register-summary__top-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.report-grid.ss-pos-register-summary__middle-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-register-summary__breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ss-pos-register-summary__box {
+  border: 1px solid #c8c0b4;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.625rem;
+  background: #fff;
+}
+
+.ss-pos-register-summary__box-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ss-pos-register-summary__kv {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.ss-pos-register-summary__kv th,
+.ss-pos-register-summary__kv td {
+  padding: 0.15rem 0;
+  vertical-align: top;
+}
+
+.ss-pos-register-summary__kv th {
+  font-weight: 500;
+  text-align: left;
+  padding-right: 0.5rem;
+}
+
+.ss-pos-register-summary__kv td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ss-pos-register-summary__kv tr.is-emphasis th,
+.ss-pos-register-summary__kv tr.is-emphasis td {
+  font-weight: 700;
+}
+
+.ss-pos-register-summary__kv tr.is-total th,
+.ss-pos-register-summary__kv tr.is-total td {
+  font-weight: 700;
+  border-top: 1px solid #c8c0b4;
+  padding-top: 0.25rem;
+}
+
+.ss-pos-register-summary__table-section {
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-register-summary__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.ss-pos-register-summary__table th,
+.ss-pos-register-summary__table td {
+  padding: 0.2rem 0.35rem;
+  border-bottom: 1px solid #e2ddd4;
+  white-space: nowrap;
+}
+
+.ss-pos-register-summary__table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid #c8c0b4;
+}
+
+.ss-pos-register-summary__table th:first-child,
+.ss-pos-register-summary__table td:first-child {
+  text-align: left;
+}
+
+.ss-pos-register-summary__table .ss-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-register-summary__table tr.is-total th,
+.ss-pos-register-summary__table tr.is-total td {
+  font-weight: 700;
+  border-top: 2px solid #c8c0b4;
+  border-bottom: 0;
+}
+
+.ss-pos-register-summary__exceptions {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #c8c0b4;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 960px) {
+  .report-grid.ss-pos-register-summary__top-grid,
+  .report-grid.ss-pos-register-summary__middle-grid,
+  .ss-pos-register-summary__breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ss-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ss-pos-tender-field__input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ss-pos-tender-field__input .ss-pos-money-input,
+.ss-pos-tender-field__input input[type="number"] {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.ss-pos-discount-field__row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ss-pos-discount-field__row .ss-pos-discount-input {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.ss-pos-scan-input {
+  min-width: 14rem;
+  flex: 1 1 14rem;
+}
+
+.ss-pos-scan-input--primary {
+  font-size: 1.25rem;
+  padding: 0.75rem 1rem;
+  min-width: 20rem;
+}
+
+.ss-pos-scan-row--primary {
+  align-items: stretch;
+}
+
+.ss-pos-qty-input {
+  width: 5rem;
+}
+
+.ss-pos-money-input {
+  width: 7rem;
+}
+
+.ss-pos-table .ss-pos-inline-form {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ss-pos-choices,
+.ss-pos-return-line {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.ss-pos-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  background: #eef4fb;
+  border: 1px solid #c5d9ef;
+}
+
+.ss-pos-alert--error {
+  background: #fdeeee;
+  border-color: #efb4b4;
+}
+
+.ss-pos-alert--warning {
+  background: #fff8eb;
+  border-color: #ecd9a8;
+}
+
+.ss-pos-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.ss-pos-modal[hidden] {
+  display: none;
+}
+
+.ss-pos-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.ss-pos-modal__panel {
+  position: relative;
+  max-width: 24rem;
+  margin: 10vh auto;
+  padding: 1.25rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ss-pos-line-tax {
+  min-width: 5rem;
+}
+
+.ss-pos-tax-indicator {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ss-pos-tax-amount {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.ss-pos-receipt-tenders {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #d8d2c8;
+}
+
+.ss-pos-receipt-tenders h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.ss-pos-discount-amount {
+  color: #8a4b12;
+  font-weight: 600;
+}
+
+.ss-pos-discount-breakdown {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.ss-pos-gross-amount {
+  display: block;
+  text-decoration: line-through;
+  color: #5c5347;
+  font-size: 0.75rem;
+}
+
+.ss-pos-register-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-register-header__meta {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.ss-pos-register-header__meta div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ss-pos-register-header__exchange {
+  margin: 0.25rem 0 0;
+  color: #5c5347;
+}
+
+.ss-pos-entry-switch {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.ss-pos-entry-switch__btn {
+  border: 1px solid #d8d2c8;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+}
+
+.ss-pos-entry-switch__btn--active {
+  background: #2c2419;
+  color: #faf8f5;
+  border-color: #2c2419;
+}
+
+.ss-pos-panel__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.ss-pos-preview {
+  margin: 0.5rem 0 0;
+  line-height: 1.4;
+}
+
+.ss-pos-preview-meta {
+  color: #5c5347;
+  font-size: 0.875rem;
+}
+
+.ss-pos-money-col {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ss-pos-cart-table .ss-pos-cart-line__title {
+  display: block;
+}
+
+.ss-pos-cart-line__meta {
+  display: block;
+  font-size: 0.8125rem;
+  color: #5c5347;
+}
+
+.ss-pos-cart-line--return .ss-pos-cart-line__total,
+.ss-pos-cart-line--return .ss-pos-cart-line__qty {
+  color: #9a3412;
+}
+
+.ss-pos-cart-line__actions {
+  white-space: nowrap;
+}
+
+.ss-pos-line-edit-form__fields {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.ss-pos-line-edit-form__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ss-pos-amount-due {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.ss-pos-readiness-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.ss-pos-readiness--ready {
+  border-color: #c8dcc0;
+  background: #f5f9f2;
+}
+
+.ss-pos-readiness--blocked {
+  border-color: #ecd9a8;
+  background: #fff8eb;
+}
+
+.ss-pos-readiness--pending {
+  border-color: #d4dbe8;
+  background: #f7f9fc;
+}
+
+.ss-pos-readiness-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ss-pos-readiness-list__content {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ss-pos-readiness-list__action {
+  flex-shrink: 0;
+}
+
+.ss-pos-confirm-inactive {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.ss-pos-command-bar__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-return-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.ss-pos-choice-card {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem;
+  border: 1px solid #e2ddd4;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.ss-pos-choice-card__sku {
+  font-family: var(--ss-font-mono, monospace);
+}
+
+.ss-pos-choice-card__meta {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.ss-pos-choice-card__warn {
+  color: #9a3412;
+  font-size: 0.875rem;
+}
+
+.ss-pos-choices {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ss-pos-qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ss-pos-cart-line__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ss-pos-cart-line__badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #9a3412;
+}
+
+.ss-pos-cart-line__tax-letter {
+  font-weight: 700;
+}
+
+.ss-pos-hero .ss-pos-actions {
+  margin-top: 0.75rem;
+}
+
+.ss-pos-drawer--inline {
+  margin-top: 0.75rem;
+  border-top: 1px solid #e2ddd4;
+  padding-top: 0.75rem;
+}
+
+.ss-pos-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-drawer__header .ss-pos-panel__title {
+  margin: 0;
+}
+
+.ss-pos-readiness-list__item--block {
+  color: #9a3412;
+}
+
+.ss-pos-change-hint {
+  font-weight: 600;
+}
+
+.ss-pos-complete-btn {
+  min-width: 10rem;
+}
+
+.ss-pos-queue {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ss-pos-queue__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2ddd4;
+}
+
+.ss-pos-queue__item:last-child {
+  border-bottom: none;
+}
+
+.ss-pos-reconciliation-table th {
+  text-align: left;
+  font-weight: 500;
+}
+
+.ss-pos-reconciliation-table__total th,
+.ss-pos-reconciliation-table__total td {
+  border-top: 1px solid #e2ddd4;
+  padding-top: 0.5rem;
+}
+
+.ss-pos-variance--nonzero {
+  color: #9a3412;
+  font-weight: 600;
+}
+
+.ss-pos-advanced-actions,
+.ss-pos-advanced-tenders,
+.ss-pos-adjustments {
+  margin-top: 0.5rem;
+}
+
+.ss-pos-advanced-actions__panel {
+  margin-top: 0.75rem;
+}
+
+.ss-pos-modal__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.ss-btn--danger {
+  background: #b42318;
+  color: #fff;
+  border-color: #b42318;
+}
+
+.ss-btn--danger:hover {
+  background: #912018;
+  border-color: #912018;
+}
+
+/* 80mm thermal receipt */
+.ss-receipt-80mm {
+  width: 80mm;
+  max-width: 80mm;
+  margin: 0 auto;
+  padding: 4mm;
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.ss-receipt-header {
+  text-align: center;
+  margin-bottom: 3mm;
+}
+
+.ss-receipt-header h1 {
+  margin: 0 0 1mm;
+  font-size: 13px;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.ss-receipt-header p,
+.ss-receipt-footer p {
+  margin: 0;
+}
+
+.ss-receipt-meta {
+  margin: 3mm 0;
+}
+
+.ss-receipt-meta .ss-receipt-row,
+.ss-receipt-totals .ss-receipt-row,
+.ss-receipt-tenders .ss-receipt-row,
+.ss-receipt-line .ss-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 3mm;
+}
+
+.ss-receipt-row span {
+  flex: 1;
+}
+
+.ss-receipt-row strong {
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ss-receipt-money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.ss-receipt-rule {
+  border: 0;
+  border-top: 1px dashed #000;
+  margin: 3mm 0;
+}
+
+.ss-receipt-line {
+  margin-bottom: 3mm;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.ss-receipt-line__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 3mm;
+  row-gap: 0.5mm;
+  align-items: start;
+}
+
+.ss-receipt-line__sku {
+  grid-column: 1;
+  grid-row: 1;
+  overflow-wrap: anywhere;
+}
+
+.ss-receipt-line__amount {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5mm;
+}
+
+.ss-receipt-line__name {
+  grid-column: 1;
+  grid-row: 2;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.ss-receipt-line__details {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+}
+
+.ss-receipt-line__tax-code {
+  font-weight: 700;
+}
+
+.ss-receipt-line__detail {
+  margin: 0 0 0.5mm;
+  padding-left: 2mm;
+  font-size: 9px;
+  color: #333;
+  overflow-wrap: anywhere;
+}
+
+.ss-receipt-line__return-label {
+  margin: 0 0 0.5mm;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ss-receipt-line.is-return .ss-receipt-money,
+.ss-receipt-line.is-return .ss-receipt-line__amount {
+  color: #333;
+}
+
+.ss-receipt-row--total {
+  margin-top: 2mm;
+  padding-top: 2mm;
+  border-top: 1px solid #000;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ss-receipt-row--savings {
+  margin-top: 1mm;
+  font-weight: 600;
+}
+
+.ss-receipt-tenders {
+  margin-top: 3mm;
+  padding-top: 2mm;
+  border-top: 1px dashed #000;
+}
+
+.ss-receipt-footer {
+  margin-top: 4mm;
+  text-align: center;
+}
+
+@media print {
+  @page receipt {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  @page register-close {
+    size: letter portrait;
+    margin: 0.3in 0.35in;
+  }
+
+  @page report {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .ss-receipt-80mm,
+  .ss-receipt-80mm * {
+    visibility: visible;
+  }
+
+  .ss-receipt-80mm {
+    page: receipt;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    max-width: 80mm;
+    margin: 0;
+    padding: 3mm;
+    box-shadow: none;
+  }
+
+  .ss-pos-report,
+  .ss-pos-report *,
+  .report-print,
+  .report-print * {
+    visibility: visible;
+  }
+
+  .ss-pos-report {
+    page: report;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .report-print.ss-pos-register-summary {
+    page: register-close;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    font-size: 8.5pt;
+    line-height: 1.15;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__header {
+    margin-bottom: 0.08in;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__title-row h1 {
+    font-size: 11pt;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__printed,
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__subtitle {
+    font-size: 8pt;
+  }
+
+  .report-print.ss-pos-register-summary .report-grid.ss-pos-register-summary__top-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.08in !important;
+    margin-bottom: 0.08in !important;
+  }
+
+  .report-print.ss-pos-register-summary .report-grid.ss-pos-register-summary__middle-grid {
+    display: grid !important;
+    grid-template-columns: 0.9fr 1.4fr !important;
+    gap: 0.08in !important;
+    margin-bottom: 0.08in !important;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__breakdown-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.06in !important;
+    margin-bottom: 0.06in !important;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__box {
+    padding: 0.06in 0.08in;
+    border-radius: 0;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__box-title {
+    margin-bottom: 0.04in;
+    font-size: 7pt;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__table {
+    font-size: 8pt;
+    width: 100%;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__kv th,
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__kv td {
+    padding: 0.015in 0;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__kv tr.is-total th,
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__kv tr.is-total td {
+    padding-top: 0.03in;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__table-section {
+    margin-bottom: 0.06in;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__table-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__table th,
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__table td {
+    padding: 0.02in 0.04in;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__table thead th {
+    font-size: 6.5pt;
+    padding-bottom: 0.03in;
+  }
+
+  .report-print.ss-pos-register-summary .ss-pos-register-summary__exceptions {
+    margin-top: 0.05in;
+    padding-top: 0.05in;
+    font-size: 8pt;
+  }
+
+  .report-print .report-grid {
+    gap: 0.08in;
+  }
+
+  .report-print.ss-pos-register-summary .report-section {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .report-print.ss-pos-register-summary .report-section.ss-pos-register-summary__table-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-print .report-section {
+    break-inside: avoid;
+  }
+
+  .ss-pos-report__header {
+    margin-bottom: 0.75rem;
+  }
+
+  .ss-pos-report__print-meta {
+    display: block !important;
+  }
+
+  .ss-pos-report__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ss-pos-report-section,
+  .ss-pos-panel.ss-pos-report-section {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #bbb;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .ss-pos-report-table-wrap {
+    overflow: visible;
+  }
+
+  .ss-pos-report-table {
+    font-size: 9pt;
+  }
+
+  .ss-pos-report-table th,
+  .ss-pos-report-table td {
+    padding: 0.2rem 0.35rem;
+  }
+
+  .ss-header,
+  .ss-nav,
+  .ss-pos-banner,
+  .ss-footer,
+  .ss-pos-no-print,
+  .flash {
+    display: none !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .ss-pos-layout {
+    grid-template-columns: 1fr;
+  }
+}

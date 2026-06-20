@@ -1,0 +1,17 @@
+<h1>Open Register Session</h1>
+
+<%= form_with url: pos_register_sessions_path, class: "ss-form" do %>
+  <div class="ss-field">
+    <%= label_tag :business_date, "Business date" %>
+    <%= date_field_tag :business_date, Date.current %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :opening_cash_dollars, "Opening cash" %>
+    <%= pos_money_field :opening_cash_dollars, 0, min: 0 %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :notes, "Notes" %>
+    <%= text_area_tag :notes %>
+  </div>
+  <%= submit_tag "Open register", class: "ss-btn" %>
+<% end %>

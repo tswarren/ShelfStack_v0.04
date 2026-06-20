@@ -23,7 +23,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 3 | Catalog, Products, and Variants | Catalog metadata, identifiers, products, product variants, SKUs, conditions, display locations, and vendors. |
 | Phase 4 | Inventory Foundation            | Inventory ledger, store balances, adjustments, valuation snapshots, and inventory read surfaces.             |
 | Phase 5 | Purchasing and Receiving        | Vendors, purchase orders, receiving, supplier terms, vendor costs, and returns to vendor.                    |
-| Phase 6 | POS Foundation                  | Sales, returns, line items, tax calculation, tenders, receipts, and session/workstation-aware POS behavior.  |
+| Phase 6 | POS Foundation                  | Register sessions, POS transactions, tax/tender snapshots, inventory posting, void reversals, receipts, and workstation-aware POS behavior. |
 | Phase 7 | Advanced Store Operations       | Transfers, adjustments, cycle counts, special orders, holds, and operational workflows.                      |
 | Phase 8 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
@@ -302,62 +302,52 @@ Delivered: vendor sourcing, purchase requests (TBO), purchase orders, receiving 
 
 ## Purpose
 
-Phase 6 should establish core POS sales behavior.
+Phase 6 establishes core point-of-sale behavior.
 
 It should answer:
 
-> What was sold, at what price, with what tax, through which workstation, by which user, and how was payment taken?
+> What was sold or returned, at what price, with what tax, through which workstation, by which user, on which business date, and how was payment taken?
+
+## Documentation
+
+Detailed scope, locked decisions, and exit criteria:
+
+```text
+docs/roadmap/phase-6-pos-foundation.md
+docs/specifications/phase-6-pos-foundation-spec.md
+docs/specifications/phase-6-data-model.md
+docs/specifications/phase-6-test-plan.md
+```
 
 ## Expected Capabilities
 
-* Sales
-* Sale lines
-* Return lines
-* Taxes
-* Tenders
-* Receipts
-* Register/workstation context
-* Product variant lookup by SKU
-* Tax calculation
-* Price snapshotting
-* Name/SKU snapshotting
-* Sale audit events
+* Register sessions and cash movements
+* Draft, suspended, completed, and voided POS transactions
+* Sale, return, and exchange (mixed signed lines)
+* Open-ring lines and open-ring returns
+* Tax and tender snapshots
+* Workstation-scoped transaction numbering
+* Register-session business dates
+* Inventory posting via `Inventory::Post` (`pos_transaction`, `pos_void`)
+* Completed void reversal workflow (`pos_voids`)
+* Receipts and snapshot reports
+* Full `pos.*` permissions and audit events
 
-## Expected Design Direction
+## Design Direction
 
-POS sale lines should snapshot mutable product data.
-
-Future sale lines should store:
-
-* Product SKU snapshot
-* Variant SKU snapshot
-* Product name snapshot
-* Variant name snapshot
-* Price snapshot
-* Tax category snapshot
-* Tax rate snapshot
-* Department/category snapshot
-* Store/workstation/user context
-
-## Possible Tables
-
-```text
-sales
-sale_lines
-sale_tenders
-sale_taxes
-receipt_events
-return_reasons
-```
+* Use `pos_*` tables, not `sales` / `sale_*`.
+* Snapshot mutable product, price, and tax data on lines at completion.
+* Do not store `inventory_posting_id` on `pos_transactions`; use polymorphic posting sources.
+* One inventory posting per completed transaction; void reversals use separate `PosVoid` source.
 
 ## Major Risks
 
-* Tax accuracy
+* Tax accuracy and business-date handling
 * Historical snapshot preservation
-* Product/variant name changes after sale
-* SKU changes after sale
-* Locked sessions and workstation context
-* Offline POS requirements
+* Return quantity validation across partial returns
+* Register session and suspended-transaction edge cases
+* Void reversal correctness (inventory and tenders)
+* Offline POS requirements (deferred)
 
 ---
 

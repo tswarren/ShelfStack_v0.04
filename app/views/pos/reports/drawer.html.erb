@@ -1,0 +1,36 @@
+<h1>Drawer Report</h1>
+
+<% if @summary %>
+  <section class="ss-pos-panel ss-pos-panel--highlight">
+    <h2>Current session summary</h2>
+    <dl class="ss-pos-stats">
+      <div><dt>Business date</dt><dd><%= @session.business_date %></dd></div>
+      <div><dt>Opening cash</dt><dd><%= pos_money(@summary.opening_cash_cents) %></dd></div>
+      <div><dt>Paid in</dt><dd><%= pos_money(@summary.paid_in_cents) %></dd></div>
+      <div><dt>Paid out</dt><dd><%= pos_money(@summary.paid_out_cents) %></dd></div>
+      <div><dt>Net cash tenders</dt><dd><%= pos_money(@summary.net_cash_tender_cents) %></dd></div>
+      <div><dt>Expected closing</dt><dd><%= pos_money(@summary.expected_closing_cash_cents) %></dd></div>
+    </dl>
+    <%= link_to "View session", pos_register_session_path(@session), class: "ss-btn" if @session %>
+    <%= link_to "Register summary", register_summary_pos_reports_path(register_session_id: @session.id), class: "ss-btn ss-btn-secondary" if @session %>
+    <%= link_to "Sales & revenue summary", summary_pos_reports_path(filter_type: "register_session", register_session_id: @session.id), class: "ss-btn ss-btn-secondary" if @session %>
+  </section>
+<% end %>
+
+<h2>Recent sessions</h2>
+<table class="ss-table ss-pos-table">
+  <thead>
+    <tr><th>Opened</th><th>Business date</th><th>Status</th><th>Workstation</th><th>Expected close</th></tr>
+  </thead>
+  <tbody>
+    <% @sessions.each do |session| %>
+      <tr>
+        <td><%= link_to session.opened_at, drawer_pos_reports_path(session_id: session.id) %></td>
+        <td><%= session.business_date %></td>
+        <td><%= session.status %></td>
+        <td><%= session.workstation.name %></td>
+        <td><%= pos_money(session.expected_closing_cash_cents) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

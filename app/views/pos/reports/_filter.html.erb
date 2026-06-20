@@ -1,0 +1,43 @@
+<section class="ss-pos-panel ss-pos-report-filter">
+  <h2 class="ss-pos-panel__title">Report filter</h2>
+  <%= form_with url: summary_pos_reports_path, method: :get, class: "ss-form ss-pos-report-filter__form" do %>
+    <fieldset class="ss-pos-report-filter__types">
+      <legend class="ss-visually-hidden">Filter type</legend>
+      <label>
+        <%= radio_button_tag :filter_type, "register_session", pos_report_filter_type == "register_session" %>
+        Register session
+      </label>
+      <label>
+        <%= radio_button_tag :filter_type, "business_date", pos_report_filter_type == "business_date" %>
+        Business date
+      </label>
+      <label>
+        <%= radio_button_tag :filter_type, "date_range", pos_report_filter_type == "date_range" %>
+        Date range
+      </label>
+    </fieldset>
+
+    <div class="ss-pos-report-filter__fields">
+      <div class="ss-field" data-filter-panel="register_session">
+        <%= label_tag :register_session_id, "Register session" %>
+        <%= select_tag :register_session_id,
+                       options_for_select(pos_report_session_options(sessions), params[:register_session_id]),
+                       include_blank: "Select a session" %>
+      </div>
+
+      <div class="ss-field" data-filter-panel="business_date">
+        <%= label_tag :business_date, "Business date" %>
+        <%= date_field_tag :business_date, params[:business_date] || Date.current %>
+      </div>
+
+      <div class="ss-field ss-pos-report-filter__range" data-filter-panel="date_range">
+        <%= label_tag :start_date, "Start date" %>
+        <%= date_field_tag :start_date, params[:start_date] %>
+        <%= label_tag :end_date, "End date" %>
+        <%= date_field_tag :end_date, params[:end_date] %>
+      </div>
+    </div>
+
+    <%= submit_tag "Run report", class: "ss-btn" %>
+  <% end %>
+</section>

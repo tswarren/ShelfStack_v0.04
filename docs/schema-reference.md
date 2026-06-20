@@ -318,7 +318,7 @@ For every new table, confirm:
 
 # Deferred Schema Areas
 
-These are expected future schema areas (beyond Phase 5):
+These are expected future schema areas (beyond Phase 6):
 
 ```text
 inventory_location_balances
@@ -326,12 +326,25 @@ inventory_location_movements
 inventory_transfers
 inventory_transfer_lines
 inventory_reservations
-sales
-sale_lines
-sale_tenders
-sale_taxes
+gift_card_accounts
+store_credit_accounts
 cycle_counts
 ```
+
+Phase 6 tables (implemented):
+
+```text
+pos_register_sessions
+pos_cash_movements
+pos_transactions
+pos_transaction_lines
+pos_tenders
+pos_receipts
+pos_authorizations
+pos_voids
+```
+
+Phase 6 extends `inventory_postings.posting_type` with `pos_transaction` and `pos_void`.
 
 Phase 5 tables (implemented):
 

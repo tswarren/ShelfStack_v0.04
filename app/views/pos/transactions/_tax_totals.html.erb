@@ -1,0 +1,8 @@
+<% subtotals = pos_transaction_tax_subtotals(transaction) %>
+<% if subtotals.any? %>
+  <% subtotals.each do |subtotal| %>
+    <div><dt>Tax <%= subtotal.short_name %></dt><dd><%= pos_money(subtotal.tax_cents) %></dd></div>
+  <% end %>
+<% else %>
+  <div><dt>Tax</dt><dd><%= pos_money(transaction.tax_cents) %></dd></div>
+<% end %>

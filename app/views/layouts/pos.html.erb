@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "POS — ShelfStack" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="ss-pos-body">
+    <%= render "layouts/header" %>
+    <%= render "layouts/nav" %>
+    <%= render "layouts/pos_banner" %>
+    <main class="ss-main ss-pos-main">
+      <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
+      <% if flash[:warning] %><div class="flash flash-warning"><%= flash[:warning] %></div><% end %>
+      <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
+      <%= yield %>
+    </main>
+    <%= render "layouts/pos_supervisor_auth_modal" %>
+    <%= render "layouts/footer" %>
+  </body>
+</html>

@@ -275,4 +275,50 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  namespace :pos do
+    root to: "home#show"
+    get "locked_out", to: "home#locked_out"
+    resource :line_lookup, only: %i[show]
+    resource :return_lookup, only: %i[show]
+    resources :authorizations, only: %i[create]
+    resources :register_sessions, only: %i[new create show] do
+      member do
+        patch :close
+        patch :force_close
+      end
+      resources :cash_movements, only: %i[create]
+    end
+    resources :transactions do
+      member do
+        patch :complete
+        patch :suspend
+        patch :resume
+        patch :void
+        patch :cancel
+        post :add_line
+        post :add_return_line
+        post :add_open_ring_line
+        patch :update_line
+        delete :remove_line
+        patch :sync_tenders
+        post :readiness_preview
+        post :route_command
+      end
+    end
+    resources :receipts, only: %i[show] do
+      member do
+        patch :print
+      end
+    end
+    resources :reports, only: %i[index] do
+      collection do
+        get :sales
+        get :returns
+        get :drawer
+        get :summary
+        get :register_summary
+      end
+    end
+  end
 end

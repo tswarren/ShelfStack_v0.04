@@ -1,0 +1,25 @@
+<div id="pos_totals">
+  <%= render "pos/transactions/totals_panel", transaction: transaction %>
+</div>
+
+<details class="ss-pos-panel ss-pos-adjustments">
+  <summary>Adjustments</summary>
+    <%= form_with model: transaction, url: pos_transaction_path(transaction), method: :patch, class: "ss-form" do |f| %>
+      <%= render "pos/transactions/discount_fields",
+            label: "Transaction discount",
+            cents_value: transaction.discount_cents,
+            id_prefix: "transaction_discount" %>
+    <div class="ss-field">
+      <%= label_tag :pos_transaction_rounding_dollars, "Cash rounding" %>
+      <%= pos_money_field "pos_transaction[rounding_dollars]", transaction.rounding_cents %>
+    </div>
+    <%= f.submit "Recalculate", class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+</details>
+
+<div id="pos_tender_panel">
+  <%= render "pos/transactions/tender_panel",
+        transaction: transaction,
+        readiness: readiness,
+        inactive_warnings: inactive_warnings %>
+</div>

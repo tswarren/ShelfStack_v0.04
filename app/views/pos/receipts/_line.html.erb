@@ -1,0 +1,39 @@
+<% line_class = line.return_line? ? "ss-receipt-line is-return" : "ss-receipt-line" %>
+<article class="<%= line_class %>">
+  <% if line.return_line? %>
+    <p class="ss-receipt-line__return-label">Return</p>
+  <% end %>
+
+  <div class="ss-receipt-line__body">
+    <span class="ss-receipt-line__sku"><%= pos_receipt_line_sku(line) %></span>
+    <strong class="ss-receipt-line__amount">
+      <%= pos_receipt_money(pos_receipt_line_header_amount_cents(line)) %>
+      <% indicator = pos_line_tax_indicator(line) %>
+      <% if indicator.present? && indicator != "—" %>
+        <span class="ss-receipt-line__tax-code"><%= indicator %></span>
+      <% end %>
+    </strong>
+
+    <div class="ss-receipt-line__name">
+      <%= pos_line_display_title(line) %>
+    </div>
+
+    <div class="ss-receipt-line__details">
+      <% if line.return_line? %>
+        <% if line.return_disposition.present? %>
+          <p class="ss-receipt-line__detail"><%= line.return_disposition.humanize %></p>
+        <% end %>
+        <% if (source_label = pos_line_return_source_label(line)).present? %>
+          <p class="ss-receipt-line__detail"><%= source_label %></p>
+        <% end %>
+      <% else %>
+        <% if pos_receipt_line_show_list_detail?(line) %>
+          <p class="ss-receipt-line__detail">List price <%= pos_money(pos_receipt_line_list_amount_cents(line).abs) %></p>
+        <% end %>
+        <% if pos_receipt_line_show_item_discount_detail?(line) %>
+          <p class="ss-receipt-line__detail">Item discount <%= pos_money(pos_receipt_line_item_discount_display_cents(line)) %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</article>

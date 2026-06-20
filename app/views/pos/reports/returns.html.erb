@@ -1,0 +1,18 @@
+<h1>Returns Report</h1>
+<p><%= link_to "Export CSV", returns_pos_reports_path(format: :csv), class: "ss-btn ss-btn-secondary" %></p>
+
+<table class="ss-table ss-pos-table">
+  <thead>
+    <tr><th>Number</th><th>Date</th><th>Type</th><th>Total</th></tr>
+  </thead>
+  <tbody>
+    <% @transactions.each do |transaction| %>
+      <tr>
+        <td><%= link_to transaction.transaction_number, pos_transaction_path(transaction) %></td>
+        <td><%= transaction.completed_at %></td>
+        <td><%= transaction.transaction_type %></td>
+        <td><%= pos_money(transaction.total_cents) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

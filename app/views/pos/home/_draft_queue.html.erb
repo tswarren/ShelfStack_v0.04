@@ -1,0 +1,31 @@
+<section class="ss-pos-panel ss-pos-home__queue-panel">
+  <h2 class="ss-pos-panel__title">Draft Queue</h2>
+  <table class="ss-table ss-pos-table ss-pos-table--compact">
+    <thead>
+      <tr>
+        <th>Trans. #</th>
+        <th>Items</th>
+        <th>Amount</th>
+        <th>Time</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @draft_transactions.any? %>
+        <% @draft_transactions.each do |transaction| %>
+          <tr>
+            <td>#<%= transaction.id %></td>
+            <td><%= transaction.pos_transaction_lines.size %></td>
+            <td><%= pos_money(transaction.total_cents) %></td>
+            <td><%= pos_store_local_time(transaction.updated_at) %></td>
+            <td><%= link_to "Continue", edit_pos_transaction_path(transaction), class: "ss-btn ss-btn-secondary ss-btn--small" %></td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="5" class="ss-pos-home__empty">None</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

@@ -1,0 +1,17 @@
+<section class="ss-pos-panel ss-pos-home__queue-panel">
+  <h2 class="ss-pos-panel__title">Session Summary</h2>
+  <dl class="ss-pos-stats">
+    <div><dt>Session opened</dt><dd><%= pos_store_local_time(@register_session.opened_at) %></dd></div>
+    <div><dt>Opened by</dt><dd><%= @register_session.opened_by_user.username %></dd></div>
+    <% if @session_summary %>
+      <div><dt>Transactions</dt><dd><%= @session_summary.completed_transaction_count %></dd></div>
+      <div><dt>Expected drawer</dt><dd><%= pos_money(@session_summary.expected_closing_cash_cents) %></dd></div>
+      <div><dt>Suspended</dt><dd><%= @session_summary.suspended_transaction_count %></dd></div>
+    <% end %>
+  </dl>
+  <div class="ss-pos-home__session-links">
+    <%= link_to "Cash Pick-Up", pos_register_session_path(@register_session, anchor: "cash-movement"), class: "ss-link" %>
+    <%= link_to "Register Summary", register_summary_pos_reports_path(register_session_id: @register_session.id), class: "ss-link" %>
+    <%= link_to "Session history", drawer_pos_reports_path, class: "ss-link" %>
+  </div>
+</section>

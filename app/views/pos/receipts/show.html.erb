@@ -1,0 +1,16 @@
+<div class="ss-receipt-80mm">
+  <%= render "pos/receipts/header", store: @transaction.store %>
+  <%= render "pos/receipts/meta", receipt: @receipt, transaction: @transaction %>
+
+  <hr class="ss-receipt-rule">
+
+  <%= render "pos/receipts/lines", transaction: @transaction %>
+
+  <hr class="ss-receipt-rule">
+
+  <%= render "pos/receipts/totals", transaction: @transaction %>
+  <%= render "pos/receipts/tenders", transaction: @transaction %>
+  <%= render "pos/receipts/footer" %>
+
+  <%= render "pos/receipts/actions", receipt: @receipt, transaction: @transaction %>
+</div>

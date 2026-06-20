@@ -55,9 +55,9 @@
     <div class="ss-field">
       <%= f.text_area :bisac_subjects,
                       rows: 2,
-                      data: { bisac_subjects_target: "advancedField", preview_source: "subjects" } %>
+                      data: { bisac_subjects_target: "advancedField", catalog_item_form_target: "subjectsSource" } %>
       <p class="ss-hint">Paste Ingram or publisher subject strings. Unmatched entries stay as local subjects.</p>
-      <p class="ss-hint">Parsed preview: <span data-preview="subjects-parsed"><%= metadata_subjects_preview(catalog_item.bisac_subjects) %></span></p>
+      <p class="ss-hint">Parsed preview: <span data-catalog-item-form-target="subjectsPreview"><%= metadata_subjects_preview(catalog_item.bisac_subjects) %></span></p>
     </div>
   </details>
 </div>

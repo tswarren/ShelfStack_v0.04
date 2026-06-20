@@ -1,9 +1,13 @@
+<div data-controller="catalog-item-form" data-action="change->catalog-item-form#refresh">
 <%= render "shared/forms/errors", record: catalog_item %>
 
 <%= render layout: "shared/forms/section", locals: { title: "Basic Details" } do %>
   <div class="ss-form-grid ss-form-grid--2">
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :catalog_item_type, label: "Type", required: true } do %>
-      <%= f.select :catalog_item_type, CatalogItem::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] }, {}, data: { catalog_type: "select" } %>
+      <%= f.select :catalog_item_type,
+            CatalogItem::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] },
+            {},
+            data: { catalog_item_form_target: "typeSelect" } %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :title, required: true } do %>
       <%= f.text_field :title %>
@@ -18,8 +22,8 @@
       <%= f.text_field :publisher %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :creators } do %>
-      <%= f.text_area :creators, rows: 2, data: { preview_source: "creators" } %>
-      <p class="ss-hint">Parsed preview: <span data-preview="creators-parsed"><%= metadata_creators_preview(catalog_item.creators) %></span></p>
+      <%= f.text_area :creators, rows: 2, data: { catalog_item_form_target: "creatorsSource" } %>
+      <p class="ss-hint">Parsed preview: <span data-catalog-item-form-target="creatorsPreview"><%= metadata_creators_preview(catalog_item.creators) %></span></p>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :description } do %>
       <%= f.text_area :description, rows: 4 %>
@@ -28,7 +32,7 @@
   <%= render "shared/forms/checkbox", f: f, record: catalog_item, field: :active %>
 <% end %>
 
-<div data-catalog-fields="book periodical recorded_music videorecording audiobook ebook map game gift sideline other">
+<div data-catalog-item-form-target="fieldGroup" data-catalog-fields="book periodical recorded_music videorecording audiobook ebook map game gift sideline other">
   <%= render layout: "shared/forms/section", locals: { title: "Publication" } do %>
     <div class="ss-form-grid ss-form-grid--2">
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publication_date } do %>
@@ -50,7 +54,7 @@
   <% end %>
 </div>
 
-<div data-catalog-fields="periodical">
+<div data-catalog-item-form-target="fieldGroup" data-catalog-fields="periodical">
   <%= render layout: "shared/forms/section", locals: { title: "Periodical" } do %>
     <div class="ss-form-grid ss-form-grid--2">
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publication_frequency } do %>
@@ -60,7 +64,7 @@
   <% end %>
 </div>
 
-<div data-catalog-fields="calendar">
+<div data-catalog-item-form-target="fieldGroup" data-catalog-fields="calendar">
   <%= render layout: "shared/forms/section", locals: { title: "Calendar" } do %>
     <div class="ss-form-grid ss-form-grid--2">
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :year } do %>
@@ -70,7 +74,7 @@
   <% end %>
 </div>
 
-<div data-catalog-fields="book calendar periodical recorded_music sideline videorecording audiobook map game gift other">
+<div data-catalog-item-form-target="fieldGroup" data-catalog-fields="book calendar periodical recorded_music sideline videorecording audiobook map game gift other">
   <%= render layout: "shared/forms/section", locals: { title: "Physical Details" } do %>
     <div class="ss-form-grid ss-form-grid--2">
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :height } do %>
@@ -99,7 +103,7 @@
   <% end %>
 </div>
 
-<div data-catalog-fields="recorded_music videorecording audiobook other">
+<div data-catalog-item-form-target="fieldGroup" data-catalog-fields="recorded_music videorecording audiobook other">
   <%= render layout: "shared/forms/section", locals: { title: "Media" } do %>
     <div class="ss-form-grid ss-form-grid--2">
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :duration_minutes } do %>
@@ -110,7 +114,7 @@
   <% end %>
 </div>
 
-<div data-catalog-fields="ebook audiobook_digital">
+<div data-catalog-item-form-target="fieldGroup" data-catalog-fields="ebook audiobook_digital">
   <%= render layout: "shared/forms/section", locals: { title: "Digital" } do %>
     <%= render "shared/forms/checkbox", f: f, record: catalog_item, field: :digital %>
   <% end %>
@@ -169,73 +173,4 @@
   <% end %>
 <% end %>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    var typeSelect = document.querySelector("[data-catalog-type='select']");
-    var fieldsets = document.querySelectorAll("[data-catalog-fields]");
-    function updateCatalogFields() {
-      var selected = typeSelect ? typeSelect.value : "book";
-      fieldsets.forEach(function(fieldset) {
-        var types = fieldset.getAttribute("data-catalog-fields").split(" ");
-        fieldset.style.display = types.indexOf(selected) >= 0 ? "" : "none";
-      });
-    }
-    if (typeSelect) {
-      typeSelect.addEventListener("change", updateCatalogFields);
-      updateCatalogFields();
-    }
-
-    function splitOutsideBrackets(input) {
-      var parts = [];
-      var current = "";
-      var depth = 0;
-      for (var i = 0; i < input.length; i++) {
-        var char = input[i];
-        if (char === "[") {
-          depth += 1;
-          current += char;
-        } else if (char === "]") {
-          if (depth > 0) depth -= 1;
-          current += char;
-        } else if (char === ";" && depth === 0) {
-          parts.push(current);
-          current = "";
-        } else {
-          current += char;
-        }
-      }
-      if (current.length) parts.push(current);
-      return parts;
-    }
-
-    function parseCreatorPreview(value) {
-      return splitOutsideBrackets(value).map(function(entry) {
-        entry = entry.trim();
-        if (!entry) return null;
-        return entry.replace(/\[[^\]]+\]\s*$/, "").trim();
-      }).filter(Boolean).join("; ") || "—";
-    }
-
-    function parseSubjectPreview(value) {
-      return splitOutsideBrackets(value).map(function(entry) {
-        entry = entry.trim();
-        if (!entry) return null;
-        return entry.replace(/\[[A-Za-z0-9_]+(?:\/[^\]]+)?\]\s*$/, "").trim();
-      }).filter(Boolean).join("; ") || "—";
-    }
-
-    function bindMetadataPreview(sourceName, previewName, parser) {
-      var source = document.querySelector("[data-preview-source='" + sourceName + "']");
-      var preview = document.querySelector("[data-preview='" + previewName + "']");
-      if (!source || !preview) return;
-      function update() {
-        preview.textContent = parser(source.value);
-      }
-      source.addEventListener("input", update);
-      source.addEventListener("change", update);
-    }
-
-    bindMetadataPreview("creators", "creators-parsed", parseCreatorPreview);
-    bindMetadataPreview("subjects", "subjects-parsed", parseSubjectPreview);
-  });
-</script>
+</div>

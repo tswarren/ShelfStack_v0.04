@@ -10,6 +10,7 @@ module Phase1TestHelper
     Seeds::Phase3bPermissions.seed!
     Seeds::Phase4Permissions.seed!
     Seeds::Phase5Permissions.seed!
+    Seeds::Phase6Permissions.seed!
   end
 
   def create_store!(attrs = {})
