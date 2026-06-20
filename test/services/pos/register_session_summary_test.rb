@@ -18,7 +18,7 @@ class Pos::RegisterSessionSummaryTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     complete_pos_sale!(transaction: sale, user: @user, register_session: @session)
 
@@ -28,14 +28,14 @@ class Pos::RegisterSessionSummaryTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 1000,
         extended_price_cents: 1000,
         return_disposition: "return_to_stock",
         source_transaction_line: sale.pos_transaction_lines.first
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
     return_txn.pos_tenders.create!(tender_type: "cash", amount_cents: return_txn.total_cents)
@@ -56,7 +56,7 @@ class Pos::RegisterSessionSummaryTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     complete_pos_sale!(transaction: transaction, user: @user, register_session: @session)
 

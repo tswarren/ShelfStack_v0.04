@@ -15,7 +15,7 @@ class Pos::ReturnQuantityValidatorTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 2, unit_price_cents: 1000, extended_price_cents: 2000 }]
+      lines: [ { product_variant: @variant, quantity: 2, unit_price_cents: 1000, extended_price_cents: 2000 } ]
     )
     complete_pos_sale!(transaction: @sale, user: @user, register_session: @register_session)
     @source_line = @sale.pos_transaction_lines.first
@@ -26,14 +26,14 @@ class Pos::ReturnQuantityValidatorTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -2,
         unit_price_cents: 1000,
         extended_price_cents: -2000,
         return_disposition: "return_to_stock",
         source_transaction_line_id: @source_line.id
-      }]
+      } ]
     )
     complete_pos_sale!(transaction: return_txn, user: @user, register_session: @register_session)
 
@@ -41,14 +41,14 @@ class Pos::ReturnQuantityValidatorTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 1000,
         extended_price_cents: -1000,
         return_disposition: "return_to_stock",
         source_transaction_line_id: @source_line.id
-      }]
+      } ]
     )
 
     assert_raises(Pos::ReturnQuantityValidator::Error) do

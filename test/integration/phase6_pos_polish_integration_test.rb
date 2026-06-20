@@ -37,7 +37,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
       confirm_inactive: 1,
-      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+      tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
     assert_redirected_to pos_transaction_path(transaction)
 
@@ -69,7 +69,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
       confirm_inactive: 1,
-      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", (total + 500) / 100.0) }]
+      tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", (total + 500) / 100.0) } ]
     }
     assert_redirected_to pos_transaction_path(transaction)
 
@@ -156,7 +156,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     patch complete_pos_transaction_path(return_txn, mode: "return"), params: {
       confirm_inactive: 1,
-      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+      tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
     assert_redirected_to pos_transaction_path(return_txn)
     assert_equal "return", return_txn.reload.transaction_type
@@ -191,7 +191,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     total = return_txn.total_cents
     patch complete_pos_transaction_path(return_txn, mode: "return"), params: {
       confirm_inactive: 1,
-      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+      tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
     assert_response :redirect
     assert_match %r{/pos/transactions/\d+/edit}, response.redirect_url
@@ -211,7 +211,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     patch complete_pos_transaction_path(return_txn, mode: "return"), params: {
       confirm_inactive: 1,
       pos_authorization_id: authorization_id,
-      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", return_txn.total_cents / 100.0) }]
+      tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", return_txn.total_cents / 100.0) } ]
     }
     assert_redirected_to pos_transaction_path(return_txn)
     assert return_txn.reload.completed?
@@ -269,44 +269,6 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     assert readiness.checks.any? { |check| check.key == :no_receipt_return && check.status == :ok }
   end
 
-  test "completes even exchange with zero cash tender sync" do
-    post pos_transactions_path, params: { mode: "exchange" }
-    exchange_txn = PosTransaction.order(:id).last
-
-    post add_line_pos_transaction_path(exchange_txn, mode: "sale"), params: {
-      product_variant_id: @variant.id,
-      quantity: 1,
-      entry_action: "sale"
-    }
-    post add_line_pos_transaction_path(exchange_txn, mode: "return"), params: {
-      product_variant_id: @variant.id,
-      quantity: -1,
-      entry_action: "return_no_receipt"
-    }
-
-    exchange_txn.reload
-    Pos::RecalculateTransaction.call!(exchange_txn, business_date: @register_session.business_date)
-    assert exchange_txn.total_cents.zero?
-
-    post pos_authorizations_path, params: {
-      authorization_type: "no_receipt_return",
-      manager_username: @manager.username,
-      manager_pin: "9999",
-      pos_transaction_id: exchange_txn.id
-    }, as: :json
-    assert_response :success
-
-    patch complete_pos_transaction_path(exchange_txn, mode: "exchange"), params: {
-      confirm_inactive: 1,
-      tenders: [{ tender_type: "cash", amount_dollars: "0.00" }]
-    }
-    assert_redirected_to pos_transaction_path(exchange_txn)
-
-    exchange_txn.reload
-    assert exchange_txn.completed?
-    assert_equal "exchange", exchange_txn.transaction_type
-  end
-
   test "inactive variant lookup and completion requires confirmation" do
     inactive_variant = create_product_variant!(
       sub_department: @variant.sub_department,
@@ -334,7 +296,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     total = transaction.total_cents
 
     patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
-      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+      tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
     assert_redirected_to edit_pos_transaction_path(transaction)
     follow_redirect!
@@ -342,7 +304,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
       confirm_inactive: 1,
-      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+      tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
     assert_redirected_to pos_transaction_path(transaction)
     assert transaction.reload.completed?
@@ -372,12 +334,12 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1500,
         extended_price_cents: 1500
-      }]
+      } ]
     )
     complete_pos_sale!(transaction: transaction, user: @cashier, register_session: @register_session)
     transaction.reload

@@ -18,7 +18,7 @@ class Pos::PostInventoryTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 2, unit_price_cents: 1000, extended_price_cents: 2000 }]
+      lines: [ { product_variant: @variant, quantity: 2, unit_price_cents: 1000, extended_price_cents: 2000 } ]
     )
     complete_pos_sale!(transaction: transaction, user: @user, register_session: @register_session)
 
@@ -33,7 +33,7 @@ class Pos::PostInventoryTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     complete_pos_sale!(transaction: sale, user: @user, register_session: @register_session)
     assert_equal 4, InventoryBalance.find_by!(store: @store, product_variant: @variant).quantity_on_hand
@@ -42,13 +42,13 @@ class Pos::PostInventoryTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 1000,
         extended_price_cents: -1000,
         return_disposition: "return_to_stock"
-      }]
+      } ]
     )
     grant_no_receipt_return_authorization!(return_txn)
     complete_pos_sale!(transaction: return_txn, user: @user, register_session: @register_session)

@@ -17,13 +17,13 @@ class Pos::ReturnLinePricingTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1000,
         line_discount_cents: 100,
         extended_price_cents: 900
-      }],
+      } ],
       attrs: { discount_cents: 100 }
     )
     Pos::RecalculateTransaction.call!(sale)
@@ -36,14 +36,14 @@ class Pos::ReturnLinePricingTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 0,
         extended_price_cents: 0,
         return_disposition: "return_to_stock",
         source_transaction_line: source_line
-      }]
+      } ]
     )
 
     Pos::RecalculateTransaction.call!(return_txn)
@@ -59,13 +59,13 @@ class Pos::ReturnLinePricingTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 2,
         unit_price_cents: 1000,
         line_discount_cents: 0,
         extended_price_cents: 2000
-      }],
+      } ],
       attrs: { discount_cents: 400 }
     )
     Pos::RecalculateTransaction.call!(sale)
@@ -77,14 +77,14 @@ class Pos::ReturnLinePricingTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 0,
         extended_price_cents: 0,
         return_disposition: "return_to_stock",
         source_transaction_line: source_line
-      }]
+      } ]
     )
 
     Pos::RecalculateTransaction.call!(return_txn)

@@ -14,9 +14,9 @@ module Pos
       signs = merchandise_lines.map { |line| line.quantity <=> 0 }.uniq
       return nil if signs.empty?
 
-      if signs == [1]
+      if signs == [ 1 ]
         "sale"
-      elsif signs == [-1]
+      elsif signs == [ -1 ]
         "return"
       else
         "exchange"

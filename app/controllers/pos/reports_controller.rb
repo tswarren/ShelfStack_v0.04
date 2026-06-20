@@ -90,18 +90,18 @@ module Pos
       return "" if report.blank?
 
       CSV.generate do |csv|
-        csv << ["Sales & Revenue Summary", report.scope.label]
+        csv << [ "Sales & Revenue Summary", report.scope.label ]
         csv << []
-        csv << ["Metric", "Amount"]
-        csv << ["Gross Sales", report.revenue_summary.gross_sales_cents]
-        csv << ["Returns/Refunds", report.revenue_summary.refunds_cents]
-        csv << ["Discounts Applied", report.revenue_summary.discounts_cents]
-        csv << ["Net Sales", report.revenue_summary.net_sales_cents]
-        csv << ["Taxes Collected", report.revenue_summary.taxes_cents]
-        csv << ["Gift Cards", report.revenue_summary.gift_card_cents]
-        csv << ["Total Sales", report.revenue_summary.total_sales_cents]
+        csv << [ "Metric", "Amount" ]
+        csv << [ "Gross Sales", report.revenue_summary.gross_sales_cents ]
+        csv << [ "Returns/Refunds", report.revenue_summary.refunds_cents ]
+        csv << [ "Discounts Applied", report.revenue_summary.discounts_cents ]
+        csv << [ "Net Sales", report.revenue_summary.net_sales_cents ]
+        csv << [ "Taxes Collected", report.revenue_summary.taxes_cents ]
+        csv << [ "Gift Cards", report.revenue_summary.gift_card_cents ]
+        csv << [ "Total Sales", report.revenue_summary.total_sales_cents ]
         csv << []
-        csv << ["Clerk", "Transactions", "Sales", "Refunds", "Adjustments", "Discounts", "Net Sales", "Voids"]
+        csv << [ "Clerk", "Transactions", "Sales", "Refunds", "Adjustments", "Discounts", "Net Sales", "Voids" ]
         report.by_clerk.each do |row|
           csv << clerk_csv_row(row)
         end
@@ -116,25 +116,25 @@ module Pos
           report.revenue_summary.void_count
         ]
         csv << []
-        csv << ["Payment Type", "Amount"]
+        csv << [ "Payment Type", "Amount" ]
         report.by_tender.each do |row|
-          csv << [row.label, row.amount_cents]
+          csv << [ row.label, row.amount_cents ]
         end
         csv << []
-        csv << ["Hour", "Transactions", "Sales", "Refunds", "Adjustments", "Discounts", "Net Sales", "Voids"]
+        csv << [ "Hour", "Transactions", "Sales", "Refunds", "Adjustments", "Discounts", "Net Sales", "Voids" ]
         report.by_hour.each do |row|
           csv << hourly_csv_row(row)
         end
         if report.drawer.available
           csv << []
-          csv << ["Drawer Reconciliation", ""]
-          csv << ["Starting Bank", report.drawer.starting_bank_cents]
-          csv << ["Cash Sales", report.drawer.cash_sales_cents]
-          csv << ["Paid In", report.drawer.paid_in_cents]
-          csv << ["Paid Out", report.drawer.paid_out_cents]
-          csv << ["Expected Cash", report.drawer.expected_cash_cents]
-          csv << ["Actual Cash", report.drawer.actual_cash_cents]
-          csv << ["Variance", report.drawer.variance_cents]
+          csv << [ "Drawer Reconciliation", "" ]
+          csv << [ "Starting Bank", report.drawer.starting_bank_cents ]
+          csv << [ "Cash Sales", report.drawer.cash_sales_cents ]
+          csv << [ "Paid In", report.drawer.paid_in_cents ]
+          csv << [ "Paid Out", report.drawer.paid_out_cents ]
+          csv << [ "Expected Cash", report.drawer.expected_cash_cents ]
+          csv << [ "Actual Cash", report.drawer.actual_cash_cents ]
+          csv << [ "Variance", report.drawer.variance_cents ]
         end
       end
     end

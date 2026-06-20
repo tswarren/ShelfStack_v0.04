@@ -5,10 +5,10 @@ module PosHelper
   ENTRY_ACTIONS = %w[sale return_receipt return_no_receipt open_ring].freeze
 
   VOID_REASON_CODES = [
-    ["Cashier error", "cashier_error"],
-    ["Customer changed mind", "customer_changed_mind"],
-    ["Duplicate transaction", "duplicate"],
-    ["Other", "other"]
+    [ "Cashier error", "cashier_error" ],
+    [ "Customer changed mind", "customer_changed_mind" ],
+    [ "Duplicate transaction", "duplicate" ],
+    [ "Other", "other" ]
   ].freeze
 
   def pos_mode_label(mode)
@@ -36,10 +36,10 @@ module PosHelper
   def pos_complete_button_label(transaction, confirm_inactive: false, change_cents: nil, remaining_cents: nil)
     type = pos_derived_transaction_type(transaction)
     base = case type
-           when "return" then confirm_inactive ? "Complete (confirm inactive) return" : "Refund customer"
-           when "exchange" then confirm_inactive ? "Complete (confirm inactive) exchange" : "Complete exchange"
-           else confirm_inactive ? "Complete (confirm inactive) sale" : "Complete sale"
-           end
+    when "return" then confirm_inactive ? "Complete (confirm inactive) return" : "Refund customer"
+    when "exchange" then confirm_inactive ? "Complete (confirm inactive) exchange" : "Complete exchange"
+    else confirm_inactive ? "Complete (confirm inactive) sale" : "Complete sale"
+    end
 
     if change_cents.to_i.positive?
       "#{base} — #{pos_money(change_cents)} change due"
@@ -189,7 +189,7 @@ module PosHelper
   end
 
   def pos_discount_type_options
-    [["Amount ($)", "amount"], ["Percent (%)", "percent"]]
+    [ [ "Amount ($)", "amount" ], [ "Percent (%)", "percent" ] ]
   end
 
   def pos_discount_amount_display(cents)
@@ -197,7 +197,7 @@ module PosHelper
   end
 
   def pos_return_disposition_options
-    PosTransactionLine::RETURN_DISPOSITIONS.map { |value| [value.humanize, value] }
+    PosTransactionLine::RETURN_DISPOSITIONS.map { |value| [ value.humanize, value ] }
   end
 
   def pos_tendered_display_cents(tender)
@@ -207,7 +207,7 @@ module PosHelper
   end
 
   def pos_tender_type_options
-    PosTender::PHASE6_ALLOWED_TYPES.map { |value| [value.humanize, value] }
+    PosTender::PHASE6_ALLOWED_TYPES.map { |value| [ value.humanize, value ] }
   end
 
   def pos_line_gross_cents(line)
@@ -217,12 +217,12 @@ module PosHelper
   def pos_line_transaction_discount_cents(line)
     return line.transaction_discount_cents if line.transaction_discount_cents.to_i.positive?
 
-    base = [pos_line_gross_cents(line) - line.line_discount_cents.to_i, 0].max
-    [base - line.extended_price_cents, 0].max
+    base = [ pos_line_gross_cents(line) - line.line_discount_cents.to_i, 0 ].max
+    [ base - line.extended_price_cents, 0 ].max
   end
 
   def pos_line_total_discount_cents(line)
-    [pos_line_gross_cents(line) - line.extended_price_cents, 0].max
+    [ pos_line_gross_cents(line) - line.extended_price_cents, 0 ].max
   end
 
   def pos_line_discount_breakdown(line)
@@ -308,7 +308,7 @@ module PosHelper
   end
 
   def pos_receipt_store_address(store)
-    parts = [store.city, store.region_code, store.postal_code].compact_blank
+    parts = [ store.city, store.region_code, store.postal_code ].compact_blank
     parts.join(", ")
   end
 

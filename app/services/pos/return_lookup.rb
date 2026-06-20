@@ -38,7 +38,7 @@ module Pos
     attr_reader :store, :transaction_number
 
     def resolve_sale_transaction(transaction)
-      return [transaction, nil] unless transaction.transaction_type == "return"
+      return [ transaction, nil ] unless transaction.transaction_type == "return"
 
       source_transactions = transaction.pos_transaction_lines.filter_map do |line|
         source = line.source_transaction if line.source_transaction&.completed?
@@ -47,16 +47,16 @@ module Pos
       end.uniq
 
       if source_transactions.empty?
-        return [nil, "This is a return receipt. Enter the original sale receipt number."]
+        return [ nil, "This is a return receipt. Enter the original sale receipt number." ]
       end
 
       if source_transactions.size > 1
-        return [nil, "This return receipt references multiple sales. Enter the original sale receipt number."]
+        return [ nil, "This return receipt references multiple sales. Enter the original sale receipt number." ]
       end
 
       source = source_transactions.first
       message = "Showing original sale receipt #{source.transaction_number}."
-      [source, message]
+      [ source, message ]
     end
 
     def sale_lines_for_return(transaction)

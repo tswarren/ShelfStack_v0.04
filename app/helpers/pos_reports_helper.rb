@@ -29,7 +29,7 @@ module PosReportsHelper
         session.status,
         l(session.opened_at.in_time_zone(session.store.time_zone), format: :short)
       ].join(" · ")
-      [label, session.id]
+      [ label, session.id ]
     end
   end
 
@@ -48,7 +48,7 @@ module PosReportsHelper
     if row.units_sold.present?
       row.units_sold.to_s
     elsif row.count.present? && !row.amount_cents.to_i.zero?
-      safe_join([row.count.to_s, pos_report_signed_money(row.amount_cents)], " ")
+      safe_join([ row.count.to_s, pos_report_signed_money(row.amount_cents) ], " ")
     elsif row.count.present?
       row.count.to_s
     else

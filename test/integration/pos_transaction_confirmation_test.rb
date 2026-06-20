@@ -4,17 +4,12 @@ require "test_helper"
 
 class PosTransactionConfirmationTest < ActionDispatch::IntegrationTest
   setup do
-    @store = create_store!
-    @workstation = create_workstation!(store: @store)
     @cashier = create_user!(username: "confirm_cashier")
-    grant_all_phase6_permissions!(@cashier, store: @store)
-
-    @variant = create_product_variant!(sku: "CONF-SKU-001", selling_price_cents: 1500)
-    create_store_tax_category_rate!(store: @store, tax_category: @variant.sub_department.default_tax_category)
-    receive_inventory!(store: @store, vendor: create_vendor!, variant: @variant, user: @cashier, quantity: 5)
-
-    login_user!(@cashier, workstation: @workstation)
-    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @cashier)
+    @ctx = setup_pos_workstation!(user: @cashier)
+    @store = @ctx[:store]
+    @workstation = @ctx[:workstation]
+    @variant = @ctx[:variant]
+    @register_session = @ctx[:register_session]
   end
 
   test "completed sale shows confirmation layout with actions summary and footer void" do
@@ -22,12 +17,12 @@ class PosTransactionConfirmationTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1500,
         extended_price_cents: 1500
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
     total = transaction.total_cents
@@ -36,7 +31,7 @@ class PosTransactionConfirmationTest < ActionDispatch::IntegrationTest
       transaction: transaction.reload,
       user: @cashier,
       register_session: @register_session,
-      tenders: [{ tender_type: "cash", amount_cents: total, reference_number: "tendered_cents:#{total + 500}" }]
+      tenders: [ { tender_type: "cash", amount_cents: total, reference_number: "tendered_cents:#{total + 500}" } ]
     )
 
     get pos_transaction_path(transaction.reload)
@@ -58,18 +53,15 @@ class PosTransactionConfirmationTest < ActionDispatch::IntegrationTest
   end
 
   test "new transaction button creates draft sale" do
-    transaction = create_pos_transaction!(
-      store: @store,
-      workstation: @workstation,
+    transaction = create_completed_pos_sale!(
       user: @cashier,
-      lines: [{
-        product_variant: @variant,
-        quantity: 1,
-        unit_price_cents: 1500,
-        extended_price_cents: 1500
-      }]
+      register_session: @register_session,
+      variant: @variant,
+      store: @store,
+      workstation: @workstation
     )
-    complete_pos_sale!(transaction: transaction, user: @cashier, register_session: @register_session)
+
+    assert transaction.completed?
 
     assert_difference -> { PosTransaction.drafts.count }, 1 do
       post pos_transactions_path, params: { mode: "sale" }

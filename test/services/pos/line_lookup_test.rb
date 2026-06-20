@@ -82,7 +82,7 @@ class Pos::LineLookupTest < ActiveSupport::TestCase
     result = Pos::LineLookup.call(store: @store, query: "9780306406157")
 
     assert_equal :ambiguous, result.status
-    assert_equal [@new_variant.id, @used_variant.id].sort, result.variants.map(&:id).sort
+    assert_equal [ @new_variant.id, @used_variant.id ].sort, result.variants.map(&:id).sort
   end
 
   test "formatted isbn search keeps multiple variants visible" do

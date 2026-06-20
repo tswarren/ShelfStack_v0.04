@@ -17,13 +17,13 @@ class Pos::ReportTransactionMetricsTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1000,
         line_discount_cents: 100,
         extended_price_cents: 900
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(sale, business_date: @session.business_date)
     complete_pos_sale!(transaction: sale, user: @user, register_session: @session)
@@ -38,14 +38,14 @@ class Pos::ReportTransactionMetricsTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 1000,
         extended_price_cents: -900,
         return_disposition: "return_to_stock",
         source_transaction_line: sale.pos_transaction_lines.first
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
     return_metrics = Pos::ReportTransactionMetrics.from_transaction(return_txn.reload)
@@ -56,7 +56,7 @@ class Pos::ReportTransactionMetricsTest < ActiveSupport::TestCase
     assert_equal 0, return_metrics.order_discount_cents
     assert_equal(-900, return_metrics.net_sales_cents)
 
-    combined = Pos::ReportTransactionMetrics.combine([sale_metrics, return_metrics])
+    combined = Pos::ReportTransactionMetrics.combine([ sale_metrics, return_metrics ])
     assert_equal 1000, combined.sales_cents
     assert_equal(-900, combined.refunds_cents)
     assert_equal 100, combined.line_discount_cents

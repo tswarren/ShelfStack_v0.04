@@ -32,7 +32,7 @@ class Phase6AuthorizationTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     complete_pos_sale!(transaction: transaction, user: @user, register_session: session)
 
@@ -60,7 +60,7 @@ class Phase6AuthorizationTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     complete_pos_sale!(transaction: transaction, user: @user, register_session: session)
 

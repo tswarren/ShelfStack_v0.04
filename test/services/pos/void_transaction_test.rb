@@ -15,7 +15,7 @@ class Pos::VoidTransactionTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     complete_pos_sale!(transaction: @transaction, user: @user, register_session: @register_session)
     @transaction.reload
@@ -40,6 +40,29 @@ class Pos::VoidTransactionTest < ActiveSupport::TestCase
     assert_equal @transaction.inventory_posting, pos_void.inventory_posting.reversal_of_posting
     assert @transaction.pos_tenders.where.not(reverses_tender_id: nil).exists?
     assert_equal 5, InventoryBalance.find_by!(store: @store, product_variant: @variant).quantity_on_hand
+    assert AuditEvent.exists?(event_name: "pos.transaction.voided", auditable: @transaction)
+  end
+
+  test "void preserves original line and tender rows" do
+    original_line_attrs = @transaction.pos_transaction_lines.first.attributes.slice(
+      "extended_price_cents", "quantity", "unit_price_cents"
+    )
+    original_tender = @transaction.pos_tenders.first
+    original_tender_amount = original_tender.amount_cents
+
+    authorization = grant_void_authorization!(transaction: @transaction, requested_by: @user)
+    Pos::VoidTransaction.call!(
+      transaction: @transaction,
+      voided_by_user: @user,
+      register_session: @register_session,
+      reason_code: "cashier_error",
+      pos_authorization: authorization
+    )
+
+    line = @transaction.pos_transaction_lines.first.reload
+    assert_equal original_line_attrs, line.attributes.slice("extended_price_cents", "quantity", "unit_price_cents")
+    assert_equal original_tender_amount, original_tender.reload.amount_cents
+    assert @transaction.pos_tenders.where.not(reverses_tender_id: nil).exists?
   end
 
   test "void without supervisor authorization raises" do

@@ -15,7 +15,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     Pos::RecalculateTransaction.call!(@transaction, business_date: @session.business_date)
   end
@@ -58,7 +58,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     result = Pos::CompletionReadiness.check(
       transaction: @transaction,
       register_session: @session,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", @transaction.total_cents / 100.0) }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: format("%.2f", @transaction.total_cents / 100.0) } ]
     )
 
     assert result.ready?
@@ -68,7 +68,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     result = Pos::CompletionReadiness.check(
       transaction: @transaction,
       register_session: @session,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: "1.00" }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: "1.00" } ]
     )
 
     assert result.blocked?
@@ -79,7 +79,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     result = Pos::CompletionReadiness.check(
       transaction: @transaction,
       register_session: nil,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: "1.00" }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: "1.00" } ]
     )
 
     assert result.structural_blocked?
@@ -91,7 +91,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     result = Pos::CompletionReadiness.check(
       transaction: @transaction,
       register_session: @session,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", @transaction.total_cents / 100.0) }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: format("%.2f", @transaction.total_cents / 100.0) } ]
     )
 
     assert result.tender_ready?
@@ -103,7 +103,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000 }]
+      lines: [ { product_variant: @variant, quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000 } ]
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
     total = return_txn.total_cents.abs
@@ -111,7 +111,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     result = Pos::CompletionReadiness.check(
       transaction: return_txn,
       register_session: @session,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     )
 
     assert result.tender_ready?
@@ -143,14 +143,14 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 6000, extended_price_cents: 6000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 6000, extended_price_cents: 6000 } ]
     )
     Pos::RecalculateTransaction.call!(expensive, business_date: @session.business_date)
 
     result = Pos::CompletionReadiness.check(
       transaction: expensive,
       register_session: @session,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", expensive.total_cents / 100.0) }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: format("%.2f", expensive.total_cents / 100.0) } ]
     )
 
     refute result.blockers.any? { |check| check.key == :cash_refund_auth }
@@ -162,7 +162,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: -1, unit_price_cents: 6000, extended_price_cents: -6000 }]
+      lines: [ { product_variant: @variant, quantity: -1, unit_price_cents: 6000, extended_price_cents: -6000 } ]
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
     total = return_txn.total_cents.abs
@@ -170,7 +170,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     result = Pos::CompletionReadiness.check(
       transaction: return_txn,
       register_session: @session,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     )
 
     assert result.structural_blocked?
@@ -192,7 +192,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     result = Pos::CompletionReadiness.check(
       transaction: exchange,
       register_session: @session,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: "0.00" }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: "0.00" } ]
     )
 
     assert result.tender_ready?

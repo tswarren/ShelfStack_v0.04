@@ -139,9 +139,9 @@ module Pos
     def mix_row(label, transactions, amount: :net)
       metrics = aggregate(transactions)
       amount_cents = case amount
-                     when :refunds then metrics.refunds_cents
-                     else metrics.net_sales_cents.abs
-                     end
+      when :refunds then metrics.refunds_cents
+      else metrics.net_sales_cents.abs
+      end
 
       TransactionMixRow.new(
         label: label,

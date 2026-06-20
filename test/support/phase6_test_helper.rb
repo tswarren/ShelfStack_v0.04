@@ -68,4 +68,68 @@ module Phase6TestHelper
       pos_transaction: transaction
     )
   end
+
+  def grant_force_close_authorization!(register_session:, requested_by:, manager: nil)
+    manager ||= create_user!(username: "force-close-manager-#{SecureRandom.hex(4)}", pin: "4321")
+    grant_permission!(manager, "pos.authorizations.grant", store: register_session.store)
+
+    Pos::AuthorizationRequest.grant!(
+      authorization_type: "force_close_register",
+      requested_by: requested_by,
+      manager_username: manager.username,
+      manager_pin: "4321",
+      store: register_session.store,
+      pos_register_session: register_session
+    )
+  end
+
+  def setup_pos_workstation!(user:, store: nil, workstation: nil, opening_cash_cents: 0, login: true, grant_permissions: true, inventory_qty: 5, **variant_attrs)
+    store ||= create_store!
+    workstation ||= create_workstation!(store: store)
+    grant_all_phase6_permissions!(user, store: store) if grant_permissions
+
+    default_variant_attrs = {
+      sku: "POS-TEST-#{SecureRandom.hex(3)}",
+      selling_price_cents: 1500
+    }
+    variant = create_product_variant!(**default_variant_attrs.merge(variant_attrs))
+    create_store_tax_category_rate!(store: store, tax_category: variant.sub_department.default_tax_category)
+    if inventory_qty.positive?
+      receive_inventory!(store: store, vendor: create_vendor!, variant: variant, user: user, quantity: inventory_qty)
+    end
+    login_user!(user, workstation: workstation) if login
+
+    register_session = open_register_session!(
+      store: store,
+      workstation: workstation,
+      user: user,
+      opening_cash_cents: opening_cash_cents
+    )
+
+    {
+      store: store,
+      workstation: workstation,
+      variant: variant,
+      register_session: register_session
+    }
+  end
+
+  def create_completed_pos_sale!(user:, register_session:, variant:, store:, workstation:, quantity: 1, unit_price_cents: nil, **attrs)
+    unit_price_cents ||= variant.selling_price_cents
+    extended = unit_price_cents * quantity
+    transaction = create_pos_transaction!(
+      store: store,
+      workstation: workstation,
+      user: user,
+      lines: [ {
+        product_variant: variant,
+        quantity: quantity,
+        unit_price_cents: unit_price_cents,
+        extended_price_cents: extended
+      } ],
+      **attrs
+    )
+    complete_pos_sale!(transaction: transaction, user: user, register_session: register_session)
+    transaction.reload
+  end
 end

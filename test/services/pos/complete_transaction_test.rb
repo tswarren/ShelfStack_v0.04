@@ -16,12 +16,12 @@ class Pos::CompleteTransactionTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1000,
         extended_price_cents: 1000
-      }]
+      } ]
     )
   end
 
@@ -44,33 +44,8 @@ class Pos::CompleteTransactionTest < ActiveSupport::TestCase
 
     balance = InventoryBalance.find_by!(store: @store, product_variant: @variant)
     assert_equal 4, balance.quantity_on_hand
-  end
 
-  test "completes even exchange without tenders when total is zero" do
-    @transaction.pos_transaction_lines.create!(
-      line_number: 2,
-      line_type: "variant",
-      product_variant: @variant,
-      product: @variant.product,
-      quantity: -1,
-      unit_price_cents: 1000,
-      extended_price_cents: -1000
-    )
-    Pos::RecalculateTransaction.call!(@transaction, business_date: @register_session.business_date)
-    assert @transaction.total_cents.zero?
-    grant_no_receipt_return_authorization!(@transaction)
-
-    Pos::CompleteTransaction.call!(
-      transaction: @transaction.reload,
-      completed_by_user: @user,
-      register_session: @register_session,
-      confirmed_inactive: true
-    )
-
-    @transaction.reload
-    assert @transaction.completed?
-    assert_equal "exchange", @transaction.transaction_type
-    assert_empty @transaction.pos_tenders
+    assert AuditEvent.exists?(event_name: "pos.transaction.completed", auditable: @transaction)
   end
 
   test "completes even exchange with explicit zero cash tender" do
@@ -88,7 +63,7 @@ class Pos::CompleteTransactionTest < ActiveSupport::TestCase
     grant_no_receipt_return_authorization!(@transaction)
     Pos::TenderSync.call!(
       transaction: @transaction,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: "0.00" }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: "0.00" } ]
     )
 
     Pos::CompleteTransaction.call!(

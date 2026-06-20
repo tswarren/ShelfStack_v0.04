@@ -283,7 +283,7 @@ module Pos
           non_cash_sum = parse_tender_inputs.reject { |t| t[:tender_type] == "cash" }.sum { |t| t[:amount_cents] }
           remaining = transaction.total_cents - non_cash_sum
           if remaining.positive?
-            [cash[:amount_cents], remaining].min
+            [ cash[:amount_cents], remaining ].min
           else
             cash[:amount_cents]
           end

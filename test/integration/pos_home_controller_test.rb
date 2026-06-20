@@ -4,19 +4,16 @@ require "test_helper"
 
 class PosHomeControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @store = create_store!
-    @workstation = create_workstation!(store: @store)
     @cashier = create_user!(username: "home_cashier")
-    grant_all_phase6_permissions!(@cashier, store: @store)
-
-    @variant = create_product_variant!(sku: "HOME-SKU-001", selling_price_cents: 1200)
-    create_store_tax_category_rate!(store: @store, tax_category: @variant.sub_department.default_tax_category)
-
-    login_user!(@cashier, workstation: @workstation)
+    @ctx = setup_pos_workstation!(user: @cashier, login: true, inventory_qty: 0)
+    @store = @ctx[:store]
+    @workstation = @ctx[:workstation]
+    @variant = @ctx[:variant]
+    receive_inventory!(store: @store, vendor: create_vendor!, variant: @variant, user: @cashier, quantity: 5)
   end
 
   test "open register renders action buttons session summary and queue tables" do
-    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @cashier)
+    @register_session = @ctx[:register_session]
 
     get pos_root_path
     assert_response :success
@@ -35,6 +32,16 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "closed register renders minimal actions and draft panel only" do
+    PosRegisterSession.where(workstation: @workstation).find_each do |session|
+      Pos::RegisterSessionLifecycle.close!(
+        session: session,
+        closed_by_user: @cashier,
+        expected_closing_cash_cents: 0,
+        counted_closing_cash_cents: 0,
+        force: false
+      )
+    end
+
     get pos_root_path
     assert_response :success
 
@@ -47,13 +54,13 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "queue tables render draft and suspended rows" do
-    open_register_session!(store: @store, workstation: @workstation, user: @cashier)
+    @register_session = @ctx[:register_session]
 
     draft = create_pos_transaction!(
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1200, extended_price_cents: 1200 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1200, extended_price_cents: 1200 } ]
     )
 
     suspended = create_pos_transaction!(
@@ -61,7 +68,7 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
       workstation: @workstation,
       user: @cashier,
       attrs: { status: "suspended", suspended_at: Time.current },
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1200, extended_price_cents: 1200 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1200, extended_price_cents: 1200 } ]
     )
 
     get pos_root_path

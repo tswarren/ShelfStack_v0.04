@@ -44,7 +44,7 @@ module Pos
     attr_reader :value, :input_type, :base_cents
 
     def parse_amount_cents
-      cents = [(BigDecimal(value.to_s) * 100).round.to_i, 0].max
+      cents = [ (BigDecimal(value.to_s) * 100).round.to_i, 0 ].max
       if cents > base_cents
         raise Error, "Discount cannot exceed #{format_money(base_cents)}."
       end

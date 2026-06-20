@@ -20,7 +20,7 @@ class PosReportsControllerTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1200, extended_price_cents: 1200 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1200, extended_price_cents: 1200 } ]
     )
     complete_pos_sale!(transaction: @sale, user: @user, register_session: @session)
   end

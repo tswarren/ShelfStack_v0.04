@@ -15,7 +15,7 @@ class Pos::DeriveTransactionTypeTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
     assert_equal "sale", Pos::DeriveTransactionType.call(transaction)
   end

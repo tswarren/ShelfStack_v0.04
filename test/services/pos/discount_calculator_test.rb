@@ -25,9 +25,9 @@ class Pos::DiscountCalculatorTest < ActiveSupport::TestCase
     Pos::DiscountCalculator.apply_transaction_discount!(@transaction.reload)
 
     lines = @transaction.pos_transaction_lines.order(:line_number)
-    assert_equal [100, 200], lines.map(&:transaction_discount_cents)
+    assert_equal [ 100, 200 ], lines.map(&:transaction_discount_cents)
     assert_equal 300, lines.sum(&:transaction_discount_cents)
-    assert_equal [900, 1800], lines.map(&:extended_price_cents)
+    assert_equal [ 900, 1800 ], lines.map(&:extended_price_cents)
   end
 
   test "resets transaction discount shares when order discount is zero" do
@@ -58,7 +58,7 @@ class Pos::DiscountCalculatorTest < ActiveSupport::TestCase
     sale_lines = @transaction.pos_transaction_lines.reject(&:return_line?).sort_by(&:line_number)
     return_line = @transaction.pos_transaction_lines.find(&:return_line?)
 
-    assert_equal [100, 200], sale_lines.map(&:transaction_discount_cents)
+    assert_equal [ 100, 200 ], sale_lines.map(&:transaction_discount_cents)
     assert_equal 0, return_line.transaction_discount_cents
     assert_equal 1000, return_line.extended_price_cents
   end

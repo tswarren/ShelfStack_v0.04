@@ -32,7 +32,7 @@ module Pos
 
     def resolve_exact
       if barcode_like_query?
-        [true, false].each do |active_only|
+        [ true, false ].each do |active_only|
           matches = find_by_catalog_identifiers(active_only: active_only)
           return build_result(matches) if matches.any?
         end

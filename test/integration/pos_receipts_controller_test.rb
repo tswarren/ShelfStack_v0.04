@@ -4,17 +4,13 @@ require "test_helper"
 
 class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @store = create_store!
-    @workstation = create_workstation!(store: @store)
     @cashier = create_user!(username: "receipt_cashier")
-    grant_all_phase6_permissions!(@cashier, store: @store)
-
-    @variant = create_product_variant!(sku: "RCP-ISBN-001", selling_price_cents: 1500)
-    create_store_tax_category_rate!(store: @store, tax_category: @variant.sub_department.default_tax_category)
+    @ctx = setup_pos_workstation!(user: @cashier)
+    @store = @ctx[:store]
+    @workstation = @ctx[:workstation]
+    @variant = create_product_variant!(sku: "RCP-ISBN-001", selling_price_cents: 1500, sub_department: @ctx[:variant].sub_department)
     receive_inventory!(store: @store, vendor: create_vendor!, variant: @variant, user: @cashier, quantity: 5)
-
-    login_user!(@cashier, workstation: @workstation)
-    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @cashier)
+    @register_session = @ctx[:register_session]
   end
 
   test "show renders 80mm receipt layout from snapshots" do
@@ -22,12 +18,12 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1500,
         extended_price_cents: 1500
-      }]
+      } ]
     )
     complete_pos_sale!(transaction: transaction, user: @cashier, register_session: @register_session)
     receipt = transaction.reload.pos_receipt
@@ -54,12 +50,12 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1500,
         extended_price_cents: 1500
-      }]
+      } ]
     )
     complete_pos_sale!(transaction: transaction, user: @cashier, register_session: @register_session)
     receipt = transaction.reload.pos_receipt
@@ -78,13 +74,13 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
       workstation: @workstation,
       user: @cashier,
       attrs: { discount_cents: 100 },
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1500,
         line_discount_cents: 150,
         extended_price_cents: 1250
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
     complete_pos_sale!(transaction: transaction.reload, user: @cashier, register_session: @register_session)
@@ -106,12 +102,12 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1500,
         extended_price_cents: 1500
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(sale, business_date: @register_session.business_date)
     complete_pos_sale!(transaction: sale, user: @cashier, register_session: @register_session)
@@ -120,7 +116,7 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 1500,
@@ -128,14 +124,14 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
         return_disposition: "return_to_stock",
         source_transaction: sale,
         source_transaction_line: sale.pos_transaction_lines.first
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @register_session.business_date)
     complete_pos_sale!(
       transaction: return_txn.reload,
       user: @cashier,
       register_session: @register_session,
-      tenders: [{ tender_type: "cash", amount_cents: return_txn.total_cents }]
+      tenders: [ { tender_type: "cash", amount_cents: return_txn.total_cents } ]
     )
     receipt = return_txn.reload.pos_receipt
 

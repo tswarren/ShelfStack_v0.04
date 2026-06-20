@@ -74,15 +74,15 @@ module Pos
         non_cash_sum = non_cash.sum { |t| t[:amount_cents] }
         remaining = total - non_cash_sum
         cash_tendered = cash&.dig(:amount_cents).to_i
-        change = cash_tendered.positive? ? [cash_tendered - remaining, 0].max : 0
-        still_due = remaining.positive? ? [remaining - cash_tendered, 0].max : 0
-        [change, still_due]
+        change = cash_tendered.positive? ? [ cash_tendered - remaining, 0 ].max : 0
+        still_due = remaining.positive? ? [ remaining - cash_tendered, 0 ].max : 0
+        [ change, still_due ]
       elsif total.negative?
         tender_total = parsed.sum { |t| t[:amount_cents] }
         still_due = (total - tender_total).abs
-        [0, still_due]
+        [ 0, still_due ]
       else
-        [0, 0]
+        [ 0, 0 ]
       end
     end
 

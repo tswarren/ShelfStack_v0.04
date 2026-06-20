@@ -55,7 +55,7 @@ class PosTransaction < ApplicationRecord
   def immutable_when_completed
     return unless status_in_database == "completed"
 
-    allowed_changes = changed_attributes.keys - ["updated_at"]
+    allowed_changes = changed_attributes.keys - [ "updated_at" ]
     if allowed_changes.sort == %w[status voided_at] && status == "voided"
       return
     end

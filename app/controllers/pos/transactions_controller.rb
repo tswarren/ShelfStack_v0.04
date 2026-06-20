@@ -73,7 +73,7 @@ module Pos
       )
       payload[:panel_html] = render_to_string(
         partial: "pos/transactions/readiness_panel",
-        formats: [:html],
+        formats: [ :html ],
         locals: { transaction: @transaction, readiness: readiness }
       )
 
@@ -257,7 +257,7 @@ module Pos
 
     def sync_tenders
       result = Pos::TenderSync.call!(transaction: @transaction, tender_inputs: params[:tenders])
-      notice = ["Tenders updated.", result.message].compact.join(" ")
+      notice = [ "Tenders updated.", result.message ].compact.join(" ")
       respond_to_workspace(notice: notice)
     rescue Pos::TenderSync::Error => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)

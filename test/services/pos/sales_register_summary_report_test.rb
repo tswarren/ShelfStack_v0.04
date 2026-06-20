@@ -25,13 +25,13 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
       workstation: @workstation,
       user: @cashier,
       attrs: { discount_cents: 200 },
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 2000,
         line_discount_cents: 100,
         extended_price_cents: 1700
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(sale, business_date: @session.business_date)
     complete_pos_sale!(transaction: sale, user: @cashier, register_session: @session)
@@ -72,12 +72,12 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
         store: @store,
         workstation: @workstation,
         user: @cashier,
-        lines: [{
+        lines: [ {
           product_variant: @variant,
           quantity: 1,
           unit_price_cents: 2000,
           extended_price_cents: 2000
-        }]
+        } ]
       )
       complete_pos_sale!(transaction: sale, user: @cashier, register_session: @session)
     end
@@ -98,12 +98,12 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
         store: @store,
         workstation: @workstation,
         user: @cashier,
-        lines: [{
+        lines: [ {
           product_variant: @variant,
           quantity: 1,
           unit_price_cents: 2000,
           extended_price_cents: 2000
-        }]
+        } ]
       )
       complete_pos_sale!(transaction: sale, user: @cashier, register_session: @session)
     end

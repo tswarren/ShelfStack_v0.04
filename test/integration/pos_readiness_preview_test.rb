@@ -4,17 +4,12 @@ require "test_helper"
 
 class PosReadinessPreviewTest < ActionDispatch::IntegrationTest
   setup do
-    @store = create_store!
-    @workstation = create_workstation!(store: @store)
     @cashier = create_user!(username: "readiness_cashier")
-    grant_all_phase6_permissions!(@cashier, store: @store)
-
-    @variant = create_product_variant!(selling_price_cents: 1500)
-    create_store_tax_category_rate!(store: @store, tax_category: @variant.sub_department.default_tax_category)
-    receive_inventory!(store: @store, vendor: create_vendor!, variant: @variant, user: @cashier, quantity: 5)
-
-    login_user!(@cashier, workstation: @workstation)
-    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @cashier, opening_cash_cents: 10_000)
+    @ctx = setup_pos_workstation!(user: @cashier, opening_cash_cents: 10_000)
+    @store = @ctx[:store]
+    @workstation = @ctx[:workstation]
+    @variant = @ctx[:variant]
+    @register_session = @ctx[:register_session]
 
     post pos_transactions_path
     @transaction = PosTransaction.order(:id).last

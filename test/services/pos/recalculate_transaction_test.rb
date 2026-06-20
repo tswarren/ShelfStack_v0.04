@@ -16,7 +16,7 @@ class Pos::RecalculateTransactionTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
     )
 
     Pos::RecalculateTransaction.call!(transaction)
@@ -30,13 +30,13 @@ class Pos::RecalculateTransactionTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 1000,
         extended_price_cents: 1000,
         return_disposition: "return_to_stock"
-      }]
+      } ]
     )
 
     Pos::RecalculateTransaction.call!(transaction)
@@ -51,13 +51,13 @@ class Pos::RecalculateTransactionTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 1000,
         line_discount_cents: 1500,
         extended_price_cents: 1000
-      }]
+      } ]
     )
 
     Pos::RecalculateTransaction.call!(transaction)

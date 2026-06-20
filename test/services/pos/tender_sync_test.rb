@@ -13,7 +13,7 @@ class Pos::TenderSyncTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @user,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1500, extended_price_cents: 1500 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1500, extended_price_cents: 1500 } ]
     )
     Pos::RecalculateTransaction.call!(@transaction)
   end
@@ -21,7 +21,7 @@ class Pos::TenderSyncTest < ActiveSupport::TestCase
   test "accepts cash tender greater than total and records applied amount with change" do
     result = Pos::TenderSync.call!(
       transaction: @transaction,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: "20.00" }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: "20.00" } ]
     )
 
     cash = @transaction.pos_tenders.find_by!(tender_type: "cash")
@@ -52,7 +52,7 @@ class Pos::TenderSyncTest < ActiveSupport::TestCase
     error = assert_raises(Pos::TenderSync::Error) do
       Pos::TenderSync.call!(
         transaction: @transaction,
-        tender_inputs: [{ tender_type: "cash", amount_dollars: "5.00" }]
+        tender_inputs: [ { tender_type: "cash", amount_dollars: "5.00" } ]
       )
     end
 
@@ -75,7 +75,7 @@ class Pos::TenderSyncTest < ActiveSupport::TestCase
 
     Pos::TenderSync.call!(
       transaction: @transaction,
-      tender_inputs: [{ tender_type: "cash", amount_dollars: "0.00" }]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: "0.00" } ]
     )
 
     cash = @transaction.pos_tenders.find_by!(tender_type: "cash")

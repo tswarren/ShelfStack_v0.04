@@ -170,7 +170,7 @@ class CatalogIdentifierService
     digits = normalize_standard_digits(value)
     return [] if digits.blank?
 
-    candidates = [digits]
+    candidates = [ digits ]
     candidates << convert_isbn10_to_isbn13(digits) if digits.length == 10
     candidates.uniq
   end

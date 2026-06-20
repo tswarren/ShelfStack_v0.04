@@ -20,13 +20,13 @@ class Pos::SalesRevenueSummaryReportTest < ActiveSupport::TestCase
       workstation: @workstation,
       user: @cashier,
       attrs: { discount_cents: 200 },
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: 1,
         unit_price_cents: 2000,
         line_discount_cents: 100,
         extended_price_cents: 1700
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(sale, business_date: @session.business_date)
     complete_pos_sale!(transaction: sale, user: @cashier, register_session: @session)
@@ -54,7 +54,7 @@ class Pos::SalesRevenueSummaryReportTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 2000, extended_price_cents: 2000 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 2000, extended_price_cents: 2000 } ]
     )
     complete_pos_sale!(transaction: sale, user: @cashier, register_session: @session)
 
@@ -62,14 +62,14 @@ class Pos::SalesRevenueSummaryReportTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @manager,
-      lines: [{
+      lines: [ {
         product_variant: @variant,
         quantity: -1,
         unit_price_cents: 2000,
         extended_price_cents: -2000,
         return_disposition: "return_to_stock",
         source_transaction_line: sale.pos_transaction_lines.first
-      }]
+      } ]
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
     return_txn.pos_tenders.create!(tender_type: "cash", amount_cents: return_txn.total_cents)
@@ -110,7 +110,7 @@ class Pos::SalesRevenueSummaryReportTest < ActiveSupport::TestCase
       store: @store,
       workstation: @workstation,
       user: @cashier,
-      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 1500, extended_price_cents: 1500 }]
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1500, extended_price_cents: 1500 } ]
     )
     complete_pos_sale!(transaction: sale, user: @cashier, register_session: @session)
 

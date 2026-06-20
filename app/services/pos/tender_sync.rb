@@ -132,7 +132,7 @@ module Pos
     def create_tender!(tender_type, amount_cents, tendered_cents: nil)
       reference_number = if tendered_cents.present? && tendered_cents > amount_cents
                            "#{TENDERED_REFERENCE_PREFIX}#{tendered_cents}"
-                         end
+      end
 
       transaction.pos_tenders.create!(
         tender_type: tender_type,
