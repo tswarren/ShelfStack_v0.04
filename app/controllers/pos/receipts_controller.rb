@@ -16,7 +16,11 @@ module Pos
       @receipt = PosReceipt.where(store: pos_store).find(params[:id])
       @receipt.increment!(:reprint_count)
       record_audit!("pos.receipt.printed", @receipt)
-      redirect_to pos_receipt_path(@receipt), notice: "Receipt reprinted."
+
+      respond_to do |format|
+        format.html { redirect_to pos_receipt_path(@receipt) }
+        format.turbo_stream { head :no_content }
+      end
     end
   end
 end

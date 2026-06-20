@@ -42,6 +42,34 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Thank you for shopping with us."
     assert_includes response.body, "Items at list"
     assert_not_includes response.body, ">Net<"
+    assert_includes response.body, "Print"
+    assert_includes response.body, "Summary"
+    assert_includes response.body, "Menu"
+    assert_not_includes response.body, "Reprint"
+    assert_select "a[href=?]", pos_transaction_path(transaction), text: "Summary"
+  end
+
+  test "print increments reprint count and records audit event" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      lines: [{
+        product_variant: @variant,
+        quantity: 1,
+        unit_price_cents: 1500,
+        extended_price_cents: 1500
+      }]
+    )
+    complete_pos_sale!(transaction: transaction, user: @cashier, register_session: @register_session)
+    receipt = transaction.reload.pos_receipt
+
+    assert_difference -> { receipt.reload.reprint_count }, 1 do
+      assert_difference -> { AuditEvent.where(event_name: "pos.receipt.printed", auditable: receipt).count }, 1 do
+        patch print_pos_receipt_path(receipt), headers: { Accept: "text/vnd.turbo-stream.html" }
+      end
+    end
+    assert_response :no_content
   end
 
   test "show renders discounted sale with clear line and totals layout" do

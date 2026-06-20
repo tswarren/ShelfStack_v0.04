@@ -1,87 +1,9 @@
-<div class="ss-pos-dashboard">
-  <h1>Register</h1>
+<div class="ss-pos-home">
+  <h1 class="ss-pos-home__title">Point of Sale</h1>
 
   <% if @register_session %>
-    <section class="ss-pos-panel ss-pos-panel--highlight ss-pos-hero">
-      <h2>Register open — ready to sell</h2>
-      <dl class="ss-pos-stats">
-        <div><dt>Business date</dt><dd><%= @register_session.business_date %></dd></div>
-        <div><dt>Workstation</dt><dd><%= current_workstation.name %></dd></div>
-        <div><dt>Cashier</dt><dd><%= current_user.username %></dd></div>
-        <div><dt>Opening cash</dt><dd><%= pos_money(@register_session.opening_cash_cents) %></dd></div>
-        <% if @session_summary %>
-          <div><dt>Expected cash</dt><dd><%= pos_money(@session_summary.expected_closing_cash_cents) %></dd></div>
-        <% end %>
-      </dl>
-      <div class="ss-pos-actions">
-        <% if @draft_transactions.any? %>
-          <%= link_to "Continue selling", edit_pos_transaction_path(@draft_transactions.first), class: "ss-btn" %>
-        <% else %>
-          <%= button_to "New sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn" %>
-        <% end %>
-        <%= link_to "Manage session", pos_register_session_path(@register_session), class: "ss-btn ss-btn-secondary" %>
-        <%= link_to "Close drawer", pos_register_session_path(@register_session, anchor: "close-register"), class: "ss-btn ss-btn-secondary" %>
-      </div>
-    </section>
+    <%= render "open_dashboard" %>
   <% else %>
-    <section class="ss-pos-panel ss-pos-panel--warning ss-pos-hero">
-      <h2>Register is closed</h2>
-      <p>Open the register to begin selling.</p>
-      <%= link_to "Open register", new_pos_register_session_path, class: "ss-btn" %>
-    </section>
-  <% end %>
-
-  <section class="ss-pos-panel">
-    <h2>Other actions</h2>
-    <div class="ss-pos-actions">
-      <%= button_to "Draft sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn ss-btn-secondary", title: "Register must be open to complete" %>
-      <%= button_to "Draft return / exchange", pos_transactions_path, method: :post, params: { mode: "return" }, class: "ss-btn ss-btn-secondary", title: "Register must be open to complete" %>
-      <%= link_to "Paid in/out", (@register_session ? pos_register_session_path(@register_session, anchor: "cash-movement") : new_pos_register_session_path), class: "ss-btn ss-btn-secondary" %>
-      <%= link_to "Drawer report", drawer_pos_reports_path, class: "ss-btn ss-btn-secondary" %>
-    </div>
-    <% unless @register_session %>
-      <p class="ss-hint">Draft transactions can be started without an open register, but completion requires an open session.</p>
-    <% end %>
-  </section>
-
-  <% if @draft_transactions.any? %>
-    <section class="ss-pos-panel">
-      <h2>Draft queue</h2>
-      <ul class="ss-pos-queue">
-        <% @draft_transactions.each do |transaction| %>
-          <li class="ss-pos-queue__item">
-            <div class="ss-pos-queue__summary">
-              <strong>Draft #<%= transaction.id %></strong>
-              · <%= transaction.pos_transaction_lines.size %> <%= "item".pluralize(transaction.pos_transaction_lines.size) %>
-              · <%= pos_money(transaction.total_cents) %>
-              · started <%= transaction.updated_at.strftime("%-I:%M %p") %>
-            </div>
-            <%= link_to "Continue", edit_pos_transaction_path(transaction), class: "ss-btn ss-btn-secondary ss-btn--small" %>
-          </li>
-        <% end %>
-      </ul>
-    </section>
-  <% end %>
-
-  <% if @suspended_transactions.any? %>
-    <section class="ss-pos-panel">
-      <h2>Suspended queue</h2>
-      <ul class="ss-pos-queue">
-        <% @suspended_transactions.each do |transaction| %>
-          <li class="ss-pos-queue__item">
-            <div class="ss-pos-queue__summary">
-              <strong>Suspended #<%= transaction.id %></strong>
-              · cashier <%= transaction.cashier_user.username %>
-              · <%= transaction.pos_transaction_lines.size %> <%= "item".pluralize(transaction.pos_transaction_lines.size) %>
-              · <%= pos_money(transaction.total_cents) %>
-              <% if transaction.suspended_at %>
-                · <%= transaction.suspended_at.strftime("%-I:%M %p") %>
-              <% end %>
-            </div>
-            <%= link_to "Resume", resume_pos_transaction_path(transaction), data: { turbo_method: :patch }, class: "ss-btn ss-btn-secondary ss-btn--small" %>
-          </li>
-        <% end %>
-      </ul>
-    </section>
+    <%= render "closed_dashboard" %>
   <% end %>
 </div>

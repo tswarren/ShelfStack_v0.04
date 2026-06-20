@@ -385,4 +385,12 @@ module PosHelper
       pos_receipt_line_net_cents(line)
     end
   end
+
+  def pos_transaction_items_sold_count(transaction)
+    transaction.pos_transaction_lines.sum { |line| line.quantity.positive? ? line.quantity : 0 }
+  end
+
+  def pos_transaction_items_returned_count(transaction)
+    transaction.pos_transaction_lines.sum { |line| line.quantity.negative? ? line.quantity.abs : 0 }
+  end
 end

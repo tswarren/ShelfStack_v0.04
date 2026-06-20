@@ -3,7 +3,8 @@
 module Pos
   class HomeController < BaseController
     def show
-      @register_session = current_register_session
+      session = current_register_session
+      @register_session = session && PosRegisterSession.includes(:opened_by_user).find(session.id)
       @draft_transactions = []
       @suspended_transactions = []
       @session_summary = @register_session && Pos::RegisterSessionSummary.for(@register_session)

@@ -1,0 +1,12 @@
+<div class="ss-pos-transaction-show__heading">
+  <h1 class="ss-pos-transaction-show__title">
+    Transaction <%= transaction.transaction_number %>
+  </h1>
+  <p class="ss-pos-transaction-show__meta">
+    Status: <%= transaction.status.humanize %>
+    <% if transaction.transaction_type.present? %>
+      · <%= transaction.transaction_type.humanize %>
+    <% end %>
+    · <%= transaction.cashier_user.username %>
+  </p>
+</div>

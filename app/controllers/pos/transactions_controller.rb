@@ -340,7 +340,10 @@ module Pos
     private
 
     def set_transaction
-      @transaction = PosTransaction.where(store: pos_store).find(params[:id])
+      @transaction = PosTransaction
+        .includes(:cashier_user, :pos_receipt, :pos_tenders, pos_transaction_lines: :product_variant)
+        .where(store: pos_store)
+        .find(params[:id])
     end
 
     def ensure_editable

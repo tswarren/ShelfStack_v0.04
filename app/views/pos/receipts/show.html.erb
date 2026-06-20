@@ -12,8 +12,5 @@
   <%= render "pos/receipts/tenders", transaction: @transaction %>
   <%= render "pos/receipts/footer" %>
 
-  <div class="ss-pos-no-print">
-    <%= button_to "Reprint", print_pos_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
-    <%= link_to "Print", "#", onclick: "window.print(); return false;", class: "ss-btn ss-btn-secondary" %>
-  </div>
+  <%= render "pos/receipts/actions", receipt: @receipt, transaction: @transaction %>
 </div>

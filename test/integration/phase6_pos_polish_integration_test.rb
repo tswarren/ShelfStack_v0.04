@@ -47,7 +47,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_response :success
-    assert_match(/View receipt/i, response.body)
+    assert_match(/Receipt/i, response.body)
     assert_match(/New sale/i, response.body)
     assert_match(/Void transaction/i, response.body)
     refute_match(/Change due/i, response.body)
@@ -77,7 +77,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/Change due/i, response.body)
     assert_match(/\$5\.00/, response.body)
-    assert_match(/View receipt/i, response.body)
+    assert_match(/Receipt/i, response.body)
     assert_match(/New sale/i, response.body)
   end
 

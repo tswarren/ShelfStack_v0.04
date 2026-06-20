@@ -1,0 +1,31 @@
+<section class="ss-pos-panel ss-pos-transaction-show__lines">
+  <h2 class="ss-pos-panel__title">Lines</h2>
+  <table class="ss-table ss-pos-table">
+    <thead>
+      <tr>
+        <th>Line</th>
+        <th>SKU</th>
+        <th>Description</th>
+        <th>Qty</th>
+        <th>Unit</th>
+        <th>Discount</th>
+        <th>Tax</th>
+        <th>Extended</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% transaction.pos_transaction_lines.each do |line| %>
+        <tr>
+          <td><%= line.line_number %></td>
+          <td><%= line.variant_sku_snapshot || line.product_variant&.sku %></td>
+          <td><%= line.variant_name_snapshot || line.open_ring_description || line.product_variant&.name %></td>
+          <td><%= line.quantity %></td>
+          <td><%= pos_money(line.unit_price_cents) %></td>
+          <%= render "pos/transactions/line_discount", line: line %>
+          <%= render "pos/transactions/line_tax", line: line %>
+          <td><%= pos_money(line.extended_price_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

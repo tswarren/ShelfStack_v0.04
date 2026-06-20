@@ -1,0 +1,11 @@
+<%= render "action_buttons", variant: :open %>
+
+<div class="ss-pos-home__footer">
+  <div class="ss-pos-home__footer-column">
+    <%= render "session_summary" %>
+  </div>
+  <div class="ss-pos-home__footer-column ss-pos-home__queues">
+    <%= render "suspended_queue" %>
+    <%= render "draft_queue" %>
+  </div>
+</div>

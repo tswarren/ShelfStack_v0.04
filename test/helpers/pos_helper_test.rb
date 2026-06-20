@@ -152,4 +152,14 @@ class PosHelperTest < ActionView::TestCase
 
     assert_equal 700, pos_receipt_discounted_subtotal_cents(transaction)
   end
+
+  test "transaction item counts sum sold and returned quantities" do
+    transaction = PosTransaction.new
+    transaction.pos_transaction_lines.build(quantity: 2)
+    transaction.pos_transaction_lines.build(quantity: 1)
+    transaction.pos_transaction_lines.build(quantity: -1)
+
+    assert_equal 3, pos_transaction_items_sold_count(transaction)
+    assert_equal 1, pos_transaction_items_returned_count(transaction)
+  end
 end

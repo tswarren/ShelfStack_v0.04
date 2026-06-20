@@ -2044,9 +2044,110 @@ h2 {
 }
 
 .ss-pos-dashboard,
+.ss-pos-home,
 .ss-pos-layout {
   display: grid;
   gap: 1rem;
+}
+
+.ss-pos-home__title {
+  margin: 0;
+}
+
+.ss-pos-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-action-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ss-pos-action-grid__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.ss-pos-action-grid form {
+  display: contents;
+}
+
+.ss-pos-action-grid form .ss-pos-action-grid__btn {
+  width: 100%;
+}
+
+.ss-pos-home__footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.ss-pos-home__footer--closed {
+  grid-template-columns: 1fr;
+}
+
+.ss-pos-home__footer-column {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.ss-pos-home__queues {
+  min-width: 0;
+}
+
+.ss-pos-home__queue-panel {
+  margin-bottom: 0;
+}
+
+.ss-pos-home__session-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.ss-pos-home__empty {
+  color: #5c5348;
+  font-style: italic;
+  text-align: center;
+}
+
+.ss-pos-table--compact th,
+.ss-pos-table--compact td {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .ss-pos-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ss-pos-action-grid--three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ss-pos-home__footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .ss-pos-action-grid,
+  .ss-pos-action-grid--three {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ss-pos-layout {
@@ -2137,7 +2238,8 @@ h2 {
   color: #5c5348;
 }
 
-.ss-pos-transaction-show__change {
+.ss-pos-transaction-show__change,
+.ss-pos-confirmation__change {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -2149,17 +2251,61 @@ h2 {
   background: #f5f9f2;
 }
 
-.ss-pos-transaction-show__change-label {
+.ss-pos-transaction-show__change-label,
+.ss-pos-confirmation__change-label {
   font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.ss-pos-transaction-show__change-amount {
+.ss-pos-transaction-show__change-amount,
+.ss-pos-confirmation__change-amount {
   font-size: 1.75rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-confirmation__void {
+  margin-top: 1rem;
+}
+
+.ss-receipt-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.ss-receipt-actions__print {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ss-receipt-actions__secondary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ss-receipt-actions__secondary .ss-btn,
+.ss-receipt-actions__secondary form {
+  width: 100%;
+}
+
+.ss-receipt-actions__secondary form .ss-btn {
+  width: 100%;
+}
+
+@media (max-width: 540px) {
+  .ss-receipt-actions__secondary {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ss-pos-transaction-show__summary,

@@ -9,6 +9,7 @@ module Pos
     layout "pos"
 
     helper PosHelper
+    helper PosReportsHelper
     helper_method :pos_store, :current_register_session, :pos_mode
 
     private

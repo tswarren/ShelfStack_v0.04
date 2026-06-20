@@ -1,0 +1,7 @@
+<% change_cents = pos_receipt_change_cents(transaction) %>
+<% if change_cents.positive? %>
+  <div class="ss-pos-confirmation__change" role="status">
+    <span class="ss-pos-confirmation__change-label">Change due</span>
+    <strong class="ss-pos-confirmation__change-amount"><%= pos_money(change_cents) %></strong>
+  </div>
+<% end %>

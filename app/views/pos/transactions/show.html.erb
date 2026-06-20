@@ -1,50 +1,32 @@
 <div class="ss-pos-transaction-show" data-controller="pos-void" data-pos-void-transaction-id-value="<%= @transaction.id %>">
-  <header class="ss-pos-transaction-show__header">
-    <div class="ss-pos-transaction-show__heading">
-      <h1 class="ss-pos-transaction-show__title">
-        Transaction <%= @transaction.completed? ? @transaction.transaction_number : "##{@transaction.id}" %>
-      </h1>
-      <p class="ss-pos-transaction-show__meta">
-        Status: <%= @transaction.status.humanize %>
-        <% if @transaction.transaction_type.present? %>
-          · <%= @transaction.transaction_type.humanize %>
-        <% end %>
-      </p>
-    </div>
-
-    <% if @transaction.completed? && !@transaction.voided? %>
-      <button type="button" class="ss-btn ss-btn--danger ss-btn--small" data-action="pos-void#open">Void transaction</button>
-    <% end %>
-  </header>
-
   <% if @transaction.completed? %>
-    <% change_cents = pos_receipt_change_cents(@transaction) %>
-    <% if change_cents.positive? %>
-      <div class="ss-pos-transaction-show__change" role="status">
-        <span class="ss-pos-transaction-show__change-label">Change due</span>
-        <strong class="ss-pos-transaction-show__change-amount"><%= pos_money(change_cents) %></strong>
-      </div>
-    <% end %>
+    <header class="ss-pos-transaction-show__header">
+      <%= render "completion_header", transaction: @transaction %>
+    </header>
 
-    <section class="ss-pos-panel ss-pos-transaction-show__summary">
-      <h2 class="ss-pos-panel__title">Summary</h2>
-      <dl class="ss-pos-totals-list">
-        <div><dt>Subtotal</dt><dd><%= pos_money(@transaction.subtotal_cents) %></dd></div>
-        <% if @transaction.discount_cents.to_i.positive? %>
-          <div><dt>Order discount</dt><dd>−<%= pos_money(@transaction.discount_cents) %></dd></div>
-        <% end %>
-        <%= render "pos/transactions/tax_totals", transaction: @transaction %>
-        <div class="ss-pos-totals-list__total"><dt>Total</dt><dd><%= pos_money(@transaction.total_cents) %></dd></div>
-      </dl>
-    </section>
+    <%= render "completion_change", transaction: @transaction %>
+    <%= render "completion_actions", transaction: @transaction %>
+    <%= render "completion_summary", transaction: @transaction %>
+    <%= render "completion_lines", transaction: @transaction %>
 
-    <% if @transaction.pos_receipt %>
-      <div class="ss-pos-transaction-show__actions">
-        <%= link_to "View receipt", pos_receipt_path(@transaction.pos_receipt), class: "ss-btn" %>
-        <%= button_to "New sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn ss-btn-secondary" %>
+    <% if !@transaction.voided? %>
+      <div class="ss-pos-confirmation__void">
+        <button type="button" class="ss-btn ss-btn--danger ss-btn--small" data-action="pos-void#open">Void transaction</button>
       </div>
     <% end %>
   <% else %>
+    <header class="ss-pos-transaction-show__header">
+      <div class="ss-pos-transaction-show__heading">
+        <h1 class="ss-pos-transaction-show__title">Transaction #<%= @transaction.id %></h1>
+        <p class="ss-pos-transaction-show__meta">
+          Status: <%= @transaction.status.humanize %>
+          <% if @transaction.transaction_type.present? %>
+            · <%= @transaction.transaction_type.humanize %>
+          <% end %>
+        </p>
+      </div>
+    </header>
+
     <p>Status: <%= @transaction.status %></p>
     <% if @transaction.transaction_type.present? %>
       <p>Type: <%= @transaction.transaction_type %></p>
@@ -58,39 +40,9 @@
       <%= render "pos/transactions/tax_totals", transaction: @transaction %>
       <div class="ss-pos-totals-list__total"><dt>Total</dt><dd><%= pos_money(@transaction.total_cents) %></dd></div>
     </dl>
-  <% end %>
 
-  <section class="ss-pos-panel ss-pos-transaction-show__lines">
-    <h2 class="ss-pos-panel__title">Lines</h2>
-    <table class="ss-table ss-pos-table">
-      <thead>
-        <tr>
-          <th>Line</th>
-          <th>SKU</th>
-          <th>Description</th>
-          <th>Qty</th>
-          <th>Unit</th>
-          <th>Discount</th>
-          <th>Tax</th>
-          <th>Extended</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @transaction.pos_transaction_lines.each do |line| %>
-          <tr>
-            <td><%= line.line_number %></td>
-            <td><%= line.variant_sku_snapshot || line.product_variant&.sku %></td>
-            <td><%= line.variant_name_snapshot || line.open_ring_description || line.product_variant&.name %></td>
-            <td><%= line.quantity %></td>
-            <td><%= pos_money(line.unit_price_cents) %></td>
-            <%= render "pos/transactions/line_discount", line: line %>
-            <%= render "pos/transactions/line_tax", line: line %>
-            <td><%= pos_money(line.extended_price_cents) %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </section>
+    <%= render "completion_lines", transaction: @transaction %>
+  <% end %>
 
   <% if @transaction.completed? && !@transaction.voided? %>
     <div class="ss-pos-modal" data-pos-void-target="modal" hidden>
@@ -116,8 +68,4 @@
       </div>
     </div>
   <% end %>
-
-  <p class="ss-pos-transaction-show__back">
-    <%= link_to "Back to POS", pos_root_path, class: "ss-link" %>
-  </p>
 </div>
