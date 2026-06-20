@@ -119,6 +119,20 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
     assert_not item.reload.active?
   end
 
+  test "edit form includes type-driven field groups for stimulus toggling" do
+    item = create_catalog_item!(title: "Type Toggle Book", catalog_item_type: "book")
+
+    get edit_items_catalog_item_path(item)
+
+    assert_response :success
+    assert_includes response.body, 'data-controller="catalog-item-form"'
+    assert_includes response.body, 'data-catalog-item-form-target="typeSelect"'
+    assert_includes response.body, 'data-catalog-item-form-target="fieldGroup"'
+    assert_includes response.body, 'data-catalog-fields="periodical"'
+    assert_includes response.body, 'data-catalog-fields="calendar"'
+    assert_not_includes response.body, "DOMContentLoaded"
+  end
+
   test "create catalog item with structured bisac selections" do
     seed_bisac_scheme!
     general = CategoryNode.find_by!(node_key: "fic000000")
