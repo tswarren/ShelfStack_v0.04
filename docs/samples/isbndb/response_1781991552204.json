@@ -1,0 +1,58 @@
+{
+  "book": {
+    "title": "Yesteryear A Novel",
+    "title_long": "Yesteryear A Novel",
+    "isbn": "9780593804216",
+    "isbn13": "9780593804216",
+    "isbn10": "059380421X",
+    "binding": "hardcover",
+    "publisher": "Random House",
+    "language": "en",
+    "date_published": "2026-04-07",
+    "pages": 400,
+    "dimensions": "height: 235 mm, length: 156 mm, width: 29 mm, weight: 718 g",
+    "dimensions_structured": {
+      "length": {
+        "value": 156,
+        "unit": "mm"
+      },
+      "width": {
+        "value": 29,
+        "unit": "mm"
+      },
+      "weight": {
+        "value": 718,
+        "unit": "g"
+      },
+      "height": {
+        "value": 235,
+        "unit": "mm"
+      }
+    },
+    "image": "https://images.isbndb.com/covers/11031953482399.jpg",
+    "image_original": "https://images.isbndb.com/covers/original/11031953482399.jpg?key=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lzYm5kYi5jb20iLCJhdWQiOiJodHRwczovL2lzYm5kYi5jb20iLCJleHAiOjE3ODE5OTg3NTJ9.bgbZYGSAjxs_dOmSKeT-I0wERosEhu7_ieZI8fNQJO0",
+    "msrp": 30,
+    "synopsis": "<b>A traditional American woman, a beautiful wife and mother who sells her pioneer lifestyle of raw milk and farm-fresh eggs to her millions of social media followers, suddenly awakens cold, filthy, and terrified in the brutal reality of 1805—where she must unravel whether this living nightmare is an elaborate hoax, a twisted reality show, or something far more sinister in this sensational debut novel.</b><br><br><i>My name was Natalie Heller Mills, and I was perfect at being alive. </i><br><br>Natalie lives a traditional lifestyle. Her charming farmhouse is rustic, her husband a handsome cowboy, her six children each more delightful than the last. So what if there are nannies and producers behind the scenes, her kitchen hiding industrial-grade fridges and ovens, her husband the Republican equivalent of a Kennedy? What Natalie’s followers—all 8 million of them—don’t know won’t hurt them. And The Angry Women? The privileged, Ivy League, coastal elite haters who call her an antifeminist iconoclast? They’re sick with jealousy. Because Natalie isn’t simply living the good life, she’s living the ideal—and just so happens to be building an empire from it.<br><br>Until one morning she wakes up in a life that isn’t hers. Her home, her husband, her children—they’re all familiar, but something’s off. Her kitchen is warmed by a sputtering fire rather than electricity, her children are dirty and strange, and her soft-handed husband is suddenly a competent farmer. Just yesterday Natalie was curating photos of homemade jam for her Instagram, and now she’s expected to haul firewood and handwash clothes until her fingers bleed. Has she become the unwitting star of a brutal reality show? Could it really be time travel? Is she being tested by God? By Satan? When Natalie suffers a brutal injury in the woods, she realizes two things: This is not her beautiful life, and she must escape by any means possible.<br><br>A gripping, electrifying novel that is as darkly funny as it is frightening, <i>Yesteryear</i> is a gimlet-eyed look at tradition, fame, faith, and the grand performance of womanhood.",
+    "authors": [
+      "Caro Claire Burke"
+    ],
+    "subjects": [
+      "Mystery, Thriller & Suspense",
+      "Thrillers & Suspense",
+      "Psychological Thrillers",
+      "Suspense",
+      "Literature & Fiction",
+      "Genre Fiction",
+      "Psychological",
+      "Politics & Social Sciences",
+      "Sociology",
+      "Reference"
+    ],
+    "other_isbns": [
+      {
+        "isbn": "9780593804223",
+        "binding": "print"
+      }
+    ]
+  }
+}

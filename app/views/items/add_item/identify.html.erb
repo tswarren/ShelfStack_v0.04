@@ -1,0 +1,30 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Add Item",
+           title: "Identify by ISBN",
+           description: "Scan or enter an ISBN to search local catalog records and ISBNdb." %>
+
+<% if @local_catalog_item.present? %>
+  <div class="ss-notice ss-notice--info">
+    <p><strong>Local match found:</strong> <%= @local_catalog_item.title %></p>
+    <p>
+      <%= link_to "Continue with this catalog item", items_add_item_path(step: "item_details"), class: "ss-btn ss-btn-secondary" %>
+      <%= link_to "View catalog item", items_catalog_item_path(@local_catalog_item), class: "ss-btn ss-btn-secondary" %>
+    </p>
+  </div>
+<% end %>
+
+<%= form_with url: items_external_lookup_path, method: :post, class: "ss-form ss-form--standard" do %>
+  <%= render layout: "shared/forms/section", locals: { title: "ISBN Lookup" } do %>
+    <div class="ss-field">
+      <%= label_tag :isbn, "ISBN" %>
+      <%= text_field_tag :isbn, params[:isbn], autofocus: true, autocomplete: "off", inputmode: "numeric", class: "ss-input" %>
+      <p class="ss-help">Press Enter or Continue to run a local-first lookup.</p>
+    </div>
+  <% end %>
+  <footer class="ss-form-actions">
+    <%= submit_tag "Continue", class: "ss-btn" %>
+    <%= link_to "Enter details manually", items_add_item_path(step: "item_details"), class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Back", items_add_item_path(step: "choose_path"), class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

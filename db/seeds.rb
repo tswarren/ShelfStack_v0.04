@@ -7,6 +7,7 @@ require_relative "seeds/phase3b_permissions"
 require_relative "seeds/phase4_permissions"
 require_relative "seeds/phase5_permissions"
 require_relative "seeds/phase6_permissions"
+require_relative "seeds/phase65_permissions"
 require_relative "seeds/phase6_roles"
 require_relative "seeds/phase2_classification_tax"
 require_relative "seeds/phase3_catalog_products"
@@ -27,6 +28,7 @@ Seeds::Phase3bPermissions.seed!
 Seeds::Phase4Permissions.seed!
 Seeds::Phase5Permissions.seed!
 Seeds::Phase6Permissions.seed!
+Seeds::Phase65Permissions.seed!
 Seeds::Phase6Roles.seed!
 
 system_user = User.find_or_initialize_by(username: "system")
@@ -160,3 +162,14 @@ puts "Phase 4 seed complete."
 puts "Seeding Phase 5 purchasing..."
 Seeds::Phase5Inventory.seed!
 puts "Phase 5 seed complete."
+
+ExternalDataSource.find_or_initialize_by(source_key: "isbndb").tap do |source|
+  source.assign_attributes(
+    name: "ISBNdb",
+    base_url: "https://api2.isbndb.com",
+    active: true,
+    configuration_json: {}
+  )
+  source.save!
+end
+puts "Phase 6.5 external data sources seed complete."

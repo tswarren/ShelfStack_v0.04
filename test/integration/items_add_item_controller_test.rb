@@ -26,7 +26,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_add_item_path(step: "choose_path")
 
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
-    assert_redirected_to items_add_item_path(step: "item_details")
+    assert_redirected_to items_add_item_path(step: "identify")
 
     post items_add_item_path(step: "item_details"), params: {
       catalog_item: {

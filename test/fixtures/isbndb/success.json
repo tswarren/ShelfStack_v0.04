@@ -1,0 +1,20 @@
+{
+  "book": {
+    "title": "The Great Gatsby",
+    "title_long": "The Great Gatsby",
+    "isbn": "9780743273565",
+    "isbn13": "9780743273565",
+    "isbn10": "0743273567",
+    "authors": ["F. Scott Fitzgerald"],
+    "publisher": "Scribner",
+    "date_published": "2004-09-30",
+    "binding": "Paperback",
+    "language": "en",
+    "pages": 180,
+    "msrp": 17.00,
+    "image": "https://images.isbndb.com/covers/9780743273565.jpg",
+    "image_original": "https://images.isbndb.com/covers/original/9780743273565.jpg",
+    "synopsis": "A portrait of the Jazz Age.",
+    "subjects": ["Fiction", "Classics"]
+  }
+}

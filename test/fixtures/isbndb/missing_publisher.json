@@ -1,0 +1,10 @@
+{
+  "book": {
+    "title": "Missing Publisher Book",
+    "isbn13": "9780000000002",
+    "isbn10": "0000000002",
+    "authors": ["Test Author"],
+    "binding": "Hardcover",
+    "pages": 200
+  }
+}

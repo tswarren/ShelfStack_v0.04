@@ -1,6 +1,12 @@
 # Phase 6.5: External Catalog Lookup and ISBNdb Integration
 
-> **Status:** Planned.
+> **Status:** Planned — ShelfStack fit review (2026-06-10); decisions tightened (2026-06-10).
+>
+> **Primary UI surface:** Items workspace → Add Item (`/items/add_item`), not POS register.
+>
+> **MVP center:** ISBN local-first lookup → candidate preview → catalog create or link → Add Item continuation.
+>
+> **Naming:** Services `ExternalCatalog::*` · Permissions `items.external_lookup.*` · UI Items / Add Item.
 
 ## Purpose
 
@@ -8,9 +14,106 @@ Phase 6.5 adds ShelfStack’s first external bibliographic lookup integration, u
 
 This phase allows staff to search for book metadata outside the local ShelfStack catalog, preview the external data, compare it against existing local records, and create or enrich catalog records through a controlled, user-confirmed workflow.
 
-Phase 6.5 is intentionally positioned between Phase 6 POS and Phase 7 customer demand workflows. Customer requests, special orders, buybacks, and future intake workflows will often begin with an ISBN, title, author, or customer description for an item that may not yet exist in ShelfStack. This phase creates the lookup and import foundation those later workflows need.
+Phase 6.5 is intentionally positioned between Phase 6 POS and Phase 7 customer demand workflows. Customer requests, special orders, buybacks, and future intake workflows will often begin with an ISBN, title, author, or customer description for an item that may not yet exist in ShelfStack. This phase creates the lookup/import foundation those later workflows need.
 
 This phase does not make ISBNdb the authoritative source for ShelfStack data. ISBNdb records are treated as external candidates. Staff must review and confirm before ShelfStack creates or updates local catalog, product, or variant records.
+
+> **Note:** Phase 6 POS (`Pos::LineLookup`) resolves **local** SKUs and catalog identifiers only. External lookup belongs in Items/Add Item for v1. A future “not found at register → Add Item lookup” handoff is deferred.
+
+---
+
+## ShelfStack Fit Review
+
+This section records how Phase 6.5 aligns with the **current** ShelfStack codebase. Use it when scoping implementation and updating the functional spec/data model.
+
+### Where it fits
+
+| Surface | Fit | Notes |
+| ------- | --- | ----- |
+| **Add Item wizard** | **Primary** | Hook before or at start of `item_details` on the `catalog_linked` path. Reuse `session[:add_item_draft]` after import. |
+| **Items index / search** | Secondary | Optional “search ISBNdb” when local search misses; same services as Add Item. |
+| **Setup / admin** | Small | Provider health check and API key status. |
+| **POS register** | **Out of scope (v1)** | Cashiers sell existing variants. Do not call ISBNdb from `/pos` in the first release. |
+| **Phase 7 special orders / customer requests** | Consumer | Build reusable services now; wire UI in Phase 7. |
+| **Ingram spreadsheet import** | Parallel | Bulk distributor import stays separate; share identifier resolution and catalog upsert patterns. |
+
+### Reuse existing ShelfStack building blocks
+
+Do **not** introduce parallel import logic when these already exist:
+
+| Existing component | Phase 6.5 use |
+| ------------------ | ------------- |
+| `CatalogIdentifierService` | Identifier normalization, check-digit warnings, ISBN-10 → ISBN-13 primary rule, `add_identifier!` on import |
+| `IngramCatalogImport::IdentifierResolver` | Local-first ISBN/EAN match before external call |
+| `MetadataParser` | Map ISBNdb author arrays → `catalog_items.creators` + `creator_details` JSONB |
+| `IngramCatalogImport::FormatMapper` (or shared extract) | Binding → `formats` mapping |
+| `Items::AddItemController` | Wizard steps `choose_path` → `item_details` → `selling_setup` → `sellable_sku` |
+| `AuditEvents` | Lookup, import, link, failure events |
+
+### Domain model corrections (vs earlier draft language)
+
+| Topic | ShelfStack today | Phase 6.5 direction |
+| ----- | ---------------- | ------------------- |
+| **Contributors** | `creators` string + `creator_details` JSONB — **no** `Contributor` model | Import via `MetadataParser`; do **not** add normalized contributor tables unless explicitly approved |
+| **Publishers** | `catalog_items.publisher` string — **no** `Publisher` model | Set publisher string on catalog item; do not add publisher entity tables in v1 |
+| **Classification** | Sellable defaults from **`sub_department`** on variants; BISAC via `CategoryScheme(bisac)` | Do not assign subdepartment, tax category, or BISAC from ISBNdb subjects automatically |
+| **Store categories** | `CategoryNode` in store category scheme | ISBNdb subjects → external metadata/suggestions only |
+| **Permissions** | Items workspace uses `items.*` (see `db/seeds/phase3_permissions.rb`) | **`items.external_lookup.*` only** — do not use `external_catalog.*` |
+
+---
+
+## MVP Scope vs Follow-up
+
+Ship **MVP** first; keep the full phase document as the long-term target.
+
+### MVP (recommended first release)
+
+```text
+6.5A  Provider foundation + lookup persistence + health check (minimal)
+6.5B  ISBN lookup and normalization (ISBN path only)
+6.5C  Preview + exact-ISBN duplicate detection + create catalog / link existing
+       + fill-blank-only updates
+6.5D  Add Item ISBN entry → import → hand off to existing selling_setup / sellable_sku
+6.5E  External catalog search expansion (follow-up — not MVP)
+```
+
+### Follow-up Backlog (Phase 6.5.x / pre–Phase 7)
+
+Not required for Phase 6.5 completion. See **Follow-up Backlog** section at end of document.
+
+* **6.5E** — ISBNdb keyword/title/author/publisher/subject search and pagination
+* Fuzzy duplicate detection (title/author, title/publisher/year)
+* Explicit per-field overwrite UI on update-existing
+* Dedicated product/variant builders outside Add Item wizard
+* POS “not found → Add Item external lookup” handoff
+* Rich provider quota dashboard
+* Optional `external_identifiers` / subject suggestion tables
+* Copy MSRP into list price field during Add Item review
+
+---
+
+## Decisions (locked)
+
+| Topic | Decision |
+| ----- | -------- |
+| Permission namespace | `items.external_lookup.*` only |
+| Service namespace | `ExternalCatalog::*` |
+| UI namespace | Items workspace / Add Item |
+| Phase 6.5 completion gate | **Phase 6.5 Exit Criteria** section below — not the follow-up backlog |
+| Import rows | `external_catalog_imports` records **staff actions only** — not previews |
+| Lookup execution | Real-time, staff-initiated, synchronous — **no automatic retry** |
+| MSRP in MVP | Display + snapshot only — **not** written to catalog/product/variant price fields |
+| Incomplete catalog import | Block Apply until required fields resolved (especially `format_id`) — no active catalog item with missing required fields |
+| Keyword search | Phase **6.5E** follow-up — not in Phase 6.5 MVP |
+
+## Open Decisions (resolve before implementation)
+
+| # | Decision | Recommendation |
+| - | -------- | ---------------- |
+| 1 | **Secrets convention** | `Rails.credentials.isbndb_api_key` **vs** `ENV["ISBNDB_API_KEY"]` — pick one and document in runbook |
+| 2 | **ISBNdb plan tier** | Which endpoints are contracted (book lookup, search, health/quota) |
+| 3 | **Add Item entry UX** | New `identify` step **vs** panel on `choose_path` / top of `item_details` |
+| 4 | **After import navigation** | Pre-filled `item_details` **vs** jump to `selling_setup` when catalog complete |
 
 ---
 
@@ -20,25 +123,25 @@ Phase 6.5 should provide a reusable external catalog lookup foundation with ISBN
 
 The primary goals are:
 
-1. Add a provider-based external catalog lookup architecture.
-2. Configure ISBNdb API access securely.
-3. Support API key health checks and quota visibility.
-4. Search ShelfStack locally before calling ISBNdb.
-5. Lookup books by ISBN through ISBNdb.
-6. Search ISBNdb by title, author, keyword, publisher, or subject where appropriate.
-7. Normalize ISBNdb responses into provider-neutral book candidate objects.
-8. Persist lookup requests, lookup results, and raw response snapshots.
-9. Detect existing local catalog, product, and variant matches.
-10. Present a user-facing candidate preview before import.
-11. Create catalog items from confirmed ISBNdb candidates.
-12. Create catalog item identifiers for ISBN-13 and ISBN-10.
-13. Create or link contributors, publishers, formats, and language metadata where practical.
-14. Optionally create products and product variants when staff confirms store-facing setup.
-15. Preserve source/provenance history for imported data.
-16. Record audit events for lookup/import actions.
-17. Expose external lookup from the Add Item workflow.
-18. Prepare the lookup/import workflow for reuse in Phase 7 customer requests and special orders.
-19. Establish fixture-based tests that do not call ISBNdb in CI.
+1. Add a provider-based external catalog lookup architecture. **[MVP]**
+2. Configure ISBNdb API access securely. **[MVP]**
+3. Support API key health checks and quota visibility. **[MVP — minimal status only; rich dashboard follow-up]**
+4. Search ShelfStack locally before calling ISBNdb. **[MVP]**
+5. Lookup books by ISBN through ISBNdb. **[MVP]**
+6. Search ISBNdb by title, author, keyword, publisher, or subject where appropriate. **[Follow-up — not MVP]**
+7. Normalize ISBNdb responses into provider-neutral book candidate objects. **[MVP]**
+8. Persist lookup requests, lookup results, and raw response snapshots. **[MVP]**
+9. Detect existing local catalog, product, and variant matches. **[MVP — exact ISBN; fuzzy matching follow-up]**
+10. Present a user-facing candidate preview before import. **[MVP]**
+11. Create catalog items from confirmed ISBNdb candidates. **[MVP]**
+12. Create catalog item identifiers for ISBN-13 and ISBN-10. **[MVP — via `CatalogIdentifierService`]**
+13. Map authors and publisher into existing catalog fields (`creators`, `creator_details`, `publisher` string). **[MVP — not normalized contributor/publisher tables]**
+14. Optionally continue to product and variant setup through the **existing Add Item wizard** when staff confirms store-facing fields. **[MVP — handoff, not parallel builders]**
+15. Preserve source/provenance history for imported data. **[MVP]**
+16. Record audit events for lookup/import actions. **[MVP]**
+17. Expose external lookup from the Add Item workflow. **[MVP]**
+18. Prepare the lookup/import workflow for reuse in Phase 7 customer requests and special orders. **[MVP — service API; Phase 7 UI deferred]**
+19. Establish fixture-based tests that do not call ISBNdb in CI. **[MVP]**
 
 ---
 
@@ -53,7 +156,7 @@ Phase 6.5 does not include:
 * Automatic overwrite of curated local data.
 * Automatic product or variant creation without staff confirmation.
 * Automatic store category or BISAC mapping.
-* Automatic tax category, subdepartment, or merchandise-class assignment.
+* Automatic tax category, subdepartment, or **category** assignment. *(Use subdepartment on variants; Phase 2 `categories` table was removed.)*
 * Automatic vendor selection.
 * Automatic purchase order creation.
 * Automatic pricing updates.
@@ -67,46 +170,52 @@ Phase 6.5 does not include:
 * Customer-facing public catalog search.
 * Non-book media lookup.
 * Full Phase 7 customer request or special order workflows.
+* **Normalized contributor or publisher entity tables** *(use `MetadataParser` + string/JSONB fields unless domain direction changes)*.
+* **POS register external lookup** *(defer; local `Pos::LineLookup` only in Phase 6)*.
+* **Field-level overwrite matrix on update-existing** *(defer; fill-blank-only in MVP)*.
+* **Automatic retry or background re-fetch of failed lookups** *(real-time staff-initiated lookups only)*.
+* **Automatic lookup result caching** *(persist for audit; each staff lookup runs live local-first + external path)*.
+* **Fuzzy duplicate blocking** *(defer; exact ISBN match in MVP)*.
 
 ---
 
 ## Major Capabilities
 
-Phase 6.5 includes the following capabilities:
+Phase 6.5 includes the following capabilities. **Priority** indicates recommended delivery order; **MVP** marks the first release cut.
 
-| Capability                  | Description                                                                                                                                         |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ISBNdb source configuration | ShelfStack can configure ISBNdb as an active external catalog source while storing secrets outside normal database configuration.                   |
-| API key health check        | Authorized users can verify whether ISBNdb is configured and view basic plan/quota status.                                                          |
-| Local-first lookup          | ShelfStack searches local identifiers and catalog records before calling ISBNdb.                                                                    |
-| ISBN lookup                 | Staff can scan or enter an ISBN and retrieve an ISBNdb candidate when no confident local match exists.                                              |
-| Keyword search              | Staff can search ISBNdb by title, author, keyword, publisher, or subject.                                                                           |
-| Candidate normalization     | ISBNdb book responses are mapped into provider-neutral normalized book candidates.                                                                  |
-| Lookup persistence          | Lookup request, response status, raw payload, and normalized results are stored for caching and auditability.                                       |
-| Candidate preview           | Staff can review title, authors, publisher, date, binding, pages, subjects, synopsis, image, ISBNs, MSRP, and local match status.                   |
-| Duplicate detection         | ShelfStack detects likely local matches by ISBN-13, ISBN-10, title/author, and title/publisher/year.                                                |
-| Controlled import           | Staff can create or update local records only after reviewing a preview.                                                                            |
-| Catalog item import         | ShelfStack can create or enrich catalog items from confirmed ISBNdb candidates.                                                                     |
-| Identifier import           | ShelfStack can create ISBN-13 and ISBN-10 identifiers for imported catalog items.                                                                   |
-| Contributor import          | ShelfStack can create or link author/contributor records from ISBNdb author names.                                                                  |
-| Publisher import            | ShelfStack can create or link publisher records from ISBNdb publisher data.                                                                         |
-| Format suggestion           | ShelfStack can map ISBNdb binding values to local formats when a safe mapping exists, or require staff selection.                                   |
-| Product creation            | Staff can optionally create a product from an imported catalog item.                                                                                |
-| Variant creation            | Staff can optionally create a product variant after providing local selling fields such as subdepartment, condition, price, and inventory behavior. |
-| Source provenance           | Imported records retain source and raw payload history.                                                                                             |
-| Audit logging               | Lookup, import, link, update, and failure events create audit events.                                                                               |
-| Add Item integration        | External lookup is available from the Add Item workflow.                                                                                            |
-| Phase 7 readiness           | Customer request and special order workflows can later reuse the same lookup/import services.                                                       |
+| Capability                  | Priority | Description                                                                                                                                         |
+| --------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ISBNdb source configuration | MVP      | ShelfStack can configure ISBNdb as an active external catalog source while storing secrets outside normal database configuration.                   |
+| API key health check        | MVP      | Authorized users can verify whether ISBNdb is configured and view basic plan/quota status. *(Rich quota UI: follow-up.)*                            |
+| Local-first lookup          | MVP      | ShelfStack searches local identifiers and catalog records before calling ISBNdb. Reuse `IngramCatalogImport::IdentifierResolver` patterns.        |
+| ISBN lookup                 | MVP      | Staff can scan or enter an ISBN and retrieve an ISBNdb candidate when no confident local match exists.                                              |
+| Keyword search              | Follow-up | Staff can search ISBNdb by title, author, keyword, publisher, or subject. *(Deferred from MVP — quota and UX cost.)*                               |
+| Candidate normalization     | MVP      | ISBNdb book responses are mapped into provider-neutral normalized book candidates.                                                                  |
+| Lookup persistence          | MVP      | Lookup request, response status, raw payload, and normalized results stored for **audit and troubleshooting** — not as a cache to skip live lookups. |
+| Candidate preview           | MVP      | Staff can review title, authors, publisher, date, binding, pages, subjects, synopsis, image, ISBNs, MSRP, and local match status.                   |
+| Duplicate detection         | MVP / Follow-up | **MVP:** exact ISBN-13 and ISBN-10. **Follow-up:** probable title/author and title/publisher/year.                                          |
+| Controlled import           | MVP      | Staff can create or update local records only after reviewing a preview. *(Update: fill-blank-only in MVP.)*                                        |
+| Catalog item import         | MVP      | ShelfStack can create or enrich catalog items from confirmed ISBNdb candidates.                                                                     |
+| Identifier import           | MVP      | ShelfStack can create ISBN-13 and ISBN-10 identifiers via `CatalogIdentifierService`.                                                               |
+| Author/publisher mapping    | MVP      | Map ISBNdb authors → `creators` / `creator_details`; publisher → `catalog_items.publisher` string. *(Not separate entity tables.)*                  |
+| Format suggestion           | MVP      | Map ISBNdb binding to local `formats` when safe; require staff selection when ambiguous. Share logic with Ingram `FormatMapper` where possible.     |
+| Product/variant continuation | MVP     | After catalog import, staff continue through **existing Add Item** `selling_setup` / `sellable_sku` steps. *(Not standalone ProductBuilder in MVP.)* |
+| Source provenance           | MVP      | Imported records retain source and raw payload history on lookup/import rows.                                                                       |
+| Audit logging               | MVP      | Lookup, import, link, update, and failure events create audit events.                                                                               |
+| Add Item integration        | MVP      | External lookup is available from the Add Item workflow (`/items/add_item`), not POS.                                                                 |
+| Phase 7 readiness           | MVP      | Lookup/import services expose entry points for future customer request and special order workflows.                                                   |
 
 ---
 
 ## Internal Phase Breakdown
 
-Phase 6.5 may be implemented as four internal workstreams.
+Phase 6.5 is implemented as workstreams **6.5A–D** (MVP). Workstream **6.5E** is follow-up only.
 
 ---
 
 ## Phase 6.5A: External Catalog Provider Foundation
+
+> **MVP:** All items below except rich quota dashboard UI.
 
 ### Purpose
 
@@ -149,7 +258,7 @@ Phase 6.5A is complete when:
 8. Lookup requests can be created with source, lookup type, query, normalized query, request path, and request params.
 9. Lookup requests can end in `completed`, `not_found`, `failed`, or `rate_limited`.
 10. Lookup results can store normalized candidate fields and raw payload JSON.
-11. External catalog imports can record preview, applied, failed, or skipped import actions.
+11. External catalog imports record **staff actions only** (`applied`, `failed`, `skipped`) — not previews.
 12. Provider-neutral normalized book result object exists.
 13. ISBNdb-specific client code is separated from ShelfStack import logic.
 14. Provider errors are converted into consistent ShelfStack error states.
@@ -158,22 +267,22 @@ Phase 6.5A is complete when:
 
 ---
 
-## Phase 6.5B: ISBN Lookup, Search, and Normalization
+## Phase 6.5B: ISBN Lookup and Normalization
+
+> **MVP:** ISBN normalization, local-first ISBN lookup, synchronous `GET /book/{isbn}`, 404/timeout/rate-limit handling, book response normalization, fixture tests.
+>
+> Keyword/title/author search moved to **Phase 6.5E** (follow-up).
 
 ### Purpose
 
-Implement the ISBNdb client and normalize ISBNdb book responses into ShelfStack candidate records.
+Implement the ISBNdb client and normalize ISBNdb book responses into ShelfStack candidate records for the **ISBN lookup path only**.
 
 ### Includes
 
-* ISBN normalization
-* Local-first ISBN lookup
-* ISBNdb `GET /book/{isbn}` lookup
-* ISBNdb keyword/title/author search
-* Optional advanced book search parameters
-* 404 handling as a retryable external miss
-* Pagination support for search results
-* Search result candidate persistence
+* ISBN normalization *(reuse `CatalogIdentifierService`)*
+* Local-first ISBN lookup *(reuse `IngramCatalogImport::IdentifierResolver` patterns)*
+* ISBNdb `GET /book/{isbn}` lookup *(synchronous, real-time)*
+* 404 handling as external miss — **no automatic retry**
 * Book response normalization
 * MSRP parsing
 * ISBN-10 and ISBN-13 extraction
@@ -193,6 +302,8 @@ Implement the ISBNdb client and normalize ISBNdb book responses into ShelfStack 
 
 ### Exit Criteria
 
+> **Annotation:** Criteria 11–16 and keyword search tests are **Phase 6.5E follow-up**. MVP completes criteria 1–10, 17–21, and ISBN-path tests only.
+
 Phase 6.5B is complete when:
 
 1. ISBN input is normalized before local or external lookup.
@@ -202,25 +313,29 @@ Phase 6.5B is complete when:
 5. ISBNdb is called only when local lookup does not produce a confident match.
 6. ISBNdb `GET /book/{isbn}` responses are parsed successfully.
 7. ISBNdb 404 responses are stored as `not_found`, not treated as application errors.
-8. ISBNdb 404 responses can be retried later.
+8. ISBNdb 404 responses are **not** automatically retried; staff may submit a new lookup manually.
 9. ISBNdb timeout responses are stored as failed lookup attempts.
 10. ISBNdb rate-limit responses are stored as rate-limited lookup attempts.
-11. Search by title/keyword returns candidate results.
-12. Search by author can be performed through supported ISBNdb search parameters.
-13. Search by publisher can be performed through supported ISBNdb search parameters.
-14. Search by subject can be performed through supported ISBNdb search parameters.
-15. Search pagination is supported.
-16. Search page size is constrained by ShelfStack defaults.
+11. Search by title/keyword returns candidate results. *(Phase 6.5E.)*
+12. Search by author can be performed through supported ISBNdb search parameters. *(Phase 6.5E.)*
+13. Search by publisher can be performed through supported ISBNdb search parameters. *(Phase 6.5E.)*
+14. Search by subject can be performed through supported ISBNdb search parameters. *(Phase 6.5E.)*
+15. Search pagination is supported. *(Phase 6.5E.)*
+16. Search page size is constrained by ShelfStack defaults. *(Phase 6.5E.)*
 17. ISBNdb responses are normalized into provider-neutral book candidates.
 18. Candidate results persist ISBN-13, ISBN-10, title, authors, publisher, date published, binding, language, pages, synopsis, subjects, MSRP, image URL, and related ISBNs when present.
 19. Deprecated ISBNdb fields are not used as primary mapping sources when non-deprecated fields are available.
 20. `image_original` is not stored as the durable cover URL because it is temporary.
 21. `with_prices=true` is not used by default.
-22. Tests cover successful ISBN lookup, not-found lookup, timeout/failure handling, keyword search, normalization, and pagination.
+22. Tests cover successful ISBN lookup, not-found lookup, timeout/failure handling, normalization. *(Add keyword search tests in 6.5E.)*
 
 ---
 
 ## Phase 6.5C: Candidate Preview, Matching, and Controlled Import
+
+> **MVP:** Preview, exact ISBN duplicate detection, create catalog item, link existing, fill-blank-only update, identifiers via `CatalogIdentifierService`, authors via `MetadataParser`, publisher string, format suggestion, external subjects as metadata.
+>
+> **Follow-up:** Fuzzy duplicate detection, explicit per-field overwrite UI.
 
 ### Purpose
 
@@ -234,15 +349,15 @@ Allow staff to review ISBNdb candidates, compare them against local records, and
 * Existing catalog item link action
 * Create catalog item action
 * Update existing catalog item action
-* Create identifiers
-* Create/link contributors
-* Create/link publisher
+* Create identifiers *(via `CatalogIdentifierService`)*
+* Map authors into `creators` / `creator_details` *(via `MetadataParser` — not contributor entity tables)*
+* Set `catalog_items.publisher` string *(not publisher entity tables)*
 * Suggest or require format
 * Suggest language
 * Store external subjects as candidate metadata
 * Store raw payload snapshot with import
 * Preserve local curated data by default
-* Explicit overwrite/update choices
+* Explicit overwrite/update choices — **follow-up** *(MVP: fill-blank-only)*
 * Import audit events
 * Import failure handling
 
@@ -252,6 +367,8 @@ Allow staff to review ISBNdb candidates, compare them against local records, and
 
 ### Exit Criteria
 
+> **Annotation:** Criteria 6, 11, 15–16 (fuzzy duplicates, overwrite matrix, contributor/publisher **entities**) adjusted for ShelfStack: MVP uses exact ISBN, fill-blank updates, and string/JSONB author/publisher fields.
+
 Phase 6.5C is complete when:
 
 1. Staff can open a persisted ISBNdb candidate preview.
@@ -259,51 +376,53 @@ Phase 6.5C is complete when:
 3. Preview clearly labels the source as ISBNdb.
 4. Preview shows local match status.
 5. Exact local ISBN match is shown as an existing record rather than a new import.
-6. Probable duplicate matches are shown before import.
+6. Probable duplicate matches are shown before import. *(Follow-up; MVP may omit or show as non-blocking hints only.)*
 7. Staff can link an ISBNdb candidate to an existing catalog item.
 8. Staff can create a new catalog item from a candidate.
 9. Staff can update an existing catalog item from a candidate.
 10. Updates default to filling blank fields rather than overwriting populated local fields.
-11. Staff can explicitly choose to apply external values over local values where allowed.
+11. Staff can explicitly choose to apply external values over local values where allowed. *(Follow-up; not required for MVP.)*
 12. ShelfStack creates ISBN-13 identifier when present.
 13. ShelfStack creates ISBN-10 identifier when present.
 14. ShelfStack does not create duplicate identifiers.
-15. ShelfStack creates or links contributor records from authors.
-16. ShelfStack creates or links publisher records from publisher name.
+15. ShelfStack maps ISBNdb authors into `creators` / `creator_details` via `MetadataParser`.
+16. ShelfStack sets `catalog_items.publisher` from ISBNdb publisher name when blank.
 17. ShelfStack maps binding to local format only when a safe mapping exists.
 18. ShelfStack requires staff selection when format mapping is ambiguous.
 19. ISBNdb subjects are stored as external subject metadata or suggestions, not automatically assigned as store categories.
-20. MSRP is treated as suggested list price, not authoritative selling price.
+20. MSRP is displayed in preview and stored on lookup/import snapshots only — **not** written to catalog/product/variant price fields in MVP.
 21. Related ISBNs are displayed or stored as related metadata, but do not automatically create records.
 22. Import action records created/updated local record IDs.
 23. Import action stores source, raw payload, field mapping snapshot, actor, and timestamp.
 24. Audit events are created for link, create, update, skip, and failed import actions.
-25. Tests cover duplicate detection, create catalog item, link existing, update existing, do-not-overwrite behavior, contributor creation, publisher creation, identifier creation, ambiguous format handling, and audit creation.
+25. Tests cover duplicate detection *(exact ISBN in MVP)*, create catalog item, link existing, update existing *(fill-blank)*, author/publisher field mapping, identifier creation, ambiguous format handling, and audit creation.
 
 ---
 
 ## Phase 6.5D: Add Item Integration and Optional Product/Variant Creation
 
+> **MVP:** ISBN entry on Add Item `catalog_linked` path, local-first behavior, candidate preview, catalog import, hand off to existing `selling_setup` / `sellable_sku` wizard. Subdepartment, condition, price, and inventory behavior remain **staff-entered** on variant step.
+>
+> **Follow-up:** Keyword search from Add Item; standalone `ProductBuilder` / `VariantBuilder` outside wizard; POS handoff.
+
 ### Purpose
 
-Expose external lookup in the operational Add Item workflow and allow staff to continue from bibliographic import into store-facing product and variant setup.
+Expose external lookup in the operational Add Item workflow and allow staff to continue from bibliographic import into store-facing product and variant setup **using the existing wizard**.
 
 ### Includes
 
-* Add Item external lookup entry point
+* Add Item external lookup entry point *(before or at top of `item_details`; optional new `identify` step — see Open Decisions)*
 * ISBN quick lookup
 * Local-first result behavior
 * ISBNdb fallback behavior
 * Candidate import flow from Add Item
-* Optional product creation
-* Optional product variant creation
-* Required local store-facing fields
-* SKU policy integration
-* Subdepartment selection
-* Condition selection
-* Selling price entry
-* Inventory behavior selection
-* Tax behavior through existing subdepartment/tax setup
+* Prefill `session[:add_item_draft]` after catalog import
+* Continue to existing `selling_setup` and `sellable_sku` steps — **MVP path**
+* Optional product creation via wizard — **not a separate builder in MVP**
+* Optional product variant creation via wizard
+* Required local store-facing fields on variant step: subdepartment, condition, selling price, inventory behavior
+* SKU policy integration via existing Add Item / `SkuGenerator` rules
+* Tax behavior through existing subdepartment/tax setup only
 * Return to Add Item confirmation/result page
 * Reusable service entry points for Phase 7 request intake
 
@@ -312,6 +431,8 @@ Expose external lookup in the operational Add Item workflow and allow staff to c
 > Can a bookseller start with an ISBN or title and end with a usable ShelfStack catalog/product/variant record?
 
 ### Exit Criteria
+
+> **Annotation:** Criterion 3 (keyword search from Add Item) is **follow-up**. Criteria 7–8 are satisfied by **existing wizard continuation**, not new standalone builders.
 
 Phase 6.5D is complete when:
 
@@ -336,6 +457,29 @@ Phase 6.5D is complete when:
 
 ---
 
+## Phase 6.5E: External Catalog Search Expansion (follow-up)
+
+> **Not part of Phase 6.5 MVP.** Implement after 6.5A–D are stable.
+
+### Purpose
+
+Add ISBNdb keyword/title/author/publisher/subject search with pagination for staff who do not have an ISBN.
+
+### Includes
+
+* `ExternalCatalog::SearchBooks`
+* ISBNdb keyword/title/author/publisher/subject search endpoints
+* Pagination and page-size defaults
+* Search result candidate persistence
+* Add Item and Items index search entry points
+* Real-time staff-initiated search only — **no automatic retry** on failed search requests
+
+### Exit Criteria
+
+Phase 6.5E is complete when search, pagination, normalization, permissions, tests, and Add Item/Items integration for keyword paths match the former Phase 6.5B search criteria (11–16) and Add Item criterion 3.
+
+---
+
 ## Models Introduced
 
 Phase 6.5 introduces the following tables:
@@ -345,7 +489,7 @@ Phase 6.5 introduces the following tables:
 | `external_data_sources`    | Configures external catalog data providers such as ISBNdb.                                         |
 | `external_lookup_requests` | Records each external lookup attempt, including query, endpoint, status, response code, and actor. |
 | `external_lookup_results`  | Stores normalized candidate records returned by an external provider.                              |
-| `external_catalog_imports` | Records user-confirmed import, link, update, skip, or failed import actions.                       |
+| `external_catalog_imports` | Records **staff-confirmed import/link/update/skip actions** — not previews.                       |
 
 Optional/deferred tables:
 
@@ -356,6 +500,16 @@ Optional/deferred tables:
 | `external_provider_logs`       | Optional/deferred | Useful if provider diagnostics need more detail than lookup request records.                              |
 | `external_image_assets`        | Deferred          | Only needed if cover images are downloaded/stored locally.                                                |
 | `external_sync_runs`           | Deferred          | Only needed for future bulk enrichment or update-feed synchronization.                                    |
+
+### Table roles
+
+| Table                      | Role                                                  |
+| -------------------------- | ----------------------------------------------------- |
+| `external_lookup_requests` | API call / lookup attempt (audit + diagnostics)       |
+| `external_lookup_results`  | Persisted candidate and preview source                |
+| `external_catalog_imports` | User action: create, link, fill-blank update, skip, failed apply |
+
+Preview is rendered from `external_lookup_results` (+ `ImportPreview` service). **Do not** create an import row for preview alone.
 
 ---
 
@@ -405,13 +559,18 @@ status
 response_status_code
 error_code
 error_message
-retry_after_at
 requested_by_user_id
 started_at
 completed_at
 created_at
 updated_at
 ```
+
+Notes:
+
+* Each staff-initiated lookup runs **synchronously at request time** (local-first, then external when needed).
+* Persist rows for audit and troubleshooting — **not** to skip live lookups or auto-retry failures.
+* **No `retry_after_at`** and no background re-fetch.
 
 Suggested `lookup_type` values:
 
@@ -479,20 +638,20 @@ Notes:
 
 * `external_identifier` should usually be ISBN-13 for ISBNdb book records.
 * `raw_payload_json` should preserve the ISBNdb source response.
-* `local_*` fields can cache match results, but should be refreshable.
+* `local_*` fields store match results at lookup time; re-run staff lookup to refresh.
 
 ---
 
 ### `external_catalog_imports`
 
-Tracks user-confirmed import actions.
+Tracks **staff-confirmed import actions** only (not previews).
 
 ```text
 id
 external_lookup_result_id
 external_data_source_id
 status
-import_mode
+action_type
 imported_by_user_id
 catalog_item_id
 product_id
@@ -508,70 +667,109 @@ updated_at
 Suggested `status` values:
 
 ```text
-preview
 applied
 failed
 skipped
 ```
 
-Suggested `import_mode` values:
+Suggested `action_type` values:
 
 ```text
 create_catalog_item
-update_existing_catalog_item
 link_existing_catalog_item
-create_product
-create_product_variant
+fill_blank_existing_catalog_item
 skip
+```
+
+Notes:
+
+* `reversed` is deferred unless a void/undo workflow exists.
+* Do not use `preview` as a status — preview uses `external_lookup_results` only.
+* `create_product` / `create_product_variant` are not separate import actions in MVP; those steps use the Add Item wizard after catalog import.
+
+---
+
+## Indexes and Constraints
+
+Recommended constraints:
+
+```text
+external_data_sources.source_key                    unique
+
+external_lookup_requests:
+  index (external_data_source_id, lookup_type, normalized_query)
+  index (status)
+  index (requested_by_user_id)
+  index (created_at)
+
+external_lookup_results:
+  index (external_lookup_request_id)
+  index (source_key, external_identifier)
+  index (isbn13)
+  index (isbn10)
+  index (local_catalog_item_id)
+
+external_catalog_imports:
+  index (external_lookup_result_id)
+  index (catalog_item_id)
+  index (imported_by_user_id)
+  index (applied_at)
+```
+
+Optional uniqueness (idempotency):
+
+```text
+one applied create/link action per external_lookup_result_id + catalog_item_id + action_type
 ```
 
 ---
 
 ## Permissions Introduced
 
-Phase 6.5 introduces the following permissions:
+Phase 6.5 uses **`items.external_lookup.*`** only (aligned with Items workspace and `items.ingram_import.run`).
 
-| Permission                          | Purpose                                                            |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| `external_catalog.access`           | Access external catalog lookup workspace or Add Item lookup panel. |
-| `external_catalog.search`           | Search external catalog sources.                                   |
-| `external_catalog.import`           | Create local records from external candidates.                     |
-| `external_catalog.update_existing`  | Apply external candidate data to an existing local record.         |
-| `external_catalog.link_existing`    | Link an external candidate to an existing local record.            |
-| `external_catalog.view_raw_payload` | View raw provider response payloads.                               |
-| `external_catalog.configure`        | Configure provider settings and health checks.                     |
+| Permission | Purpose |
+| ---------- | ------- |
+| `items.external_lookup.access` | Access Add Item external lookup panel. |
+| `items.external_lookup.search` | Run external ISBN lookup *(and keyword search in 6.5E)*. |
+| `items.external_lookup.import` | Create local catalog records from external candidates. |
+| `items.external_lookup.link_existing` | Link an external candidate to an existing local catalog item. |
+| `items.external_lookup.update_existing` | Apply fill-blank external data to an existing catalog item. |
+| `items.external_lookup.view_raw_payload` | View raw provider response payloads. |
+| `items.external_lookup.configure` | Configure provider settings and run health checks. |
 
 Suggested permission defaults:
 
 | User type             | Suggested access                                           |
 | --------------------- | ---------------------------------------------------------- |
-| Frontline bookseller  | Search and import with restricted update behavior.         |
-| Buyer/inventory staff | Search, import, link existing, and create product/variant. |
-| Manager/admin         | Configure provider, update existing, and view raw payload. |
+| Frontline bookseller  | Search and import; link existing; **no** update-existing or configure in MVP. |
+| Buyer/inventory staff | Search, import, link existing, continue Add Item to variant. |
+| Manager/admin         | Configure provider, update existing *(follow-up)*, view raw payload. |
+
+> **Note:** Catalog data is global; permissions gate **who may trigger external API calls and imports**, not store-scoped catalog rows. Store context may still appear on audit events when lookup runs from a store session.
 
 ---
 
 ## Services Introduced
 
-Phase 6.5 introduces the following service objects:
+> **Annotation:** Prefer shared catalog upsert with `IngramCatalogImport`. **Naming:** services `ExternalCatalog::*`; permissions `items.external_lookup.*`.
 
-| Service                                       | Purpose                                                               |
-| --------------------------------------------- | --------------------------------------------------------------------- |
-| `ExternalCatalog::Provider::IsbndbClient`     | Low-level ISBNdb HTTP client.                                         |
-| `ExternalCatalog::Provider::IsbndbNormalizer` | Converts ISBNdb responses into normalized book candidates.            |
-| `ExternalCatalog::CheckProviderHealth`        | Calls provider health/quota endpoint and records provider status.     |
-| `ExternalCatalog::LookupByIsbn`               | Local-first ISBN lookup with ISBNdb fallback.                         |
-| `ExternalCatalog::SearchBooks`                | Searches local catalog and external book candidates.                  |
-| `ExternalCatalog::PersistLookupResult`        | Stores normalized candidates and raw payloads.                        |
-| `ExternalCatalog::DuplicateDetector`          | Finds exact and probable local matches.                               |
-| `ExternalCatalog::ImportPreview`              | Builds field-by-field preview for user confirmation.                  |
-| `ExternalCatalog::ImportCandidate`            | Applies confirmed candidate data to local records.                    |
-| `ExternalCatalog::CatalogItemBuilder`         | Creates or updates catalog item data.                                 |
-| `ExternalCatalog::ContributorMapper`          | Creates or links contributor records.                                 |
-| `ExternalCatalog::PublisherMapper`            | Creates or links publisher records.                                   |
-| `ExternalCatalog::FormatMapper`               | Maps ISBNdb binding values to ShelfStack formats where safe.          |
-| `ExternalCatalog::ProductBuilder`             | Optionally creates a product from an imported catalog item.           |
-| `ExternalCatalog::VariantBuilder`             | Optionally creates a product variant using local store-facing fields. |
+| Service                                       | MVP | Purpose                                                               |
+| --------------------------------------------- | --- | --------------------------------------------------------------------- |
+| `ExternalCatalog::Provider::IsbndbClient`     | Yes | Low-level ISBNdb HTTP client.                                         |
+| `ExternalCatalog::Provider::IsbndbNormalizer` | Yes | Converts ISBNdb responses into normalized book candidates.            |
+| `ExternalCatalog::CheckProviderHealth`        | Yes | Calls provider health/quota endpoint and records provider status.     |
+| `ExternalCatalog::LookupByIsbn`               | Yes | Local-first ISBN lookup with ISBNdb fallback.                         |
+| `ExternalCatalog::SearchBooks`                | No  | Searches local catalog and external book candidates. *(Follow-up.)*   |
+| `ExternalCatalog::PersistLookupResult`        | Yes | Stores normalized candidates and raw payloads.                        |
+| `ExternalCatalog::DuplicateDetector`          | Partial | **MVP:** exact ISBN. **Follow-up:** fuzzy title/author matches.   |
+| `ExternalCatalog::ImportPreview`              | Yes | Builds field-by-field preview for user confirmation.                  |
+| `ExternalCatalog::ImportCandidate`            | Yes | Applies confirmed candidate data to local records.                    |
+| `ExternalCatalog::CatalogItemBuilder`         | Yes | Creates or updates catalog item data; should delegate to shared upsert logic. |
+| `ExternalCatalog::MetadataMapper`             | Yes | Maps authors/publisher/subjects into `MetadataParser` + catalog fields. *(Replaces ContributorMapper / PublisherMapper.)* |
+| `ExternalCatalog::FormatMapper`               | Yes | Maps ISBNdb binding to ShelfStack `formats`; share with Ingram where practical. |
+| `ExternalCatalog::ProductBuilder`             | No  | **Follow-up.** MVP uses existing Add Item product step.               |
+| `ExternalCatalog::VariantBuilder`             | No  | **Follow-up.** MVP uses existing Add Item variant step.               |
 
 ---
 
@@ -641,6 +839,8 @@ local catalog results
 → clearly labeled source sections
 ```
 
+> **Follow-up:** Keyword search is not part of MVP. Do not block MVP on search endpoints or pagination.
+
 ---
 
 ### ISBN lookup is the MVP center
@@ -659,11 +859,74 @@ Scan or enter ISBN
 
 Keyword and author/title search are useful, but secondary.
 
+> **MVP defers keyword search.** Implement ISBN lookup path first; add search in Phase 6.5.x once Add Item ISBN flow is stable.
+
+---
+
+### Architecture naming
+
+```text
+Service namespace:     ExternalCatalog::*
+Permission namespace:  items.external_lookup.*
+UI namespace:          Items workspace / Add Item
+```
+
+Provider-neutral services live under `ExternalCatalog::*`. Authorization uses Items permission keys because staff trigger lookups from the Items workspace.
+
+---
+
+### Real-time lookup policy
+
+All external lookups and searches are **real-time and staff-initiated**:
+
+```text
+Staff submits lookup
+→ synchronous request (local-first, then external when needed)
+→ persist lookup request + result for audit
+→ show preview or outcome
+```
+
+Rules:
+
+* **No automatic retry** for `failed`, `not_found`, or `rate_limited` outcomes.
+* **No background re-fetch** or scheduled retry jobs.
+* **No lookup result cache** used to skip a live external call on a new staff submission.
+* Failed outcomes are diagnostic records only; staff must **manually submit again** to retry.
+* Do **not** store or use `retry_after_at`.
+
+Persisted lookup rows support audit, troubleshooting, and preview source data — not quota-saving cache substitution.
+
+---
+
+### HTTP timeouts (single ISBN lookup)
+
+Single ISBN lookup runs synchronously in the web request:
+
+```text
+Open timeout:  2 seconds
+Read timeout:  5 seconds
+```
+
+On timeout: persist `failed` lookup, show staff-friendly message, allow manual entry or a **new** staff-initiated lookup. Do not retry inside the same request.
+
+---
+
+### Provider health check frequency
+
+Do **not** call ISBNdb `/key` on every Add Item page load.
+
+Health check is:
+
+* Manual from setup/admin (`items.external_lookup.configure`), or
+* Cached on `external_data_sources` for **15–60 minutes** unless user manually refreshes.
+
+Operational diagnostics only — not part of every item lookup.
+
 ---
 
 ### ISBNdb 404 handling
 
-An ISBNdb 404 for `GET /book/{isbn}` should be treated as a retryable external miss, not as proof that the ISBN is invalid.
+An ISBNdb 404 for `GET /book/{isbn}` is an external miss for that moment — not proof the ISBN is invalid.
 
 Recommended status:
 
@@ -671,19 +934,25 @@ Recommended status:
 not_found
 ```
 
-Recommended retry behavior:
-
-```text
-retry_after_at = 24.hours.from_now
-```
+**No automatic retry.** Staff may submit a new lookup manually or add the item manually.
 
 User-facing message:
 
-> No ISBNdb match found. ISBNdb may add new records later. You can add the item manually or try again later.
+> No ISBNdb match found right now. You can add the item manually or try a new lookup.
 
 ---
 
-### ISBNdb pricing behavior
+### MSRP handling (MVP)
+
+```text
+ISBNdb MSRP: displayed in preview and stored on lookup/import snapshots only.
+MVP:         do not write MSRP to catalog_items, products, or product_variants price fields.
+Follow-up:   optional staff action to copy MSRP into list price during Add Item review (Phase 6.5.x).
+```
+
+---
+
+### ISBNdb pricing behavior (`with_prices`)
 
 Do not enable ISBNdb `with_prices=true` by default.
 
@@ -695,7 +964,7 @@ Reasons:
 * Search and bulk endpoints do not return pricing.
 * ShelfStack local pricing remains authoritative.
 
-Use the ISBNdb `msrp` field, when present, as suggested list price only.
+Use the ISBNdb `msrp` field for preview/snapshot display only in MVP (see **MSRP handling** above).
 
 ---
 
@@ -722,13 +991,70 @@ Correct behavior:
 
 * Fill blank local fields.
 * Add missing identifiers.
-* Add missing contributors.
-* Add missing publisher if blank.
+* Add missing author metadata via `MetadataParser` when `creators` is blank.
+* Set `publisher` string when blank.
 * Add external subjects as suggestions.
 * Show conflicting values in preview.
 * Require explicit confirmation before overwriting local data.
 
 Avoid automatic overwrite of curated local data.
+
+> **MVP:** Fill-blank-only updates. Per-field overwrite checkboxes are follow-up.
+
+---
+
+### Integration with Ingram import
+
+`IngramCatalogImport` already upserts catalog items, products, and variants from spreadsheet rows with identifier resolution, format mapping, and audit events.
+
+Phase 6.5 should:
+
+* Reuse identifier resolution and format mapping patterns.
+* Extract or share a common **catalog item upsert from external metadata** path where practical.
+* Treat Ingram and ISBNdb as separate **sources** with separate provenance on lookup/import rows.
+* When both sources could apply to the same ISBN, prefer **existing local record + link**; never silently merge conflicting metadata.
+
+---
+
+### Add Item session draft behavior
+
+After a confirmed catalog import from Add Item:
+
+1. Write imported `catalog_item_id` and bibliographic prefill into `session[:add_item_draft]`.
+2. Set `workflow` to `catalog_linked`.
+3. Route staff to `item_details` (review/edit) or directly to `selling_setup` if catalog item is complete enough.
+
+Staff still complete **subdepartment**, **condition**, **selling price**, and **inventory behavior** on existing wizard steps. ISBNdb does not set these.
+
+---
+
+### Required catalog fields on import
+
+Imported catalog items must satisfy Phase 3 rules. ShelfStack must **not** create an active catalog item with missing required fields.
+
+If a required field cannot be derived safely from ISBNdb (especially `format_id`), the import preview must **require staff selection before Apply**. Block the create/link action until resolved.
+
+Required for catalog create:
+
+* `catalog_item_type` (default `book` when appropriate)
+* `title`
+* `format_id` *(mapped or staff-selected — never omitted)*
+* `publication_status` *(default e.g. `unknown` when appropriate)*
+* At least one active primary identifier via `CatalogIdentifierService`
+
+ShelfStack does not use incomplete catalog draft records in MVP; use Add Item `session[:add_item_draft]` for wizard state before persist where appropriate.
+
+`store_category` / BISAC linking remains **staff-curated** after import unless already present on an existing record.
+
+---
+
+### Idempotency
+
+Phase 6.5 must prevent duplicate catalog noise:
+
+* Repeating the same import action for the same ISBN must not create duplicate catalog items or duplicate identifiers.
+* If an exact local ISBN match exists at import time, route to **link** or **fill-blank update** — not create.
+* Re-submitting a staff lookup runs a **new** lookup request (real-time); import idempotency is enforced at apply time, not by skipping live lookup.
 
 ---
 
@@ -833,7 +1159,7 @@ timeout/failure response
 
 ## Deferred Items
 
-The following are intentionally deferred:
+The following are intentionally deferred. Items marked **review addition** were added during the 2026-06 ShelfStack fit review.
 
 | Item                               | Reason                                                                 |
 | ---------------------------------- | ---------------------------------------------------------------------- |
@@ -841,7 +1167,7 @@ The following are intentionally deferred:
 | Premium update feed sync           | Requires higher plan and background synchronization design.            |
 | `with_prices=true` support         | Higher plan/performance impact and not core bibliographic metadata.    |
 | Cover image asset storage          | Requires image caching, licensing, refresh, and storage decisions.     |
-| Automatic subject/category mapping | Risky; store categories are curated operational data.                  |
+| Automatic subject/category mapping | Risky; store categories and BISAC are curated operational data.        |
 | Automatic pricing updates          | Local pricing should remain authoritative.                             |
 | Automatic vendor sourcing          | Vendor data belongs to purchasing/sourcing workflows.                  |
 | Related edition auto-creation      | Could create duplicate/noisy records without staff review.             |
@@ -850,184 +1176,112 @@ The following are intentionally deferred:
 | Buyback lookup integration         | Useful later; buyback workflow is not in scope yet.                    |
 | Non-book lookup                    | ISBNdb is book-focused; media/game lookup should use future providers. |
 | Public/customer-facing search      | This is an internal staff workflow.                                    |
+| **ISBNdb keyword/title/author search** | **Review addition:** defer from MVP; ISBN path first.              |
+| **Fuzzy duplicate detection**      | **Review addition:** exact ISBN sufficient for MVP.                    |
+| **Per-field overwrite UI**         | **Review addition:** fill-blank-only for MVP.                          |
+| **Standalone ProductBuilder / VariantBuilder** | **Review addition:** use Add Item wizard continuation.     |
+| **POS register external lookup**   | **Review addition:** Items/Add Item only in v1.                        |
+| **Normalized contributor/publisher tables** | **Review addition:** use existing string/JSONB fields.          |
+| **Rich provider quota dashboard**  | **Review addition:** minimal health status in MVP.                     |
+| **`external_identifiers` table**   | **Review addition:** optional until multi-provider linking needed.     |
+| **Background/async lookup jobs**   | **Review addition:** defer until keyword search or slow paths ship.    |
+| **Polish file–style split of lookup UI** | Optional maintainability; not required for MVP.                |
+
+| **Automatic retry / lookup caching** | Real-time staff-initiated lookups only; audit persistence without cache substitution. |
+| **Phase 6.5E keyword search** | Separate follow-up workstream after 6.5A–D. |
 
 ---
 
-## Final Phase 6.5 Exit Criteria
+## Phase 6.5 Exit Criteria
 
-Phase 6.5 is complete when all of the following are true.
+Phase 6.5 is **complete** when all of the following are true. This is the only completion gate for the phase.
 
-### Provider Configuration
+### Provider configuration
 
-1. ISBNdb is represented as an external data source.
-2. ISBNdb base URL is configurable or seeded.
-3. ISBNdb API key is loaded from credentials/environment/secrets.
-4. API key is not stored in plain database fields.
-5. Authorized user can check ISBNdb provider health.
-6. Provider health check records last status and timestamp.
-7. Provider health check records plan limit total, spent, and remaining when available.
-8. Provider configuration screens are permission-protected.
+1. ISBNdb is represented as an `external_data_source`.
+2. API key is loaded from credentials/environment/secrets — not plain database fields.
+3. Authorized user can run health check manually; status cached 15–60 minutes — not on every Add Item load.
+4. Configuration is protected by `items.external_lookup.configure`.
 
-### Lookup Requests
+### Lookup (real-time ISBN path)
 
-1. ShelfStack can create external lookup request records.
-2. Lookup requests store source, lookup type, query, normalized query, request path, request params, actor, and timestamps.
-3. Lookup requests support `pending`, `completed`, `not_found`, `failed`, `rate_limited`, and `cancelled` statuses.
-4. Successful lookups store response status and completion timestamp.
-5. Failed lookups store error code/message.
-6. Not-found ISBN lookups are stored as retryable misses.
-7. Lookup requests retain enough information for debugging and audit review.
+1. Staff can scan or enter an ISBN from Add Item.
+2. ISBN is normalized; invalid ISBN rejected before external call.
+3. Local ISBN identifiers searched first via existing patterns.
+4. Exact local match routes to existing record — no duplicate external import.
+5. External ISBNdb call runs **synchronously** only when local miss (open 2s / read 5s timeouts).
+6. Outcomes persisted: `completed`, `not_found`, `failed`, `rate_limited` — **no automatic retry**.
+7. Normalized candidate + raw payload stored on `external_lookup_results`.
 
-### ISBN Lookup
+### Preview and duplicate detection
 
-1. Staff can scan or enter an ISBN.
-2. ISBN input is normalized.
-3. Invalid ISBN input is rejected before external lookup.
-4. ShelfStack searches local ISBN identifiers first.
-5. Exact local ISBN match is shown before any external import.
-6. ISBNdb is called when no confident local match exists.
-7. ISBNdb book response is parsed.
-8. ISBNdb 404 is handled as `not_found`.
-9. ISBNdb timeout/failure is handled without crashing the workflow.
-10. ISBNdb rate-limit response is handled without crashing the workflow.
+1. Candidate preview shows bibliographic fields, source label, MSRP *(display only)*, and exact ISBN local match status.
+2. Exact ISBN-13 and ISBN-10 duplicates detected; create blocked unless staff chooses link or fill-blank update.
+3. Ambiguous `format_id` requires staff selection before Apply.
+4. Preview does **not** create `external_catalog_imports` rows.
 
-### Search
+### Catalog import (staff actions)
 
-1. Staff can search by title/keyword.
-2. Staff can search by author where supported.
-3. Staff can search by publisher where supported.
-4. Staff can search by subject where supported.
-5. Search results are paginated.
-6. Search results clearly identify ISBNdb as the source.
-7. Search results show enough data to distinguish editions.
-8. Local matches are shown or badged when detected.
-9. Search does not automatically create local records.
+1. Staff can create catalog item, link existing, or fill-blank update from preview.
+2. Identifiers created via `CatalogIdentifierService` — no duplicates.
+3. Authors/publisher via `MetadataMapper` / `MetadataParser` — not entity tables.
+4. MSRP stored on snapshots only — **not** written to price fields.
+5. `external_catalog_imports` records **actions only** (`applied`, `failed`, `skipped`) with `action_type`.
+6. Import idempotency: repeat apply for same ISBN does not create duplicate catalog items or identifiers.
 
-### Normalization
+### Add Item integration
 
-1. ISBNdb responses are converted into provider-neutral book candidates.
-2. Candidate stores ISBN-13.
-3. Candidate stores ISBN-10 when present.
-4. Candidate stores title.
-5. Candidate stores authors.
-6. Candidate stores publisher.
-7. Candidate stores publication date.
-8. Candidate stores binding/format candidate.
-9. Candidate stores language.
-10. Candidate stores page count.
-11. Candidate stores synopsis/description when present.
-12. Candidate stores subjects.
-13. Candidate stores MSRP as suggested list price when present.
-14. Candidate stores image URL when present.
-15. Candidate stores related ISBNs when present.
-16. Candidate stores raw payload JSON.
+1. External lookup on Add Item `catalog_linked` path with barcode/scanner input.
+2. After import, `session[:add_item_draft]` updated; staff continues via existing `selling_setup` / `sellable_sku`.
+3. Subdepartment, condition, selling price, inventory behavior remain staff-entered on wizard steps.
 
-### Matching and Duplicate Detection
+### Authorization, audit, and tests
 
-1. Exact ISBN-13 match is detected.
-2. Exact ISBN-10 match is detected.
-3. Probable title/author duplicate is detected.
-4. Probable title/publisher/year duplicate is detected.
-5. Candidate preview displays local match status.
-6. Import is blocked or redirected when exact duplicate exists unless user chooses link/update.
-7. Duplicate detection is refreshable before import.
+1. `items.external_lookup.*` permissions seeded; unauthorized users blocked.
+2. Audit events for lookup failures, imports, links, and apply failures.
+3. Fixture-based tests only — no live ISBNdb in CI.
+4. Tests cover normalization, exact-ISBN duplicate detection, idempotent import, timeouts, and Add Item flow.
 
-### Candidate Preview
+---
 
-1. Candidate preview page exists.
-2. Preview displays bibliographic fields.
-3. Preview displays source provider.
-4. Preview displays raw payload only to authorized users.
-5. Preview shows local matches and conflicts.
-6. Preview distinguishes blank-field fills from overwrites.
-7. Preview allows create, link, update, skip, or cancel actions according to permission.
+## Follow-up Backlog (not Phase 6.5)
 
-### Catalog Import
+Work tracked here does **not** block Phase 6.5 completion.
 
-1. Staff can create a catalog item from an ISBNdb candidate.
-2. Staff can link an ISBNdb candidate to an existing catalog item.
-3. Staff can update an existing catalog item from an ISBNdb candidate.
-4. Existing local data is not overwritten by default.
-5. Staff can explicitly approve allowed overwrites.
-6. ISBN-13 identifier is created when present.
-7. ISBN-10 identifier is created when present.
-8. Duplicate identifiers are not created.
-9. Contributors are created or linked.
-10. Publisher is created or linked.
-11. Format is mapped when safe.
-12. Ambiguous format requires staff selection.
-13. Language is mapped when safe.
-14. External subjects are stored as suggestions/metadata.
-15. Related ISBNs are stored or displayed without auto-creation.
-16. MSRP is treated as suggested list price.
-17. Import action stores field mapping snapshot.
-18. Import action stores raw payload snapshot.
-19. Import action records actor and timestamp.
+### Phase 6.5E — External catalog search expansion
 
-### Optional Product and Variant Creation
+* ISBNdb keyword/title/author/publisher/subject search and pagination
+* `ExternalCatalog::SearchBooks`
+* Add Item / Items index keyword entry points
+* Real-time staff-initiated search only — no automatic retry on failed searches
 
-1. Staff can create a product after catalog import.
-2. Product creation is optional.
-3. Product creation requires staff confirmation.
-4. Staff can create a product variant after product creation.
-5. Variant creation is optional.
-6. Variant creation requires subdepartment.
-7. Variant creation requires condition.
-8. Variant creation requires selling price.
-9. Variant creation requires inventory behavior.
-10. Variant creation uses local SKU rules.
-11. Variant creation does not infer tax behavior directly from ISBNdb.
-12. Variant creation records audit events.
+### Other Phase 6.5.x items
 
-### Add Item Integration
+* Fuzzy duplicate detection (title/author, title/publisher/year)
+* Per-field overwrite UI on update-existing
+* Copy MSRP into list price during Add Item review
+* Standalone `ProductBuilder` / `VariantBuilder` outside Add Item wizard
+* POS “not found → Add Item external lookup” handoff
+* Rich provider quota dashboard
+* `external_identifiers` / subject suggestion tables
+* Background/async lookup jobs *(only if needed for slow search paths)*
 
-1. Add Item screen exposes external catalog lookup.
-2. ISBN lookup can be launched from Add Item.
-3. Keyword search can be launched from Add Item.
-4. Local match opens or links to the existing ShelfStack item.
-5. External match opens candidate preview.
-6. Successful import returns the user to a sensible Add Item continuation path.
-7. Add Item lookup respects permissions.
-8. Add Item lookup is usable with barcode scanner input.
+### Phase 7 consumers
 
-### Auditability
+* Customer request and special order intake reusing `ExternalCatalog::LookupByIsbn` and import services
 
-1. Provider health checks create audit events when appropriate.
-2. Lookup failures create audit events or persisted diagnostic records.
-3. Candidate imports create audit events.
-4. Candidate links create audit events.
-5. Candidate updates create audit events.
-6. Product/variant creation from external candidate creates audit events.
-7. Audit events include actor, event name, timestamp, source, auditable record, and store/workstation/session context when available.
-8. Raw provider payloads are not editable through normal UI.
+---
 
-### Authorization
+## Related Documents
 
-1. Permissions are seeded.
-2. Unauthorized users cannot access external catalog lookup.
-3. Unauthorized users cannot import candidates.
-4. Unauthorized users cannot update existing catalog records from external candidates.
-5. Unauthorized users cannot configure ISBNdb.
-6. Unauthorized users cannot view raw provider payloads.
-7. Store-scoped authorization works where store context is required.
-
-### Testing
-
-1. ISBN normalization tests pass.
-2. ISBNdb client fixture tests pass.
-3. Provider health check tests pass.
-4. Lookup request status tests pass.
-5. Normalization tests pass.
-6. Duplicate detection tests pass.
-7. Candidate preview tests pass.
-8. Catalog import tests pass.
-9. Identifier import tests pass.
-10. Contributor import tests pass.
-11. Publisher import tests pass.
-12. Format mapping tests pass.
-13. Do-not-overwrite-local-data tests pass.
-14. Add Item integration tests pass.
-15. Authorization tests pass.
-16. Audit tests pass.
-17. Seed idempotency tests pass.
-18. No CI test calls the live ISBNdb API.
+```text
+docs/roadmap.md                                    — add Phase 6.5 row when approved
+docs/roadmap/phase-6-pos-foundation.md             — POS local lookup only (Pos::LineLookup)
+docs/roadmap/phase-3-catalog-products-variants.md  — catalog item, identifiers, Add Item
+docs/specifications/classification-target-spec.md  — sub_department, BISAC, store categories
+docs/implementation/phase-3-completion.md          — Add Item wizard, Ingram import
+app/services/catalog_identifier_service.rb         — identifier rules
+app/services/ingram_catalog_import/                — parallel bulk import patterns
+app/controllers/items/add_item_controller.rb       — wizard integration point
+AGENTS.md                                          — deferred: external API without confirmation
+```

@@ -1,0 +1,53 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "Original External Metadata",
+           description: "Provider snapshot captured when this catalog item was imported from an external lookup." %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Import" } do %>
+  <dl class="ss-dl">
+    <dt>Catalog item</dt><dd><%= @catalog_item.title %></dd>
+    <dt>Source</dt><dd><%= @import.external_data_source.name %></dd>
+    <dt>Import action</dt><dd><%= @import.action_type.humanize %></dd>
+    <dt>Imported at</dt><dd><%= l(@import.applied_at, format: :long) %></dd>
+    <dt>Imported by</dt><dd><%= @import.imported_by_user.display_name %></dd>
+    <dt>ISBN-13</dt><dd><%= @lookup_result.isbn13.presence || "—" %></dd>
+    <dt>ISBN-10</dt><dd><%= @lookup_result.isbn10.presence || "—" %></dd>
+  </dl>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Provider Snapshot" } do %>
+  <dl class="ss-dl">
+    <dt>Title</dt><dd><%= @lookup_result.title %></dd>
+    <dt>Authors (ISBNdb)</dt><dd><%= Array(@lookup_result.authors_snapshot).join("; ").presence || "—" %></dd>
+    <dt>Publisher</dt><dd><%= (@lookup_result.publisher_snapshot["name"] || @lookup_result.publisher_snapshot[:name]).presence || "—" %></dd>
+    <dt>Binding</dt><dd><%= @lookup_result.binding_snapshot.presence || "—" %></dd>
+    <dt>Pages</dt><dd><%= @lookup_result.pages.presence || "—" %></dd>
+    <dt>MSRP</dt>
+    <dd>
+      <% if @lookup_result.msrp_cents.present? %>
+        <%= number_to_currency(@lookup_result.msrp_cents / 100.0) %>
+      <% else %>
+        —
+      <% end %>
+    </dd>
+    <dt>Subjects</dt><dd><%= Array(@lookup_result.subjects_snapshot).join("; ").presence || "—" %></dd>
+  </dl>
+<% end %>
+
+<% if @import.field_mapping_snapshot.present? %>
+  <%= render layout: "shared/forms/section", locals: { title: "Mapped Catalog Fields" } do %>
+    <pre class="ss-code-block"><%= JSON.pretty_generate(@import.field_mapping_snapshot) %></pre>
+  <% end %>
+<% end %>
+
+<% if @can_view_raw_payload %>
+  <%= render layout: "shared/forms/section", locals: { title: "Raw Provider Payload" } do %>
+    <pre class="ss-code-block"><%= JSON.pretty_generate(@import.raw_payload_json.presence || @lookup_result.raw_payload_json) %></pre>
+  <% end %>
+<% end %>
+
+<footer class="ss-form-actions">
+  <%= link_to "Back to item setup",
+              items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup"),
+              class: "ss-btn ss-btn-secondary" %>
+</footer>

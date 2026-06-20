@@ -115,6 +115,12 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
+    ffi (1.17.4-aarch64-linux-gnu)
+    ffi (1.17.4-aarch64-linux-musl)
+    ffi (1.17.4-arm-linux-gnu)
+    ffi (1.17.4-arm-linux-musl)
+    ffi (1.17.4-x86_64-linux-gnu)
+    ffi (1.17.4-x86_64-linux-musl)
     fugit (1.12.2)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
@@ -306,6 +312,9 @@ GEM
       rubocop-rails (>= 2.30)
     ruby-ole (1.2.13.1)
     ruby-progressbar (1.13.0)
+    ruby-vips (2.3.0)
+      ffi (~> 1.12)
+      logger
     rubyzip (2.4.1)
     securerandom (0.4.1)
     selenium-webdriver (4.44.0)
@@ -401,6 +410,7 @@ DEPENDENCIES
   roo (~> 2.10)
   roo-xls
   rubocop-rails-omakase
+  ruby-vips (~> 2.0)
   selenium-webdriver
   solid_cable
   solid_cache

@@ -1,7 +1,7 @@
 <%= render "shared/forms/page_header",
            eyebrow: "Add Item",
            title: "Add Catalog-Linked Item — Item Details",
-           description: "Enter catalog metadata. You can finish after this step or continue to selling setup." %>
+           description: @external_lookup_staged ? "Review imported metadata, edit as needed, then save to create the catalog record." : "Enter catalog metadata. You can finish after this step or continue to selling setup." %>
 
 <%= form_with url: items_add_item_path(step: "item_details"), method: :post, class: "ss-form ss-form--wide" do %>
   <%= fields_for :catalog_item, @catalog_item do |f| %>
@@ -9,7 +9,7 @@
           f: f,
           catalog_item: @catalog_item,
           formats: @formats,
-          include_identifier: true,
+          include_identifier: !@external_lookup_staged,
           primary_bisac_category_node_id: @primary_bisac_category_node_id,
           primary_bisac_category_node_label: @primary_bisac_category_node_label,
           bisac_category_node_ids: @bisac_category_node_ids,

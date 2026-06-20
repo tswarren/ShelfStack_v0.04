@@ -1,6 +1,9 @@
 <section class="ss-item-setup-section">
   <h2>Catalog metadata</h2>
-  <%= render "items/items/catalog", item: item, identifiers: identifiers %>
+  <%= render "items/items/catalog",
+        item: item,
+        identifiers: identifiers,
+        external_catalog_import: local_assigns[:external_catalog_import] %>
 </section>
 
 <section class="ss-item-setup-section">

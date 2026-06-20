@@ -1,0 +1,33 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "External Data Sources",
+           description: "Configure and monitor external catalog providers." %>
+
+<% @sources.each do |source| %>
+  <%= render layout: "shared/forms/section", locals: { title: source.name } do %>
+    <dl class="ss-dl">
+      <dt>Source key</dt><dd><%= source.source_key %></dd>
+      <dt>Base URL</dt><dd><%= source.base_url %></dd>
+      <dt>Active</dt><dd><%= source.active? ? "Yes" : "No" %></dd>
+      <dt>Last health check</dt>
+      <dd>
+        <% if source.last_health_check_at.present? %>
+          <%= l(source.last_health_check_at, format: :long) %> — <%= source.last_health_check_status %>
+        <% else %>
+          Never checked
+        <% end %>
+      </dd>
+      <% if source.last_plan_limit_total.present? %>
+        <dt>Plan usage</dt>
+        <dd><%= source.last_plan_limit_spent %> / <%= source.last_plan_limit_total %> (<%= source.last_plan_limit_left %> left)</dd>
+      <% end %>
+    </dl>
+
+    <% if Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.configure", store: current_store) %>
+      <%= button_to "Run health check",
+                    setup_external_data_source_health_check_path(source.source_key),
+                    method: :post,
+                    class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  <% end %>
+<% end %>

@@ -1,0 +1,10 @@
+{
+  "book": {
+    "title": "Ambiguous Binding Book",
+    "isbn13": "9780000000001",
+    "isbn10": "0000000001",
+    "authors": ["Test Author"],
+    "binding": "Unknown Binding Type",
+    "pages": 100
+  }
+}

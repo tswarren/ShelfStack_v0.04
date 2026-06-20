@@ -1,0 +1,114 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "External Catalog Preview",
+           description: "Review candidate metadata before importing into the local catalog." %>
+
+<% if @preview.format_required %>
+  <div class="ss-notice ss-notice--warning">
+    <p>Select a format below before continuing.</p>
+  </div>
+<% end %>
+
+<% if @preview.apply_blocked %>
+  <div class="ss-notice ss-notice--warning">
+    <p><%= @preview.apply_blocked_reason %></p>
+  </div>
+<% end %>
+
+<% if @preview.duplicate.duplicate? %>
+  <div class="ss-notice ss-notice--info">
+    <p>
+      <strong>Local duplicate:</strong>
+      <%= link_to @preview.duplicate.catalog_item.title, items_catalog_item_path(@preview.duplicate.catalog_item) %>
+      (<%= @preview.duplicate.matched_type.upcase %> <%= @preview.duplicate.matched_isbn %>)
+    </p>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Candidate" } do %>
+  <dl class="ss-dl">
+    <dt>Title</dt><dd><%= @lookup_result.title %></dd>
+    <dt>Subtitle</dt><dd><%= @lookup_result.subtitle.presence || "—" %></dd>
+    <dt>Authors (ISBNdb)</dt><dd><%= Array(@lookup_result.authors_snapshot).join("; ").presence || "—" %></dd>
+    <dt>Authors (import format)</dt><dd><%= @import_attributes[:creators].presence || "—" %></dd>
+    <dt>Subjects → themes</dt><dd><%= @import_attributes[:themes].presence || "—" %></dd>
+    <dt>Publisher</dt><dd><%= (@lookup_result.publisher_snapshot["name"] || @lookup_result.publisher_snapshot[:name]).presence || "—" %></dd>
+    <dt>Binding</dt><dd><%= @lookup_result.binding_snapshot.presence || "—" %></dd>
+    <dt>Format</dt>
+    <dd>
+      <% if @preview.resolved_format.present? %>
+        <%= @preview.resolved_format.name %>
+      <% else %>
+        Unmapped — select below
+      <% end %>
+    </dd>
+    <dt>Pages</dt><dd><%= @lookup_result.pages.presence || "—" %></dd>
+    <dt>Dimensions</dt>
+    <dd>
+      <% dims = @lookup_result.dimensions_snapshot || {} %>
+      <% if dims["height"].present? || dims["width"].present? || dims["depth"].present? %>
+        <%= [
+          ("#{dims["height"]} #{dims["dimension_units"]} H" if dims["height"].present?),
+          ("#{dims["width"]} #{dims["dimension_units"]} W" if dims["width"].present?),
+          ("#{dims["depth"]} #{dims["dimension_units"]} D" if dims["depth"].present?)
+        ].compact.join(" × ") %>
+        <% if dims["weight"].present? %>
+          · <%= dims["weight"] %> <%= dims["weight_units"] %>
+        <% end %>
+      <% else %>
+        —
+      <% end %>
+    </dd>
+    <dt>MSRP</dt>
+    <dd>
+      <% if @lookup_result.msrp_cents.present? %>
+        <%= number_to_currency(@lookup_result.msrp_cents / 100.0) %> (display only)
+      <% else %>
+        —
+      <% end %>
+    </dd>
+    <dt>ISBN-13</dt><dd><%= @lookup_result.isbn13.presence || "—" %></dd>
+    <dt>ISBN-10</dt><dd><%= @lookup_result.isbn10.presence || "—" %></dd>
+  </dl>
+<% end %>
+
+<% if @can_view_raw_payload %>
+  <%= render layout: "shared/forms/section", locals: { title: "Raw Payload" } do %>
+    <pre class="ss-code-block"><%= JSON.pretty_generate(@lookup_result.raw_payload_json) %></pre>
+  <% end %>
+<% end %>
+
+<%= form_with url: items_external_lookup_import_path(@lookup_result), method: :post, class: "ss-form ss-form--standard" do %>
+  <% if @preview.format_required %>
+    <%= render layout: "shared/forms/section", locals: { title: "Format Selection" } do %>
+      <div class="ss-field">
+        <%= label_tag :format_id, "Format" %>
+        <%= select_tag :format_id,
+                       options_from_collection_for_select(@formats, :id, :name),
+                       include_blank: "Select format",
+                       required: true,
+                       class: "ss-input" %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if @preview.duplicate.duplicate? %>
+    <%= hidden_field_tag :catalog_item_id, @preview.duplicate.catalog_item.id %>
+  <% end %>
+
+  <footer class="ss-form-actions">
+    <% action_labels = {
+      "create_catalog_item" => "Review and edit item details",
+      "link_existing_catalog_item" => "Link existing catalog item",
+      "fill_blank_existing_catalog_item" => "Fill blank fields",
+      "skip" => "Skip"
+    } %>
+    <% @preview.allowed_actions.each do |action| %>
+      <%= submit_tag action_labels.fetch(action, action.humanize),
+                     name: "action_type",
+                     value: action,
+                     class: "ss-btn #{action == 'skip' ? 'ss-btn-secondary' : ''}" %>
+    <% end %>
+    <%= link_to "Back", items_add_item_path(step: "identify"), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

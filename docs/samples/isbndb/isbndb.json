@@ -1,0 +1,40 @@
+{
+  "book": {
+    "title": "Mavericks Life stories and lessons of history's most extraordinary misfits",
+    "title_long": "Mavericks Life stories and lessons of history's most extraordinary misfits",
+    "isbn": "9781786788986",
+    "isbn13": "9781786788986",
+    "isbn10": "1786788985",
+    "binding": "Hardcover",
+    "publisher": "Watkins Media Limited (US, CA)",
+    "language": "en",
+    "date_published": "2025-02-11",
+    "pages": 224,
+    "dimensions": "Weight: 1.25 Pounds",
+    "dimensions_structured": {
+      "weight": {
+        "value": 1.25,
+        "unit": "pounds"
+      }
+    },
+    "image": "https://images.isbndb.com/covers/4418903482824.jpg",
+    "image_original": "https://images.isbndb.com/covers/original/4418903482824.jpg?key=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lzYm5kYi5jb20iLCJhdWQiOiJodHRwczovL2lzYm5kYi5jb20iLCJleHAiOjE3ODE5OTYyOTR9.z8zm3yTa7Kr9pw69ZPIGvoxHwJHLVD7_nMSyv2G5MiI",
+    "synopsis": "<b>In her first book, popular TikTok historian J Draper uses her characteristic wit and intellect to introduce us to extraordinary figures marginalized by history, and the lessons we can learn from them.</b><br><br><b>Witty and engaging TikTok historian J.D. Draper digs out unusual stories of individuals that have shaped the world, and discovers the lessons their unique experiences can teach us.</b><br><br>Breaking away from history as told through the lens of kings, queens and nobles, this book instead lifts the lid on 24 fascinating stories of little-known underdogs, mavericks, trailblazers and oddballs. Through these stories you will meet characters such as: <br><br> <ul><li><b>The Chevalier d'Eon</b> – a fencing master, spy and diplomat who came out as a woman in 18th-century London</li><li><b><b> </b>Ellen and William Craft</b> – a married couple who made a daring escape from slavery in the American south </li><li><b>Peter the Wild Boy</b> – a child found living in the woods in Germany who was taken to the royal court in England</li><li><b>Caroline Herschel</b> – the first British woman to be paid for scientific work, and a discoverer of comets</li><li><b>William Buckland</b> – the man who wrote the first account of a dinosaur – yet who also ate the heart of a French king</li><li><b>Eleanor Rykener –</b> a gender-bending sex worker from medieval England who spilled juicy gossip about her clients in the clergy Juliana Popjoy - a society beauty who lived in a tree for years</li><li><b>Paul Robeson</b> – athlete, singer, actor, polyglot, activist... and handsome to boot</li><li><b>The Rebecca Rioters</b> – a roving crowd of Welshmen who destroyed tollbooths dressed in skirts and bonnets.</li></ul><br>These poignant and often hilarious true stories show us that the world as we know it was built by a wider array of historical figures than we experienced in our schoolbooks.",
+    "authors": [
+      "Jenny Draper"
+    ],
+    "subjects": [
+      "History",
+      "LGBTQ",
+      "Women",
+      "Humor",
+      "Topic"
+    ],
+    "other_isbns": [
+      {
+        "isbn": "9781786788993",
+        "binding": "print"
+      }
+    ]
+  }
+}

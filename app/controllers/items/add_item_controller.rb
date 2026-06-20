@@ -4,7 +4,7 @@ module Items
   class AddItemController < BaseController
     include CatalogItemBisacSyncable
 
-    STEPS = %w[choose_path item_details selling_setup sellable_sku].freeze
+    STEPS = %w[choose_path identify item_details selling_setup sellable_sku].freeze
     WORKFLOWS = %w[catalog_linked non_catalog].freeze
 
     before_action :load_step
@@ -19,6 +19,7 @@ module Items
     def create
       case @step
       when "choose_path" then handle_choose_path
+      when "identify" then handle_identify
       when "item_details" then handle_item_details
       when "selling_setup" then handle_selling_setup
       when "sellable_sku" then handle_sellable_sku
@@ -55,6 +56,8 @@ module Items
       case @step
       when "choose_path"
         authorize!("items.access")
+      when "identify"
+        authorize!("items.external_lookup.access")
       when "item_details"
         authorize!("items.catalog_items.create")
       when "selling_setup"
@@ -76,8 +79,13 @@ module Items
       case @step
       when "choose_path"
         render "items/add_item/choose_path"
+      when "identify"
+        ensure_catalog_linked_workflow! or return
+        @local_catalog_item = local_match_catalog_item
+        render "items/add_item/identify"
       when "item_details"
         ensure_catalog_linked_workflow! or return
+        @external_lookup_staged = external_lookup_staged?
         @catalog_item = find_or_build_catalog_item
         @formats = Format.active_records.order(:name)
         load_bisac_form_state(@catalog_item)
@@ -112,28 +120,61 @@ module Items
 
       save_draft!("workflow" => workflow)
       if workflow == "catalog_linked"
-        redirect_to items_add_item_path(step: "item_details")
+        redirect_to items_add_item_path(step: "identify")
       else
         redirect_to items_add_item_path(step: "selling_setup")
       end
+    end
+
+    def handle_identify
+      ensure_catalog_linked_workflow! or return
+      redirect_to items_add_item_path(step: "identify")
+    end
+
+    def local_match_catalog_item
+      return unless @draft["catalog_item_id"].present?
+
+      CatalogItem.find_by(id: @draft["catalog_item_id"])
     end
 
     def handle_item_details
       ensure_catalog_linked_workflow! or return
       @formats = Format.active_records.order(:name)
       load_store_category_collections
-      @catalog_item = CatalogItem.new(catalog_item_params.merge(active: true, publication_status: "active"))
+      @external_lookup_staged = external_lookup_staged?
 
-      saved = save_catalog_item!(@catalog_item)
+      cover_image_url = external_lookup_result&.image_url if @external_lookup_staged
+
+      if @draft["catalog_item_id"].present?
+        @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
+        @catalog_item.assign_attributes(catalog_item_params)
+        saved = persist_catalog_item_updates!(@catalog_item)
+        created = false
+      else
+        @catalog_item = CatalogItem.new(catalog_item_params.merge(active: true, publication_status: "active"))
+        saved = save_catalog_item!(@catalog_item)
+        created = saved
+      end
       return unless saved
+
+      finalize_external_lookup_import!(@catalog_item) if @external_lookup_staged
 
       bisac_result = sync_catalog_item_bisac!(@catalog_item)
       store_category_result = sync_catalog_store_category!(@catalog_item)
-      record_audit!("catalog_item.created", @catalog_item)
+      record_audit!(created ? "catalog_item.created" : "catalog_item.updated", @catalog_item)
       apply_bisac_sync_notice!(bisac_result)
       apply_store_category_sync_notice!(store_category_result)
       apply_identifier_validation_notice!(@catalog_item)
-      save_draft!("catalog_item_id" => @catalog_item.id)
+      draft_attrs = {
+        "catalog_item_id" => @catalog_item.id,
+        "external_lookup_result_id" => nil,
+        "external_lookup_format_id" => nil
+      }
+      draft_attrs["external_lookup_cover_image_url"] = cover_image_url if cover_image_url.present?
+      if external_lookup_result&.msrp_cents.present?
+        draft_attrs["external_lookup_msrp_cents"] = external_lookup_result.msrp_cents
+      end
+      save_draft!(draft_attrs)
 
       if done_commit?
         reset_draft!
@@ -169,15 +210,25 @@ module Items
       @catalog_item = @product.catalog_item if catalog_linked?
 
       if @product.save
+        cover_import_message = import_external_cover_image!(@product)
         record_audit!("product.created", @product)
-        save_draft!("product_id" => @product.id)
+        draft_updates = { "product_id" => @product.id, "external_lookup_msrp_cents" => nil }
+        draft_updates["external_lookup_cover_image_url"] = nil if cover_import_message.nil?
+        save_draft!(draft_updates)
+
+        notice = if done_commit?
+                   "Selling setup saved. Add a sellable SKU when ready."
+                 else
+                   nil
+                 end
+        notice = [ notice, cover_import_message ].compact.join(" ") if cover_import_message.present?
 
         if done_commit?
           reset_draft!
-          redirect_to ItemPresenter.from_product(@product).show_path,
-                      notice: "Selling setup saved. Add a sellable SKU when ready."
+          redirect_to ItemPresenter.from_product(@product).show_path, notice: notice.presence
         else
-          redirect_to items_add_item_path(step: "sellable_sku")
+          redirect_to items_add_item_path(step: "sellable_sku"),
+                      notice: notice.presence || "Selling setup saved."
         end
       else
         @step = "selling_setup"
@@ -220,10 +271,17 @@ module Items
 
     def save_catalog_item!(catalog_item)
       saved = false
+      lookup_result = external_lookup_result
       CatalogItem.transaction do
         raise ActiveRecord::Rollback unless catalog_item.save
 
-        if identifier_value_param.present?
+        if lookup_result.present?
+          ExternalCatalog::CatalogItemBuilder.add_identifiers!(
+            catalog_item: catalog_item,
+            candidate: lookup_result,
+            actor: current_user
+          )
+        elsif identifier_value_param.present?
           CatalogIdentifierService.add_identifier!(
             catalog_item: catalog_item,
             identifier_type: identifier_type_param,
@@ -241,12 +299,62 @@ module Items
 
       unless saved
         @step = "item_details"
+        @external_lookup_staged = external_lookup_staged?
         load_bisac_form_state(catalog_item)
         load_store_category_collections
         render "items/add_item/item_details", status: :unprocessable_entity
       end
 
       saved
+    end
+
+    def persist_catalog_item_updates!(catalog_item)
+      return false unless catalog_item.save
+
+      true
+    end
+
+    def finalize_external_lookup_import!(catalog_item)
+      lookup_result = external_lookup_result
+      return if lookup_result.blank?
+
+      ExternalCatalog::ImportCandidate.finalize_create!(
+        lookup_result: lookup_result,
+        catalog_item: catalog_item,
+        actor: current_user
+      )
+    end
+
+    def external_lookup_staged?
+      @draft["external_lookup_result_id"].present? && @draft["catalog_item_id"].blank?
+    end
+
+    def external_lookup_result
+      return unless @draft["external_lookup_result_id"].present?
+
+      ExternalLookupResult.find_by(id: @draft["external_lookup_result_id"])
+    end
+
+    def import_external_cover_image!(product)
+      return if cover_image_uploaded?
+      return if @draft["external_lookup_cover_image_url"].blank?
+
+      result = ExternalCatalog::CoverImageImporter.call(
+        product: product,
+        url: @draft["external_lookup_cover_image_url"],
+        actor: current_user
+      )
+      return nil if result.attached
+
+      result.message
+    end
+
+    def cover_image_uploaded?
+      params.dig(:product, :cover_image).present?
+    end
+
+    def external_lookup_msrp_cents
+      @draft["external_lookup_msrp_cents"].to_i
     end
 
     def prepare_selling_setup_form
@@ -262,7 +370,7 @@ module Items
           variation_type: "conditional",
           name: ProductNameRenderer.product_name(Product.new(catalog_item: @catalog_item)),
           sku: @catalog_item.primary_identifier&.normalized_identifier,
-          list_price_cents: 0
+          list_price_cents: external_lookup_msrp_cents
         )
         apply_store_category_product_defaults!(@product)
       else
@@ -348,7 +456,11 @@ module Items
     end
 
     def find_or_build_catalog_item
-      if @draft["catalog_item_id"].present?
+      if external_lookup_staged?
+        lookup_result = external_lookup_result
+        format = Format.active_records.find_by(id: @draft["external_lookup_format_id"])
+        ExternalCatalog::StagedCatalogItemBuilder.build(lookup_result:, format:)
+      elsif @draft["catalog_item_id"].present?
         CatalogItem.find(@draft["catalog_item_id"])
       else
         CatalogItem.new(active: true, publication_status: "active", catalog_item_type: "book")

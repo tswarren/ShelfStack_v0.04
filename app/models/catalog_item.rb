@@ -23,6 +23,7 @@ class CatalogItem < ApplicationRecord
   belongs_to :store_category, class_name: "CategoryNode", optional: true
   has_many :catalog_item_identifiers, dependent: :destroy
   has_many :products, dependent: :restrict_with_error
+  has_many :external_catalog_imports, dependent: :restrict_with_error
   has_many :categorizations, as: :categorizable, dependent: :destroy
 
   accepts_nested_attributes_for :catalog_item_identifiers, allow_destroy: true, reject_if: :all_blank
@@ -69,6 +70,10 @@ class CatalogItem < ApplicationRecord
 
   def primary_bisac_categorization
     bisac_categorizations.primary_records.first
+  end
+
+  def latest_external_catalog_import
+    external_catalog_imports.applied_imports.order(applied_at: :desc, id: :desc).first
   end
 
   private

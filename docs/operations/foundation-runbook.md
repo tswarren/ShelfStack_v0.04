@@ -221,6 +221,23 @@ Assign roles in Setup → Users. Managers granting authorizations need `pos.auth
 
 ---
 
+## ISBNdb API Key (Phase 6.5)
+
+External catalog lookup uses ISBNdb when local ISBN identifiers do not match.
+
+Configure the API key using one of:
+
+1. Rails credentials: `rails credentials:edit` → `isbndb: api_key: YOUR_KEY`
+2. Environment variable: `ISBNDB_API_KEY=YOUR_KEY`
+
+The key is **not** stored in `external_data_sources.configuration_json`.
+
+Run a manual health check from **Setup → External Data Sources** (requires `items.external_lookup.configure`).
+
+Direct URL: `/setup/external_data_sources`
+
+---
+
 ## Related Documents
 
 - [../implementation/phase-1-completion.md](../implementation/phase-1-completion.md)

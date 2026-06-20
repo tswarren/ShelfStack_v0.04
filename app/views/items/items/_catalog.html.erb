@@ -50,6 +50,11 @@
 
   <div class="ss-catalog-actions">
     <%= link_to "Edit catalog details", edit_items_catalog_item_path(item.catalog_item, item_flow), class: "ss-btn" %>
+    <% if external_catalog_import.present? && Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.access", store: current_store) %>
+      <%= link_to "View original metadata",
+                  items_item_external_metadata_path(catalog_item_id: item.catalog_item.id),
+                  class: "ss-btn ss-btn-secondary" %>
+    <% end %>
     <%= link_to "Add identifier", new_identifier_items_catalog_item_path(item.catalog_item, return_to: "item"), class: "ss-btn ss-btn-secondary" %>
     <% if item.catalog_item.active? %>
       <%= button_to "Inactivate catalog item", inactivate_items_catalog_item_path(item.catalog_item, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>

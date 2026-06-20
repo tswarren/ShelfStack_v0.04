@@ -213,6 +213,110 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["sort_order"], name: "index_display_locations_on_sort_order"
   end
 
+  create_table "external_catalog_imports", force: :cascade do |t|
+    t.string "action_type", null: false
+    t.datetime "applied_at"
+    t.bigint "catalog_item_id"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.bigint "external_data_source_id", null: false
+    t.bigint "external_lookup_result_id", null: false
+    t.jsonb "field_mapping_snapshot", default: {}, null: false
+    t.bigint "imported_by_user_id", null: false
+    t.bigint "product_id"
+    t.bigint "product_variant_id"
+    t.jsonb "raw_payload_json", default: {}, null: false
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["applied_at"], name: "index_external_catalog_imports_on_applied_at"
+    t.index ["catalog_item_id"], name: "index_external_catalog_imports_on_catalog_item_id"
+    t.index ["external_data_source_id"], name: "index_external_catalog_imports_on_external_data_source_id"
+    t.index ["external_lookup_result_id", "catalog_item_id", "action_type"], name: "index_external_catalog_imports_on_result_item_action_applied", unique: true, where: "(((status)::text = 'applied'::text) AND ((action_type)::text = ANY ((ARRAY['create_catalog_item'::character varying, 'link_existing_catalog_item'::character varying, 'fill_blank_existing_catalog_item'::character varying])::text[])))"
+    t.index ["external_lookup_result_id"], name: "index_external_catalog_imports_on_external_lookup_result_id"
+    t.index ["imported_by_user_id"], name: "index_external_catalog_imports_on_imported_by_user_id"
+    t.index ["product_id"], name: "index_external_catalog_imports_on_product_id"
+    t.index ["product_variant_id"], name: "index_external_catalog_imports_on_product_variant_id"
+  end
+
+  create_table "external_data_sources", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "base_url", null: false
+    t.jsonb "configuration_json", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "last_health_check_at"
+    t.string "last_health_check_status"
+    t.integer "last_plan_limit_left"
+    t.integer "last_plan_limit_spent"
+    t.integer "last_plan_limit_total"
+    t.string "name", null: false
+    t.string "source_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_key"], name: "index_external_data_sources_on_source_key", unique: true
+  end
+
+  create_table "external_lookup_requests", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.string "error_code"
+    t.text "error_message"
+    t.bigint "external_data_source_id", null: false
+    t.string "lookup_type", null: false
+    t.string "normalized_query"
+    t.string "query", null: false
+    t.jsonb "request_params_json", default: {}, null: false
+    t.string "request_path"
+    t.bigint "requested_by_user_id", null: false
+    t.integer "response_status_code"
+    t.datetime "started_at"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_external_lookup_requests_on_created_at"
+    t.index ["external_data_source_id", "lookup_type", "normalized_query"], name: "index_external_lookup_requests_on_source_type_query"
+    t.index ["external_data_source_id"], name: "index_external_lookup_requests_on_external_data_source_id"
+    t.index ["requested_by_user_id"], name: "index_external_lookup_requests_on_requested_by_user_id"
+    t.index ["status"], name: "index_external_lookup_requests_on_status"
+  end
+
+  create_table "external_lookup_results", force: :cascade do |t|
+    t.jsonb "authors_snapshot", default: [], null: false
+    t.string "binding_snapshot"
+    t.decimal "confidence_score", precision: 5, scale: 4
+    t.datetime "created_at", null: false
+    t.string "currency_code", limit: 3
+    t.string "date_published_snapshot"
+    t.string "dewey_decimal_snapshot"
+    t.jsonb "dimensions_snapshot", default: {}, null: false
+    t.text "excerpt"
+    t.string "external_identifier"
+    t.bigint "external_lookup_request_id", null: false
+    t.string "image_url"
+    t.string "isbn10"
+    t.string "isbn13"
+    t.string "language_snapshot"
+    t.bigint "local_catalog_item_id"
+    t.bigint "local_product_id"
+    t.bigint "local_product_variant_id"
+    t.integer "msrp_cents"
+    t.jsonb "other_isbns_snapshot", default: [], null: false
+    t.integer "pages"
+    t.jsonb "publisher_snapshot", default: {}, null: false
+    t.jsonb "raw_payload_json", default: {}, null: false
+    t.boolean "selected", default: false, null: false
+    t.string "source_key", null: false
+    t.jsonb "subjects_snapshot", default: [], null: false
+    t.string "subtitle"
+    t.text "synopsis"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["external_lookup_request_id"], name: "index_external_lookup_results_on_external_lookup_request_id"
+    t.index ["isbn10"], name: "index_external_lookup_results_on_isbn10"
+    t.index ["isbn13"], name: "index_external_lookup_results_on_isbn13"
+    t.index ["local_catalog_item_id"], name: "index_external_lookup_results_on_local_catalog_item_id"
+    t.index ["local_product_id"], name: "index_external_lookup_results_on_local_product_id"
+    t.index ["local_product_variant_id"], name: "index_external_lookup_results_on_local_product_variant_id"
+    t.index ["source_key", "external_identifier"], name: "index_external_lookup_results_on_source_and_identifier"
+  end
+
   create_table "formats", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "code", limit: 20
@@ -1121,6 +1225,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "category_nodes", "display_locations", column: "default_display_location_id"
   add_foreign_key "category_nodes", "sub_departments", column: "default_sub_department_id"
   add_foreign_key "display_locations", "display_locations", column: "parent_id"
+  add_foreign_key "external_catalog_imports", "catalog_items"
+  add_foreign_key "external_catalog_imports", "external_data_sources"
+  add_foreign_key "external_catalog_imports", "external_lookup_results"
+  add_foreign_key "external_catalog_imports", "product_variants"
+  add_foreign_key "external_catalog_imports", "products"
+  add_foreign_key "external_catalog_imports", "users", column: "imported_by_user_id"
+  add_foreign_key "external_lookup_requests", "external_data_sources"
+  add_foreign_key "external_lookup_requests", "users", column: "requested_by_user_id"
+  add_foreign_key "external_lookup_results", "catalog_items", column: "local_catalog_item_id"
+  add_foreign_key "external_lookup_results", "external_lookup_requests"
+  add_foreign_key "external_lookup_results", "product_variants", column: "local_product_variant_id"
+  add_foreign_key "external_lookup_results", "products", column: "local_product_id"
   add_foreign_key "inventory_adjustment_lines", "inventory_adjustments"
   add_foreign_key "inventory_adjustment_lines", "inventory_locations"
   add_foreign_key "inventory_adjustment_lines", "inventory_reason_codes"
