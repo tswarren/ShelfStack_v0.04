@@ -40,7 +40,7 @@
     <p class="ss-hint ss-pos-change-hint" data-pos-transaction-edit-target="changeHint" hidden></p>
 
     <div class="ss-pos-tender-actions">
-      <%= submit_tag complete_label, class: "ss-btn ss-pos-complete-btn", disabled: readiness.structural_blocked?, data: { pos_transaction_edit_target: "completeButton" } %>
+      <%= submit_tag complete_label, class: "ss-btn ss-pos-complete-btn", disabled: !readiness.complete_ready?, data: { pos_transaction_edit_target: "completeButton" } %>
     </div>
   <% end %>
 

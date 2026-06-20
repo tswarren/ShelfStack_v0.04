@@ -34,7 +34,7 @@ module Pos
     end
 
     def close
-      expected = parse_dollar_param(params[:expected_closing_cash_dollars]) || params[:expected_closing_cash_cents].to_i
+      expected = Pos::RegisterSessionSummary.for(@register_session).expected_closing_cash_cents
       counted = parse_dollar_param(params[:counted_closing_cash_dollars]) || params[:counted_closing_cash_cents].to_i
 
       Pos::RegisterSessionLifecycle.close!(
@@ -58,7 +58,7 @@ module Pos
       suspended_count = PosTransaction.suspended.where(workstation: @register_session.workstation).count
       flash[:warning] = "#{suspended_count} suspended transaction(s) remain on this workstation." if suspended_count.positive?
 
-      expected = parse_dollar_param(params[:expected_closing_cash_dollars]) || params[:expected_closing_cash_cents].to_i
+      expected = Pos::RegisterSessionSummary.for(@register_session).expected_closing_cash_cents
       counted = parse_dollar_param(params[:counted_closing_cash_dollars]) || params[:counted_closing_cash_cents].to_i
 
       Pos::RegisterSessionLifecycle.close!(

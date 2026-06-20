@@ -1,4 +1,4 @@
-<div class="ss-pos-transaction-show" data-controller="pos-void">
+<div class="ss-pos-transaction-show" data-controller="pos-void" data-pos-void-transaction-id-value="<%= @transaction.id %>">
   <header class="ss-pos-transaction-show__header">
     <div class="ss-pos-transaction-show__heading">
       <h1 class="ss-pos-transaction-show__title">
@@ -98,6 +98,7 @@
       <div class="ss-pos-modal__panel">
         <h2>Void transaction <%= @transaction.transaction_number %></h2>
         <%= form_with url: void_pos_transaction_path(@transaction), method: :patch, data: { pos_void_target: "form", action: "submit->pos-void#submit" } do %>
+          <%= hidden_field_tag :pos_authorization_id, nil, data: { pos_void_target: "authorizationId" } %>
           <div class="ss-field">
             <%= label_tag :reason_code, "Reason" %>
             <%= select_tag :reason_code, options_for_select(pos_void_reason_options), include_blank: "Select a reason", required: true, data: { pos_void_target: "reasonField" } %>

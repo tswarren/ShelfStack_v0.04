@@ -76,7 +76,6 @@
     </table>
 
     <%= form_with url: close_pos_register_session_path(@register_session), method: :patch, class: "ss-form ss-pos-close-form" do %>
-      <%= hidden_field_tag :expected_closing_cash_dollars, format("%.2f", @summary.expected_closing_cash_cents / 100.0) %>
       <div class="ss-field">
         <%= label_tag :counted_closing_cash_dollars, "Counted cash" %>
         <%= pos_money_field :counted_closing_cash_dollars, nil, required: true, data: { pos_register_close_target: "countedField", action: "input->pos-register-close#updateVariance change->pos-register-close#updateVariance" } %>
@@ -91,7 +90,6 @@
         <p class="ss-hint">Force close requires manager approval and should only be used when normal close is blocked.</p>
         <%= form_with url: force_close_pos_register_session_path(@register_session), method: :patch, class: "ss-form" do %>
           <%= hidden_field_tag :pos_authorization_id, nil, data: { pos_transaction_edit_target: "authorizationId" } %>
-          <%= hidden_field_tag :expected_closing_cash_dollars, format("%.2f", @summary.expected_closing_cash_cents / 100.0) %>
           <%= pos_money_field :counted_closing_cash_dollars, nil %>
           <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-transaction-edit#requestAuth" data-authorization-type="force_close_register" data-register-session-id="<%= @register_session.id %>" data-authorization-message="Force close requires manager approval.">
             Authorize force close

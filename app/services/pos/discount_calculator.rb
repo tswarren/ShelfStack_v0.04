@@ -17,7 +17,7 @@ module Pos
       return if lines.empty?
 
       discountable_total = lines.sum { |line| discountable_line_base(line) }
-      transaction_discount = transaction.discount_cents.to_i
+      transaction_discount = [transaction.discount_cents.to_i, discountable_total].min
       if transaction_discount.zero? || discountable_total.zero?
         lines.each { |line| line.update!(transaction_discount_cents: 0) }
         return
@@ -33,7 +33,7 @@ module Pos
                 end
         remaining_discount -= share
         line.update!(
-          extended_price_cents: line_base - share,
+          extended_price_cents: [line_base - share, 0].max,
           transaction_discount_cents: share
         )
       end

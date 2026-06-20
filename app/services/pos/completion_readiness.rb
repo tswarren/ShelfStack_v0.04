@@ -215,6 +215,8 @@ module Pos
     end
 
     def cash_refund_authorization_check
+      return unless transaction.total_cents.negative?
+
       cash_amount = effective_cash_tender_cents
       return if cash_amount.nil? || cash_amount >= 0
 
@@ -280,7 +282,11 @@ module Pos
         else
           non_cash_sum = parse_tender_inputs.reject { |t| t[:tender_type] == "cash" }.sum { |t| t[:amount_cents] }
           remaining = transaction.total_cents - non_cash_sum
-          remaining.positive? ? -remaining : cash[:amount_cents]
+          if remaining.positive?
+            [cash[:amount_cents], remaining].min
+          else
+            cash[:amount_cents]
+          end
         end
       else
         transaction.pos_tenders.find { |t| t.tender_type == "cash" }&.amount_cents

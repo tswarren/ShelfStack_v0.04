@@ -166,6 +166,19 @@ class CatalogIdentifierService
     normalize_standard_digits(value)
   end
 
+  def self.lookup_candidates(value)
+    digits = normalize_standard_digits(value)
+    return [] if digits.blank?
+
+    candidates = [digits]
+    candidates << convert_isbn10_to_isbn13(digits) if digits.length == 10
+    candidates.uniq
+  end
+
+  def self.lookup_digit_prefix(value)
+    normalize_standard_digits(value)
+  end
+
   def self.validation_preview(identifier_type:, value:)
     identifier_type = identifier_type.to_s
     trimmed = value.to_s.strip

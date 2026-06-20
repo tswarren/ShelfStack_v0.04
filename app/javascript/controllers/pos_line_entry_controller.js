@@ -69,8 +69,18 @@ export default class extends Controller {
 
     if (payload.variants?.length) {
       this.renderChoices(payload.variants)
-      this.showMessage(payload.status === "ambiguous" ? "Multiple variants matched. Choose one." : "")
+      if (payload.status === "ambiguous") {
+        this.showMessage("Multiple variants matched. Choose one.")
+      } else if (payload.status === "search") {
+        this.showMessage("")
+      } else {
+        this.showMessage("")
+      }
+      return
     }
+
+    this.clearChoices()
+    this.showMessage("No matching SKU or barcode found.")
   }
 
   fetchLookup(params) {

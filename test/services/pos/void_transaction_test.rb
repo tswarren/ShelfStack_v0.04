@@ -22,19 +22,34 @@ class Pos::VoidTransactionTest < ActiveSupport::TestCase
   end
 
   test "void creates pos_void posting and reversing tenders" do
+    authorization = grant_void_authorization!(transaction: @transaction, requested_by: @user)
+
     pos_void = Pos::VoidTransaction.call!(
       transaction: @transaction,
       voided_by_user: @user,
       register_session: @register_session,
-      reason_code: "cashier_error"
+      reason_code: "cashier_error",
+      pos_authorization: authorization
     )
 
     @transaction.reload
     assert @transaction.voided?
+    assert_equal authorization.id, pos_void.pos_authorization_id
     assert_not_nil pos_void.inventory_posting
     assert_equal "pos_void", pos_void.inventory_posting.posting_type
     assert_equal @transaction.inventory_posting, pos_void.inventory_posting.reversal_of_posting
     assert @transaction.pos_tenders.where.not(reverses_tender_id: nil).exists?
     assert_equal 5, InventoryBalance.find_by!(store: @store, product_variant: @variant).quantity_on_hand
+  end
+
+  test "void without supervisor authorization raises" do
+    assert_raises(Pos::VoidTransaction::Error) do
+      Pos::VoidTransaction.call!(
+        transaction: @transaction,
+        voided_by_user: @user,
+        register_session: @register_session,
+        reason_code: "cashier_error"
+      )
+    end
   end
 end

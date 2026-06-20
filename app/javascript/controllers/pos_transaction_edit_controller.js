@@ -91,7 +91,7 @@ export default class extends Controller {
 
     if (!this.hasCompleteButtonTarget) return
 
-    this.completeButtonTarget.disabled = Boolean(data.structural_blocked)
+    this.completeButtonTarget.disabled = data.complete_ready !== true
     if (data.complete_label) {
       this.completeButtonTarget.value = data.complete_label
     }

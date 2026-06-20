@@ -45,4 +45,25 @@ class Pos::RecalculateTransactionTest < ActiveSupport::TestCase
     assert_equal transaction.tax_cents, transaction.pos_transaction_lines.sum(&:tax_cents) * -1
     assert_equal "return", transaction.transaction_type
   end
+
+  test "line discount is clamped to line gross base" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [{
+        product_variant: @variant,
+        quantity: 1,
+        unit_price_cents: 1000,
+        line_discount_cents: 1500,
+        extended_price_cents: 1000
+      }]
+    )
+
+    Pos::RecalculateTransaction.call!(transaction)
+    line = transaction.pos_transaction_lines.first
+
+    assert_equal 1000, line.line_discount_cents
+    assert_equal 0, line.extended_price_cents
+  end
 end

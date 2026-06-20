@@ -307,6 +307,47 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal "exchange", exchange_txn.transaction_type
   end
 
+  test "inactive variant lookup and completion requires confirmation" do
+    inactive_variant = create_product_variant!(
+      sub_department: @variant.sub_department,
+      sku: "POS-INACTIVE-001",
+      selling_price_cents: 1200,
+      active: true
+    )
+    receive_inventory!(store: @store, vendor: create_vendor!, variant: inactive_variant, user: @cashier, quantity: 2)
+    inactive_variant.update!(active: false)
+
+    result = Pos::LineLookup.call(store: @store, query: inactive_variant.sku)
+    assert_equal :found, result.status
+    assert_equal inactive_variant.id, result.variants.first.id
+
+    post pos_transactions_path, params: { mode: "sale" }
+    transaction = PosTransaction.order(:id).last
+
+    post add_line_pos_transaction_path(transaction, mode: "sale"), params: {
+      product_variant_id: inactive_variant.id,
+      quantity: 1,
+      entry_action: "sale"
+    }
+    transaction.reload
+    Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
+    total = transaction.total_cents
+
+    patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
+      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+    }
+    assert_redirected_to edit_pos_transaction_path(transaction)
+    follow_redirect!
+    assert_match(/inactive/i, response.body)
+
+    patch complete_pos_transaction_path(transaction, mode: "sale"), params: {
+      confirm_inactive: 1,
+      tenders: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+    }
+    assert_redirected_to pos_transaction_path(transaction)
+    assert transaction.reload.completed?
+  end
+
   test "register session summary computes expected closing cash" do
     sale = create_and_complete_sale!
     summary = Pos::RegisterSessionSummary.for(@register_session)

@@ -138,6 +138,45 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     assert result.tender_ready?
   end
 
+  test "sale over cash refund threshold does not require cash refund authorization" do
+    expensive = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [{ product_variant: @variant, quantity: 1, unit_price_cents: 6000, extended_price_cents: 6000 }]
+    )
+    Pos::RecalculateTransaction.call!(expensive, business_date: @session.business_date)
+
+    result = Pos::CompletionReadiness.check(
+      transaction: expensive,
+      register_session: @session,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", expensive.total_cents / 100.0) }]
+    )
+
+    refute result.blockers.any? { |check| check.key == :cash_refund_auth }
+    assert result.complete_ready?
+  end
+
+  test "return cash refund over threshold requires authorization" do
+    return_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [{ product_variant: @variant, quantity: -1, unit_price_cents: 6000, extended_price_cents: -6000 }]
+    )
+    Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
+    total = return_txn.total_cents.abs
+
+    result = Pos::CompletionReadiness.check(
+      transaction: return_txn,
+      register_session: @session,
+      tender_inputs: [{ tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) }]
+    )
+
+    assert result.structural_blocked?
+    assert result.blockers.any? { |check| check.key == :cash_refund_auth }
+  end
+
   test "evaluates explicit zero cash tender input on even exchange" do
     exchange = create_pos_transaction!(
       store: @store,

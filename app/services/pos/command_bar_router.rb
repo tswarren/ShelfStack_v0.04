@@ -63,7 +63,13 @@ module Pos
     end
 
     def numeric_amount?
+      return false if barcode_like_input?
+
       input.match?(/\A\d+(\.\d{1,2})?\z/)
+    end
+
+    def barcode_like_input?
+      CatalogIdentifierService.lookup_digit_prefix(input).length >= 10
     end
   end
 end

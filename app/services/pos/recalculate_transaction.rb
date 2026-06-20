@@ -49,7 +49,9 @@ module Pos
       end
 
       base = line.unit_price_cents * line.quantity.abs
-      line.extended_price_cents = [base - line.line_discount_cents.to_i, 0].max
+      line_discount = [line.line_discount_cents.to_i, base].min
+      line.line_discount_cents = line_discount if line.line_discount_cents.to_i != line_discount
+      line.extended_price_cents = [base - line_discount, 0].max
       line.transaction_discount_cents = 0 if line.return_line?
     end
 

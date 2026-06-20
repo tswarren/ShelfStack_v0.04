@@ -312,13 +312,19 @@ module Pos
         return
       end
 
+      unless void_authorization_valid?
+        redirect_to pos_transaction_path(@transaction), alert: "Supervisor authorization required to void."
+        return
+      end
+
       register_session = current_register_session
       Pos::VoidTransaction.call!(
         transaction: @transaction,
         voided_by_user: current_user,
         register_session: register_session,
         reason_code: params[:reason_code],
-        notes: params[:notes]
+        notes: params[:notes],
+        pos_authorization: void_authorization
       )
       redirect_to pos_transaction_path(@transaction), notice: "Transaction voided."
     rescue StandardError => e
@@ -388,7 +394,10 @@ module Pos
         message: nil
       )
       presented = Pos::LineLookupPresenter.as_json(lookup_result, store: pos_store)
-      payload.merge(variants: presented[:variants])
+      payload.merge(
+        status: lookup_result.status.to_s,
+        variants: presented[:variants]
+      )
     end
 
     def next_line_number
@@ -441,6 +450,22 @@ module Pos
         :rounding_cents,
         :notes,
         pos_tenders_attributes: %i[id tender_type amount_cents reference_number _destroy]
+      )
+    end
+
+    def void_authorization
+      return @void_authorization if defined?(@void_authorization)
+
+      @void_authorization = if params[:pos_authorization_id].present?
+        PosAuthorization.find_by(id: params[:pos_authorization_id])
+      end
+    end
+
+    def void_authorization_valid?
+      Pos::AuthorizationRequest.granted_for_transaction?(
+        transaction: @transaction,
+        authorization_type: "void_transaction",
+        pos_authorization_id: void_authorization&.id
       )
     end
   end

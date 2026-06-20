@@ -54,4 +54,18 @@ module Phase6TestHelper
       confirmed_inactive: true
     )
   end
+
+  def grant_void_authorization!(transaction:, requested_by:, manager: nil)
+    manager ||= create_user!(username: "void-manager-#{SecureRandom.hex(4)}", pin: "4321")
+    grant_permission!(manager, "pos.authorizations.grant", store: transaction.store)
+
+    Pos::AuthorizationRequest.grant!(
+      authorization_type: "void_transaction",
+      requested_by: requested_by,
+      manager_username: manager.username,
+      manager_pin: "4321",
+      store: transaction.store,
+      pos_transaction: transaction
+    )
+  end
 end

@@ -31,53 +31,83 @@ module Pos
     attr_reader :store, :query, :mode
 
     def resolve_exact
-      variant_matches = find_by_variant_sku
-      return build_result(variant_matches) if variant_matches.any?
+      if barcode_like_query?
+        [true, false].each do |active_only|
+          matches = find_by_catalog_identifiers(active_only: active_only)
+          return build_result(matches) if matches.any?
+        end
+      end
 
-      product_matches = find_by_product_sku
-      return build_result(product_matches) if product_matches.any?
-
-      identifier_matches = find_by_catalog_identifiers
-      return build_result(identifier_matches) if identifier_matches.any?
+      [
+        -> { find_by_variant_sku(active_only: true) },
+        -> { find_by_product_sku(active_only: true) },
+        -> { find_by_catalog_identifiers(active_only: true) },
+        -> { find_by_variant_sku(active_only: false) },
+        -> { find_by_product_sku(active_only: false) },
+        -> { find_by_catalog_identifiers(active_only: false) }
+      ].each do |finder|
+        matches = finder.call
+        return build_result(matches) if matches.any?
+      end
 
       Result.new(status: :not_found, variants: [], message: "No matching SKU or barcode found.")
     end
 
+    def barcode_like_query?
+      CatalogIdentifierService.lookup_digit_prefix(query).length >= 10
+    end
+
     def search_results
       pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
-      variants = base_scope
+      variants = active_scope
         .where("product_variants.sku ILIKE :q OR products.sku ILIKE :q OR product_variants.name ILIKE :q", q: pattern)
-        .order("product_variants.sku")
-        .limit(25)
         .to_a
+
+      variants.concat(find_by_catalog_identifiers_for_search(active_only: true))
+      variants = dedupe_variants(variants)
 
       if variants.empty?
         Result.new(status: :not_found, variants: [], message: "No variants matched your search.")
       else
-        Result.new(status: :search, variants: variants, message: nil)
+        Result.new(status: :search, variants: variants.sort_by(&:sku), message: nil)
       end
     end
 
-    def find_by_variant_sku
-      base_scope.where("LOWER(product_variants.sku) = ?", query.downcase).to_a
+    def find_by_variant_sku(active_only:)
+      lookup_scope(active_only:).where("LOWER(product_variants.sku) = ?", query.downcase).to_a
     end
 
-    def find_by_product_sku
-      base_scope.where("LOWER(products.sku) = ?", query.downcase).to_a
+    def find_by_product_sku(active_only:)
+      lookup_scope(active_only:).where("LOWER(products.sku) = ?", query.downcase).to_a
     end
 
-    def find_by_catalog_identifiers
-      digits = normalized_digits(query)
-      return [] if digits.blank?
+    def find_by_catalog_identifiers(active_only:)
+      candidates = CatalogIdentifierService.lookup_candidates(query)
+      return [] if candidates.empty?
 
-      catalog_item_ids = CatalogItemIdentifier.active_records
-        .where(normalized_identifier: digits)
+      identifier_scope = active_only ? CatalogItemIdentifier.active_records : CatalogItemIdentifier.all
+      catalog_item_ids = identifier_scope
+        .where(normalized_identifier: candidates)
         .select(:catalog_item_id)
 
-      base_scope.where(products: { catalog_item_id: catalog_item_ids }).distinct.to_a
+      lookup_scope(active_only:).where(products: { catalog_item_id: catalog_item_ids }).distinct.to_a
+    end
+
+    def find_by_catalog_identifiers_for_search(active_only:)
+      prefix = CatalogIdentifierService.lookup_digit_prefix(query)
+      return [] if prefix.blank? || prefix.length < 2
+
+      identifier_scope = active_only ? CatalogItemIdentifier.active_records : CatalogItemIdentifier.all
+      catalog_item_ids = identifier_scope
+        .where("normalized_identifier LIKE ?", "#{ActiveRecord::Base.sanitize_sql_like(prefix)}%")
+        .select(:catalog_item_id)
+
+      lookup_scope(active_only:).where(products: { catalog_item_id: catalog_item_ids }).distinct.to_a
     end
 
     def build_result(variants)
+      variants = dedupe_variants(variants)
+
       if variants.empty?
         Result.new(status: :not_found, variants: [], message: "No matching SKU or barcode found.")
       elsif variants.size == 1
@@ -87,16 +117,24 @@ module Pos
       end
     end
 
-    def base_scope
-      ProductVariant.active_records
-        .includes(:condition, :product, :sub_department)
-        .joins(:product)
-        .merge(Product.active_records)
+    def dedupe_variants(variants)
+      variants.uniq(&:id)
     end
 
-    def normalized_digits(value)
-      normalized = CatalogIdentifierService.normalize_preview("isbn13", value).to_s
-      normalized.presence
+    def active_scope
+      lookup_scope(active_only: true)
+    end
+
+    def lookup_scope(active_only:)
+      scope = ProductVariant
+        .includes(:condition, :product, :sub_department)
+        .joins(:product)
+
+      if active_only
+        scope.merge(ProductVariant.active_records).merge(Product.active_records)
+      else
+        scope.where("product_variants.active = ? OR products.active = ?", false, false)
+      end
     end
   end
 end

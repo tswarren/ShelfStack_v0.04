@@ -58,6 +58,14 @@ class Pos::DiscountInputTest < ActiveSupport::TestCase
     assert_equal 3800, base
   end
 
+  test "rejects amount discount above base" do
+    error = assert_raises(Pos::DiscountInput::Error) do
+      Pos::DiscountInput.resolve_cents(value: "50.00", input_type: "amount", base_cents: 3800)
+    end
+
+    assert_match(/cannot exceed/i, error.message)
+  end
+
   test "ten percent transaction discount on mixed lines" do
     base = Pos::DiscountInput.discountable_transaction_base_cents(@transaction)
     discount_cents = Pos::DiscountInput.resolve_cents(value: "10", input_type: "percent", base_cents: base)

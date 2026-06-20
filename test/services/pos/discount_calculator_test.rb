@@ -62,4 +62,15 @@ class Pos::DiscountCalculatorTest < ActiveSupport::TestCase
     assert_equal 0, return_line.transaction_discount_cents
     assert_equal 1000, return_line.extended_price_cents
   end
+
+  test "caps transaction discount to discountable base" do
+    @transaction.update!(discount_cents: 5000)
+
+    Pos::DiscountCalculator.apply_transaction_discount!(@transaction.reload)
+
+    lines = @transaction.pos_transaction_lines.order(:line_number)
+    assert lines.all? { |line| line.extended_price_cents >= 0 }
+    assert_equal 0, lines.sum(&:extended_price_cents)
+    assert_equal 3000, lines.sum(&:transaction_discount_cents)
+  end
 end

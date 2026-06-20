@@ -7,6 +7,7 @@ class PosAuthorization < ApplicationRecord
     cash_refund_over_threshold
     force_close_register
     inactive_sell
+    void_transaction
     other
   ].freeze
 

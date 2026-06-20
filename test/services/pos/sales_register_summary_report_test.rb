@@ -109,11 +109,13 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
     end
 
     travel_to Time.utc(2026, 1, 15, 20, 0, 0) do
+      authorization = grant_void_authorization!(transaction: sale.reload, requested_by: @cashier)
       Pos::VoidTransaction.call!(
         transaction: sale.reload,
         voided_by_user: @cashier,
         register_session: @session,
-        reason_code: "cashier_error"
+        reason_code: "cashier_error",
+        pos_authorization: authorization
       )
     end
 

@@ -80,11 +80,13 @@ class Pos::SalesRevenueSummaryReportTest < ActiveSupport::TestCase
       confirmed_inactive: true
     )
 
+    authorization = grant_void_authorization!(transaction: sale.reload, requested_by: @manager)
     Pos::VoidTransaction.call!(
       transaction: sale.reload,
       voided_by_user: @manager,
       register_session: @session,
-      reason_code: "cashier_error"
+      reason_code: "cashier_error",
+      pos_authorization: authorization
     )
 
     scope = Pos::ReportScope.new(
