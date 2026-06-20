@@ -26,15 +26,15 @@ module Pos
 
       transaction.pos_transaction_lines.each do |line|
         list_amount = line.unit_price_cents * line.quantity.abs
-        line_discount_cents += line.line_discount_cents.to_i
-        order_discount_cents += line.transaction_discount_cents.to_i
 
         if line.quantity.positive?
           sales_cents += list_amount
           net_sales_cents += line.extended_price_cents
+          line_discount_cents += line.line_discount_cents.to_i
+          order_discount_cents += line.transaction_discount_cents.to_i
           units_sold += line.quantity
         else
-          refunds_cents -= list_amount
+          refunds_cents -= line.extended_price_cents
           net_sales_cents -= line.extended_price_cents
           if line.return_line? && line.source_transaction_line_id.blank?
             no_receipt_return_lines += 1
@@ -102,6 +102,20 @@ module Pos
       hour = time.strftime("%-I").to_i
       suffix = time.strftime("%p").downcase
       "#{hour}#{suffix}"
+    end
+
+    def active_hours(transactions:, voids:, scope:)
+      transaction_hours = transactions.map { |transaction| scope.local_time(transaction.completed_at).hour }
+      void_hours = voids.map { |pos_void| scope.local_time(pos_void.voided_at).hour }
+      (transaction_hours + void_hours).uniq.sort
+    end
+
+    def group_transactions_by_completion_hour(transactions, scope)
+      transactions.group_by { |transaction| scope.local_time(transaction.completed_at).hour }
+    end
+
+    def group_voids_by_voided_hour(voids, scope)
+      voids.group_by { |pos_void| scope.local_time(pos_void.voided_at).hour }
     end
   end
 end

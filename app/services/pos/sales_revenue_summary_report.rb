@@ -107,15 +107,13 @@ module Pos
 
     def call
       transactions = scope.transactions.to_a
-      voided_transaction_ids = scope.voids.pluck(:pos_transaction_id).to_set
-      void_counts_by_cashier = scope.voids
-        .includes(:pos_transaction)
-        .group_by { |pos_void| pos_void.pos_transaction.cashier_user_id }
+      voids = scope.voids.includes(:pos_transaction).to_a
+      void_counts_by_cashier = voids.group_by { |pos_void| pos_void.pos_transaction.cashier_user_id }
         .transform_values(&:size)
 
-      revenue_summary = aggregate_transactions(transactions).with_void_count(voided_transaction_ids.size)
+      revenue_summary = aggregate_transactions(transactions).with_void_count(voids.size)
       by_clerk = build_clerk_rows(transactions, void_counts_by_cashier)
-      by_hour = build_hourly_rows(transactions, voided_transaction_ids)
+      by_hour = build_hourly_rows(transactions, voids)
       by_tender = build_tender_rows(transactions)
       drawer = build_drawer_reconciliation
 
@@ -138,35 +136,16 @@ module Pos
     end
 
     def transaction_metrics(transaction)
-      sales_cents = 0
-      refunds_cents = 0
-      discount_total = 0
-      net_sales_cents = 0
-
-      transaction.pos_transaction_lines.each do |line|
-        list_amount = line.unit_price_cents * line.quantity.abs
-        discount_total += line.line_discount_cents.to_i + line.transaction_discount_cents.to_i
-
-        if line.quantity.positive?
-          sales_cents += list_amount
-          net_sales_cents += line.extended_price_cents
-        else
-          refunds_cents -= list_amount
-          net_sales_cents -= line.extended_price_cents
-        end
-      end
-
-      adjustments_cents = transaction.rounding_cents.to_i
-      net_sales_cents += adjustments_cents
+      metrics = ReportTransactionMetrics.from_transaction(transaction)
       gift_card_cents = transaction.pos_tenders.select { |tender| tender.tender_type == "gift_card" }.sum(&:amount_cents)
 
       Metrics.new(
-        sales_cents: sales_cents,
-        refunds_cents: refunds_cents,
-        adjustments_cents: adjustments_cents,
-        discounts_cents: -discount_total,
-        net_sales_cents: net_sales_cents,
-        taxes_cents: transaction.tax_cents.to_i,
+        sales_cents: metrics.sales_cents,
+        refunds_cents: metrics.refunds_cents,
+        adjustments_cents: transaction.rounding_cents.to_i,
+        discounts_cents: ReportTransactionMetrics.total_discounts_cents(metrics),
+        net_sales_cents: metrics.net_sales_cents,
+        taxes_cents: metrics.taxes_cents,
         gift_card_cents: gift_card_cents,
         transaction_count: 1,
         void_count: 0
@@ -184,15 +163,19 @@ module Pos
       end.sort_by { |row| row.clerk_name.downcase }
     end
 
-    def build_hourly_rows(transactions, voided_transaction_ids)
-      hourly_groups = transactions.group_by { |transaction| scope.local_time(transaction.completed_at).hour }
-      rows = hourly_groups.sort.map do |hour, hour_transactions|
-        void_count = hour_transactions.count { |transaction| voided_transaction_ids.include?(transaction.id) }
-        metrics = aggregate_transactions(hour_transactions).with_void_count(void_count)
+    def build_hourly_rows(transactions, voids)
+      transaction_groups = ReportTransactionMetrics.group_transactions_by_completion_hour(transactions, scope)
+      void_groups = ReportTransactionMetrics.group_voids_by_voided_hour(voids, scope)
+      hours = ReportTransactionMetrics.active_hours(transactions: transactions, voids: voids, scope: scope)
+
+      rows = hours.map do |hour|
+        hour_transactions = transaction_groups[hour] || []
+        hour_voids = void_groups[hour] || []
+        metrics = aggregate_transactions(hour_transactions).with_void_count(hour_voids.size)
         HourlyRow.new(hour: hour, label: hour_label(hour), metrics: metrics)
       end
 
-      totals = aggregate_transactions(transactions).with_void_count(voided_transaction_ids.size)
+      totals = aggregate_transactions(transactions).with_void_count(voids.size)
       rows << HourlyRow.new(hour: nil, label: "Total", metrics: totals)
       rows
     end

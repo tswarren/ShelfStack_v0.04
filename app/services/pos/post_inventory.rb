@@ -16,8 +16,8 @@ module Pos
       return nil if lines.empty?
 
       payloads = lines.map do |line|
-        quantity_delta = line.quantity
-        movement_type = quantity_delta.positive? ? "sold" : "customer_return"
+        movement_type = line.quantity.positive? ? "sold" : "customer_return"
+        quantity_delta = -line.quantity
 
         Inventory::Post::LinePayload.new(
           product_variant: line.product_variant,

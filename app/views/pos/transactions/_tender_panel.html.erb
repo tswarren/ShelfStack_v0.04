@@ -5,9 +5,7 @@
   <% complete_params = {} %>
   <% complete_params[:confirm_inactive] = 1 if confirm_inactive %>
   <%= form_with url: complete_pos_transaction_path(transaction, complete_params), method: :patch, class: "ss-form", data: {
-        action: "input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange",
-        pos_transaction_edit_readiness_url_value: readiness_preview_pos_transaction_path(transaction),
-        pos_transaction_edit_transaction_id_value: transaction.id
+        action: "input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange"
       } do %>
     <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
     <%= hidden_field_tag :confirm_inactive, 1, data: { pos_transaction_edit_target: "confirmInactiveField" }, disabled: !confirm_inactive, id: nil %>
@@ -22,7 +20,10 @@
       <div class="ss-field ss-pos-tender-field" data-tender-type="<%= tender_type %>">
         <%= label_tag "tenders_#{tender_type}", pos_tender_field_label(tender_type, transaction) %>
         <div class="ss-pos-tender-field__input">
-          <%= pos_money_field "tenders[][amount_dollars]", display_cents, min: 0, data: { pos_transaction_edit_target: "amountField" } %>
+          <%= pos_money_field "tenders[][amount_dollars]", display_cents, min: 0, data: {
+                pos_transaction_edit_target: "amountField",
+                action: "input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange"
+              } %>
           <%= button_tag "Fill",
                 type: "button",
                 class: "ss-btn ss-btn-secondary ss-btn--small",

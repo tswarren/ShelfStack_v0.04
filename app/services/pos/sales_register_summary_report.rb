@@ -63,7 +63,6 @@ module Pos
       session = scope.register_session
       transactions = scope.transactions.to_a
       voids = scope.voids.includes(:pos_transaction).to_a
-      voided_transaction_ids = voids.map(&:pos_transaction_id).to_set
       void_counts_by_cashier = voids.group_by { |pos_void| pos_void.pos_transaction.cashier_user_id }
         .transform_values(&:size)
 
@@ -74,7 +73,7 @@ module Pos
       taxes = build_taxes(transactions)
       drawer = build_drawer(session)
       by_clerk = build_breakdown_rows(transactions, void_counts_by_cashier) { |user| user.display_name }
-      by_hour = build_hourly_rows(transactions, voided_transaction_ids)
+      by_hour = build_hourly_rows(transactions, voids)
       exceptions = build_exceptions(voids, transactions)
       breakdown_total = BreakdownRow.new(
         label: "Total",
@@ -234,16 +233,21 @@ module Pos
       rows.sort_by { |row| row.label.downcase }
     end
 
-    def build_hourly_rows(transactions, voided_transaction_ids)
-      hourly_groups = transactions.group_by { |transaction| scope.local_time(transaction.completed_at).hour }
-      rows = hourly_groups.sort.map do |hour, hour_transactions|
+    def build_hourly_rows(transactions, voids)
+      transaction_groups = ReportTransactionMetrics.group_transactions_by_completion_hour(transactions, scope)
+      void_groups = ReportTransactionMetrics.group_voids_by_voided_hour(voids, scope)
+      hours = ReportTransactionMetrics.active_hours(transactions: transactions, voids: voids, scope: scope)
+
+      rows = hours.map do |hour|
+        hour_transactions = transaction_groups[hour] || []
+        hour_voids = void_groups[hour] || []
         metrics = aggregate(hour_transactions)
         BreakdownRow.new(
           label: ReportTransactionMetrics.compact_hour_label(hour),
           transaction_count: hour_transactions.size,
           units_sold: metrics.units_sold,
           metrics: metrics,
-          void_count: hour_transactions.count { |transaction| voided_transaction_ids.include?(transaction.id) }
+          void_count: hour_voids.size
         )
       end
 
@@ -253,7 +257,7 @@ module Pos
         transaction_count: transactions.size,
         units_sold: totals.units_sold,
         metrics: totals,
-        void_count: voided_transaction_ids.size
+        void_count: voids.size
       )
       rows
     end

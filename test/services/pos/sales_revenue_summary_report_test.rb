@@ -97,6 +97,8 @@ class Pos::SalesRevenueSummaryReportTest < ActiveSupport::TestCase
 
     assert_operator report.revenue_summary.refunds_cents, :<, 0
     assert_equal 1, report.revenue_summary.void_count
+    assert_equal report.by_hour.reject { |row| row.label == "Total" }.sum { |row| row.metrics.void_count },
+                 report.by_hour.find { |row| row.label == "Total" }.metrics.void_count
     assert_equal 1, report.by_clerk.size
     assert_equal "Administrator", report.by_clerk.sole.clerk_name
   end

@@ -35,5 +35,6 @@ class Pos::VoidTransactionTest < ActiveSupport::TestCase
     assert_equal "pos_void", pos_void.inventory_posting.posting_type
     assert_equal @transaction.inventory_posting, pos_void.inventory_posting.reversal_of_posting
     assert @transaction.pos_tenders.where.not(reverses_tender_id: nil).exists?
+    assert_equal 5, InventoryBalance.find_by!(store: @store, product_variant: @variant).quantity_on_hand
   end
 end

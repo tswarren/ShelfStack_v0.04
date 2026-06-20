@@ -71,6 +71,11 @@ module Pos
         confirm_inactive: params[:confirm_inactive].present?,
         tender_inputs: params[:tenders]
       )
+      payload[:panel_html] = render_to_string(
+        partial: "pos/transactions/readiness_panel",
+        formats: [:html],
+        locals: { transaction: @transaction, readiness: readiness }
+      )
 
       render json: payload
     end

@@ -38,7 +38,12 @@ class Pos::CompleteTransactionTest < ActiveSupport::TestCase
     assert_not_nil posting
     assert_equal "pos_transaction", posting.posting_type
     assert_equal 1, posting.inventory_ledger_entries.count
-    assert_equal "sold", posting.inventory_ledger_entries.first.movement_type
+    entry = posting.inventory_ledger_entries.first
+    assert_equal "sold", entry.movement_type
+    assert_equal(-1, entry.quantity_delta)
+
+    balance = InventoryBalance.find_by!(store: @store, product_variant: @variant)
+    assert_equal 4, balance.quantity_on_hand
   end
 
   test "completes even exchange without tenders when total is zero" do

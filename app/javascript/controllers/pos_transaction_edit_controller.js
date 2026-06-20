@@ -20,7 +20,10 @@ export default class extends Controller {
   connect() {
     this.previewTimer = null
     this.updateChange()
-    this.refreshReadiness()
+  }
+
+  disconnect() {
+    clearTimeout(this.previewTimer)
   }
 
   updateChange() {
@@ -33,11 +36,22 @@ export default class extends Controller {
     this.previewTimer = setTimeout(() => this.refreshReadiness(), 150)
   }
 
+  tenderAmountFields() {
+    if (this.amountFieldTargets.length > 0) {
+      return this.amountFieldTargets
+    }
+
+    return Array.from(this.element.querySelectorAll("[data-pos-transaction-edit-target='amountField']"))
+  }
+
   refreshReadiness() {
     if (!this.hasReadinessUrlValue) return
 
+    const fields = this.tenderAmountFields()
+    if (fields.length === 0) return
+
     const body = new FormData()
-    this.amountFieldTargets.forEach((field) => {
+    fields.forEach((field) => {
       const row = field.closest("[data-tender-type]")
       body.append("tenders[][amount_dollars]", field.value || "0")
       body.append("tenders[][tender_type]", row?.dataset.tenderType || "cash")
@@ -57,17 +71,27 @@ export default class extends Controller {
         "X-CSRF-Token": this.csrfToken,
         Accept: "application/json"
       },
+      credentials: "same-origin",
       body
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error(`readiness preview failed (${response.status})`)
+
+        return response.json()
+      })
       .then((data) => this.applyPreview(data))
       .catch(() => {})
   }
 
   applyPreview(data) {
+    if (data.panel_html) {
+      const panel = document.getElementById("pos_readiness")
+      if (panel) panel.innerHTML = data.panel_html
+    }
+
     if (!this.hasCompleteButtonTarget) return
 
-    this.completeButtonTarget.disabled = !data.complete_ready
+    this.completeButtonTarget.disabled = Boolean(data.structural_blocked)
     if (data.complete_label) {
       this.completeButtonTarget.value = data.complete_label
     }
@@ -95,7 +119,7 @@ export default class extends Controller {
     if (Number.isNaN(totalCents)) return
 
     let otherTotal = 0
-    this.amountFieldTargets.forEach((field) => {
+    this.tenderAmountFields().forEach((field) => {
       const row = field.closest("[data-tender-type]")
       if (row?.dataset.tenderType !== tenderType) {
         otherTotal += Math.round(parseFloat(field.value || "0") * 100)
@@ -114,7 +138,7 @@ export default class extends Controller {
 
     displayCents = Math.max(0, displayCents)
 
-    this.amountFieldTargets.forEach((field) => {
+    this.tenderAmountFields().forEach((field) => {
       const row = field.closest("[data-tender-type]")
       if (row?.dataset.tenderType === tenderType) {
         field.value = (displayCents / 100).toFixed(2)
@@ -148,7 +172,7 @@ export default class extends Controller {
     let nonCashCents = 0
     let cashTenderedCents = 0
 
-    this.amountFieldTargets.forEach((field) => {
+    this.tenderAmountFields().forEach((field) => {
       const row = field.closest("[data-tender-type]")
       const cents = Math.round(parseFloat(field.value || "0") * 100)
       if (row?.dataset.tenderType === "cash") {

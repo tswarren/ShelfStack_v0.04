@@ -88,4 +88,44 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
     assert_equal 1, hour_rows.size
     assert_equal "1pm–2pm", hour_rows.first.label
   end
+
+  test "hourly breakdown includes void-only hours and void totals reconcile" do
+    @store.update!(time_zone: "America/New_York")
+
+    sale = nil
+    travel_to Time.utc(2026, 1, 15, 15, 0, 0) do
+      sale = create_pos_transaction!(
+        store: @store,
+        workstation: @workstation,
+        user: @cashier,
+        lines: [{
+          product_variant: @variant,
+          quantity: 1,
+          unit_price_cents: 2000,
+          extended_price_cents: 2000
+        }]
+      )
+      complete_pos_sale!(transaction: sale, user: @cashier, register_session: @session)
+    end
+
+    travel_to Time.utc(2026, 1, 15, 20, 0, 0) do
+      Pos::VoidTransaction.call!(
+        transaction: sale.reload,
+        voided_by_user: @cashier,
+        register_session: @session,
+        reason_code: "cashier_error"
+      )
+    end
+
+    report = Pos::SalesRegisterSummaryReport.call(scope: @scope)
+    hour_rows = report.by_hour.reject { |row| row.label == "Total" }
+    total_row = report.by_hour.find { |row| row.label == "Total" }
+
+    assert_equal 1, hour_rows.size
+    assert_equal "3pm–4pm", hour_rows.first.label
+    assert_equal 0, hour_rows.first.transaction_count
+    assert_equal 1, hour_rows.first.void_count
+    assert_equal 1, total_row.void_count
+    assert_equal hour_rows.sum(&:void_count), total_row.void_count
+  end
 end
