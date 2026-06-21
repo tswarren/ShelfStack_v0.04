@@ -24,6 +24,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 4 | Inventory Foundation            | Inventory ledger, store balances, adjustments, valuation snapshots, and inventory read surfaces.             |
 | Phase 5 | Purchasing and Receiving        | Vendors, purchase orders, receiving, supplier terms, vendor costs, and returns to vendor.                    |
 | Phase 6 | POS Foundation                  | Register sessions, POS transactions, tax/tender snapshots, inventory posting, void reversals, receipts, and workstation-aware POS behavior. |
+| Phase 6.5 | External Catalog Lookup       | Real-time ISBN local-first lookup via ISBNdb, candidate preview, controlled catalog import, and Add Item wizard integration. |
 | Phase 7 | Advanced Store Operations       | Transfers, adjustments, cycle counts, special orders, holds, and operational workflows.                      |
 | Phase 8 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
@@ -348,6 +349,42 @@ docs/specifications/phase-6-test-plan.md
 * Register session and suspended-transaction edge cases
 * Void reversal correctness (inventory and tenders)
 * Offline POS requirements (deferred)
+
+---
+
+# Phase 6.5: External Catalog Lookup
+
+## Purpose
+
+Phase 6.5 adds real-time ISBN lookup for catalog-linked Add Item workflows.
+
+It should answer:
+
+> Can staff scan an ISBN, see a provider candidate or local match, preview fields, and import catalog metadata before continuing the Add Item wizard?
+
+## Documentation
+
+```text
+docs/roadmap/phase-6.5-external-catalog-lookup.md
+docs/specifications/phase-6.5-external-catalog-lookup-spec.md
+docs/specifications/phase-6.5-data-model.md
+docs/specifications/phase-6.5-test-plan.md
+```
+
+## Expected Capabilities (MVP)
+
+* ISBNdb provider configuration and manual health check
+* Local-first ISBN lookup with synchronous external fallback
+* Candidate preview and exact-ISBN duplicate detection
+* Controlled catalog import (create, link, fill-blank)
+* Add Item `identify` wizard step and post-import handoff to `item_details`
+* `items.external_lookup.*` permissions and audit events
+
+## Out of Scope (MVP)
+
+* Keyword/title/author search (Phase 6.5E)
+* POS register lookup
+* Lookup-result caching and automatic retry
 
 ---
 

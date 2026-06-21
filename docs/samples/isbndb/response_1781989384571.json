@@ -1,0 +1,46 @@
+{
+  "book": {
+    "title": "Cher The Memoir. Part one",
+    "title_long": "Cher The Memoir. Part one",
+    "isbn": "9780062863102",
+    "isbn13": "9780062863102",
+    "isbn10": "006286310X",
+    "binding": "Hardcover",
+    "publisher": "William Morrow",
+    "language": "en",
+    "date_published": "2024",
+    "pages": 413,
+    "dimensions": "Weight: 1.00089866948 pounds",
+    "dimensions_structured": {
+      "weight": {
+        "value": 1.00089866948,
+        "unit": "pounds"
+      }
+    },
+    "image": "https://images.isbndb.com/covers/9835123482210.jpg",
+    "image_original": "https://images.isbndb.com/covers/original/9835123482210.jpg?key=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lzYm5kYi5jb20iLCJhdWQiOiJodHRwczovL2lzYm5kYi5jb20iLCJleHAiOjE3ODE5OTY1ODR9.L-g-AjgBex5pyQvf1GOZ5bc2fUxpM6ZchFz49FbziK4",
+    "synopsis": "\"There is only one Cher... And for seven decades she has been showing us why. With a life too big for one volume, Cher holds the attention of the world with her voice, her acting, her style, her wit, and her unstoppable spirit. Now, for the first time, she tells her story in her own voice -- a voice that is as honest as it is hilarious, as powerful as it is perceptive. Cher: The Memoir, Part One recounts Cher's origin, backtracking through her mother's childhood to trace how the choices Georgia made influenced Cher's personality. Chasing fame, love, and stability for her children, with movie-star looks and a knockout voice, Georgia married and moved over and over again. Surrounded by artists, actors, and glamorous women, Cher's childhood was anything but normal. When her mom told her not to worry about her trouble in school, that she was going to become somebody when she grew up, she believed her, practicing her autograph for future stardom. Whether on her tricycle, a train, or behind the wheel on the streets of Los Angeles, Cher had a powerful desire to keep moving, eventually landing her in the arms of Sonny Bono. The duo became famous beyond their wildest dreams. Cher: The Memoir, Part One charts her career -- from singing backup in Phil Spector's studio to pop stardom with Sonny and Cher, to the Vegas lounge act that gave birth to the television show that brought them into America's living room and made her a fashion icon and household name. As time passed, fame changed the dynamic of their relationship and Cher evolved from a wide-eyed teenager into a woman. She started fighting for herself, breaking away from his control and realizing things were not as they seemed. Taking risks, making headlines, falling in love -- first with David Geffen, who showed her the truth and then took care of her and her entire family, and then with Gregg Allman -- Cher struggled and stumbled while trying to become her own woman, charting her own path, and taking her own place in the world. Cher: The Memoir, Part One brings us to the brink of her next chapter, a remarkable acting and recording career that cemented her legacy for the ages.\" --",
+    "authors": [
+      "Cher"
+    ],
+    "subjects": [
+      "Arts & Photography",
+      "Music",
+      "Musical Genres",
+      "Biographies & Memoirs",
+      "Arts & Literature",
+      "Actors & Entertainers",
+      "Composers & Musicians",
+      "Community & Culture",
+      "Women",
+      "Memoirs",
+      "Humor & Entertainment"
+    ],
+    "other_isbns": [
+      {
+        "isbn": "9780062863126",
+        "binding": "print"
+      }
+    ]
+  }
+}

@@ -25,6 +25,7 @@ Rails.application.routes.draw do
       query.present? ? "/items?#{query.to_query}" : "/items"
     }, as: :search
     get "item", to: "items#show", as: :item
+    get "item/external_metadata", to: "external_metadata#show", as: :item_external_metadata
 
     get "add_item", to: "add_item#show", as: :add_item
     post "add_item", to: "add_item#create"
@@ -34,9 +35,13 @@ Rails.application.routes.draw do
     post "ingram_import/preview", to: "ingram_import#preview", as: :ingram_import_preview
     post "ingram_import", to: "ingram_import#create", as: :ingram_import_run
 
-    get "bisac_subjects/search", to: "bisac_subject_searches#index", as: :bisac_subjects_search
     get "identifier_preview", to: "identifier_previews#show", as: :identifier_preview
 
+    post "external_lookup", to: "external_lookup#lookup", as: :external_lookup
+    get "external_lookup/:id", to: "external_lookup#preview", as: :external_lookup_result
+    post "external_lookup/:id/import", to: "external_lookup#import", as: :external_lookup_import
+
+    get "bisac_subjects/search", to: "bisac_subject_searches#index", as: :bisac_subjects_search
     resources :catalog_items do
       member do
         patch :inactivate
@@ -163,6 +168,8 @@ Rails.application.routes.draw do
     resource :bisac_subjects, only: %i[show] do
       post :import, on: :member
     end
+    get "external_data_sources", to: "external_data_sources#index", as: :external_data_sources
+    post "external_data_sources/:source_key/health_check", to: "external_data_sources#health_check", as: :external_data_source_health_check
     resources :formats do
       member do
         patch :inactivate

@@ -49,6 +49,7 @@ module Items
         @identifiers = @item.catalog_item&.catalog_item_identifiers&.active_records
           &.order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc) || []
         @variants = @item.variants
+        @external_catalog_import = @item.catalog_item&.latest_external_catalog_import
         load_display_vendor_data
       when "activity"
         @audit_events = merged_audit_events
