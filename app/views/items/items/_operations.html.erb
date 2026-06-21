@@ -1,6 +1,10 @@
 <% operations_tab = local_assigns[:operations_tab] %>
 <% operations = local_assigns[:operations] %>
 
+<% if request_match_context.valid? %>
+  <%= render "shared/request_match_banner", context: request_match_context %>
+<% end %>
+
 <% if local_assigns[:attention_items].present? %>
   <%= render "orders/shared/attention_panel", items: attention_items %>
 <% end %>
@@ -27,7 +31,10 @@
       <tr>
         <th>SKU</th>
         <th class="ss-num">Available</th>
+        <th class="ss-num">Reserved</th>
         <th class="ss-num">On hand</th>
+        <th class="ss-num">On order avail.</th>
+        <th class="ss-num">Ready pickup</th>
         <th class="ss-num">Open TBO</th>
         <th class="ss-num">Pending PO</th>
         <th class="ss-num">On order</th>
@@ -43,7 +50,10 @@
         <tr class="<%= "ss-table-row--highlight" if operations_tab&.highlight_variant&.id == row.variant.id %>">
           <td><%= row.variant.sku %></td>
           <td class="ss-num"><%= row.available.nil? ? "—" : row.available %></td>
+          <td class="ss-num"><%= row.reserved.nil? ? "—" : row.reserved %></td>
           <td class="ss-num"><%= row.on_hand.nil? ? "—" : row.on_hand %></td>
+          <td class="ss-num"><%= row.on_order_available.nil? ? "—" : row.on_order_available %></td>
+          <td class="ss-num"><%= row.ready_for_pickup_qty %></td>
           <td class="ss-num"><%= row.open_tbo %></td>
           <td class="ss-num"><%= row.pending_po.nil? ? "—" : row.pending_po %></td>
           <td class="ss-num"><%= row.on_order.nil? ? "—" : row.on_order %></td>
@@ -57,7 +67,20 @@
               —
             <% end %>
           </td>
-          <td><%= link_to "Focus", item.tab_path("operations", variant_id: row.variant.id) %></td>
+          <td>
+            <%= link_to "Focus", items_item_path_with_match(item, tab: "operations", variant_id: row.variant.id), class: "ss-btn-link" %>
+            <% if request_match_context.valid? &&
+                  Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
+              <%= button_to "Match",
+                    match_variant_customers_customer_request_path(request_match_context.request_record),
+                    method: :post,
+                    params: {
+                      line_id: request_match_context.line_id,
+                      product_variant_id: row.variant.id
+                    },
+                    class: "ss-btn ss-btn-small" %>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </tbody>
@@ -209,11 +232,138 @@
   <% end %>
 <% end %>
 
+<% if operations_tab&.customer_demand_visible? %>
+  <% if operations_tab.variant_scoped_customer_request_lines.any? %>
+    <%= render "orders/shared/collapsible_panel", title: "Open customer requests", open: true do %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Request</th>
+            <th>Line</th>
+            <th>Type</th>
+            <th class="ss-num">Qty</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% operations_tab.variant_scoped_customer_request_lines.each do |line| %>
+            <tr>
+              <td><%= link_to line.customer_request.request_number, customers_customer_request_path(line.customer_request) %></td>
+              <td><%= line.line_number %></td>
+              <td><%= line.request_type.tr("_", " ").titleize %></td>
+              <td class="ss-num"><%= line.requested_quantity %></td>
+              <td><%= line.status.tr("_", " ").titleize %></td>
+              <td><%= link_to "View request", customers_customer_request_path(line.customer_request, anchor: "line-#{line.id}") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
+
+  <% if operations_tab.variant_scoped_active_holds.any? %>
+    <%= render "orders/shared/collapsible_panel", title: "Active holds" do %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Variant</th>
+            <th class="ss-num">Qty</th>
+            <th>Expires</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% operations_tab.variant_scoped_active_holds.each do |reservation| %>
+            <tr>
+              <td><%= reservation.customer&.display_name || "—" %></td>
+              <td><%= reservation.product_variant.sku %></td>
+              <td class="ss-num"><%= reservation.quantity_reserved %></td>
+              <td><%= reservation.expires_at ? l(reservation.expires_at.to_date) : "—" %></td>
+              <td>
+                <% if reservation.customer_request_line.present? %>
+                  <%= link_to "View request", customers_customer_request_path(reservation.customer_request_line.customer_request) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
+
+  <% if operations_tab.variant_scoped_incoming_reserves.any? %>
+    <%= render "orders/shared/collapsible_panel", title: "Incoming reserves" do %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Variant</th>
+            <th class="ss-num">Qty</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% operations_tab.variant_scoped_incoming_reserves.each do |reservation| %>
+            <tr>
+              <td><%= reservation.customer&.display_name || "—" %></td>
+              <td><%= reservation.product_variant.sku %></td>
+              <td class="ss-num"><%= reservation.quantity_reserved %></td>
+              <td>
+                <% if reservation.customer_request_line.present? %>
+                  <%= link_to "View request", customers_customer_request_path(reservation.customer_request_line.customer_request) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
+
+  <% if operations_tab.variant_scoped_special_orders.any? %>
+    <%= render "orders/shared/collapsible_panel", title: "Special orders" do %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Variant</th>
+            <th>Status</th>
+            <th class="ss-num">Committed</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% operations_tab.variant_scoped_special_orders.each do |order| %>
+            <tr>
+              <td><%= order.customer.display_name %></td>
+              <td><%= order.product_variant&.sku || "—" %></td>
+              <td><%= order.status.tr("_", " ").titleize %></td>
+              <td class="ss-num"><%= order.quantity_committed %></td>
+              <td>
+                <%= link_to "View request",
+                      customers_customer_request_path(order.customer_request_line.customer_request, anchor: "line-#{order.customer_request_line_id}") %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
+<% end %>
+
 <% if operations_tab.blank? || (
       operations_tab.open_purchase_request_lines.empty? &&
       operations_tab.open_purchase_order_lines.empty? &&
       operations_tab.recent_receipt_lines.empty? &&
-      operations_tab.recent_rtv_lines.empty?
+      operations_tab.recent_rtv_lines.empty? &&
+      (!operations_tab.customer_demand_visible? || (
+        operations_tab.open_customer_request_lines.empty? &&
+        operations_tab.active_holds.empty? &&
+        operations_tab.incoming_reserves.empty? &&
+        operations_tab.open_special_orders.empty?
+      ))
     ) %>
   <p class="ss-muted">No operational documents yet for this item.</p>
 <% end %>

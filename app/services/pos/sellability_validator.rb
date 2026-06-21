@@ -40,6 +40,8 @@ module Pos
         if (!variant.active? || !product.active?) && !confirmed_inactive
           raise Error, "Variant #{variant.sku} is inactive; confirmation required."
         end
+
+        check_reserved_stock!(line, variant)
       end
     end
 
@@ -62,6 +64,19 @@ module Pos
 
     def business_date
       transaction.business_date || Date.current
+    end
+
+    def check_reserved_stock!(line, variant)
+      return if line.inventory_reservation_id.present?
+
+      reserved = Inventory::Availability.reserved(store: transaction.store, variant: variant)
+      return if reserved.zero?
+
+      available = Inventory::Availability.available(store: transaction.store, variant: variant)
+      qty = line.quantity.abs
+      return if qty <= available
+
+      raise Error, "Variant #{variant.sku} has #{reserved} reserved; use reservation pickup or override."
     end
   end
 end

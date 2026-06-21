@@ -331,6 +331,22 @@ store_credit_accounts
 cycle_counts
 ```
 
+Phase 7A tables (implemented):
+
+```text
+customers
+customer_request_sequences
+customer_requests
+customer_request_lines
+special_orders
+inventory_reservations
+purchase_order_line_allocations
+receipt_line_allocations
+customer_contact_events
+```
+
+Phase 7A extends `inventory_balances.quantity_reserved` and `pos_transaction_lines` / `pos_transactions` with customer demand FKs.
+
 Phase 6 tables (implemented):
 
 ```text

@@ -1,0 +1,83 @@
+<%= render "setup/shared/back_link", path: customers_customers_path, label: "Customers" %>
+
+<h1><%= @customer.display_name %></h1>
+
+<dl class="ss-summary">
+  <dt>Email</dt><dd><%= @customer.email.presence || "—" %></dd>
+  <dt>Phone</dt><dd><%= @customer.phone.presence || "—" %></dd>
+  <dt>Preferred contact</dt>
+  <dd><%= @customer.preferred_contact_method.present? ? customers_preferred_contact_label(@customer.preferred_contact_method) : "—" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@customer.active?) %>"><%= status_label(@customer.active?) %></span></dd>
+  <% if @customer.notes.present? %>
+    <dt>Notes</dt><dd><%= simple_format(@customer.notes) %></dd>
+  <% end %>
+</dl>
+
+<div class="ss-detail-actions">
+  <% if Authorization.allowed?(user: current_user, permission_key: "customers.update", store: current_store) %>
+    <%= link_to "Edit", edit_customers_customer_path(@customer), class: "ss-btn" %>
+  <% end %>
+  <% if @customer.active? && Authorization.allowed?(user: current_user, permission_key: "customers.inactivate", store: current_store) %>
+    <%= button_to "Inactivate", inactivate_customers_customer_path(@customer), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% elsif Authorization.allowed?(user: current_user, permission_key: "customers.reactivate", store: current_store) %>
+    <%= button_to "Reactivate", reactivate_customers_customer_path(@customer), method: :patch, class: "ss-btn" %>
+  <% end %>
+</div>
+
+<h2>Open requests</h2>
+<% if @customer_requests.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Request</th>
+        <th>Status</th>
+        <th>Lines</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @customer_requests.each do |request| %>
+        <tr>
+          <td><%= request.request_number %></td>
+          <td><%= render "customers/shared/status_badge", status: request.status %></td>
+          <td class="ss-num"><%= request.customer_request_lines.size %></td>
+          <td><%= display_time(request.created_at) %></td>
+          <td><%= link_to "View", customers_customer_request_path(request) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No requests yet.</p>
+<% end %>
+
+<h2>Contact history</h2>
+<% if @contact_events.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Method</th>
+        <th>Status</th>
+        <th>Summary</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @contact_events.each do |event| %>
+        <tr>
+          <td><%= display_time(event.occurred_at) %></td>
+          <td><%= customers_preferred_contact_label(event.contact_method) %></td>
+          <td><%= event.status.titleize %></td>
+          <td><%= event.summary %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No contact events recorded.</p>
+<% end %>
+
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

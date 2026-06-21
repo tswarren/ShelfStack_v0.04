@@ -4,31 +4,37 @@ module Purchasing
   class BuildPurchaseOrder
     class BuildError < StandardError; end
 
-    def self.call(store:, vendor:, created_by_user:, purchase_request_lines: [], manual_lines: [], notes: nil, line_quantities: {})
+    def self.call(store:, vendor:, created_by_user:, purchase_request_lines: [], manual_lines: [], special_orders: [],
+                  notes: nil, line_quantities: {})
       new(
         store:,
         vendor:,
         created_by_user:,
         purchase_request_lines:,
         manual_lines:,
+        special_orders:,
         notes:,
         line_quantities:
       ).call
     end
 
-    def initialize(store:, vendor:, created_by_user:, purchase_request_lines: [], manual_lines: [], notes: nil, line_quantities: {})
+    def initialize(store:, vendor:, created_by_user:, purchase_request_lines: [], manual_lines: [], special_orders: [],
+                   notes: nil, line_quantities: {})
       @store = store
       @vendor = vendor
       @created_by_user = created_by_user
       @purchase_request_lines = Array(purchase_request_lines)
       @manual_lines = Array(manual_lines)
+      @special_orders = Array(special_orders)
       @notes = notes
       @line_quantities = line_quantities.stringify_keys
     end
 
     def call
       raise BuildError, "Vendor is required" if vendor.blank?
-      raise BuildError, "At least one line is required" if purchase_request_lines.empty? && manual_lines.empty?
+      if purchase_request_lines.empty? && manual_lines.empty? && special_orders.empty?
+        raise BuildError, "At least one line is required"
+      end
 
       purchase_order = nil
       PurchaseOrder.transaction do
@@ -53,6 +59,10 @@ module Purchasing
           )
         end
 
+        special_orders.each do |special_order|
+          add_line_from_special_order!(purchase_order, special_order)
+        end
+
         AuditEvents.record!(
           actor: created_by_user,
           event_name: "purchase_order.created",
@@ -71,7 +81,35 @@ module Purchasing
 
     private
 
-    attr_reader :store, :vendor, :created_by_user, :purchase_request_lines, :manual_lines, :notes, :line_quantities
+    attr_reader :store, :vendor, :created_by_user, :purchase_request_lines, :manual_lines, :special_orders, :notes, :line_quantities
+
+    def add_line_from_special_order!(purchase_order, special_order)
+      variant = special_order.product_variant
+      qty = special_order.remaining_committed
+      existing_line = purchase_order.purchase_order_lines.find_by(product_variant: variant, vendor: vendor)
+
+      po_line = if existing_line
+        existing_line.update!(quantity_ordered: existing_line.quantity_ordered + qty)
+        existing_line
+      else
+        sourcing = SourcingLookup.for(variant: variant, vendor: vendor)
+        purchase_order.purchase_order_lines.create!(
+          product_variant: variant,
+          vendor: vendor,
+          product_variant_vendor: sourcing.product_variant_vendor,
+          quantity_ordered: qty,
+          quantity_received: 0,
+          status: "open"
+        )
+      end
+
+      SpecialOrders::AttachToPurchaseOrderLine.call!(
+        special_order: special_order,
+        purchase_order_line: po_line,
+        quantity: qty,
+        attached_by_user: created_by_user
+      )
+    end
 
     def add_line_from_request!(purchase_order, request_line)
       variant = request_line.product_variant

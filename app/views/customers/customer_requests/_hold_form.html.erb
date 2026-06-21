@@ -1,0 +1,28 @@
+<%# locals: customer_request:, line:, availability: %>
+<%= form_with url: create_hold_customers_customer_request_path(customer_request),
+              method: :post,
+              class: "ss-form ss-form--inline" do %>
+  <%= hidden_field_tag :line_id, line.id %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= label_tag :quantity, "Quantity", class: "ss-label" %>
+      <%= number_field_tag :quantity, line.requested_quantity, min: 1, class: "ss-input" %>
+      <% if availability.present? %>
+        <p class="ss-hint"><%= availability[:available] %> available · <%= availability[:on_hand] %> on hand</p>
+      <% end %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :expires_at, "Expires on", class: "ss-label" %>
+      <%= date_field_tag :expires_at, 14.days.from_now.to_date, class: "ss-input" %>
+    </div>
+  </div>
+  <% if availability.present? && line.requested_quantity > availability[:available].to_i &&
+        Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.override", store: current_store) %>
+    <div class="ss-field">
+      <%= label_tag :override_reason, "Override reason (over-reserve)", class: "ss-label" %>
+      <%= text_field_tag :override_reason, nil, class: "ss-input" %>
+      <%= hidden_field_tag :override_authorized, "1" %>
+    </div>
+  <% end %>
+  <%= submit_tag "Create hold", class: "ss-btn ss-btn-small" %>
+<% end %>

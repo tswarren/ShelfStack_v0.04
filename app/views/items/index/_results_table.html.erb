@@ -16,12 +16,13 @@
     <% results.each do |result| %>
       <% item = result.presenter %>
       <% summary = operational_summaries[item] %>
+      <% active_variants = item.variants.select(&:active?) %>
       <tr>
         <td>
           <div class="ss-search-item-cell">
             <%= item_cover_thumbnail(item, size: :search) %>
             <div>
-              <strong><%= link_to item.title, item.show_path, class: "ss-search-item-title" %></strong><br>
+              <strong><%= link_to item.title, items_item_path_with_match(item), class: "ss-search-item-title" %></strong><br>
               <span class="ss-muted"><%= item.creator_line %> · <%= item.format_name %> · <%= item.primary_identifier_display %></span>
             </div>
           </div>
@@ -48,12 +49,29 @@
           </td>
         <% end %>
         <td class="ss-search-action-cell">
+          <% if local_assigns[:match_context]&.valid? &&
+                Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
+            <% if active_variants.size == 1 %>
+              <%= button_to "Match to request",
+                    match_variant_customers_customer_request_path(match_context.request_record),
+                    method: :post,
+                    params: {
+                      line_id: match_context.line_id,
+                      product_variant_id: active_variants.first.id
+                    },
+                    class: "ss-btn ss-btn-small" %>
+            <% elsif active_variants.any? %>
+              <%= link_to "Pick variant",
+                    items_item_path_with_match(item, tab: "operations", variant_id: active_variants.first.id),
+                    class: "ss-search-view-link" %>
+            <% end %>
+          <% end %>
           <% if summary&.actions.present? %>
             <% summary.actions.each do |action| %>
               <%= link_to action.label, action.url, class: "ss-search-view-link" %>
             <% end %>
           <% else %>
-            <%= link_to "View Item", item.show_path, class: "ss-search-view-link" %>
+            <%= link_to "View Item", items_item_path_with_match(item), class: "ss-search-view-link" %>
           <% end %>
         </td>
       </tr>

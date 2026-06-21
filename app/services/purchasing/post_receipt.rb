@@ -58,6 +58,7 @@ module Purchasing
         )
 
         UpdatePoLineQuantities.call(receipt: receipt)
+        Receiving::AllocateCustomerDemandFromReceipt.call!(receipt: receipt, posted_by_user: posted_by_user)
 
         receipt.update!(
           status: "posted",

@@ -118,6 +118,15 @@ docs/specifications/phase-6-data-model.md
 docs/specifications/phase-6-test-plan.md
 ```
 
+## Phase 7A Documents
+
+```text
+docs/roadmap/phase-7a-customer-demand.md
+docs/specifications/phase-7a-customer-demand-spec.md
+docs/specifications/phase-7a-data-model.md
+docs/specifications/phase-7a-test-plan.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -151,6 +160,14 @@ Phase 5 was completed on 2026-06-10. See [docs/implementation/phase-5-completion
 ## Phase 6: POS Foundation — **Complete**
 
 Phase 6 was completed on 2026-06-10. See [docs/implementation/phase-6-completion.md](docs/implementation/phase-6-completion.md).
+
+## Phase 6.5: External Catalog Lookup — **Complete**
+
+Phase 6.5 was completed on 2026-06-21. ISBNdb local-first lookup, Add Item wizard integration, and controlled import.
+
+## Phase 7A: Customer Demand — **Complete**
+
+Phase 7A was completed on 2026-06-21. See [docs/implementation/phase-7a-completion.md](docs/implementation/phase-7a-completion.md).
 
 Do not jump ahead to gift-card/store-credit ledgers, offline POS, or full GL unless explicitly requested.
 
@@ -469,7 +486,7 @@ product_variants.sub_department_id → sub_departments.id
 * Authoritative inventory grain is `store_id + product_variant_id`.
 * Only `inventory_behavior = standard_physical` variants are ledger-eligible.
 * Balances are cached from posted ledger entries; do not mutate balances outside `Inventory::Post` / `Inventory::BalanceUpdater`.
-* `quantity_available = quantity_on_hand` in Phase 4.
+* `quantity_available = quantity_on_hand - quantity_reserved` after Phase 7A on-hand holds (`quantity_reserved` cached from active `on_hand_hold` / `special_order_reserve` reservations).
 * Negative on-hand is allowed; treat as an operational exception.
 * Posted postings and ledger entries are immutable in normal operation.
 * Inventory locations are context only; they do not maintain authoritative balances.
@@ -503,6 +520,17 @@ product_variants.sub_department_id → sub_departments.id
 * `Pos::TenderValidator` rejects `gift_card` and `store_credit` in Phase 6.
 * Lookup ranking: variant SKU → product SKU → catalog identifier.
 * Gift-card and store-credit **ledgers** deferred; store credit is a future tender on normal return/exchange transactions.
+
+## Phase 7A Rules
+
+* `notify` request lines surface in Notify Customer queue on stock arrival; **no auto-hold**.
+* Default hold expiry: 14 days (`expires_at`); staff may override; nightly `InventoryReservations::Expire`.
+* Over-reserve on-hand uses reservation override columns + `inventory_reservations.override`; POS reserved-stock override uses `pos_authorizations`.
+* PO customer allocations require `special_order_id`; auto-merge same variant + vendor on draft PO lines; TBO FK path unchanged.
+* Receipt customer allocation is atomic with `PostReceipt`; failure rolls back entire receipt.
+* Pickup POS lines require `inventory_reservation_id`; validate consistent demand chain FKs.
+* Partial receipt: FIFO allocation to PO line allocations; partial pickup/void/cancel per spec.
+* Header status derived via `CustomerRequests::HeaderStatusResolver`; manual override limited to terminal statuses.
 
 ---
 

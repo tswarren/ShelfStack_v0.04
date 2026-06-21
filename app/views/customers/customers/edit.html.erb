@@ -1,0 +1,14 @@
+<%= render "setup/shared/back_link", path: customers_customer_path(@customer), label: @customer.display_name %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "Customers",
+           title: "Edit Customer",
+           description: "Update contact details and notes." %>
+
+<%= form_with model: @customer, url: customers_customer_path(@customer), class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, customer: @customer %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Save Changes", class: "ss-btn" %>
+    <%= link_to "Cancel", customers_customer_path(@customer), class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

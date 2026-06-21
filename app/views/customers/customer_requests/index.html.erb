@@ -1,0 +1,40 @@
+<%= render "customers/shared/workspace_nav", active: :requests %>
+
+<h1>Customer Requests
+  <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.create", store: current_store) %>
+    <%= link_to "New", new_customers_customer_request_path, class: "ss-btn" %>
+  <% end %>
+</h1>
+
+<%= render "customers/shared/queue_nav" %>
+
+<%= form_with url: customers_customer_requests_path, method: :get, class: "ss-form" do %>
+  <%= hidden_field_tag :queue, params[:queue] if params[:queue].present? %>
+  <%= text_field_tag :q, params[:q], placeholder: "Search request number" %>
+  <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>Request</th>
+      <th>Customer</th>
+      <th>Status</th>
+      <th class="ss-num">Lines</th>
+      <th>Created</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @customer_requests.each do |request| %>
+      <tr>
+        <td><%= request.request_number %></td>
+        <td><%= request.display_customer_name %></td>
+        <td><%= render "customers/shared/status_badge", status: request.status %></td>
+        <td class="ss-num"><%= request.customer_request_lines.size %></td>
+        <td><%= display_time(request.created_at) %></td>
+        <td><%= link_to "View", customers_customer_request_path(request) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

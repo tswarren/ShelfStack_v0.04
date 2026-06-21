@@ -14,6 +14,9 @@ class PosTransactionLine < ApplicationRecord
   belongs_to :store_tax_rate, optional: true
   belongs_to :source_transaction, class_name: "PosTransaction", optional: true
   belongs_to :source_transaction_line, class_name: "PosTransactionLine", optional: true
+  belongs_to :customer_request_line, optional: true
+  belongs_to :special_order, optional: true
+  belongs_to :inventory_reservation, optional: true
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :line_number, uniqueness: { scope: :pos_transaction_id }

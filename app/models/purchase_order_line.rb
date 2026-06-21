@@ -12,6 +12,8 @@ class PurchaseOrderLine < ApplicationRecord
   belongs_to :purchase_request_line, optional: true
 
   has_many :receipt_lines, dependent: :restrict_with_error
+  has_many :purchase_order_line_allocations, dependent: :destroy
+  has_many :inventory_reservations, dependent: :restrict_with_error
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates_nested_line_number_uniqueness :purchase_order, foreign_key: :purchase_order_id

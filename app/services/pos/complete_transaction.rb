@@ -52,6 +52,7 @@ module Pos
         transaction.save!
 
         PostInventory.call(transaction:, posted_by_user: completed_by_user)
+        CompleteReservationFulfillment.call!(transaction:, fulfilled_by_user: completed_by_user)
 
         PosReceipt.create!(
           pos_transaction: transaction,

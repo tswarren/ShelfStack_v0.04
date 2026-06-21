@@ -14,6 +14,22 @@ module Inventory
       balance&.quantity_available || 0
     end
 
+    def self.reserved(store:, variant:)
+      balance = InventoryBalance.find_by(store: store, product_variant: variant)
+      balance&.quantity_reserved || 0
+    end
+
+    def self.reserved_incoming(store:, variant:)
+      InventoryReservation.active_incoming
+                          .where(store: store, product_variant: variant)
+                          .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+    end
+
+    def self.on_order_available(store:, variant:)
+      po_qty = Purchasing::OrderQuantityLookup.for_variant(store: store, variant: variant).on_order
+      [ po_qty - reserved_incoming(store: store, variant: variant), 0 ].max
+    end
+
     def self.product_on_hand(store:, product:)
       product.product_variants.active_records.sum do |variant|
         next 0 unless Eligibility.eligible?(variant)

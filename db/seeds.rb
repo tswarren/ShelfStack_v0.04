@@ -8,6 +8,7 @@ require_relative "seeds/phase4_permissions"
 require_relative "seeds/phase5_permissions"
 require_relative "seeds/phase6_permissions"
 require_relative "seeds/phase65_permissions"
+require_relative "seeds/phase7a_permissions"
 require_relative "seeds/phase6_roles"
 require_relative "seeds/phase2_classification_tax"
 require_relative "seeds/phase3_catalog_products"
@@ -29,6 +30,7 @@ Seeds::Phase4Permissions.seed!
 Seeds::Phase5Permissions.seed!
 Seeds::Phase6Permissions.seed!
 Seeds::Phase65Permissions.seed!
+Seeds::Phase7aPermissions.seed!
 Seeds::Phase6Roles.seed!
 
 system_user = User.find_or_initialize_by(username: "system")

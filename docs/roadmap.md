@@ -24,8 +24,9 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 4 | Inventory Foundation            | Inventory ledger, store balances, adjustments, valuation snapshots, and inventory read surfaces.             |
 | Phase 5 | Purchasing and Receiving        | Vendors, purchase orders, receiving, supplier terms, vendor costs, and returns to vendor.                    |
 | Phase 6 | POS Foundation                  | Register sessions, POS transactions, tax/tender snapshots, inventory posting, void reversals, receipts, and workstation-aware POS behavior. |
-| Phase 6.5 | External Catalog Lookup       | Real-time ISBN local-first lookup via ISBNdb, candidate preview, controlled catalog import, and Add Item wizard integration. |
-| Phase 7 | Advanced Store Operations       | Transfers, adjustments, cycle counts, special orders, holds, and operational workflows.                      |
+| Phase 6.5 | External Catalog Lookup       | Real-time ISBN local-first lookup via ISBNdb, candidate preview, controlled catalog import, and Add Item wizard integration. **Complete.** |
+| Phase 7A | Customer Demand               | Customers, requests, special orders, holds/reservations, PO/receipt allocations, ready-for-pickup, POS fulfillment. **Complete.** |
+| Phase 7 | Advanced Store Operations       | Transfers, cycle counts, buybacks, and remaining operational workflows.                                      |
 | Phase 8 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
 Later phases may be split or reordered as implementation details become clearer.

@@ -9,6 +9,7 @@ class PosTransaction < ApplicationRecord
   belongs_to :user_session, optional: true
   belongs_to :pos_register_session, optional: true
   belongs_to :cashier_user, class_name: "User"
+  belongs_to :customer, optional: true
 
   has_many :pos_transaction_lines, -> { order(:line_number) }, dependent: :destroy, inverse_of: :pos_transaction
   has_many :pos_tenders, dependent: :destroy

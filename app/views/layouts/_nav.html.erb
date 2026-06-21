@@ -16,7 +16,11 @@
   <% else %>
     <span class="disabled">Orders</span>
   <% end %>
-  <span class="disabled">Customers</span>
+  <% if Authorization.allowed?(user: current_user, permission_key: "customers.access", store: current_store) %>
+    <%= link_to "Customers", customers_root_path, class: (request.path.start_with?("/customers") ? "active" : nil) %>
+  <% else %>
+    <span class="disabled">Customers</span>
+  <% end %>
   <span class="disabled">Reports</span>
   <%= link_to "Setup", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>
 </nav>

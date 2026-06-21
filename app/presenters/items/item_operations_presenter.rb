@@ -10,6 +10,9 @@ module Items
       :variant,
       :on_hand,
       :available,
+      :reserved,
+      :on_order_available,
+      :ready_for_pickup_qty,
       :open_tbo,
       :pending_po,
       :on_order,
@@ -46,6 +49,7 @@ module Items
       [
         Metric.new(label: "On hand", value: rows.sum { |row| row.on_hand || 0 }, class_name: "ss-num"),
         Metric.new(label: "Available", value: rows.sum { |row| row.available || 0 }, class_name: "ss-num"),
+        Metric.new(label: "Reserved", value: rows.sum { |row| row.reserved || 0 }, class_name: "ss-num"),
         Metric.new(label: "TBO", value: rows.sum(&:open_tbo), class_name: "ss-num"),
         Metric.new(label: "Pending PO", value: rows.sum { |row| row.pending_po || 0 }, class_name: "ss-num"),
         Metric.new(label: "On order", value: rows.sum { |row| row.on_order || 0 }, class_name: "ss-num"),
@@ -168,6 +172,7 @@ module Items
       open_tbo = open_tbo_quantities_for(variant_ids)
       last_received = Purchasing::LastReceivedLookup.for_variants(store: store, variant_ids: variant_ids)
       suggested_vendors = Purchasing::SuggestedVendorResolver.for_variants(variant_ids)
+      ready_for_pickup = ready_for_pickup_quantities_for(variant_ids)
 
       variants.map do |variant|
         eligible = inventory_eligible?(variant)
@@ -181,6 +186,9 @@ module Items
           variant: variant,
           on_hand: eligible ? (balance&.quantity_on_hand || 0) : nil,
           available: eligible ? Inventory::Availability.available(store: store, variant: variant) : nil,
+          reserved: eligible ? Inventory::Availability.reserved(store: store, variant: variant) : nil,
+          on_order_available: eligible ? Inventory::Availability.on_order_available(store: store, variant: variant) : nil,
+          ready_for_pickup_qty: ready_for_pickup.fetch(variant.id, 0),
           open_tbo: open_tbo.fetch(variant.id, 0),
           pending_po: eligible ? order_qty.pending : nil,
           on_order: eligible ? order_qty.on_order : nil,
@@ -191,6 +199,15 @@ module Items
           actions: variant_actions(variant)
         )
       end
+    end
+
+    def ready_for_pickup_quantities_for(variant_ids)
+      CustomerRequestLine.open_lines
+                         .where(product_variant_id: variant_ids, status: "ready_for_pickup")
+                         .joins(:customer_request)
+                         .where(customer_requests: { store_id: store.id })
+                         .group(:product_variant_id)
+                         .sum(:requested_quantity)
     end
 
     def open_tbo_quantities_for(variant_ids)

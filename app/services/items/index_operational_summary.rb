@@ -6,14 +6,15 @@ module Items
 
     Action = Data.define(:label, :url, :permission_key)
 
-    def self.for(store:, user:, results:)
-      new(store: store, user: user, results: results).summaries_by_presenter
+    def self.for(store:, user:, results:, match_context: nil)
+      new(store: store, user: user, results: results, match_context: match_context).summaries_by_presenter
     end
 
-    def initialize(store:, user:, results:)
+    def initialize(store:, user:, results:, match_context: nil)
       @store = store
       @user = user
       @results = Array(results)
+      @match_context = match_context
     end
 
     def summaries_by_presenter

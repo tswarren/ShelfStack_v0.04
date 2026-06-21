@@ -1,0 +1,27 @@
+<%# locals: f:, customer: nil %>
+<div class="ss-field">
+  <%= f.label :customer_id, "Customer", class: "ss-label" %>
+  <div class="ss-detail-actions" style="margin-bottom: 0.5rem;">
+    <% if Authorization.allowed?(user: current_user, permission_key: "customers.create", store: current_store) %>
+      <%= link_to "New customer",
+            new_customers_customer_path(return_to: request.fullpath),
+            class: "ss-btn ss-btn-small ss-btn-secondary" %>
+    <% end %>
+    <button type="button" class="ss-btn ss-btn-small ss-btn-secondary"
+            data-action="customer-lookup#clearCustomer">
+      Clear customer
+    </button>
+  </div>
+  <%= text_field_tag nil, customer&.display_name,
+        class: "ss-input",
+        placeholder: "Search by name, email, or phone…",
+        autocomplete: "off",
+        data: {
+          customer_lookup_target: "lookupInput",
+          action: "keydown->customer-lookup#lookupExact input->customer-lookup#search"
+        } %>
+  <%= f.hidden_field :customer_id, data: { customer_lookup_target: "customerId" } %>
+  <p class="ss-hint" data-customer-lookup-target="preview"></p>
+  <p class="ss-hint" data-customer-lookup-target="message"></p>
+  <div class="ss-pos-choices" data-customer-lookup-target="choices"></div>
+</div>

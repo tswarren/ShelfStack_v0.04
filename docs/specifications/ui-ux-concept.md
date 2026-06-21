@@ -137,7 +137,7 @@ Setup
 | Items     | Catalog/inventory/frontline staff | Search, add, review, and maintain items, products, and sellable SKUs.                 |
 | Inventory | Stock staff/managers              | Future receiving, adjustments, counts, stock lookup, and movement history.            |
 | Orders    | Buyers/managers                   | Future purchase orders, special orders, and vendor returns.                           |
-| Customers | Clerks/managers                   | Future customer profiles, credits, holds, special orders, and buybacks.               |
+| Customers | Clerks/managers                   | Customer profiles, request queues, holds, special orders, ready-for-pickup, and contact history (`/customers`). |
 | Reports   | Managers                          | Sales, inventory, cash, tax, margin, and operational reports.                         |
 | Setup     | Admins/managers                   | Stores, users, roles, departments, categories, tax, formats, conditions, vendors.     |
 

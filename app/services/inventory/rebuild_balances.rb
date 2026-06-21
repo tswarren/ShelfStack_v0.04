@@ -44,6 +44,8 @@ module Inventory
         rebuilt += 1
       end
 
+      InventoryReservations::RebuildReservedQuantities.call!
+
       AuditEvents.record!(
         actor: actor || User.find_by!(username: ShelfStack::SYSTEM_USERNAME),
         event_name: "inventory.balance_rebuild",

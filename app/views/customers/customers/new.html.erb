@@ -1,0 +1,13 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Customers",
+           title: "New Customer",
+           description: "Create a customer profile for requests, holds, and pickup." %>
+
+<%= form_with model: @customer, url: customers_customers_path, class: "ss-form ss-form--standard" do |f| %>
+  <%= hidden_field_tag :return_to, @return_to if @return_to.present? %>
+  <%= render "form", f: f, customer: @customer %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create Customer", class: "ss-btn" %>
+    <%= link_to "Cancel", @return_to.presence || customers_customers_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

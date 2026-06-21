@@ -315,7 +315,40 @@ docs/specifications/phase-6-data-model.md
 
 ---
 
-# 8. Conceptual Flow
+# 8. Customer Demand Domain (Phase 7A)
+
+Phase 7A links customer-facing demand to catalog, purchasing, inventory reservations, and POS pickup.
+
+| Concept | Description |
+| --- | --- |
+| Customer | Lightweight customer profile (`customers`). |
+| Customer Request | Store-scoped multi-line demand document (`customer_requests`). |
+| Request Line | Provisional or matched line with type: research, notify, hold, special_order. |
+| Special Order | Customer-backed commitment at variant grain (`special_orders`). |
+| Inventory Reservation | On-hand hold, incoming reserve, or special-order reserve (`inventory_reservations`). |
+| PO Line Allocation | Customer quantity on a PO line (`purchase_order_line_allocations`). |
+| Receipt Line Allocation | Customer quantity from a posted receipt (`receipt_line_allocations`). |
+
+Availability after Phase 7A:
+
+```text
+quantity_available = quantity_on_hand - quantity_reserved
+on_order_available = on_order - reserved_incoming
+```
+
+Notify lines enter a staff queue on stock arrival; holds are created manually (no auto-hold).
+
+## Related Documents
+
+```text
+docs/roadmap/phase-7a-customer-demand.md
+docs/specifications/phase-7a-customer-demand-spec.md
+docs/specifications/phase-7a-data-model.md
+```
+
+---
+
+# 9. Conceptual Flow
 
 ShelfStack’s core data flow can be summarized as:
 

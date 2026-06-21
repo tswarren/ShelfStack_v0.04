@@ -1,0 +1,35 @@
+<fieldset class="ss-adjustment-line" data-nested-form-lines-target="line">
+  <%= line_form.hidden_field :id if line_form.object.persisted? %>
+  <%= line_form.hidden_field :_destroy, value: false, data: { nested_form_lines_target: "destroy" } %>
+
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= line_form.label :request_type, class: "ss-label" %>
+      <%= line_form.select :request_type,
+            request_types.map { |t| [customers_request_type_label(t), t] },
+            { selected: line_form.object.request_type.presence || "research" } %>
+    </div>
+    <div class="ss-field">
+      <%= line_form.label :requested_quantity, class: "ss-label" %>
+      <%= line_form.number_field :requested_quantity, min: 1, step: 1 %>
+    </div>
+    <div class="ss-field">
+      <%= line_form.label :provisional_title, class: "ss-label" %>
+      <%= line_form.text_field :provisional_title %>
+    </div>
+    <div class="ss-field">
+      <%= line_form.label :provisional_identifier, class: "ss-label" %>
+      <%= line_form.text_field :provisional_identifier %>
+    </div>
+    <div class="ss-field">
+      <%= line_form.label :provisional_creator, class: "ss-label" %>
+      <%= line_form.text_field :provisional_creator %>
+    </div>
+    <div class="ss-field">
+      <%= line_form.label :notes, class: "ss-label" %>
+      <%= line_form.text_field :notes %>
+    </div>
+  </div>
+
+  <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#removeLine">Remove line</button>
+</fieldset>

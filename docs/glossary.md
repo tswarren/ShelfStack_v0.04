@@ -103,6 +103,24 @@ A catalog item is not the sellable SKU. Products and product variants are used f
 
 ---
 
+## Customer
+
+A lightweight store customer profile used for requests, holds, special orders, and pickup contact history.
+
+---
+
+## Customer Request
+
+A store-scoped document capturing one or more customer demand lines (research, notify, hold, or special order) with optional provisional metadata before variant matching.
+
+---
+
+## Customer Request Line
+
+A single line on a customer request. May start provisional and later link to catalog/product/variant.
+
+---
+
 ## Catalog Item Identifier
 
 An identifier associated with a catalog item.
@@ -281,6 +299,14 @@ A role assignment that applies across all stores.
 ---
 
 # I
+
+## Inventory Reservation
+
+A quantity commitment against on-hand or incoming stock for customer demand.
+
+Types: `on_hand_hold`, `incoming_reserve`, `special_order_reserve`. Active on-hand reservations reduce `quantity_available`.
+
+---
 
 ## Identifier Normalization
 
@@ -480,6 +506,12 @@ The assignment is scoped, not the role itself.
 ---
 
 # S
+
+## Special Order
+
+A customer-backed commitment record linking a matched request line to downstream PO allocation, receiving, and pickup fulfillment.
+
+---
 
 ## SubDepartment
 

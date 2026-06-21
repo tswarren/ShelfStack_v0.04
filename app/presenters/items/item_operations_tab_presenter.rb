@@ -14,12 +14,82 @@ module Items
     attr_reader :highlight_variant
 
     def metrics
-      [
+      base = [
         { label: "Open TBO", value: open_purchase_request_lines.size },
         { label: "Open PO lines", value: open_purchase_order_lines.size },
         { label: "Recent receipts", value: recent_receipt_lines.size },
         { label: "RTV lines", value: recent_rtv_lines.size }
       ]
+      return base unless customer_demand_visible?
+
+      base + [
+        { label: "Open requests", value: open_customer_request_lines.size },
+        { label: "Active holds", value: active_holds.size },
+        { label: "Special orders", value: open_special_orders.size }
+      ]
+    end
+
+    def customer_demand_visible?
+      return false unless store.present? && user.present?
+
+      Authorization.allowed?(user: user, permission_key: "customer_requests.access", store: store)
+    end
+
+    def open_customer_request_lines
+      @open_customer_request_lines ||= CustomerRequestLine.open_lines
+                                                          .includes(:customer_request, :product_variant)
+                                                          .joins(:customer_request)
+                                                          .where(product_variant_id: variant_ids, customer_requests: { store_id: store.id })
+                                                          .order("customer_requests.created_at DESC")
+                                                          .to_a
+    end
+
+    def active_holds
+      @active_holds ||= InventoryReservation.active_on_hand
+                                              .includes(:customer, :product_variant, customer_request_line: :customer_request)
+                                              .where(store: store, product_variant_id: variant_ids)
+                                              .order(reserved_at: :desc)
+                                              .to_a
+    end
+
+    def incoming_reserves
+      @incoming_reserves ||= InventoryReservation.active_incoming
+                                                   .includes(:customer, :product_variant, :special_order, customer_request_line: :customer_request)
+                                                   .where(store: store, product_variant_id: variant_ids)
+                                                   .order(reserved_at: :desc)
+                                                   .to_a
+    end
+
+    def open_special_orders
+      @open_special_orders ||= SpecialOrder.open_orders
+                                           .includes(:customer, :product_variant, :customer_request_line)
+                                           .where(store: store, product_variant_id: variant_ids)
+                                           .order(created_at: :desc)
+                                           .to_a
+    end
+
+    def variant_scoped_customer_request_lines
+      return open_customer_request_lines if highlight_variant.blank?
+
+      open_customer_request_lines.select { |line| line.product_variant_id == highlight_variant.id }
+    end
+
+    def variant_scoped_active_holds
+      return active_holds if highlight_variant.blank?
+
+      active_holds.select { |reservation| reservation.product_variant_id == highlight_variant.id }
+    end
+
+    def variant_scoped_incoming_reserves
+      return incoming_reserves if highlight_variant.blank?
+
+      incoming_reserves.select { |reservation| reservation.product_variant_id == highlight_variant.id }
+    end
+
+    def variant_scoped_special_orders
+      return open_special_orders if highlight_variant.blank?
+
+      open_special_orders.select { |order| order.product_variant_id == highlight_variant.id }
     end
 
     def open_purchase_request_lines

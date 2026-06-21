@@ -26,12 +26,13 @@ module Items
       @per_page = result.per_page
       @total_pages = [ (@total_count.to_f / @per_page).ceil, 1 ].max
       @operational_summaries = load_operational_summaries
+      @request_match_context = request_match_context
     end
 
     private
 
     def index_params
-      params.permit(*INDEX_PARAMS)
+      params.permit(*INDEX_PARAMS, :return_to, :customer_request_id, :line_id)
     end
 
     def load_operational_summaries
@@ -41,7 +42,8 @@ module Items
       Items::IndexOperationalSummary.for(
         store: current_store,
         user: current_user,
-        results: @results
+        results: @results,
+        match_context: request_match_context
       )
     end
 

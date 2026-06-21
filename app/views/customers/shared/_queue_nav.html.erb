@@ -1,0 +1,8 @@
+<div class="ss-detail-actions">
+  <%= link_to "All", customers_customer_requests_path, class: customers_queue_link_class(nil) %>
+  <% Customers::CustomerRequestsController::QUEUE_FILTERS.each_key do |queue| %>
+    <%= link_to customers_queue_label(queue),
+          customers_customer_requests_path(queue: queue),
+          class: customers_queue_link_class(queue) %>
+  <% end %>
+</div>

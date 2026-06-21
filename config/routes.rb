@@ -245,6 +245,34 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :customers do
+    root to: "home#show"
+    get "locked_out", to: "home#locked_out"
+    resource :customer_lookup, only: %i[show]
+    resource :variant_lookup, only: %i[show]
+    resources :customers do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
+    resources :customer_requests do
+      member do
+        patch :cancel
+        patch :mark_unfillable
+        post :match_variant
+        patch :update_line_type
+        post :mark_awaiting_response
+        post :create_special_order
+        post :create_hold
+        post :release_hold
+        post :attach_special_order
+        post :build_purchase_order_from_special_order
+        post :record_contact
+      end
+    end
+  end
+
   namespace :orders do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"
