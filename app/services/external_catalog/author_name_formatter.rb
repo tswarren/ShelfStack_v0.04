@@ -21,11 +21,11 @@ module ExternalCatalog
       display_name = value
       formatted_name = if display_name.include?(",")
                          display_name
-                       elsif single_token?(display_name) || collective?(display_name)
+      elsif single_token?(display_name) || collective?(display_name)
                          display_name
-                       else
+      else
                          invert_personal_name(display_name)
-                       end
+      end
 
       return formatted_name if single_token?(display_name) || collective?(display_name)
 

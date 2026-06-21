@@ -115,9 +115,9 @@ module ExternalCatalog
     def find_target_catalog_item!(duplicate:)
       catalog_item = if @catalog_item_id.present?
                        CatalogItem.find(@catalog_item_id)
-                     else
+      else
                        duplicate.catalog_item
-                     end
+      end
       raise ImportError, "Existing catalog item is required for this action." if catalog_item.blank?
 
       catalog_item

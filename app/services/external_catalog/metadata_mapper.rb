@@ -114,9 +114,9 @@ module ExternalCatalog
     def plain_text_description
       synopsis = if @candidate.respond_to?(:synopsis)
                    @candidate.synopsis
-                 else
+      else
                    nil
-                 end
+      end
       HtmlToPlainText.call(synopsis)
     end
 

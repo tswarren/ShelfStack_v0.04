@@ -62,13 +62,13 @@ module ExternalCatalog
       fields.map do |field, (current, proposed)|
         action = if catalog_item.blank?
                    :set
-                 elsif current.blank? && proposed.present?
+        elsif current.blank? && proposed.present?
                    :fill_blank
-                 elsif current.present? && proposed.present? && current.to_s != proposed.to_s
+        elsif current.present? && proposed.present? && current.to_s != proposed.to_s
                    :conflict
-                 else
+        else
                    :unchanged
-                 end
+        end
 
         FieldDiff.new(
           field: field,

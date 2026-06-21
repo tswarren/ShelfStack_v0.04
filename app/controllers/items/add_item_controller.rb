@@ -218,9 +218,9 @@ module Items
 
         notice = if done_commit?
                    "Selling setup saved. Add a sellable SKU when ready."
-                 else
+        else
                    nil
-                 end
+        end
         notice = [ notice, cover_import_message ].compact.join(" ") if cover_import_message.present?
 
         if done_commit?

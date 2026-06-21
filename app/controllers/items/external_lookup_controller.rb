@@ -83,14 +83,14 @@ module Items
 
     def authorize_import_action!(action_type)
       permission = case action_type
-                   when "create_catalog_item" then "items.external_lookup.import"
-                   when "link_existing_catalog_item" then "items.external_lookup.link_existing"
-                   when "fill_blank_existing_catalog_item" then "items.external_lookup.update_existing"
-                   when "skip" then "items.external_lookup.access"
-                   else
+      when "create_catalog_item" then "items.external_lookup.import"
+      when "link_existing_catalog_item" then "items.external_lookup.link_existing"
+      when "fill_blank_existing_catalog_item" then "items.external_lookup.update_existing"
+      when "skip" then "items.external_lookup.access"
+      else
                      redirect_to items_root_path, alert: "Invalid import action."
                      return
-                   end
+      end
 
       authorize!(permission)
     end
