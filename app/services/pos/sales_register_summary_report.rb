@@ -154,11 +154,11 @@ module Pos
     def build_payments(transactions)
       cash_sales = 0
       cash_refunds = 0
-      card_cents = 0
-      check_cents = 0
+      card_total = 0
+      check_total = 0
 
       transactions.each do |transaction|
-        transaction.pos_tenders.each do |tender|
+        transaction.pos_tenders.settlement_rows.each do |tender|
           case tender.tender_type
           when "cash"
             if tender.amount_cents.negative?
@@ -167,19 +167,19 @@ module Pos
               cash_sales += tender.amount_cents
             end
           when "card"
-            card_cents += tender.amount_cents
+            card_total += tender.amount_cents
           when "check"
-            check_cents += tender.amount_cents
+            check_total += tender.amount_cents
           end
         end
       end
 
-      total_paid = cash_sales + cash_refunds + card_cents + check_cents
+      total_paid = cash_sales + cash_refunds + card_total + check_total
       [
         PaymentRow.new(label: "Cash sales", amount_cents: cash_sales),
         PaymentRow.new(label: "Cash refunds", amount_cents: cash_refunds),
-        PaymentRow.new(label: "Card", amount_cents: card_cents),
-        PaymentRow.new(label: "Check", amount_cents: check_cents),
+        PaymentRow.new(label: "Card", amount_cents: card_total),
+        PaymentRow.new(label: "Check", amount_cents: check_total),
         PaymentRow.new(label: "Total paid", amount_cents: total_paid)
       ]
     end

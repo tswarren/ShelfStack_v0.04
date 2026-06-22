@@ -2,17 +2,13 @@
   <%= render "pos/transactions/totals_panel", transaction: transaction %>
 </div>
 
-<% unless pos_pickup_mode? %>
-  <%= render "pos/transactions/pickup_panel", transaction: transaction %>
-<% end %>
-
 <details class="ss-pos-panel ss-pos-adjustments">
-  <summary>Adjustments</summary>
-    <%= form_with model: transaction, url: pos_transaction_path(transaction), method: :patch, class: "ss-form" do |f| %>
-      <%= render "pos/transactions/discount_fields",
-            label: "Transaction discount",
-            cents_value: transaction.discount_cents,
-            id_prefix: "transaction_discount" %>
+  <summary>Discount/Adjustment</summary>
+  <%= form_with model: transaction, url: pos_transaction_path(transaction), method: :patch, class: "ss-form" do |f| %>
+    <%= render "pos/transactions/discount_fields",
+          label: "Transaction discount",
+          cents_value: transaction.discount_cents,
+          id_prefix: "transaction_discount" %>
     <div class="ss-field">
       <%= label_tag :pos_transaction_rounding_dollars, "Cash rounding" %>
       <%= pos_money_field "pos_transaction[rounding_dollars]", transaction.rounding_cents %>
@@ -21,8 +17,8 @@
   <% end %>
 </details>
 
-<div id="pos_tender_panel">
-  <%= render "pos/transactions/tender_panel",
+<div id="pos_settlement_actions">
+  <%= render "pos/transactions/settlement_actions",
         transaction: transaction,
         readiness: readiness,
         inactive_warnings: inactive_warnings %>

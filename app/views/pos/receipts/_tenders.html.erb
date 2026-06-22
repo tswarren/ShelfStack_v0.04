@@ -1,5 +1,5 @@
 <section class="ss-receipt-tenders">
-  <% transaction.pos_tenders.reject(&:reverses_tender_id).each do |tender| %>
+  <% transaction.pos_tenders.settlement_rows.order(:line_number).each do |tender| %>
     <div class="ss-receipt-row">
       <span><%= pos_tender_receipt_label(tender) %></span>
       <strong><%= pos_receipt_money(pos_tender_receipt_amount_cents(tender)) %></strong>

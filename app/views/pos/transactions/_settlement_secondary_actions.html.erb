@@ -1,0 +1,7 @@
+<%# locals: (transaction:, compact: false) %>
+<% btn_class = compact ? "ss-btn ss-btn-secondary ss-btn--small" : "ss-btn ss-btn-secondary" %>
+<% danger_class = compact ? "ss-btn ss-btn--danger ss-btn--small" : "ss-btn ss-btn--danger" %>
+<div class="ss-pos-secondary-actions ss-pos-secondary-actions--inline<%= " ss-pos-secondary-actions--compact" if compact %>">
+  <%= button_to "Suspend", suspend_pos_transaction_path(transaction), method: :patch, class: btn_class %>
+  <%= button_to "Cancel transaction", cancel_pos_transaction_path(transaction), method: :patch, class: danger_class, data: { turbo_confirm: "Cancel this draft?" } %>
+</div>

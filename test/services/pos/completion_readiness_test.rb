@@ -21,7 +21,7 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
   end
 
   test "ready when register open lines present and tenders match" do
-    @transaction.pos_tenders.create!(tender_type: "cash", amount_cents: @transaction.total_cents)
+    create_pos_tender!(@transaction, tender_type: "cash", amount_cents: @transaction.total_cents)
 
     result = Pos::CompletionReadiness.check(
       transaction: @transaction.reload,
@@ -175,6 +175,47 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
 
     assert result.structural_blocked?
     assert result.blockers.any? { |check| check.key == :cash_refund_auth }
+  end
+
+  test "evaluates multi-row settlement preview totals" do
+    card_amount = @transaction.total_cents / 3
+    cash_tendered = @transaction.total_cents - (card_amount * 2)
+
+    result = Pos::CompletionReadiness.check(
+      transaction: @transaction,
+      register_session: @session,
+      tender_inputs: [
+        { tender_type: "card", amount_cents: card_amount, card_brand: "visa" },
+        { tender_type: "card", amount_cents: card_amount, card_brand: "mastercard" },
+        { tender_type: "cash", tendered_cents: cash_tendered }
+      ]
+    )
+
+    assert result.tender_ready?
+    assert result.complete_ready?
+  end
+
+  test "evaluates split refund preview totals" do
+    return_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000 } ]
+    )
+    Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
+    half = return_txn.total_cents.abs / 2
+    remaining = return_txn.total_cents - (-half)
+
+    result = Pos::CompletionReadiness.check(
+      transaction: return_txn,
+      register_session: @session,
+      tender_inputs: [
+        { tender_type: "card", amount_cents: -half, card_brand: "visa" },
+        { tender_type: "cash", amount_cents: remaining }
+      ]
+    )
+
+    assert result.tender_ready?
   end
 
   test "evaluates explicit zero cash tender input on even exchange" do

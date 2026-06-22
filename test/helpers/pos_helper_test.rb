@@ -73,11 +73,43 @@ class PosHelperTest < ActionView::TestCase
     assert_equal 60, subtotals.second.tax_cents
   end
 
-  test "receipt change derives from cash tendered reference" do
+  test "receipt change derives from change_cents column" do
     transaction = PosTransaction.new
-    transaction.pos_tenders.build(tender_type: "cash", amount_cents: 1590, reference_number: "tendered_cents:2000")
+    transaction.pos_tenders.build(
+      tender_type: "cash",
+      amount_cents: 1590,
+      tendered_cents: 2000,
+      change_cents: 410,
+      line_number: 1
+    )
 
     assert_equal 410, pos_receipt_change_cents(transaction)
+  end
+
+  test "receipt change derives from legacy cash tendered reference" do
+    transaction = PosTransaction.new
+    transaction.pos_tenders.build(tender_type: "cash", amount_cents: 1590, reference_number: "tendered_cents:2000", line_number: 1)
+
+    assert_equal 410, pos_receipt_change_cents(transaction)
+  end
+
+  test "receipt label includes card brand and last four" do
+    tender = PosTender.new(tender_type: "card", card_brand: "visa", card_last_four: "1122", amount_cents: 1000, line_number: 1)
+
+    assert_equal "Visa ending 1122", pos_tender_receipt_label(tender)
+  end
+
+  test "receipt label includes check number" do
+    tender = PosTender.new(tender_type: "check", check_number: "5001", amount_cents: 1000, line_number: 1)
+
+    assert_equal "Check #5001", pos_tender_receipt_label(tender)
+  end
+
+  test "settlement row summary includes card brand and amount" do
+    row = PosTender.new(tender_type: "card", card_brand: "visa", card_last_four: "1122", amount_cents: 1000, line_number: 1)
+    transaction = PosTransaction.new(total_cents: 1000)
+
+    assert_equal "Card – Visa 1122 — $10.00", pos_settlement_row_summary(row, transaction)
   end
 
   test "price editable for sale lines and no receipt returns but not receipted returns" do

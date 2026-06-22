@@ -65,12 +65,13 @@ module Pos
     end
 
     def readiness_preview
-      readiness = build_readiness(tender_inputs: params[:tenders])
+      inputs = settlement_inputs
+      readiness = build_readiness(tender_inputs: inputs)
       payload = Pos::ReadinessPreviewResponse.build(
         readiness: readiness,
         transaction: @transaction,
         confirm_inactive: params[:confirm_inactive].present?,
-        tender_inputs: params[:tenders]
+        tender_inputs: inputs
       )
       payload[:panel_html] = render_to_string(
         partial: "pos/transactions/readiness_panel",
@@ -273,10 +274,15 @@ module Pos
     end
 
     def sync_tenders
-      result = Pos::TenderSync.call!(transaction: @transaction, tender_inputs: params[:tenders])
-      notice = [ "Tenders updated.", result.message ].compact.join(" ")
+      result = Pos::SettlementSync.call!(
+        transaction: @transaction,
+        tender_inputs: settlement_inputs,
+        actor: current_user
+      )
+      @transaction.reload
+      notice = [ "Settlement updated.", result.message ].compact.join(" ")
       respond_to_workspace(notice: notice)
-    rescue Pos::TenderSync::Error => e
+    rescue Pos::SettlementSync::Error => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
@@ -287,8 +293,13 @@ module Pos
         return
       end
 
-      if params[:tenders].present?
-        Pos::TenderSync.call!(transaction: @transaction, tender_inputs: params[:tenders])
+      if settlement_inputs.present?
+        Pos::SettlementSync.call!(
+          transaction: @transaction,
+          tender_inputs: settlement_inputs,
+          actor: current_user
+        )
+        @transaction.reload
       end
 
       Pos::CompleteTransaction.call!(
@@ -299,7 +310,7 @@ module Pos
         pos_authorization_id: params[:pos_authorization_id]
       )
       redirect_to pos_transaction_path(@transaction), notice: "Transaction completed."
-    rescue Pos::TenderSync::Error => e
+    rescue Pos::SettlementSync::Error => e
       flash[:complete_error] = e.message
       redirect_to edit_pos_transaction_path(@transaction, confirm_inactive: params[:confirm_inactive])
     rescue StandardError => e
@@ -386,6 +397,10 @@ module Pos
         confirmed_inactive: params[:confirm_inactive].present?,
         pos_authorization_id: params[:pos_authorization_id]
       )
+    end
+
+    def settlement_inputs
+      params[:settlements] || params[:tenders]
     end
 
     def respond_to_workspace(notice: nil, alert: nil, status: :ok)

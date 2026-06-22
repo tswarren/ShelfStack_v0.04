@@ -21,6 +21,52 @@ class Pos::VoidTransactionTest < ActiveSupport::TestCase
     @transaction.reload
   end
 
+  test "void reversal assigns new line_number and copies structured fields" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
+    )
+    Pos::RecalculateTransaction.call!(transaction)
+    Pos::SettlementSync.call!(
+      transaction: transaction,
+      tender_inputs: [
+        {
+          tender_type: "card",
+          amount_dollars: format("%.2f", transaction.total_cents / 100.0),
+          card_brand: "visa",
+          card_last_four: "4242",
+          card_authorization_code: "AUTH1"
+        }
+      ]
+    )
+    Pos::CompleteTransaction.call!(
+      transaction: transaction.reload,
+      completed_by_user: @user,
+      register_session: @register_session,
+      confirmed_inactive: true
+    )
+    original = transaction.pos_tenders.settlement_rows.sole
+
+    authorization = grant_void_authorization!(transaction: transaction, requested_by: @user)
+    Pos::VoidTransaction.call!(
+      transaction: transaction.reload,
+      voided_by_user: @user,
+      register_session: @register_session,
+      reason_code: "cashier_error",
+      pos_authorization: authorization
+    )
+
+    reversal = transaction.pos_tenders.find_by!(reverses_tender_id: original.id)
+    assert_not_equal original.line_number, reversal.line_number
+    assert_equal "visa", reversal.card_brand
+    assert_equal "4242", reversal.card_last_four
+    assert_equal "AUTH1", reversal.card_authorization_code
+    assert_equal(-original.amount_cents, reversal.amount_cents)
+    assert AuditEvent.exists?(event_name: "pos.settlement.void_reversed", auditable: transaction)
+  end
+
   test "void creates pos_void posting and reversing tenders" do
     authorization = grant_void_authorization!(transaction: @transaction, requested_by: @user)
 

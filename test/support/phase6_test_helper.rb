@@ -30,7 +30,7 @@ module Phase6TestHelper
     end
 
     tenders.each do |tender_attrs|
-      transaction.pos_tenders.create!(tender_attrs)
+      transaction.pos_tenders.create!(default_tender_attrs(transaction, tender_attrs))
     end
 
     transaction
@@ -39,12 +39,14 @@ module Phase6TestHelper
   def complete_pos_sale!(transaction:, user:, register_session:, tenders: nil)
     if tenders
       transaction.pos_tenders.destroy_all
-      tenders.each { |attrs| transaction.pos_tenders.create!(attrs) }
+      tenders.each { |attrs| transaction.pos_tenders.create!(default_tender_attrs(transaction, attrs)) }
     end
 
     Pos::RecalculateTransaction.call!(transaction, business_date: register_session.business_date)
     unless transaction.pos_tenders.exists?
-      transaction.pos_tenders.create!(tender_type: "cash", amount_cents: transaction.total_cents)
+      transaction.pos_tenders.create!(
+        default_tender_attrs(transaction, tender_type: "cash", amount_cents: transaction.total_cents)
+      )
     end
 
     Pos::CompleteTransaction.call!(
@@ -131,5 +133,36 @@ module Phase6TestHelper
     )
     complete_pos_sale!(transaction: transaction, user: user, register_session: register_session)
     transaction.reload
+  end
+
+  def create_pos_tender!(transaction, attrs = {})
+    transaction.pos_tenders.create!(default_tender_attrs(transaction, attrs))
+  end
+
+  def grant_no_receipt_return_authorization!(transaction, requested_by: nil, manager: nil)
+    requested_by ||= transaction.cashier_user
+    manager ||= create_user!(username: "no-receipt-manager-#{SecureRandom.hex(4)}", pin: "4321")
+    grant_permission!(manager, "pos.authorizations.grant", store: transaction.store)
+
+    Pos::AuthorizationRequest.grant!(
+      authorization_type: "no_receipt_return",
+      requested_by: requested_by,
+      manager_username: manager.username,
+      manager_pin: "4321",
+      store: transaction.store,
+      pos_transaction: transaction
+    )
+  end
+
+  def default_tender_attrs(transaction, attrs)
+    attrs = attrs.symbolize_keys
+    line_number = attrs[:line_number] || PosTender.next_line_number_for(transaction)
+    card_brand = if attrs[:tender_type] == "card"
+      attrs[:card_brand] || "other"
+    else
+      attrs[:card_brand]
+    end
+
+    attrs.merge(line_number: line_number, card_brand: card_brand).compact
   end
 end

@@ -16,7 +16,7 @@
       <div><dt>Rounding</dt><dd><%= pos_money(transaction.rounding_cents) %></dd></div>
     <% end %>
     <div class="ss-pos-totals-list__total"><dt>Total due</dt><dd><%= pos_money(transaction.total_cents) %></dd></div>
-    <% transaction.pos_tenders.reject(&:reverses_tender_id).each do |tender| %>
+    <% transaction.pos_tenders.settlement_rows.order(:line_number).each do |tender| %>
       <div><dt><%= pos_tender_receipt_label(tender) %></dt><dd><%= pos_money(pos_tender_receipt_amount_cents(tender)) %></dd></div>
       <% if tender.tender_type == "cash" && tender.amount_cents != pos_tender_receipt_amount_cents(tender) %>
         <div><dt>Cash applied</dt><dd><%= pos_money(tender.amount_cents) %></dd></div>

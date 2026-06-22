@@ -72,7 +72,7 @@ class Pos::SalesRevenueSummaryReportTest < ActiveSupport::TestCase
       } ]
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
-    return_txn.pos_tenders.create!(tender_type: "cash", amount_cents: return_txn.total_cents)
+    create_pos_tender!(return_txn, tender_type: "cash", amount_cents: return_txn.total_cents)
     Pos::CompleteTransaction.call!(
       transaction: return_txn.reload,
       completed_by_user: @manager,

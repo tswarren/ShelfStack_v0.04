@@ -50,6 +50,46 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
     assert_equal 0, report.exceptions.void_count
   end
 
+  test "summarizes card and check payments by tender type" do
+    sale = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      lines: [ {
+        product_variant: @variant,
+        quantity: 1,
+        unit_price_cents: 2000,
+        extended_price_cents: 2000
+      } ]
+    )
+    Pos::RecalculateTransaction.call!(sale, business_date: @session.business_date)
+    third = sale.total_cents / 3
+    remainder = sale.total_cents - (third * 2)
+    Pos::SettlementSync.call!(
+      transaction: sale,
+      tender_inputs: [
+        { tender_type: "card", amount_cents: third, card_brand: "visa" },
+        { tender_type: "card", amount_cents: third, card_brand: "mastercard" },
+        { tender_type: "check", amount_cents: remainder, check_number: "1001" }
+      ]
+    )
+    Pos::CompleteTransaction.call!(
+      transaction: sale.reload,
+      completed_by_user: @cashier,
+      register_session: @session,
+      confirmed_inactive: true
+    )
+
+    report = Pos::SalesRegisterSummaryReport.call(scope: @scope)
+    card_row = report.payments.find { |row| row.label == "Card" }
+    check_row = report.payments.find { |row| row.label == "Check" }
+
+    assert_equal third * 2, card_row.amount_cents
+    assert_equal remainder, check_row.amount_cents
+    refute report.payments.any? { |row| row.label.start_with?("Card —") }
+    refute report.payments.any? { |row| row.label.start_with?("Check #") }
+  end
+
   test "requires register session scope" do
     scope = Pos::ReportScope.new(
       type: :business_date,

@@ -42,7 +42,7 @@ Completed transactions must satisfy this before completion.
 - Preserved through suspend/resume
 - Draft deletes may renumber remaining rows
 - Completed transactions never renumber
-- Void reversal rows reference original ordering (copy `line_number` or link via `reverses_tender_id`)
+- Void reversal rows get a **new** `line_number` (unique per transaction); link to the original via `reverses_tender_id` (do not copy `line_number`)
 
 ---
 
