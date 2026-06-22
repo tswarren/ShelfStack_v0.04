@@ -221,7 +221,7 @@ Assign roles in Setup → Users. Managers granting authorizations need `pos.auth
 
 ### Customer pickup (Phase 7A)
 
-- Use **Customer pickup** on the POS home screen or the **Customer pickup** panel on the transaction sidebar.
+- Use the **Customer pickup** panel on the transaction sidebar (or scan a ready SKU and choose **Pickup for [Customer]**).
 - Search by customer name or request number; select a ready reservation to add a pickup line.
 - Scanning a SKU with ready reservations offers **Pickup for [Customer]** choice cards.
 - Selling into reserved stock without a pickup line requires manager override (`sell_reserved_stock_override`).
