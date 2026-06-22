@@ -93,16 +93,17 @@ export default class extends Controller {
   fillRemaining(event) {
     event.preventDefault()
     const tenderType = event.currentTarget.dataset.tenderType
-    if (!tenderType) return
+    const row = event.currentTarget.closest("[data-settlement-row]")
+    if (!tenderType || !row) return
 
     const totalCents = this.totalCentsValue
     if (Number.isNaN(totalCents)) return
 
     let otherTotal = 0
-    this.visibleRows().forEach((row) => {
-      if (row.dataset.settlementType === tenderType) return
+    this.visibleRows().forEach((visibleRow) => {
+      if (visibleRow === row) return
 
-      otherTotal += this.rowAmountCents(row)
+      otherTotal += this.rowAmountCents(visibleRow)
     })
 
     let displayCents
@@ -117,12 +118,8 @@ export default class extends Controller {
 
     displayCents = Math.max(0, displayCents)
 
-    const row = event.currentTarget.closest("[data-settlement-row]")
-    if (row) {
-      this.setRowAmountCents(row, displayCents)
-      this.collapseRowIfReady(row)
-    }
-
+    this.setRowAmountCents(row, displayCents)
+    this.collapseRowIfReady(row)
     this.update()
   }
 
