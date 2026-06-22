@@ -401,8 +401,10 @@ No required POS transaction seed data for Phase 6.
 Do not add in Phase 6:
 
 ```text
-gift_card_accounts
-store_credit_accounts
+gift_card_accounts      (superseded by Phase 7B stored_value_accounts)
+store_credit_accounts   (superseded by Phase 7B stored_value_accounts)
 sale_taxes (normalized tax rows — tax on lines sufficient for Phase 6)
 offline_pos_sync_queues
 ```
+
+See [phase-7b-data-model.md](phase-7b-data-model.md) for the canonical stored value schema.

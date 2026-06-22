@@ -318,18 +318,29 @@ For every new table, confirm:
 
 # Deferred Schema Areas
 
-These are expected future schema areas (beyond Phase 6):
+These are expected future schema areas (beyond implemented phases):
 
 ```text
 inventory_location_balances
 inventory_location_movements
 inventory_transfers
 inventory_transfer_lines
-inventory_reservations
-gift_card_accounts
-store_credit_accounts
 cycle_counts
 ```
+
+**Superseded future-table language:** Phase 6 docs referenced separate `gift_card_accounts` and `store_credit_accounts`. Phase 7B replaces these with the canonical stored value model below.
+
+Phase 7B tables (planned — not yet implemented):
+
+```text
+stored_value_reason_codes
+stored_value_accounts
+stored_value_identifiers
+stored_value_ledger_entries
+stored_value_transfers
+```
+
+Phase 7B also extends `pos_tenders` with settlement and stored-value linkage columns. See [phase-7b-data-model.md](specifications/phase-7b-data-model.md).
 
 Phase 7A tables (implemented):
 

@@ -127,6 +127,19 @@ docs/specifications/phase-7a-data-model.md
 docs/specifications/phase-7a-test-plan.md
 ```
 
+## Phase 7B Documents
+
+```text
+docs/roadmap/phase-7b-customer-credit-foundation.md
+docs/roadmap/phase-7b-1-pos-settlement-foundation.md
+docs/roadmap/phase-7b-2-stored-value-foundation.md
+docs/roadmap/phase-7b-3-pos-stored-value-integration.md
+docs/specifications/phase-7b-pos-settlement-spec.md
+docs/specifications/phase-7b-stored-value-spec.md
+docs/specifications/phase-7b-data-model.md
+docs/specifications/phase-7b-test-plan.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -165,11 +178,17 @@ Phase 6 was completed on 2026-06-10. See [docs/implementation/phase-6-completion
 
 Phase 6.5 was completed on 2026-06-21. ISBNdb local-first lookup, Add Item wizard integration, and controlled import.
 
-## Phase 7A: Customer Demand — **Implemented (UX/QA pending)**
+## Phase 7A: Customer Demand — **Complete**
 
-Phase 7A core workflows were implemented on 2026-06-21. Correctness and bookseller UX polish remain in progress. See [docs/implementation/phase-7a-completion.md](docs/implementation/phase-7a-completion.md).
+Phase 7A was completed on 2026-06-21. See [docs/implementation/phase-7a-completion.md](docs/implementation/phase-7a-completion.md).
 
-Do not jump ahead to gift-card/store-credit ledgers, offline POS, or full GL unless explicitly requested.
+## Phase 7B: Customer Credit Foundation — **Active**
+
+Phase 7B is the current development priority. Implement in order: **7B-1** POS settlement, **7B-2** stored value ledger, **7B-3** POS integration. See [docs/roadmap/phase-7b-customer-credit-foundation.md](docs/roadmap/phase-7b-customer-credit-foundation.md).
+
+The canonical stored value model (`stored_value_*` tables) supersedes earlier `gift_card_accounts` / `store_credit_accounts` future-table language. Do not implement separate account tables.
+
+Do not jump ahead to offline POS or full GL unless explicitly requested. Store credit and gift-card POS tenders are in scope for 7B-3 only after 7B-1 and 7B-2.
 
 ---
 
@@ -531,6 +550,18 @@ product_variants.sub_department_id → sub_departments.id
 * Pickup POS lines require `inventory_reservation_id`; validate consistent demand chain FKs.
 * Partial receipt: FIFO allocation to PO line allocations; partial pickup/void/cancel per spec.
 * Header status derived via `CustomerRequests::HeaderStatusResolver`; manual override limited to terminal statuses.
+
+## Phase 7B Rules (planned — see phase 7B specs)
+
+* Implement in order: 7B-1 settlement → 7B-2 stored value ledger → 7B-3 POS integration.
+* Multiple `pos_tender` rows per transaction; one cash row only; `sum(amount_cents) == total_cents`.
+* Cash drawer math uses `amount_cents`, not `tendered_cents`; migrate legacy `reference_number` tendered hack.
+* Check refunds out of scope for 7B-1; check payments only.
+* Stored value: append-only ledger; `stored_value_*` supersedes `gift_card_accounts` / `store_credit_accounts`.
+* Negative stored value balances not allowed; account row locked on redeem/issue.
+* `store_credit` / `gift_card` POS tenders enabled in 7B-3 only with `stored_value_account_id` and ledger posting on completion.
+* POS void reverses stored value ledger entries via `reverses_entry_id`; do not mutate originals.
+* Liability reporting is operational only — no GL export in 7B.
 
 ---
 
