@@ -15,6 +15,8 @@ module CustomerRequests
       provisional_identifier provisional_format notes status _destroy
     ].freeze
 
+    LINE_BUILD_KEYS = (LINE_PERMITTED - %i[id _destroy]).freeze
+
     def self.call!(store:, created_by_user:, params:)
       new(store:, created_by_user:, params:).call!
     end
@@ -51,7 +53,12 @@ module CustomerRequests
       return [] if lines_param.blank?
 
       values = lines_param.respond_to?(:to_unsafe_h) ? lines_param.to_unsafe_h.values : lines_param.values
-      values.map { |line| line.to_h.symbolize_keys }
+      values.filter_map do |line|
+        attrs = line.to_h.symbolize_keys
+        next if ActiveModel::Type::Boolean.new.cast(attrs[:_destroy])
+
+        attrs.slice(*LINE_BUILD_KEYS)
+      end
     end
   end
 end
