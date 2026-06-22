@@ -47,15 +47,17 @@ export default class extends Controller {
   refreshReadiness() {
     if (!this.hasReadinessUrlValue) return
 
-    const fields = this.tenderAmountFields()
-    if (fields.length === 0) return
-
     const body = new FormData()
-    fields.forEach((field) => {
-      const row = field.closest("[data-tender-type]")
-      body.append("tenders[][amount_dollars]", field.value || "0")
-      body.append("tenders[][tender_type]", row?.dataset.tenderType || "cash")
-    })
+    if (!this.appendSettlementInputs(body)) {
+      const fields = this.tenderAmountFields()
+      if (fields.length === 0) return
+
+      fields.forEach((field) => {
+        const row = field.closest("[data-tender-type]")
+        body.append("tenders[][amount_dollars]", field.value || "0")
+        body.append("tenders[][tender_type]", row?.dataset.tenderType || "cash")
+      })
+    }
 
     if (this.hasAuthorizationIdTarget && this.authorizationIdTarget.value) {
       body.append("pos_authorization_id", this.authorizationIdTarget.value)
@@ -244,6 +246,30 @@ export default class extends Controller {
 
   formatMoney(cents) {
     return `$${(cents / 100).toFixed(2)}`
+  }
+
+  appendSettlementInputs(body) {
+    const panel = document.getElementById("pos_tender_panel")
+    if (!panel) return false
+
+    const rows = panel.querySelectorAll("[data-settlement-row]")
+    if (rows.length === 0) return false
+
+    rows.forEach((row) => {
+      if (row.dataset.destroyed === "true" || row.hidden) {
+        body.append("settlements[][id]", row.dataset.rowId || "")
+        body.append("settlements[][_destroy]", "1")
+        body.append("settlements[][tender_type]", row.dataset.settlementType || "")
+        return
+      }
+
+      row.querySelectorAll("input, select, textarea").forEach((field) => {
+        if (!field.name || field.disabled) return
+        body.append(field.name, field.value || "")
+      })
+    })
+
+    return true
   }
 
   get csrfToken() {

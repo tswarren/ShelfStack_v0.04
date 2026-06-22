@@ -267,6 +267,14 @@ module PosHelper
     PosTender::PHASE6_ALLOWED_TYPES.map { |value| [ value.humanize, value ] }
   end
 
+  def pos_card_brand_options
+    PosTender::CARD_BRANDS.map { |brand| [ brand.humanize, brand ] }
+  end
+
+  def pos_settlement_row_type_label(tender_type, transaction)
+    pos_tender_field_label(tender_type, transaction)
+  end
+
   def pos_line_gross_cents(line)
     line.unit_price_cents * line.quantity.abs
   end
@@ -333,26 +341,46 @@ module PosHelper
   end
 
   def pos_receipt_change_cents(transaction)
-    cash_tender = transaction.pos_tenders.find { |tender| tender.tender_type == "cash" }
-    return 0 if cash_tender.blank?
+    pos_settlement_tenders(transaction).sum(&:change_display_cents)
+  end
 
-    tendered = Pos::TenderSync.tendered_cents_for(cash_tender)
-    return 0 unless tendered > cash_tender.amount_cents
-
-    tendered - cash_tender.amount_cents
+  def pos_settlement_tenders(transaction)
+    if transaction.persisted?
+      transaction.pos_tenders.settlement_rows
+    else
+      transaction.pos_tenders.reject(&:reverses_tender_id)
+    end
   end
 
   def pos_tender_receipt_label(tender)
-    tendered = Pos::TenderSync.tendered_cents_for(tender)
-    if tender.tender_type == "cash" && tendered > tender.amount_cents
-      "Cash tendered"
+    case tender.tender_type
+    when "card"
+      brand = tender.card_brand.to_s.humanize
+      if tender.card_last_four.present?
+        "#{brand} ending #{tender.card_last_four}"
+      else
+        brand
+      end
+    when "check"
+      if tender.check_number.present?
+        "Check ##{tender.check_number}"
+      else
+        "Check"
+      end
+    when "cash"
+      tendered = tender.tendered_display_cents
+      if tendered > tender.amount_cents
+        "Cash tendered"
+      else
+        "Cash"
+      end
     else
       tender.tender_type.humanize
     end
   end
 
   def pos_tender_receipt_amount_cents(tender)
-    tendered = Pos::TenderSync.tendered_cents_for(tender)
+    tendered = tender.tendered_display_cents
     if tender.tender_type == "cash" && tendered > tender.amount_cents
       tendered
     else

@@ -1,0 +1,84 @@
+<% confirm_inactive = params[:confirm_inactive].present? %>
+<% complete_label = pos_complete_button_label(transaction, confirm_inactive: confirm_inactive && inactive_warnings.any?) %>
+<% settlement_rows = transaction.pos_tenders.settlement_rows.order(:line_number) %>
+<% refund = transaction.total_cents.to_i.negative? %>
+
+<section class="ss-pos-panel ss-pos-settlement-panel"
+         data-controller="pos-settlement-panel"
+         data-pos-settlement-panel-total-cents-value="<%= transaction.total_cents %>"
+         data-pos-settlement-panel-refund-value="<%= refund %>">
+  <% complete_params = {} %>
+  <% complete_params[:confirm_inactive] = 1 if confirm_inactive %>
+  <%= form_with url: complete_pos_transaction_path(transaction, complete_params), method: :patch, class: "ss-form ss-pos-settlement-form", data: {
+        controller: "pos-transaction-edit",
+        action: "input->pos-settlement-panel#update change->pos-settlement-panel#update"
+      } do %>
+    <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
+    <%= hidden_field_tag :confirm_inactive, 1, data: { pos_transaction_edit_target: "confirmInactiveField" }, disabled: !confirm_inactive, id: nil %>
+
+    <h2 class="ss-pos-panel__title">Settlement</h2>
+
+    <table class="ss-pos-settlement-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th colspan="2">Details</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody data-pos-settlement-panel-target="rows">
+        <% if settlement_rows.any? %>
+          <% settlement_rows.each_with_index do |row, index| %>
+            <%= render "pos/transactions/settlement_row", row: row, transaction: transaction, row_index: index %>
+          <% end %>
+        <% else %>
+          <tr class="ss-pos-settlement-empty" data-pos-settlement-panel-target="emptyRow">
+            <td colspan="4">No settlement rows yet. Add cash, card, or check.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <template data-pos-settlement-panel-target="cardTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "card", card_brand: "other", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE" %>
+    </template>
+
+    <template data-pos-settlement-panel-target="checkTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "check", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE" %>
+    </template>
+
+    <template data-pos-settlement-panel-target="cashTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "cash", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE" %>
+    </template>
+
+    <div class="ss-pos-settlement-add-actions">
+      <%= button_tag "Add Cash", type: "button", class: "ss-btn ss-btn-secondary ss-btn--small",
+            data: { action: "pos-settlement-panel#addCash" } %>
+      <%= button_tag "Add Card", type: "button", class: "ss-btn ss-btn-secondary ss-btn--small",
+            data: { action: "pos-settlement-panel#addCard" } %>
+      <%= button_tag "Add Check", type: "button", class: "ss-btn ss-btn-secondary ss-btn--small",
+            data: { action: "pos-settlement-panel#addCheck" } %>
+    </div>
+
+    <p class="ss-hint" data-pos-settlement-panel-target="remainingHint" hidden></p>
+    <p class="ss-hint ss-pos-change-hint" data-pos-settlement-panel-target="changeHint" hidden></p>
+
+    <div class="ss-pos-tender-actions">
+      <%= submit_tag complete_label, class: "ss-btn ss-pos-complete-btn", disabled: !readiness.complete_ready?, data: { pos_transaction_edit_target: "completeButton" } %>
+    </div>
+  <% end %>
+
+  <div class="ss-pos-secondary-actions">
+    <%= button_to "Suspend", suspend_pos_transaction_path(transaction), method: :patch, class: "ss-btn ss-btn-secondary" %>
+    <%= button_to "Cancel", cancel_pos_transaction_path(transaction), method: :patch, class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Cancel this draft?" } %>
+  </div>
+</section>

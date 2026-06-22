@@ -715,12 +715,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
 
   create_table "pos_tenders", force: :cascade do |t|
     t.integer "amount_cents", null: false
+    t.string "card_authorization_code"
+    t.string "card_brand"
+    t.string "card_last_four"
+    t.integer "change_cents"
+    t.string "check_number"
     t.datetime "created_at", null: false
+    t.integer "line_number", null: false
+    t.text "notes"
     t.bigint "pos_transaction_id", null: false
     t.string "reference_number"
     t.bigint "reverses_tender_id"
     t.string "tender_type", null: false
+    t.integer "tendered_cents"
     t.datetime "updated_at", null: false
+    t.index ["pos_transaction_id", "line_number"], name: "index_pos_tenders_on_pos_transaction_id_and_line_number", unique: true
     t.index ["pos_transaction_id"], name: "index_pos_tenders_on_pos_transaction_id"
     t.index ["reverses_tender_id"], name: "index_pos_tenders_on_reverses_tender_id"
   end

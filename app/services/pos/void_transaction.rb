@@ -86,15 +86,35 @@ module Pos
     end
 
     def reverse_tenders!(pos_void)
-      transaction.pos_tenders.where(reverses_tender_id: nil).find_each do |tender|
+      reversed_count = 0
+
+      transaction.pos_tenders.settlement_rows.includes(:reversed_by_tender).find_each do |tender|
+        next if tender.reversed_by_tender.present?
+
         PosTender.create!(
           pos_transaction: transaction,
+          line_number: PosTender.next_line_number_for(transaction),
           tender_type: tender.tender_type,
           amount_cents: -tender.amount_cents,
-          reference_number: tender.reference_number,
+          card_brand: tender.card_brand,
+          card_last_four: tender.card_last_four,
+          card_authorization_code: tender.card_authorization_code,
+          check_number: tender.check_number,
+          notes: tender.notes,
           reverses_tender: tender
         )
+        reversed_count += 1
       end
+
+      return unless reversed_count.positive?
+
+      AuditEvents.record!(
+        actor: voided_by_user,
+        event_name: "pos.settlement.void_reversed",
+        auditable: transaction,
+        source: pos_void,
+        details: { "reversal_count" => reversed_count }
+      )
     end
   end
 end

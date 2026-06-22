@@ -25,7 +25,7 @@ class Pos::TenderValidatorTest < ActiveSupport::TestCase
 
   test "rejects store credit in phase 6" do
     @transaction.pos_tenders.destroy_all
-    @transaction.pos_tenders.create!(tender_type: "store_credit", amount_cents: 1000)
+    @transaction.pos_tenders.create!(tender_type: "store_credit", amount_cents: 1000, line_number: 1)
 
     error = assert_raises(Pos::TenderValidator::Error) { Pos::TenderValidator.validate!(@transaction) }
     assert_match(/store_credit/, error.message)
@@ -33,7 +33,7 @@ class Pos::TenderValidatorTest < ActiveSupport::TestCase
 
   test "rejects tender total mismatch" do
     @transaction.pos_tenders.destroy_all
-    @transaction.pos_tenders.create!(tender_type: "cash", amount_cents: 900)
+    @transaction.pos_tenders.create!(tender_type: "cash", amount_cents: 900, line_number: 1)
 
     error = assert_raises(Pos::TenderValidator::Error) { Pos::TenderValidator.validate!(@transaction) }
     assert_match(/does not match transaction total/i, error.message)

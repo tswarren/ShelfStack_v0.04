@@ -16,7 +16,7 @@
      data-controller="pos-transaction-edit pos-cart-line"
      data-pos-transaction-edit-readiness-url-value="<%= readiness_preview_pos_transaction_path(@transaction) %>"
      data-pos-transaction-edit-transaction-id-value="<%= @transaction.id %>"
-     data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange">
+     data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange pos:settlement-updated@document->pos-transaction-edit#updateChange">
   <div class="ss-pos-layout__main">
     <%= render "pos/transactions/command_bar",
           transaction: @transaction,

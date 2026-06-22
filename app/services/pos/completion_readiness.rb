@@ -270,91 +270,57 @@ module Pos
 
     def effective_tender_total_cents
       if tender_inputs.blank?
-        return transaction.pos_tenders.sum(&:amount_cents) if transaction.pos_tenders.any?
+        return transaction.pos_tenders.settlement_rows.sum(&:amount_cents) if transaction.pos_tenders.settlement_rows.any?
 
         return nil if transaction.total_cents.nonzero?
 
         return 0
       end
 
-      parsed = parse_tender_inputs
-      return nil if parsed.empty? && transaction.total_cents.nonzero?
+      parsed = SettlementInputParser.parse(transaction:, raw_inputs: tender_inputs)
+      return nil if parsed.reject(&:destroy).empty? && transaction.total_cents.nonzero?
 
       total_cents = transaction.total_cents
+      active = parsed.reject(&:destroy)
       if total_cents.positive?
-        preview_sale_tender_total(parsed, total_cents)
+        SettlementSync.preview_sale_totals(transaction, active)
       elsif total_cents.negative?
-        parsed.sum { |t| t[:amount_cents] }
+        active.sum(&:amount_cents)
       else
-        parsed.sum { |t| t[:amount_cents] }
+        active.sum(&:amount_cents)
       end
-    end
-
-    def preview_sale_tender_total(parsed, total_cents)
-      non_cash = parsed.reject { |t| t[:tender_type] == "cash" }
-      cash = parsed.find { |t| t[:tender_type] == "cash" }
-      non_cash_sum = non_cash.sum { |t| t[:amount_cents] }
-      return nil if non_cash_sum > total_cents
-
-      remaining = total_cents - non_cash_sum
-      return total_cents if remaining.zero?
-      return nil if cash.blank?
-      return nil if cash[:amount_cents] < remaining
-
-      total_cents
     end
 
     def effective_cash_tender_cents
       if tender_inputs.present?
-        cash = parse_tender_inputs.find { |t| t[:tender_type] == "cash" }
+        parsed = SettlementInputParser.parse(transaction:, raw_inputs: tender_inputs)
+        cash = parsed.reject(&:destroy).find { |row| row.tender_type == "cash" }
         return nil if cash.blank?
 
         if transaction.total_cents.negative?
-          cash[:amount_cents]
+          cash.amount_cents
         else
-          non_cash_sum = parse_tender_inputs.reject { |t| t[:tender_type] == "cash" }.sum { |t| t[:amount_cents] }
+          non_cash_sum = parsed.reject(&:destroy).reject { |row| row.tender_type == "cash" }.sum(&:amount_cents)
           remaining = transaction.total_cents - non_cash_sum
           if remaining.positive?
-            [ cash[:amount_cents], remaining ].min
+            [ cash.tendered_cents || cash.amount_cents, remaining ].min
           else
-            cash[:amount_cents]
+            cash.tendered_cents || cash.amount_cents
           end
         end
       else
-        transaction.pos_tenders.find { |t| t.tender_type == "cash" }&.amount_cents
+        transaction.pos_tenders.settlement_rows.find { |t| t.tender_type == "cash" }&.amount_cents
       end
     end
 
     def parse_tender_inputs
-      Array(tender_inputs).filter_map do |attrs|
-        amount_cents = if attrs[:amount_dollars].present?
-          (BigDecimal(attrs[:amount_dollars].to_s) * 100).round.to_i
-        else
-          attrs[:amount_cents].to_i
-        end
-
-        next if amount_cents.zero? && !zero_total_tender_input?(attrs, amount_cents)
-
-        amount_cents = normalize_refund_amount_cents(amount_cents)
-
-        {
-          tender_type: attrs[:tender_type],
-          amount_cents: amount_cents
-        }
+      SettlementInputParser.parse(transaction:, raw_inputs: tender_inputs).map do |row|
+        { tender_type: row.tender_type, amount_cents: row.amount_cents }
       end
     end
 
     def normalize_refund_amount_cents(amount_cents)
-      return amount_cents unless transaction.total_cents.negative?
-      return amount_cents if amount_cents.negative?
-
-      -amount_cents.abs
-    end
-
-    def zero_total_tender_input?(attrs, amount_cents)
-      transaction.total_cents.zero? &&
-        amount_cents.zero? &&
-        (attrs[:amount_dollars].present? || attrs.key?(:amount_cents))
+      SettlementInputParser.normalize_refund_amount_cents(transaction, amount_cents)
     end
 
     def authorization_valid?(authorization_type)

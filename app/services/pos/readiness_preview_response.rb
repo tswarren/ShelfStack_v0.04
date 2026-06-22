@@ -67,42 +67,23 @@ module Pos
 
     def tender_amounts
       total = transaction.total_cents
-      parsed = parse_tender_inputs
+      parsed = SettlementInputParser.parse(transaction:, raw_inputs: tender_inputs).reject(&:destroy)
 
       if total.positive?
-        non_cash = parsed.reject { |t| t[:tender_type] == "cash" }
-        cash = parsed.find { |t| t[:tender_type] == "cash" }
-        non_cash_sum = non_cash.sum { |t| t[:amount_cents] }
+        non_cash = parsed.reject { |row| row.tender_type == "cash" }
+        cash = parsed.find { |row| row.tender_type == "cash" }
+        non_cash_sum = non_cash.sum(&:amount_cents)
         remaining = total - non_cash_sum
-        cash_tendered = cash&.dig(:amount_cents).to_i
+        cash_tendered = cash&.tendered_cents || cash&.amount_cents.to_i
         change = cash_tendered.positive? ? [ cash_tendered - remaining, 0 ].max : 0
         still_due = remaining.positive? ? [ remaining - cash_tendered, 0 ].max : 0
         [ change, still_due ]
       elsif total.negative?
-        tender_total = parsed.sum { |t| t[:amount_cents] }
+        tender_total = parsed.sum(&:amount_cents)
         still_due = (total - tender_total).abs
         [ 0, still_due ]
       else
         [ 0, 0 ]
-      end
-    end
-
-    def parse_tender_inputs
-      Array(tender_inputs).filter_map do |attrs|
-        amount_cents = if attrs[:amount_dollars].present?
-          (BigDecimal(attrs[:amount_dollars].to_s) * 100).round.to_i
-        else
-          attrs[:amount_cents].to_i
-        end
-
-        next if amount_cents.zero?
-
-        amount_cents = TenderSync.normalize_refund_amount_cents(transaction, amount_cents)
-
-        {
-          tender_type: attrs[:tender_type],
-          amount_cents: amount_cents
-        }
       end
     end
   end

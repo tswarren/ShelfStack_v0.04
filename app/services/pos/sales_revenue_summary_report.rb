@@ -182,18 +182,35 @@ module Pos
 
     def build_tender_rows(transactions)
       totals = Hash.new(0)
+      card_by_brand = Hash.new(0)
+
       transactions.each do |transaction|
-        transaction.pos_tenders.each do |tender|
+        transaction.pos_tenders.settlement_rows.each do |tender|
           totals[tender.tender_type] += tender.amount_cents
+          if tender.tender_type == "card"
+            brand = tender.card_brand.presence || "other"
+            card_by_brand[brand] += tender.amount_cents
+          end
         end
       end
 
-      rows = TENDER_ORDER.map do |tender_type|
-        TenderRow.new(
-          tender_type: tender_type,
-          label: TENDER_LABELS.fetch(tender_type),
-          amount_cents: totals[tender_type]
-        )
+      rows = []
+      TENDER_ORDER.each do |tender_type|
+        if tender_type == "card"
+          card_by_brand.sort.each do |brand, amount_cents|
+            rows << TenderRow.new(
+              tender_type: "card",
+              label: "Card — #{brand.humanize}",
+              amount_cents: amount_cents
+            )
+          end
+        else
+          rows << TenderRow.new(
+            tender_type: tender_type,
+            label: TENDER_LABELS.fetch(tender_type),
+            amount_cents: totals[tender_type]
+          )
+        end
       end
 
       rows << TenderRow.new(
