@@ -2,7 +2,7 @@
 
 module Inventory
   class BalanceIntegrityCheck
-    Mismatch = Data.define(:store_id, :product_variant_id, :cached_on_hand, :ledger_on_hand)
+    Mismatch = Data.define(:store_id, :product_variant_id, :cached_on_hand, :ledger_on_hand, :kind, :expected, :actual)
 
     def self.call(actor: nil)
       new(actor:).call
@@ -24,7 +24,10 @@ module Inventory
           store_id: row.store_id,
           product_variant_id: row.product_variant_id,
           cached_on_hand: cached,
-          ledger_on_hand: ledger
+          ledger_on_hand: ledger,
+          kind: "on_hand",
+          expected: ledger,
+          actual: cached
         )
       end
 
@@ -35,8 +38,19 @@ module Inventory
           store_id: balance.store_id,
           product_variant_id: balance.product_variant_id,
           cached_on_hand: balance.quantity_on_hand,
-          ledger_on_hand: 0
+          ledger_on_hand: 0,
+          kind: "on_hand",
+          expected: 0,
+          actual: balance.quantity_on_hand
         )
+
+        check_reserved_and_available!(balance, mismatches)
+      end
+
+      InventoryBalance.find_each do |balance|
+        next unless ledger_sums_map.key?([ balance.store_id, balance.product_variant_id ])
+
+        check_reserved_and_available!(balance, mismatches)
       end
 
       if (audit_actor = actor || User.find_by(username: ShelfStack::SYSTEM_USERNAME))
@@ -68,6 +82,36 @@ module Inventory
 
     def ledger_sums_map
       @ledger_sums_map ||= ledger_sums.index_by { |row| [ row.store_id, row.product_variant_id ] }
+    end
+
+    def check_reserved_and_available!(balance, mismatches)
+      expected_reserved = InventoryReservation.active_on_hand
+                                                .where(store: balance.store, product_variant: balance.product_variant)
+                                                .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+      if balance.quantity_reserved != expected_reserved
+        mismatches << Mismatch.new(
+          store_id: balance.store_id,
+          product_variant_id: balance.product_variant_id,
+          cached_on_hand: balance.quantity_on_hand,
+          ledger_on_hand: expected_reserved,
+          kind: "reserved",
+          expected: expected_reserved,
+          actual: balance.quantity_reserved
+        )
+      end
+
+      expected_available = balance.quantity_on_hand - balance.quantity_reserved
+      return if balance.quantity_available == expected_available
+
+      mismatches << Mismatch.new(
+        store_id: balance.store_id,
+        product_variant_id: balance.product_variant_id,
+        cached_on_hand: balance.quantity_on_hand,
+        ledger_on_hand: expected_available,
+        kind: "available",
+        expected: expected_available,
+        actual: balance.quantity_available
+      )
     end
   end
 end

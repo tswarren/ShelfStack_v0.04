@@ -3,17 +3,26 @@
            title: "Identify by ISBN",
            description: "Scan or enter an ISBN to search local catalog records and ISBNdb." %>
 
+<%= render "items/add_item/match_context" %>
+
 <% if @local_catalog_item.present? %>
   <div class="ss-notice ss-notice--info">
     <p><strong>Local match found:</strong> <%= @local_catalog_item.title %></p>
     <p>
       <%= link_to "Continue with this catalog item", items_add_item_path(step: "item_details"), class: "ss-btn ss-btn-secondary" %>
       <%= link_to "View catalog item", items_catalog_item_path(@local_catalog_item), class: "ss-btn ss-btn-secondary" %>
+      <% if @match_context&.valid? && @local_match_variant.present? %>
+        <%= button_to "Match existing variant to request",
+              match_variant_customers_customer_request_path(@match_context.request_record, line_id: @match_context.line_id, product_variant_id: @local_match_variant.id),
+              method: :post,
+              class: "ss-btn ss-btn-secondary" %>
+      <% end %>
     </p>
   </div>
 <% end %>
 
 <%= form_with url: items_external_lookup_path, method: :post, class: "ss-form ss-form--standard" do %>
+  <%= render "shared/request_match_params_fields", context: @match_context if @match_context&.active? %>
   <%= render layout: "shared/forms/section", locals: { title: "ISBN Lookup" } do %>
     <div class="ss-field">
       <%= label_tag :isbn, "ISBN" %>
@@ -25,6 +34,6 @@
     <%= submit_tag "Continue", class: "ss-btn" %>
     <%= link_to "Enter details manually", items_add_item_path(step: "item_details"), class: "ss-btn ss-btn-secondary" %>
     <%= link_to "Back", items_add_item_path(step: "choose_path"), class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", add_item_cancel_path, class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>

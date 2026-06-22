@@ -1,0 +1,48 @@
+<%# locals: line_card: %>
+<% line = line_card.line %>
+<% action = line_card.next_action %>
+<section id="line-<%= line.id %>" class="ss-line-card">
+  <%= render "next_action_strip", action: action, line_card: line_card %>
+
+  <header class="ss-line-card__header">
+    <div>
+      <h3 class="ss-line-card__title">
+        Line <%= line.line_number %> — <%= line_card.item_title %>
+      </h3>
+      <p class="ss-muted">
+        <%= customers_request_type_label(line.request_type) %>
+        · <%= render "customers/shared/status_badge", status: line.status %>
+        · <%= line_card.quantity_summary %>
+      </p>
+      <% if line_card.item_subtitle.present? %>
+        <p class="ss-muted"><%= line_card.item_subtitle %></p>
+      <% end %>
+    </div>
+  </header>
+
+  <%= render "line_trail", steps: line_card.trail_steps %>
+
+  <% if line_card.availability_summary.present? %>
+    <dl class="ss-summary-compact ss-line-card__availability">
+      <dt>On hand</dt><dd class="ss-num"><%= line_card.availability_summary.on_hand %></dd>
+      <dt>Available</dt><dd class="ss-num"><%= line_card.availability_summary.available %></dd>
+      <dt>Reserved</dt><dd class="ss-num"><%= line_card.availability_summary.reserved %></dd>
+    </dl>
+  <% end %>
+
+  <% if line.product_variant.blank? %>
+    <%= render "line_match_panel",
+          customer_request: line_card.customer_request,
+          line: line,
+          search_query: line.provisional_identifier.presence || line.provisional_title %>
+  <% else %>
+    <%= render "line_actions",
+          customer_request: line_card.customer_request,
+          line: line,
+          line_card: line_card,
+          active_reservations: line_card.active_reservations,
+          availability: line_card.availability,
+          draft_po_lines: line_card.draft_po_lines,
+          vendors: line_card.vendors %>
+  <% end %>
+</section>

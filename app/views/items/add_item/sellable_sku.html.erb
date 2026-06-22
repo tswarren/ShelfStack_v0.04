@@ -3,7 +3,10 @@
            title: "Create Sellable SKU",
            description: "Product: #{@product.name} · SKU #{@product.sku}" %>
 
+<%= render "items/add_item/match_context" %>
+
 <%= form_with model: @variant, url: items_add_item_path(step: "sellable_sku"), method: :post, class: "ss-form ss-form--wide" do |f| %>
+  <%= render "shared/request_match_params_fields", context: @match_context if @match_context&.active? %>
   <%= render "items/shared/variant_forms/chooser",
              f: f,
              variant: @variant,
@@ -18,7 +21,7 @@
   <footer class="ss-form-actions">
     <%= f.submit "Create SKU", class: "ss-btn" %>
     <%= f.submit "Create SKU and Add Another", class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Cancel", Items::ItemPresenter.from_product(@product).show_path, class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", (@match_context&.valid? ? add_item_cancel_path : Items::ItemPresenter.from_product(@product).show_path), class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>
 

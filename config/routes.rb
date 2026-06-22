@@ -26,6 +26,7 @@ Rails.application.routes.draw do
     }, as: :search
     get "item", to: "items#show", as: :item
     get "item/external_metadata", to: "external_metadata#show", as: :item_external_metadata
+    post "customer_demand", to: "customer_demand_actions#create", as: :customer_demand
 
     get "add_item", to: "add_item#show", as: :add_item
     post "add_item", to: "add_item#create"
@@ -245,6 +246,35 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :customers do
+    root to: "home#show"
+    get "locked_out", to: "home#locked_out"
+    resource :customer_lookup, only: %i[show]
+    resource :variant_lookup, only: %i[show]
+    resources :customers do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+      resources :contact_events, only: %i[create]
+    end
+    resources :customer_requests do
+      member do
+        patch :cancel
+        patch :mark_unfillable
+        post :match_variant
+        patch :update_line_type
+        post :mark_awaiting_response
+        post :create_special_order
+        post :create_hold
+        post :release_hold
+        post :attach_special_order
+        post :build_purchase_order_from_special_order
+        post :record_contact
+      end
+    end
+  end
+
   namespace :orders do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"
@@ -288,6 +318,7 @@ Rails.application.routes.draw do
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]
+    resource :pickup_lookup, only: %i[create]
     resources :authorizations, only: %i[create]
     resources :register_sessions, only: %i[new create show] do
       member do
@@ -304,6 +335,7 @@ Rails.application.routes.draw do
         patch :void
         patch :cancel
         post :add_line
+        post :add_reservation_line
         post :add_return_line
         post :add_open_ring_line
         patch :update_line

@@ -1,6 +1,7 @@
 <header class="ss-pos-register-header">
   <div class="ss-pos-register-header__primary">
     <h1 class="ss-pos-title"><%= pos_draft_type_label(transaction) %> #<%= transaction.id %></h1>
+    <%= render "pos/transactions/mode_switcher", transaction: transaction %>
     <% exchange = pos_exchange_summary(transaction) %>
     <% if exchange %>
       <p class="ss-pos-register-header__exchange">
@@ -27,6 +28,12 @@
     <div><dt>Cashier</dt><dd><%= transaction.cashier_user.username %></dd></div>
     <% if current_workstation %>
       <div><dt>Workstation</dt><dd><%= current_workstation.name %></dd></div>
+    <% end %>
+    <% if transaction.customer.present? %>
+      <div><dt>Customer</dt><dd><%= transaction.customer.display_name %></dd></div>
+    <% end %>
+    <% if (pickup_summary = pos_transaction_pickup_summary(transaction)).present? %>
+      <div><dt>Pickup</dt><dd><%= pickup_summary.customer_name %> · <%= pickup_summary.request_numbers.join(", ") %></dd></div>
     <% end %>
   </dl>
 </header>

@@ -3,7 +3,12 @@
            title: "Add Item",
            description: "What kind of item are you adding?" %>
 
+<% if @match_context&.valid? %>
+  <%= render "shared/request_match_banner", context: @match_context %>
+<% end %>
+
 <%= form_with url: items_add_item_path(step: "choose_path"), method: :post, class: "ss-form ss-form--standard" do %>
+  <%= render "shared/request_match_params_fields", context: @match_context if @match_context&.active? %>
   <%= render layout: "shared/forms/section", locals: { title: "Creation Path" } do %>
     <div class="ss-choice-list" role="radiogroup" aria-label="Creation path">
       <label class="ss-choice-option" for="workflow_catalog_linked">
@@ -24,7 +29,7 @@
   <% end %>
   <footer class="ss-form-actions">
     <%= submit_tag "Continue", class: "ss-btn" %>
-    <%= link_to "Search for existing item", items_root_path, class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Search for existing item", items_root_path(@match_context&.param_hash || {}), class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", (@match_context&.return_path || items_root_path), class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>

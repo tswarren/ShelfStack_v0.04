@@ -10,7 +10,7 @@ module Pos
 
     helper PosHelper
     helper PosReportsHelper
-    helper_method :pos_store, :current_register_session, :pos_mode
+    helper_method :pos_store, :current_register_session, :pos_mode, :pos_workspace_mode, :pos_pickup_mode?
 
     private
 
@@ -38,7 +38,19 @@ module Pos
 
     def pos_mode
       mode = params[:mode].presence || "sale"
+      return "return" if mode == "return"
+      return "sale" if mode == "pickup"
+
       PosHelper::POS_MODES.include?(mode) ? mode : "sale"
+    end
+
+    def pos_workspace_mode
+      mode = params[:mode].presence || "sale"
+      PosHelper::POS_WORKSPACE_MODES.include?(mode) ? mode : "sale"
+    end
+
+    def pos_pickup_mode?
+      pos_workspace_mode == "pickup"
     end
 
     def parse_dollar_param(value)

@@ -217,7 +217,24 @@ Completed transactions can be voided from the transaction detail screen (`pos.tr
 | `pos_lead` | Open-ring, no-receipt returns, resume other cashier |
 | `pos_manager` | Full POS permissions including authorizations and export |
 
-Assign roles in Setup → Users. Managers granting authorizations need `pos.authorizations.grant` and a PIN.
+Assign roles in Setup → Users. Managers granting authorizations need `pos.authorizations.grant` and a PIN. Reserved-stock override additionally requires `pos.sell_reserved_stock_override`.
+
+### Customer pickup (Phase 7A)
+
+- Use **Customer pickup** on the POS home screen or the **Customer pickup** panel on the transaction sidebar.
+- Search by customer name or request number; select a ready reservation to add a pickup line.
+- Scanning a SKU with ready reservations offers **Pickup for [Customer]** choice cards.
+- Selling into reserved stock without a pickup line requires manager override (`sell_reserved_stock_override`).
+
+### Background jobs (Solid Queue)
+
+Hold expiry runs nightly via `InventoryReservations::ExpireJob` (Solid Queue recurring task). Manual fallback:
+
+```bash
+rails shelfstack:inventory:expire_reservations
+```
+
+Run the job worker with `bin/jobs` or set `SOLID_QUEUE_IN_PUMA=1` when starting Puma.
 
 ---
 

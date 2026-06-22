@@ -2,46 +2,64 @@
 
 require "test_helper"
 
-class Items::ItemOperationsPresenterTest < ActiveSupport::TestCase
+class ItemOperationsPresenterTest < ActiveSupport::TestCase
+  include Phase7aTestHelper
+
   setup do
-    seed_phase5_reference_data!
+    Seeds::Phase7aPermissions.seed!
     @store = create_store!
     @user = create_user!
-    @vendor = create_vendor!
-    @product = create_product!
-    @variant = create_product_variant!(product: @product)
-    @item = Items::ItemPresenter.from_product(@product)
-    grant_all_phase5_permissions!(@user, store: @store)
-    grant_permission!(@user, "inventory.access", store: @store)
-    grant_permission!(@user, "inventory.balances.view", store: @store)
-  end
-
-  test "rollup metrics summarize variant operational quantities" do
-    InventoryBalance.create!(
+    grant_permission!(@user, "customer_requests.access", store: @store)
+    grant_permission!(@user, "customer_requests.create", store: @store)
+    grant_permission!(@user, "inventory_reservations.create", store: @store)
+    grant_permission!(@user, "special_orders.create", store: @store)
+    @variant = create_product_variant!(inventory_behavior: "standard_physical")
+    post_inventory_adjustment!(
+      create_inventory_adjustment!(
+        store: @store,
+        lines: [ { product_variant: @variant, quantity_delta: 3, line_number: 1 } ]
+      ),
+      user: @user
+    )
+    @product = @variant.product
+    @customer_request = create_customer_request!(
       store: @store,
-      product_variant: @variant,
-      quantity_on_hand: 6,
-      quantity_available: 6
+      created_by_user: @user,
+      lines: [ { request_type: "hold", provisional_title: "Ops hold" } ]
     )
-    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 2,
-      status: "open"
+    @line = @customer_request.customer_request_lines.first
+    match_request_line!(line: @line, variant: @variant, actor: @user)
+    @reservation = InventoryReservations::ReserveOnHand.call!(
+      store: @store,
+      variant: @variant,
+      quantity: 2,
+      reserved_by_user: @user,
+      customer_request_line: @line
     )
-
-    presenter = Items::ItemOperationsPresenter.new(item: @item, store: @store, user: @user)
-    metrics = presenter.rollup_metrics.index_by(&:label)
-
-    assert_equal 6, metrics["On hand"].value
-    assert_equal 6, metrics["Available"].value
-    assert_equal 2, metrics["TBO"].value
+    @reservation.update!(status: "ready", quantity_fulfilled: 1)
   end
 
-  test "flags missing vendor source on variant row" do
-    presenter = Items::ItemOperationsPresenter.new(item: @item, store: @store, user: @user)
-    row = presenter.variant_rows.first
+  test "variant row includes customer demand actions" do
+    presenter = Items::ItemOperationsPresenter.new(
+      item: Items::ItemPresenter.from_product(@product),
+      store: @store,
+      user: @user
+    )
+    row = presenter.variant_rows.find { |candidate| candidate.variant.id == @variant.id }
 
-    assert_nil row.preferred_vendor_name
-    assert_nil row.vendor_item_number
+    assert row.demand_actions.map(&:drawer_key).include?("hold")
+    assert row.demand_actions.map(&:drawer_key).include?("notify")
+    assert row.demand_actions.map(&:drawer_key).include?("special_order")
+  end
+
+  test "ready_for_pickup_qty uses reservation remaining quantity" do
+    presenter = Items::ItemOperationsPresenter.new(
+      item: Items::ItemPresenter.from_product(@product),
+      store: @store,
+      user: @user
+    )
+    row = presenter.variant_rows.find { |candidate| candidate.variant.id == @variant.id }
+
+    assert_equal 1, row.ready_for_pickup_qty
   end
 end

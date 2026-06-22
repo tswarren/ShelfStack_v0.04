@@ -43,6 +43,7 @@ export default class extends Controller {
   connect() {
     this.lastMatch = null
     this.quantityOnHand = parseInt(this.element.dataset.purchasingLineRowInitialOnHandValue, 10) || 0
+    this.customerReservedOpen = parseInt(this.element.dataset.purchasingLineRowInitialCustomerReservedValue, 10) || 0
 
     if (this.hasVariantIdTarget && this.variantIdTarget.value) {
       this.element.dataset.blankRow = "false"
@@ -62,6 +63,7 @@ export default class extends Controller {
 
     this.reconcileAcceptedDisplay()
     this.updateInventoryWarnings()
+    this.renderCustomerReservedWarning()
   }
 
   disconnect() {
@@ -254,6 +256,9 @@ export default class extends Controller {
     const warnings = []
     if (!match.sourcing_record_present) warnings.push("No vendor source")
     if (match.returnability_status === "non_returnable") warnings.push("Non-returnable")
+    if (this.contextValue === "receive" && match.customer_reserved_open > 0) {
+      warnings.push(`${match.customer_reserved_open} reserved for customers`)
+    }
     if (this.contextValue === "rtv") {
       const onHand = match.quantity_on_hand ?? this.quantityOnHand ?? 0
       const qty = parseInt(this.quantityInput()?.value, 10) || 0
@@ -261,6 +266,13 @@ export default class extends Controller {
       if (qty > onHand) warnings.push("Exceeds on hand")
     }
     this.warningsTarget.textContent = warnings.join(" · ")
+  }
+
+  renderCustomerReservedWarning() {
+    if (!this.hasWarningsTarget || this.contextValue !== "receive") return
+    if (this.customerReservedOpen > 0 && !this.lastMatch) {
+      this.warningsTarget.textContent = `${this.customerReservedOpen} reserved for customers`
+    }
   }
 
   updateInventoryWarnings() {

@@ -66,6 +66,17 @@ module Purchasing
         )
       end
 
+      customer_alloc_qty = purchase_order.purchase_order_lines.sum do |line|
+        Purchasing::PurchaseOrderLineDemandBreakdown.new(purchase_order).for_line(line).customer_allocated_quantity
+      end
+      if customer_alloc_qty.positive? && %w[submitted partially_received].include?(purchase_order.status)
+        items << AttentionItem.new(
+          message: "#{customer_alloc_qty} #{'unit'.pluralize(customer_alloc_qty)} on open lines reserved for customers.",
+          link_path: nil,
+          link_label: nil
+        )
+      end
+
       items
     end
 
@@ -89,6 +100,19 @@ module Purchasing
           link_path: nil,
           link_label: nil
         )
+      end
+
+      if receipt.draft?
+        reserved_lines = receipt.receipt_lines.count do |line|
+          Purchasing::ReceiptLineDemand.customer_reserved_open(line.purchase_order_line).positive?
+        end
+        if reserved_lines.positive?
+          items << AttentionItem.new(
+            message: "#{reserved_lines} #{'line'.pluralize(reserved_lines)} include units reserved for customers.",
+            link_path: nil,
+            link_label: nil
+          )
+        end
       end
 
       items

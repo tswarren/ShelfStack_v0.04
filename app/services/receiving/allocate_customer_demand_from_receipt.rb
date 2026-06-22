@@ -1,0 +1,104 @@
+# frozen_string_literal: true
+
+module Receiving
+  class AllocateCustomerDemandFromReceipt
+    class AllocateError < StandardError; end
+
+    def self.call!(receipt:, posted_by_user:)
+      new(receipt:, posted_by_user:).call!
+    end
+
+    def initialize(receipt:, posted_by_user:)
+      @receipt = receipt
+      @posted_by_user = posted_by_user
+    end
+
+    def call!
+      receipt.receipt_lines.each do |receipt_line|
+        next if receipt_line.quantity_accepted.zero?
+
+        allocate_po_backed_lines!(receipt_line)
+        surface_notify_lines!(receipt_line)
+      end
+    end
+
+    private
+
+    attr_reader :receipt, :posted_by_user
+
+    def allocate_po_backed_lines!(receipt_line)
+      po_line = receipt_line.purchase_order_line
+      return if po_line.blank?
+
+      remaining = receipt_line.quantity_accepted
+      po_line.purchase_order_line_allocations.open_allocations.order(:created_at).each do |allocation|
+        break if remaining.zero?
+
+        alloc_qty = [ allocation.quantity_allocated - allocation.quantity_received, remaining ].min
+        next if alloc_qty.zero?
+
+        converted_reservation = nil
+        incoming = InventoryReservation.active_incoming.find_by(
+          purchase_order_line: po_line,
+          special_order: allocation.special_order
+        )
+        if incoming.present?
+          converted_reservation = InventoryReservations::ConvertIncomingToOnHand.call!(
+            reservation: incoming,
+            receipt_line: receipt_line,
+            quantity: alloc_qty,
+            converted_by_user: posted_by_user
+          )
+        end
+
+        ReceiptLineAllocation.create!(
+          receipt_line: receipt_line,
+          purchase_order_line_allocation: allocation,
+          customer_request_line: allocation.customer_request_line,
+          special_order: allocation.special_order,
+          inventory_reservation: converted_reservation,
+          quantity_allocated: alloc_qty
+        )
+
+        allocation.update!(
+          quantity_received: allocation.quantity_received + alloc_qty,
+          status: allocation.quantity_received + alloc_qty >= allocation.quantity_allocated ? "received" : "partially_received"
+        )
+
+        special_order = allocation.special_order
+        special_order.update!(
+          quantity_received: special_order.quantity_received + alloc_qty,
+          quantity_ready: special_order.quantity_ready + alloc_qty,
+          status: "ready_for_pickup",
+          ready_at: Time.current
+        )
+
+        request_line = allocation.customer_request_line
+        if request_line.present?
+          request_line.update!(status: "ready_for_pickup")
+          request_line.customer_request.refresh_status_from_lines!(actor: posted_by_user, source: request_line)
+        end
+
+        AuditEvents.record!(
+          actor: posted_by_user,
+          event_name: "receipt_line_allocation.created",
+          auditable: receipt_line,
+          details: { "quantity_allocated" => alloc_qty, "special_order_id" => special_order.id }
+        )
+
+        remaining -= alloc_qty
+      end
+    end
+
+    def surface_notify_lines!(receipt_line)
+      variant = receipt_line.product_variant
+      return if variant.blank?
+
+      CustomerRequests::SurfaceNotifyLines.for_variant(
+        store: receipt.store,
+        variant: variant,
+        actor: posted_by_user
+      )
+    end
+  end
+end

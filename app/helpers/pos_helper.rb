@@ -2,6 +2,7 @@
 
 module PosHelper
   POS_MODES = %w[sale return exchange].freeze
+  POS_WORKSPACE_MODES = %w[sale return pickup].freeze
   ENTRY_ACTIONS = %w[sale return_receipt return_no_receipt open_ring].freeze
 
   VOID_REASON_CODES = [
@@ -12,7 +13,16 @@ module PosHelper
   ].freeze
 
   def pos_mode_label(mode)
-    mode.to_s.humanize
+    mode.to_s == "pickup" ? "Pickup" : mode.to_s.humanize
+  end
+
+  def pos_pickup_mode?
+    pos_workspace_mode == "pickup"
+  end
+
+  def pos_workspace_mode
+    mode = params[:mode].presence || "sale"
+    POS_WORKSPACE_MODES.include?(mode) ? mode : "sale"
   end
 
   def pos_initial_entry_action(mode)
@@ -118,6 +128,50 @@ module PosHelper
     "From receipt #{line.source_transaction.transaction_number}"
   end
 
+  PickupSummary = Data.define(:customer_name, :request_numbers, :line_count)
+  PickupLineContext = Data.define(:customer_name, :request_number, :label)
+
+  def pos_transaction_pickup_summary(transaction)
+    pickup_lines = transaction.pos_transaction_lines.select { |line| line.inventory_reservation_id.present? }
+    return nil if pickup_lines.empty?
+
+    customer_names = pickup_lines.filter_map do |line|
+      line.inventory_reservation&.customer&.display_name ||
+        line.customer_request_line&.customer_request&.customer&.display_name
+    end.uniq
+
+    request_numbers = pickup_lines.filter_map do |line|
+      line.customer_request_line&.customer_request&.request_number
+    end.uniq
+
+    PickupSummary.new(
+      customer_name: customer_names.one? ? customer_names.first : customer_names.join(", "),
+      request_numbers: request_numbers,
+      line_count: pickup_lines.size
+    )
+  end
+
+  def pos_line_pickup_context(line)
+    return nil unless line.inventory_reservation_id.present?
+
+    customer_name = line.inventory_reservation&.customer&.display_name ||
+      line.customer_request_line&.customer_request&.customer&.display_name
+    request_number = line.customer_request_line&.customer_request&.request_number
+
+    PickupLineContext.new(
+      customer_name: customer_name,
+      request_number: request_number,
+      label: [ customer_name, request_number ].compact.join(" · ")
+    )
+  end
+
+  def pos_line_pickup_label(line)
+    context = pos_line_pickup_context(line)
+    return if context.blank?
+
+    [ "Customer pickup", context.label ].compact.join(" · ")
+  end
+
   def pos_line_price_editable?(line)
     !(line.return_line? && line.source_transaction_line_id.present?)
   end
@@ -161,6 +215,7 @@ module PosHelper
     when :discount_auth then "This discount exceeds the cashier limit. A manager must enter their username and PIN to approve."
     when :no_receipt_return then "This return has no receipt. A manager must enter their username and PIN to approve."
     when :cash_refund_auth then "This cash refund exceeds the limit. A manager must enter their username and PIN to approve."
+    when :reserved_stock_auth then "This sale uses stock reserved for customer pickup. A manager must approve selling without a reservation line."
     else "A manager must enter their username and PIN to approve this action."
     end
   end
@@ -168,9 +223,11 @@ module PosHelper
   def pos_lookup_preview_text(variant)
     price = pos_money(variant[:selling_price_cents] || variant["selling_price_cents"])
     on_hand = variant[:quantity_on_hand] || variant["quantity_on_hand"] || 0
+    available = variant[:quantity_available] || variant["quantity_available"] || on_hand
+    reserved = variant[:quantity_reserved] || variant["quantity_reserved"] || 0
     sku = variant[:sku] || variant["sku"]
     name = variant[:name] || variant["name"]
-    "#{sku} — #{name}\nOn hand: #{on_hand} · #{price}"
+    "#{sku} — #{name}\nOn hand: #{on_hand} · Available: #{available} · Reserved: #{reserved} · #{price}"
   end
 
   def pos_void_reason_options

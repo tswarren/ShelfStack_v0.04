@@ -1,0 +1,36 @@
+<%# locals: customer_request:, line:, special_order:, draft_po_lines:, vendors: %>
+<%= render "orders/shared/collapsible_panel", title: "Attach special order to PO", open: false do %>
+  <% po_lines = draft_po_lines || [] %>
+  <% if po_lines.any? && Authorization.allowed?(user: current_user, permission_key: "special_orders.attach_to_po", store: current_store) %>
+    <% po_lines.each do |po_line| %>
+      <%= form_with url: attach_special_order_customers_customer_request_path(customer_request),
+                    method: :post,
+                    class: "ss-form" do %>
+        <%= hidden_field_tag :special_order_id, special_order.id %>
+        <%= hidden_field_tag :purchase_order_line_id, po_line.id %>
+        <%= hidden_field_tag :quantity, special_order.remaining_committed %>
+        <p>
+          Draft PO <%= po_line.purchase_order_id %> · <%= po_line.product_variant.sku %> ·
+          qty <%= po_line.quantity_ordered %>
+        </p>
+        <%= submit_tag "Attach to this PO line", class: "ss-btn ss-btn-small" %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <p class="ss-muted">No matching draft PO lines for this variant.</p>
+  <% end %>
+
+  <% if Authorization.allowed?(user: current_user, permission_key: "special_orders.create", store: current_store) &&
+        Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) %>
+    <%= form_with url: build_purchase_order_from_special_order_customers_customer_request_path(customer_request),
+                  method: :post,
+                  class: "ss-form" do %>
+      <%= hidden_field_tag :special_order_id, special_order.id %>
+      <div class="ss-field">
+        <%= label_tag :vendor_id, "Vendor for new draft PO", class: "ss-label" %>
+        <%= select_tag :vendor_id, options_from_collection_for_select(vendors, :id, :name), class: "ss-input" %>
+      </div>
+      <%= submit_tag "Build new draft PO", class: "ss-btn ss-btn-small ss-btn-secondary" %>
+    <% end %>
+  <% end %>
+<% end %>

@@ -1,0 +1,8 @@
+<%# locals: steps: %>
+<ol class="ss-status-trail">
+  <% steps.each do |step| %>
+    <li class="ss-status-trail__step ss-status-trail__step--<%= step.state %>">
+      <%= step.label %>
+    </li>
+  <% end %>
+</ol>

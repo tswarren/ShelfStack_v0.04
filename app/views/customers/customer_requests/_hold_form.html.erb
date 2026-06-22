@@ -1,0 +1,44 @@
+<%# locals: customer_request:, line:, availability: %>
+<% can_override = Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.override", store: current_store) %>
+<% available = availability&.dig(:available).to_i %>
+<% on_hand = availability&.dig(:on_hand).to_i %>
+<%= form_with url: create_hold_customers_customer_request_path(customer_request),
+              method: :post,
+              class: "ss-form ss-form--inline",
+              data: {
+                controller: "customer-request-hold-form",
+                customer_request_hold_form_available_value: available,
+                customer_request_hold_form_on_hand_value: on_hand,
+                customer_request_hold_form_can_override_value: can_override
+              } do %>
+  <%= hidden_field_tag :line_id, line.id %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= label_tag :quantity, "Quantity", class: "ss-label" %>
+      <%= number_field_tag :quantity, line.requested_quantity,
+            min: 1,
+            class: "ss-input",
+            data: {
+              customer_request_hold_form_target: "quantity",
+              action: "input->customer-request-hold-form#quantityChanged change->customer-request-hold-form#quantityChanged"
+            } %>
+      <% if availability.present? %>
+        <p class="ss-hint"><%= available %> available · <%= on_hand %> on hand</p>
+      <% end %>
+      <p class="ss-hint ss-hint-warning" data-customer-request-hold-form-target="warning" hidden></p>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :expires_at, "Expires on", class: "ss-label" %>
+      <%= date_field_tag :expires_at, 14.days.from_now.to_date, class: "ss-input" %>
+    </div>
+  </div>
+  <div class="ss-field" data-customer-request-hold-form-target="overridePanel" hidden>
+    <%= label_tag :override_reason, "Override reason (over-reserve)", class: "ss-label" %>
+    <%= text_field_tag :override_reason, nil,
+          class: "ss-input",
+          data: { customer_request_hold_form_target: "overrideReason" } %>
+  </div>
+  <%= submit_tag "Create hold",
+        class: "ss-btn ss-btn-small",
+        data: { customer_request_hold_form_target: "submit" } %>
+<% end %>

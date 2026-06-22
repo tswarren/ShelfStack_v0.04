@@ -2,7 +2,7 @@
 
 module Purchasing
   class OrderQuantityLookup
-    Result = Data.define(:on_order, :pending)
+    Result = Data.define(:on_order, :pending, :reserved_incoming, :on_order_available)
 
     ON_ORDER_PO_STATUSES = %w[submitted partially_received].freeze
     PENDING_PO_STATUSES = %w[draft].freeze
@@ -37,16 +37,17 @@ module Purchasing
         rows.each do |(variant_id, po_status), quantity|
           bucket = results[variant_id]
           if ON_ORDER_PO_STATUSES.include?(po_status)
-            results[variant_id] = Result.new(on_order: bucket.on_order + quantity, pending: bucket.pending)
+            results[variant_id] = bucket.with(on_order: bucket.on_order + quantity)
           elsif PENDING_PO_STATUSES.include?(po_status)
-            results[variant_id] = Result.new(on_order: bucket.on_order, pending: bucket.pending + quantity)
+            results[variant_id] = bucket.with(pending: bucket.pending + quantity)
           end
         end
+        apply_incoming_reserves!(results)
       end
     end
 
     def self.zero_result
-      Result.new(on_order: 0, pending: 0)
+      Result.new(on_order: 0, pending: 0, reserved_incoming: 0, on_order_available: 0)
     end
 
     private
@@ -59,6 +60,21 @@ module Purchasing
 
     def remainder_sql
       Arel.sql("GREATEST(purchase_order_lines.quantity_ordered - purchase_order_lines.quantity_received, 0)")
+    end
+
+    def apply_incoming_reserves!(results)
+      incoming = InventoryReservation.active_incoming
+                                       .where(store: store, product_variant_id: variant_ids)
+                                       .group(:product_variant_id)
+                                       .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+
+      results.each do |variant_id, bucket|
+        reserved = incoming[variant_id] || 0
+        results[variant_id] = bucket.with(
+          reserved_incoming: reserved,
+          on_order_available: [ bucket.on_order - reserved, 0 ].max
+        )
+      end
     end
   end
 end

@@ -73,6 +73,27 @@ module Orders
       document_hub.discrepancies.any?
     end
 
+    def show_customer_allocations?
+      receipt.receipt_lines.any? { |line| line.receipt_line_allocations.any? }
+    end
+
+    def customer_allocation_rows
+      receipt.receipt_lines.flat_map do |line|
+        line.receipt_line_allocations.map do |allocation|
+          request = allocation.customer_request_line&.customer_request
+          {
+            receipt_line_number: line.line_number,
+            variant: line.product_variant,
+            customer_name: allocation.special_order&.customer&.display_name || request&.customer&.display_name,
+            request_number: request&.request_number,
+            request_id: request&.id,
+            quantity: allocation.quantity_allocated,
+            special_order_id: allocation.special_order_id
+          }
+        end
+      end
+    end
+
     private
 
     attr_reader :receipt, :document_hub

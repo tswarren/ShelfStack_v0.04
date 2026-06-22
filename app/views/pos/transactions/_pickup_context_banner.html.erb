@@ -1,0 +1,10 @@
+<% if (summary = pos_transaction_pickup_summary(transaction)).present? %>
+  <div class="ss-pos-pickup-banner" role="status">
+    <strong>Customer pickup</strong>
+    <span><%= summary.customer_name %></span>
+    <% if summary.request_numbers.any? %>
+      <span class="ss-pos-pickup-banner__requests"><%= summary.request_numbers.join(" · ") %></span>
+    <% end %>
+    <span class="ss-hint"><%= summary.line_count %> <%= summary.line_count == 1 ? "item" : "items" %></span>
+  </div>
+<% end %>

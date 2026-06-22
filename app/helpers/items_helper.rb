@@ -151,7 +151,32 @@ module ItemsHelper
   end
 
   def item_flow_path_options
-    item_flow? ? { return_to: "item" } : {}
+    if item_flow?
+      { return_to: "item" }
+    elsif request_match_context.valid?
+      request_match_context.param_hash
+    else
+      {}
+    end
+  end
+
+  def request_match_context
+    @request_match_context ||= Customers::RequestMatchContext.from_params(params, store: current_store)
+  end
+
+  def request_match_path_options
+    request_match_context.valid? ? request_match_context.param_hash : {}
+  end
+
+  def request_match_banner_label
+    request_match_context.banner_label if request_match_context.valid?
+  end
+
+  def items_item_path_with_match(item, tab: nil, variant_id: nil)
+    params = item.route_params.merge(request_match_path_options)
+    params[:tab] = tab if tab.present? && tab != "overview"
+    params[:variant_id] = variant_id if variant_id.present?
+    items_item_path(params)
   end
 
   def item_vendor_sourcing_editable?

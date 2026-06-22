@@ -94,7 +94,22 @@ module Orders
         relation = relation.includes(
           :purchase_order,
           :inventory_posting,
-          receipt_lines: [ :product_variant, :purchase_order_line, :receiving_discrepancies ]
+          receipt_lines: [
+            :product_variant,
+            :purchase_order_line,
+            :receiving_discrepancies,
+            { receipt_line_allocations: {
+              customer_request_line: { customer_request: :customer },
+              special_order: :customer
+            } },
+            { purchase_order_line: { purchase_order_line_allocations: :special_order } }
+          ]
+        )
+      elsif %w[edit new].include?(action_name)
+        relation = relation.includes(
+          receipt_lines: {
+            purchase_order_line: { purchase_order_line_allocations: :special_order }
+          }
         )
       end
       @receipt = relation.find(params[:id])

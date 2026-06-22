@@ -34,11 +34,7 @@ module Pos
       manager = User.active_records.find_by(username: manager_username)
       raise Error, "Manager not found." if manager.blank?
       raise Error, "Invalid manager PIN." unless manager.authenticate_pin(manager_pin)
-      raise Error, "Manager is not authorized to grant approvals." unless Authorization.allowed?(
-        user: manager,
-        permission_key: "pos.authorizations.grant",
-        store: store
-      )
+      raise Error, "Manager is not authorized to grant approvals." unless manager_can_grant?(manager)
 
       authorization = PosAuthorization.create!(
         store: store,
@@ -111,5 +107,20 @@ module Pos
 
     attr_reader :authorization_type, :requested_by, :manager_username, :manager_pin, :store,
                 :pos_transaction, :pos_register_session, :details
+
+    def manager_can_grant?(manager)
+      return false unless Authorization.allowed?(
+        user: manager,
+        permission_key: "pos.authorizations.grant",
+        store: store
+      )
+
+      case authorization_type
+      when "sell_reserved_stock_override"
+        Authorization.allowed?(user: manager, permission_key: "pos.sell_reserved_stock_override", store: store)
+      else
+        true
+      end
+    end
   end
 end

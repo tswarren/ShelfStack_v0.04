@@ -10,6 +10,7 @@ class ReceiptLine < ApplicationRecord
   belongs_to :purchase_order_line, optional: true
 
   has_many :receiving_discrepancies, dependent: :destroy
+  has_many :receipt_line_allocations, dependent: :destroy
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates_nested_line_number_uniqueness :receipt, foreign_key: :receipt_id

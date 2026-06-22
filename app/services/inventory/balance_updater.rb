@@ -18,7 +18,8 @@ module Inventory
       balance = InventoryBalance.find_or_initialize_by(store: store, product_variant: variant)
       prior_on_hand = balance.quantity_on_hand || 0
       balance.quantity_on_hand = prior_on_hand + quantity_delta
-      balance.quantity_available = balance.quantity_on_hand
+      balance.quantity_reserved ||= 0
+      balance.quantity_available = balance.quantity_on_hand - balance.quantity_reserved
       balance.unit_cost_cents = valuation.unit_cost_cents
       balance.unit_retail_cents = valuation.unit_retail_cents
       balance.cost_source = valuation.cost_source

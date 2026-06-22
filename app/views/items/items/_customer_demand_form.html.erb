@@ -1,0 +1,121 @@
+<% can_override = Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.override", store: current_store) %>
+<%= form_with url: items_customer_demand_path,
+              method: :post,
+              class: "ss-form ss-form--standard",
+              data: {
+                controller: "customer-request-hold-form",
+                customer_request_hold_form_available_value: 0,
+                customer_request_hold_form_on_hand_value: 0,
+                customer_request_hold_form_can_override_value: can_override
+              } do %>
+  <%= hidden_field_tag :request_type, nil, data: { item_customer_demand_drawer_target: "requestTypeField" } %>
+  <%= hidden_field_tag :product_variant_id, nil, data: { item_customer_demand_drawer_target: "productVariantField" } %>
+
+  <div data-controller="customer-lookup"
+       data-customer-lookup-url-value="<%= customers_customer_lookup_path %>">
+    <%= render layout: "shared/forms/section", locals: {
+      title: "Customer",
+      description: "Search for an existing customer or capture a walk-in snapshot."
+    } do %>
+      <div class="ss-field">
+        <%= label_tag :customer_lookup, "Customer", class: "ss-label" %>
+        <%= text_field_tag :customer_lookup, nil,
+              class: "ss-input",
+              placeholder: "Search by name, email, or phone…",
+              autocomplete: "off",
+              data: {
+                customer_lookup_target: "lookupInput",
+                action: "keydown->customer-lookup#lookupExact input->customer-lookup#search"
+              } %>
+        <%= hidden_field_tag :customer_id, nil, data: { customer_lookup_target: "customerId" } %>
+        <p class="ss-hint" data-customer-lookup-target="preview"></p>
+        <p class="ss-hint" data-customer-lookup-target="message"></p>
+        <div class="ss-pos-choices" data-customer-lookup-target="choices"></div>
+      </div>
+
+      <div data-customer-lookup-target="walkInFields">
+        <div class="ss-form-grid ss-form-grid--2">
+          <div class="ss-field">
+            <%= label_tag :customer_name_snapshot, "Walk-in name", class: "ss-label" %>
+            <%= text_field_tag :customer_name_snapshot, nil, class: "ss-input" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :preferred_contact_method, "Preferred contact", class: "ss-label" %>
+            <%= select_tag :preferred_contact_method,
+                  options_for_select(CustomerRequest::PREFERRED_CONTACT_METHODS.map { |m| [customers_preferred_contact_label(m), m] }),
+                  include_blank: true,
+                  class: "ss-input" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :customer_email_snapshot, "Walk-in email", class: "ss-label" %>
+            <%= email_field_tag :customer_email_snapshot, nil, class: "ss-input" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :customer_phone_snapshot, "Walk-in phone", class: "ss-label" %>
+            <%= text_field_tag :customer_phone_snapshot, nil, class: "ss-input" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%= render layout: "shared/forms/section", locals: {
+    title: "Demand",
+    description: "Quantity and timing apply whether the customer is linked or walk-in."
+  } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <div class="ss-field">
+        <%= label_tag :needed_by_date, "Needed by", class: "ss-label" %>
+        <%= date_field_tag :needed_by_date, nil, class: "ss-input" %>
+      </div>
+      <div class="ss-field">
+        <%= label_tag :quantity, "Quantity", class: "ss-label" %>
+        <%= number_field_tag :quantity, 1, min: 1, class: "ss-input",
+              data: {
+                customer_request_hold_form_target: "quantity",
+                action: "input->customer-request-hold-form#quantityChanged change->customer-request-hold-form#quantityChanged"
+              } %>
+      </div>
+    </div>
+
+  <div data-item-customer-demand-drawer-target="holdFields" hidden>
+    <div class="ss-form-grid ss-form-grid--2">
+      <div class="ss-field">
+        <%= label_tag :hold_expires_at, "Hold expires on", class: "ss-label" %>
+        <%= date_field_tag :expires_at, 14.days.from_now.to_date, class: "ss-input" %>
+      </div>
+    </div>
+    <p class="ss-hint ss-hint-warning" data-customer-request-hold-form-target="warning" hidden></p>
+    <div class="ss-field" data-customer-request-hold-form-target="overridePanel" hidden>
+      <%= label_tag :override_reason, "Override reason (over-reserve)", class: "ss-label" %>
+      <%= text_field_tag :override_reason, nil,
+            class: "ss-input",
+            data: { customer_request_hold_form_target: "overrideReason" } %>
+    </div>
+  </div>
+
+  <p class="ss-hint" data-item-customer-demand-drawer-target="specialOrderNote" hidden>
+    A linked customer record is required for special orders. Search for an existing customer or create one first.
+  </p>
+
+  <p class="ss-hint" data-item-customer-demand-drawer-target="notifyNote" hidden>
+  This creates a notify request. Staff will contact the customer when stock is available. No inventory is reserved.
+  </p>
+
+  <div class="ss-field">
+    <%= label_tag :notes, "Notes", class: "ss-label" %>
+    <%= text_area_tag :notes, nil, rows: 2, class: "ss-input" %>
+  </div>
+  <% end %>
+
+  <footer class="ss-form-actions">
+    <%= submit_tag "Submit",
+          class: "ss-btn",
+          data: {
+            item_customer_demand_drawer_target: "submitButton",
+            customer_request_hold_form_target: "submit"
+          } %>
+    <button type="button" class="ss-btn ss-btn-secondary"
+            data-action="item-customer-demand-drawer#close">Cancel</button>
+  </footer>
+<% end %>

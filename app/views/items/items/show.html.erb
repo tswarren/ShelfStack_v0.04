@@ -4,7 +4,7 @@
 
 <nav class="ss-tabs ss-item-tabs">
   <% Items::ItemsController::VALID_TABS.each do |tab| %>
-    <%= link_to items_tab_label(tab), @item.tab_path(tab), class: (@tab == tab ? "active" : nil) %>
+    <%= link_to items_tab_label(tab), items_item_path_with_match(@item, tab: tab), class: (@tab == tab ? "active" : nil) %>
   <% end %>
 </nav>
 

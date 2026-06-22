@@ -25,6 +25,11 @@ module Pos
 
     def variant_json(variant)
       balance = InventoryBalance.find_by(store: store, product_variant: variant)
+      on_hand = balance&.quantity_on_hand || 0
+      available = Inventory::Availability.available(store: store, variant: variant) || 0
+      reserved = Inventory::Availability.reserved(store: store, variant: variant)
+      ready_reservations = ready_reservations_for(variant)
+
       {
         id: variant.id,
         sku: variant.sku,
@@ -35,8 +40,29 @@ module Pos
         inventory_behavior: variant.inventory_behavior,
         active: variant.active?,
         product_active: variant.product.active?,
-        quantity_on_hand: balance&.quantity_on_hand || 0
+        quantity_on_hand: on_hand,
+        quantity_available: available,
+        quantity_reserved: reserved,
+        ready_reservations: ready_reservations
       }
+    end
+
+    def ready_reservations_for(variant)
+      InventoryReservation
+        .where(store: store, product_variant: variant, status: %w[active ready],
+               reservation_type: %w[on_hand_hold special_order_reserve])
+        .includes(:customer, customer_request_line: { customer_request: :customer })
+        .limit(10)
+        .map do |reservation|
+          request = reservation.customer_request_line&.customer_request
+          {
+            id: reservation.id,
+            customer_name: CustomerDemand::DisplayName.for_reservation(reservation),
+            request_number: request&.request_number,
+            expires_at: reservation.expires_at&.iso8601,
+            quantity: reservation.remaining_quantity
+          }
+        end
     end
   end
 end

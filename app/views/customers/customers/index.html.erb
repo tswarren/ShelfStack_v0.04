@@ -1,0 +1,40 @@
+<%= render "customers/shared/workspace_nav", active: :customers %>
+
+<h1>Customers
+  <% if Authorization.allowed?(user: current_user, permission_key: "customers.create", store: current_store) %>
+    <%= link_to "New", new_customers_customer_path, class: "ss-btn" %>
+  <% end %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.create", store: current_store) %>
+    <%= link_to "New request", new_customers_customer_request_path, class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+</h1>
+
+<%= form_with url: customers_customers_path, method: :get, class: "ss-form" do %>
+  <%= text_field_tag :q, params[:q], placeholder: "Search by name" %>
+  <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Preferred contact</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @customers.each do |customer| %>
+      <tr>
+        <td><%= customer.display_name %></td>
+        <td><%= customer.email.presence || "—" %></td>
+        <td><%= customer.phone.presence || "—" %></td>
+        <td><%= customer.preferred_contact_method.present? ? customers_preferred_contact_label(customer.preferred_contact_method) : "—" %></td>
+        <td><span class="<%= status_class(customer.active?) %>"><%= status_label(customer.active?) %></span></td>
+        <td><%= link_to "View", customers_customer_path(customer) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -1,0 +1,6 @@
+<% context = local_assigns[:context] || (defined?(request_match_context) ? request_match_context : nil) %>
+<% if context&.valid? %>
+  <% context.param_hash.each do |key, value| %>
+    <%= hidden_field_tag key, value %>
+  <% end %>
+<% end %>

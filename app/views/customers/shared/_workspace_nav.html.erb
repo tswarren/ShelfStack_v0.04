@@ -1,0 +1,8 @@
+<div class="ss-detail-actions">
+  <%= link_to "Dashboard", customers_root_path,
+        class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :dashboard)].compact.join(" ") %>
+  <%= link_to "Customers", customers_customers_path,
+        class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :customers)].compact.join(" ") %>
+  <%= link_to "Customer requests", customers_customer_requests_path,
+        class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :requests)].compact.join(" ") %>
+</div>

@@ -1,0 +1,96 @@
+<%= render "customers/shared/document_header",
+      title: @show_presenter.customer_request.request_number,
+      status: @show_presenter.customer_request.status,
+      metadata_lines: [
+        "Customer: #{@show_presenter.customer_request.display_customer_name}",
+        "Source: #{@show_presenter.customer_request.source.tr('_', ' ').titleize}",
+        (@show_presenter.customer_request.needed_by_date.present? ? "Needed by: #{l(@show_presenter.customer_request.needed_by_date)}" : nil),
+        (@show_presenter.customer_request.last_contacted_at.present? ? "Last contacted: #{display_time(@show_presenter.customer_request.last_contacted_at)}" : nil)
+      ].compact do %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
+    <%= link_to "Edit", edit_customers_customer_request_path(@show_presenter.customer_request), class: "ss-btn" %>
+  <% end %>
+  <%= link_to "Back", customers_customer_requests_path, class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<%= render "orders/shared/metric_strip", metrics: @show_presenter.metrics %>
+
+<% if @show_presenter.attention_items.present? %>
+  <%= render "orders/shared/attention_panel", items: @show_presenter.attention_items %>
+<% end %>
+
+<% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.cancel", store: current_store) &&
+      !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) %>
+  <%= render "orders/shared/collapsible_panel", title: "Cancel request", open: false do %>
+    <%= form_with url: cancel_customers_customer_request_path(@show_presenter.customer_request), method: :patch, class: "ss-form" do %>
+      <div class="ss-field">
+        <%= label_tag :reason, "Cancellation reason", class: "ss-label" %>
+        <%= text_area_tag :reason, nil, required: true, rows: 2 %>
+      </div>
+      <%= submit_tag "Cancel request", class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Cancel this customer request?" } %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.mark_unfillable", store: current_store) &&
+      !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) &&
+      @show_presenter.can_mark_unfillable? %>
+  <%= render "orders/shared/collapsible_panel", title: "Mark unfillable", open: false do %>
+    <%= form_with url: mark_unfillable_customers_customer_request_path(@show_presenter.customer_request), method: :patch, class: "ss-form" do %>
+      <div class="ss-field">
+        <%= label_tag :reason, "Reason", class: "ss-label" %>
+        <%= text_area_tag :reason, nil, required: true, rows: 2 %>
+      </div>
+      <%= submit_tag "Mark unfillable", class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Mark this request unfillable?" } %>
+    <% end %>
+  <% end %>
+<% elsif Authorization.allowed?(user: current_user, permission_key: "customer_requests.mark_unfillable", store: current_store) &&
+         !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) &&
+         @show_presenter.unfillable_blockers.any? %>
+  <p class="ss-muted">Mark unfillable is not available for committed requests. Use Cancel to close held or ordered lines.</p>
+<% end %>
+
+<%= render layout: "orders/shared/document_layout" do %>
+  <h2>Request lines</h2>
+  <div class="ss-line-card-list">
+    <% @show_presenter.line_cards.each do |line_card| %>
+      <%= render "line_card", line_card: line_card %>
+    <% end %>
+  </div>
+
+  <% content_for :document_sidebar do %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.contact", store: current_store) %>
+      <%= render "contact_panel",
+            customer_request: @show_presenter.customer_request,
+            contact_events: @show_presenter.contact_events,
+            show_presenter: @show_presenter %>
+    <% end %>
+
+    <div class="ss-sidebar-card">
+      <h2>Request facts</h2>
+      <dl class="ss-summary-compact">
+        <dt>Customer</dt>
+        <dd>
+          <% if @show_presenter.customer_request.customer %>
+            <%= link_to @show_presenter.customer_request.customer.display_name,
+                  customers_customer_path(@show_presenter.customer_request.customer) %>
+          <% else %>
+            <%= @show_presenter.customer_request.customer_name_snapshot || "—" %>
+          <% end %>
+        </dd>
+        <dt>Store</dt><dd><%= @show_presenter.customer_request.store.name %></dd>
+        <dt>Created</dt><dd><%= display_time(@show_presenter.customer_request.created_at) %></dd>
+        <% if @show_presenter.customer_request.assigned_to_user.present? %>
+          <dt>Assigned</dt><dd><%= @show_presenter.customer_request.assigned_to_user.display_name %></dd>
+        <% end %>
+        <% if @show_presenter.customer_request.notes.present? %>
+          <dt>Notes</dt><dd><%= @show_presenter.customer_request.notes %></dd>
+        <% end %>
+      </dl>
+    </div>
+  <% end %>
+<% end %>
+
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
+  <%= render "shared/audit_timeline", audit_events: @show_presenter.audit_events %>
+<% end %>

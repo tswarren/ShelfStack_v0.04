@@ -12,6 +12,23 @@ namespace :shelfstack do
       exit 1
     end
 
+    desc "Rebuild cached reserved quantities from active reservations"
+    task rebuild_reservations: :environment do
+      InventoryReservations::RebuildReservedQuantities.call!
+      puts "Rebuilt reserved quantities."
+    end
+
+    desc "Expire overdue on-hand holds"
+    task expire_reservations: :environment do
+      actor = if ENV["USERNAME"].present?
+        User.find_by!(username: ENV["USERNAME"])
+      else
+        User.find_by!(username: ShelfStack::SYSTEM_USERNAME)
+      end
+      count = InventoryReservations::Expire.call!(actor: actor)
+      puts "Expired #{count} reservation(s)."
+    end
+
     desc "Check inventory balance integrity against ledger sums"
     task check_integrity: :environment do
       actor = if ENV["USERNAME"].present?

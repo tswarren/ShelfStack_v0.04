@@ -6,6 +6,7 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
     before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview]
     before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line route_command]
+    before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: %i[add_open_ring_line]
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
     before_action -> { authorize_pos!("pos.lines.remove") }, only: %i[remove_line]
@@ -16,13 +17,13 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.void") }, only: %i[void]
     before_action -> { authorize_pos!("pos.transactions.cancel") }, only: %i[cancel]
     before_action :set_transaction, only: %i[
-      show edit update add_line add_open_ring_line add_return_line update_line remove_line
+      show edit update add_line add_reservation_line add_open_ring_line add_return_line update_line remove_line
       sync_tenders complete suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
-      edit update add_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command
+      edit update add_line add_reservation_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command
     ]
-    before_action :load_edit_context, only: %i[edit add_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command]
+    before_action :load_edit_context, only: %i[edit add_line add_reservation_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command]
 
     def index
       @transactions = PosTransaction.where(store: pos_store).order(updated_at: :desc).limit(50)
@@ -118,6 +119,22 @@ module Pos
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
       respond_to_workspace(notice: "Line added.")
+    end
+
+    def add_reservation_line
+      reservation = InventoryReservation.find(params[:inventory_reservation_id])
+      quantity = params[:quantity].presence&.to_i
+      quantity = 1 if quantity.nil? || quantity <= 0
+
+      Pos::AddReservationLine.call!(
+        transaction: @transaction,
+        reservation: reservation,
+        added_by_user: current_user,
+        quantity: quantity
+      )
+      respond_to_workspace(notice: "Pickup line added.")
+    rescue Pos::AddReservationLine::Error => e
+      respond_to_workspace(alert: e.message)
     end
 
     def add_return_line

@@ -1,0 +1,27 @@
+<%# locals: f, customer: %>
+<%= render "shared/forms/errors", record: customer %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Customer profile",
+  description: "Basic contact details for requests, holds, and pickup."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :display_name, required: true } do %>
+      <%= f.text_field :display_name, autocomplete: "name" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :preferred_contact_method, label: "Preferred contact" } do %>
+      <%= f.select :preferred_contact_method,
+            Customer::PREFERRED_CONTACT_METHODS.map { |m| [customers_preferred_contact_label(m), m] },
+            include_blank: true %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :email } do %>
+      <%= f.email_field :email, autocomplete: "email" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :phone } do %>
+      <%= f.telephone_field :phone, autocomplete: "tel" %>
+    <% end %>
+  </div>
+  <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :notes } do %>
+    <%= f.text_area :notes, rows: 4 %>
+  <% end %>
+<% end %>
