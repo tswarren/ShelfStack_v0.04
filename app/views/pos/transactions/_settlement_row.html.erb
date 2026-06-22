@@ -39,7 +39,7 @@
         <%= label_tag nil, "Last four", class: "ss-pos-settlement-row__field-label" %>
         <%= text_field_tag "settlements[][card_last_four]", row.card_last_four,
               maxlength: 4,
-              pattern: "\\d{4}",
+              inputmode: "numeric",
               placeholder: "1234",
               data: { action: "input->pos-settlement-panel#update change->pos-settlement-panel#update" } %>
       </div>

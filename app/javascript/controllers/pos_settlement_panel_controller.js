@@ -200,6 +200,24 @@ export default class extends Controller {
     } else {
       this.changeHintTarget.hidden = true
     }
+
+    this.updateCompleteButton(nonCashCents, cashTenderedCents, totalCents)
+  }
+
+  updateCompleteButton(nonCashCents, cashTenderedCents, totalCents) {
+    const button = this.element.querySelector("[data-pos-transaction-edit-target='completeButton']")
+    if (!button) return
+
+    if (totalCents > 0) {
+      const remainingAfterNonCash = Math.max(totalCents - nonCashCents, 0)
+      const ready = nonCashCents <= totalCents && cashTenderedCents >= remainingAfterNonCash
+      button.disabled = !ready
+    } else if (totalCents < 0) {
+      const tenderTotal = nonCashCents + cashTenderedCents
+      button.disabled = Math.abs(totalCents) > tenderTotal
+    } else {
+      button.disabled = false
+    }
   }
 
   hideEmptyRow() {

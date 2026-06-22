@@ -10,8 +10,7 @@
   <% complete_params = {} %>
   <% complete_params[:confirm_inactive] = 1 if confirm_inactive %>
   <%= form_with url: complete_pos_transaction_path(transaction, complete_params), method: :patch, class: "ss-form ss-pos-settlement-form", data: {
-        controller: "pos-transaction-edit",
-        action: "input->pos-settlement-panel#update change->pos-settlement-panel#update"
+        action: "input->pos-settlement-panel#update change->pos-settlement-panel#update input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange"
       } do %>
     <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
     <%= hidden_field_tag :confirm_inactive, 1, data: { pos_transaction_edit_target: "confirmInactiveField" }, disabled: !confirm_inactive, id: nil %>
