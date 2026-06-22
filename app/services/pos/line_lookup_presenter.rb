@@ -55,10 +55,9 @@ module Pos
         .limit(10)
         .map do |reservation|
           request = reservation.customer_request_line&.customer_request
-          customer = reservation.customer || request&.customer
           {
             id: reservation.id,
-            customer_name: customer&.display_name,
+            customer_name: CustomerDemand::DisplayName.for_reservation(reservation),
             request_number: request&.request_number,
             expires_at: reservation.expires_at&.iso8601,
             quantity: reservation.remaining_quantity

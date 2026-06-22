@@ -24,6 +24,33 @@
   <% end %>
 </div>
 
+<% if @profile_presenter %>
+  <div class="ss-profile-actions ss-detail-actions">
+    <% if @profile_presenter.can_create_request? %>
+      <%= link_to "New request", @profile_presenter.new_request_path, class: "ss-btn" %>
+    <% end %>
+    <% if @profile_presenter.can_view_requests? && @profile_presenter.ready_for_pickup_line_count.positive? %>
+      <%= link_to "View ready pickups (#{@profile_presenter.ready_for_pickup_line_count})",
+            @profile_presenter.ready_pickups_path,
+            class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+    <% if @profile_presenter.can_view_requests? && @profile_presenter.active_hold_count.positive? %>
+      <%= link_to "View active holds (#{@profile_presenter.active_hold_count})",
+            @profile_presenter.active_holds_path,
+            class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+    <% if @profile_presenter.can_record_contact? %>
+      <details class="ss-collapsible-inline">
+        <summary class="ss-btn ss-btn-secondary">Record contact</summary>
+        <%= render "customers/customers/contact_form", customer: @customer %>
+      </details>
+    <% end %>
+  </div>
+  <p class="ss-muted">
+    <%= @profile_presenter.open_request_count %> open request<%= @profile_presenter.open_request_count == 1 ? "" : "s" %>
+  </p>
+<% end %>
+
 <h2>Open requests</h2>
 <% if @customer_requests.any? %>
   <table class="ss-table">

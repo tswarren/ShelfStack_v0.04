@@ -37,6 +37,7 @@ module InventoryReservations
           so.update!(
             status: fully_completed ? "completed" : "ready_for_pickup",
             quantity_completed: quantity_completed,
+            quantity_ready: so.quantity_ready + quantity,
             completed_at: fully_completed ? so.completed_at || Time.current : nil
           )
         end

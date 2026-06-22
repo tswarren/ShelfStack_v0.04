@@ -11,14 +11,14 @@ module CustomerRequests
     end
 
     attr_reader :customer_request, :store, :contact_events, :audit_events,
-                :active_holds_by_line, :availability_by_variant, :draft_po_lines_by_variant, :vendors
+                :active_reservations_by_line, :availability_by_variant, :draft_po_lines_by_variant, :vendors
 
     def line_cards
       @line_cards ||= customer_request.customer_request_lines.map do |line|
         LineShowPresenter.build(
           line: line,
           store: store,
-          active_hold: active_holds_by_line[line.id],
+          active_reservations: active_reservations_by_line[line.id] || [],
           availability: availability_by_variant[line.product_variant_id],
           draft_po_lines: draft_po_lines_by_variant[line.product_variant_id] || [],
           vendors: vendors
@@ -77,9 +77,7 @@ module CustomerRequests
       lines = customer_request.customer_request_lines
       variant_ids = lines.filter_map(&:product_variant_id)
 
-      @active_holds_by_line = InventoryReservation.active_on_hand
-                                                    .where(customer_request_line_id: lines.map(&:id))
-                                                    .index_by(&:customer_request_line_id)
+      @active_reservations_by_line = CustomerRequests::ReservationLookup.active_by_line_id(lines.map(&:id))
 
       @availability_by_variant = variant_ids.index_with do |variant_id|
         variant = ProductVariant.find(variant_id)

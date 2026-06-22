@@ -63,6 +63,18 @@ class PosCompleteReservationFulfillmentTest < ActiveSupport::TestCase
     assert_equal 1, @reservation.quantity_fulfilled
   end
 
+  test "pickup reduces quantity_ready on linked special order" do
+    @line.update!(request_type: "special_order")
+    special_order = SpecialOrders::CreateFromRequestLine.call!(line: @line, created_by_user: @user, quantity: 3)
+    SpecialOrders::Approve.call!(special_order: special_order, approved_by_user: @user)
+    @reservation.update!(special_order: special_order, reservation_type: "special_order_reserve")
+    special_order.update!(quantity_ready: 3)
+
+    Pos::CompleteReservationFulfillment.call!(transaction: @transaction, fulfilled_by_user: @user)
+
+    assert_equal 2, special_order.reload.quantity_ready
+  end
+
   test "full pickup completes line and header" do
     @pos_line.update!(quantity: 3)
 

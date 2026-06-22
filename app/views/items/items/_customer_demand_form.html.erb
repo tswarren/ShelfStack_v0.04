@@ -54,22 +54,29 @@
             <%= label_tag :customer_phone_snapshot, "Walk-in phone", class: "ss-label" %>
             <%= text_field_tag :customer_phone_snapshot, nil, class: "ss-input" %>
           </div>
-          <div class="ss-field">
-            <%= label_tag :needed_by_date, "Needed by", class: "ss-label" %>
-            <%= date_field_tag :needed_by_date, nil, class: "ss-input" %>
-          </div>
-          <div class="ss-field">
-            <%= label_tag :quantity, "Quantity", class: "ss-label" %>
-            <%= number_field_tag :quantity, 1, min: 1, class: "ss-input",
-                  data: {
-                    customer_request_hold_form_target: "quantity",
-                    action: "input->customer-request-hold-form#quantityChanged change->customer-request-hold-form#quantityChanged"
-                  } %>
-          </div>
         </div>
       </div>
     <% end %>
   </div>
+
+  <%= render layout: "shared/forms/section", locals: {
+    title: "Demand",
+    description: "Quantity and timing apply whether the customer is linked or walk-in."
+  } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <div class="ss-field">
+        <%= label_tag :needed_by_date, "Needed by", class: "ss-label" %>
+        <%= date_field_tag :needed_by_date, nil, class: "ss-input" %>
+      </div>
+      <div class="ss-field">
+        <%= label_tag :quantity, "Quantity", class: "ss-label" %>
+        <%= number_field_tag :quantity, 1, min: 1, class: "ss-input",
+              data: {
+                customer_request_hold_form_target: "quantity",
+                action: "input->customer-request-hold-form#quantityChanged change->customer-request-hold-form#quantityChanged"
+              } %>
+      </div>
+    </div>
 
   <div data-item-customer-demand-drawer-target="holdFields" hidden>
     <div class="ss-form-grid ss-form-grid--2">
@@ -99,6 +106,7 @@
     <%= label_tag :notes, "Notes", class: "ss-label" %>
     <%= text_area_tag :notes, nil, rows: 2, class: "ss-input" %>
   </div>
+  <% end %>
 
   <footer class="ss-form-actions">
     <%= submit_tag "Submit",

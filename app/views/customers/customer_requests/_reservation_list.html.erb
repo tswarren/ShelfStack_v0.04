@@ -1,0 +1,30 @@
+<%# locals: customer_request:, line:, reservations: %>
+<% if reservations.any? %>
+  <div class="ss-reservation-list">
+    <h4 class="ss-reservation-list__title">Reservations</h4>
+    <ul class="ss-reservation-list__items">
+      <% reservations.each do |reservation| %>
+        <li class="ss-reservation-list__item">
+          <span class="ss-reservation-list__type"><%= reservation.reservation_type.tr("_", " ").titleize %></span>
+          <span class="ss-num">Qty <%= reservation.remaining_quantity %></span>
+          <% if reservation.receipt_line&.receipt.present? %>
+            <span class="ss-muted">
+              from <%= link_to "Receipt ##{reservation.receipt_line.receipt.id}",
+                    orders_receipt_path(reservation.receipt_line.receipt) %>
+            </span>
+          <% end %>
+          <% if reservation.expires_at.present? %>
+            <span class="ss-muted">Expires <%= l(reservation.expires_at.to_date) %></span>
+          <% end %>
+          <% if Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.release", store: current_store) %>
+            <%= button_to "Release",
+                  release_hold_customers_customer_request_path(customer_request, reservation_id: reservation.id, release_reason: "staff_release"),
+                  method: :post,
+                  class: "ss-btn ss-btn-small ss-btn-secondary",
+                  data: { turbo_confirm: "Release this reservation?" } %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

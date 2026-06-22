@@ -243,6 +243,8 @@ unfillable
 
 **Quantity tracking:** `quantity_committed`, `quantity_ordered`, `quantity_received`, `quantity_ready`, `quantity_completed`, `quantity_cancelled`
 
+`quantity_ready` is the current open ready-for-pickup quantity (operational), not cumulative; it increases when stock is received and decreases when picked up at POS, restoring on void reversal.
+
 Links: customer, customer_request_line, product_variant, vendor (optional until PO), allocations, reservation, POS line.
 
 ---

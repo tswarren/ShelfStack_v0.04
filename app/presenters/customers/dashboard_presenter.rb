@@ -48,7 +48,7 @@ module Customers
         action = CustomerRequests::NextActionResolver.for_request(
           request,
           store: store,
-          active_holds_by_line: context[:active_holds_by_line],
+          active_reservations_by_line: context[:active_reservations_by_line],
           availability_by_variant: context[:availability_by_variant]
         )
         PreviewRow.new(
@@ -103,10 +103,8 @@ module Customers
       line_ids = requests.flat_map { |request| request.customer_request_lines.map(&:id) }
       variant_ids = requests.flat_map { |request| request.customer_request_lines.filter_map(&:product_variant_id) }.uniq
 
-      active_holds = if line_ids.any?
-        InventoryReservation.active_on_hand
-                              .where(customer_request_line_id: line_ids)
-                              .index_by(&:customer_request_line_id)
+      active_reservations = if line_ids.any?
+        CustomerRequests::ReservationLookup.active_by_line_id(line_ids)
       else
         {}
       end
@@ -116,7 +114,7 @@ module Customers
         Inventory::Availability.available(store: store, variant: variant)
       end
 
-      { active_holds_by_line: active_holds, availability_by_variant: availability_by_variant }
+      { active_reservations_by_line: active_reservations, availability_by_variant: availability_by_variant }
     end
 
     def primary_item_summary(request)

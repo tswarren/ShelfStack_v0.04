@@ -6,9 +6,13 @@ module CustomerRequests
 
     EXPIRING_HOLD_WINDOW = QueueScope::EXPIRING_HOLD_WINDOW
 
-    def self.for_line(line, store:, customer_request: nil, active_hold: nil, availability: nil)
+    def self.for_line(line, store:, customer_request: nil, active_reservations: nil, active_hold: nil, availability: nil)
       request = customer_request || line.customer_request
-      holds = active_hold.present? ? { line.id => active_hold } : {}
+      reservations = active_reservations
+      reservations = [ active_hold ] if reservations.blank? && active_hold.present?
+      reservations = Array(reservations).compact
+      holds = reservations.any? ? { line.id => reservations } : {}
+
       availability_by_variant = if availability.present? && line.product_variant_id.present?
         { line.product_variant_id => availability }
       else
@@ -18,19 +22,20 @@ module CustomerRequests
       new(
         request,
         store:,
-        active_holds_by_line: holds,
+        active_reservations_by_line: holds,
         availability_by_variant: availability_by_variant
       ).resolve_for_line(line)
     end
 
-    def self.for_request(request, store:, active_holds_by_line: {}, availability_by_variant: {})
-      new(request, store:, active_holds_by_line:, availability_by_variant:).resolve
+    def self.for_request(request, store:, active_holds_by_line: {}, active_reservations_by_line: nil, availability_by_variant: {})
+      reservations_by_line = active_reservations_by_line || active_holds_by_line.transform_values { |hold| Array(hold) }
+      new(request, store:, active_reservations_by_line: reservations_by_line, availability_by_variant:).resolve
     end
 
-    def initialize(request, store:, active_holds_by_line:, availability_by_variant:)
+    def initialize(request, store:, active_reservations_by_line:, availability_by_variant:)
       @request = request
       @store = store
-      @active_holds_by_line = active_holds_by_line
+      @active_reservations_by_line = active_reservations_by_line
       @availability_by_variant = availability_by_variant
     end
 
@@ -50,7 +55,7 @@ module CustomerRequests
 
     private
 
-    attr_reader :request, :store, :active_holds_by_line, :availability_by_variant
+    attr_reader :request, :store, :active_reservations_by_line, :availability_by_variant
 
     def most_urgent_line
       open_lines = request.customer_request_lines.reject { |line| terminal_line?(line) }
@@ -62,7 +67,7 @@ module CustomerRequests
     def line_priority(line)
       return 0 if line.product_variant_id.blank?
       return 1 if expiring_hold?(line)
-      return 2 if line.status == "ready_for_pickup"
+      return 2 if line.status == "ready_for_pickup" || ready_quantity_for(line).positive?
       return 3 if line.special_order&.status == "approved"
       return 4 if line.request_type == "special_order" && line.special_order.blank?
       return 5 if notify_ready?(line)
@@ -82,7 +87,7 @@ module CustomerRequests
         return Action.new(label: "Hold expiring", path: path)
       end
 
-      if line.status == "ready_for_pickup"
+      if line.status == "ready_for_pickup" || ready_quantity_for(line).positive?
         return Action.new(label: "Ready for pickup", path: path)
       end
 
@@ -116,10 +121,19 @@ module CustomerRequests
     end
 
     def expiring_hold?(line)
-      hold = active_holds_by_line[line.id]
-      return false if hold.blank? || hold.expires_at.blank?
+      reservations_for(line).any? do |reservation|
+        reservation.reservation_type == "on_hand_hold" &&
+          reservation.expires_at.present? &&
+          reservation.expires_at <= EXPIRING_HOLD_WINDOW.from_now
+      end
+    end
 
-      hold.expires_at <= EXPIRING_HOLD_WINDOW.from_now
+    def ready_quantity_for(line)
+      reservations_for(line).sum(&:remaining_quantity)
+    end
+
+    def reservations_for(line)
+      active_reservations_by_line[line.id] || []
     end
 
     def terminal_line?(line)

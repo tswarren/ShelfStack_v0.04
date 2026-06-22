@@ -113,20 +113,16 @@ module CustomerRequests
     end
 
     def create_hold!(request:, line:)
-      reservation = InventoryReservations::ReserveOnHand.call!(
+      CustomerRequests::CreateHoldFromLine.call!(
+        request: request,
+        line: line,
         store: store,
-        variant: variant,
+        actor: actor,
         quantity: quantity,
-        reserved_by_user: actor,
-        customer: request.customer,
-        customer_request_line: line,
         expires_at: expires_at,
         override_authorized_by_user: override_authorized_by_user,
         override_reason: override_reason
       )
-      line.update!(status: "ready_for_pickup")
-      request.refresh_status_from_lines!
-      reservation
     end
 
     def create_special_order!(line:)

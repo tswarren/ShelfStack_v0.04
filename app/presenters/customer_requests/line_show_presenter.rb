@@ -5,23 +5,46 @@ module CustomerRequests
     TrailStep = Data.define(:label, :state)
     Availability = Data.define(:available, :on_hand, :reserved)
 
-    def self.build(line:, store:, active_hold: nil, availability: nil, draft_po_lines: [], vendors: [])
-      new(line:, store:, active_hold:, availability:, draft_po_lines:, vendors:).build
+    def self.build(line:, store:, active_reservations: nil, active_hold: nil, availability: nil, draft_po_lines: [], vendors: [])
+      reservations = active_reservations
+      reservations = [ active_hold ] if reservations.blank? && active_hold.present?
+      reservations = Array(reservations).compact
+
+      new(
+        line:,
+        store:,
+        active_reservations: reservations,
+        availability:,
+        draft_po_lines:,
+        vendors:
+      ).build
     end
 
-    def initialize(line:, store:, active_hold: nil, availability: nil, draft_po_lines: [], vendors: [])
+    def initialize(line:, store:, active_reservations: [], availability: nil, draft_po_lines: [], vendors: [])
       @line = line
       @store = store
-      @active_hold = active_hold
+      @active_reservations = Array(active_reservations)
       @availability = availability
       @draft_po_lines = draft_po_lines
       @vendors = vendors
     end
 
-    attr_reader :line, :active_hold, :availability, :draft_po_lines, :vendors
+    attr_reader :line, :active_reservations, :availability, :draft_po_lines, :vendors
 
     def build
       self
+    end
+
+    def active_hold
+      on_hand_holds.first
+    end
+
+    def on_hand_holds
+      active_reservations.select { |reservation| reservation.reservation_type == "on_hand_hold" }
+    end
+
+    def ready_quantity
+      active_reservations.sum(&:remaining_quantity)
     end
 
     def customer_request
@@ -33,7 +56,7 @@ module CustomerRequests
         line,
         store: store,
         customer_request: customer_request,
-        active_hold: active_hold,
+        active_reservations: active_reservations,
         availability: availability_hash
       )
     end
@@ -41,6 +64,7 @@ module CustomerRequests
     def contact_relevant?
       line.status == "awaiting_customer_response" ||
         line.status == "ready_for_pickup" ||
+        ready_quantity.positive? ||
         notify_ready?
     end
 
@@ -96,17 +120,18 @@ module CustomerRequests
 
     def quantity_summary
       parts = [ "Requested #{line.requested_quantity}" ]
+      parts << "ready #{ready_quantity}" if ready_quantity.positive?
       parts << "filled #{line.filled_quantity}" if line.filled_quantity.positive?
       parts << "cancelled #{line.cancelled_quantity}" if line.cancelled_quantity.positive?
       parts.join(" · ")
     end
 
     def hold_expires_on
-      active_hold&.expires_at&.to_date
+      on_hand_holds.filter_map(&:expires_at).min&.to_date
     end
 
     def can_create_hold?
-      line.matched? && %w[hold notify].include?(line.request_type) && active_hold.blank?
+      line.matched? && %w[hold notify].include?(line.request_type) && on_hand_holds.empty?
     end
 
     def can_override_hold?
@@ -148,7 +173,7 @@ module CustomerRequests
     end
 
     def hold_state
-      return "current" if active_hold.present?
+      return "current" if on_hand_holds.any?
       return "complete" if %w[ready_for_pickup partially_filled completed].include?(line.status)
 
       line.request_type == "hold" && line.matched? ? "upcoming" : "upcoming"
@@ -169,7 +194,7 @@ module CustomerRequests
     end
 
     def ready_state
-      return "current" if line.status == "ready_for_pickup"
+      return "current" if line.status == "ready_for_pickup" || ready_quantity.positive?
       return "complete" if line.status == "completed"
 
       "upcoming"
@@ -190,7 +215,8 @@ module CustomerRequests
 
     def ready_relevant?
       %w[ready_for_pickup partially_filled completed].include?(line.status) ||
-        (line.request_type == "hold" && active_hold.present?)
+        ready_quantity.positive? ||
+        (line.request_type == "hold" && on_hand_holds.any?)
     end
   end
 end

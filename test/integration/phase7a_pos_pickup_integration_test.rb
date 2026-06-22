@@ -52,6 +52,33 @@ class Phase7aPosPickupIntegrationTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "pickup lookup finds walk-in snapshot customer by name" do
+    walk_in_request = create_customer_request!(
+      store: @store,
+      created_by_user: @user,
+      lines: [ { request_type: "hold" } ]
+    )
+    walk_in_line = walk_in_request.customer_request_lines.first
+    match_request_line!(line: walk_in_line, variant: @variant, actor: @user)
+    walk_in_reservation = InventoryReservations::ReserveOnHand.call!(
+      store: @store,
+      variant: @variant,
+      quantity: 1,
+      reserved_by_user: @user,
+      customer: nil,
+      customer_request_line: walk_in_line
+    )
+    walk_in_reservation.update!(status: "ready")
+
+    post pos_pickup_lookup_path, params: { query: walk_in_request.customer_name_snapshot }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    reservation_ids = body["pickups"].map { |row| row["reservation_id"] }
+    assert_includes reservation_ids, walk_in_reservation.id
+    assert_equal walk_in_request.customer_name_snapshot, body["pickups"].find { |row| row["reservation_id"] == walk_in_reservation.id }["customer_name"]
+  end
+
   test "pickup lookup returns ready reservation" do
     post pos_pickup_lookup_path, params: { query: "Pickup Pat" }, as: :json
 

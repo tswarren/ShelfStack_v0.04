@@ -49,27 +49,23 @@ module Customers
     end
 
     def create
+      @customer_request = CustomerRequests::CreateFromForm.call!(
+        store: customers_store,
+        created_by_user: current_user,
+        params: params
+      )
+      redirect_to customers_customer_request_path(@customer_request), notice: "Customer request created."
+    rescue CustomerRequests::CreateFromForm::CreateError => e
       @customer_request = CustomerRequest.new(customer_request_params)
       @customer_request.store = customers_store
       @customer_request.created_by_user = current_user
-      @customer_request.status = "new"
-      @customer_request.request_number = CustomerRequests::RequestNumberAssigner.next_for!(store: customers_store)
-
-      if @customer_request.save
-        AuditEvents.record!(
-          actor: current_user,
-          event_name: "customer_request.created",
-          auditable: @customer_request,
-          details: {
-            "request_number" => @customer_request.request_number,
-            "line_count" => @customer_request.customer_request_lines.size
-          }
-        )
-        redirect_to customers_customer_request_path(@customer_request), notice: "Customer request created."
-      else
-        load_form_collections
-        render :new, status: :unprocessable_entity
-      end
+      @customer_request.errors.add(:base, e.message)
+      load_form_collections
+      render :new, status: :unprocessable_entity
+    rescue ActiveRecord::RecordInvalid => e
+      @customer_request = e.record
+      load_form_collections
+      render :new, status: :unprocessable_entity
     end
 
     def edit
@@ -114,25 +110,52 @@ module Customers
 
     def update_line_type
       line = @customer_request.customer_request_lines.find(params[:line_id])
-      request_type = params[:request_type].to_s
-      unless CustomerRequestLine::REQUEST_TYPES.include?(request_type)
-        raise StandardError, "Invalid request type"
-      end
-
-      line.update!(request_type: request_type)
-      @customer_request.refresh_status_from_lines!
+      CustomerRequests::ChangeLineType.call!(
+        request: @customer_request,
+        line: line,
+        request_type: params[:request_type],
+        actor: current_user
+      )
       redirect_to customers_customer_request_path(@customer_request, anchor: "line-#{line.id}"),
-                  notice: "Line type updated to #{request_type.tr('_', ' ')}."
-    rescue StandardError => e
+                  notice: "Line type updated to #{params[:request_type].to_s.tr('_', ' ')}."
+    rescue CustomerRequests::ChangeLineType::ChangeError => e
       redirect_to customers_customer_request_path(@customer_request), alert: e.message
     end
 
     def mark_awaiting_response
       line = @customer_request.customer_request_lines.find(params[:line_id])
-      line.update!(status: "awaiting_customer_response")
-      @customer_request.refresh_status_from_lines!
+      CustomerRequests::MarkAwaitingResponse.call!(
+        request: @customer_request,
+        line: line,
+        actor: current_user
+      )
       redirect_to customers_customer_request_path(@customer_request, anchor: "line-#{line.id}"),
                   notice: "Line marked awaiting customer response."
+    end
+
+    def create_hold
+      line = @customer_request.customer_request_lines.find(params[:line_id])
+      override_user = if params[:override_reason].present? &&
+                         Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.override", store: current_store)
+                        current_user
+      end
+
+      CustomerRequests::CreateHoldFromLine.call!(
+        request: @customer_request,
+        line: line,
+        store: customers_store,
+        actor: current_user,
+        quantity: params[:quantity],
+        expires_at: params[:expires_at],
+        override_authorized_by_user: override_user,
+        override_reason: params[:override_reason]
+      )
+      redirect_to customers_customer_request_path(@customer_request, anchor: "line-#{line.id}"),
+                  notice: "Hold created."
+    rescue CustomerRequests::CreateHoldFromLine::HoldError => e
+      redirect_to customers_customer_request_path(@customer_request), alert: e.message
+    rescue StandardError => e
+      redirect_to customers_customer_request_path(@customer_request), alert: e.message
     end
 
     def create_special_order
@@ -141,36 +164,6 @@ module Customers
       SpecialOrders::Approve.call!(special_order: special_order, approved_by_user: current_user)
       redirect_to customers_customer_request_path(@customer_request, anchor: "line-#{line.id}"),
                   notice: "Special order created and approved."
-    rescue StandardError => e
-      redirect_to customers_customer_request_path(@customer_request), alert: e.message
-    end
-
-    def create_hold
-      line = @customer_request.customer_request_lines.find(params[:line_id])
-      raise StandardError, "Line must be matched" unless line.matched?
-
-      quantity = params[:quantity].presence&.to_i || line.requested_quantity
-      expires_at = params[:expires_at].present? ? Time.zone.parse(params[:expires_at]) : nil
-      override_user = if params[:override_reason].present? &&
-                         Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.override", store: current_store)
-                        current_user
-      end
-
-      InventoryReservations::ReserveOnHand.call!(
-        store: customers_store,
-        variant: line.product_variant,
-        quantity: quantity,
-        reserved_by_user: current_user,
-        customer: @customer_request.customer,
-        customer_request_line: line,
-        expires_at: expires_at,
-        override_authorized_by_user: override_user,
-        override_reason: params[:override_reason]
-      )
-      line.update!(status: "ready_for_pickup")
-      @customer_request.refresh_status_from_lines!
-      redirect_to customers_customer_request_path(@customer_request, anchor: "line-#{line.id}"),
-                  notice: "Hold created."
     rescue StandardError => e
       redirect_to customers_customer_request_path(@customer_request), alert: e.message
     end
@@ -224,20 +217,18 @@ module Customers
     end
 
     def record_contact
-      event = CustomerContactEvent.create!(
-        customer: @customer_request.customer,
+      CustomerRequests::RecordContact.call!(
+        actor: current_user,
         customer_request: @customer_request,
         customer_request_line_id: params[:line_id],
         contact_method: params[:contact_method],
         direction: params[:direction] || "outbound",
         status: params[:status] || "attempted",
-        summary: params[:summary],
-        recorded_by_user: current_user,
-        occurred_at: Time.current
+        summary: params[:summary]
       )
-      @customer_request.update!(last_contacted_at: Time.current)
-      record_audit!("customer_contact_event.created", event)
       redirect_to customers_customer_request_path(@customer_request), notice: "Contact recorded."
+    rescue CustomerRequests::RecordContact::RecordError => e
+      redirect_to customers_customer_request_path(@customer_request), alert: e.message
     end
 
     private

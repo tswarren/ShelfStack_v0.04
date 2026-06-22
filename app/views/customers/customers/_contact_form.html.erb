@@ -1,0 +1,27 @@
+<%# locals: customer: %>
+<%= form_with url: customers_customer_contact_events_path(customer),
+              method: :post,
+              class: "ss-form ss-form--standard ss-profile-contact-form" do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= label_tag :contact_method, "Contact method", class: "ss-label" %>
+      <%= select_tag :contact_method,
+            options_for_select(
+              CustomerContactEvent::CONTACT_METHODS.map { |method| [customers_preferred_contact_label(method), method] },
+              customer.preferred_contact_method
+            ),
+            class: "ss-input" %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :status, "Outcome", class: "ss-label" %>
+      <%= select_tag :status,
+            options_for_select(CustomerContactEvent::STATUSES.map { |status| [status.titleize, status] }),
+            class: "ss-input" %>
+    </div>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :summary, "Summary", class: "ss-label" %>
+    <%= text_area_tag :summary, nil, required: true, rows: 3, class: "ss-input", placeholder: "What was discussed or attempted?" %>
+  </div>
+  <%= submit_tag "Record contact", class: "ss-btn" %>
+<% end %>

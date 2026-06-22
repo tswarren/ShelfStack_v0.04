@@ -54,6 +54,16 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal "ready_for_pickup", request.customer_request_lines.first.status
   end
 
+  test "quantity field is outside walk-in fields target" do
+    get items_item_path(product_id: @product.id, tab: "operations")
+
+    assert_response :success
+    walk_in_block = response.body[/data-customer-lookup-target="walkInFields"[^>]*>[\s\S]*?<\/div>\s*<\/section>/m]
+    assert_not_nil walk_in_block
+    assert_not_includes walk_in_block, 'name="quantity"'
+    assert_match(/<h2>Demand<\/h2>[\s\S]*name="quantity"/, response.body)
+  end
+
   test "create notify without hold permission still works with create only" do
     post items_customer_demand_path, params: {
       request_type: "notify",

@@ -1,4 +1,4 @@
-<%# locals: customer_request:, line:, active_hold:, availability:, draft_po_lines:, vendors:, line_card: nil %>
+<%# locals: customer_request:, line:, active_reservations:, availability:, draft_po_lines:, vendors:, line_card: nil %>
 <div class="ss-detail-actions">
   <% if line.request_type == "research" && line.matched? &&
         Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
@@ -47,13 +47,8 @@
           availability: availability %>
   <% end %>
 
-  <% if active_hold.present? &&
-        Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.release", store: current_store) %>
-    <span class="ss-muted">Held until <%= l(active_hold.expires_at.to_date) if active_hold.expires_at.present? %></span>
-    <%= button_to "Release hold",
-          release_hold_customers_customer_request_path(customer_request, reservation_id: active_hold.id, release_reason: "staff_release"),
-          method: :post,
-          class: "ss-btn ss-btn-small ss-btn-secondary",
-          data: { turbo_confirm: "Release this hold?" } %>
-  <% end %>
+  <%= render "reservation_list",
+        customer_request: customer_request,
+        line: line,
+        reservations: active_reservations %>
 </div>

@@ -19,6 +19,7 @@ module InventoryReservations
       raise ConvertError, "Reservation must be incoming_reserve" unless reservation.reservation_type == "incoming_reserve"
       raise ConvertError, "Quantity exceeds remaining" if quantity > reservation.remaining_quantity
       raise ConvertError, "Receipt store mismatch" if receipt_line.receipt.store_id != reservation.store_id
+      raise ConvertError, "Receipt line variant mismatch" if receipt_line.product_variant_id != reservation.product_variant_id
 
       converted = nil
       InventoryBalance.transaction do

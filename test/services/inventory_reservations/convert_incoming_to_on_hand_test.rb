@@ -114,4 +114,29 @@ class InventoryReservationsConvertIncomingToOnHandTest < ActiveSupport::TestCase
     result = Inventory::BalanceIntegrityCheck.call(actor: @user)
     assert result.passed
   end
+
+  test "rejects receipt line variant mismatch" do
+    wrong_variant = ProductVariant.create!(
+      product: @variant.product,
+      sku: "MISMATCH-#{SecureRandom.hex(4)}",
+      name: "Mismatch copy",
+      sub_department: @variant.sub_department,
+      condition: @variant.condition,
+      inventory_behavior: "standard_physical",
+      active: true,
+      selling_price_cents: 1000
+    )
+    @receipt_line.update_column(:product_variant_id, wrong_variant.id)
+
+    error = assert_raises(InventoryReservations::ConvertIncomingToOnHand::ConvertError) do
+      InventoryReservations::ConvertIncomingToOnHand.call!(
+        reservation: @incoming,
+        receipt_line: @receipt_line,
+        quantity: 1,
+        converted_by_user: @user
+      )
+    end
+
+    assert_match(/variant mismatch/i, error.message)
+  end
 end

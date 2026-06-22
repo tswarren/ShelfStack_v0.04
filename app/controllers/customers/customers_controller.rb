@@ -18,6 +18,11 @@ module Customers
       @customer_requests = @customer.customer_requests.where(store: customers_store).order(created_at: :desc).limit(20)
       @contact_events = CustomerContactEvent.where(customer: @customer).order(occurred_at: :desc).limit(20)
       @audit_events = AuditEvent.for_auditable(@customer).limit(20)
+      @profile_presenter = Customers::ProfilePresenter.build(
+        customer: @customer,
+        store: customers_store,
+        user: current_user
+      )
     end
 
     def new

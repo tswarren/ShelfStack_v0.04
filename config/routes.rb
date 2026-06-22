@@ -256,6 +256,7 @@ Rails.application.routes.draw do
         patch :inactivate
         patch :reactivate
       end
+      resources :contact_events, only: %i[create]
     end
     resources :customer_requests do
       member do

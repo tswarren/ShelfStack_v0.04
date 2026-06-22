@@ -10,7 +10,7 @@ module CustomerRequests
       "awaiting_response" => { status: "awaiting_customer_response" },
       "approved_to_order" => { kind: :approved_to_order },
       "on_order" => { status: %w[ordered partially_filled] },
-      "ready_for_pickup" => { status: "ready_for_pickup" },
+      "ready_for_pickup" => { kind: :ready_for_pickup },
       "notify_customer" => { kind: :notify_customer },
       "expiring_holds" => { kind: :expiring_holds },
       "completed" => { status: "completed" },
@@ -59,6 +59,8 @@ module CustomerRequests
         apply_notify_customer
       when :expiring_holds
         apply_expiring_holds
+      when :ready_for_pickup
+        apply_ready_for_pickup
       else
         apply_status(filter)
       end
@@ -83,6 +85,17 @@ module CustomerRequests
     def apply_notify_customer
       ids = NotifyQueueQuery.customer_request_ids_for(store: store)
       @relation.where(id: ids)
+    end
+
+    def apply_ready_for_pickup
+      line_ready_ids = @relation.joins(:customer_request_lines)
+                                  .merge(CustomerRequestLine.open_lines.where(status: "ready_for_pickup"))
+                                  .select(:id)
+      reservation_ready_ids = @relation.joins(customer_request_lines: :inventory_reservations)
+                                         .merge(InventoryReservation.active_on_hand.where(status: %w[active ready]))
+                                         .select(:id)
+
+      @relation.where(id: line_ready_ids).or(@relation.where(id: reservation_ready_ids)).distinct
     end
 
     def apply_expiring_holds

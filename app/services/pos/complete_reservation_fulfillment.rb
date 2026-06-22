@@ -28,9 +28,11 @@ module Pos
           quantity = line.quantity.abs
           quantity_completed = so.quantity_completed + quantity
           fully_completed = quantity_completed + so.quantity_cancelled >= so.quantity_committed
+          quantity_ready = [ so.quantity_ready - quantity, 0 ].max
           so.update!(
             status: fully_completed ? "completed" : "ready_for_pickup",
             quantity_completed: quantity_completed,
+            quantity_ready: quantity_ready,
             completed_at: fully_completed ? Time.current : nil
           )
         end

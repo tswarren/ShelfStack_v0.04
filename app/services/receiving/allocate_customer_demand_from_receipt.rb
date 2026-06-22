@@ -37,11 +37,26 @@ module Receiving
         alloc_qty = [ allocation.quantity_allocated - allocation.quantity_received, remaining ].min
         next if alloc_qty.zero?
 
+        converted_reservation = nil
+        incoming = InventoryReservation.active_incoming.find_by(
+          purchase_order_line: po_line,
+          special_order: allocation.special_order
+        )
+        if incoming.present?
+          converted_reservation = InventoryReservations::ConvertIncomingToOnHand.call!(
+            reservation: incoming,
+            receipt_line: receipt_line,
+            quantity: alloc_qty,
+            converted_by_user: posted_by_user
+          )
+        end
+
         ReceiptLineAllocation.create!(
           receipt_line: receipt_line,
           purchase_order_line_allocation: allocation,
           customer_request_line: allocation.customer_request_line,
           special_order: allocation.special_order,
+          inventory_reservation: converted_reservation,
           quantity_allocated: alloc_qty
         )
 
@@ -49,19 +64,6 @@ module Receiving
           quantity_received: allocation.quantity_received + alloc_qty,
           status: allocation.quantity_received + alloc_qty >= allocation.quantity_allocated ? "received" : "partially_received"
         )
-
-        incoming = InventoryReservation.active_incoming.find_by(
-          purchase_order_line: po_line,
-          special_order: allocation.special_order
-        )
-        if incoming.present?
-          InventoryReservations::ConvertIncomingToOnHand.call!(
-            reservation: incoming,
-            receipt_line: receipt_line,
-            quantity: alloc_qty,
-            converted_by_user: posted_by_user
-          )
-        end
 
         special_order = allocation.special_order
         special_order.update!(

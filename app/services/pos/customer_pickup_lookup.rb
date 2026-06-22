@@ -53,7 +53,17 @@ module Pos
                              .where("display_name ILIKE :q OR email ILIKE :q OR phone ILIKE :q", q: "%#{query}%")
                              .limit(25)
                              .pluck(:id)
-      scope.where(customer_id: customer_ids)
+      snapshot_ids = scope.joins(customer_request_line: :customer_request)
+                          .where(customer_requests: { store_id: store.id })
+                          .where(
+                            "customer_requests.customer_name_snapshot ILIKE :q OR " \
+                            "customer_requests.customer_email_snapshot ILIKE :q OR " \
+                            "customer_requests.customer_phone_snapshot ILIKE :q",
+                            q: "%#{query}%"
+                          )
+                          .select(:id)
+
+      scope.where(customer_id: customer_ids).or(scope.where(id: snapshot_ids))
     end
 
     def filter_by_request_number(scope)
@@ -67,12 +77,11 @@ module Pos
 
     def row_for(reservation)
       request = reservation.customer_request_line&.customer_request
-      customer = reservation.customer || request&.customer
 
       PickupRow.new(
         reservation_id: reservation.id,
-        customer_id: customer&.id,
-        customer_name: customer&.display_name || "—",
+        customer_id: reservation.customer_id || request&.customer_id,
+        customer_name: CustomerDemand::DisplayName.for_reservation(reservation),
         request_number: request&.request_number,
         request_id: request&.id,
         variant_sku: reservation.product_variant.sku,
