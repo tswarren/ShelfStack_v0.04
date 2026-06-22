@@ -125,6 +125,9 @@ Closed in gap-closure pass:
 - Special-order `quantity_ready` is maintained on pickup fulfillment and void reversal.
 - Item drawer hold validation scoped to hold requests; availability synced explicitly on drawer open.
 - Request show Ready metric and expiring-hold urgency label aligned with reservation-aware UI.
+- Request line reservation list restricts staff Release to on-hand holds; special-order ready stock uses pickup/cancel workflows.
+- Derived customer-request header status changes are audited as `customer_request.status_changed` for the request timeline.
+- Mark unfillable is blocked once lines are held, ordered, or have active reservations / committed special orders.
 
 ---
 

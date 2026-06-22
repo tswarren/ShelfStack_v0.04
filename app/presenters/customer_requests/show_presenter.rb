@@ -73,6 +73,18 @@ module CustomerRequests
       end
     end
 
+    def unfillable_eligibility
+      @unfillable_eligibility ||= UnfillableEligibility.check(customer_request)
+    end
+
+    def can_mark_unfillable?
+      unfillable_eligibility.allowed
+    end
+
+    def unfillable_blockers
+      unfillable_eligibility.reasons
+    end
+
     private
 
     def load_supporting_data!

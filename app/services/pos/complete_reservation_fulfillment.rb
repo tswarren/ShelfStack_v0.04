@@ -45,7 +45,7 @@ module Pos
             status: fulfillment_status_for(req_line, filled_quantity),
             filled_quantity: filled_quantity
           )
-          req_line.customer_request.refresh_status_from_lines!
+          req_line.customer_request.refresh_status_from_lines!(actor: fulfilled_by_user, source: req_line)
         end
       end
     end

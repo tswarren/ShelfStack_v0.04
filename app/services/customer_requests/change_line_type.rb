@@ -19,7 +19,7 @@ module CustomerRequests
       raise ChangeError, "Invalid request type" unless CustomerRequestLine::REQUEST_TYPES.include?(request_type)
 
       line.update!(request_type: request_type)
-      request.refresh_status_from_lines!
+      request.refresh_status_from_lines!(actor: actor, source: line)
 
       AuditEvents.record!(
         actor: actor,

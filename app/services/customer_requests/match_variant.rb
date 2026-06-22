@@ -27,7 +27,7 @@ module CustomerRequests
           catalog_item: variant.product.catalog_item,
           status: "matched"
         )
-        line.customer_request.refresh_status_from_lines!
+        line.customer_request.refresh_status_from_lines!(actor: actor, source: line)
 
         AuditEvents.record!(
           actor: actor,

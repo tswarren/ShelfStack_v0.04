@@ -33,7 +33,8 @@
 <% end %>
 
 <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.mark_unfillable", store: current_store) &&
-      !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) %>
+      !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) &&
+      @show_presenter.can_mark_unfillable? %>
   <%= render "orders/shared/collapsible_panel", title: "Mark unfillable", open: false do %>
     <%= form_with url: mark_unfillable_customers_customer_request_path(@show_presenter.customer_request), method: :patch, class: "ss-form" do %>
       <div class="ss-field">
@@ -43,6 +44,10 @@
       <%= submit_tag "Mark unfillable", class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Mark this request unfillable?" } %>
     <% end %>
   <% end %>
+<% elsif Authorization.allowed?(user: current_user, permission_key: "customer_requests.mark_unfillable", store: current_store) &&
+         !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) &&
+         @show_presenter.unfillable_blockers.any? %>
+  <p class="ss-muted">Mark unfillable is not available for committed requests. Use Cancel to close held or ordered lines.</p>
 <% end %>
 
 <%= render layout: "orders/shared/document_layout" do %>

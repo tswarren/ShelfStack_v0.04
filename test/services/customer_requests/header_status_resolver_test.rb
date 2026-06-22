@@ -83,4 +83,29 @@ class CustomerRequestsHeaderStatusResolverTest < ActiveSupport::TestCase
 
     assert_equal "partially_filled", request.reload.status
   end
+
+  test "records status_changed audit event when header status changes" do
+    request = create_customer_request!(store: @store, created_by_user: @user, customer: @customer)
+    line = request.customer_request_lines.first
+    line.update!(product_variant: @variant, status: "matched", request_type: "hold")
+    line.update!(status: "ready_for_pickup")
+
+    assert_difference -> { AuditEvent.where(event_name: "customer_request.status_changed", auditable: request).count }, 1 do
+      CustomerRequests::HeaderStatusResolver.call!(request, actor: @user, source: line)
+    end
+
+    event = AuditEvent.where(event_name: "customer_request.status_changed", auditable: request).last
+    assert_equal "new", event.event_details["prior_status"]
+    assert_equal "ready_for_pickup", event.event_details["new_status"]
+  end
+
+  test "does not record audit event when header status unchanged" do
+    request = create_customer_request!(store: @store, created_by_user: @user, customer: @customer)
+    request.update!(status: "researching")
+    request.customer_request_lines.first.update!(status: "matched", product_variant: @variant)
+
+    assert_no_difference -> { AuditEvent.where(event_name: "customer_request.status_changed", auditable: request).count } do
+      CustomerRequests::HeaderStatusResolver.call!(request, actor: @user)
+    end
+  end
 end

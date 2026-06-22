@@ -42,7 +42,7 @@ module CustomerRequests
         override_reason: override_reason
       )
       line.update!(status: "ready_for_pickup")
-      request.refresh_status_from_lines!
+      request.refresh_status_from_lines!(actor: actor, source: line)
 
       AuditEvents.record!(
         actor: actor,

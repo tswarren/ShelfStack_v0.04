@@ -17,6 +17,9 @@ module CustomerRequests
     def call!
       raise MarkUnfillableError, "Reason is required" if reason.blank?
 
+      eligibility = UnfillableEligibility.check(request)
+      raise MarkUnfillableError, eligibility.reasons.join("; ") unless eligibility.allowed
+
       CustomerRequest.transaction do
         request.customer_request_lines.open_lines.find_each do |line|
           line.update!(status: "unfillable")

@@ -76,7 +76,7 @@ module Receiving
         request_line = allocation.customer_request_line
         if request_line.present?
           request_line.update!(status: "ready_for_pickup")
-          request_line.customer_request.refresh_status_from_lines!
+          request_line.customer_request.refresh_status_from_lines!(actor: posted_by_user, source: request_line)
         end
 
         AuditEvents.record!(

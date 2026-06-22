@@ -14,7 +14,7 @@ module CustomerRequests
 
     def call!
       line.update!(status: "awaiting_customer_response")
-      request.refresh_status_from_lines!
+      request.refresh_status_from_lines!(actor: actor, source: line)
 
       AuditEvents.record!(
         actor: actor,

@@ -4,12 +4,14 @@ module CustomerRequests
   class HeaderStatusResolver
     TERMINAL_STATUSES = %w[completed cancelled unfillable].freeze
 
-    def self.call!(request)
-      new(request).call!
+    def self.call!(request, actor: nil, source: nil)
+      new(request, actor: actor, source: source).call!
     end
 
-    def initialize(request)
+    def initialize(request, actor: nil, source: nil)
       @request = request
+      @actor = actor
+      @source = source
     end
 
     def call!
@@ -21,13 +23,33 @@ module CustomerRequests
       new_status = derive_status(lines)
       return request if new_status == request.status
 
+      prior_status = request.status
       request.update!(status: new_status)
+      record_status_change!(prior_status:, new_status:)
       request
     end
 
     private
 
-    attr_reader :request
+    attr_reader :request, :actor, :source
+
+    def record_status_change!(prior_status:, new_status:)
+      AuditEvents.record!(
+        actor: resolved_actor,
+        event_name: "customer_request.status_changed",
+        auditable: request,
+        source: source,
+        details: {
+          "prior_status" => prior_status,
+          "new_status" => new_status,
+          "derived_from" => "lines"
+        }
+      )
+    end
+
+    def resolved_actor
+      actor || Current.user || request.created_by_user
+    end
 
     def derive_status(lines)
       active = lines.reject { |line| %w[cancelled unfillable].include?(line.status) }

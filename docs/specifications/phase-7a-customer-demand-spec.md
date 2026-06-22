@@ -745,7 +745,7 @@ customer_contact_event.created
 Create customer (or snapshot) → customer_request + provisional line
   → researching → match variant (catalog / ISBN lookup / Add Item)
   → awaiting_customer_response or approved
-  → special_order + PO allocation OR unfillable
+  → special_order + PO allocation OR unfillable (only before hold/PO commitment)
   → ordered → receipt → ready_for_pickup → POS pickup → completed
 ```
 

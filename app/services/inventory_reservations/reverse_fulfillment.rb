@@ -49,7 +49,7 @@ module InventoryReservations
             status: fulfillment_status_for(line, filled_quantity),
             filled_quantity: filled_quantity
           )
-          line.customer_request.refresh_status_from_lines!
+          line.customer_request.refresh_status_from_lines!(actor: reversed_by_user, source: line)
         end
 
         AuditEvents.record!(

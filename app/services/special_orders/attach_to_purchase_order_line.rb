@@ -38,7 +38,7 @@ module SpecialOrders
         special_order.update!(status: "ordered", ordered_at: Time.current, quantity_ordered: special_order.quantity_ordered + quantity)
         line = special_order.customer_request_line
         line.update!(status: "ordered", ordered_quantity: line.ordered_quantity + quantity) if line.present?
-        line&.customer_request&.refresh_status_from_lines!
+        line&.customer_request&.refresh_status_from_lines!(actor: attached_by_user, source: line)
 
         InventoryReservations::ReserveIncoming.call!(
           store: special_order.store,

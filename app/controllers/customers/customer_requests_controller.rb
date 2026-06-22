@@ -75,7 +75,7 @@ module Customers
 
     def update
       if @customer_request.update(customer_request_params)
-        @customer_request.refresh_status_from_lines!
+        @customer_request.refresh_status_from_lines!(actor: current_user, source: @customer_request)
         record_audit!("customer_request.updated", @customer_request)
         redirect_to customers_customer_request_path(@customer_request), notice: "Customer request updated."
       else
@@ -171,6 +171,7 @@ module Customers
     def release_hold
       reservation = InventoryReservation.find(params[:reservation_id])
       raise StandardError, "Reservation does not belong to this request" unless reservation.customer_request_line&.customer_request_id == @customer_request.id
+      raise StandardError, "Only on-hand holds can be released from the request screen" unless reservation.reservation_type == "on_hand_hold"
 
       InventoryReservations::Release.call!(
         reservation: reservation,

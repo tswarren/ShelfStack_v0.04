@@ -37,8 +37,8 @@ class CustomerRequest < ApplicationRecord
     customer&.display_name || customer_name_snapshot
   end
 
-  def refresh_status_from_lines!
-    CustomerRequests::HeaderStatusResolver.call!(self)
+  def refresh_status_from_lines!(actor: nil, source: nil)
+    CustomerRequests::HeaderStatusResolver.call!(self, actor: actor, source: source)
   end
 
   private
