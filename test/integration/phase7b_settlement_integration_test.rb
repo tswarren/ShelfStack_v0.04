@@ -111,6 +111,15 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal 2, @transaction.pos_tenders.settlement_rows.count
   end
 
+  test "edit page omits register meta and sidebar pickup panel" do
+    get edit_pos_transaction_path(@transaction)
+    assert_response :success
+    assert_select "dt", text: "Register", count: 0
+    assert_select "dt", text: "Cashier", count: 0
+    assert_select "summary", text: "Customer pickup", count: 0
+    assert_select ".ss-pos-command-bar__entry-row .ss-pos-mode-switch"
+  end
+
   test "void preserves reversal line numbers and receipt fields" do
     half = @transaction.total_cents / 2
 
