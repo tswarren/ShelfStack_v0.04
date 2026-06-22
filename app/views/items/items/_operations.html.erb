@@ -1,6 +1,7 @@
 <% operations_tab = local_assigns[:operations_tab] %>
 <% operations = local_assigns[:operations] %>
 
+<div data-controller="item-customer-demand-drawer">
 <% if request_match_context.valid? %>
   <%= render "shared/request_match_banner", context: request_match_context %>
 <% end %>
@@ -69,6 +70,20 @@
           </td>
           <td>
             <%= link_to "Focus", items_item_path_with_match(item, tab: "operations", variant_id: row.variant.id), class: "ss-btn-link" %>
+            <% row.demand_actions.each do |action| %>
+              <button type="button"
+                      class="ss-btn ss-btn-small ss-btn-secondary"
+                      data-action="item-customer-demand-drawer#open"
+                      data-drawer-key="<%= action.drawer_key %>"
+                      data-action-label="<%= action.label %>"
+                      data-variant-id="<%= row.variant.id %>"
+                      data-variant-sku="<%= row.variant.sku %>"
+                      data-variant-name="<%= row.variant.name %>"
+                      data-available="<%= row.availability_context&.available || 0 %>"
+                      data-on-hand="<%= row.availability_context&.on_hand || 0 %>">
+                <%= action.label %>
+              </button>
+            <% end %>
             <% if request_match_context.valid? &&
                   Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
               <%= button_to "Match",
@@ -367,3 +382,6 @@
     ) %>
   <p class="ss-muted">No operational documents yet for this item.</p>
 <% end %>
+
+<%= render "items/items/customer_demand_drawer", operations: operations %>
+</div>

@@ -3,19 +3,23 @@
     data-pos-cart-line-target="displayRow"
     data-line-id="<%= line.id %>">
   <td class="ss-pos-cart-line__qty">
-    <div class="ss-pos-qty-controls">
-      <%= button_to "−",
-            update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: -1),
-            method: :patch,
-            class: "ss-btn ss-btn-secondary ss-btn--small",
-            form: { data: { turbo_stream: true } } %>
-      <span><%= line.quantity.abs %></span>
-      <%= button_to "+",
-            update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: 1),
-            method: :patch,
-            class: "ss-btn ss-btn-secondary ss-btn--small",
-            form: { data: { turbo_stream: true } } %>
-    </div>
+    <% if line.inventory_reservation_id.present? %>
+      <span class="ss-pos-cart-line__qty-readonly"><%= line.quantity.abs %></span>
+    <% else %>
+      <div class="ss-pos-qty-controls">
+        <%= button_to "−",
+              update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: -1),
+              method: :patch,
+              class: "ss-btn ss-btn-secondary ss-btn--small",
+              form: { data: { turbo_stream: true } } %>
+        <span><%= line.quantity.abs %></span>
+        <%= button_to "+",
+              update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: 1),
+              method: :patch,
+              class: "ss-btn ss-btn-secondary ss-btn--small",
+              form: { data: { turbo_stream: true } } %>
+      </div>
+    <% end %>
   </td>
   <td class="ss-pos-cart-line__item">
     <div class="ss-pos-cart-line__header">
@@ -32,8 +36,13 @@
       <% if (source_label = pos_line_return_source_label(line)).present? %>
         <span class="ss-hint"><%= source_label %></span>
       <% end %>
-      <% if (pickup_label = pos_line_pickup_label(line)).present? %>
-        <span class="ss-hint"><%= pickup_label %></span>
+      <% if (pickup_context = pos_line_pickup_context(line)).present? %>
+        <div class="ss-pos-pickup-context">
+          <strong>Pickup for <%= pickup_context.customer_name || "customer" %></strong>
+          <% if pickup_context.request_number.present? %>
+            <span>Request <%= pickup_context.request_number %></span>
+          <% end %>
+        </div>
       <% end %>
     </div>
   </td>

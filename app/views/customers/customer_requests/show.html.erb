@@ -1,28 +1,28 @@
 <%= render "customers/shared/document_header",
-      title: @customer_request.request_number,
-      status: @customer_request.status,
+      title: @show_presenter.customer_request.request_number,
+      status: @show_presenter.customer_request.status,
       metadata_lines: [
-        "Customer: #{@customer_request.display_customer_name}",
-        "Source: #{@customer_request.source.tr('_', ' ').titleize}",
-        (@customer_request.needed_by_date.present? ? "Needed by: #{l(@customer_request.needed_by_date)}" : nil),
-        (@customer_request.last_contacted_at.present? ? "Last contacted: #{display_time(@customer_request.last_contacted_at)}" : nil)
+        "Customer: #{@show_presenter.customer_request.display_customer_name}",
+        "Source: #{@show_presenter.customer_request.source.tr('_', ' ').titleize}",
+        (@show_presenter.customer_request.needed_by_date.present? ? "Needed by: #{l(@show_presenter.customer_request.needed_by_date)}" : nil),
+        (@show_presenter.customer_request.last_contacted_at.present? ? "Last contacted: #{display_time(@show_presenter.customer_request.last_contacted_at)}" : nil)
       ].compact do %>
   <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
-    <%= link_to "Edit", edit_customers_customer_request_path(@customer_request), class: "ss-btn" %>
+    <%= link_to "Edit", edit_customers_customer_request_path(@show_presenter.customer_request), class: "ss-btn" %>
   <% end %>
   <%= link_to "Back", customers_customer_requests_path, class: "ss-btn ss-btn-secondary" %>
 <% end %>
 
-<%= render "orders/shared/metric_strip", metrics: @show_metrics %>
+<%= render "orders/shared/metric_strip", metrics: @show_presenter.metrics %>
 
-<% if @attention_items.present? %>
-  <%= render "orders/shared/attention_panel", items: @attention_items %>
+<% if @show_presenter.attention_items.present? %>
+  <%= render "orders/shared/attention_panel", items: @show_presenter.attention_items %>
 <% end %>
 
 <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.cancel", store: current_store) &&
-      !%w[completed cancelled unfillable].include?(@customer_request.status) %>
+      !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) %>
   <%= render "orders/shared/collapsible_panel", title: "Cancel request", open: false do %>
-    <%= form_with url: cancel_customers_customer_request_path(@customer_request), method: :patch, class: "ss-form" do %>
+    <%= form_with url: cancel_customers_customer_request_path(@show_presenter.customer_request), method: :patch, class: "ss-form" do %>
       <div class="ss-field">
         <%= label_tag :reason, "Cancellation reason", class: "ss-label" %>
         <%= text_area_tag :reason, nil, required: true, rows: 2 %>
@@ -33,9 +33,9 @@
 <% end %>
 
 <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.mark_unfillable", store: current_store) &&
-      !%w[completed cancelled unfillable].include?(@customer_request.status) %>
+      !%w[completed cancelled unfillable].include?(@show_presenter.customer_request.status) %>
   <%= render "orders/shared/collapsible_panel", title: "Mark unfillable", open: false do %>
-    <%= form_with url: mark_unfillable_customers_customer_request_path(@customer_request), method: :patch, class: "ss-form" do %>
+    <%= form_with url: mark_unfillable_customers_customer_request_path(@show_presenter.customer_request), method: :patch, class: "ss-form" do %>
       <div class="ss-field">
         <%= label_tag :reason, "Reason", class: "ss-label" %>
         <%= text_area_tag :reason, nil, required: true, rows: 2 %>
@@ -46,133 +46,46 @@
 <% end %>
 
 <%= render layout: "orders/shared/document_layout" do %>
-  <h2>Lines</h2>
-  <table class="ss-table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Type</th>
-        <th>Item</th>
-        <th class="ss-num">Qty</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @customer_request.customer_request_lines.each do |line| %>
-        <tr id="line-<%= line.id %>">
-          <td><%= line.line_number %></td>
-          <td><%= customers_request_type_label(line.request_type) %></td>
-          <td>
-            <% if line.product_variant %>
-              <%= render "orders/shared/variant_identity", variant: line.product_variant %>
-            <% else %>
-              <strong><%= line.provisional_title.presence || "—" %></strong>
-              <% if line.provisional_identifier.present? %>
-                <br><span class="ss-muted"><%= line.provisional_identifier %></span>
-              <% end %>
-            <% end %>
-          </td>
-          <td class="ss-num"><%= line.requested_quantity %></td>
-          <td><%= render "customers/shared/status_badge", status: line.status %></td>
-          <td>
-            <% if line.product_variant.blank? %>
-              <%= render "line_match_panel",
-                    customer_request: @customer_request,
-                    line: line,
-                    search_query: line.provisional_identifier.presence || line.provisional_title %>
-            <% else %>
-              <%= render "line_actions",
-                    customer_request: @customer_request,
-                    line: line,
-                    active_hold: @active_holds_by_line[line.id],
-                    availability: @availability_by_variant[line.product_variant_id],
-                    draft_po_lines: @draft_po_lines_by_variant[line.product_variant_id],
-                    vendors: @vendors %>
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <h2>Request lines</h2>
+  <div class="ss-line-card-list">
+    <% @show_presenter.line_cards.each do |line_card| %>
+      <%= render "line_card", line_card: line_card %>
+    <% end %>
+  </div>
 
   <% content_for :document_sidebar do %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.contact", store: current_store) %>
+      <%= render "contact_panel",
+            customer_request: @show_presenter.customer_request,
+            contact_events: @show_presenter.contact_events,
+            show_presenter: @show_presenter %>
+    <% end %>
+
     <div class="ss-sidebar-card">
       <h2>Request facts</h2>
       <dl class="ss-summary-compact">
         <dt>Customer</dt>
         <dd>
-          <% if @customer_request.customer %>
-            <%= link_to @customer_request.customer.display_name, customers_customer_path(@customer_request.customer) %>
+          <% if @show_presenter.customer_request.customer %>
+            <%= link_to @show_presenter.customer_request.customer.display_name,
+                  customers_customer_path(@show_presenter.customer_request.customer) %>
           <% else %>
-            <%= @customer_request.customer_name_snapshot || "—" %>
+            <%= @show_presenter.customer_request.customer_name_snapshot || "—" %>
           <% end %>
         </dd>
-        <dt>Store</dt><dd><%= @customer_request.store.name %></dd>
-        <dt>Created</dt><dd><%= display_time(@customer_request.created_at) %></dd>
-        <% if @customer_request.notes.present? %>
-          <dt>Notes</dt><dd><%= @customer_request.notes %></dd>
+        <dt>Store</dt><dd><%= @show_presenter.customer_request.store.name %></dd>
+        <dt>Created</dt><dd><%= display_time(@show_presenter.customer_request.created_at) %></dd>
+        <% if @show_presenter.customer_request.assigned_to_user.present? %>
+          <dt>Assigned</dt><dd><%= @show_presenter.customer_request.assigned_to_user.display_name %></dd>
+        <% end %>
+        <% if @show_presenter.customer_request.notes.present? %>
+          <dt>Notes</dt><dd><%= @show_presenter.customer_request.notes %></dd>
         <% end %>
       </dl>
     </div>
   <% end %>
 <% end %>
 
-<% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.contact", store: current_store) %>
-  <%= render "orders/shared/collapsible_panel", title: "Record contact" do %>
-    <%= form_with url: record_contact_customers_customer_request_path(@customer_request),
-                  method: :post,
-                  class: "ss-form ss-form--standard" do %>
-      <div class="ss-form-grid ss-form-grid--2">
-        <div class="ss-field">
-          <%= label_tag :contact_method, "Contact method", class: "ss-label" %>
-          <%= select_tag :contact_method,
-                options_for_select(CustomerContactEvent::CONTACT_METHODS.map { |m| [customers_preferred_contact_label(m), m] }),
-                class: "ss-input" %>
-        </div>
-        <div class="ss-field">
-          <%= label_tag :status, "Outcome", class: "ss-label" %>
-          <%= select_tag :status,
-                options_for_select(CustomerContactEvent::STATUSES.map { |s| [s.titleize, s] }),
-                class: "ss-input" %>
-        </div>
-      </div>
-      <div class="ss-field">
-        <%= label_tag :summary, "Summary", class: "ss-label" %>
-        <%= text_area_tag :summary, nil, required: true, rows: 3, class: "ss-input", placeholder: "What was discussed or attempted?" %>
-      </div>
-      <%= submit_tag "Record contact", class: "ss-btn" %>
-    <% end %>
-  <% end %>
-<% end %>
-
-<%= render "orders/shared/collapsible_panel", title: "Contact history" do %>
-  <% if @contact_events.any? %>
-    <table class="ss-table">
-      <thead>
-        <tr>
-          <th>When</th>
-          <th>Method</th>
-          <th>Status</th>
-          <th>Summary</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @contact_events.each do |event| %>
-          <tr>
-            <td><%= display_time(event.occurred_at) %></td>
-            <td><%= customers_preferred_contact_label(event.contact_method) %></td>
-            <td><%= event.status.titleize %></td>
-            <td><%= event.summary %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p class="ss-muted">No contact events yet.</p>
-  <% end %>
-<% end %>
-
 <%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
-  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+  <%= render "shared/audit_timeline", audit_events: @show_presenter.audit_events %>
 <% end %>

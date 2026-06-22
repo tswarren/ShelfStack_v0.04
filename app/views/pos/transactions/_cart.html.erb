@@ -1,5 +1,6 @@
 <section class="ss-pos-panel ss-pos-cart">
   <h2 class="ss-pos-panel__title">Cart</h2>
+  <%= render "pos/transactions/pickup_context_banner", transaction: transaction %>
   <% if transaction.pos_transaction_lines.empty? %>
     <p class="ss-hint">Scan an item to begin.</p>
   <% else %>

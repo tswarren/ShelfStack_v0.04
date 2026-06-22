@@ -61,6 +61,46 @@ class PosAddReservationLineTest < ActiveSupport::TestCase
     assert_equal 1, line.quantity
   end
 
+  test "creates pickup line with partial quantity" do
+    @reservation.update!(quantity_reserved: 3, quantity_fulfilled: 0)
+
+    line = Pos::AddReservationLine.call!(
+      transaction: @transaction,
+      reservation: @reservation.reload,
+      added_by_user: @user,
+      quantity: 2
+    )
+
+    assert_equal 2, line.quantity
+  end
+
+  test "rejects quantity above remaining reservation" do
+    assert_raises(Pos::AddReservationLine::Error) do
+      Pos::AddReservationLine.call!(
+        transaction: @transaction,
+        reservation: @reservation,
+        added_by_user: @user,
+        quantity: 5
+      )
+    end
+  end
+
+  test "rejects duplicate reservation on same transaction" do
+    Pos::AddReservationLine.call!(
+      transaction: @transaction,
+      reservation: @reservation,
+      added_by_user: @user
+    )
+
+    assert_raises(Pos::AddReservationLine::Error) do
+      Pos::AddReservationLine.call!(
+        transaction: @transaction,
+        reservation: @reservation,
+        added_by_user: @user
+      )
+    end
+  end
+
   test "rejects mismatched demand chain" do
     other_customer = create_customer!(display_name: "Other Customer")
     @reservation.update!(customer: other_customer)

@@ -71,4 +71,24 @@ class Phase7aPosPickupIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal @reservation.id, line.inventory_reservation_id
     assert_equal @customer.id, @transaction.customer_id
   end
+
+  test "pickup mode renders promoted pickup panel" do
+    get edit_pos_transaction_path(@transaction, mode: "pickup")
+
+    assert_response :success
+    assert_includes response.body, "Find pickup"
+    assert_includes response.body, "ss-pos-mode-switch"
+  end
+
+  test "add_reservation_line accepts quantity parameter" do
+    @reservation.update!(quantity_reserved: 2)
+
+    post add_reservation_line_pos_transaction_path(@transaction),
+         params: { inventory_reservation_id: @reservation.id, quantity: 2 },
+         headers: { Accept: "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    line = @transaction.reload.pos_transaction_lines.first
+    assert_equal 2, line.quantity
+  end
 end

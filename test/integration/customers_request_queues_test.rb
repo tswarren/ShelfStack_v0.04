@@ -14,22 +14,6 @@ class CustomersRequestQueuesTest < ActionDispatch::IntegrationTest
     login_user!(@user, workstation: @workstation)
   end
 
-  test "needs research queue lists requests with unmatched open lines" do
-    matched_request = create_customer_request!(store: @store, created_by_user: @user)
-    matched_request.customer_request_lines.first.update!(
-      product_variant: create_product_variant!,
-      status: "matched"
-    )
-
-    unmatched_request = create_customer_request!(store: @store, created_by_user: @user)
-
-    get customers_customer_requests_path(queue: "needs_research")
-
-    assert_response :success
-    assert_includes response.body, unmatched_request.request_number
-    assert_not_includes response.body, matched_request.request_number
-  end
-
   test "expiring holds queue lists requests with soon-expiring holds" do
     customer = create_customer!
     request = create_customer_request!(
@@ -63,5 +47,37 @@ class CustomersRequestQueuesTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, request.request_number
+  end
+
+  test "needs research queue lists requests with unmatched open lines and shows count badge" do
+    matched_request = create_customer_request!(store: @store, created_by_user: @user)
+    matched_request.customer_request_lines.first.update!(
+      product_variant: create_product_variant!,
+      status: "matched"
+    )
+
+    unmatched_request = create_customer_request!(store: @store, created_by_user: @user)
+
+    get customers_customer_requests_path(queue: "needs_research")
+
+    assert_response :success
+    assert_includes response.body, unmatched_request.request_number
+    assert_not_includes response.body, matched_request.request_number
+    assert_includes response.body, "Needs research (1)"
+  end
+
+  test "request index search finds customer name" do
+    customer = create_customer!(display_name: "Queue Search Casey")
+    request = create_customer_request!(
+      store: @store,
+      created_by_user: @user,
+      customer: customer
+    )
+
+    get customers_customer_requests_path, params: { q: "Queue Search" }
+
+    assert_response :success
+    assert_includes response.body, request.request_number
+    assert_includes response.body, "Queue Search Casey"
   end
 end

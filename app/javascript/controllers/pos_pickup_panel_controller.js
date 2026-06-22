@@ -45,26 +45,42 @@ export default class extends Controller {
 
     this.showMessage("")
     this.resultsTarget.innerHTML = pickups.map((row) => this.rowHtml(row)).join("")
-    this.resultsTarget.querySelectorAll("[data-reservation-id]").forEach((button) => {
-      button.addEventListener("click", () => this.addReservation(button.dataset.reservationId))
+    this.resultsTarget.querySelectorAll("[data-add-reservation]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const card = button.closest("[data-reservation-id]")
+        const qtyInput = card?.querySelector("[data-pickup-qty]")
+        const quantity = parseInt(qtyInput?.value, 10) || 1
+        this.addReservation(button.dataset.reservationId, quantity)
+      })
     })
   }
 
   rowHtml(row) {
     const expires = row.expires_at ? ` · Expires ${new Date(row.expires_at).toLocaleDateString()}` : ""
+    const maxQty = row.quantity || 1
     return `
-      <button type="button" class="ss-pos-choice-card" data-reservation-id="${row.reservation_id}">
+      <div class="ss-pos-choice-card ss-pos-pickup-card" data-reservation-id="${row.reservation_id}">
         <strong class="ss-pos-choice-card__sku">${row.variant_sku}</strong>
         <span class="ss-pos-choice-card__name">${row.variant_name}</span>
-        <span class="ss-pos-choice-card__meta">Pickup for ${row.customer_name} · Qty ${row.quantity}${expires}</span>
+        <span class="ss-pos-choice-card__meta">Pickup for ${row.customer_name} · Up to ${maxQty} available${expires}</span>
         ${row.request_number ? `<span class="ss-pos-choice-card__meta">Request ${row.request_number}</span>` : ""}
-      </button>
+        <div class="ss-pos-pickup-card__actions">
+          <label class="ss-pos-pickup-card__qty">
+            <span class="visually-hidden">Pickup quantity</span>
+            <input type="number" min="1" max="${maxQty}" value="1" data-pickup-qty class="ss-input ss-input--small" />
+          </label>
+          <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-add-reservation data-reservation-id="${row.reservation_id}">
+            Add to cart
+          </button>
+        </div>
+      </div>
     `
   }
 
-  addReservation(reservationId) {
+  addReservation(reservationId, quantity = 1) {
     const body = new FormData()
     body.append("inventory_reservation_id", reservationId)
+    body.append("quantity", quantity)
 
     fetch(this.addReservationUrlValue, {
       method: "POST",

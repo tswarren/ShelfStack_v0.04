@@ -44,7 +44,7 @@ module Pos
         status: "draft"
       )
       record_audit!("pos.transaction.created", @transaction)
-      redirect_to edit_pos_transaction_path(@transaction, mode: params[:mode].presence || "sale", pickup: params[:pickup])
+      redirect_to edit_pos_transaction_path(@transaction, mode: params[:mode].presence || "sale")
     end
 
     def edit
@@ -123,10 +123,14 @@ module Pos
 
     def add_reservation_line
       reservation = InventoryReservation.find(params[:inventory_reservation_id])
+      quantity = params[:quantity].presence&.to_i
+      quantity = 1 if quantity.nil? || quantity <= 0
+
       Pos::AddReservationLine.call!(
         transaction: @transaction,
         reservation: reservation,
-        added_by_user: current_user
+        added_by_user: current_user,
+        quantity: quantity
       )
       respond_to_workspace(notice: "Pickup line added.")
     rescue Pos::AddReservationLine::Error => e

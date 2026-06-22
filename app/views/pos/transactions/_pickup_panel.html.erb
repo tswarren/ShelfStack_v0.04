@@ -1,5 +1,7 @@
-<details class="ss-pos-panel" <%= "open" if params[:pickup].present? %>>
-  <summary>Customer pickup</summary>
+<% promoted = local_assigns.fetch(:promoted, false) %>
+<% panel_open = local_assigns.fetch(:open, params[:pickup].present? || pos_pickup_mode?) %>
+
+<% pickup_content = capture do %>
   <div data-controller="pos-pickup-panel"
        data-pos-pickup-panel-url-value="<%= pos_pickup_lookup_path %>"
        data-pos-pickup-panel-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>">
@@ -19,4 +21,16 @@
     <p class="ss-hint" data-pos-pickup-panel-target="message"></p>
     <div class="ss-pos-choices" data-pos-pickup-panel-target="results"></div>
   </div>
-</details>
+<% end %>
+
+<% if promoted %>
+  <section class="ss-pos-panel ss-pos-pickup-panel ss-pos-pickup-panel--promoted">
+    <h2 class="ss-pos-panel__title">Find pickup</h2>
+    <%= pickup_content %>
+  </section>
+<% else %>
+  <details class="ss-pos-panel" <%= "open" if panel_open %>>
+    <summary>Customer pickup</summary>
+    <%= pickup_content %>
+  </details>
+<% end %>

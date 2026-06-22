@@ -1,0 +1,23 @@
+<%# locals: card %>
+<article class="ss-card">
+  <div class="ss-metric-card">
+    <span class="ss-metric-card__label"><%= card.label %></span>
+    <span class="ss-metric-card__value ss-num"><%= card.count %></span>
+  </div>
+
+  <% if card.preview_rows.any? %>
+    <table class="ss-table">
+      <tbody>
+        <% card.preview_rows.each do |row| %>
+          <%= render "dashboard_preview_row", row: row %>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="ss-muted">Nothing needs attention in this queue.</p>
+  <% end %>
+
+  <p>
+    <%= link_to "View queue →", card.path %>
+  </p>
+</article>

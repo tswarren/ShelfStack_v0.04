@@ -26,6 +26,7 @@ Rails.application.routes.draw do
     }, as: :search
     get "item", to: "items#show", as: :item
     get "item/external_metadata", to: "external_metadata#show", as: :item_external_metadata
+    post "customer_demand", to: "customer_demand_actions#create", as: :customer_demand
 
     get "add_item", to: "add_item#show", as: :add_item
     post "add_item", to: "add_item#create"

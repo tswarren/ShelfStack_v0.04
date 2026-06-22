@@ -6,6 +6,8 @@ module Items
 
     Metric = Data.define(:label, :value, :class_name)
     Action = Data.define(:label, :url, :permission_key)
+    CustomerDemandAction = Data.define(:label, :drawer_key, :permission_key)
+    AvailabilityContext = Data.define(:available, :on_hand, :reserved)
     VariantRow = Data.define(
       :variant,
       :on_hand,
@@ -20,7 +22,9 @@ module Items
       :preferred_vendor_name,
       :vendor_item_number,
       :returnability_status,
-      :actions
+      :actions,
+      :demand_actions,
+      :availability_context
     )
 
     def initialize(item:, store:, user:)
@@ -121,6 +125,51 @@ module Items
         .first
     end
 
+    def customer_demand_visible?
+      return false unless store.present? && user.present?
+
+      Authorization.allowed?(user: user, permission_key: "customer_requests.access", store: store)
+    end
+
+    def availability_context(variant)
+      return nil unless inventory_eligible?(variant)
+
+      balance = InventoryBalance.find_by(store: store, product_variant: variant)
+      AvailabilityContext.new(
+        available: Inventory::Availability.available(store: store, variant: variant) || 0,
+        on_hand: balance&.quantity_on_hand || 0,
+        reserved: Inventory::Availability.reserved(store: store, variant: variant) || 0
+      )
+    end
+
+    def variant_customer_demand_actions(variant)
+      return [] unless customer_demand_visible?
+
+      actions = []
+      if allowed?("customer_requests.create") && allowed?("inventory_reservations.create")
+        actions << CustomerDemandAction.new(
+          label: "Hold for customer",
+          drawer_key: "hold",
+          permission_key: "inventory_reservations.create"
+        )
+      end
+      if allowed?("customer_requests.create") && allowed?("special_orders.create")
+        actions << CustomerDemandAction.new(
+          label: "Special order",
+          drawer_key: "special_order",
+          permission_key: "special_orders.create"
+        )
+      end
+      if allowed?("customer_requests.create")
+        actions << CustomerDemandAction.new(
+          label: "Notify customer",
+          drawer_key: "notify",
+          permission_key: "customer_requests.create"
+        )
+      end
+      actions
+    end
+
     def variant_actions(variant)
       actions = []
       if inventory_eligible?(variant) && allowed?("orders.purchase_requests.create")
@@ -196,18 +245,18 @@ module Items
           preferred_vendor_name: vendor&.name,
           vendor_item_number: sourcing&.vendor_item_number,
           returnability_status: vendor.present? ? Purchasing::ReturnabilityResolver.resolve(variant: variant, vendor: vendor) : nil,
-          actions: variant_actions(variant)
+          actions: variant_actions(variant),
+          demand_actions: variant_customer_demand_actions(variant),
+          availability_context: availability_context(variant)
         )
       end
     end
 
     def ready_for_pickup_quantities_for(variant_ids)
-      CustomerRequestLine.open_lines
-                         .where(product_variant_id: variant_ids, status: "ready_for_pickup")
-                         .joins(:customer_request)
-                         .where(customer_requests: { store_id: store.id })
-                         .group(:product_variant_id)
-                         .sum(:requested_quantity)
+      InventoryReservation.active_on_hand
+                          .where(store: store, product_variant_id: variant_ids, status: "ready")
+                          .group(:product_variant_id)
+                          .sum("quantity_reserved - quantity_fulfilled - quantity_released")
     end
 
     def open_tbo_quantities_for(variant_ids)

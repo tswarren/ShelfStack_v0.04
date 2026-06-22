@@ -2,22 +2,6 @@
 
 module Customers
   class CustomerRequestsController < BaseController
-    QUEUE_FILTERS = {
-      "new" => { status: "new" },
-      "needs_research" => { kind: :needs_research },
-      "awaiting_response" => { status: "awaiting_customer_response" },
-      "approved_to_order" => { kind: :approved_to_order },
-      "on_order" => { status: %w[ordered partially_filled] },
-      "ready_for_pickup" => { status: "ready_for_pickup" },
-      "notify_customer" => { kind: :notify_customer },
-      "expiring_holds" => { kind: :expiring_holds },
-      "completed" => { status: "completed" },
-      "cancelled" => { status: "cancelled" },
-      "unfillable" => { status: "unfillable" }
-    }.freeze
-
-    EXPIRING_HOLD_WINDOW = 3.days
-
     before_action :set_customer_request, only: %i[
       show edit update cancel mark_unfillable match_variant create_special_order
       create_hold release_hold update_line_type mark_awaiting_response
@@ -36,18 +20,25 @@ module Customers
 
     def index
       @queue = params[:queue]
-      @customer_requests = CustomerRequest.includes(:customer, :customer_request_lines)
+      @queue_counts = CustomerRequests::QueueScope.counts_for(store: customers_store)
+      @customer_requests = CustomerRequest.includes(:customer, :assigned_to_user, customer_request_lines: :product_variant)
                                           .where(store: customers_store)
                                           .order(created_at: :desc)
 
-      apply_queue_filter! if @queue.present?
-      @customer_requests = @customer_requests.where("request_number ILIKE ?", "%#{params[:q]}%") if params[:q].present?
+      @customer_requests = CustomerRequests::QueueScope.apply(@customer_requests, @queue, store: customers_store) if @queue.present?
+      @customer_requests = CustomerRequests::SearchQuery.apply(@customer_requests, params[:q])
+      @index_rows = CustomerRequests::IndexRowPresenter.build_collection(@customer_requests, store: customers_store)
     end
 
     def show
       @audit_events = AuditEvent.for_auditable(@customer_request).limit(50)
       @contact_events = CustomerContactEvent.where(customer_request: @customer_request).order(occurred_at: :desc)
-      load_show_presenters!
+      @show_presenter = CustomerRequests::ShowPresenter.new(
+        customer_request: @customer_request,
+        store: customers_store,
+        contact_events: @contact_events,
+        audit_events: @audit_events
+      )
     end
 
     def new
@@ -268,127 +259,6 @@ module Customers
       raise CustomerRequests::MatchVariant::MatchError, "Invalid match context" unless context.valid?
 
       line
-    end
-
-    def load_show_presenters!
-      lines = @customer_request.customer_request_lines
-      variant_ids = lines.filter_map(&:product_variant_id)
-
-      @active_holds_by_line = InventoryReservation.active_on_hand
-                                                    .where(customer_request_line_id: lines.map(&:id))
-                                                    .index_by(&:customer_request_line_id)
-
-      @availability_by_variant = variant_ids.index_with do |variant_id|
-        variant = ProductVariant.find(variant_id)
-        {
-          available: Inventory::Availability.available(store: customers_store, variant: variant),
-          on_hand: Inventory::Availability.on_hand(store: customers_store, variant: variant)
-        }
-      end
-
-      @draft_po_lines_by_variant = if variant_ids.any?
-        PurchaseOrderLine.joins(:purchase_order)
-                         .includes(:purchase_order, :vendor)
-                         .where(
-                           product_variant_id: variant_ids,
-                           purchase_orders: { store_id: customers_store.id, status: "draft" }
-                         )
-                         .group_by(&:product_variant_id)
-      else
-        {}
-      end
-
-      @vendors = Vendor.active_records.order(:name)
-      @show_metrics = [
-        { label: "Lines", value: lines.size },
-        { label: "Unmatched", value: lines.count { |line| line.product_variant_id.blank? } },
-        { label: "Ready", value: lines.count { |line| line.status == "ready_for_pickup" } }
-      ]
-
-      @attention_items = build_attention_items(lines)
-    end
-
-    def build_attention_items(lines)
-      items = []
-      unmatched = lines.count { |line| line.product_variant_id.blank? }
-      if unmatched.positive?
-        items << Purchasing::DocumentAttention::AttentionItem.new(
-          message: "#{unmatched} line(s) still need a variant match.",
-          link_path: nil,
-          link_label: nil
-        )
-      end
-
-      approved_count = lines.count { |line| line.special_order&.status == "approved" }
-      if approved_count.positive?
-        items << Purchasing::DocumentAttention::AttentionItem.new(
-          message: "#{approved_count} approved special order(s) need PO attachment.",
-          link_path: nil,
-          link_label: nil
-        )
-      end
-      items
-    end
-
-    def apply_queue_filter!
-      filter = QUEUE_FILTERS[@queue]
-      return if filter.blank?
-
-      case filter[:kind]
-      when :needs_research
-        apply_needs_research_filter!
-      when :approved_to_order
-        apply_approved_to_order_filter!
-      when :notify_customer
-        apply_notify_customer_filter!
-      when :expiring_holds
-        apply_expiring_holds_filter!
-      else
-        apply_status_filter!(filter)
-      end
-    end
-
-    def apply_needs_research_filter!
-      @customer_requests = @customer_requests.joins(:customer_request_lines)
-                                             .merge(CustomerRequestLine.open_lines.where(product_variant_id: nil))
-                                             .distinct
-    end
-
-    def apply_approved_to_order_filter!
-      @customer_requests = @customer_requests.joins(customer_request_lines: :special_order)
-                                             .where(special_orders: { status: "approved" })
-                                             .distinct
-    end
-
-    def apply_notify_customer_filter!
-      ids = CustomerRequests::NotifyQueueQuery.customer_request_ids_for(store: customers_store)
-      @customer_requests = @customer_requests.where(id: ids)
-    end
-
-    def apply_expiring_holds_filter!
-      @customer_requests = @customer_requests.joins(customer_request_lines: :inventory_reservations)
-                                             .where(
-                                               inventory_reservations: {
-                                                 reservation_type: "on_hand_hold",
-                                                 status: %w[active ready]
-                                               }
-                                             )
-                                             .where(inventory_reservations: { expires_at: ..EXPIRING_HOLD_WINDOW.from_now })
-                                             .distinct
-    end
-
-    def apply_status_filter!(filter)
-      if filter[:status].is_a?(Array)
-        @customer_requests = @customer_requests.where(status: filter[:status])
-      elsif filter[:line_type]
-        @customer_requests = @customer_requests.joins(:customer_request_lines)
-                                               .where(customer_request_lines: {
-                                                 request_type: filter[:line_type],
-                                                 status: filter[:line_status]
-                                               }).distinct
-      else
-        @customer_requests = @customer_requests.where(status: filter[:status])
-      end
     end
 
     def load_form_collections

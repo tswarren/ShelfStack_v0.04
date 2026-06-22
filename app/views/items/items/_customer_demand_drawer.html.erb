@@ -1,0 +1,27 @@
+<%# locals: operations: %>
+<% return unless operations&.customer_demand_visible? %>
+
+<div class="ss-item-demand-drawer">
+  <div class="ss-item-demand-drawer__backdrop"
+       data-item-customer-demand-drawer-target="backdrop"
+       data-action="click->item-customer-demand-drawer#close"
+       hidden></div>
+
+  <aside class="ss-item-demand-drawer__panel"
+         data-item-customer-demand-drawer-target="panel"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="item-demand-drawer-title"
+         hidden>
+    <header class="ss-item-demand-drawer__header">
+      <h2 id="item-demand-drawer-title" data-item-customer-demand-drawer-target="title">Customer demand</h2>
+      <button type="button" class="ss-btn ss-btn-secondary ss-btn-small"
+              data-action="item-customer-demand-drawer#close"
+              aria-label="Close">Close</button>
+    </header>
+
+    <p class="ss-item-demand-drawer__variant" data-item-customer-demand-drawer-target="variantSummary"></p>
+
+    <%= render "items/items/customer_demand_form" %>
+  </aside>
+</div>

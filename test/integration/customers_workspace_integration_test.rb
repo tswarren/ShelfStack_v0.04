@@ -40,4 +40,11 @@ class CustomersWorkspaceIntegrationTest < ActionDispatch::IntegrationTest
     get customers_customers_path
     assert_redirected_to customers_locked_out_path
   end
+
+  test "customers root shows dashboard for authorized users" do
+    get customers_root_path
+
+    assert_response :success
+    assert_includes response.body, "Customer Demand"
+  end
 end

@@ -4,14 +4,16 @@ module Pos
   class AddReservationLine
     Error = Class.new(StandardError)
 
-    def self.call!(transaction:, reservation:, added_by_user:)
-      new(transaction:, reservation:, added_by_user:).call!
+    def self.call!(transaction:, reservation:, added_by_user:, quantity: 1)
+      new(transaction:, reservation:, added_by_user:, quantity:).call!
     end
 
-    def initialize(transaction:, reservation:, added_by_user:)
+    def initialize(transaction:, reservation:, added_by_user:, quantity: 1)
       @transaction = transaction
       @reservation = reservation
       @added_by_user = added_by_user
+      @quantity = quantity.to_i
+      @quantity = 1 if @quantity <= 0
     end
 
     def call!
@@ -22,6 +24,11 @@ module Pos
 
       remaining = reservation.remaining_quantity
       raise Error, "Reservation has no remaining quantity" if remaining <= 0
+      raise Error, "Quantity exceeds remaining reservation quantity" if quantity > remaining
+
+      if transaction.pos_transaction_lines.exists?(inventory_reservation_id: reservation.id)
+        raise Error, "Reservation is already on this transaction"
+      end
 
       variant = reservation.product_variant
       line = transaction.pos_transaction_lines.create!(
@@ -29,7 +36,7 @@ module Pos
         line_type: "variant",
         product_variant: variant,
         product: variant.product,
-        quantity: 1,
+        quantity: quantity,
         unit_price_cents: variant.selling_price_cents,
         line_discount_cents: 0,
         extended_price_cents: 0,
@@ -47,7 +54,7 @@ module Pos
 
     private
 
-    attr_reader :transaction, :reservation, :added_by_user
+    attr_reader :transaction, :reservation, :added_by_user, :quantity
 
     def next_line_number
       (transaction.pos_transaction_lines.maximum(:line_number) || 0) + 1

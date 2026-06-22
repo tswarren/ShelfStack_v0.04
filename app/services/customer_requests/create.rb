@@ -25,7 +25,9 @@ module CustomerRequests
           request_number: RequestNumberAssigner.next_for!(store: store)
         ))
         lines.each_with_index do |line_attrs, index|
-          request.customer_request_lines.build(line_attrs.merge(line_number: index + 1, status: "new"))
+          attrs = line_attrs.merge(line_number: index + 1)
+          attrs[:status] ||= "new"
+          request.customer_request_lines.build(attrs)
         end
         request.save!
 

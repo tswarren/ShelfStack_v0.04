@@ -1,40 +1,56 @@
-<section class="ss-pos-panel ss-pos-command-bar"
-         data-controller="pos-command-bar pos-line-entry"
-         data-pos-command-bar-route-url-value="<%= route_command_pos_transaction_path(transaction) %>"
-         data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
-         data-pos-line-entry-add-url-value="<%= add_line_pos_transaction_path(transaction) %>"
-         data-pos-line-entry-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>"
-         data-pos-line-entry-return-mode-value="false">
-  <div class="ss-pos-command-bar__header">
-    <h2 class="ss-pos-panel__title">Scan or enter item</h2>
-    <span class="ss-status-badge"><%= pos_draft_type_label(transaction) %></span>
-    <label class="ss-pos-return-toggle">
-      <%= check_box_tag :return_mode, 1, false, data: { action: "change->pos-command-bar#toggleReturnMode", pos_command_bar_target: "returnToggle" } %>
-      Return
-    </label>
-  </div>
+<% pickup_mode = pos_pickup_mode? %>
+<% return_mode = pos_workspace_mode == "return" %>
 
-  <div class="ss-field ss-pos-command-bar__input">
-    <%= label_tag :pos_command_input, "SKU, ISBN, receipt number, or amount", class: "visually-hidden" %>
-    <%= text_field_tag :pos_command_input, nil,
-          autocomplete: "off",
-          placeholder: "Scan / enter SKU, ISBN, receipt number, or amount",
-          class: "ss-pos-scan-input",
-          data: {
-            pos_command_bar_target: "input",
-            pos_line_entry_target: "query",
-            action: "keydown.enter->pos-command-bar#submit input->pos-line-entry#search"
-          } %>
-  </div>
+<% if pickup_mode %>
+  <%= render "pos/transactions/pickup_panel", transaction: transaction, promoted: true, open: true %>
+<% end %>
 
-  <p class="ss-hint" data-pos-line-entry-target="message"></p>
-  <div class="ss-pos-choices" data-pos-line-entry-target="choices"></div>
+<% scan_wrapper_tag = pickup_mode ? :details : :div %>
+<%= content_tag scan_wrapper_tag, class: "ss-pos-scan-section" do %>
+  <% if pickup_mode %>
+    <summary class="ss-pos-scan-section__summary">Scan other item</summary>
+  <% end %>
 
-  <div class="ss-pos-inline-panel" data-pos-command-bar-target="receiptPanel" hidden>
-    <%= render "pos/transactions/return_receipt_drawer", transaction: transaction, inline: true %>
-  </div>
+  <section class="ss-pos-panel ss-pos-command-bar"
+           data-controller="pos-command-bar pos-line-entry"
+           data-pos-command-bar-route-url-value="<%= route_command_pos_transaction_path(transaction) %>"
+           data-pos-command-bar-return-mode-value="<%= return_mode %>"
+           data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
+           data-pos-line-entry-add-url-value="<%= add_line_pos_transaction_path(transaction) %>"
+           data-pos-line-entry-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>"
+           data-pos-line-entry-return-mode-value="<%= return_mode %>"
+           data-pos-line-entry-mode-value="<%= pos_workspace_mode %>">
+    <div class="ss-pos-command-bar__header">
+      <h2 class="ss-pos-panel__title">Scan or enter item</h2>
+      <% if return_mode %>
+        <span class="ss-status-badge status-warning">Return</span>
+      <% elsif !pickup_mode %>
+        <span class="ss-status-badge"><%= pos_draft_type_label(transaction) %></span>
+      <% end %>
+    </div>
 
-  <div class="ss-pos-inline-panel" data-pos-command-bar-target="openRingPanel" hidden>
-    <%= render "pos/transactions/open_ring_drawer", transaction: transaction, sub_departments: sub_departments, inline: true %>
-  </div>
-</section>
+    <div class="ss-field ss-pos-command-bar__input">
+      <%= label_tag :pos_command_input, "SKU, ISBN, receipt number, or amount", class: "visually-hidden" %>
+      <%= text_field_tag :pos_command_input, nil,
+            autocomplete: "off",
+            placeholder: "Scan / enter SKU, ISBN, receipt number, or amount",
+            class: "ss-pos-scan-input",
+            data: {
+              pos_command_bar_target: "input",
+              pos_line_entry_target: "query",
+              action: "keydown.enter->pos-command-bar#submit input->pos-line-entry#search"
+            } %>
+    </div>
+
+    <p class="ss-hint" data-pos-line-entry-target="message"></p>
+    <div class="ss-pos-choices" data-pos-line-entry-target="choices"></div>
+
+    <div class="ss-pos-inline-panel" data-pos-command-bar-target="receiptPanel" hidden>
+      <%= render "pos/transactions/return_receipt_drawer", transaction: transaction, inline: true %>
+    </div>
+
+    <div class="ss-pos-inline-panel" data-pos-command-bar-target="openRingPanel" hidden>
+      <%= render "pos/transactions/open_ring_drawer", transaction: transaction, sub_departments: sub_departments, inline: true %>
+    </div>
+  </section>
+<% end %>

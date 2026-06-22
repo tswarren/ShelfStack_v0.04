@@ -2,7 +2,9 @@
   <%= render "pos/transactions/totals_panel", transaction: transaction %>
 </div>
 
-<%= render "pos/transactions/pickup_panel", transaction: transaction %>
+<% unless pos_pickup_mode? %>
+  <%= render "pos/transactions/pickup_panel", transaction: transaction %>
+<% end %>
 
 <details class="ss-pos-panel ss-pos-adjustments">
   <summary>Adjustments</summary>

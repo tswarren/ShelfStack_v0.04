@@ -108,6 +108,13 @@ Closed in gap-closure pass:
 - `release_reason` and `customer_contact_events.status` enums aligned with data model spec
 - Store/vendor/draft guards on `AttachToPurchaseOrderLine` and store/variant guards on `AllocateCustomerDemandToPoLine`
 
+### UX pass (dashboard)
+
+- `/customers` is a Customer Demand dashboard with operational queue cards, preview rows, and open-request metric
+- Request index shows operational columns, multi-field search, and queue nav count badges
+- Shared `CustomerRequests::QueueScope`, `SearchQuery`, and `NextActionResolver` services
+- Request show uses line workflow cards with per-line next action strip, status trail, sidebar contact panel, and live hold validation
+
 ---
 
 ## Documentation

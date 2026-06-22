@@ -1,15 +1,11 @@
 # frozen_string_literal: true
 
 module Customers
-  class HomeController < ApplicationController
-    before_action :require_active_session
+  class HomeController < BaseController
+    skip_before_action :require_customers_access, only: :locked_out
 
     def show
-      if Authorization.allowed?(user: current_user, permission_key: "customers.access", store: current_store)
-        redirect_to customers_customers_path
-      else
-        redirect_to customers_locked_out_path
-      end
+      @dashboard = DashboardPresenter.new(store: customers_store)
     end
 
     def locked_out

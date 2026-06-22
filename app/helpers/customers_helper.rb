@@ -43,6 +43,14 @@ module CustomersHelper
     QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize)
   end
 
+  def customers_queue_link_label(queue_key, counts = nil)
+    label = queue_key.nil? ? "All" : customers_queue_label(queue_key)
+    return label if counts.blank?
+
+    count = queue_key.nil? ? counts.values.sum : counts.fetch(queue_key.to_s, 0)
+    count.positive? ? "#{label} (#{count})" : label
+  end
+
   def customers_queue_active?(queue_key)
     params[:queue].to_s == queue_key.to_s
   end

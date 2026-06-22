@@ -2,6 +2,7 @@
 
 module PosHelper
   POS_MODES = %w[sale return exchange].freeze
+  POS_WORKSPACE_MODES = %w[sale return pickup].freeze
   ENTRY_ACTIONS = %w[sale return_receipt return_no_receipt open_ring].freeze
 
   VOID_REASON_CODES = [
@@ -12,7 +13,16 @@ module PosHelper
   ].freeze
 
   def pos_mode_label(mode)
-    mode.to_s.humanize
+    mode.to_s == "pickup" ? "Pickup" : mode.to_s.humanize
+  end
+
+  def pos_pickup_mode?
+    pos_workspace_mode == "pickup"
+  end
+
+  def pos_workspace_mode
+    mode = params[:mode].presence || "sale"
+    POS_WORKSPACE_MODES.include?(mode) ? mode : "sale"
   end
 
   def pos_initial_entry_action(mode)
@@ -118,13 +128,48 @@ module PosHelper
     "From receipt #{line.source_transaction.transaction_number}"
   end
 
-  def pos_line_pickup_label(line)
-    return unless line.inventory_reservation_id.present?
+  PickupSummary = Data.define(:customer_name, :request_numbers, :line_count)
+  PickupLineContext = Data.define(:customer_name, :request_number, :label)
 
-    parts = [ "Customer pickup" ]
-    parts << line.customer_request_line.customer_request.request_number if line.customer_request_line&.customer_request
-    parts << line.inventory_reservation.customer&.display_name if line.inventory_reservation&.customer
-    parts.compact.join(" · ")
+  def pos_transaction_pickup_summary(transaction)
+    pickup_lines = transaction.pos_transaction_lines.select { |line| line.inventory_reservation_id.present? }
+    return nil if pickup_lines.empty?
+
+    customer_names = pickup_lines.filter_map do |line|
+      line.inventory_reservation&.customer&.display_name ||
+        line.customer_request_line&.customer_request&.customer&.display_name
+    end.uniq
+
+    request_numbers = pickup_lines.filter_map do |line|
+      line.customer_request_line&.customer_request&.request_number
+    end.uniq
+
+    PickupSummary.new(
+      customer_name: customer_names.one? ? customer_names.first : customer_names.join(", "),
+      request_numbers: request_numbers,
+      line_count: pickup_lines.size
+    )
+  end
+
+  def pos_line_pickup_context(line)
+    return nil unless line.inventory_reservation_id.present?
+
+    customer_name = line.inventory_reservation&.customer&.display_name ||
+      line.customer_request_line&.customer_request&.customer&.display_name
+    request_number = line.customer_request_line&.customer_request&.request_number
+
+    PickupLineContext.new(
+      customer_name: customer_name,
+      request_number: request_number,
+      label: [ customer_name, request_number ].compact.join(" · ")
+    )
+  end
+
+  def pos_line_pickup_label(line)
+    context = pos_line_pickup_context(line)
+    return if context.blank?
+
+    [ "Customer pickup", context.label ].compact.join(" · ")
   end
 
   def pos_line_price_editable?(line)

@@ -1,0 +1,21 @@
+<%= render "customers/shared/workspace_nav", active: :dashboard %>
+
+<div class="ss-page-header">
+  <h1>Customer Demand</h1>
+  <div class="ss-detail-actions">
+    <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.create", store: current_store) %>
+      <%= link_to "New request", new_customers_customer_request_path, class: "ss-btn" %>
+    <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "customers.create", store: current_store) %>
+      <%= link_to "New customer", new_customers_customer_path, class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
+</div>
+
+<%= render "orders/shared/metric_strip", metrics: @dashboard.metrics %>
+
+<div class="ss-card-grid">
+  <% @dashboard.queue_cards.each do |card| %>
+    <%= render "queue_card", card: card %>
+  <% end %>
+</div>

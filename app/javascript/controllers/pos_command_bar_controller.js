@@ -3,20 +3,25 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode"]
   static values = {
-    routeUrl: String
+    routeUrl: String,
+    returnMode: { type: Boolean, default: false }
   }
 
   connect() {
     this.focusInput()
+    this.syncOpenRingReturnMode()
   }
 
   toggleReturnMode() {
+    if (!this.hasReturnToggleTarget) return
+
     const returnMode = this.returnToggleTarget.checked
+    this.returnModeValue = returnMode
     this.element.dataset.posLineEntryReturnModeValue = returnMode ? "true" : "false"
     this.syncOpenRingReturnMode(returnMode)
   }
 
-  syncOpenRingReturnMode(returnMode = this.returnToggleTarget.checked) {
+  syncOpenRingReturnMode(returnMode = this.returnMode) {
     if (!this.hasOpenRingReturnModeTarget) return
 
     this.openRingReturnModeTarget.value = returnMode ? "1" : "0"
@@ -31,7 +36,7 @@ export default class extends Controller {
 
     const body = new FormData()
     body.append("input", input)
-    body.append("return_mode", this.returnToggleTarget.checked ? "1" : "0")
+    body.append("return_mode", this.returnMode ? "1" : "0")
 
     fetch(this.routeUrlValue, {
       method: "POST",
@@ -130,6 +135,12 @@ export default class extends Controller {
 
   dispatchMessage(message) {
     this.dispatch("message", { detail: { message } })
+  }
+
+  get returnMode() {
+    if (this.hasReturnToggleTarget) return this.returnToggleTarget.checked
+
+    return this.returnModeValue
   }
 
   get csrfToken() {
