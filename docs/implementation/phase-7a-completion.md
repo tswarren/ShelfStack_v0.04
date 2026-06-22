@@ -115,6 +115,17 @@ Closed in gap-closure pass:
 - Shared `CustomerRequests::QueueScope`, `SearchQuery`, and `NextActionResolver` services
 - Request show uses line workflow cards with per-line next action strip, status trail, sidebar contact panel, and live hold validation
 
+### Final Phase 7A review closure
+
+- Ready-for-pickup queue now uses line/reservation readiness, not only request header status.
+- Request show supports multiple active reservations per line.
+- Item customer-demand drawer keeps quantity/timing visible for linked customers.
+- Receipt allocations link to converted on-hand reservations.
+- POS pickup lookup supports snapshot-only customer requests.
+- Special-order `quantity_ready` is maintained on pickup fulfillment and void reversal.
+- Item drawer hold validation scoped to hold requests; availability synced explicitly on drawer open.
+- Request show Ready metric and expiring-hold urgency label aligned with reservation-aware UI.
+
 ---
 
 ## Documentation

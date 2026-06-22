@@ -31,7 +31,9 @@ module CustomerRequests
       [
         { label: "Lines", value: lines.size },
         { label: "Unmatched", value: lines.count { |line| line.product_variant_id.blank? } },
-        { label: "Ready", value: lines.count { |line| line.status == "ready_for_pickup" } }
+        { label: "Ready", value: line_cards.count { |card|
+          card.ready_quantity.positive? || card.line.status == "ready_for_pickup"
+        } }
       ]
     end
 

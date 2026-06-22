@@ -17,6 +17,7 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "customer_requests.access", store: @store)
     grant_permission!(@user, "customer_requests.create", store: @store)
     grant_permission!(@user, "inventory_reservations.create", store: @store)
+    grant_permission!(@user, "special_orders.create", store: @store)
     login_user!(@user, workstation: @workstation)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
     post_inventory_adjustment!(
@@ -62,6 +63,23 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     assert_not_nil walk_in_block
     assert_not_includes walk_in_block, 'name="quantity"'
     assert_match(/<h2>Demand<\/h2>[\s\S]*name="quantity"/, response.body)
+  end
+
+  test "create special order from item operations" do
+    assert_difference [ -> { CustomerRequest.count }, -> { SpecialOrder.count } ], 1 do
+      post items_customer_demand_path, params: {
+        request_type: "special_order",
+        product_variant_id: @variant.id,
+        customer_id: @customer.id,
+        quantity: 1
+      }
+    end
+
+    request = CustomerRequest.order(:id).last
+    line = request.customer_request_lines.first
+    assert_redirected_to customers_customer_request_path(request, anchor: "line-#{line.id}")
+    assert_equal "special_order", line.request_type
+    assert_equal "approved", line.special_order.status
   end
 
   test "create notify without hold permission still works with create only" do

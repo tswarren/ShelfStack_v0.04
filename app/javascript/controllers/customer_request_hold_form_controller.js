@@ -12,7 +12,21 @@ export default class extends Controller {
     this.quantityChanged()
   }
 
+  setAvailability({ available, onHand }) {
+    this.availableValue = parseInt(available, 10) || 0
+    this.onHandValue = parseInt(onHand, 10) || 0
+    this.quantityChanged()
+  }
+
   quantityChanged() {
+    if (this.requestType() !== "hold") {
+      if (this.hasWarningTarget) this.warningTarget.hidden = true
+      if (this.hasOverridePanelTarget) this.overridePanelTarget.hidden = true
+      if (this.hasOverrideReasonTarget) this.overrideReasonTarget.required = false
+      if (this.hasSubmitTarget) this.submitTarget.disabled = false
+      return
+    }
+
     const quantity = parseInt(this.quantityTarget.value, 10) || 0
     const overReserve = quantity > this.availableValue
 
@@ -34,5 +48,10 @@ export default class extends Controller {
     if (this.hasSubmitTarget) {
       this.submitTarget.disabled = overReserve && !this.canOverrideValue
     }
+  }
+
+  requestType() {
+    const field = this.element.querySelector("#request_type")
+    return field?.value || ""
   }
 }

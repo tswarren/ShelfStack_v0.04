@@ -46,11 +46,11 @@ export default class extends Controller {
       this.holdFieldsTarget.hidden = drawerKey !== "hold"
       const form = this.element.querySelector("form")
       if (form) {
-        form.dataset.customerRequestHoldFormAvailableValue = available || "0"
-        form.dataset.customerRequestHoldFormOnHandValue = onHand || "0"
-        const quantityInput = form.querySelector("[data-customer-request-hold-form-target='quantity']")
-        if (quantityInput) {
-          quantityInput.dispatchEvent(new Event("change", { bubbles: true }))
+        const holdController = this.application.getControllerForElementAndIdentifier(
+          form, "customer-request-hold-form"
+        )
+        if (holdController) {
+          holdController.setAvailability({ available: available || "0", onHand: onHand || "0" })
         }
       }
     }

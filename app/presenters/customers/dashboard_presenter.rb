@@ -131,7 +131,11 @@ module Customers
     def urgency_label_for(request, queue_key)
       if queue_key == "expiring_holds"
         hold = request.customer_request_lines.flat_map(&:inventory_reservations)
-                      .select { |reservation| reservation.reservation_type == "on_hand_hold" && reservation.expires_at.present? }
+                      .select { |reservation|
+                        reservation.reservation_type == "on_hand_hold" &&
+                          %w[active ready].include?(reservation.status) &&
+                          reservation.expires_at.present?
+                      }
                       .min_by(&:expires_at)
         return "Expires #{I18n.l(hold.expires_at.to_date)}" if hold.present?
       end
