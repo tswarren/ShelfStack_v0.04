@@ -105,6 +105,13 @@ class PosHelperTest < ActionView::TestCase
     assert_equal "Check #5001", pos_tender_receipt_label(tender)
   end
 
+  test "settlement row summary includes card brand and amount" do
+    row = PosTender.new(tender_type: "card", card_brand: "visa", card_last_four: "1122", amount_cents: 1000, line_number: 1)
+    transaction = PosTransaction.new(total_cents: 1000)
+
+    assert_equal "Visa ending 1122 — $10.00", pos_settlement_row_summary(row, transaction)
+  end
+
   test "price editable for sale lines and no receipt returns but not receipted returns" do
     sale_line = PosTransactionLine.new(quantity: 1, line_type: "variant")
     no_receipt_return = PosTransactionLine.new(quantity: -1, line_type: "variant")

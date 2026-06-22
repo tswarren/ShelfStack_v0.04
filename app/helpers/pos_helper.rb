@@ -275,6 +275,28 @@ module PosHelper
     pos_tender_field_label(tender_type, transaction)
   end
 
+  def pos_settlement_row_summary(row, transaction)
+    refund = transaction.total_cents.to_i.negative?
+
+    case row.tender_type
+    when "cash"
+      cents = refund ? row.amount_cents.to_i.abs : row.tendered_display_cents
+      label = refund ? "Cash refund" : "Cash tendered"
+      "#{label} — #{pos_money(cents)}"
+    when "card"
+      brand = row.card_brand.to_s.humanize
+      detail = row.card_last_four.present? ? "#{brand} ending #{row.card_last_four}" : brand
+      amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
+      "#{detail} — #{pos_money(amount_cents)}"
+    when "check"
+      label = row.check_number.present? ? "Check ##{row.check_number}" : "Check"
+      amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
+      "#{label} — #{pos_money(amount_cents)}"
+    else
+      row.tender_type.humanize
+    end
+  end
+
   def pos_line_gross_cents(line)
     line.unit_price_cents * line.quantity.abs
   end

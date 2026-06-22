@@ -19,10 +19,12 @@ export default class extends Controller {
   }
 
   connect() {
+    this.visibleRows().forEach((row) => this.updateRowSummary(row))
     this.update()
   }
 
   update() {
+    this.visibleRows().forEach((row) => this.updateRowSummary(row))
     this.updateHints()
     this.dispatchUpdate()
   }
@@ -45,7 +47,8 @@ export default class extends Controller {
     event.preventDefault()
     const existing = this.rowsTarget.querySelector("[data-settlement-type='cash']:not([data-destroyed='true'])")
     if (existing) {
-      existing.querySelector("[data-settlement-amount]")?.focus()
+      this.expandRowElement(existing)
+      this.focusRowEntry(existing)
       return
     }
 
@@ -56,12 +59,14 @@ export default class extends Controller {
     this.hideEmptyRow()
     const fragment = template.content.cloneNode(true)
     const row = fragment.querySelector("[data-settlement-row]")
-    if (row) {
-      row.dataset.rowId = ""
-      row.removeAttribute("data-destroyed")
-      this.rowsTarget.appendChild(fragment)
-    }
+    if (!row) return
+
+    row.dataset.rowId = ""
+    row.removeAttribute("data-destroyed")
+    row.dataset.collapsed = "false"
+    this.rowsTarget.appendChild(fragment)
     this.update()
+    this.focusRowEntry(row)
   }
 
   removeRow(event) {
@@ -115,9 +120,78 @@ export default class extends Controller {
     const row = event.currentTarget.closest("[data-settlement-row]")
     if (row) {
       this.setRowAmountCents(row, displayCents)
+      this.collapseRowIfReady(row)
     }
 
     this.update()
+  }
+
+  rowFocusOut(event) {
+    const row = event.target.closest("[data-settlement-row]")
+    if (!row || row.dataset.destroyed === "true") return
+
+    requestAnimationFrame(() => {
+      if (row.contains(document.activeElement)) return
+      this.collapseRowIfReady(row)
+    })
+  }
+
+  expandRow(event) {
+    event.preventDefault()
+    const row = event.currentTarget.closest("[data-settlement-row]")
+    if (!row) return
+
+    this.expandRowElement(row)
+    this.focusRowEntry(row)
+  }
+
+  expandRowElement(row) {
+    row.dataset.collapsed = "false"
+  }
+
+  collapseRowIfReady(row) {
+    if (!this.rowHasAmount(row)) return
+
+    row.dataset.collapsed = "true"
+    this.updateRowSummary(row)
+  }
+
+  rowHasAmount(row) {
+    return this.rowAmountCents(row) > 0
+  }
+
+  updateRowSummary(row) {
+    const label = row.querySelector("[data-pos-settlement-panel-target='rowSummaryLabel']")
+    if (!label) return
+
+    label.textContent = this.rowSummaryText(row)
+  }
+
+  rowSummaryText(row) {
+    const amountCents = this.rowAmountCents(row)
+    const amount = this.formatMoney(amountCents)
+    const tenderType = row.dataset.settlementType
+
+    if (tenderType === "cash") {
+      const prefix = this.refundValue ? "Cash refund" : "Cash tendered"
+      return `${prefix} — ${amount}`
+    }
+
+    if (tenderType === "card") {
+      const brandField = row.querySelector("[name*='[card_brand]']")
+      const brand = brandField?.selectedOptions?.[0]?.text || "Card"
+      const lastFour = row.querySelector("[name*='[card_last_four]']")?.value
+      const detail = lastFour ? `${brand} ending ${lastFour}` : brand
+      return `${detail} — ${amount}`
+    }
+
+    if (tenderType === "check") {
+      const checkNumber = row.querySelector("[name*='[check_number]']")?.value
+      const label = checkNumber ? `Check #${checkNumber}` : "Check"
+      return `${label} — ${amount}`
+    }
+
+    return amount
   }
 
   visibleRows() {
@@ -238,5 +312,18 @@ export default class extends Controller {
 
   formatMoney(cents) {
     return `$${(cents / 100).toFixed(2)}`
+  }
+
+  focusRowEntry(row) {
+    this.expandRowElement(row)
+
+    const amountField = row.querySelector("[data-settlement-amount]")
+    if (amountField) {
+      amountField.focus()
+      if (typeof amountField.select === "function") amountField.select()
+      return
+    }
+
+    row.querySelector("input:not([type='hidden']), select")?.focus()
   }
 }

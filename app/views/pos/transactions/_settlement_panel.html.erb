@@ -25,7 +25,7 @@
           <th></th>
         </tr>
       </thead>
-      <tbody data-pos-settlement-panel-target="rows">
+      <tbody data-pos-settlement-panel-target="rows" data-action="focusout->pos-settlement-panel#rowFocusOut">
         <% if settlement_rows.any? %>
           <% settlement_rows.each_with_index do |row, index| %>
             <%= render "pos/transactions/settlement_row", row: row, transaction: transaction, row_index: index %>
