@@ -50,7 +50,7 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
     assert_equal 0, report.exceptions.void_count
   end
 
-  test "groups card payments by brand and lists check detail" do
+  test "summarizes card and check payments by tender type" do
     sale = create_pos_transaction!(
       store: @store,
       workstation: @workstation,
@@ -81,10 +81,13 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
     )
 
     report = Pos::SalesRegisterSummaryReport.call(scope: @scope)
+    card_row = report.payments.find { |row| row.label == "Card" }
+    check_row = report.payments.find { |row| row.label == "Check" }
 
-    assert report.payments.any? { |row| row.label == "Card — Visa" && row.amount_cents == third }
-    assert report.payments.any? { |row| row.label == "Card — Mastercard" && row.amount_cents == third }
-    assert report.payments.any? { |row| row.label == "Check #1001" && row.amount_cents == remainder }
+    assert_equal third * 2, card_row.amount_cents
+    assert_equal remainder, check_row.amount_cents
+    refute report.payments.any? { |row| row.label.start_with?("Card —") }
+    refute report.payments.any? { |row| row.label.start_with?("Check #") }
   end
 
   test "requires register session scope" do

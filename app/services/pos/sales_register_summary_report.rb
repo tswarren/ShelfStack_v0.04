@@ -154,8 +154,8 @@ module Pos
     def build_payments(transactions)
       cash_sales = 0
       cash_refunds = 0
-      card_by_brand = Hash.new(0)
-      check_rows = []
+      card_total = 0
+      check_total = 0
 
       transactions.each do |transaction|
         transaction.pos_tenders.settlement_rows.each do |tender|
@@ -167,34 +167,21 @@ module Pos
               cash_sales += tender.amount_cents
             end
           when "card"
-            label = card_brand_label(tender.card_brand)
-            card_by_brand[label] += tender.amount_cents
+            card_total += tender.amount_cents
           when "check"
-            next unless tender.amount_cents.positive?
-
-            detail = tender.check_number.present? ? "Check ##{tender.check_number}" : "Check"
-            check_rows << PaymentRow.new(label: detail, amount_cents: tender.amount_cents)
+            check_total += tender.amount_cents
           end
         end
       end
 
-      total_paid = cash_sales + cash_refunds + card_by_brand.values.sum + check_rows.sum(&:amount_cents)
-      rows = [
+      total_paid = cash_sales + cash_refunds + card_total + check_total
+      [
         PaymentRow.new(label: "Cash sales", amount_cents: cash_sales),
-        PaymentRow.new(label: "Cash refunds", amount_cents: cash_refunds)
+        PaymentRow.new(label: "Cash refunds", amount_cents: cash_refunds),
+        PaymentRow.new(label: "Card", amount_cents: card_total),
+        PaymentRow.new(label: "Check", amount_cents: check_total),
+        PaymentRow.new(label: "Total paid", amount_cents: total_paid)
       ]
-      card_by_brand.sort.each do |label, amount_cents|
-        rows << PaymentRow.new(label: label, amount_cents: amount_cents)
-      end
-      rows.concat(check_rows.sort_by(&:label))
-      rows << PaymentRow.new(label: "Total paid", amount_cents: total_paid)
-      rows
-    end
-
-    def card_brand_label(brand)
-      return "Card" if brand.blank?
-
-      "Card — #{brand.to_s.humanize}"
     end
 
     def build_taxes(transactions)
