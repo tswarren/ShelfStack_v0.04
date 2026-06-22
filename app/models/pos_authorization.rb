@@ -8,6 +8,7 @@ class PosAuthorization < ApplicationRecord
     force_close_register
     inactive_sell
     void_transaction
+    sell_reserved_stock_override
     other
   ].freeze
 

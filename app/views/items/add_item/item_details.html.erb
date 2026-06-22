@@ -3,7 +3,10 @@
            title: "Add Catalog-Linked Item — Item Details",
            description: @external_lookup_staged ? "Review imported metadata, edit as needed, then save to create the catalog record." : "Enter catalog metadata. You can finish after this step or continue to selling setup." %>
 
+<%= render "items/add_item/match_context" %>
+
 <%= form_with url: items_add_item_path(step: "item_details"), method: :post, class: "ss-form ss-form--wide" do %>
+  <%= render "shared/request_match_params_fields", context: @match_context if @match_context&.active? %>
   <%= fields_for :catalog_item, @catalog_item do |f| %>
     <%= render "items/catalog_items/form",
           f: f,
@@ -19,6 +22,6 @@
   <footer class="ss-form-actions">
     <%= submit_tag "Create Selling Setup", class: "ss-btn" %>
     <%= submit_tag "Done", name: "commit", class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Cancel", add_item_cancel_path, class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>

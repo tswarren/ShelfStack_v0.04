@@ -316,6 +316,7 @@ Rails.application.routes.draw do
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]
+    resource :pickup_lookup, only: %i[create]
     resources :authorizations, only: %i[create]
     resources :register_sessions, only: %i[new create show] do
       member do
@@ -332,6 +333,7 @@ Rails.application.routes.draw do
         patch :void
         patch :cancel
         post :add_line
+        post :add_reservation_line
         post :add_return_line
         post :add_open_ring_line
         patch :update_line

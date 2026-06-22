@@ -1,0 +1,74 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class Phase7aPosPickupIntegrationTest < ActionDispatch::IntegrationTest
+  include Phase2TestHelper
+  include Phase6TestHelper
+  include Phase7aTestHelper
+
+  setup do
+    Seeds::Phase6Permissions.seed!
+    Seeds::Phase7aPermissions.seed!
+    @store = create_store!
+    @workstation = create_workstation!(store: @store)
+    @user = create_user!(pin: "1234")
+    grant_all_phase6_permissions!(@user, store: @store)
+    grant_all_phase7a_permissions!(@user, store: @store)
+    login_user!(@user, workstation: @workstation)
+    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @user)
+    @variant = create_product_variant!(inventory_behavior: "standard_physical")
+    create_store_tax_category_rate!(store: @store, tax_category: @variant.sub_department.default_tax_category)
+    post_inventory_adjustment!(
+      create_inventory_adjustment!(
+        store: @store,
+        lines: [ { product_variant: @variant, quantity_delta: 2, line_number: 1 } ]
+      ),
+      user: @user
+    )
+    @customer = create_customer!(display_name: "Pickup Pat")
+    @customer_request = create_customer_request!(
+      store: @store,
+      created_by_user: @user,
+      customer: @customer,
+      lines: [ { request_type: "hold" } ]
+    )
+    @line = @customer_request.customer_request_lines.first
+    match_request_line!(line: @line, variant: @variant, actor: @user)
+    @reservation = InventoryReservations::ReserveOnHand.call!(
+      store: @store,
+      variant: @variant,
+      quantity: 1,
+      reserved_by_user: @user,
+      customer: @customer,
+      customer_request_line: @line
+    )
+    @reservation.update!(status: "ready")
+    @transaction = PosTransaction.create!(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @user,
+      status: "draft"
+    )
+  end
+
+  test "pickup lookup returns ready reservation" do
+    post pos_pickup_lookup_path, params: { query: "Pickup Pat" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal 1, body["pickups"].size
+    assert_equal @reservation.id, body["pickups"].first["reservation_id"]
+  end
+
+  test "add_reservation_line adds pickup line to transaction" do
+    post add_reservation_line_pos_transaction_path(@transaction),
+         params: { inventory_reservation_id: @reservation.id },
+         headers: { Accept: "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    line = @transaction.reload.pos_transaction_lines.first
+    assert_equal @reservation.id, line.inventory_reservation_id
+    assert_equal @customer.id, @transaction.customer_id
+  end
+end

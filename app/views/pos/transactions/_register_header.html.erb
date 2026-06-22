@@ -28,5 +28,8 @@
     <% if current_workstation %>
       <div><dt>Workstation</dt><dd><%= current_workstation.name %></dd></div>
     <% end %>
+    <% if transaction.customer.present? %>
+      <div><dt>Customer</dt><dd><%= transaction.customer.display_name %></dd></div>
+    <% end %>
   </dl>
 </header>

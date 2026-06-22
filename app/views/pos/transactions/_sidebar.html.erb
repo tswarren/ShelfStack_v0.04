@@ -2,6 +2,8 @@
   <%= render "pos/transactions/totals_panel", transaction: transaction %>
 </div>
 
+<%= render "pos/transactions/pickup_panel", transaction: transaction %>
+
 <details class="ss-pos-panel ss-pos-adjustments">
   <summary>Adjustments</summary>
     <%= form_with model: transaction, url: pos_transaction_path(transaction), method: :patch, class: "ss-form" do |f| %>

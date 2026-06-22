@@ -18,7 +18,7 @@ module Phase7aTestHelper
     )
   end
 
-  def create_customer_request!(store:, created_by_user:, customer: nil, lines: [{}])
+  def create_customer_request!(store:, created_by_user:, customer: nil, lines: [ {} ])
     CustomerRequests::Create.call(
       store: store,
       created_by_user: created_by_user,

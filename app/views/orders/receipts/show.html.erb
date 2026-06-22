@@ -108,6 +108,39 @@
   <% end %>
 <% end %>
 
+<% if presenter.show_customer_allocations? %>
+  <%= render "orders/shared/collapsible_panel", title: "Customer allocations" do %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Line</th>
+          <th>Item</th>
+          <th>Customer</th>
+          <th>Request</th>
+          <th class="ss-num">Qty</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% presenter.customer_allocation_rows.each do |row| %>
+          <tr>
+            <td><%= row[:receipt_line_number] %></td>
+            <td><%= render "orders/shared/variant_identity", variant: row[:variant] %></td>
+            <td><%= row[:customer_name] || "—" %></td>
+            <td>
+              <% if row[:request_id].present? %>
+                <%= link_to row[:request_number], customers_customer_request_path(row[:request_id]) %>
+              <% else %>
+                —
+              <% end %>
+            </td>
+            <td class="ss-num"><%= row[:quantity] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+<% end %>
+
 <% if presenter.show_discrepancies? %>
   <%= render "orders/shared/collapsible_panel", title: "Receiving discrepancies" do %>
     <%= render "orders/shared/receipt_discrepancies_detail", discrepancies: @document_hub.discrepancies %>

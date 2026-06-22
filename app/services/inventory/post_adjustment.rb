@@ -71,11 +71,25 @@ module Inventory
         )
       end
 
+      surface_notify_for_increases!(posting)
+
       posting
     end
 
     private
 
     attr_reader :adjustment, :posted_by_user
+
+    def surface_notify_for_increases!(posting)
+      adjustment.inventory_adjustment_lines.each do |line|
+        next unless line.quantity_delta.positive?
+
+        CustomerRequests::SurfaceNotifyLines.for_variant(
+          store: adjustment.store,
+          variant: line.product_variant,
+          actor: posted_by_user
+        )
+      end
+    end
   end
 end

@@ -84,6 +84,7 @@ module Items
       when "identify"
         ensure_catalog_linked_workflow! or return
         @local_catalog_item = local_match_catalog_item
+        @local_match_variant = local_match_variant_for_request
         render "items/add_item/identify"
       when "item_details"
         ensure_catalog_linked_workflow! or return
@@ -137,6 +138,20 @@ module Items
       return unless @draft["catalog_item_id"].present?
 
       CatalogItem.find_by(id: @draft["catalog_item_id"])
+    end
+
+    def local_match_variant_for_request
+      item = @local_catalog_item || local_match_catalog_item
+      return if item.blank?
+
+      ProductVariant.active_records.joins(:product).where(products: { catalog_item_id: item.id }).first
+    end
+
+    def add_item_cancel_path
+      context = load_match_context
+      return context.return_path if context.valid?
+
+      items_root_path
     end
 
     def handle_item_details
@@ -629,6 +644,6 @@ module Items
         line_id: draft["customer_request_line_id"]
       }
     end
-    helper_method :add_item_match_params, :customer_request_match_draft, :load_match_context
+    helper_method :add_item_match_params, :customer_request_match_draft, :load_match_context, :add_item_cancel_path
   end
 end

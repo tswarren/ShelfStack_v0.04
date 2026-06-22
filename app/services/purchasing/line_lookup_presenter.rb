@@ -61,6 +61,7 @@ module Purchasing
         po_line = match.purchase_order_line
         json[:purchase_order_line_id] = po_line.id
         json[:quantity_expected] = [ po_line.quantity_ordered - po_line.quantity_received, 0 ].max
+        json[:customer_reserved_open] = ReceiptLineDemand.customer_reserved_open(po_line)
       end
 
       json

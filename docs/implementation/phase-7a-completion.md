@@ -85,12 +85,21 @@ Manual smoke:
 ## Known gaps / deferrals
 
 - Deposits, automated customer notifications, CRM
-- PO line allocation breakdown UI on Orders workspace (service layer complete)
-- Receiving screen customer-reserved flags (allocation runs; UI flag deferred)
-- Solid Queue recurring job for `InventoryReservations::Expire` (rake task provided)
-- Keyword/title notify without PO path scanning on non-PO receipts (partial: notify lines flagged on PO receipt path)
-- POS `pos.fulfill_customer_reservation` / `sell_reserved_stock_override` authorization flows (warnings/block in place; full auth modal deferred)
 - Gift-card / store-credit pickup tenders
+- Auto-hold / auto-reserve on notify (manual notify queue by design)
+
+## Gap closure (2026-06-21)
+
+Closed in gap-closure pass:
+
+- Orders PO line customer/stock breakdown on purchase order show
+- Receiving customer-reserved warnings and posted receipt allocation panel
+- POS customer pickup panel, reservation line entry, enriched scan lookup
+- POS `sell_reserved_stock_override` supervisor auth via readiness panel
+- Add Item wizard match banner/return paths and identify shortcut
+- `CustomerRequests::SurfaceNotifyLines` + availability-based notify queue filter
+- Solid Queue nightly `InventoryReservations::ExpireJob` (+ rake fallback)
+- Customer search trigram indexes on `display_name`, `email`, `phone`
 
 ---
 

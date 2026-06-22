@@ -35,6 +35,8 @@
         <th class="ss-num">Ordered</th>
         <th class="ss-num">Received</th>
         <th class="ss-num">Open</th>
+        <th class="ss-num">Customer</th>
+        <th class="ss-num">Stock</th>
         <th class="ss-num">Cost</th>
         <th>Status</th>
         <th>Flags</th>
@@ -42,6 +44,7 @@
     </thead>
     <tbody>
       <% @purchase_order.purchase_order_lines.each do |line| %>
+        <% breakdown = presenter.line_demand_breakdown(line) %>
         <tr>
           <td><%= line.line_number %></td>
           <td>
@@ -54,6 +57,8 @@
           <td class="ss-num"><%= line.quantity_ordered %></td>
           <td class="ss-num"><%= line.quantity_received %></td>
           <td class="ss-num"><%= @purchase_order.open_quantity_for_line(line) %></td>
+          <td class="ss-num"><%= breakdown&.customer_allocated_quantity || 0 %></td>
+          <td class="ss-num"><%= breakdown&.stock_quantity || line.quantity_ordered %></td>
           <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
           <td><%= render "orders/shared/status_badge", status: line.status %></td>
           <td>
@@ -61,6 +66,13 @@
             <%= flags.any? ? flags.join(" · ") : "—" %>
           </td>
         </tr>
+        <% if breakdown&.allocation_rows&.any? %>
+          <tr class="ss-table-detail">
+            <td colspan="11">
+              <%= render "orders/purchase_orders/line_demand_detail", breakdown: breakdown %>
+            </td>
+          </tr>
+        <% end %>
       <% end %>
     </tbody>
   </table>

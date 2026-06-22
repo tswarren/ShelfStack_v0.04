@@ -118,6 +118,15 @@ module PosHelper
     "From receipt #{line.source_transaction.transaction_number}"
   end
 
+  def pos_line_pickup_label(line)
+    return unless line.inventory_reservation_id.present?
+
+    parts = [ "Customer pickup" ]
+    parts << line.customer_request_line.customer_request.request_number if line.customer_request_line&.customer_request
+    parts << line.inventory_reservation.customer&.display_name if line.inventory_reservation&.customer
+    parts.compact.join(" · ")
+  end
+
   def pos_line_price_editable?(line)
     !(line.return_line? && line.source_transaction_line_id.present?)
   end
@@ -161,6 +170,7 @@ module PosHelper
     when :discount_auth then "This discount exceeds the cashier limit. A manager must enter their username and PIN to approve."
     when :no_receipt_return then "This return has no receipt. A manager must enter their username and PIN to approve."
     when :cash_refund_auth then "This cash refund exceeds the limit. A manager must enter their username and PIN to approve."
+    when :reserved_stock_auth then "This sale uses stock reserved for customer pickup. A manager must approve selling without a reservation line."
     else "A manager must enter their username and PIN to approve this action."
     end
   end
@@ -168,9 +178,11 @@ module PosHelper
   def pos_lookup_preview_text(variant)
     price = pos_money(variant[:selling_price_cents] || variant["selling_price_cents"])
     on_hand = variant[:quantity_on_hand] || variant["quantity_on_hand"] || 0
+    available = variant[:quantity_available] || variant["quantity_available"] || on_hand
+    reserved = variant[:quantity_reserved] || variant["quantity_reserved"] || 0
     sku = variant[:sku] || variant["sku"]
     name = variant[:name] || variant["name"]
-    "#{sku} — #{name}\nOn hand: #{on_hand} · #{price}"
+    "#{sku} — #{name}\nOn hand: #{on_hand} · Available: #{available} · Reserved: #{reserved} · #{price}"
   end
 
   def pos_void_reason_options

@@ -84,6 +84,7 @@ module Pos
         register_session_check,
         lines_check,
         inactive_check,
+        reserved_stock_authorization_check,
         discount_authorization_check,
         no_receipt_return_authorization_check,
         tender_total_check,
@@ -143,6 +144,37 @@ module Pos
           action_key: :confirm_inactive,
           action_label: "Confirm inactive sale"
         )
+      end
+    end
+
+    def reserved_stock_authorization_check
+      return unless reserved_stock_override_needed?
+
+      if authorization_valid?(:sell_reserved_stock_override)
+        Check.new(key: :reserved_stock_auth, status: :ok, message: "Reserved stock override authorized", action_key: nil, action_label: nil)
+      else
+        Check.new(
+          key: :reserved_stock_auth,
+          status: :block,
+          message: "Selling into reserved stock requires manager authorization",
+          action_key: :supervisor_auth,
+          action_label: "Authorize override"
+        )
+      end
+    end
+
+    def reserved_stock_override_needed?
+      transaction.pos_transaction_lines.any? do |line|
+        next false unless line.variant_line?
+        next false if line.product_variant.blank?
+        next false if line.inventory_reservation_id.present?
+
+        variant = line.product_variant
+        reserved = Inventory::Availability.reserved(store: transaction.store, variant: variant)
+        next false if reserved.zero?
+
+        available = Inventory::Availability.available(store: transaction.store, variant: variant)
+        line.quantity.abs > available
       end
     end
 

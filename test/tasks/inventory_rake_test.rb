@@ -63,6 +63,35 @@ class InventoryRakeTest < ActiveSupport::TestCase
     assert_equal 1, exit_code
   end
 
+  test "expire_reservations task expires overdue holds" do
+    Seeds::Phase7aPermissions.seed!
+    User.find_or_create_by!(username: ShelfStack::SYSTEM_USERNAME) do |user|
+      user.assign_attributes(
+        user_type: "system",
+        first_name: "ShelfStack",
+        last_name: "System",
+        display_name: "ShelfStack System",
+        interactive_login_enabled: false,
+        active: true,
+        password: SecureRandom.hex(32)
+      )
+    end
+    reservation = InventoryReservations::ReserveOnHand.call!(
+      store: @store,
+      variant: @variant,
+      quantity: 1,
+      reserved_by_user: @admin,
+      expires_at: 1.day.ago
+    )
+
+    capture_io do
+      Rake::Task["shelfstack:inventory:expire_reservations"].reenable
+      Rake::Task["shelfstack:inventory:expire_reservations"].invoke
+    end
+
+    assert_equal "expired", reservation.reload.status
+  end
+
   private
 
   def capture_io

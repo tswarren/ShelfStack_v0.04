@@ -12,6 +12,10 @@
     <% if variant %>
     data-purchasing-line-row-initial-sku-value="<%= variant.sku %>"
     data-purchasing-line-row-initial-variant-id-value="<%= variant.id %>"
+    <% end %>
+    <% customer_reserved = Purchasing::ReceiptLineDemand.customer_reserved_open(line_form.object.purchase_order_line) %>
+    <% if customer_reserved.positive? %>
+    data-purchasing-line-row-initial-customer-reserved-value="<%= customer_reserved %>"
     <% end %>>
   <%= line_form.hidden_field :id if line_form.object.persisted? %>
   <%= line_form.hidden_field :_destroy, value: false, data: { purchasing_line_table_target: "destroy" } %>
@@ -81,6 +85,11 @@
           <% end %>
         </dd>
       </div>
+      <% if customer_reserved.to_i.positive? %>
+        <div class="ss-notice ss-notice--info">
+          <%= customer_reserved %> <%= "copy".pluralize(customer_reserved) %> reserved for customers on this PO line.
+        </div>
+      <% end %>
     </dl>
   </td>
 </tr>

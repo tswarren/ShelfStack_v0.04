@@ -163,7 +163,7 @@ module Customers
       override_user = if params[:override_reason].present? &&
                          Authorization.allowed?(user: current_user, permission_key: "inventory_reservations.override", store: current_store)
                         current_user
-                      end
+      end
 
       InventoryReservations::ReserveOnHand.call!(
         store: customers_store,
@@ -361,9 +361,8 @@ module Customers
     end
 
     def apply_notify_customer_filter!
-      @customer_requests = @customer_requests.joins(:customer_request_lines)
-                                             .where(customer_request_lines: { request_type: "notify", status: "ready_for_pickup" })
-                                             .distinct
+      ids = CustomerRequests::NotifyQueueQuery.customer_request_ids_for(store: customers_store)
+      @customer_requests = @customer_requests.where(id: ids)
     end
 
     def apply_expiring_holds_filter!

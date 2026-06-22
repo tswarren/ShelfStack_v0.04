@@ -1,0 +1,22 @@
+<details class="ss-pos-panel" <%= "open" if params[:pickup].present? %>>
+  <summary>Customer pickup</summary>
+  <div data-controller="pos-pickup-panel"
+       data-pos-pickup-panel-url-value="<%= pos_pickup_lookup_path %>"
+       data-pos-pickup-panel-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>">
+    <div class="ss-field">
+      <%= label_tag :pos_pickup_customer_query, "Find customer" %>
+      <%= text_field_tag :pos_pickup_customer_query, nil,
+            class: "ss-input",
+            data: { pos_pickup_panel_target: "query", action: "keydown.enter->pos-pickup-panel#search" } %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :pos_pickup_request_number, "Request number" %>
+      <%= text_field_tag :pos_pickup_request_number, nil,
+            class: "ss-input",
+            data: { pos_pickup_panel_target: "requestNumber", action: "keydown.enter->pos-pickup-panel#search" } %>
+    </div>
+    <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-pickup-panel#search">Search ready items</button>
+    <p class="ss-hint" data-pos-pickup-panel-target="message"></p>
+    <div class="ss-pos-choices" data-pos-pickup-panel-target="results"></div>
+  </div>
+</details>

@@ -1,0 +1,18 @@
+<ul class="ss-detail-list">
+  <% breakdown.allocation_rows.each do |row| %>
+    <li>
+      <%= row.quantity_open %> open / <%= row.quantity_allocated %> allocated for
+      <%= row.customer_name %>
+      <% if row.request_number.present? %>
+        · <%= link_to "Request #{row.request_number}", customers_customer_request_path(row.request_id) %>
+      <% end %>
+      <% if row.special_order_id.present? %>
+        · Special order #<%= row.special_order_id %>
+      <% end %>
+      · <%= row.status.humanize %>
+    </li>
+  <% end %>
+  <% if breakdown.internal_tbo_quantity.positive? %>
+    <li><%= breakdown.internal_tbo_quantity %> for internal TBO</li>
+  <% end %>
+</ul>

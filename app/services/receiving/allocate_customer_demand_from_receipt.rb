@@ -18,7 +18,7 @@ module Receiving
         next if receipt_line.quantity_accepted.zero?
 
         allocate_po_backed_lines!(receipt_line)
-        flag_notify_lines!(receipt_line)
+        surface_notify_lines!(receipt_line)
       end
     end
 
@@ -88,19 +88,15 @@ module Receiving
       end
     end
 
-    def flag_notify_lines!(receipt_line)
+    def surface_notify_lines!(receipt_line)
       variant = receipt_line.product_variant
       return if variant.blank?
 
-      CustomerRequestLine.open_lines
-                         .where(request_type: "notify", product_variant: variant, status: "matched")
-                         .joins(:customer_request)
-                         .where(customer_requests: { store_id: receipt.store_id })
-                         .find_each do |line|
-        # Notify queue only — no auto-hold per spec revision
-        line.update!(status: "ready_for_pickup") if line.status == "matched"
-        line.customer_request.refresh_status_from_lines!
-      end
+      CustomerRequests::SurfaceNotifyLines.for_variant(
+        store: receipt.store,
+        variant: variant,
+        actor: posted_by_user
+      )
     end
   end
 end

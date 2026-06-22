@@ -32,12 +32,22 @@ module InventoryReservations
 
         if reservation.special_order.present?
           so = reservation.special_order
-          so.update!(status: "ready_for_pickup", quantity_completed: [ so.quantity_completed - quantity, 0 ].max)
+          quantity_completed = [ so.quantity_completed - quantity, 0 ].max
+          fully_completed = quantity_completed + so.quantity_cancelled >= so.quantity_committed
+          so.update!(
+            status: fully_completed ? "completed" : "ready_for_pickup",
+            quantity_completed: quantity_completed,
+            completed_at: fully_completed ? so.completed_at || Time.current : nil
+          )
         end
 
         if reservation.customer_request_line.present?
           line = reservation.customer_request_line
-          line.update!(status: "ready_for_pickup", filled_quantity: [ line.filled_quantity - quantity, 0 ].max)
+          filled_quantity = [ line.filled_quantity - quantity, 0 ].max
+          line.update!(
+            status: fulfillment_status_for(line, filled_quantity),
+            filled_quantity: filled_quantity
+          )
           line.customer_request.refresh_status_from_lines!
         end
 
@@ -54,5 +64,15 @@ module InventoryReservations
     private
 
     attr_reader :reservation, :reversed_by_user, :quantity
+
+    def fulfillment_status_for(request_line, filled_quantity)
+      if filled_quantity + request_line.cancelled_quantity >= request_line.requested_quantity
+        "completed"
+      elsif filled_quantity.positive?
+        "partially_filled"
+      else
+        "ready_for_pickup"
+      end
+    end
   end
 end

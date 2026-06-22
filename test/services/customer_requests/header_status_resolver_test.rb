@@ -31,4 +31,56 @@ class CustomerRequestsHeaderStatusResolverTest < ActiveSupport::TestCase
 
     assert_equal "researching", request.reload.status
   end
+
+  test "derives completed when all active lines are completed" do
+    request = create_customer_request!(store: @store, created_by_user: @user, customer: @customer)
+    line = request.customer_request_lines.first
+    line.update!(
+      product_variant: @variant,
+      request_type: "hold",
+      status: "completed",
+      requested_quantity: 1,
+      filled_quantity: 1
+    )
+
+    CustomerRequests::HeaderStatusResolver.call!(request)
+
+    assert_equal "completed", request.reload.status
+  end
+
+  test "derives partially_filled when one line completed and another still open" do
+    request = create_customer_request!(
+      store: @store,
+      created_by_user: @user,
+      customer: @customer,
+      lines: [ { request_type: "hold" }, { request_type: "hold" } ]
+    )
+    completed_line, open_line = request.customer_request_lines.order(:line_number)
+    completed_line.update!(
+      product_variant: @variant,
+      status: "completed",
+      requested_quantity: 1,
+      filled_quantity: 1
+    )
+    open_line.update!(product_variant: @variant, status: "ready_for_pickup")
+
+    CustomerRequests::HeaderStatusResolver.call!(request)
+
+    assert_equal "partially_filled", request.reload.status
+  end
+
+  test "derives partially_filled when a line is partially filled" do
+    request = create_customer_request!(store: @store, created_by_user: @user, customer: @customer)
+    request.customer_request_lines.first.update!(
+      product_variant: @variant,
+      request_type: "hold",
+      status: "partially_filled",
+      requested_quantity: 3,
+      filled_quantity: 1
+    )
+
+    CustomerRequests::HeaderStatusResolver.call!(request)
+
+    assert_equal "partially_filled", request.reload.status
+  end
 end

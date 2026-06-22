@@ -17,6 +17,7 @@ export default class extends Controller {
   static values = {
     url: String,
     addUrl: String,
+    addReservationUrl: String,
     returnMode: { type: Boolean, default: false },
     mode: { type: String, default: "sale" },
     autoAdd: { type: Boolean, default: true }
@@ -112,13 +113,55 @@ export default class extends Controller {
   renderChoices(variants) {
     this.choicesTarget.innerHTML = ""
     variants.forEach((variant) => {
-      const card = document.createElement("button")
-      card.type = "button"
-      card.className = "ss-pos-choice-card"
-      card.innerHTML = this.choiceCardHtml(variant)
-      card.addEventListener("click", () => this.selectVariant(variant, { autoAdd: true }))
-      this.choicesTarget.appendChild(card)
+      if (variant.ready_reservations?.length && !this.returnModeValue) {
+        variant.ready_reservations.forEach((reservation) => {
+          const card = document.createElement("button")
+          card.type = "button"
+          card.className = "ss-pos-choice-card"
+          card.innerHTML = this.pickupChoiceCardHtml(variant, reservation)
+          card.addEventListener("click", () => this.addReservation(reservation.id))
+          this.choicesTarget.appendChild(card)
+        })
+      }
+
+      const available = variant.quantity_available ?? variant.quantity_on_hand ?? 0
+      if (available > 0 || this.returnModeValue) {
+        const card = document.createElement("button")
+        card.type = "button"
+        card.className = "ss-pos-choice-card"
+        card.innerHTML = this.choiceCardHtml(variant)
+        card.addEventListener("click", () => this.selectVariant(variant, { autoAdd: true }))
+        this.choicesTarget.appendChild(card)
+      } else if (!variant.ready_reservations?.length) {
+        const card = document.createElement("button")
+        card.type = "button"
+        card.className = "ss-pos-choice-card"
+        card.innerHTML = this.reservedChoiceCardHtml(variant)
+        card.addEventListener("click", () => this.selectVariant(variant, { autoAdd: true }))
+        this.choicesTarget.appendChild(card)
+      }
     })
+  }
+
+  pickupChoiceCardHtml(variant, reservation) {
+    const price = `$${(variant.selling_price_cents / 100).toFixed(2)}`
+    return `
+      <strong class="ss-pos-choice-card__sku">${variant.sku}</strong>
+      <span class="ss-pos-choice-card__name">${variant.name}</span>
+      <span class="ss-pos-choice-card__meta">Pickup for ${reservation.customer_name || "customer"} · Qty ${reservation.quantity} · ${price}</span>
+      ${reservation.request_number ? `<span class="ss-pos-choice-card__meta">Request ${reservation.request_number}</span>` : ""}
+    `
+  }
+
+  reservedChoiceCardHtml(variant) {
+    const price = `$${(variant.selling_price_cents / 100).toFixed(2)}`
+    const reserved = variant.quantity_reserved ?? 0
+    return `
+      <strong class="ss-pos-choice-card__sku">${variant.sku}</strong>
+      <span class="ss-pos-choice-card__name">${variant.name}</span>
+      <span class="ss-pos-choice-card__warn">No available copies. ${reserved} reserved for pickup.</span>
+      <span class="ss-pos-choice-card__meta">${price}</span>
+    `
   }
 
   choiceCardHtml(variant) {
@@ -132,7 +175,7 @@ export default class extends Controller {
     return `
       <strong class="ss-pos-choice-card__sku">${variant.sku}</strong>
       <span class="ss-pos-choice-card__name">${variant.name}</span>
-      <span class="ss-pos-choice-card__meta">${condition} · On hand ${variant.quantity_on_hand ?? 0} · ${price} · ${behavior}</span>
+      <span class="ss-pos-choice-card__meta">${condition} · On hand ${variant.quantity_on_hand ?? 0} · Available ${variant.quantity_available ?? variant.quantity_on_hand ?? 0} · ${price} · ${behavior}</span>
       ${inactive}
     `
   }
@@ -182,6 +225,34 @@ export default class extends Controller {
         this.focusInput()
       })
       .catch(() => this.showMessage("Unable to add line."))
+  }
+
+  addReservation(reservationId) {
+    if (!this.hasAddReservationUrlValue) return
+
+    const body = new FormData()
+    body.append("inventory_reservation_id", reservationId)
+
+    fetch(this.addReservationUrlValue, {
+      method: "POST",
+      headers: {
+        "X-CSRF-Token": this.csrfToken,
+        Accept: "text/vnd.turbo-stream.html"
+      },
+      body
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Add pickup line failed (${response.status})`)
+        return response.text()
+      })
+      .then((html) => {
+        window.Turbo.renderStreamMessage(html)
+        this.inputElement.value = ""
+        this.clearChoices()
+        this.showMessage("")
+        this.focusInput()
+      })
+      .catch(() => this.showMessage("Unable to add pickup line."))
   }
 
   formatPreview(variant) {

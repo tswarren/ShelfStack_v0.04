@@ -4,11 +4,12 @@ module Orders
   class PurchaseOrderShowPresenter
     include Rails.application.routes.url_helpers
 
-    def initialize(purchase_order:, document_hub:, order_summary:, sourcing_warnings:)
+    def initialize(purchase_order:, document_hub:, order_summary:, sourcing_warnings:, line_demand_breakdowns: [])
       @purchase_order = purchase_order
       @document_hub = document_hub
       @order_summary = order_summary
       @sourcing_warnings = sourcing_warnings
+      @line_demand_breakdowns = line_demand_breakdowns.index_by { |entry| entry.line.id }
     end
 
     def title
@@ -65,7 +66,20 @@ module Orders
         flags << "No source" unless sourcing.sourcing_record_present
       end
       flags << "Discrepancy" if discrepancy_line_ids.include?(line.id)
+      breakdown = line_demand_breakdown(line)
+      if breakdown&.customer_allocated_quantity.to_i.positive?
+        qty = breakdown.customer_allocated_quantity
+        flags << "#{qty} for #{'customer'.pluralize(qty)}"
+      end
       flags
+    end
+
+    def line_demand_breakdown(line)
+      line_demand_breakdowns[line.id]
+    end
+
+    def customer_allocations_present?
+      line_demand_breakdowns.values.any? { |entry| entry.customer_allocated_quantity.positive? || entry.allocation_rows.any? }
     end
 
     def show_line_activity?
@@ -82,7 +96,7 @@ module Orders
 
     private
 
-    attr_reader :purchase_order, :document_hub, :order_summary, :sourcing_warnings
+    attr_reader :purchase_order, :document_hub, :order_summary, :sourcing_warnings, :line_demand_breakdowns
 
     def discrepancy_line_ids
       @discrepancy_line_ids ||= document_hub.discrepancies.filter_map(&:purchase_order_line).map(&:id).uniq

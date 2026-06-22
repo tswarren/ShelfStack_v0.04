@@ -6,6 +6,7 @@
       <%= button_to "New Transaction", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-pos-action-grid__btn ss-btn" %>
     <% end %>
     <%= link_to "Manage Session", pos_register_session_path(@register_session), class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
+    <%= button_to "Customer Pickup", pos_transactions_path, method: :post, params: { mode: "sale", pickup: "1" }, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
     <%= link_to "Cash In/Out", pos_register_session_path(@register_session, anchor: "cash-movement"), class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
     <%= link_to "Reports", pos_reports_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
   <% else %>

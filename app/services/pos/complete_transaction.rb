@@ -31,7 +31,7 @@ module Pos
       end
 
       transaction.pos_transaction_lines.each { |line| ReturnQuantityValidator.call!(line) }
-      SellabilityValidator.validate!(transaction, confirmed_inactive: confirmed_inactive)
+      SellabilityValidator.validate!(transaction, confirmed_inactive: confirmed_inactive, pos_authorization_id: pos_authorization_id)
       validate_authorizations!
 
       PosTransaction.transaction do
@@ -87,6 +87,25 @@ module Pos
 
       if transaction.pos_transaction_lines.any? { |line| line.return_line? && line.source_transaction_line_id.blank? }
         require_authorization!(:no_receipt_return, "No-receipt return requires supervisor authorization.")
+      end
+
+      if reserved_stock_override_required?
+        require_authorization!(:sell_reserved_stock_override, "Selling reserved stock requires manager override.")
+      end
+    end
+
+    def reserved_stock_override_required?
+      transaction.pos_transaction_lines.any? do |line|
+        next false unless line.variant_line?
+        next false if line.product_variant.blank?
+        next false if line.inventory_reservation_id.present?
+
+        variant = line.product_variant
+        reserved = Inventory::Availability.reserved(store: transaction.store, variant: variant)
+        next false if reserved.zero?
+
+        available = Inventory::Availability.available(store: transaction.store, variant: variant)
+        line.quantity.abs > available
       end
     end
 

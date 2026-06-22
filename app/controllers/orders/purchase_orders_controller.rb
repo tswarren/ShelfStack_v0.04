@@ -25,7 +25,8 @@ module Orders
         purchase_order: @purchase_order,
         document_hub: @document_hub,
         order_summary: @order_summary,
-        sourcing_warnings: @sourcing_warnings
+        sourcing_warnings: @sourcing_warnings,
+        line_demand_breakdowns: Purchasing::PurchaseOrderLineDemandBreakdown.for(@purchase_order)
       )
       @audit_events = AuditEvent.for_auditable(@purchase_order).limit(50)
       @closable = Purchasing::ClosePurchaseOrder.new(
@@ -190,7 +191,11 @@ module Orders
           purchase_order_lines: [
             :product_variant,
             :purchase_request_line,
-            { receipt_lines: [ :receipt, :receiving_discrepancies ] }
+            { receipt_lines: [ :receipt, :receiving_discrepancies ] },
+            { purchase_order_line_allocations: {
+              special_order: :customer,
+              customer_request_line: { customer_request: :customer }
+            } }
           ]
         )
       end

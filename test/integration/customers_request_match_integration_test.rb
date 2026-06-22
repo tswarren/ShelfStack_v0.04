@@ -13,6 +13,8 @@ class CustomersRequestMatchIntegrationTest < ActionDispatch::IntegrationTest
     grant_all_phase7a_permissions!(@user, store: @store)
     grant_permission!(@user, "items.access", store: @store)
     grant_permission!(@user, "items.catalog_items.view", store: @store)
+    grant_permission!(@user, "items.external_lookup.access", store: @store)
+    grant_permission!(@user, "items.catalog_items.create", store: @store)
     login_user!(@user, workstation: @workstation)
 
     @customer = create_customer!
@@ -59,5 +61,22 @@ class CustomersRequestMatchIntegrationTest < ActionDispatch::IntegrationTest
          params: { line_id: @line.id, product_variant_id: @variant.id }
 
     assert_equal @variant.id, @line.reload.product_variant_id
+  end
+
+  test "add item identify shows match banner when draft has match context" do
+    get items_add_item_path(
+      step: "choose_path",
+      return_to: Customers::RequestMatchContext::RETURN_TO,
+      customer_request_id: @customer_request.id,
+      line_id: @line.id
+    )
+    assert_response :success
+
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+    follow_redirect!
+
+    get items_add_item_path(step: "identify")
+    assert_response :success
+    assert_includes response.body, @customer_request.request_number
   end
 end
