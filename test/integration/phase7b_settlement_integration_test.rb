@@ -83,6 +83,34 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal return_txn.total_cents, return_txn.pos_tenders.settlement_rows.sum(&:amount_cents)
   end
 
+  test "edit page renders settlement modal launcher instead of inline panel" do
+    get edit_pos_transaction_path(@transaction)
+    assert_response :success
+    assert_select "#pos_settlement_modal[hidden]"
+    assert_select "#pos_settlement_actions .ss-pos-settlement-open-btn"
+    assert_select "#pos_tender_panel", false
+    assert_select "details.ss-pos-adjustments summary", text: "Discount/Adjustment"
+    assert_select "#pos_settlement_actions .ss-pos-secondary-actions--inline"
+  end
+
+  test "complete sale via settlements params matching modal form" do
+    total = @transaction.total_cents
+    half = total / 2
+
+    patch complete_pos_transaction_path(@transaction), params: {
+      confirm_inactive: 1,
+      settlements: [
+        { tender_type: "card", amount_dollars: format("%.2f", half / 100.0), card_brand: "visa", card_last_four: "4242" },
+        { tender_type: "cash", tendered_dollars: format("%.2f", (total - half) / 100.0) }
+      ]
+    }
+    assert_redirected_to pos_transaction_path(@transaction)
+
+    @transaction.reload
+    assert @transaction.completed?
+    assert_equal 2, @transaction.pos_tenders.settlement_rows.count
+  end
+
   test "void preserves reversal line numbers and receipt fields" do
     half = @transaction.total_cents / 2
 

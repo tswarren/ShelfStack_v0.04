@@ -12,29 +12,39 @@
   <div class="ss-pos-alert ss-pos-alert--error"><%= @complete_error %></div>
 <% end %>
 
-<div class="ss-pos-layout"
-     data-controller="pos-transaction-edit pos-cart-line"
+<div id="pos_transaction_workspace"
+     data-controller="pos-transaction-edit pos-settlement-panel"
      data-pos-transaction-edit-readiness-url-value="<%= readiness_preview_pos_transaction_path(@transaction) %>"
      data-pos-transaction-edit-transaction-id-value="<%= @transaction.id %>"
-     data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange pos:settlement-updated@document->pos-transaction-edit#updateChange">
-  <div class="ss-pos-layout__main">
-    <%= render "pos/transactions/command_bar",
-          transaction: @transaction,
-          sub_departments: @sub_departments %>
-    <div id="pos_cart">
-      <%= render "pos/transactions/cart", transaction: @transaction %>
+     data-pos-settlement-panel-total-cents-value="<%= @transaction.total_cents %>"
+     data-pos-settlement-panel-refund-value="<%= @transaction.total_cents.negative? %>"
+     data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange pos:settlement-updated@document->pos-transaction-edit#updateChange pos:workspace-updated@document->pos-settlement-panel#syncTotal">
+
+  <div class="ss-pos-layout" data-controller="pos-cart-line">
+    <div class="ss-pos-layout__main">
+      <%= render "pos/transactions/command_bar",
+            transaction: @transaction,
+            sub_departments: @sub_departments %>
+      <div id="pos_cart">
+        <%= render "pos/transactions/cart", transaction: @transaction %>
+      </div>
+      <div id="pos_readiness">
+        <%= render "pos/transactions/readiness_panel", transaction: @transaction, readiness: @readiness %>
+      </div>
     </div>
-    <div id="pos_readiness">
-      <%= render "pos/transactions/readiness_panel", transaction: @transaction, readiness: @readiness %>
-    </div>
+
+    <aside class="ss-pos-layout__sidebar">
+      <%= render "pos/transactions/sidebar",
+            transaction: @transaction,
+            readiness: @readiness,
+            inactive_warnings: @inactive_warnings %>
+    </aside>
   </div>
 
-  <aside class="ss-pos-layout__sidebar">
-    <%= render "pos/transactions/sidebar",
-          transaction: @transaction,
-          readiness: @readiness,
-          inactive_warnings: @inactive_warnings %>
-  </aside>
+  <%= render "pos/transactions/settlement_modal",
+        transaction: @transaction,
+        readiness: @readiness,
+        inactive_warnings: @inactive_warnings %>
 </div>
 
 <div id="pos_workspace_events" hidden aria-hidden="true"></div>

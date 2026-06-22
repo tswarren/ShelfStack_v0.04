@@ -1,0 +1,14 @@
+<%# locals: (transaction:, readiness:, inactive_warnings:) %>
+<% confirm_inactive = params[:confirm_inactive].present? %>
+<% settlement_label = pos_complete_button_label(transaction, confirm_inactive: confirm_inactive && inactive_warnings.any?) %>
+<% settlement_label = settlement_label.sub(/\AComplete /, "Settlement — ") if settlement_label.start_with?("Complete ") %>
+
+<section class="ss-pos-panel ss-pos-settlement-actions">
+  <%= button_tag settlement_label,
+        type: "button",
+        class: "ss-btn ss-pos-settlement-open-btn",
+        disabled: readiness.structural_blocked?,
+        data: { action: "pos-settlement-panel#open", pos_transaction_edit_target: "settlementButton" } %>
+
+  <%= render "pos/transactions/settlement_secondary_actions", transaction: transaction %>
+</section>

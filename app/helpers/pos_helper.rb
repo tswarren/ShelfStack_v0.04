@@ -276,24 +276,33 @@ module PosHelper
   end
 
   def pos_settlement_row_summary(row, transaction)
+    parts = pos_settlement_row_summary_parts(row, transaction)
+    "#{parts[:label]} — #{parts[:amount]}"
+  end
+
+  def pos_settlement_row_summary_parts(row, transaction)
     refund = transaction.total_cents.to_i.negative?
 
     case row.tender_type
     when "cash"
-      cents = refund ? row.amount_cents.to_i.abs : row.tendered_display_cents
-      label = refund ? "Cash refund" : "Cash tendered"
-      "#{label} — #{pos_money(cents)}"
+      cents = refund ? row.amount_cents.to_i.abs : pos_tendered_display_cents(row).to_i
+      label = refund ? "Cash refund" : "Cash"
+      { label: label, amount: pos_money(cents) }
     when "card"
       brand = row.card_brand.to_s.humanize
-      detail = row.card_last_four.present? ? "#{brand} ending #{row.card_last_four}" : brand
+      label = if row.card_last_four.present?
+        "Card – #{brand} #{row.card_last_four}"
+      else
+        "Card – #{brand}"
+      end
       amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
-      "#{detail} — #{pos_money(amount_cents)}"
+      { label: label, amount: pos_money(amount_cents) }
     when "check"
       label = row.check_number.present? ? "Check ##{row.check_number}" : "Check"
       amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
-      "#{label} — #{pos_money(amount_cents)}"
+      { label: label, amount: pos_money(amount_cents) }
     else
-      row.tender_type.humanize
+      { label: row.tender_type.humanize, amount: pos_money(0) }
     end
   end
 

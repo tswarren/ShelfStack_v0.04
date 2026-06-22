@@ -9,7 +9,8 @@ export default class extends Controller {
     "confirmInactiveField",
     "changeHint",
     "remainingHint",
-    "completeButton"
+    "completeButton",
+    "settlementButton"
   ]
 
   static values = {
@@ -36,7 +37,19 @@ export default class extends Controller {
     this.previewTimer = setTimeout(() => this.refreshReadiness(), 150)
   }
 
+  settlementAmountFields() {
+    const modal = document.getElementById("pos_settlement_modal")
+    if (!modal) return []
+
+    return Array.from(modal.querySelectorAll("[data-settlement-amount]"))
+  }
+
   tenderAmountFields() {
+    const settlementFields = this.settlementAmountFields()
+    if (settlementFields.length > 0) {
+      return settlementFields
+    }
+
     if (this.amountFieldTargets.length > 0) {
       return this.amountFieldTargets
     }
@@ -91,12 +104,27 @@ export default class extends Controller {
       if (panel) panel.innerHTML = data.panel_html
     }
 
-    if (!this.hasCompleteButtonTarget) return
-
-    this.completeButtonTarget.disabled = data.complete_ready !== true
-    if (data.complete_label) {
-      this.completeButtonTarget.value = data.complete_label
+    if (this.hasCompleteButtonTarget) {
+      this.completeButtonTarget.disabled = data.complete_ready !== true
+      if (data.complete_label) {
+        this.completeButtonTarget.value = data.complete_label
+      }
     }
+
+    if (this.hasSettlementButtonTarget) {
+      this.settlementButtonTarget.disabled = data.structural_blocked === true
+      if (data.complete_label) {
+        this.settlementButtonTarget.textContent = this.settlementButtonLabel(data.complete_label)
+      }
+    }
+  }
+
+  settlementButtonLabel(completeLabel) {
+    if (completeLabel.startsWith("Complete ")) {
+      return `Settlement — ${completeLabel.slice("Complete ".length)}`
+    }
+
+    return completeLabel
   }
 
   requestAuth(event) {
@@ -114,39 +142,10 @@ export default class extends Controller {
 
   fillTender(event) {
     event.preventDefault()
-    const tenderType = event.currentTarget.dataset.tenderType
-    if (!tenderType) return
+    const panel = this.application.getControllerForElementAndIdentifier(this.element, "pos-settlement-panel")
+    if (!panel) return
 
-    const totalCents = parseInt(this.totalTarget.dataset.totalCents, 10)
-    if (Number.isNaN(totalCents)) return
-
-    let otherTotal = 0
-    this.tenderAmountFields().forEach((field) => {
-      const row = field.closest("[data-tender-type]")
-      if (row?.dataset.tenderType !== tenderType) {
-        otherTotal += Math.round(parseFloat(field.value || "0") * 100)
-      }
-    })
-
-    let displayCents
-    if (totalCents < 0) {
-      displayCents = Math.abs(totalCents) - otherTotal
-    } else {
-      displayCents = totalCents - otherTotal
-      if (tenderType !== "cash") {
-        displayCents = Math.max(0, displayCents)
-      }
-    }
-
-    displayCents = Math.max(0, displayCents)
-
-    this.tenderAmountFields().forEach((field) => {
-      const row = field.closest("[data-tender-type]")
-      if (row?.dataset.tenderType === tenderType) {
-        field.value = (displayCents / 100).toFixed(2)
-      }
-    })
-
+    panel.fillCashFromReadiness()
     this.updateChange()
   }
 
@@ -175,9 +174,10 @@ export default class extends Controller {
     let cashTenderedCents = 0
 
     this.tenderAmountFields().forEach((field) => {
-      const row = field.closest("[data-tender-type]")
+      const row = field.closest("[data-settlement-row]") || field.closest("[data-tender-type]")
+      const tenderType = row?.dataset.settlementType || row?.dataset.tenderType
       const cents = Math.round(parseFloat(field.value || "0") * 100)
-      if (row?.dataset.tenderType === "cash") {
+      if (tenderType === "cash") {
         cashTenderedCents = cents
       } else {
         nonCashCents += cents
@@ -249,10 +249,10 @@ export default class extends Controller {
   }
 
   appendSettlementInputs(body) {
-    const panel = document.getElementById("pos_tender_panel")
-    if (!panel) return false
+    const modal = document.getElementById("pos_settlement_modal")
+    if (!modal) return false
 
-    const rows = panel.querySelectorAll("[data-settlement-row]")
+    const rows = modal.querySelectorAll("[data-settlement-row]")
     if (rows.length === 0) return false
 
     rows.forEach((row) => {

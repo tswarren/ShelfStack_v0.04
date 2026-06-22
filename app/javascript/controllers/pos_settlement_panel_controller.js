@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
+    "modal",
     "rows",
     "emptyRow",
     "cardTemplate",
@@ -9,8 +10,9 @@ export default class extends Controller {
     "cashTemplate",
     "destroyField",
     "amountField",
-    "remainingHint",
-    "changeHint"
+    "remainingBalance",
+    "changeDue",
+    "rowSummaryAmount"
   ]
 
   static values = {
@@ -19,8 +21,80 @@ export default class extends Controller {
   }
 
   connect() {
-    this.visibleRows().forEach((row) => this.updateRowSummary(row))
+    this.boundKeydown = this.keydown.bind(this)
+    this.visibleRows().forEach((row) => {
+      this.syncRowLayout(row)
+      this.updateRowSummary(row)
+    })
     this.update()
+  }
+
+  disconnect() {
+    document.removeEventListener("keydown", this.boundKeydown)
+  }
+
+  open(event) {
+    event?.preventDefault()
+    if (!this.hasModalTarget) return
+
+    this.modalTarget.hidden = false
+    document.body.classList.add("ss-pos-modal-open")
+    document.addEventListener("keydown", this.boundKeydown)
+    this.update()
+    this.element.dispatchEvent(new CustomEvent("pos:settlement-opened", { bubbles: true }))
+
+    const rows = this.visibleRows()
+    const emptyAmountRow = rows.find((row) => !this.rowHasAmount(row))
+    if (emptyAmountRow) {
+      this.focusRowEntry(emptyAmountRow)
+    } else if (rows.length === 0) {
+      this.modalTarget.querySelector(".ss-pos-settlement-modal-footer__center .ss-btn")?.focus()
+    } else {
+      this.modalTarget.querySelector("[data-pos-transaction-edit-target='completeButton']")?.focus()
+    }
+  }
+
+  close(event) {
+    event?.preventDefault()
+    if (!this.hasModalTarget) return
+
+    this.modalTarget.hidden = true
+    document.body.classList.remove("ss-pos-modal-open")
+    document.removeEventListener("keydown", this.boundKeydown)
+  }
+
+  keydown(event) {
+    if (event.key === "Escape") {
+      this.close()
+    }
+  }
+
+  syncTotal() {
+    const totalEl = this.element.querySelector("[data-pos-transaction-edit-target='total']")
+    if (!totalEl) return
+
+    const cents = parseInt(totalEl.dataset.totalCents, 10)
+    if (Number.isNaN(cents)) return
+
+    this.totalCentsValue = cents
+    this.update()
+  }
+
+  fillCashFromReadiness() {
+    this.open()
+    this.ensureCashAndFillRemaining()
+  }
+
+  ensureCashAndFillRemaining() {
+    let row = this.rowsTarget.querySelector("[data-settlement-type='cash']:not([data-destroyed='true'])")
+    if (!row || row.hidden) {
+      this.appendRow(this.cashTemplateTarget)
+      row = this.visibleRows().find((visibleRow) => visibleRow.dataset.settlementType === "cash")
+    }
+
+    if (row) {
+      this.fillRemainingForRow(row, "cash")
+    }
   }
 
   update() {
@@ -46,7 +120,7 @@ export default class extends Controller {
   addCash(event) {
     event.preventDefault()
     const existing = this.rowsTarget.querySelector("[data-settlement-type='cash']:not([data-destroyed='true'])")
-    if (existing) {
+    if (existing && !existing.hidden) {
       this.expandRowElement(existing)
       this.focusRowEntry(existing)
       return
@@ -65,6 +139,7 @@ export default class extends Controller {
     row.removeAttribute("data-destroyed")
     row.dataset.collapsed = "false"
     this.rowsTarget.appendChild(fragment)
+    this.syncRowLayout(row)
     this.update()
     this.focusRowEntry(row)
   }
@@ -96,6 +171,11 @@ export default class extends Controller {
     const row = event.currentTarget.closest("[data-settlement-row]")
     if (!tenderType || !row) return
 
+    this.fillRemainingForRow(row, tenderType)
+    this.update()
+  }
+
+  fillRemainingForRow(row, tenderType) {
     const totalCents = this.totalCentsValue
     if (Number.isNaN(totalCents)) return
 
@@ -120,7 +200,6 @@ export default class extends Controller {
 
     this.setRowAmountCents(row, displayCents)
     this.collapseRowIfReady(row)
-    this.update()
   }
 
   rowFocusOut(event) {
@@ -144,13 +223,25 @@ export default class extends Controller {
 
   expandRowElement(row) {
     row.dataset.collapsed = "false"
+    this.syncRowLayout(row)
   }
 
   collapseRowIfReady(row) {
     if (!this.rowHasAmount(row)) return
 
     row.dataset.collapsed = "true"
+    this.syncRowLayout(row)
     this.updateRowSummary(row)
+  }
+
+  syncRowLayout(row) {
+    const labelCell = row.querySelector(".ss-pos-settlement-row__label-cell")
+    const amountCell = row.querySelector(".ss-pos-settlement-row__amount-cell")
+    if (!labelCell || !amountCell) return
+
+    const collapsed = row.dataset.collapsed === "true"
+    labelCell.colSpan = collapsed ? 1 : 2
+    amountCell.hidden = !collapsed
   }
 
   rowHasAmount(row) {
@@ -158,37 +249,39 @@ export default class extends Controller {
   }
 
   updateRowSummary(row) {
-    const label = row.querySelector("[data-pos-settlement-panel-target='rowSummaryLabel']")
-    if (!label) return
+    const { label, amount } = this.rowSummaryParts(row)
+    const labelTarget = row.querySelector("[data-pos-settlement-panel-target='rowSummaryLabel']")
+    const amountTarget = row.querySelector("[data-pos-settlement-panel-target='rowSummaryAmount']")
 
-    label.textContent = this.rowSummaryText(row)
+    if (labelTarget) labelTarget.textContent = label
+    if (amountTarget) amountTarget.textContent = amount
   }
 
-  rowSummaryText(row) {
+  rowSummaryParts(row) {
     const amountCents = this.rowAmountCents(row)
     const amount = this.formatMoney(amountCents)
     const tenderType = row.dataset.settlementType
 
     if (tenderType === "cash") {
-      const prefix = this.refundValue ? "Cash refund" : "Cash tendered"
-      return `${prefix} — ${amount}`
+      const label = this.refundValue ? "Cash refund" : "Cash"
+      return { label, amount }
     }
 
     if (tenderType === "card") {
       const brandField = row.querySelector("[name*='[card_brand]']")
       const brand = brandField?.selectedOptions?.[0]?.text || "Card"
       const lastFour = row.querySelector("[name*='[card_last_four]']")?.value
-      const detail = lastFour ? `${brand} ending ${lastFour}` : brand
-      return `${detail} — ${amount}`
+      const label = lastFour ? `Card – ${brand} ${lastFour}` : `Card – ${brand}`
+      return { label, amount }
     }
 
     if (tenderType === "check") {
       const checkNumber = row.querySelector("[name*='[check_number]']")?.value
       const label = checkNumber ? `Check #${checkNumber}` : "Check"
-      return `${label} — ${amount}`
+      return { label, amount }
     }
 
-    return amount
+    return { label: tenderType, amount }
   }
 
   visibleRows() {
@@ -226,50 +319,38 @@ export default class extends Controller {
       }
     })
 
-    if (this.hasRemainingHintTarget) {
-      if (totalCents > 0) {
-        const remainingCents = totalCents - nonCashCents - Math.min(cashTenderedCents, Math.max(totalCents - nonCashCents, 0))
-        if (remainingCents > 0) {
-          this.remainingHintTarget.textContent = `Remaining due: ${this.formatMoney(remainingCents)}`
-          this.remainingHintTarget.hidden = false
-        } else {
-          this.remainingHintTarget.hidden = true
-        }
-      } else if (totalCents < 0) {
-        const tenderTotal = nonCashCents + cashTenderedCents
-        const remainingCents = Math.abs(totalCents) - tenderTotal
-        if (remainingCents > 0) {
-          this.remainingHintTarget.textContent = `Refund still due: ${this.formatMoney(remainingCents)}`
-          this.remainingHintTarget.hidden = false
-        } else if (remainingCents < 0) {
-          this.remainingHintTarget.textContent = `Refund exceeds due by ${this.formatMoney(Math.abs(remainingCents))}`
-          this.remainingHintTarget.hidden = false
-        } else {
-          this.remainingHintTarget.hidden = true
-        }
+    let remainingDisplay = "—"
+    let changeDisplay = "—"
+
+    if (totalCents > 0) {
+      const remainingAfterNonCash = Math.max(totalCents - nonCashCents, 0)
+      const remainingCents = remainingAfterNonCash - Math.min(cashTenderedCents, remainingAfterNonCash)
+      remainingDisplay = this.formatMoney(Math.max(remainingCents, 0))
+
+      const changeCents = cashTenderedCents - remainingAfterNonCash
+      if (cashTenderedCents > 0 && changeCents > 0) {
+        changeDisplay = this.formatMoney(changeCents)
+      } else if (cashTenderedCents > 0 && cashTenderedCents < remainingAfterNonCash) {
+        changeDisplay = this.formatMoney(0)
       } else {
-        this.remainingHintTarget.hidden = true
+        changeDisplay = this.formatMoney(0)
       }
-    }
-
-    if (!this.hasChangeHintTarget || totalCents <= 0) {
-      if (this.hasChangeHintTarget) {
-        this.changeHintTarget.hidden = true
-      }
-      return
-    }
-
-    const remainingCents = totalCents - nonCashCents
-    const changeCents = cashTenderedCents - remainingCents
-
-    if (cashTenderedCents > 0 && changeCents > 0) {
-      this.changeHintTarget.textContent = `Change due: ${this.formatMoney(changeCents)}`
-      this.changeHintTarget.hidden = false
-    } else if (cashTenderedCents > 0 && cashTenderedCents < remainingCents) {
-      this.changeHintTarget.textContent = `Cash still due: ${this.formatMoney(remainingCents - cashTenderedCents)}`
-      this.changeHintTarget.hidden = false
+    } else if (totalCents < 0) {
+      const tenderTotal = nonCashCents + cashTenderedCents
+      const remainingCents = Math.abs(totalCents) - tenderTotal
+      remainingDisplay = this.formatMoney(Math.max(remainingCents, 0))
+      changeDisplay = this.formatMoney(0)
     } else {
-      this.changeHintTarget.hidden = true
+      remainingDisplay = this.formatMoney(0)
+      changeDisplay = this.formatMoney(0)
+    }
+
+    if (this.hasRemainingBalanceTarget) {
+      this.remainingBalanceTarget.textContent = remainingDisplay
+    }
+
+    if (this.hasChangeDueTarget) {
+      this.changeDueTarget.textContent = changeDisplay
     }
 
     this.updateCompleteButton(nonCashCents, cashTenderedCents, totalCents)
@@ -302,7 +383,7 @@ export default class extends Controller {
       const row = document.createElement("tr")
       row.className = "ss-pos-settlement-empty"
       row.dataset.posSettlementPanelTarget = "emptyRow"
-      row.innerHTML = '<td colspan="4">No settlement rows yet. Add cash, card, or check.</td>'
+      row.innerHTML = '<td colspan="3">No tenders yet. Add cash, card, or check.</td>'
       this.rowsTarget.appendChild(row)
     }
   }
