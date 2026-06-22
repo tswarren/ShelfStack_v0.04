@@ -165,9 +165,9 @@ Phase 6 was completed on 2026-06-10. See [docs/implementation/phase-6-completion
 
 Phase 6.5 was completed on 2026-06-21. ISBNdb local-first lookup, Add Item wizard integration, and controlled import.
 
-## Phase 7A: Customer Demand — **Complete**
+## Phase 7A: Customer Demand — **Implemented (UX/QA pending)**
 
-Phase 7A was completed on 2026-06-21. See [docs/implementation/phase-7a-completion.md](docs/implementation/phase-7a-completion.md).
+Phase 7A core workflows were implemented on 2026-06-21. Correctness and bookseller UX polish remain in progress. See [docs/implementation/phase-7a-completion.md](docs/implementation/phase-7a-completion.md).
 
 Do not jump ahead to gift-card/store-credit ledgers, offline POS, or full GL unless explicitly requested.
 

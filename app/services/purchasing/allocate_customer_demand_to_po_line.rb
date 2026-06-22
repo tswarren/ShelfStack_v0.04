@@ -16,6 +16,10 @@ module Purchasing
     end
 
     def call!
+      purchase_order = purchase_order_line.purchase_order
+      raise AllocateError, "Store mismatch" if special_order.store_id != purchase_order.store_id
+      raise AllocateError, "Variant mismatch" if special_order.product_variant_id != purchase_order_line.product_variant_id
+
       existing = purchase_order_line.purchase_order_line_allocations.sum(:quantity_allocated)
       if existing + quantity > purchase_order_line.quantity_ordered
         raise AllocateError, "Allocation exceeds PO line quantity ordered"

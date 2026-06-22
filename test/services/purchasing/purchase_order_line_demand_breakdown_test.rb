@@ -25,7 +25,7 @@ class PurchasingPurchaseOrderLineDemandBreakdownTest < ActiveSupport::TestCase
     @purchase_order = PurchaseOrder.create!(
       store: @store,
       vendor: @vendor,
-      status: "submitted",
+      status: "draft",
       purchase_order_lines: [
         PurchaseOrderLine.new(
           line_number: 1,
@@ -45,6 +45,7 @@ class PurchasingPurchaseOrderLineDemandBreakdownTest < ActiveSupport::TestCase
       quantity: 2,
       attached_by_user: @user
     )
+    Purchasing::SubmitPurchaseOrder.call(purchase_order: @purchase_order, submitted_by_user: @user)
   end
 
   test "breakdown reports customer allocated and stock quantities" do

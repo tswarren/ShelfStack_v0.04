@@ -1,7 +1,7 @@
 # Phase 7A Completion Record
 
 **Phase:** Customer Demand (7A)  
-**Status:** Complete  
+**Status:** Implemented — UX/QA pending  
 **Date:** 2026-06-21
 
 ---
@@ -100,6 +100,13 @@ Closed in gap-closure pass:
 - `CustomerRequests::SurfaceNotifyLines` + availability-based notify queue filter
 - Solid Queue nightly `InventoryReservations::ExpireJob` (+ rake fallback)
 - Customer search trigram indexes on `display_name`, `email`, `phone`
+
+### Correctness pass (post-gap-closure)
+
+- `ConvertIncomingToOnHand` splits incoming reserves on partial receipt so cached `quantity_reserved` stays aligned with active on-hand reservations
+- `Pos::ReverseReservationFulfillment` reverses partial pickups when reservation is still `ready`/`active`
+- `release_reason` and `customer_contact_events.status` enums aligned with data model spec
+- Store/vendor/draft guards on `AttachToPurchaseOrderLine` and store/variant guards on `AllocateCustomerDemandToPoLine`
 
 ---
 

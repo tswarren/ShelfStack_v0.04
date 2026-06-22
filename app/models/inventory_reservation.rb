@@ -6,8 +6,8 @@ class InventoryReservation < ApplicationRecord
   STATUSES = %w[active ready fulfilled released expired cancelled].freeze
 
   RELEASE_REASONS = %w[
-    customer_declined customer_no_show staff_release expired converted_to_sale
-    cancelled_request po_cancelled receipt_short other
+    customer_cancelled customer_declined expired staff_release fulfilled_elsewhere
+    order_cancelled unfillable manager_override data_correction other
   ].freeze
 
   ON_HAND_CACHE_STATUSES = %w[active ready].freeze

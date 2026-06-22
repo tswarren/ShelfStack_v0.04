@@ -19,6 +19,13 @@ module SpecialOrders
       raise AttachError, "Quantity must be positive" unless quantity.positive?
       raise AttachError, "Variant mismatch" if special_order.product_variant_id != purchase_order_line.product_variant_id
 
+      purchase_order = purchase_order_line.purchase_order
+      raise AttachError, "Store mismatch" if special_order.store_id != purchase_order.store_id
+      raise AttachError, "Purchase order must be draft" unless purchase_order.status == "draft"
+      if special_order.vendor_id.present? && special_order.vendor_id != purchase_order.vendor_id
+        raise AttachError, "Vendor mismatch"
+      end
+
       allocation = nil
       PurchaseOrderLineAllocation.transaction do
         allocation = Purchasing::AllocateCustomerDemandToPoLine.call!(

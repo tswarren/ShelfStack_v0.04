@@ -16,12 +16,14 @@ module Pos
         next if line.inventory_reservation_id.blank?
 
         reservation = line.inventory_reservation
-        next unless reservation.status == "fulfilled"
+        quantity = line.quantity.abs
+        next unless quantity.positive?
+        next unless reservation.quantity_fulfilled >= quantity
 
         InventoryReservations::ReverseFulfillment.call!(
           reservation: reservation,
           reversed_by_user: reversed_by_user,
-          quantity: line.quantity.abs
+          quantity: quantity
         )
       end
     end

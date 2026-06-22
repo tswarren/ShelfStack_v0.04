@@ -3,7 +3,7 @@
 class CustomerContactEvent < ApplicationRecord
   CONTACT_METHODS = %w[phone email sms in_person other].freeze
   DIRECTIONS = %w[outbound inbound].freeze
-  STATUSES = %w[attempted reached left_message no_answer scheduled other].freeze
+  STATUSES = %w[attempted reached left_message no_answer failed not_needed].freeze
 
   belongs_to :customer, optional: true
   belongs_to :customer_request, optional: true

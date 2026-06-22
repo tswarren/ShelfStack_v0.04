@@ -802,6 +802,4 @@ notify auto-hold / auto_reserve flag (deferred — manual notify queue in 7A)
 
 # 22. Exit Criteria
 
-Add exit criterion note for notify: staff can use Notify Customer queue (maps to §3.6 scenario 40).
-
-Phase 7A is complete when all 23 exit criteria in [phase-7a-test-plan.md](phase-7a-test-plan.md) §4 pass.
+Phase 7A is complete when all exit criteria in [phase-7a-test-plan.md](phase-7a-test-plan.md) §4 pass, including notify queue usage (§3.6 scenario 40).

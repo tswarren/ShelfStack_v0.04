@@ -1,4 +1,3 @@
-Here is a paste-ready draft for:
 **Phase 7A: Customer Demand — Customer Requests, Special Orders, Holds, and Reservations**
 
 **Purpose**
