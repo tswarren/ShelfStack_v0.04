@@ -50,8 +50,11 @@ Reports
 
 | Area                                          | Decision                                                                                                                                      |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Used variant strategy                         | Use **graded used variants**.                                                                                                                 |
-| Variant eligibility                           | Buyback may only create/select variants whose condition is explicitly buyback-eligible.                                                       |
+| Used variant strategy                         | Use **graded used variants** with existing Phase 3 condition keys (Very Fine / Fine grading, not alternate names).                          |
+| Variant eligibility                           | Require **both** `sub_departments.buyback_allowed = true` **and** `product_conditions.buyback_eligible = true`.                             |
+| Inventory void source                         | Use a separate `buyback_voids` record as the inventory/stored-value void source (mirrors `pos_voids`; do not reuse `BuybackSession` as source). |
+| Session numbering                             | Assign `buyback_number` at completion from per-workstation `buyback_sequences` (mirrors POS transaction numbering).                         |
+| Trade-credit redemption (MVP)                 | Reachable by stored-value **identifier lookup** or **explicit account selection**; POS does not auto-pick `trade_credit` over `merchandise_credit`. |
 | Inventory availability                        | Accepted items post immediately and are sellable immediately. Processing flags are tracked operationally.                                     |
 | Payout mode                                   | MVP supports one payout mode per buyback session: `cash`, `trade_credit`, or `no_value_donation`. No split cash + trade-credit payout in MVP. |
 | Seller identity                               | Anonymous sellers are not allowed. A `customer_id` is required.                                                                               |
@@ -73,20 +76,23 @@ Phase 7C includes:
 
 ```text
 customer-required buyback sessions
+buyback_number assignment via buyback_sequences
 structured customer identity/address fields
-graded buyback-eligible used conditions
-buyback item scan/search/resolve
+dual eligibility: sub_department.buyback_allowed and product_condition.buyback_eligible
+graded buyback-eligible used conditions (existing Phase 3 keys)
+buyback item scan/search/resolve (reuse Phase 6.5 ISBN lookup where applicable)
 constrained buyback catalog/product/variant intake
-buyback line pricing
+buyback line pricing with documented precedence
 cash offer and trade-credit offer calculation
 staff price/offer override with permission and reason
 accepted, rejected, and donated line outcomes
-cash payout via register paid-out movement
+cash payout via register paid_out movement
 trade-credit payout via stored_value trade_credit issue
+trade-credit redemption via identifier or explicit account selection
 no-value donation inventory posting
 immediate inventory posting for accepted/donated lines
 buyback receipt/slip
-void/reversal workflow
+buyback_voids void/reversal workflow
 buyback reports
 permissions
 audit events
@@ -113,7 +119,7 @@ advanced pricing feeds
 automated online resale valuation
 ```
 
-Signed, collectible, remainder, damaged, or special copies may be noted on a buyback line, but they must not create or target special non-buyback variants in the MVP.
+Signed, remainder, special-edition, or other non-buyback conditions may be noted on a buyback line (`signed_copy` flag, `special_notes`), but they must not create or target non-buyback variants in the MVP.
 
 ---
 
@@ -128,8 +134,8 @@ Add:
 ```text
 first_name string nullable
 last_name string nullable
-address1 string nullable
-address2 string nullable
+address_line1 string nullable
+address_line2 string nullable
 city string nullable
 country_code string not null default "US"
 region_code string nullable
@@ -147,6 +153,7 @@ Rules:
 
 * `display_name` remains required.
 * New records should generate `display_name` from `first_name` and `last_name` when possible.
+* Address fields use `address_line1` / `address_line2` to match `stores` naming.
 * `country_code` defaults to `US`.
 * `region_code` stores state/province using the local two-letter code when applicable.
 * `date_of_birth` is optional and should only be required by store policy.
@@ -155,7 +162,7 @@ Rules:
 
 ## 5.2 `product_conditions`
 
-Phase 3 already models product conditions and product variants, including variant condition, SKU, selling price, and inventory behavior.   Phase 7C adds explicit buyback eligibility.
+Phase 3 already models product conditions and product variants, including variant condition, SKU, selling price, and inventory behavior. Phase 7C adds explicit buyback eligibility on top of the **existing seeded condition keys** in `db/seeds/phase3_catalog_products.rb`.
 
 Add:
 
@@ -167,29 +174,50 @@ buyback_price_factor_bps integer nullable
 buyback_requires_review boolean not null default false
 ```
 
-Seed graded used conditions:
+`buyback_price_factor_bps` is optional. When present, it participates in pricing as a condition-level default/fallback (see §7.5).
 
-| `condition_key`  | Name             | `new_condition` | `buyback_eligible` | `buyback_default` | Notes                     |
-| ---------------- | ---------------- | --------------: | -----------------: | ----------------: | ------------------------- |
-| `used_like_new`  | Used - Like New  |           false |               true |             false | Highest normal used grade |
-| `used_very_good` | Used - Very Good |           false |               true |             false |                           |
-| `used_good`      | Used - Good      |           false |               true |              true | Recommended default       |
-| `used_fair`      | Used - Fair      |           false |               true |             false |                           |
-| `used_poor`      | Used - Poor      |           false |               true |             false | Usually review/low value  |
+Seed matrix (upsert by existing `condition_key`; do not introduce alternate keys such as `used_very_good` or `used_fair`):
 
-Non-buyback examples:
+| `condition_key`    | Name                 | `buyback_eligible` | `buyback_default` | `buyback_requires_review` | Notes                              |
+| ------------------ | -------------------- | -----------------: | ----------------: | ------------------------: | ---------------------------------- |
+| `used_like_new`    | Used - Like New      |               true |             false |                     false | Highest normal used grade          |
+| `used_very_fine`   | Used - Very Fine     |               true |             false |                     false |                                    |
+| `used_fine`        | Used - Fine          |               true |             false |                     false |                                    |
+| `used_good`        | Used - Good          |               true |              true |                     false | Recommended buyback default        |
+| `used_poor`        | Used - Poor          |               true |             false |                     false | Usually review/low value           |
+| `used_ex_library`  | Used - Ex-Library    |               true |             false |                      true | Eligible with staff review         |
+| `used_book_club`   | Used - Book Club     |               true |             false |                      true | Eligible with staff review         |
 
-| Condition   | `buyback_eligible` | Rule                                                 |
-| ----------- | -----------------: | ---------------------------------------------------- |
-| New         |              false | Never selectable in buyback                          |
-| Signed      |              false | Capture as note/flag, not variant condition          |
-| Remainder   |              false | Not normal customer buyback                          |
-| Collectible |              false | Deferred rare/collectible workflow                   |
-| Damaged     |              false | Reject or note; do not target normal buyback variant |
+Non-buyback conditions (keep `buyback_eligible = false`):
 
-## 5.3 `catalog_items`, `products`, `product_variants`
+| `condition_key`     | `buyback_eligible` | Rule                                                |
+| ------------------- | -----------------: | --------------------------------------------------- |
+| `new`               |              false | Never selectable in buyback                         |
+| `signed_copy`       |              false | Capture via `signed_copy` line flag, not as condition |
+| `remainder`         |              false | Not normal customer buyback                         |
+| `special_edition`   |              false | Note in `special_notes`; deferred rare workflow     |
 
-Add review/source markers where practical:
+## 5.3 `sub_departments`
+
+Phase 2/3B already exposes `buyback_allowed` on `sub_departments` (seeded in CSV, resolved via `ClassificationDefaultsResolver`).
+
+Rules:
+
+* Buyback line acceptance and intake require `sub_departments.buyback_allowed = true` for the line's resolved subdepartment.
+* `buyback_allowed` is a **classification gate**; it does not replace `product_conditions.buyback_eligible`.
+* Both gates must pass before a line can be accepted, posted, or used for intake variant creation.
+
+## 5.4 `catalog_items`, `products`, `product_variants`
+
+Add to **all three** tables:
+
+```text
+catalog_items
+products
+product_variants
+```
+
+Columns:
 
 ```text
 source string not null default "manual"
@@ -197,45 +225,76 @@ needs_review boolean not null default false
 created_from_buyback_session_id bigint nullable FK buyback_sessions
 ```
 
-At minimum, add these to:
-
-```text
-catalog_items
-product_variants
-```
-
-Recommended values:
+Recommended values for buyback intake:
 
 ```text
 source = "buyback_intake"
 needs_review = true
 ```
 
-Buyback-created records should be reviewable from the Items workspace.
+Buyback-created catalog items, products, and variants should be reviewable from the Items workspace.
 
-## 5.4 `inventory_postings.posting_type`
+## 5.5 `inventory_postings.posting_type`
 
-Add:
-
-```text
-used_buyback
-used_buyback_void
-```
-
-## 5.5 `inventory_ledger_entries.movement_type`
-
-Add:
+`used_buyback` is already reserved in Phase 4. Phase 7C adds:
 
 ```text
-used_buyback
-used_buyback_void
+buyback_void
 ```
 
-## 5.6 `pos_cash_movements`
+Completion posting:
 
-Phase 6 already supports `paid_in` and `paid_out` register movements.  Phase 7C uses this table for cash buyback payouts.
+```text
+posting_type = used_buyback
+source_type = BuybackSession
+source_id = buyback_session.id
+```
 
-Recommended additions:
+Void posting (mirrors `pos_void`):
+
+```text
+posting_type = buyback_void
+source_type = BuybackVoid
+source_id = buyback_void.id
+reversal_of_posting_id = original used_buyback posting
+```
+
+`inventory_postings` enforces unique `(source_type, source_id)`. A void **must not** reuse `BuybackSession` as the posting source.
+
+## 5.6 `inventory_ledger_entries`
+
+`used_buyback` is already reserved as a `movement_type`. Phase 7C does **not** add a separate void movement type.
+
+Original ledger line:
+
+```text
+movement_type = used_buyback
+quantity_delta = +1
+```
+
+Void reversal line (mirrors `Pos::PostVoidInventory`):
+
+```text
+movement_type = used_buyback
+quantity_delta = negated original quantity_delta
+unit_cost_cents = original line unit_cost_cents
+cost_source = original line cost_source
+```
+
+Extend controlled `cost_source` values:
+
+```text
+buyback_offer
+no_value_donation
+```
+
+`retail_source` remains `variant_selling_price` or `unknown` per existing `Inventory::CostEstimator` behavior. Do not add buyback-specific retail sources until `CostEstimator` supports explicit retail input. Ledger retail snapshots therefore depend on `product_variants.selling_price_cents` at posting time (see §7.3 and §7.10).
+
+## 5.7 `pos_cash_movements`
+
+Phase 6 already supports `paid_in` and `paid_out` register movements. Phase 7C uses this table for cash buyback payouts.
+
+Add:
 
 ```text
 source_type string nullable
@@ -256,39 +315,75 @@ Cash buyback void/reversal, when appropriate:
 
 ```text
 movement_type = paid_in
-reason_code = used_buyback_void
+reason_code = buyback_void
+source_type = BuybackVoid
+source_id = buyback_void.id
 reverses_cash_movement_id = original_cash_movement.id
 ```
+
+## 5.8 `stored_value_reason_codes`
+
+Phase 7B requires reason codes for manual/system issuance. Add seeds:
+
+| `reason_key`                 | Name                         | Use                                      |
+| ---------------------------- | ---------------------------- | ---------------------------------------- |
+| `buyback_trade_credit_issue` | Buyback Trade Credit Issue   | Trade-credit payout at buyback completion |
+| `buyback_trade_credit_void`  | Buyback Trade Credit Void    | Reversal of buyback trade-credit issue   |
+
+Trade-credit payout uses `buyback_trade_credit_issue`. Void reversal uses `buyback_trade_credit_void` (via `StoredValue::VoidEntry` / reversal entry pattern).
 
 ---
 
 # 6. New tables
 
-## 6.1 `buyback_sessions`
+## 6.1 `buyback_sequences`
+
+Per-workstation sequence counter for `buyback_number` assignment (mirrors `pos_workstation_sequences`).
+
+| Field                       | Type     | Notes                          |
+| --------------------------- | -------- | ------------------------------ |
+| `id`                        | bigint   | PK                             |
+| `workstation_id`            | bigint   | Required; unique               |
+| `last_sequence`             | integer  | Default 0; incremented on assign |
+| `created_at` / `updated_at` | datetime | Rails timestamps               |
+
+Rules:
+
+* One row per workstation.
+* `buyback_number` is assigned at **completion**, not at session start.
+* Format mirrors POS transaction numbers with a buyback prefix in the sequence segment:
+
+```text
+{store_number}-{workstation_number}-B{sequence:06d}
+```
+
+Example: `0001-03-B000042`
+
+Implementation may follow `Pos::TransactionNumberAssigner` / `Buybacks::BuybackNumberAssigner`.
+
+## 6.2 `buyback_sessions`
 
 Represents one seller interaction.
 
-| Field                               | Type     | Notes                                                             |
-| ----------------------------------- | -------- | ----------------------------------------------------------------- |
-| `id`                                | bigint   | PK                                                                |
-| `store_id`                          | bigint   | Required                                                          |
-| `workstation_id`                    | bigint   | Nullable                                                          |
-| `pos_register_session_id`           | bigint   | Required for cash payout; nullable otherwise                      |
-| `customer_id`                       | bigint   | Required; anonymous sellers not allowed                           |
-| `status`                            | string   | Controlled value                                                  |
-| `payout_mode`                       | string   | `cash`, `trade_credit`, `no_value_donation`                       |
-| `business_date`                     | date     | From register session when present; otherwise store business date |
-| `total_cash_offer_cents`            | integer  | Default 0                                                         |
-| `total_trade_credit_offer_cents`    | integer  | Default 0                                                         |
-| `accepted_payout_cents`             | integer  | Final payout amount; default 0                                    |
-| `donation_value_cents`              | integer  | Optional estimated retail value of no-value donations             |
-| `stored_value_account_id`           | bigint   | Nullable; required for trade-credit payout                        |
-| `stored_value_ledger_entry_id`      | bigint   | Nullable; trade-credit issue                                      |
-| `pos_cash_movement_id`              | bigint   | Nullable; cash payout                                             |
-| `inventory_posting_id`              | bigint   | Nullable; inventory posting for accepted/donated lines            |
-| `void_inventory_posting_id`         | bigint   | Nullable                                                          |
-| `void_stored_value_ledger_entry_id` | bigint   | Nullable                                                          |
-| `void_cash_movement_id`             | bigint   | Nullable                                                          |
+| Field                            | Type     | Notes                                                             |
+| -------------------------------- | -------- | ----------------------------------------------------------------- |
+| `id`                             | bigint   | PK                                                                |
+| `buyback_number`                 | string   | Nullable until completion; unique per store when present          |
+| `store_id`                       | bigint   | Required                                                          |
+| `workstation_id`                 | bigint   | Nullable until completion context known                           |
+| `pos_register_session_id`        | bigint   | Required for cash payout; nullable otherwise                      |
+| `customer_id`                    | bigint   | Required; anonymous sellers not allowed                           |
+| `status`                         | string   | Controlled value                                                  |
+| `payout_mode`                    | string   | `cash`, `trade_credit`, `no_value_donation`                       |
+| `business_date`                  | date     | From register session when present; otherwise store business date |
+| `total_cash_offer_cents`         | integer  | Default 0                                                         |
+| `total_trade_credit_offer_cents` | integer  | Default 0                                                         |
+| `accepted_payout_cents`          | integer  | Final payout amount; default 0                                    |
+| `donation_value_cents`           | integer  | Optional estimated retail value of no-value donations             |
+| `stored_value_account_id`        | bigint   | Nullable; required for trade-credit payout                        |
+| `stored_value_ledger_entry_id`   | bigint   | Nullable; trade-credit issue                                      |
+| `pos_cash_movement_id`           | bigint   | Nullable; cash payout                                             |
+| `inventory_posting_id`           | bigint   | Nullable; completion inventory posting                            |
 | `needs_label`                       | boolean  | Default true                                                      |
 | `needs_review`                      | boolean  | Default false                                                     |
 | `needs_cleaning`                    | boolean  | Default false                                                     |
@@ -312,8 +407,8 @@ Seller snapshots:
 seller_display_name_snapshot
 seller_first_name_snapshot
 seller_last_name_snapshot
-seller_address1_snapshot
-seller_address2_snapshot
+seller_address_line1_snapshot
+seller_address_line2_snapshot
 seller_city_snapshot
 seller_region_code_snapshot
 seller_postal_code_snapshot
@@ -344,13 +439,14 @@ voided
 Rules:
 
 * `customer_id` is required.
+* `buyback_number` is assigned at completion from `buyback_sequences` for the session workstation.
 * `payout_mode` is required before completion.
 * `pos_register_session_id` is required when `payout_mode = cash`.
 * `stored_value_account_id` is required when `payout_mode = trade_credit`.
 * Completed sessions are append-only operational facts.
-* Completed sessions may only be corrected by void/reversal.
+* Completed sessions may only be corrected by void/reversal via `buyback_voids`.
 
-## 6.2 `buyback_lines`
+## 6.3 `buyback_lines`
 
 Represents one evaluated item. UI should treat quantity as 1 for books/media.
 
@@ -429,7 +525,34 @@ Rules:
 * Rejected lines do not post inventory.
 * Donated lines may post inventory with `accepted_offer_cents = 0`.
 
-## 6.3 `buyback_pricing_rules`
+## 6.4 `buyback_voids`
+
+Represents one void event for a completed buyback session (mirrors `pos_voids`). Serves as the polymorphic **source** for void inventory postings and void cash movements.
+
+| Field                            | Type     | Notes                                           |
+| -------------------------------- | -------- | ----------------------------------------------- |
+| `id`                             | bigint   | PK                                              |
+| `buyback_session_id`             | bigint   | Required; unique (one void per session)         |
+| `store_id`                       | bigint   | Required                                        |
+| `workstation_id`                 | bigint   | Required                                        |
+| `pos_register_session_id`        | bigint   | Nullable; required when reversing cash payout   |
+| `voided_at`                      | datetime | Required                                        |
+| `voided_by_user_id`              | bigint   | Required                                        |
+| `void_reason`                    | text     | Required                                        |
+| `pos_authorization_id`           | bigint   | Nullable; manager auth when cash was paid out   |
+| `inventory_posting_id`           | bigint   | Nullable; `buyback_void` reversal posting       |
+| `void_stored_value_ledger_entry_id` | bigint | Nullable; reversal of trade-credit issue     |
+| `void_cash_movement_id`          | bigint   | Nullable; counter `paid_in` when cash recovered |
+| `notes`                          | text     | Nullable                                        |
+| `created_at` / `updated_at`      | datetime | Rails timestamps                                |
+
+Rules:
+
+* Created only for `completed` sessions; marks session `voided`.
+* Void inventory posts with `source: BuybackVoid`, not `BuybackSession`.
+* Must not mutate original completion postings, ledger entries, or stored-value rows.
+
+## 6.5 `buyback_pricing_rules`
 
 Defines suggested resale and offer calculations.
 
@@ -467,7 +590,15 @@ Rules:
 * Accepted offer becomes the inventory cost basis.
 * Donation cost basis is zero.
 
-## 6.4 `buyback_reject_reasons`
+Pricing precedence (resolution order):
+
+1. **`buyback_pricing_rules`** — primary source for suggested resale price and cash/trade-credit offers when a matching active rule exists (most specific `sub_department_id` + `product_condition_id` wins).
+2. **`product_conditions.buyback_price_factor_bps`** — condition-level default/fallback when no rule factor applies; may combine with `default_list_price_factor_bps` for `condition_adjusted_list_price` base sources.
+3. **`sub_departments.default_pricing_model`** — classification default only (e.g. `buyback_resale` indicates department intent); does not override an explicit pricing rule or condition factor.
+
+`sub_departments.default_margin_target_bps` remains an inventory **cost estimation** fallback for non-buyback postings; buyback accepted lines use `accepted_offer_cents` as cost basis (`cost_source = buyback_offer`).
+
+## 6.6 `buyback_reject_reasons`
 
 | Field                       | Type     | Notes            |
 | --------------------------- | -------- | ---------------- |
@@ -524,13 +655,15 @@ Validation before accepting/posting a line:
 ```text
 product_variant_id present
 product_condition_id present
+sub_department_id present
+sub_department.buyback_allowed == true
 product_variant.condition_id == product_condition_id
 product_condition.buyback_eligible == true
 product_variant.inventory_behavior == "standard_physical"
 product_variant.active == true
 ```
 
-New, signed, remainder, collectible, damaged, or other non-buyback variants may be shown for context, but they must not be selectable.
+New, signed, remainder, special-edition, or other non-buyback variants may be shown for context, but they must not be selectable.
 
 ## 7.3 Graded used variant creation
 
@@ -542,14 +675,21 @@ Buybacks::FindOrCreateGradedUsedVariant
 
 The service must:
 
-1. Require a buyback-eligible product condition.
-2. Default to the configured `buyback_default` condition.
+1. Require a buyback-eligible product condition on a buyback-allowed subdepartment.
+2. Default to the configured `buyback_default` condition (`used_good`).
 3. Reject `new_condition = true`.
 4. Reject non-buyback conditions.
 5. Set `inventory_behavior = standard_physical`.
 6. Generate a variant SKU using the selected used condition.
-7. Set selling price from accepted resale price.
-8. Mark buyback-created variants `needs_review = true`.
+7. Set `selling_price_cents` from `accepted_resale_price_cents` before inventory posting.
+8. Mark buyback-created catalog item, product, and variant `source = buyback_intake` and `needs_review = true`.
+
+Selling price timing (retail snapshots):
+
+* `Inventory::CostEstimator` derives ledger `retail_source` from `variant.selling_price_cents` only.
+* Before `Inventory::Post`, ensure `product_variants.selling_price_cents` reflects `accepted_resale_price_cents` for the target variant.
+* On **new** graded used variant creation, set selling price during create.
+* On **existing** variant selection, update `selling_price_cents` when staff accepts a resale price override; otherwise the ledger retail snapshot reflects the variant's current selling price.
 
 ## 7.4 Catalog/product intake creation
 
@@ -589,10 +729,13 @@ Rules:
 * Search first, create second.
 * Exact identifier matches should prefer existing catalog records.
 * Likely duplicates must be shown before creating a new intake record.
-* Buyback-created records are marked `source = buyback_intake` and `needs_review = true`.
+* Buyback-created `catalog_items`, `products`, and `product_variants` are marked `source = buyback_intake` and `needs_review = true`.
+* For ISBN/barcode resolution, reuse Phase 6.5 external lookup services where applicable (local identifier search first, synchronous ISBNdb on miss); do not duplicate lookup/import logic in buyback-only code paths.
 * Full catalog maintenance remains outside the buyback workflow.
 
 ## 7.5 Pricing rules
+
+Pricing resolution follows §6.5 precedence: `buyback_pricing_rules` first, then `product_conditions.buyback_price_factor_bps`, then subdepartment `default_pricing_model` as classification context only.
 
 Each priced line should show:
 
@@ -642,17 +785,28 @@ Cash payout requires an open register session.
 
 ## 7.8 Trade-credit payout
 
-Trade-credit payout creates a stored value issue:
+Trade-credit payout creates or credits a `trade_credit` stored value account and issues via `StoredValue::Issue`:
 
 ```text
 stored_value_accounts.account_type = trade_credit
 stored_value_ledger_entries.entry_type = issue
 amount_delta_cents = accepted_payout_cents
+reason_code = buyback_trade_credit_issue
 source_type = BuybackSession
 source_id = buyback_session.id
 ```
 
-Stored value ledger entries remain append-only, with corrections handled by reversal entries.
+Stored value ledger entries remain append-only; void uses `StoredValue::VoidEntry` with `buyback_trade_credit_void`.
+
+Trade-credit redemption at POS (MVP):
+
+* POS `store_credit` tender is compatible with `trade_credit` accounts (`Pos::StoredValueTenderSupport`), but default customer account resolution creates/finds `merchandise_credit`, not `trade_credit`.
+* MVP **requires** one of:
+  * stored-value **identifier lookup** (scan/swipe trade-credit identifier at POS), or
+  * **explicit account selection** from the customer's stored-value accounts (Customers workspace or POS account picker).
+* Auto-preferring `trade_credit` when a customer has both merchandise and trade balances is **out of scope** for 7C MVP.
+
+Completion should issue or ensure a printable trade-credit identifier when the account uses identifier-based redemption.
 
 ## 7.9 No-value donation
 
@@ -668,9 +822,9 @@ cost_source = no_value_donation
 
 ## 7.10 Inventory posting
 
-Accepted and donated lines post inventory through `Inventory::Post`.
+Accepted and donated lines post inventory through `Inventory::Post` in a **single** completion posting per session.
 
-Posting:
+Completion posting:
 
 ```text
 inventory_postings.posting_type = used_buyback
@@ -678,15 +832,14 @@ inventory_postings.source_type = BuybackSession
 inventory_postings.source_id = buyback_session.id
 ```
 
-Ledger entry:
+Ledger line (per accepted/donated buyback line):
 
 ```text
 movement_type = used_buyback
 quantity_delta = +1
-unit_cost_cents = accepted_offer_cents
-unit_retail_cents = accepted_resale_price_cents
+manual_unit_cost_cents = accepted_offer_cents
 cost_source = buyback_offer or no_value_donation
-retail_source = buyback_pricing_rule or staff_override
+retail_source = variant_selling_price (from variant.selling_price_cents via CostEstimator)
 ```
 
 Rules:
@@ -695,6 +848,8 @@ Rules:
 * Rejected lines do not post inventory.
 * Buyback inventory is immediately sellable in MVP.
 * Processing flags remain operational signals and do not block posting.
+* Ensure variant `selling_price_cents` is set per §7.3 before posting so retail snapshots are meaningful.
+* Subsequent buybacks into the same used variant replace balance `unit_cost_cents` with the latest offer (no moving-average blend for buyback cost in MVP); document operationally if needed.
 
 ---
 
@@ -709,7 +864,8 @@ validate session
 validate customer requirements
 validate payout mode
 validate accepted/donated lines
-validate buyback-eligible variants
+validate buyback_allowed subdepartments and buyback-eligible variants
+assign buyback_number from buyback_sequences
 lock stored value account if trade credit
 create cash movement if cash
 create stored value issue if trade credit
@@ -729,21 +885,31 @@ If any step fails, the entire completion rolls back.
 
 Completed buybacks must not be edited in place.
 
-`Buybacks::VoidSession` creates reversing records:
+`Buybacks::VoidSession` creates a `buyback_voids` row and reversing records (mirrors `Pos::VoidTransaction` + `Pos::PostVoidInventory`):
 
-| Original effect                        | Reversal                                                 |
-| -------------------------------------- | -------------------------------------------------------- |
-| Inventory +1 per accepted/donated line | Inventory -1 per posted line                             |
-| Cash paid out                          | Counter cash movement, when cash is recovered/authorized |
-| Trade credit issued                    | Stored value reversal entry                              |
-| Donation inventory posted              | Inventory -1 with zero-cost reversal                     |
+| Original effect                        | Reversal                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| Inventory +1 per accepted/donated line | `buyback_void` posting via `Inventory::Post`, `source: BuybackVoid`, negated `used_buyback` lines, `reversal_of_posting` → completion posting |
+| Cash paid out                          | `paid_in` counter movement with `reverses_cash_movement_id`, `source: BuybackVoid` |
+| Trade credit issued                    | `StoredValue::VoidEntry` with `buyback_trade_credit_void`                |
+| Donation inventory posted              | Inventory -1 with original zero cost preserved on reversal line            |
+
+Void inventory posting:
+
+```text
+posting_type = buyback_void
+source_type = BuybackVoid
+source_id = buyback_void.id
+reversal_of_posting_id = buyback_session.inventory_posting_id
+```
 
 Void rules:
 
 * Requires permission.
-* Requires reason.
-* Requires manager authorization if cash was paid.
-* Must not mutate original ledger entries.
+* Requires reason on `buyback_voids.void_reason`.
+* Requires manager authorization (`pos_authorization_id`) if cash was paid out.
+* One void per completed session (`buyback_voids.buyback_session_id` unique).
+* Must not mutate original ledger entries, stored-value rows, or completion cash movements.
 * Must not delete buyback lines.
 * Must mark the original session `voided`.
 
@@ -755,6 +921,7 @@ Recommended service boundaries:
 
 ```text
 Buybacks::StartSession
+Buybacks::BuybackNumberAssigner
 Buybacks::ResolveItem
 Buybacks::CreateIntakeItem
 Buybacks::FindOrCreateGradedUsedVariant
@@ -763,6 +930,7 @@ Buybacks::AcceptLine
 Buybacks::RejectLine
 Buybacks::CompleteSession
 Buybacks::VoidSession
+Buybacks::PostVoidInventory
 Buybacks::ReceiptBuilder
 Buybacks::ReportBuilder
 ```
@@ -774,9 +942,9 @@ Responsibilities:
 ```text
 local exact identifier lookup
 local fuzzy title/creator lookup
-external lookup handoff when available
+Phase 6.5 external ISBN lookup handoff when local miss (reuse existing services)
 return existing catalog/product/variant matches
-return eligible graded used variants
+return eligible graded used variants for buyback-allowed subdepartments
 show non-buyback variants as warnings/context only
 ```
 
@@ -788,8 +956,8 @@ Responsibilities:
 create minimal catalog item
 create product
 create graded used product variant
-mark records source = buyback_intake
-mark records needs_review = true
+mark catalog_item, product, and variant source = buyback_intake
+mark catalog_item, product, and variant needs_review = true
 audit creation
 ```
 
@@ -813,11 +981,23 @@ Responsibilities:
 
 ```text
 validate
+assign buyback_number
 post cash/stored value/inventory atomically
 snapshot seller data
 snapshot line data
 mark completed
 emit audit events
+```
+
+## `Buybacks::PostVoidInventory`
+
+Responsibilities (mirrors `Pos::PostVoidInventory`):
+
+```text
+load completion inventory posting from buyback_session
+build negated used_buyback line payloads preserving cost snapshots
+post buyback_void via Inventory::Post with source BuybackVoid
+set reversal_of_posting to completion posting
 ```
 
 ---
@@ -892,11 +1072,13 @@ Label:
 Buyback condition
 ```
 
-Only show:
+Only show conditions where:
 
 ```text
 product_conditions.buyback_eligible = true
 ```
+
+and only on lines whose resolved subdepartment has `buyback_allowed = true`.
 
 Do not show a raw general variant condition selector.
 
@@ -907,11 +1089,15 @@ If an item has New/Signed/etc. variants but no eligible used variant:
 ```text
 Existing variants found:
 - New Hardcover — not eligible for buyback
-- Signed Hardcover — not eligible for buyback
+- Signed Copy Hardcover — not eligible for buyback
 
 No graded used variant exists yet.
 [Create Used Variant]
 ```
+
+## 11.7 Trade-credit redemption guidance
+
+Receipt/slip and completion UI should show trade-credit identifier and remind staff that POS redemption requires identifier scan or explicit account selection (not automatic `merchandise_credit` resolution).
 
 ---
 
@@ -921,7 +1107,7 @@ A completed buyback receipt/slip should show:
 
 ```text
 store header
-buyback session number
+buyback_number
 business date/time
 staff/cashier
 seller name
@@ -999,6 +1185,7 @@ buyback.session.quoted
 buyback.session.completed
 buyback.session.cancelled
 buyback.session.voided
+buyback.void.created
 
 buyback.line.added
 buyback.line.resolved
@@ -1060,33 +1247,39 @@ Required test coverage:
 ```text
 customer required before completion
 missing required seller fields block completion
+cannot accept line when sub_department.buyback_allowed is false
 cannot accept New variant
-cannot accept Signed variant
+cannot accept signed_copy variant
 cannot accept non-buyback condition
 cannot create non-buyback variant from buyback
+buyback_number assigned at completion from per-workstation sequence
 can create intake catalog item + product + graded used variant
-intake-created records are marked needs_review
+intake-created catalog_item, product, and variant marked needs_review and source buyback_intake
 exact identifier match prefers existing catalog record
 duplicate warning appears before new intake creation
+pricing rule precedence over condition factor defaults
 price rule calculates cash offer
 price rule calculates trade-credit offer
 price override requires permission and reason
 offer override requires permission and reason
-cash payout creates paid_out cash movement
-trade-credit payout creates stored_value issue
+cash payout creates paid_out cash movement with BuybackSession source
+trade-credit payout creates stored_value issue with buyback_trade_credit_issue
 no-value donation creates no payout
-accepted cash line posts inventory +1
+accepted cash line posts inventory +1 with cost_source buyback_offer
 accepted trade-credit line posts inventory +1
-donated line posts inventory +1 with zero cost
+donated line posts inventory +1 with zero cost and cost_source no_value_donation
+ledger retail_source uses variant_selling_price after selling price set
 rejected line posts no inventory
 completion rolls back if cash movement fails
 completion rolls back if stored value issue fails
 completion rolls back if inventory posting fails
-void reverses inventory posting
-void reverses stored value issue
+void creates buyback_voids row
+void inventory uses buyback_void posting source BuybackVoid not BuybackSession
+void reverses inventory posting with negated used_buyback lines
+void reverses stored value issue with buyback_trade_credit_void
 void creates cash counter-movement when applicable
 void does not mutate original records
-receipt/slip renders accepted, donated, rejected, and payout details
+receipt/slip renders buyback_number, accepted, donated, rejected, and payout details
 ```
 
 ---
@@ -1097,31 +1290,34 @@ Phase 7C is complete when:
 
 1. Staff can create a buyback session.
 2. A customer is required; anonymous sellers are not allowed.
-3. Customers support structured name and address fields.
+3. Customers support structured name and address fields (`address_line1`, `address_line2`).
 4. Seller identity fields are snapshotted at completion.
 5. Staff can scan/search by ISBN/barcode/title.
 6. Staff can match to an existing catalog item/product/variant.
 7. Staff can create a constrained buyback intake catalog item, product, and graded used variant.
-8. Buyback-created records are marked `needs_review`.
-9. Staff can select only buyback-eligible graded used conditions.
-10. New, signed, remainder, collectible, damaged, and other non-buyback variants cannot be selected or created through buyback.
-11. System calculates suggested resale price, cash offer, and trade-credit offer.
+8. Buyback-created `catalog_items`, `products`, and `product_variants` are marked `needs_review` and `source = buyback_intake`.
+9. Staff can select only buyback-eligible conditions on buyback-allowed subdepartments.
+10. New, signed, remainder, special-edition, and other non-buyback variants cannot be selected or created through buyback.
+11. System calculates suggested resale price, cash offer, and trade-credit offer per pricing precedence (§6.5).
 12. Staff can override resale price or offer only with permission and reason.
 13. Staff can accept, reject, or mark lines as no-value donation.
 14. MVP payout is single-mode: cash, trade credit, or no-value donation.
-15. Cash payout creates a register paid-out cash movement.
-16. Trade-credit payout creates a `trade_credit` stored value issue.
-17. No-value donation creates no payout.
-18. Accepted and donated lines post inventory through `Inventory::Post`.
-19. Inventory cost basis equals accepted payout value, or zero for no-value donations.
-20. Accepted inventory is immediately sellable.
-21. Processing flags such as `needs_label`, `needs_review`, `needs_cleaning`, and `hold_for_review` are tracked.
-22. Buyback receipt/slip is available.
-23. Completed buybacks can be voided through reversing records.
-24. Original cash, stored value, and inventory records are not mutated during correction.
-25. Buyback activity appears in operational reports.
-26. Permissions and audit events are implemented.
-27. Tests cover eligibility, payout, inventory posting, intake creation, rollback, and void behavior.
+15. Cash payout creates a register paid-out cash movement linked to `BuybackSession`.
+16. Trade-credit payout creates a `trade_credit` stored value issue with `buyback_trade_credit_issue`.
+17. Trade-credit redemption at POS is documented and reachable via identifier lookup or explicit account selection.
+18. No-value donation creates no payout.
+19. Accepted and donated lines post inventory through `Inventory::Post` with `posting_type = used_buyback`.
+20. Inventory cost basis equals accepted payout value (`cost_source = buyback_offer`), or zero for donations (`no_value_donation`).
+21. Accepted inventory is immediately sellable.
+22. `buyback_number` is assigned at completion from per-workstation `buyback_sequences`.
+23. Processing flags such as `needs_label`, `needs_review`, `needs_cleaning`, and `hold_for_review` are tracked.
+24. Buyback receipt/slip shows `buyback_number` and payout details.
+25. Completed buybacks can be voided via `buyback_voids` and reversing records.
+26. Void inventory posts with `posting_type = buyback_void` and `source = BuybackVoid`.
+27. Original cash, stored value, and inventory records are not mutated during correction.
+28. Buyback activity appears in operational reports.
+29. Permissions and audit events are implemented.
+30. Tests cover eligibility, payout, inventory posting, intake creation, numbering, rollback, and void behavior.
 
 ---
 
