@@ -1,0 +1,66 @@
+<%= render "customers/shared/workspace_nav", active: :stored_value_reports %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "Customers",
+           title: "Stored value liability",
+           description: "Operational outstanding balances and ledger activity summary." %>
+
+<%= link_to "Back to accounts", customers_stored_value_accounts_path, class: "ss-btn ss-btn-secondary" %>
+
+<%= render "orders/shared/metric_strip", metrics: [
+  { label: "Total outstanding liability", value: format_cents(@report.total_liability_cents) }
+] %>
+
+<section class="ss-summary-block">
+  <h2>Outstanding balances</h2>
+  <% if @report.balance_rows.any? %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Account type</th>
+          <th>Issuing store</th>
+          <th class="ss-num">Accounts</th>
+          <th class="ss-num">Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @report.balance_rows.each do |row| %>
+          <tr>
+            <td><%= stored_value_account_type_label(row.account_type) %></td>
+            <td><%= row.issuing_store_name %></td>
+            <td class="ss-num"><%= row.account_count %></td>
+            <td class="ss-num"><%= format_cents(row.total_balance_cents) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="ss-muted">No outstanding stored value liability.</p>
+  <% end %>
+</section>
+
+<section class="ss-summary-block">
+  <h2>Activity summary</h2>
+  <% if @report.activity_rows.any? %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Entry type</th>
+          <th class="ss-num">Count</th>
+          <th class="ss-num">Total delta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @report.activity_rows.each do |row| %>
+          <tr>
+            <td><%= row.entry_type.humanize %></td>
+            <td class="ss-num"><%= row.entry_count %></td>
+            <td class="ss-num"><%= format_cents(row.total_amount_cents) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="ss-muted">No ledger activity recorded.</p>
+  <% end %>
+</section>

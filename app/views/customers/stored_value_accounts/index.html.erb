@@ -1,0 +1,52 @@
+<%= render "customers/shared/workspace_nav", active: :stored_value_accounts %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "Customers",
+           title: "Stored value",
+           description: "Merchandise credit, gift cards, and other stored-value accounts." %>
+
+<div class="ss-detail-actions">
+  <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.accounts.create", store: current_store) %>
+    <%= link_to "New account", new_customers_stored_value_account_path, class: "ss-btn" %>
+  <% end %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.reports.view", store: current_store) %>
+    <%= link_to "Liability report", customers_stored_value_reports_path, class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+</div>
+
+<%= form_with url: lookup_customers_stored_value_accounts_path, method: :get, class: "ss-form ss-form--inline" do %>
+  <%= label_tag :code, "Lookup by identifier", class: "ss-label" %>
+  <%= text_field_tag :code, params[:code], placeholder: "Enter card or credit code" %>
+  <%= submit_tag "Lookup", class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<% if @accounts.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Account</th>
+        <th>Type</th>
+        <th>Customer / holder</th>
+        <th>Issuing store</th>
+        <th class="ss-num">Balance</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @accounts.each do |account| %>
+        <tr>
+          <td>#<%= account.id %></td>
+          <td><%= stored_value_account_type_label(account.account_type) %></td>
+          <td><%= account.customer&.display_name || account.holder_name_snapshot || "—" %></td>
+          <td><%= account.issuing_store.name %></td>
+          <td class="ss-num"><%= format_cents(account.current_balance_cents) %></td>
+          <td><%= stored_value_account_status(account) %></td>
+          <td><%= link_to "View", customers_stored_value_account_path(account) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No stored value accounts yet.</p>
+<% end %>

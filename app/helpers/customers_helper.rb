@@ -96,4 +96,30 @@ module CustomersHelper
       q: query
     }.compact
   end
+
+  def stored_value_account_title(account)
+    if account.customer
+      account.customer.display_name
+    elsif account.holder_name_snapshot.present?
+      account.holder_name_snapshot
+    else
+      "Account ##{account.id}"
+    end
+  end
+
+  def stored_value_account_type_label(account_type)
+    account_type.to_s.tr("_", " ").titleize
+  end
+
+  def stored_value_account_status(account)
+    tag.span(status_label(account.active?), class: status_class(account.active?))
+  end
+
+  def stored_value_revealed_identifier_for(identifier)
+    revealed = flash[:stored_value_revealed_identifier]
+    return unless revealed.is_a?(Hash)
+    return unless revealed["id"].to_i == identifier.id
+
+    revealed["value"]
+  end
 end

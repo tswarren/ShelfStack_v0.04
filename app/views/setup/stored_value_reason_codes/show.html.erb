@@ -1,0 +1,21 @@
+<%= render "setup/shared/back_link", path: setup_stored_value_reason_codes_path, label: "Stored Value Reason Codes" %>
+
+<h1><%= @reason_code.name %></h1>
+<dl class="ss-summary">
+  <dt>Key</dt><dd><code><%= @reason_code.reason_key %></code></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@reason_code.active?) %>"><%= status_label(@reason_code.active?) %></span></dd>
+  <% if @reason_code.description.present? %>
+    <dt>Description</dt><dd><%= @reason_code.description %></dd>
+  <% end %>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_stored_value_reason_code_path(@reason_code), class: "ss-btn" %>
+  <% if @reason_code.active? %>
+    <%= button_to "Inactivate", inactivate_setup_stored_value_reason_code_path(@reason_code), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_stored_value_reason_code_path(@reason_code), method: :patch, class: "ss-btn" %>
+  <% end %>
+</div>
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline", open: false do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

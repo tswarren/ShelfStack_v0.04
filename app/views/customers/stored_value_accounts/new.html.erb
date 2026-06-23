@@ -1,0 +1,14 @@
+<%= render "customers/shared/workspace_nav", active: :stored_value_accounts %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "Customers",
+           title: "New stored value account",
+           description: "Create a customer-linked or standalone stored-value account." %>
+
+<%= form_with model: @account, url: customers_stored_value_accounts_path, class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, account: @account, stores: @stores, customers: @customers %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create account", class: "ss-btn" %>
+    <%= link_to "Cancel", customers_stored_value_accounts_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>
