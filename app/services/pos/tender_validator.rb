@@ -75,7 +75,13 @@ module Pos
       raise Error, "Stored value account is required." if tender.stored_value_account_id.blank? && transaction.customer_id.blank?
 
       if tender.redeem_tender?(transaction) && tender.stored_value_account.present?
-        if tender.amount_cents > tender.stored_value_account.current_balance_cents
+        capped = StoredValueTenderSupport.capped_redeem_amount_cents(
+          transaction:,
+          tender_type: tender.tender_type,
+          amount_cents: tender.amount_cents,
+          account: tender.stored_value_account
+        )
+        if tender.amount_cents > capped
           raise Error, "Redemption exceeds available account balance."
         end
       end

@@ -32,6 +32,13 @@ module Pos
     private
 
     def authorize_lookup!
+      if params[:purpose] == "gift_card_sale"
+        return if GiftCardSalePolicy.issue_permitted?(actor: current_user, store: current_store)
+
+        render json: { status: "forbidden", message: "Not authorized." }, status: :forbidden
+        return
+      end
+
       permission = params[:tender_type] == "gift_card" ? "pos.tenders.gift_card" : "pos.tenders.store_credit"
       return if Authorization.allowed?(user: current_user, permission_key: permission, store: current_store)
 

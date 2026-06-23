@@ -8,6 +8,7 @@ module Pos
       discount_auth
       no_receipt_return
       cash_refund_auth
+      gift_card_sale
     ].freeze
 
     Check = Data.define(:key, :status, :message, :action_key, :action_label)
@@ -90,6 +91,7 @@ module Pos
         reserved_stock_authorization_check,
         discount_authorization_check,
         no_receipt_return_authorization_check,
+        gift_card_sale_check,
         tender_total_check,
         stored_value_tender_check,
         cash_refund_authorization_check
@@ -196,6 +198,35 @@ module Pos
           action_label: "Authorize discount"
         )
       end
+    end
+
+    def gift_card_sale_check
+      gift_card_lines = transaction.pos_transaction_lines.select(&:gift_card_sale_line?)
+      return if gift_card_lines.empty?
+
+      unless actor.present? && GiftCardSalePolicy.issue_permitted?(actor:, store: transaction.store)
+        return Check.new(
+          key: :gift_card_sale,
+          status: :block,
+          message: "You are not authorized to sell gift cards at POS",
+          action_key: nil,
+          action_label: nil
+        )
+      end
+
+      gift_card_lines.each do |line|
+        next if GiftCardSaleSupport.activation_ready?(line)
+
+        return Check.new(
+          key: :gift_card_sale,
+          status: :block,
+          message: "Gift card sale line is missing card activation",
+          action_key: :focus_gift_card_sale,
+          action_label: "Gift card"
+        )
+      end
+
+      Check.new(key: :gift_card_sale, status: :ok, message: "Gift card sales ready", action_key: nil, action_label: nil)
     end
 
     def no_receipt_return_authorization_check

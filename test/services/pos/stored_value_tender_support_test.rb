@@ -25,6 +25,23 @@ class Pos::StoredValueTenderSupportTest < ActiveSupport::TestCase
     assert_equal 2500, amount
   end
 
+  test "caps gift card redeem amount to account balance" do
+    gift_card_account = create_stored_value_account!(
+      issuing_store: @store,
+      account_type: "gift_card",
+      current_balance_cents: 1800
+    )
+
+    amount = Pos::StoredValueTenderSupport.capped_redeem_amount_cents(
+      transaction: @transaction,
+      tender_type: "gift_card",
+      amount_cents: 4000,
+      account: gift_card_account
+    )
+
+    assert_equal 1800, amount
+  end
+
   test "leaves entered amount when below balance" do
     amount = Pos::StoredValueTenderSupport.capped_redeem_amount_cents(
       transaction: @transaction,

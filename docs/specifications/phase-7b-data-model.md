@@ -80,8 +80,21 @@ Assign `line_number` sequentially per transaction for existing rows.
 
 | Column | Type | Nullable | Notes |
 | --- | --- | --- | --- |
-| `stored_value_account_id` | bigint FK | yes | Required when tender_type in store_credit, gift_card |
-| `stored_value_identifier_id` | bigint FK | yes | Required when redemption lookup uses identifier |
+| `stored_value_account_id` | bigint FK | yes | Required when tender_type in store_credit, gift_card (resolved at sync/completion if missing on returns) |
+| `stored_value_identifier_id` | bigint FK | yes | Required when redemption lookup uses identifier; set when identifier is generated on refund issue |
+| `generate_stored_value_identifier` | boolean | not null | default false; when true on refund store-credit row, generate redeemable identifier at sync/completion |
+
+---
+
+# 3B. Changes to `pos_transaction_lines` (7B-3 gift card sale)
+
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `stored_value_account_id` | bigint FK | yes | Reload target or account resolved at completion |
+| `stored_value_identifier_id` | bigint FK | yes | Scanned card on reload; set when identifier generated on new card |
+| `generate_stored_value_identifier` | boolean | not null | default false; new-card auto-number at completion |
+
+`line_type` adds `gift_card_sale` for variable-amount POS gift card issuance (paid via cash/card/check tenders, not `gift_card` settlement rows).
 
 ---
 

@@ -164,6 +164,16 @@ db/seeds/phase7b_permissions.rb
 16. Register report includes store credit and gift card totals
 17. Liability report reflects POS activity
 
+## Gift card sale (7B-3 enhancement)
+
+18. `/giftcard 25` adds `gift_card_sale` line; cash payment; completion issues `pos_gift_card_sale` ledger entry
+19. Generate identifier on new card; receipt shows code; void reverses balance
+20. Reload via identifier lookup increases existing `gift_card` account balance
+21. Completion blocked when gift card line lacks activation metadata
+22. `pos.gift_cards.issue` required; distinct from `pos.tenders.gift_card` redeem permission
+23. Void reverses line-sourced gift card sale ledger entries
+24. Register report separates gift card redemptions (tender) and gift card sales (lines)
+
 ---
 
 # 6. Always test

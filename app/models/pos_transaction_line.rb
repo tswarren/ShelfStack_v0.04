@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 class PosTransactionLine < ApplicationRecord
-  LINE_TYPES = %w[variant open_ring].freeze
+  LINE_TYPES = %w[variant open_ring gift_card_sale].freeze
   RETURN_DISPOSITIONS = %w[
     return_to_stock damaged defective return_to_vendor_candidate other
   ].freeze
+  GIFT_CARD_SALE_DESCRIPTION = "Gift card"
 
   belongs_to :pos_transaction
   belongs_to :product_variant, optional: true
@@ -17,6 +18,8 @@ class PosTransactionLine < ApplicationRecord
   belongs_to :customer_request_line, optional: true
   belongs_to :special_order, optional: true
   belongs_to :inventory_reservation, optional: true
+  belongs_to :stored_value_account, optional: true
+  belongs_to :stored_value_identifier, optional: true
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :line_number, uniqueness: { scope: :pos_transaction_id }
@@ -28,6 +31,7 @@ class PosTransactionLine < ApplicationRecord
   validates :tax_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :return_disposition, inclusion: { in: RETURN_DISPOSITIONS }, allow_nil: true
   validate :variant_required_for_variant_line
+  validate :gift_card_sale_line_constraints
   validate :cannot_edit_when_transaction_locked, on: :update
 
   def variant_line?
@@ -38,12 +42,20 @@ class PosTransactionLine < ApplicationRecord
     line_type == "open_ring"
   end
 
+  def gift_card_sale_line?
+    line_type == "gift_card_sale"
+  end
+
   def return_line?
     quantity.negative?
   end
 
   def merchandise_line?
-    variant_line? || open_ring_line?
+    variant_line? || open_ring_line? || gift_card_sale_line?
+  end
+
+  def reload_gift_card_sale?
+    gift_card_sale_line? && stored_value_account_id.present?
   end
 
   private
@@ -53,6 +65,26 @@ class PosTransactionLine < ApplicationRecord
     return if product_variant_id.present?
 
     errors.add(:product_variant, "must be present for variant lines")
+  end
+
+  def gift_card_sale_line_constraints
+    return unless gift_card_sale_line?
+
+    if quantity != 1
+      errors.add(:quantity, "must be 1 for gift card sales")
+    end
+
+    if unit_price_cents.to_i <= 0
+      errors.add(:unit_price_cents, "must be positive for gift card sales")
+    end
+
+    if product_variant_id.present? || product_id.present?
+      errors.add(:base, "gift card sale lines cannot reference catalog products")
+    end
+
+    if generate_stored_value_identifier? && stored_value_identifier_id.present?
+      errors.add(:generate_stored_value_identifier, "cannot be combined with an assigned identifier")
+    end
   end
 
   def cannot_edit_when_transaction_locked

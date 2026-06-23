@@ -20,7 +20,8 @@ module Seeds
       [
         permission_attrs("pos.tenders", "store_credit", "Redeem store credit at POS", "Redeem store credit as POS tender"),
         permission_attrs("pos.tenders", "gift_card", "Redeem gift card at POS", "Redeem gift card stored value as POS tender"),
-        permission_attrs("pos.refunds", "store_credit", "Issue store credit from POS", "Issue store credit from POS returns and exchanges")
+        permission_attrs("pos.refunds", "store_credit", "Issue store credit from POS", "Issue store credit from POS returns and exchanges"),
+        permission_attrs("pos.gift_cards", "issue", "Sell gift cards at POS", "Issue or reload gift card stored value from POS sales")
       ]
     end
 
@@ -94,6 +95,7 @@ module Seeds
       pos.tenders.store_credit
       pos.tenders.gift_card
       pos.refunds.store_credit
+      pos.gift_cards.issue
       stored_value.accounts.create
       stored_value.identifiers.create
     ].freeze

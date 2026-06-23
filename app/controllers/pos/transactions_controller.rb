@@ -7,7 +7,7 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview]
     before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line route_command]
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
-    before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: %i[add_open_ring_line]
+    before_action -> { authorize_pos!("pos.gift_cards.issue") }, only: %i[add_gift_card_sale_line update_gift_card_sale_line]
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
     before_action -> { authorize_pos!("pos.lines.remove") }, only: %i[remove_line]
     before_action -> { authorize_pos!("pos.returns.receipted") }, only: %i[add_return_line]
@@ -17,13 +17,18 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.void") }, only: %i[void]
     before_action -> { authorize_pos!("pos.transactions.cancel") }, only: %i[cancel]
     before_action :set_transaction, only: %i[
-      show edit update add_line add_reservation_line add_open_ring_line add_return_line update_line remove_line
+      show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
+      update_line update_gift_card_sale_line remove_line
       sync_tenders complete suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
-      edit update add_line add_reservation_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command
+      edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
+      update_line update_gift_card_sale_line remove_line sync_tenders route_command
     ]
-    before_action :load_edit_context, only: %i[edit add_line add_reservation_line add_open_ring_line add_return_line update_line remove_line sync_tenders route_command]
+    before_action :load_edit_context, only: %i[
+      edit add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
+      update_line update_gift_card_sale_line remove_line sync_tenders route_command
+    ]
 
     def index
       @transactions = PosTransaction.where(store: pos_store).order(updated_at: :desc).limit(50)
@@ -235,16 +240,46 @@ module Pos
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
+    def add_gift_card_sale_line
+      amount_cents = parse_dollar_param(params[:unit_price]) || params[:amount_cents].to_i
+      Pos::AddGiftCardSaleLine.call!(
+        transaction: @transaction,
+        actor: current_user,
+        amount_cents: amount_cents,
+        line_number: next_line_number
+      )
+      respond_to_workspace(notice: "Gift card sale line added.")
+    rescue Pos::AddGiftCardSaleLine::Error => e
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+    end
+
+    def update_gift_card_sale_line
+      line = @transaction.pos_transaction_lines.find(params[:line_id])
+      Pos::UpdateGiftCardSaleLine.call!(
+        line: line,
+        actor: current_user,
+        lookup_code: params[:lookup_code],
+        clear_card_number: ActiveModel::Type::Boolean.new.cast(params[:clear_card_number]),
+        generate_identifier: params[:generate_identifier],
+        unit_price_cents: (parse_dollar_param(params[:unit_price]) if params[:unit_price].present?)
+      )
+      respond_to_workspace(notice: "Gift card line updated.")
+    rescue Pos::UpdateGiftCardSaleLine::Error => e
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+    end
+
     def update_line
       line = @transaction.pos_transaction_lines.find(params[:line_id])
       attrs = {}
 
       if params[:quantity_delta].present?
-        delta = params[:quantity_delta].to_i
-        attrs[:quantity] = if line.quantity.negative?
-          line.quantity - delta
-        else
-          line.quantity + delta
+        unless line.gift_card_sale_line?
+          delta = params[:quantity_delta].to_i
+          attrs[:quantity] = if line.quantity.negative?
+            line.quantity - delta
+          else
+            line.quantity + delta
+          end
         end
       elsif params.key?(:quantity)
         attrs[:quantity] = params[:quantity].to_i
@@ -523,7 +558,8 @@ module Pos
       flash[:pos_generated_stored_value_identifiers] = generated_identifiers.map do |generated|
         {
           "display_value" => generated.display_value,
-          "pos_tender_id" => generated.pos_tender_id
+          "pos_tender_id" => generated.pos_tender_id,
+          "pos_transaction_line_id" => generated.pos_transaction_line_id
         }
       end
     end

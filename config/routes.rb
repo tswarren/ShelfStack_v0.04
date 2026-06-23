@@ -369,6 +369,8 @@ Rails.application.routes.draw do
         post :add_reservation_line
         post :add_return_line
         post :add_open_ring_line
+        post :add_gift_card_sale_line
+        patch :update_gift_card_sale_line
         patch :update_line
         delete :remove_line
         patch :sync_tenders

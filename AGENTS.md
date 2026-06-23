@@ -188,7 +188,7 @@ Phase 7B was completed on 2026-06-21. See [docs/implementation/phase-7b-2-comple
 
 - 7B-1: merged via PR #23 (POS settlement foundation)
 - 7B-2: stored value accounts/ledger (Customers workspace)
-- 7B-3: POS issue/redeem/void integration
+- 7B-3: POS issue/redeem/void integration, bearer refund identifiers, redemption balance cap, POS gift card sale/reload (`pos.gift_cards.issue`)
 
 The canonical stored value model (`stored_value_*` tables) supersedes earlier `gift_card_accounts` / `store_credit_accounts` future-table language. Do not implement separate account tables.
 
@@ -575,8 +575,10 @@ product_variants.sub_department_id → sub_departments.id
 * Stored value: append-only ledger; `stored_value_*` supersedes `gift_card_accounts` / `store_credit_accounts`.
 * Negative stored value balances not allowed; account row locked on post via `StoredValue::Post`.
 * Manual issue/adjust/transfer/void require reason code and audit events (7B-2 admin UI).
-* `Pos::TenderTypePolicy` enables `store_credit` / `gift_card` when actor has `pos.tenders.*` / `pos.refunds.store_credit`; settlement rows require `stored_value_account_id` (or customer-linked auto-resolve on returns).
-* POS completion posts stored value ledger via `Pos::PostStoredValueLedger`; void reverses via `Pos::ReverseStoredValueLedger`.
+* `Pos::TenderTypePolicy` enables `store_credit` / `gift_card` **tender redemption** when actor has `pos.tenders.*`; `pos.refunds.store_credit` (or related) for return store-credit issuance via negative settlement rows.
+* **Gift card sale/reload** is a `gift_card_sale` POS line (not a `gift_card` tender): variable amount via `/giftcard` command; pay with cash/card/check; `Pos::PostGiftCardSaleLedger` issues balance at completion; requires `pos.gift_cards.issue`.
+* POS redemption saves `min(amount entered, account balance)` on store-credit/gift-card tender rows; remainder due needs another tender.
+* POS completion posts stored value ledger via `Pos::PostStoredValueLedger` (tenders) and `Pos::PostGiftCardSaleLedger` (gift card sale lines); void reverses both via `Pos::ReverseStoredValueLedger`.
 * POS void reverses stored value ledger entries via `reverses_entry_id`; do not mutate originals.
 * Liability reporting is operational only — no GL export in 7B.
 

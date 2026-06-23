@@ -18,7 +18,7 @@ Issue credit from returns/exchanges, redeem as POS tender, void reversal, receip
 
 ```text
 customer deposits / prepayments
-gift card product activation/sale workflow
+gift card product SKU / catalog sale workflow (POS variable-amount sale implemented)
 buyback intake and pricing
 multi-store liability settlement
 GL / accounting export
@@ -236,9 +236,12 @@ source_type PosTender, source_id pos_tender.id
 pos_tender.amount_cents positive
 ledger entry_type redeem, amount_delta_cents negative
 one tender row + one ledger entry per account
-cannot exceed account balance or remaining transaction due
+POS saves min(amount entered, account balance) on the tender row
+redemption cannot exceed remaining transaction amount due (tender total must match transaction total)
 multiple accounts per transaction allowed
 ```
+
+When the cashier enters more than the account balance, settlement caps the tender to the available balance rather than rejecting the row. Any remaining amount due requires another tender type.
 
 ## 10.5 Completion transaction boundary
 
@@ -248,6 +251,26 @@ recalculate -> validate tenders -> validate stored value -> lock accounts
 ```
 
 Failure rolls back entire completion.
+
+## 10.7 Gift card sale (7B-3 enhancement)
+
+Gift card **sale/reload** uses a `gift_card_sale` POS line, not a `gift_card` settlement tender.
+
+```text
+/giftcard <amount>  -> add gift_card_sale line
+scan existing card  -> reload (issue to existing gift_card account)
+generate identifier -> new bearer gift_card account + identifier at completion
+pay with cash/card/check tenders
+```
+
+At completion:
+
+```text
+ledger entry_type issue, reason_code pos_gift_card_sale
+source_type PosTransactionLine
+```
+
+Permission: `pos.gift_cards.issue` (distinct from `pos.tenders.gift_card` redemption).
 
 ## 10.6 Void
 
@@ -282,6 +305,7 @@ stored_value.reports.view
 pos.tenders.store_credit
 pos.tenders.gift_card
 pos.refunds.store_credit
+pos.gift_cards.issue
 ```
 
 ---

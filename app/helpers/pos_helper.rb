@@ -91,6 +91,11 @@ module PosHelper
   end
 
   def pos_line_display_title(line)
+    if line.gift_card_sale_line?
+      amount = pos_money(line.unit_price_cents)
+      return "#{PosTransactionLine::GIFT_CARD_SALE_DESCRIPTION} #{amount}"
+    end
+
     if line.open_ring_line?
       return line.open_ring_description.presence || "Open ring item"
     end
@@ -115,6 +120,8 @@ module PosHelper
   end
 
   def pos_line_display_sku(line)
+    return "Gift card" if line.gift_card_sale_line?
+
     return pos_open_ring_line_sku(line) if line.open_ring_line?
 
     line.variant_sku_snapshot.presence ||
@@ -269,6 +276,24 @@ module PosHelper
 
   def pos_can_use_stored_value_tender?(transaction, tender_type, user = current_user)
     Pos::TenderTypePolicy.allowed?(transaction, actor: user, tender_type:, store: transaction.store)
+  end
+
+  def pos_can_issue_gift_card_sale?(transaction, user = current_user)
+    Pos::GiftCardSalePolicy.issue_permitted?(actor: user, store: transaction.store)
+  end
+
+  def pos_gift_card_sale_activation_status(line)
+    if line.stored_value_identifier&.display_value_masked.present?
+      if line.reload_gift_card_sale?
+        "Reloading card #{line.stored_value_identifier.display_value_masked}"
+      else
+        "Card #{line.stored_value_identifier.display_value_masked}"
+      end
+    elsif line.generate_stored_value_identifier?
+      "A card number will be auto-generated at completion."
+    else
+      "Leave blank to auto-generate, or enter an existing or new card number."
+    end
   end
 
   def pos_customer_stored_value_account(transaction, tender_type: "store_credit")

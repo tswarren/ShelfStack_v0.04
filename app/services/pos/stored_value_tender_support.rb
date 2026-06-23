@@ -62,7 +62,7 @@ module Pos
       account ||= StoredValueAccount.find_by(id: stored_value_account_id) if stored_value_account_id.present?
       return amount_cents if account.blank?
 
-      [amount_cents, account.current_balance_cents].min
+      [ amount_cents.to_i, account.current_balance_cents ].min
     end
   end
 end

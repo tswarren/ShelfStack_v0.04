@@ -743,6 +743,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.datetime "created_at", null: false
     t.bigint "customer_request_line_id"
     t.integer "extended_price_cents", default: 0, null: false
+    t.boolean "generate_stored_value_identifier", default: false, null: false
     t.string "inventory_behavior_snapshot"
     t.bigint "inventory_reservation_id"
     t.integer "line_discount_cents", default: 0, null: false
@@ -762,6 +763,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "special_order_id"
     t.bigint "store_tax_rate_id"
     t.string "store_tax_rate_short_name_snapshot"
+    t.bigint "stored_value_account_id"
+    t.bigint "stored_value_identifier_id"
     t.bigint "sub_department_id"
     t.string "sub_department_name_snapshot"
     t.bigint "tax_category_id"
@@ -783,6 +786,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["source_transaction_line_id"], name: "index_pos_transaction_lines_on_source_transaction_line_id"
     t.index ["special_order_id"], name: "index_pos_transaction_lines_on_special_order_id"
     t.index ["store_tax_rate_id"], name: "index_pos_transaction_lines_on_store_tax_rate_id"
+    t.index ["stored_value_account_id"], name: "index_pos_transaction_lines_on_stored_value_account_id"
+    t.index ["stored_value_identifier_id"], name: "index_pos_transaction_lines_on_stored_value_identifier_id"
     t.index ["sub_department_id"], name: "index_pos_transaction_lines_on_sub_department_id"
     t.index ["tax_category_id"], name: "index_pos_transaction_lines_on_tax_category_id"
   end
@@ -1759,6 +1764,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_transaction_lines", "products"
   add_foreign_key "pos_transaction_lines", "special_orders"
   add_foreign_key "pos_transaction_lines", "store_tax_rates"
+  add_foreign_key "pos_transaction_lines", "stored_value_accounts"
+  add_foreign_key "pos_transaction_lines", "stored_value_identifiers"
   add_foreign_key "pos_transaction_lines", "sub_departments"
   add_foreign_key "pos_transaction_lines", "tax_categories"
   add_foreign_key "pos_transactions", "customers"

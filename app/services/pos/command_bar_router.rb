@@ -3,6 +3,7 @@
 module Pos
   class CommandBarRouter
     RECEIPT_NUMBER_PATTERN = /\A\d+-\d+-\d{6}\z/
+    GIFT_CARD_COMMAND_PATTERN = /\A\/giftcard(?:\s+(\d+(?:\.\d{1,2})?))?\z/i
 
     Route = Data.define(:action, :payload, :message)
 
@@ -18,6 +19,10 @@ module Pos
 
     def call
       return Route.new(action: :empty, payload: {}, message: "Enter a SKU, ISBN, receipt number, or amount.") if input.blank?
+
+      if gift_card_command?
+        return gift_card_route
+      end
 
       if lookup.variants.any?
         return Route.new(
@@ -53,6 +58,24 @@ module Pos
     private
 
     attr_reader :store, :input, :return_mode
+
+    def gift_card_command?
+      input.match?(GIFT_CARD_COMMAND_PATTERN)
+    end
+
+    def gift_card_route
+      match = input.match(GIFT_CARD_COMMAND_PATTERN)
+      amount = match[1]
+      if amount.present?
+        Route.new(
+          action: :gift_card_sale,
+          payload: { amount_cents: (BigDecimal(amount) * 100).round.to_i },
+          message: nil
+        )
+      else
+        Route.new(action: :gift_card_sale_offer, payload: {}, message: nil)
+      end
+    end
 
     def receipt_number?
       input.match?(RECEIPT_NUMBER_PATTERN)

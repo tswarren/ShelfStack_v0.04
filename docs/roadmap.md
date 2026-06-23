@@ -26,7 +26,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 6 | POS Foundation                  | Register sessions, POS transactions, tax/tender snapshots, inventory posting, void reversals, receipts, and workstation-aware POS behavior. |
 | Phase 6.5 | External Catalog Lookup       | Real-time ISBN local-first lookup via ISBNdb, candidate preview, controlled catalog import, and Add Item wizard integration. **Complete.** |
 | Phase 7A | Customer Demand               | Customers, requests, special orders, holds/reservations, PO/receipt allocations, ready-for-pickup, POS fulfillment. **Complete.** |
-| Phase 7B | Customer Credit Foundation    | POS multi-row settlement (7B-1), stored value accounts/ledger (7B-2), POS issue/redeem (7B-3). |
+| Phase 7B | Customer Credit Foundation    | POS multi-row settlement (7B-1), stored value accounts/ledger (7B-2), POS issue/redeem (7B-3). **Complete.** |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, buybacks, and remaining operational workflows.                                      |
 | Phase 8 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
@@ -423,6 +423,8 @@ docs/specifications/phase-7b-test-plan.md
 
 Phase 6 reserved `gift_card` and `store_credit` tender types; Phase 7B activates stored value. The generic `stored_value_*` model supersedes earlier `gift_card_accounts` / `store_credit_accounts` future-table language.
 
+**Status:** Implemented. See [implementation/phase-7b-2-completion.md](implementation/phase-7b-2-completion.md) and [implementation/phase-7b-3-completion.md](implementation/phase-7b-3-completion.md).
+
 ## Deferred
 
 Check refunds, deposits/prepayments, buyback intake, multi-store liability settlement, GL export.
@@ -532,14 +534,15 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 # Current Priority
 
-Phases 1–6.5 and 7A are complete. See implementation records under `docs/implementation/`.
+Phases 1–6.5, 7A, and 7B are complete. See implementation records under `docs/implementation/`.
 
 ```text
-Phase 1 ✓ → Phase 2 ✓ → Phase 3 ✓ → Phase 4 ✓ → Phase 5 ✓ → Phase 6 ✓ → Phase 6.5 ✓ → Phase 7A ✓ → Phase 7B ← current priority
+Phase 1 ✓ → … → Phase 7A ✓ → Phase 7B ✓ → Phase 7 (Advanced Store Operations) ← next
 ```
 
-**Active work:** [Phase 7B: Customer Credit Foundation](#phase-7b-customer-credit-foundation) — implement 7B-1 (POS settlement), then 7B-2 (stored value ledger), then 7B-3 (POS integration).
+**Active work:** Phase 7 advanced store operations (transfers, cycle counts, buybacks, consignment) and Phase 8 reporting/accounting — not yet started.
 
 Implementation records:
 
-- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through phase-7a-completion.md
+- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through [phase-7a-completion.md](implementation/phase-7a-completion.md)
+- [docs/implementation/phase-7b-2-completion.md](implementation/phase-7b-2-completion.md), [phase-7b-3-completion.md](implementation/phase-7b-3-completion.md)

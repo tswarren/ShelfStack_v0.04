@@ -3,7 +3,9 @@
     data-pos-cart-line-target="displayRow"
     data-line-id="<%= line.id %>">
   <td class="ss-pos-cart-line__qty">
-    <% if line.inventory_reservation_id.present? %>
+    <% if line.gift_card_sale_line? %>
+      <span class="ss-pos-cart-line__qty-readonly"><%= line.quantity %></span>
+    <% elsif line.inventory_reservation_id.present? %>
       <span class="ss-pos-cart-line__qty-readonly"><%= line.quantity.abs %></span>
     <% else %>
       <div class="ss-pos-qty-controls">
@@ -24,6 +26,7 @@
   <td class="ss-pos-cart-line__item">
     <div class="ss-pos-cart-line__header">
       <% if line.return_line? %><span class="ss-pos-cart-line__badge">RETURN</span><% end %>
+      <% if line.gift_card_sale_line? %><span class="ss-pos-cart-line__badge">GIFT CARD</span><% end %>
       <% if line.inventory_reservation_id.present? %><span class="ss-pos-cart-line__badge">PICKUP</span><% end %>
       <span class="ss-pos-cart-line__meta"><%= pos_line_display_sku(line) %></span>
       <span class="ss-pos-cart-line__tax-letter"><%= render "pos/transactions/line_tax_indicator", line: line %></span>

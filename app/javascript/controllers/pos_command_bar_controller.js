@@ -1,9 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel"]
   static values = {
     routeUrl: String,
+    addGiftCardUrl: String,
     returnMode: { type: Boolean, default: false }
   }
 
@@ -64,6 +65,12 @@ export default class extends Controller {
       case "open_ring_offer":
         this.showOpenRingPanel(data.payload)
         break
+      case "gift_card_sale":
+        this.addGiftCardSale(data.payload)
+        break
+      case "gift_card_sale_offer":
+        this.showGiftCardPanel(data.payload)
+        break
       default:
         this.dispatchMessage(data.message)
     }
@@ -92,9 +99,67 @@ export default class extends Controller {
     }
   }
 
+  showGiftCardPanel(payload) {
+    if (!this.hasGiftCardPanelTarget) {
+      this.dispatchMessage("Gift card sales are not available.")
+      return
+    }
+
+    this.giftCardPanelTarget.hidden = false
+    const priceField = this.giftCardPanelTarget.querySelector("[name='unit_price']")
+    if (priceField && payload.amount_cents) {
+      priceField.value = (payload.amount_cents / 100).toFixed(2)
+    }
+  }
+
+  addGiftCardSale(payload) {
+    if (!this.addGiftCardUrlValue) {
+      this.dispatchMessage("Gift card sales are not available.")
+      return
+    }
+
+    const body = new FormData()
+    body.append("amount_cents", payload.amount_cents)
+
+    fetch(this.addGiftCardUrlValue, {
+      method: "POST",
+      headers: {
+        "X-CSRF-Token": this.csrfToken,
+        Accept: "text/vnd.turbo-stream.html"
+      },
+      body
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("failed")
+        return response.text()
+      })
+      .then((html) => {
+        Turbo.renderStreamMessage(html)
+        this.inputTarget.value = ""
+        this.focusInput()
+      })
+      .catch(() => this.dispatchMessage("Unable to add gift card sale."))
+  }
+
+  closeGiftCardPanel(event) {
+    event?.preventDefault()
+    if (!this.hasGiftCardPanelTarget) return
+
+    this.giftCardPanelTarget.hidden = true
+    this.giftCardPanelTarget.querySelector("form")?.reset()
+    this.focusInput()
+  }
+
+  giftCardSubmitted(event) {
+    if (event.detail.success) {
+      this.closeGiftCardPanel()
+    }
+  }
+
   hidePanels() {
     if (this.hasReceiptPanelTarget) this.receiptPanelTarget.hidden = true
     if (this.hasOpenRingPanelTarget) this.openRingPanelTarget.hidden = true
+    if (this.hasGiftCardPanelTarget) this.giftCardPanelTarget.hidden = true
   }
 
   closeOpenRingPanel(event) {

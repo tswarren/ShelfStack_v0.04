@@ -12,8 +12,12 @@ Phase 7B-3 wires stored value accounts and ledger into POS settlement so credit 
 
 - `pos_tenders.stored_value_account_id` (FK, nullable)
 - `pos_tenders.stored_value_identifier_id` (FK, nullable)
+- `pos_tenders.generate_stored_value_identifier` (boolean, default false)
 
-Migration: `db/migrate/20250701120000_add_stored_value_to_pos_tenders.rb`
+Migrations:
+
+- `db/migrate/20250701120000_add_stored_value_to_pos_tenders.rb`
+- `db/migrate/20250701130000_add_generate_stored_value_identifier_to_pos_tenders.rb`
 
 ### Services
 
@@ -23,12 +27,14 @@ Pos::StoredValueTenderSupport
 Pos::StoredValueAccountResolver
 Pos::PostStoredValueLedger
 Pos::ReverseStoredValueLedger
+Pos::GenerateStoredValueIdentifier
 ```
 
 Hooks:
 
 - `Pos::CompleteTransaction` posts stored value ledger after tender validation
 - `Pos::VoidTransaction` reverses stored value ledger after tender reversals
+- `Pos::SettlementSync` resolves accounts, caps redemption amounts, and may generate identifiers before save
 
 ### Permissions (seeded)
 
@@ -38,7 +44,33 @@ pos.tenders.gift_card
 pos.refunds.store_credit
 ```
 
+`Seeds::Phase7bPermissions.grant_pos_stored_value_to_roles!` also grants POS roles (`pos_cashier`, `pos_lead`, `pos_manager`):
+
+```text
+stored_value.accounts.create
+stored_value.identifiers.create
+```
+
 Reason code: `pos_return_credit`
+
+Refund store-credit policy accepts any of: `pos.refunds.store_credit`, `pos.tenders.store_credit`, `pos.tenders.refund`, or `pos.transactions.complete` (store-scoped).
+
+### Behavior
+
+**Issuance (returns/exchanges)**
+
+- Customer on transaction: resolve or create customer-linked merchandise-credit account
+- No customer: lookup existing identifier/account, or with **Generate new identifier** checked, create a standalone/bearer account and generate a redeemable code at completion
+
+**Redemption (sales)**
+
+- Applied tender amount is `min(amount entered, account balance)` in `Pos::SettlementSync` and settlement UI (Fill / amount clamp)
+- Ledger still posts only the saved tender amount; balance cannot go negative
+- If capped redemption is less than amount due, another tender (cash/card/check) is required for the remainder
+
+**Settlement form**
+
+- Indexed row params (`settlements[0][tender_type]`, etc.) keep checkbox and amount fields on one row (avoids Rails `settlements[][]` split)
 
 ### UI
 
@@ -59,14 +91,53 @@ pos.stored_value.void_reversed
 
 ```bash
 ./dev/rails-docker bundle exec rails db:migrate
+./dev/rails-docker bundle exec rails db:seed
 ./dev/rails-docker bundle exec rails test test/services/pos/tender_type_policy_test.rb \
+  test/services/pos/stored_value_tender_support_test.rb \
   test/services/pos/post_stored_value_ledger_test.rb \
   test/services/pos/reverse_stored_value_ledger_test.rb \
+  test/services/pos/generate_stored_value_identifier_test.rb \
   test/integration/phase7b_pos_stored_value_test.rb
 ```
 
-Manual smoke: return to store credit → redeem on next sale → void second sale → confirm balance restored.
+Manual smoke: return to store credit (with generate identifier) → redeem on next sale → void second sale → confirm balance restored.
+
+## 7B-3 enhancement: POS gift card sale (2026-06-21)
+
+Variable-amount gift card issuance at POS (new cards and reloads), paid via normal settlement tenders.
+
+### Schema (`pos_transaction_lines`)
+
+- `stored_value_account_id`, `stored_value_identifier_id`, `generate_stored_value_identifier`
+- `line_type` value `gift_card_sale`
+
+### Services
+
+```text
+Pos::GiftCardSaleSupport
+Pos::GiftCardSalePolicy
+Pos::AddGiftCardSaleLine
+Pos::UpdateGiftCardSaleLine
+Pos::GiftCardSaleAccountResolver
+Pos::PostGiftCardSaleLedger
+```
+
+Extended: `Pos::GenerateStoredValueIdentifier` (line targets), `Pos::ReverseStoredValueLedger` (line-sourced entries), `Pos::CompletionReadiness`, `Pos::CommandBarRouter` (`/giftcard`).
+
+### Permission
+
+```text
+pos.gift_cards.issue
+```
+
+Reason code: `pos_gift_card_sale`
+
+### Behavior
+
+- `/giftcard 25` or gift card drawer adds a `gift_card_sale` line; activation via scan (reload) or generate-new checkbox
+- Completion issues ledger credit linked to the line; void reverses
+- Register report separates **Gift Card Redemptions** (tender) vs **Gift Card Sales** (lines)
 
 ## Deferred (unchanged)
 
-Check refunds, deposits/prepayments, gift card product activation, buyback intake, multi-store redemption restrictions, GL export.
+Check refunds, deposits/prepayments, product SKU gift card catalog workflow, buyback intake, multi-store redemption restrictions, GL export.

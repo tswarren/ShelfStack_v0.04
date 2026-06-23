@@ -8,6 +8,7 @@
 <section class="ss-pos-panel ss-pos-command-bar"
          data-controller="pos-command-bar pos-line-entry"
          data-pos-command-bar-route-url-value="<%= route_command_pos_transaction_path(transaction) %>"
+         data-pos-command-bar-add-gift-card-url-value="<%= add_gift_card_sale_line_pos_transaction_path(transaction) %>"
          data-pos-command-bar-return-mode-value="<%= return_mode %>"
          data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
          data-pos-line-entry-add-url-value="<%= add_line_pos_transaction_path(transaction) %>"
@@ -19,7 +20,7 @@
       <%= label_tag :pos_command_input, "Scan or enter item", class: "ss-pos-command-bar__scan-label" %>
       <%= text_field_tag :pos_command_input, nil,
             autocomplete: "off",
-            placeholder: "Scan / enter SKU, ISBN, receipt number, or amount",
+            placeholder: "Scan / enter SKU, ISBN, receipt number, /giftcard, or amount",
             class: "ss-pos-scan-input ss-pos-scan-input--primary",
             data: {
               pos_command_bar_target: "input",
@@ -41,5 +42,9 @@
 
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="openRingPanel" hidden>
     <%= render "pos/transactions/open_ring_drawer", transaction: transaction, sub_departments: sub_departments, inline: true %>
+  </div>
+
+  <div class="ss-pos-inline-panel" data-pos-command-bar-target="giftCardPanel" hidden>
+    <%= render "pos/transactions/gift_card_sale_drawer", transaction: transaction, inline: true %>
   </div>
 </section>

@@ -33,6 +33,7 @@ module Pos
       transaction.pos_transaction_lines.each { |line| ReturnQuantityValidator.call!(line) }
       SellabilityValidator.validate!(transaction, confirmed_inactive: confirmed_inactive, pos_authorization_id: pos_authorization_id)
       validate_authorizations!
+      validate_gift_card_sales!
 
       PosTransaction.transaction do
         transaction.assign_attributes(
@@ -45,13 +46,18 @@ module Pos
         RecalculateTransaction.call!(transaction, business_date: register_session.business_date)
         transaction.transaction_type = DeriveTransactionType.call(transaction)
         TenderValidator.validate!(transaction, actor: completed_by_user, pos_authorization_id: pos_authorization_id)
-        PostStoredValueLedger.call!(
+        stored_value_result = PostStoredValueLedger.call!(
           transaction:,
           actor: completed_by_user,
           store: transaction.store
-        ).tap do |stored_value_result|
-          transaction.pos_generated_stored_value_identifiers = stored_value_result.generated_identifiers
-        end
+        )
+        gift_card_result = PostGiftCardSaleLedger.call!(
+          transaction:,
+          actor: completed_by_user,
+          store: transaction.store
+        )
+        transaction.pos_generated_stored_value_identifiers =
+          stored_value_result.generated_identifiers + gift_card_result.generated_identifiers
         TransactionNumberAssigner.call!(transaction)
 
         transaction.status = "completed"
@@ -132,6 +138,8 @@ module Pos
           snapshot_variant_line!(line)
         elsif line.open_ring_line?
           snapshot_open_ring_line!(line)
+        elsif line.gift_card_sale_line?
+          snapshot_gift_card_sale_line!(line)
         end
       end
     end
@@ -157,6 +165,23 @@ module Pos
         sub_department_name_snapshot: line.sub_department&.name
       )
       line.save!
+    end
+
+    def snapshot_gift_card_sale_line!(line)
+      line.assign_attributes(
+        sub_department_name_snapshot: line.sub_department&.name,
+        open_ring_description: line.open_ring_description.presence || PosTransactionLine::GIFT_CARD_SALE_DESCRIPTION,
+        inventory_behavior_snapshot: "pure_financial"
+      )
+      line.save!
+    end
+
+    def validate_gift_card_sales!
+      transaction.pos_transaction_lines.select(&:gift_card_sale_line?).each do |line|
+        next if GiftCardSaleSupport.activation_ready?(line)
+
+        raise Error, "Gift card sale lines require a card number or auto-generation."
+      end
     end
   end
 end

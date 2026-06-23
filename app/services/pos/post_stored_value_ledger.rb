@@ -73,7 +73,13 @@ module Pos
       tenders.select { |t| t.redeem_tender?(transaction) }.each do |tender|
         next if tender.stored_value_account.blank?
 
-        if tender.amount_cents > tender.stored_value_account.current_balance_cents
+        capped = StoredValueTenderSupport.capped_redeem_amount_cents(
+          transaction:,
+          tender_type: tender.tender_type,
+          amount_cents: tender.amount_cents,
+          account: tender.stored_value_account
+        )
+        if tender.amount_cents > capped
           raise Error, "Redemption exceeds available account balance."
         end
       end

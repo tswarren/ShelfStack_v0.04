@@ -153,6 +153,57 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal 2500, tender.amount_cents
   end
 
+  test "caps gift card redemption to account balance" do
+    gift_card_account = create_stored_value_account!(
+      issuing_store: @store,
+      account_type: "gift_card",
+      current_balance_cents: 2500
+    )
+
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: 2, unit_price_cents: 3000, extended_price_cents: 6000 } ]
+    )
+    Pos::RecalculateTransaction.call!(transaction, business_date: @session.business_date)
+    total = transaction.total_cents
+    capped = Pos::StoredValueTenderSupport.capped_redeem_amount_cents(
+      transaction:,
+      tender_type: "gift_card",
+      amount_cents: total,
+      account: gift_card_account
+    )
+
+    Pos::SettlementSync.call!(
+      transaction: transaction,
+      tender_inputs: [
+        {
+          tender_type: "gift_card",
+          amount_cents: total,
+          stored_value_account_id: gift_card_account.id
+        },
+        {
+          tender_type: "cash",
+          amount_cents: total - capped
+        }
+      ],
+      actor: @user
+    )
+
+    tender = transaction.pos_tenders.settlement_rows.find_by!(tender_type: "gift_card")
+    assert_equal 2500, tender.amount_cents
+
+    Pos::CompleteTransaction.call!(
+      transaction: transaction.reload,
+      completed_by_user: @user,
+      register_session: @session,
+      confirmed_inactive: true
+    )
+
+    assert_equal 0, gift_card_account.reload.current_balance_cents
+  end
+
   test "lookup endpoint returns masked account details" do
     identifier = generate_test_identifier!(account: @account, actor: @user)
     raw = StoredValue::IdentifierVault.decrypt(identifier.encrypted_value)
@@ -189,5 +240,79 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
       Pos::TenderValidator.validate!(transaction, actor: @user)
     end
     assert_match(/not enabled/i, error.message)
+  end
+
+  test "sells gift card with generated identifier on completed sale" do
+    ensure_gift_card_sale_classification!(store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+    line = add_gift_card_sale_line!(transaction: transaction, actor: @user, amount_cents: 2500)
+    Pos::RecalculateTransaction.call!(transaction, business_date: @session.business_date)
+
+    Pos::SettlementSync.call!(
+      transaction: transaction,
+      tender_inputs: [ { tender_type: "cash", amount_cents: transaction.total_cents } ],
+      actor: @user
+    )
+
+    Pos::CompleteTransaction.call!(
+      transaction: transaction.reload,
+      completed_by_user: @user,
+      register_session: @session,
+      confirmed_inactive: true
+    )
+
+    line.reload
+    assert line.stored_value_identifier_id.present?
+    assert_equal 2500, line.stored_value_account.current_balance_cents
+    assert AuditEvent.exists?(event_name: "pos.gift_card.sold")
+  end
+
+  test "blocks completion when gift card sale line lacks activation metadata" do
+    ensure_gift_card_sale_classification!(store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+    line = add_gift_card_sale_line!(transaction: transaction, actor: @user, amount_cents: 2500)
+    line.update!(generate_stored_value_identifier: false)
+    Pos::RecalculateTransaction.call!(transaction, business_date: @session.business_date)
+
+    readiness = Pos::CompletionReadiness.check(
+      transaction: transaction.reload,
+      register_session: @session,
+      actor: @user
+    )
+
+    assert readiness.blockers.any? { |check| check.key == :gift_card_sale }
+  end
+
+  test "void reverses gift card sale ledger entry" do
+    ensure_gift_card_sale_classification!(store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+    add_gift_card_sale_line!(transaction: transaction, actor: @user, amount_cents: 2500)
+    Pos::RecalculateTransaction.call!(transaction, business_date: @session.business_date)
+    Pos::SettlementSync.call!(
+      transaction: transaction,
+      tender_inputs: [ { tender_type: "cash", amount_cents: transaction.total_cents } ],
+      actor: @user
+    )
+
+    Pos::CompleteTransaction.call!(
+      transaction: transaction.reload,
+      completed_by_user: @user,
+      register_session: @session,
+      confirmed_inactive: true
+    )
+
+    account = transaction.pos_transaction_lines.first.reload.stored_value_account
+    assert_equal 2500, account.current_balance_cents
+
+    auth = grant_void_authorization!(transaction: transaction, requested_by: @user)
+    Pos::VoidTransaction.call!(
+      transaction: transaction.reload,
+      voided_by_user: @user,
+      register_session: @session,
+      reason_code: "cashier_error",
+      pos_authorization: auth
+    )
+
+    assert_equal 0, account.reload.current_balance_cents
   end
 end

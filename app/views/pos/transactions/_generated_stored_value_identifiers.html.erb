@@ -1,9 +1,13 @@
 <% if flash[:pos_generated_stored_value_identifiers].present? %>
   <section class="ss-pos-generated-identifiers ss-panel">
-    <h2 class="ss-panel__title">New store credit identifier</h2>
+    <h2 class="ss-panel__title">New stored value identifier</h2>
     <% flash[:pos_generated_stored_value_identifiers].each do |item| %>
       <p class="ss-pos-generated-identifiers__value">
-        Give the customer this code to redeem their credit:
+        <% if item["pos_transaction_line_id"].present? %>
+          Give the customer this gift card number:
+        <% else %>
+          Give the customer this code to redeem their credit:
+        <% end %>
         <strong><%= item["display_value"] %></strong>
       </p>
     <% end %>

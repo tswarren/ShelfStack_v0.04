@@ -34,3 +34,4 @@ donations,009,Donations/Contributions,Donations,pass_through,Prepared Food,FALSE
 tickets,009,Ticket Sales,Tickets,pass_through,Prepared Food,FALSE,FALSE,
 shipping,009,Shipping/Postage,Shipping,pass_through,Prepared Food,FALSE,FALSE,
 other,009,Other,Other,net_cost_markup,Prepared Food,FALSE,FALSE,5000
+gift_cards,010,Gift Cards / Certificates,Gift Cards,pass_through,Gift Card,FALSE,FALSE,

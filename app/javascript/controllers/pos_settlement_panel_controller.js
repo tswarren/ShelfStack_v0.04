@@ -181,6 +181,16 @@ export default class extends Controller {
       if (statusEl) {
         statusEl.textContent = `${payload.display_value_masked} · Balance ${this.formatMoney(payload.current_balance_cents)}`
       }
+
+      this.clampStoredValueAmount(row)
+      if (this.rowAmountCents(row) === 0) {
+        this.fillRemainingForRow(row, tenderType)
+      } else {
+        this.clampStoredValueAmount(row)
+      }
+      this.updateRowSummary(row)
+      this.updateHints()
+      this.dispatchUpdate()
     } catch (_error) {
       if (statusEl) statusEl.textContent = "Lookup failed."
     }
