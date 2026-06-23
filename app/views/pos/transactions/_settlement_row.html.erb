@@ -1,5 +1,5 @@
 <%# locals: (row:, transaction:, row_index:, modal: true) %>
-<% refund = transaction.total_cents.to_i.negative? %>
+<% refund = Pos::TenderTypePolicy.refund_transaction?(transaction) %>
 <% display_amount = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i %>
 <% row_amount_cents = row.tender_type == "cash" ? (refund ? display_amount : pos_tendered_display_cents(row).to_i) : display_amount.to_i %>
 <% collapsed = row_amount_cents.positive? %>
@@ -8,13 +8,14 @@
     data-settlement-row
     data-settlement-type="<%= row.tender_type %>"
     data-row-id="<%= row.id %>"
+    data-settlement-index="<%= row_index %>"
     data-collapsed="<%= collapsed %>"
     data-pos-settlement-panel-target="row">
   <td class="ss-pos-settlement-row__label-cell">
-    <%= hidden_field_tag "settlements[][id]", row.id %>
-    <%= hidden_field_tag "settlements[][tender_type]", row.tender_type %>
-    <%= hidden_field_tag "settlements[][line_number]", row.line_number %>
-    <%= hidden_field_tag "settlements[][_destroy]", 0, data: { pos_settlement_panel_target: "destroyField" } %>
+    <%= hidden_field_tag "settlements[#{row_index}][id]", row.id %>
+    <%= hidden_field_tag "settlements[#{row_index}][tender_type]", row.tender_type %>
+    <%= hidden_field_tag "settlements[#{row_index}][line_number]", row.line_number %>
+    <%= hidden_field_tag "settlements[#{row_index}][_destroy]", 0, data: { pos_settlement_panel_target: "destroyField" } %>
 
     <button type="button"
             class="ss-pos-settlement-row__summary"
@@ -30,7 +31,7 @@
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--cash">
           <%= label_tag nil, refund ? "Refund amount" : "Tendered", class: "ss-pos-settlement-row__field-label" %>
           <% cash_display = refund ? display_amount : pos_tendered_display_cents(row) %>
-          <%= pos_money_field "settlements[][#{refund ? 'amount_dollars' : 'tendered_dollars'}]",
+          <%= pos_money_field "settlements[#{row_index}][#{refund ? 'amount_dollars' : 'tendered_dollars'}]",
                 cash_display,
                 min: 0,
                 data: {
@@ -43,13 +44,13 @@
       <% elsif row.tender_type == "card" %>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--brand">
           <%= label_tag nil, "Brand", class: "ss-pos-settlement-row__field-label" %>
-          <%= select_tag "settlements[][card_brand]",
+          <%= select_tag "settlements[#{row_index}][card_brand]",
                 options_for_select(pos_card_brand_options, row.card_brand || "other"),
                 data: { action: "change->pos-settlement-panel#update" } %>
         </div>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--last-four">
           <%= label_tag nil, "Last four", class: "ss-pos-settlement-row__field-label" %>
-          <%= text_field_tag "settlements[][card_last_four]", row.card_last_four,
+          <%= text_field_tag "settlements[#{row_index}][card_last_four]", row.card_last_four,
                 maxlength: 4,
                 inputmode: "numeric",
                 placeholder: "1234",
@@ -57,12 +58,12 @@
         </div>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--auth">
           <%= label_tag nil, "Auth code", class: "ss-pos-settlement-row__field-label" %>
-          <%= text_field_tag "settlements[][card_authorization_code]", row.card_authorization_code,
+          <%= text_field_tag "settlements[#{row_index}][card_authorization_code]", row.card_authorization_code,
                 data: { action: "input->pos-settlement-panel#update change->pos-settlement-panel#update" } %>
         </div>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--amount">
           <%= label_tag nil, refund ? "Refund amount" : "Amount", class: "ss-pos-settlement-row__field-label" %>
-          <%= pos_money_field "settlements[][amount_dollars]", display_amount, min: 0,
+          <%= pos_money_field "settlements[#{row_index}][amount_dollars]", display_amount, min: 0,
                 data: {
                   pos_settlement_panel_target: "amountField",
                   pos_transaction_edit_target: "amountField",
@@ -73,12 +74,55 @@
       <% elsif row.tender_type == "check" %>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--check-number">
           <%= label_tag nil, "Check number", class: "ss-pos-settlement-row__field-label" %>
-          <%= text_field_tag "settlements[][check_number]", row.check_number,
+          <%= text_field_tag "settlements[#{row_index}][check_number]", row.check_number,
                 data: { action: "input->pos-settlement-panel#update change->pos-settlement-panel#update" } %>
         </div>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--amount">
           <%= label_tag nil, refund ? "Refund amount" : "Amount", class: "ss-pos-settlement-row__field-label" %>
-          <%= pos_money_field "settlements[][amount_dollars]", display_amount, min: 0,
+          <%= pos_money_field "settlements[#{row_index}][amount_dollars]", display_amount, min: 0,
+                data: {
+                  pos_settlement_panel_target: "amountField",
+                  pos_transaction_edit_target: "amountField",
+                  settlement_amount: true,
+                  action: "input->pos-settlement-panel#update change->pos-settlement-panel#update"
+                } %>
+        </div>
+      <% elsif row.tender_type.in?(%w[store_credit gift_card]) %>
+        <% default_account = pos_customer_stored_value_account(transaction, tender_type: row.tender_type) %>
+        <%= hidden_field_tag "settlements[#{row_index}][stored_value_account_id]", row.stored_value_account_id || default_account&.id %>
+        <%= hidden_field_tag "settlements[#{row_index}][stored_value_identifier_id]", row.stored_value_identifier_id %>
+        <% if refund && row.tender_type == "store_credit" %>
+          <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--generate">
+            <label class="ss-pos-settlement-row__checkbox-label">
+              <%= check_box_tag "settlements[#{row_index}][generate_identifier]",
+                    1,
+                    row.persisted? ? row.generate_stored_value_identifier? : true,
+                    data: { action: "change->pos-settlement-panel#update" } %>
+              Generate new identifier
+            </label>
+            <p class="ss-pos-settlement-row__detail">Creates a redeemable code for this credit when the return completes.</p>
+          </div>
+        <% end %>
+        <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--lookup">
+          <%= label_tag nil, "Identifier", class: "ss-pos-settlement-row__field-label" %>
+          <%= text_field_tag "settlements[#{row_index}][lookup_code]", nil,
+                placeholder: "Scan or enter code",
+                data: {
+                  pos_settlement_panel_target: "lookupCodeField",
+                  action: "change->pos-settlement-panel#lookupStoredValue blur->pos-settlement-panel#lookupStoredValue"
+                } %>
+          <p class="ss-pos-settlement-row__lookup-status" data-pos-settlement-panel-target="lookupStatus"></p>
+        </div>
+        <% if refund && transaction.customer_id.present? && default_account.present? %>
+          <p class="ss-pos-settlement-row__detail">Customer account: <%= default_account.customer.display_name %></p>
+        <% elsif refund && transaction.customer_id.present? %>
+          <p class="ss-pos-settlement-row__detail">A customer-linked account will be created when this return completes.</p>
+        <% elsif refund && transaction.customer_id.blank? %>
+          <p class="ss-pos-settlement-row__detail">Enter an existing identifier, or link an account before completing.</p>
+        <% end %>
+        <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--amount">
+          <%= label_tag nil, refund ? "Credit amount" : "Redeem amount", class: "ss-pos-settlement-row__field-label" %>
+          <%= pos_money_field "settlements[#{row_index}][amount_dollars]", display_amount, min: 0,
                 data: {
                   pos_settlement_panel_target: "amountField",
                   pos_transaction_edit_target: "amountField",

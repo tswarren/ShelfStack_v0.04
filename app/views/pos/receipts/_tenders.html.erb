@@ -4,6 +4,22 @@
       <span><%= pos_tender_receipt_label(tender) %></span>
       <strong><%= pos_receipt_money(pos_tender_receipt_amount_cents(tender)) %></strong>
     </div>
+    <% if tender.stored_value_tender? %>
+      <% identifier_value = pos_stored_value_receipt_identifier_value(tender) %>
+      <% if identifier_value.present? && tender.amount_cents.negative? %>
+        <div class="ss-receipt-row">
+          <span>Credit identifier</span>
+          <strong><%= identifier_value %></strong>
+        </div>
+      <% end %>
+      <% balance_cents = pos_stored_value_receipt_balance_cents(tender) %>
+      <% if balance_cents.present? %>
+        <div class="ss-receipt-row">
+          <span>Remaining balance</span>
+          <strong><%= pos_receipt_money(balance_cents) %></strong>
+        </div>
+      <% end %>
+    <% end %>
     <% if tender.tender_type == "cash" && tender.amount_cents != pos_tender_receipt_amount_cents(tender) %>
       <div class="ss-receipt-row">
         <span>Cash applied</span>

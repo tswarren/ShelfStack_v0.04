@@ -280,6 +280,7 @@ module Pos
         actor: current_user
       )
       @transaction.reload
+      store_pos_generated_identifier_flash!(result.generated_identifiers)
       notice = [ "Settlement updated.", result.message ].compact.join(" ")
       respond_to_workspace(notice: notice)
     rescue Pos::SettlementSync::Error => e
@@ -293,23 +294,27 @@ module Pos
         return
       end
 
+      generated_identifiers = []
       if settlement_inputs.present?
-        Pos::SettlementSync.call!(
+        sync_result = Pos::SettlementSync.call!(
           transaction: @transaction,
           tender_inputs: settlement_inputs,
           actor: current_user
         )
+        generated_identifiers.concat(sync_result.generated_identifiers)
         @transaction.reload
       end
 
-      Pos::CompleteTransaction.call!(
+      completed_transaction = Pos::CompleteTransaction.call!(
         transaction: @transaction,
         completed_by_user: current_user,
         register_session: register_session,
         confirmed_inactive: params[:confirm_inactive].present?,
         pos_authorization_id: params[:pos_authorization_id]
       )
-      redirect_to pos_transaction_path(@transaction), notice: "Transaction completed."
+      generated_identifiers.concat(completed_transaction.pos_generated_stored_value_identifiers || [])
+      store_pos_generated_identifier_flash!(generated_identifiers)
+      redirect_to pos_transaction_path(completed_transaction), notice: completion_notice(generated_identifiers)
     rescue Pos::SettlementSync::Error => e
       flash[:complete_error] = e.message
       redirect_to edit_pos_transaction_path(@transaction, confirm_inactive: params[:confirm_inactive])
@@ -395,12 +400,20 @@ module Pos
         register_session: current_register_session,
         tender_inputs: tender_inputs,
         confirmed_inactive: params[:confirm_inactive].present?,
-        pos_authorization_id: params[:pos_authorization_id]
+        pos_authorization_id: params[:pos_authorization_id],
+        actor: current_user
       )
     end
 
     def settlement_inputs
-      params[:settlements] || params[:tenders]
+      inputs = params[:settlements] || params[:tenders]
+      return inputs if inputs.blank?
+      return inputs unless inputs.respond_to?(:to_unsafe_h)
+
+      hash = inputs.to_unsafe_h
+      return inputs unless hash.keys.all? { |key| key.to_s.match?(/\A\d+\z/) }
+
+      hash.sort_by { |key, _| key.to_i }.map { |_, value| value }
     end
 
     def respond_to_workspace(notice: nil, alert: nil, status: :ok)
@@ -502,6 +515,25 @@ module Pos
         authorization_type: "void_transaction",
         pos_authorization_id: void_authorization&.id
       )
+    end
+
+    def store_pos_generated_identifier_flash!(generated_identifiers)
+      return if generated_identifiers.blank?
+
+      flash[:pos_generated_stored_value_identifiers] = generated_identifiers.map do |generated|
+        {
+          "display_value" => generated.display_value,
+          "pos_tender_id" => generated.pos_tender_id
+        }
+      end
+    end
+
+    def completion_notice(generated_identifiers)
+      notice = "Transaction completed."
+      return notice if generated_identifiers.blank?
+
+      values = generated_identifiers.map(&:display_value).join(", ")
+      "#{notice} New store credit identifier: #{values}."
     end
   end
 end

@@ -348,6 +348,7 @@ Rails.application.routes.draw do
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]
+    resource :stored_value_lookup, only: %i[show]
     resource :pickup_lookup, only: %i[create]
     resources :authorizations, only: %i[create]
     resources :register_sessions, only: %i[new create show] do

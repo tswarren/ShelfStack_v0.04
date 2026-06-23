@@ -51,32 +51,35 @@ module Pos
       end
     end
 
-    def self.check(transaction:, register_session:, tender_inputs: nil, confirmed_inactive: false, pos_authorization_id: nil)
+    def self.check(transaction:, register_session:, tender_inputs: nil, confirmed_inactive: false, pos_authorization_id: nil, actor: nil)
       new(
         transaction:,
         register_session:,
         tender_inputs:,
         confirmed_inactive:,
-        pos_authorization_id:
+        pos_authorization_id:,
+        actor:
       ).call
     end
 
-    def self.preview(transaction:, register_session:, tender_inputs: nil, confirmed_inactive: false, pos_authorization_id: nil)
+    def self.preview(transaction:, register_session:, tender_inputs: nil, confirmed_inactive: false, pos_authorization_id: nil, actor: nil)
       check(
         transaction:,
         register_session:,
         tender_inputs:,
         confirmed_inactive:,
-        pos_authorization_id:
+        pos_authorization_id:,
+        actor:
       )
     end
 
-    def initialize(transaction:, register_session:, tender_inputs: nil, confirmed_inactive: false, pos_authorization_id: nil)
+    def initialize(transaction:, register_session:, tender_inputs: nil, confirmed_inactive: false, pos_authorization_id: nil, actor: nil)
       @transaction = transaction
       @register_session = register_session
       @tender_inputs = tender_inputs
       @confirmed_inactive = confirmed_inactive
       @pos_authorization_id = pos_authorization_id
+      @actor = actor
     end
 
     def call
@@ -88,6 +91,7 @@ module Pos
         discount_authorization_check,
         no_receipt_return_authorization_check,
         tender_total_check,
+        stored_value_tender_check,
         cash_refund_authorization_check
       ].compact
 
@@ -99,7 +103,7 @@ module Pos
 
     private
 
-    attr_reader :transaction, :register_session, :tender_inputs, :confirmed_inactive, :pos_authorization_id
+    attr_reader :transaction, :register_session, :tender_inputs, :confirmed_inactive, :pos_authorization_id, :actor
 
     def register_session_check
       if register_session&.open?
@@ -244,6 +248,63 @@ module Pos
           )
         end
       end
+    end
+
+    def stored_value_tender_check
+      return unless actor.present?
+
+      parsed_rows = if tender_inputs.present?
+        SettlementInputParser.parse(transaction:, raw_inputs: tender_inputs).reject(&:destroy)
+      else
+        transaction.pos_tenders.settlement_rows.map do |tender|
+          SettlementInputParser::ParsedRow.new(
+            id: tender.id.to_s,
+            destroy: false,
+            tender_type: tender.tender_type,
+            amount_cents: tender.amount_cents,
+            tendered_cents: tender.tendered_cents,
+            card_brand: tender.card_brand,
+            card_last_four: tender.card_last_four,
+            card_authorization_code: tender.card_authorization_code,
+            check_number: tender.check_number,
+            notes: tender.notes,
+            stored_value_account_id: tender.stored_value_account_id&.to_s,
+            stored_value_identifier_id: tender.stored_value_identifier_id&.to_s,
+            lookup_code: nil,
+            generate_identifier: tender.generate_stored_value_identifier?
+          )
+        end
+      end
+
+      sv_rows = parsed_rows.select { |row| Pos::StoredValueTenderSupport.stored_value_tender?(row.tender_type) }
+      return if sv_rows.empty?
+
+      unless TenderTypePolicy.allowed_types(transaction, actor:, store: transaction.store).intersect?(sv_rows.map(&:tender_type))
+        return Check.new(
+          key: :stored_value,
+          status: :block,
+          message: "Stored value tender type is not enabled for your role",
+          action_key: nil,
+          action_label: nil
+        )
+      end
+
+      sv_rows.each do |row|
+        next if row.generate_identifier
+        next if row.stored_value_account_id.present?
+        next if row.lookup_code.present?
+        next if transaction.customer_id.present?
+
+        return Check.new(
+          key: :stored_value,
+          status: :block,
+          message: "Link a stored value account or enter an identifier",
+          action_key: :open_settlement,
+          action_label: "Open settlement"
+        )
+      end
+
+      Check.new(key: :stored_value, status: :ok, message: "Stored value tenders ready", action_key: nil, action_label: nil)
     end
 
     def cash_refund_authorization_check

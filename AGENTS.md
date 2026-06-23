@@ -182,16 +182,17 @@ Phase 6.5 was completed on 2026-06-21. ISBNdb local-first lookup, Add Item wizar
 
 Phase 7A was completed on 2026-06-21. See [docs/implementation/phase-7a-completion.md](docs/implementation/phase-7a-completion.md).
 
-## Phase 7B: Customer Credit Foundation — **Active (7B-2 complete)**
+## Phase 7B: Customer Credit Foundation — **Complete**
 
-Phase 7B is the current development priority. **7B-1** (POS settlement) and **7B-2** (stored value foundation) are complete. Next slice: **7B-3** POS stored value integration. See [docs/roadmap/phase-7b-customer-credit-foundation.md](docs/roadmap/phase-7b-customer-credit-foundation.md).
+Phase 7B was completed on 2026-06-21. See [docs/implementation/phase-7b-2-completion.md](docs/implementation/phase-7b-2-completion.md) and [docs/implementation/phase-7b-3-completion.md](docs/implementation/phase-7b-3-completion.md).
 
 - 7B-1: merged via PR #23 (POS settlement foundation)
-- 7B-2: [docs/implementation/phase-7b-2-completion.md](docs/implementation/phase-7b-2-completion.md)
+- 7B-2: stored value accounts/ledger (Customers workspace)
+- 7B-3: POS issue/redeem/void integration
 
 The canonical stored value model (`stored_value_*` tables) supersedes earlier `gift_card_accounts` / `store_credit_accounts` future-table language. Do not implement separate account tables.
 
-Do not jump ahead to offline POS or full GL unless explicitly requested. Store credit and gift-card POS tenders are in scope for 7B-3 only after 7B-1 and 7B-2.
+Do not jump ahead to offline POS or full GL unless explicitly requested.
 
 ---
 
@@ -551,9 +552,8 @@ product_variants.sub_department_id → sub_departments.id
 * `ClassificationDefaultsResolver` + `TaxRateLookup` use transaction `business_date`; missing tax/subdepartment blocks completion.
 * Inactive sell: warn + confirm; $0 allowed with price prompt.
 * `Pos::ReturnQuantityValidator`: cumulative returns ≤ original sold qty via `source_transaction_line_id`.
-* `Pos::TenderValidator` rejects `gift_card` and `store_credit` in Phase 6.
-* Lookup ranking: variant SKU → product SKU → catalog identifier.
-* Gift-card and store-credit **ledgers** deferred; store credit is a future tender on normal return/exchange transactions.
+* `Pos::TenderTypePolicy` + `Pos::TenderValidator` enforce stored value tender permissions and account linkage; legacy Phase 6 allowlist remains as base types only.
+* Gift-card and store-credit **ledgers** use `stored_value_*` tables; POS posts via `Pos::PostStoredValueLedger`.
 
 ## Phase 7A Rules
 
@@ -568,15 +568,15 @@ product_variants.sub_department_id → sub_departments.id
 
 ## Phase 7B Rules
 
-* Implement in order: 7B-1 settlement → 7B-2 stored value ledger → 7B-3 POS integration. **7B-2 foundation is implemented.**
+* Implement in order: 7B-1 settlement → 7B-2 stored value ledger → 7B-3 POS integration. **Phase 7B is complete.**
 * Multiple `pos_tender` rows per transaction; one cash row only; `sum(amount_cents) == total_cents`.
 * Cash drawer math uses `amount_cents`, not `tendered_cents`; migrate legacy `reference_number` tendered hack.
 * Check refunds out of scope for 7B-1; check payments only.
 * Stored value: append-only ledger; `stored_value_*` supersedes `gift_card_accounts` / `store_credit_accounts`.
 * Negative stored value balances not allowed; account row locked on post via `StoredValue::Post`.
 * Manual issue/adjust/transfer/void require reason code and audit events (7B-2 admin UI).
-* `Pos::TenderValidator` still rejects `gift_card` / `store_credit` until 7B-3.
-* `store_credit` / `gift_card` POS tenders enabled in 7B-3 only with `stored_value_account_id` and ledger posting on completion.
+* `Pos::TenderTypePolicy` enables `store_credit` / `gift_card` when actor has `pos.tenders.*` / `pos.refunds.store_credit`; settlement rows require `stored_value_account_id` (or customer-linked auto-resolve on returns).
+* POS completion posts stored value ledger via `Pos::PostStoredValueLedger`; void reverses via `Pos::ReverseStoredValueLedger`.
 * POS void reverses stored value ledger entries via `reverses_entry_id`; do not mutate originals.
 * Liability reporting is operational only — no GL export in 7B.
 

@@ -267,6 +267,50 @@ module PosHelper
     PosTender::PHASE6_ALLOWED_TYPES.map { |value| [ value.humanize, value ] }
   end
 
+  def pos_can_use_stored_value_tender?(transaction, tender_type, user = current_user)
+    Pos::TenderTypePolicy.allowed?(transaction, actor: user, tender_type:, store: transaction.store)
+  end
+
+  def pos_customer_stored_value_account(transaction, tender_type: "store_credit")
+    return if transaction.customer_id.blank?
+
+    account_type = Pos::StoredValueTenderSupport.default_account_type_for_tender(tender_type)
+    StoredValueAccount.active_records.find_by(
+      customer_id: transaction.customer_id,
+      issuing_store_id: transaction.store_id,
+      account_type: account_type
+    )
+  end
+
+  def pos_stored_value_tender_label(tender)
+    base = tender.tender_type == "gift_card" ? "Gift card" : "Store credit"
+    if tender.stored_value_identifier&.display_value_masked.present?
+      "#{base} #{tender.stored_value_identifier.display_value_masked}"
+    elsif tender.stored_value_account&.customer&.display_name.present?
+      "#{base} – #{tender.stored_value_account.customer.display_name}"
+    elsif tender.stored_value_account&.holder_name_snapshot.present?
+      "#{base} – #{tender.stored_value_account.holder_name_snapshot}"
+    else
+      base
+    end
+  end
+
+  def pos_stored_value_receipt_balance_cents(tender)
+    return unless tender.stored_value_account_id.present?
+
+    entry = StoredValueLedgerEntry.where(source: tender).order(posted_at: :desc, id: :desc).first
+    entry&.balance_after_cents || tender.stored_value_account&.current_balance_cents
+  end
+
+  def pos_stored_value_receipt_identifier_value(tender)
+    identifier = tender.stored_value_identifier
+    return if identifier.blank? || identifier.encrypted_value.blank?
+
+    StoredValue::IdentifierCodec.format_display(
+      StoredValue::IdentifierVault.decrypt(identifier.encrypted_value)
+    )
+  end
+
   def pos_card_brand_options
     PosTender::CARD_BRANDS.map { |brand| [ brand.humanize, brand ] }
   end
@@ -299,6 +343,10 @@ module PosHelper
       { label: label, amount: pos_money(amount_cents) }
     when "check"
       label = row.check_number.present? ? "Check ##{row.check_number}" : "Check"
+      amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
+      { label: label, amount: pos_money(amount_cents) }
+    when "store_credit", "gift_card"
+      label = pos_stored_value_tender_label(row)
       amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
       { label: label, amount: pos_money(amount_cents) }
     else
@@ -405,6 +453,12 @@ module PosHelper
       else
         "Cash"
       end
+    when "store_credit"
+      refund = tender.amount_cents.negative?
+      refund ? "Store credit issued" : "Store credit redeemed"
+    when "gift_card"
+      refund = tender.amount_cents.negative?
+      refund ? "Gift card credit issued" : "Gift card redeemed"
     else
       tender.tender_type.humanize
     end

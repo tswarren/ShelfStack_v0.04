@@ -12,6 +12,24 @@ module Phase7bTestHelper
     end
   end
 
+  def grant_pos_stored_value_tender_permissions!(user, store:)
+    %w[pos.tenders.store_credit pos.tenders.gift_card pos.refunds.store_credit].each do |key|
+      next if Authorization.allowed?(user: user, permission_key: key, store: store)
+
+      grant_permission!(user, key, store: store)
+    end
+  end
+
+  def issue_stored_value_credit!(account:, store:, actor:, amount_cents:)
+    StoredValue::Issue.call(
+      account: account,
+      store: store,
+      actor: actor,
+      amount_cents: amount_cents,
+      reason_code: stored_value_reason_code!("manual_issue")
+    )
+  end
+
   def create_stored_value_account!(attrs = {})
     attrs = attrs.dup
     store = attrs.delete(:issuing_store)

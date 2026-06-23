@@ -44,7 +44,14 @@ module Pos
         snapshot_lines!
         RecalculateTransaction.call!(transaction, business_date: register_session.business_date)
         transaction.transaction_type = DeriveTransactionType.call(transaction)
-        TenderValidator.validate!(transaction, pos_authorization_id: pos_authorization_id)
+        TenderValidator.validate!(transaction, actor: completed_by_user, pos_authorization_id: pos_authorization_id)
+        PostStoredValueLedger.call!(
+          transaction:,
+          actor: completed_by_user,
+          store: transaction.store
+        ).tap do |stored_value_result|
+          transaction.pos_generated_stored_value_identifiers = stored_value_result.generated_identifiers
+        end
         TransactionNumberAssigner.call!(transaction)
 
         transaction.status = "completed"

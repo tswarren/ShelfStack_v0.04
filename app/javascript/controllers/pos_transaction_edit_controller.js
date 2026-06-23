@@ -256,10 +256,13 @@ export default class extends Controller {
     if (rows.length === 0) return false
 
     rows.forEach((row) => {
+      const rowIndex = row.dataset.settlementIndex
+      if (!rowIndex) return
+
       if (row.dataset.destroyed === "true" || row.hidden) {
-        body.append("settlements[][id]", row.dataset.rowId || "")
-        body.append("settlements[][_destroy]", "1")
-        body.append("settlements[][tender_type]", row.dataset.settlementType || "")
+        body.append(`settlements[${rowIndex}][id]`, row.dataset.rowId || "")
+        body.append(`settlements[${rowIndex}][_destroy]`, "1")
+        body.append(`settlements[${rowIndex}][tender_type]`, row.dataset.settlementType || "")
         return
       }
 
