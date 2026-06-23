@@ -68,6 +68,195 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["workstation_id"], name: "index_audit_events_on_workstation_id"
   end
 
+  create_table "buyback_lines", force: :cascade do |t|
+    t.integer "accepted_offer_cents"
+    t.integer "accepted_resale_price_cents"
+    t.bigint "buyback_pricing_rule_id"
+    t.bigint "buyback_reject_reason_id"
+    t.bigint "buyback_session_id", null: false
+    t.bigint "catalog_item_id"
+    t.string "condition_snapshot"
+    t.datetime "created_at", null: false
+    t.bigint "created_catalog_item_id"
+    t.bigint "created_product_id"
+    t.bigint "created_product_variant_id"
+    t.string "creator_snapshot"
+    t.integer "current_selling_price_cents"
+    t.string "format_snapshot"
+    t.boolean "hold_for_review", default: false, null: false
+    t.string "identifier_entered"
+    t.string "identifier_normalized"
+    t.bigint "inventory_ledger_entry_id"
+    t.integer "line_number", null: false
+    t.integer "list_price_cents"
+    t.boolean "needs_cleaning", default: false, null: false
+    t.boolean "needs_label", default: true, null: false
+    t.boolean "needs_review", default: false, null: false
+    t.text "notes"
+    t.boolean "offer_overridden", default: false, null: false
+    t.string "outcome"
+    t.text "override_reason"
+    t.bigint "product_condition_id"
+    t.bigint "product_id"
+    t.bigint "product_variant_id"
+    t.integer "quantity", default: 1, null: false
+    t.boolean "resale_price_overridden", default: false, null: false
+    t.boolean "signed_copy", default: false, null: false
+    t.text "special_notes"
+    t.string "status", default: "pending", null: false
+    t.bigint "sub_department_id"
+    t.integer "suggested_cash_offer_cents"
+    t.integer "suggested_resale_price_cents"
+    t.integer "suggested_trade_credit_offer_cents"
+    t.string "title_snapshot"
+    t.datetime "updated_at", null: false
+    t.string "variant_sku_snapshot"
+    t.bigint "void_inventory_ledger_entry_id"
+    t.index ["buyback_pricing_rule_id"], name: "index_buyback_lines_on_buyback_pricing_rule_id"
+    t.index ["buyback_reject_reason_id"], name: "index_buyback_lines_on_buyback_reject_reason_id"
+    t.index ["buyback_session_id", "line_number"], name: "index_buyback_lines_on_buyback_session_id_and_line_number", unique: true
+    t.index ["buyback_session_id"], name: "index_buyback_lines_on_buyback_session_id"
+    t.index ["catalog_item_id"], name: "index_buyback_lines_on_catalog_item_id"
+    t.index ["created_catalog_item_id"], name: "index_buyback_lines_on_created_catalog_item_id"
+    t.index ["created_product_id"], name: "index_buyback_lines_on_created_product_id"
+    t.index ["created_product_variant_id"], name: "index_buyback_lines_on_created_product_variant_id"
+    t.index ["inventory_ledger_entry_id"], name: "index_buyback_lines_on_inventory_ledger_entry_id"
+    t.index ["product_condition_id"], name: "index_buyback_lines_on_product_condition_id"
+    t.index ["product_id"], name: "index_buyback_lines_on_product_id"
+    t.index ["product_variant_id"], name: "index_buyback_lines_on_product_variant_id"
+    t.index ["sub_department_id"], name: "index_buyback_lines_on_sub_department_id"
+    t.index ["void_inventory_ledger_entry_id"], name: "index_buyback_lines_on_void_inventory_ledger_entry_id"
+  end
+
+  create_table "buyback_pricing_rules", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "base_price_source", default: "variant_selling_price", null: false
+    t.integer "cash_offer_bps", null: false
+    t.datetime "created_at", null: false
+    t.integer "maximum_offer_cents"
+    t.integer "minimum_offer_cents", default: 0, null: false
+    t.string "name", null: false
+    t.bigint "product_condition_id"
+    t.integer "resale_price_factor_bps"
+    t.integer "rounding_increment_cents", default: 100, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.bigint "sub_department_id"
+    t.integer "trade_credit_offer_bps", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_condition_id"], name: "index_buyback_pricing_rules_on_product_condition_id"
+    t.index ["sub_department_id"], name: "index_buyback_pricing_rules_on_sub_department_id"
+  end
+
+  create_table "buyback_reject_reasons", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.string "reason_key", null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["reason_key"], name: "index_buyback_reject_reasons_on_reason_key", unique: true
+  end
+
+  create_table "buyback_sequences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "last_sequence", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workstation_id", null: false
+    t.index ["workstation_id"], name: "index_buyback_sequences_on_workstation_id", unique: true
+  end
+
+  create_table "buyback_sessions", force: :cascade do |t|
+    t.integer "accepted_payout_cents", default: 0, null: false
+    t.date "business_date"
+    t.string "buyback_number"
+    t.datetime "cancelled_at"
+    t.bigint "cancelled_by_user_id"
+    t.datetime "completed_at"
+    t.bigint "completed_by_user_id"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_user_id", null: false
+    t.bigint "customer_id", null: false
+    t.integer "donation_value_cents", default: 0, null: false
+    t.boolean "hold_for_review", default: false, null: false
+    t.bigint "inventory_posting_id"
+    t.boolean "needs_cleaning", default: false, null: false
+    t.boolean "needs_label", default: true, null: false
+    t.boolean "needs_review", default: false, null: false
+    t.text "notes"
+    t.string "payout_mode"
+    t.bigint "pos_cash_movement_id"
+    t.bigint "pos_register_session_id"
+    t.text "processing_notes"
+    t.datetime "quoted_at"
+    t.string "seller_address_line1_snapshot"
+    t.string "seller_address_line2_snapshot"
+    t.boolean "seller_age_confirmed", default: false, null: false
+    t.string "seller_city_snapshot"
+    t.string "seller_country_code_snapshot"
+    t.string "seller_display_name_snapshot"
+    t.string "seller_email_snapshot"
+    t.string "seller_first_name_snapshot"
+    t.boolean "seller_identity_verified", default: false, null: false
+    t.string "seller_last_name_snapshot"
+    t.string "seller_phone_snapshot"
+    t.string "seller_postal_code_snapshot"
+    t.string "seller_region_code_snapshot"
+    t.datetime "seller_signature_captured_at"
+    t.datetime "seller_terms_accepted_at"
+    t.string "status", default: "draft", null: false
+    t.bigint "store_id", null: false
+    t.bigint "stored_value_account_id"
+    t.bigint "stored_value_ledger_entry_id"
+    t.integer "total_cash_offer_cents", default: 0, null: false
+    t.integer "total_trade_credit_offer_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.text "void_reason"
+    t.datetime "voided_at"
+    t.bigint "voided_by_user_id"
+    t.bigint "workstation_id"
+    t.index ["buyback_number"], name: "index_buyback_sessions_on_buyback_number", unique: true, where: "(buyback_number IS NOT NULL)"
+    t.index ["cancelled_by_user_id"], name: "index_buyback_sessions_on_cancelled_by_user_id"
+    t.index ["completed_by_user_id"], name: "index_buyback_sessions_on_completed_by_user_id"
+    t.index ["created_by_user_id"], name: "index_buyback_sessions_on_created_by_user_id"
+    t.index ["customer_id"], name: "index_buyback_sessions_on_customer_id"
+    t.index ["inventory_posting_id"], name: "index_buyback_sessions_on_inventory_posting_id"
+    t.index ["pos_cash_movement_id"], name: "index_buyback_sessions_on_pos_cash_movement_id"
+    t.index ["pos_register_session_id"], name: "index_buyback_sessions_on_pos_register_session_id"
+    t.index ["store_id", "status"], name: "index_buyback_sessions_on_store_id_and_status"
+    t.index ["store_id"], name: "index_buyback_sessions_on_store_id"
+    t.index ["stored_value_account_id"], name: "index_buyback_sessions_on_stored_value_account_id"
+    t.index ["stored_value_ledger_entry_id"], name: "index_buyback_sessions_on_stored_value_ledger_entry_id"
+    t.index ["voided_by_user_id"], name: "index_buyback_sessions_on_voided_by_user_id"
+    t.index ["workstation_id"], name: "index_buyback_sessions_on_workstation_id"
+  end
+
+  create_table "buyback_voids", force: :cascade do |t|
+    t.bigint "buyback_session_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "inventory_posting_id"
+    t.text "notes"
+    t.bigint "pos_authorization_id"
+    t.bigint "pos_register_session_id"
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "void_cash_movement_id"
+    t.text "void_reason", null: false
+    t.bigint "void_stored_value_ledger_entry_id"
+    t.datetime "voided_at", null: false
+    t.bigint "voided_by_user_id", null: false
+    t.bigint "workstation_id", null: false
+    t.index ["buyback_session_id"], name: "index_buyback_voids_on_buyback_session_id", unique: true
+    t.index ["inventory_posting_id"], name: "index_buyback_voids_on_inventory_posting_id"
+    t.index ["pos_authorization_id"], name: "index_buyback_voids_on_pos_authorization_id"
+    t.index ["pos_register_session_id"], name: "index_buyback_voids_on_pos_register_session_id"
+    t.index ["store_id"], name: "index_buyback_voids_on_store_id"
+    t.index ["void_cash_movement_id"], name: "index_buyback_voids_on_void_cash_movement_id"
+    t.index ["void_stored_value_ledger_entry_id"], name: "index_buyback_voids_on_void_stored_value_ledger_entry_id"
+    t.index ["voided_by_user_id"], name: "index_buyback_voids_on_voided_by_user_id"
+    t.index ["workstation_id"], name: "index_buyback_voids_on_workstation_id"
+  end
+
   create_table "catalog_item_identifiers", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.bigint "catalog_item_id", null: false
@@ -95,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "bisac_subjects"
     t.string "catalog_item_type", null: false
     t.datetime "created_at", null: false
+    t.bigint "created_from_buyback_session_id"
     t.jsonb "creator_details"
     t.string "creators"
     t.decimal "depth", precision: 10, scale: 2
@@ -109,6 +299,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.decimal "height", precision: 10, scale: 2
     t.string "language_code", limit: 10
     t.boolean "large_print", default: false, null: false
+    t.boolean "needs_review", default: false, null: false
     t.integer "page_count"
     t.date "publication_date"
     t.string "publication_frequency"
@@ -118,6 +309,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.jsonb "series_data"
     t.string "series_enumeration", limit: 15
     t.string "series_name"
+    t.string "source", default: "manual", null: false
     t.bigint "store_category_id"
     t.jsonb "target_audience_data"
     t.string "target_audiences"
@@ -131,6 +323,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "year", limit: 4
     t.index ["active"], name: "index_catalog_items_on_active"
     t.index ["catalog_item_type"], name: "index_catalog_items_on_catalog_item_type"
+    t.index ["created_from_buyback_session_id"], name: "index_catalog_items_on_created_from_buyback_session_id"
     t.index ["format_id"], name: "index_catalog_items_on_format_id"
     t.index ["publication_status"], name: "index_catalog_items_on_publication_status"
     t.index ["publisher"], name: "index_catalog_items_on_publisher"
@@ -278,20 +471,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
 
   create_table "customers", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.string "address_line1"
+    t.string "address_line2"
+    t.string "city"
+    t.string "country_code", default: "US", null: false
     t.datetime "created_at", null: false
+    t.bigint "created_by_user_id"
+    t.string "customer_number"
+    t.date "date_of_birth"
     t.string "display_name", null: false
     t.string "email"
+    t.string "email_normalized"
+    t.string "first_name"
     t.bigint "home_store_id"
+    t.string "last_name"
+    t.bigint "merged_into_customer_id"
     t.text "notes"
     t.string "phone"
+    t.string "phone_normalized"
+    t.string "postal_code"
     t.string "preferred_contact_method"
+    t.string "region_code"
     t.datetime "updated_at", null: false
+    t.bigint "updated_by_user_id"
     t.index ["active"], name: "index_customers_on_active"
+    t.index ["created_by_user_id"], name: "index_customers_on_created_by_user_id"
     t.index ["display_name"], name: "index_customers_on_display_name"
     t.index ["display_name"], name: "index_customers_on_display_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["email"], name: "index_customers_on_email_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["home_store_id"], name: "index_customers_on_home_store_id"
+    t.index ["merged_into_customer_id"], name: "index_customers_on_merged_into_customer_id"
     t.index ["phone"], name: "index_customers_on_phone_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["updated_by_user_id"], name: "index_customers_on_updated_by_user_id"
   end
 
   create_table "departments", force: :cascade do |t|
@@ -668,10 +879,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "reason_code"
     t.datetime "recorded_at", null: false
     t.bigint "recorded_by_user_id", null: false
+    t.bigint "reverses_cash_movement_id"
+    t.bigint "source_id"
+    t.string "source_type"
     t.bigint "store_id", null: false
     t.datetime "updated_at", null: false
     t.index ["pos_register_session_id"], name: "index_pos_cash_movements_on_pos_register_session_id"
     t.index ["recorded_by_user_id"], name: "index_pos_cash_movements_on_recorded_by_user_id"
+    t.index ["reverses_cash_movement_id"], name: "index_pos_cash_movements_on_reverses_cash_movement_id"
+    t.index ["source_type", "source_id"], name: "index_pos_cash_movements_on_source_type_and_source_id"
     t.index ["store_id"], name: "index_pos_cash_movements_on_store_id"
   end
 
@@ -857,6 +1073,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
 
   create_table "product_conditions", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.boolean "buyback_default", default: false, null: false
+    t.boolean "buyback_eligible", default: false, null: false
+    t.integer "buyback_price_factor_bps"
+    t.boolean "buyback_requires_review", default: false, null: false
+    t.integer "buyback_sort_order"
     t.string "condition_key", null: false
     t.datetime "created_at", null: false
     t.integer "default_list_price_factor_bps", default: 10000, null: false
@@ -902,20 +1123,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "attribute2_value"
     t.bigint "condition_id"
     t.datetime "created_at", null: false
+    t.bigint "created_from_buyback_session_id"
     t.bigint "display_location_id"
     t.string "inventory_behavior", default: "standard_physical", null: false
     t.string "name", null: false
     t.string "name_override"
+    t.boolean "needs_review", default: false, null: false
     t.string "pricing_model_override"
     t.bigint "product_id", null: false
     t.string "returnability_status", default: "unknown", null: false
     t.integer "selling_price_cents", default: 0, null: false
     t.string "short_name", limit: 40
     t.string "sku", limit: 50, null: false
+    t.string "source", default: "manual", null: false
     t.bigint "sub_department_id", null: false
     t.datetime "updated_at", null: false
     t.index ["active"], name: "index_product_variants_on_active"
     t.index ["condition_id"], name: "index_product_variants_on_condition_id"
+    t.index ["created_from_buyback_session_id"], name: "index_product_variants_on_created_from_buyback_session_id"
     t.index ["display_location_id"], name: "index_product_variants_on_display_location_id"
     t.index ["inventory_behavior"], name: "index_product_variants_on_inventory_behavior"
     t.index ["pricing_model_override"], name: "index_product_variants_on_pricing_model_override"
@@ -948,20 +1173,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.boolean "active", default: true, null: false
     t.bigint "catalog_item_id"
     t.datetime "created_at", null: false
+    t.bigint "created_from_buyback_session_id"
     t.bigint "default_display_location_id"
     t.bigint "default_sub_department_id"
     t.integer "list_price_cents", default: 0, null: false
     t.string "name", null: false
     t.string "name_override"
+    t.boolean "needs_review", default: false, null: false
     t.string "product_type", default: "physical", null: false
     t.string "short_name", limit: 40
     t.string "sku", limit: 50, null: false
+    t.string "source", default: "manual", null: false
     t.datetime "updated_at", null: false
     t.string "variant1_label"
     t.string "variant2_label"
     t.string "variation_type", default: "standard", null: false
     t.index ["active"], name: "index_products_on_active"
     t.index ["catalog_item_id"], name: "index_products_on_catalog_item_id"
+    t.index ["created_from_buyback_session_id"], name: "index_products_on_created_from_buyback_session_id"
     t.index ["default_display_location_id"], name: "index_products_on_default_display_location_id"
     t.index ["default_sub_department_id"], name: "index_products_on_default_sub_department_id"
     t.index ["name"], name: "index_products_on_name"
@@ -1671,7 +1900,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "audit_events", "user_sessions"
   add_foreign_key "audit_events", "users", column: "actor_user_id"
   add_foreign_key "audit_events", "workstations"
+  add_foreign_key "buyback_lines", "buyback_pricing_rules"
+  add_foreign_key "buyback_lines", "buyback_reject_reasons"
+  add_foreign_key "buyback_lines", "buyback_sessions"
+  add_foreign_key "buyback_lines", "catalog_items"
+  add_foreign_key "buyback_lines", "catalog_items", column: "created_catalog_item_id"
+  add_foreign_key "buyback_lines", "inventory_ledger_entries"
+  add_foreign_key "buyback_lines", "inventory_ledger_entries", column: "void_inventory_ledger_entry_id"
+  add_foreign_key "buyback_lines", "product_conditions"
+  add_foreign_key "buyback_lines", "product_variants"
+  add_foreign_key "buyback_lines", "product_variants", column: "created_product_variant_id"
+  add_foreign_key "buyback_lines", "products"
+  add_foreign_key "buyback_lines", "products", column: "created_product_id"
+  add_foreign_key "buyback_lines", "sub_departments"
+  add_foreign_key "buyback_pricing_rules", "product_conditions"
+  add_foreign_key "buyback_pricing_rules", "sub_departments"
+  add_foreign_key "buyback_sequences", "workstations"
+  add_foreign_key "buyback_sessions", "customers"
+  add_foreign_key "buyback_sessions", "inventory_postings"
+  add_foreign_key "buyback_sessions", "pos_cash_movements"
+  add_foreign_key "buyback_sessions", "pos_register_sessions"
+  add_foreign_key "buyback_sessions", "stored_value_accounts"
+  add_foreign_key "buyback_sessions", "stored_value_ledger_entries"
+  add_foreign_key "buyback_sessions", "stores"
+  add_foreign_key "buyback_sessions", "users", column: "cancelled_by_user_id"
+  add_foreign_key "buyback_sessions", "users", column: "completed_by_user_id"
+  add_foreign_key "buyback_sessions", "users", column: "created_by_user_id"
+  add_foreign_key "buyback_sessions", "users", column: "voided_by_user_id"
+  add_foreign_key "buyback_sessions", "workstations"
+  add_foreign_key "buyback_voids", "buyback_sessions"
+  add_foreign_key "buyback_voids", "inventory_postings"
+  add_foreign_key "buyback_voids", "pos_authorizations"
+  add_foreign_key "buyback_voids", "pos_cash_movements", column: "void_cash_movement_id"
+  add_foreign_key "buyback_voids", "pos_register_sessions"
+  add_foreign_key "buyback_voids", "stored_value_ledger_entries", column: "void_stored_value_ledger_entry_id"
+  add_foreign_key "buyback_voids", "stores"
+  add_foreign_key "buyback_voids", "users", column: "voided_by_user_id"
+  add_foreign_key "buyback_voids", "workstations"
   add_foreign_key "catalog_item_identifiers", "catalog_items"
+  add_foreign_key "catalog_items", "buyback_sessions", column: "created_from_buyback_session_id"
   add_foreign_key "catalog_items", "category_nodes", column: "store_category_id"
   add_foreign_key "catalog_items", "formats"
   add_foreign_key "categorizations", "category_nodes"
@@ -1692,7 +1959,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "customer_requests", "stores"
   add_foreign_key "customer_requests", "users", column: "assigned_to_user_id"
   add_foreign_key "customer_requests", "users", column: "created_by_user_id"
+  add_foreign_key "customers", "customers", column: "merged_into_customer_id"
   add_foreign_key "customers", "stores", column: "home_store_id"
+  add_foreign_key "customers", "users", column: "created_by_user_id"
+  add_foreign_key "customers", "users", column: "updated_by_user_id"
   add_foreign_key "display_locations", "display_locations", column: "parent_id"
   add_foreign_key "external_catalog_imports", "catalog_items"
   add_foreign_key "external_catalog_imports", "external_data_sources"
@@ -1742,6 +2012,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_authorizations", "stores"
   add_foreign_key "pos_authorizations", "users", column: "granted_by_user_id"
   add_foreign_key "pos_authorizations", "users", column: "requested_by_user_id"
+  add_foreign_key "pos_cash_movements", "pos_cash_movements", column: "reverses_cash_movement_id"
   add_foreign_key "pos_cash_movements", "pos_register_sessions"
   add_foreign_key "pos_cash_movements", "stores"
   add_foreign_key "pos_cash_movements", "users", column: "recorded_by_user_id"
@@ -1783,12 +2054,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_workstation_sequences", "workstations"
   add_foreign_key "product_variant_vendors", "product_variants"
   add_foreign_key "product_variant_vendors", "vendors"
+  add_foreign_key "product_variants", "buyback_sessions", column: "created_from_buyback_session_id"
   add_foreign_key "product_variants", "display_locations"
   add_foreign_key "product_variants", "product_conditions", column: "condition_id"
   add_foreign_key "product_variants", "products"
   add_foreign_key "product_variants", "sub_departments"
   add_foreign_key "product_vendors", "products"
   add_foreign_key "product_vendors", "vendors"
+  add_foreign_key "products", "buyback_sessions", column: "created_from_buyback_session_id"
   add_foreign_key "products", "catalog_items"
   add_foreign_key "products", "display_locations", column: "default_display_location_id"
   add_foreign_key "products", "sub_departments", column: "default_sub_department_id"

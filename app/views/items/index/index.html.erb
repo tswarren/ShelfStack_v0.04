@@ -50,6 +50,10 @@
       <%= check_box_tag :include_inactive, "1", @include_inactive %>
       Include inactive
     <% end %>
+    <%= label_tag :needs_review_intake, class: "ss-checkbox-label" do %>
+      <%= check_box_tag :needs_review_intake, "1", @needs_review_intake %>
+      Buyback intake needs review
+    <% end %>
     <%= submit_tag @query.present? ? "Search" : "Apply filters", class: "ss-btn" %>
     <%= link_to "Clear filters", items_root_path(request_match_path_options), class: "ss-btn ss-btn-secondary" %>
   </div>

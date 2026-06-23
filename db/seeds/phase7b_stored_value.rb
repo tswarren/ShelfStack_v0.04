@@ -10,7 +10,9 @@ module Seeds
       { reason_key: "promo", name: "Promotional Credit", description: "Promotional credit issuance" },
       { reason_key: "migration", name: "Legacy Migration", description: "Imported legacy balance" },
       { reason_key: "pos_return_credit", name: "POS Return Credit", description: "Credit issued from POS return or exchange" },
-      { reason_key: "pos_gift_card_sale", name: "POS Gift Card Sale", description: "Gift card value issued from POS sale or reload" }
+      { reason_key: "pos_gift_card_sale", name: "POS Gift Card Sale", description: "Gift card value issued from POS sale or reload" },
+      { reason_key: "buyback_trade_credit_issue", name: "Buyback Trade Credit Issue", description: "Trade credit issued from used buyback" },
+      { reason_key: "buyback_trade_credit_void", name: "Buyback Trade Credit Void", description: "Void of buyback trade credit issue" }
     ].freeze
 
     def self.seed!

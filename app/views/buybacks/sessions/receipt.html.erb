@@ -1,0 +1,26 @@
+<h1>Buyback receipt</h1>
+<p><strong><%= @receipt.session.buyback_number %></strong></p>
+<p>Seller: <%= @receipt.session.seller_display_name_snapshot || @receipt.session.customer.display_name %></p>
+<p>Payout: <%= @receipt.payout_label %> — <%= buyback_money(@receipt.session.accepted_payout_cents) %></p>
+
+<% if @receipt.identifier_display.present? %>
+  <p>Trade credit identifier: <strong><%= @receipt.identifier_display %></strong></p>
+  <p class="ss-muted">Present this identifier at POS or select the trade credit account in Customers to redeem.</p>
+<% end %>
+
+<table class="ss-table">
+  <thead>
+    <tr><th>Line</th><th>Item</th><th>Offer</th></tr>
+  </thead>
+  <tbody>
+    <% @receipt.lines.each do |line| %>
+      <tr>
+        <td><%= line.line_number %></td>
+        <td><%= line.title_snapshot %></td>
+        <td><%= buyback_money(line.accepted_offer_cents) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p><%= link_to "Back to session", buybacks_session_path(@receipt.session) %></p>

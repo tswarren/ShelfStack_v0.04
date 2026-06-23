@@ -6,6 +6,12 @@
   description: "Basic contact details for requests, holds, and pickup."
 } do %>
   <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :first_name } do %>
+      <%= f.text_field :first_name, autocomplete: "given-name" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :last_name } do %>
+      <%= f.text_field :last_name, autocomplete: "family-name" %>
+    <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :display_name, required: true } do %>
       <%= f.text_field :display_name, autocomplete: "name" %>
     <% end %>
@@ -24,4 +30,30 @@
   <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :notes } do %>
     <%= f.text_area :notes, rows: 4 %>
   <% end %>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Address",
+  description: "Required for buyback seller identity."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :address_line1, label: "Address line 1" } do %>
+      <%= f.text_field :address_line1, autocomplete: "address-line1" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :address_line2, label: "Address line 2" } do %>
+      <%= f.text_field :address_line2, autocomplete: "address-line2" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :city } do %>
+      <%= f.text_field :city, autocomplete: "address-level2" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :region_code, label: "State / province" } do %>
+      <%= f.text_field :region_code, autocomplete: "address-level1" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :postal_code, label: "Postal code" } do %>
+      <%= f.text_field :postal_code, autocomplete: "postal-code" %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: customer, field: :country_code, label: "Country" } do %>
+      <%= f.text_field :country_code, maxlength: 2, autocomplete: "country" %>
+    <% end %>
+  </div>
 <% end %>

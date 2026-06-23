@@ -21,6 +21,11 @@
   <% else %>
     <span class="disabled">Customers</span>
   <% end %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "buybacks.view", store: current_store) %>
+    <%= link_to "Buybacks", buybacks_root_path, class: (request.path.start_with?("/buybacks") ? "active" : nil) %>
+  <% else %>
+    <span class="disabled">Buybacks</span>
+  <% end %>
   <span class="disabled">Reports</span>
   <%= link_to "Setup", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>
 </nav>

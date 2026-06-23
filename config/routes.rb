@@ -305,6 +305,31 @@ Rails.application.routes.draw do
     resources :stored_value_reports, only: %i[index]
   end
 
+  namespace :buybacks do
+    root to: "home#show"
+    get "locked_out", to: "home#locked_out"
+    resources :reports, only: %i[index]
+    resources :sessions, only: %i[new create show update] do
+      member do
+        patch :complete
+        patch :cancel
+        patch :void
+        get :receipt
+      end
+      resources :lines, only: %i[create update] do
+        member do
+          post :accept
+          post :reject
+          post :resolve
+          post :select_variant
+          post :intake
+          patch :price_override
+          patch :offer_override
+        end
+      end
+    end
+  end
+
   namespace :orders do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"

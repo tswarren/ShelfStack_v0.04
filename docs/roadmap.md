@@ -27,7 +27,8 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 6.5 | External Catalog Lookup       | Real-time ISBN local-first lookup via ISBNdb, candidate preview, controlled catalog import, and Add Item wizard integration. **Complete.** |
 | Phase 7A | Customer Demand               | Customers, requests, special orders, holds/reservations, PO/receipt allocations, ready-for-pickup, POS fulfillment. **Complete.** |
 | Phase 7B | Customer Credit Foundation    | POS multi-row settlement (7B-1), stored value accounts/ledger (7B-2), POS issue/redeem (7B-3). **Complete.** |
-| Phase 7 | Advanced Store Operations       | Transfers, cycle counts, buybacks, and remaining operational workflows.                                      |
+| Phase 7C | Used Buyback                  | Customer-required buyback sessions, graded used variants, cash/trade-credit/donation payout, inventory posting. **Complete** (2026-06-23). |
+| Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
 | Phase 8 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
 Later phases may be split or reordered as implementation details become clearer.

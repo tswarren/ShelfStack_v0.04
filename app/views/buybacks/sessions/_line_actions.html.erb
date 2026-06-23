@@ -1,0 +1,28 @@
+<%# locals: line, session, conditions, sub_departments, reject_reasons %>
+<% if line.product_variant.blank? %>
+  <%= button_to "Resolve",
+        resolve_buybacks_session_line_path(session, line),
+        method: :post,
+        class: "ss-btn ss-btn-secondary ss-btn--small",
+        form: { data: { turbo_frame: dom_id(line, :resolve) } } %>
+  <%= turbo_frame_tag dom_id(line, :resolve) do %>
+    <p class="ss-muted ss-hint">Click Resolve to search catalog matches.</p>
+  <% end %>
+  <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline" do %>
+    <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment" %>
+    <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
+    <%= submit_tag "Create new catalog item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+  <% end %>
+<% else %>
+  <%= form_with url: accept_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline" do %>
+    <%= hidden_field_tag :product_variant_id, line.product_variant_id %>
+    <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name, line.product_condition_id), include_blank: false %>
+    <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name, line.sub_department_id), include_blank: false %>
+    <%= submit_tag "Accept", class: "ss-btn ss-btn--small" %>
+  <% end %>
+  <%= form_with url: reject_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline" do %>
+    <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
+    <%= hidden_field_tag :outcome, "rejected_returned_to_seller" %>
+    <%= submit_tag "Reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+  <% end %>
+<% end %>

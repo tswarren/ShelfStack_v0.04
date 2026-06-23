@@ -21,6 +21,7 @@ class CatalogItem < ApplicationRecord
 
   belongs_to :format
   belongs_to :store_category, class_name: "CategoryNode", optional: true
+  belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
   has_many :catalog_item_identifiers, dependent: :destroy
   has_many :products, dependent: :restrict_with_error
   has_many :external_catalog_imports, dependent: :restrict_with_error

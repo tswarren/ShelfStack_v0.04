@@ -1,0 +1,37 @@
+<h1>Buyback reports</h1>
+
+<%= form_with url: buybacks_reports_path, method: :get, class: "ss-form ss-form-inline" do %>
+  <%= date_field_tag :start_date, params[:start_date] %>
+  <%= date_field_tag :end_date, params[:end_date] %>
+  <%= submit_tag "Filter", class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<dl class="ss-stats-grid">
+  <div><dt>Sessions</dt><dd><%= @summary.session_count %></dd></div>
+  <div><dt>Completed</dt><dd><%= @summary.completed_count %></dd></div>
+  <div><dt>Voided</dt><dd><%= @summary.voided_count %></dd></div>
+  <div><dt>Cash paid</dt><dd><%= buyback_money(@summary.cash_paid_cents) %></dd></div>
+  <div><dt>Trade credit</dt><dd><%= buyback_money(@summary.trade_credit_issued_cents) %></dd></div>
+  <div><dt>Donations</dt><dd><%= @summary.donation_count %></dd></div>
+  <div><dt>Overrides</dt><dd><%= @summary.override_count %></dd></div>
+</dl>
+
+<h2>Activity</h2>
+<table class="ss-table">
+  <thead>
+    <tr><th>Number</th><th>Status</th><th>Payout</th><th>Total</th><th>Date</th></tr>
+  </thead>
+  <tbody>
+    <% @activity.each do |session| %>
+      <tr>
+        <td><%= link_to session.buyback_number.presence || session.id, buybacks_session_path(session) %></td>
+        <td><%= session.status %></td>
+        <td><%= session.payout_mode %></td>
+        <td><%= buyback_money(session.accepted_payout_cents) %></td>
+        <td><%= session.created_at %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p><%= link_to "Back to buybacks", buybacks_root_path %></p>

@@ -9,6 +9,7 @@ class PosAuthorization < ApplicationRecord
     inactive_sell
     void_transaction
     sell_reserved_stock_override
+    void_buyback
     other
   ].freeze
 

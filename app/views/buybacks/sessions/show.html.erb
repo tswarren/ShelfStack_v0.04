@@ -1,0 +1,96 @@
+<div class="ss-page-header">
+  <div>
+    <h1><%= @buyback_session.buyback_number.presence || "Buyback session ##{@buyback_session.id}" %></h1>
+    <p class="ss-muted">Seller: <%= @buyback_session.customer.display_name %> · <%= buyback_status_label(@buyback_session.status) %></p>
+  </div>
+  <div>
+    <% if @buyback_session.completed? %>
+      <%= link_to "Receipt", receipt_buybacks_session_path(@buyback_session), class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+    <% if current_register_session %>
+      <%= link_to "Register session", pos_register_session_path(current_register_session), class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
+</div>
+
+<% if @buyback_session.editable? %>
+  <%= form_with model: @buyback_session, url: buybacks_session_path(@buyback_session), method: :patch, class: "ss-form" do |f| %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <div>
+        <%= f.label :payout_mode, "Payout mode" %>
+        <%= f.select :payout_mode, buyback_payout_options, include_blank: "Select payout mode" %>
+      </div>
+      <div>
+        <%= f.label :processing_notes, "Processing notes" %>
+        <%= f.text_area :processing_notes, rows: 2 %>
+      </div>
+    </div>
+    <div class="ss-form-grid ss-form-grid--4">
+      <%= render "shared/forms/checkbox", f: f, record: @buyback_session, field: :needs_label %>
+      <%= render "shared/forms/checkbox", f: f, record: @buyback_session, field: :needs_review %>
+      <%= render "shared/forms/checkbox", f: f, record: @buyback_session, field: :needs_cleaning %>
+      <%= render "shared/forms/checkbox", f: f, record: @buyback_session, field: :hold_for_review %>
+    </div>
+    <%= f.submit "Save session", class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+
+  <section class="ss-panel">
+    <h2>Add line</h2>
+    <%= form_with url: buybacks_session_lines_path(@buyback_session), class: "ss-form ss-form-inline" do %>
+      <%= text_field_tag :identifier, nil, placeholder: "ISBN / identifier" %>
+      <%= text_field_tag :title, nil, placeholder: "Title (if no identifier)" %>
+      <%= submit_tag "Add line", class: "ss-btn" %>
+    <% end %>
+  </section>
+<% end %>
+
+<section class="ss-panel">
+  <h2>Lines</h2>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th>Condition</th>
+        <th>Resale</th>
+        <th>Offer</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @lines.each do |line| %>
+        <tr id="line-<%= line.id %>">
+          <td><%= line.line_number %></td>
+          <td><%= line.title_snapshot %><% if line.variant_sku_snapshot.present? %> <span class="ss-muted">(<%= line.variant_sku_snapshot %>)</span><% end %></td>
+          <td><%= line.condition_snapshot || line.product_condition&.name %></td>
+          <td><%= buyback_money(line.accepted_resale_price_cents || line.suggested_resale_price_cents) %></td>
+          <td><%= buyback_money(line.accepted_offer_cents || line.suggested_cash_offer_cents) %></td>
+          <td><%= line.status %></td>
+          <td>
+            <% if @buyback_session.editable? %>
+              <%= render "buybacks/sessions/line_actions", line: line, session: @buyback_session, conditions: @conditions, sub_departments: @sub_departments, reject_reasons: @reject_reasons %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<% if @buyback_session.editable? %>
+  <footer class="ss-form-actions">
+    <%= button_to "Complete buyback", complete_buybacks_session_path(@buyback_session), method: :patch, class: "ss-btn", data: { turbo_confirm: "Complete this buyback?" } %>
+    <%= button_to "Cancel session", cancel_buybacks_session_path(@buyback_session), method: :patch, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Cancel this session?" } %>
+  </footer>
+<% elsif @buyback_session.completed? %>
+  <%= form_with url: void_buybacks_session_path(@buyback_session), method: :patch, class: "ss-form" do %>
+    <%= text_field_tag :void_reason, nil, placeholder: "Void reason", required: true %>
+    <%= hidden_field_tag :pos_authorization_id, nil %>
+    <%= submit_tag "Void buyback", class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Void this completed buyback?" } %>
+  <% end %>
+<% end %>
+
+<% if @receipt&.identifier_display.present? %>
+  <p class="ss-hint">Trade credit identifier: <strong><%= @receipt.identifier_display %></strong></p>
+<% end %>

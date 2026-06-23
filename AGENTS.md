@@ -140,6 +140,15 @@ docs/specifications/phase-7b-data-model.md
 docs/specifications/phase-7b-test-plan.md
 ```
 
+## Phase 7C Documents
+
+```text
+docs/roadmap/phase-7c-used-buyback.md
+docs/specifications/phase-7c-used-buyback-spec.md
+docs/specifications/phase-7c-data-model.md
+docs/specifications/phase-7c-test-plan.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -193,6 +202,15 @@ Phase 7B was completed on 2026-06-21. See [docs/implementation/phase-7b-2-comple
 The canonical stored value model (`stored_value_*` tables) supersedes earlier `gift_card_accounts` / `store_credit_accounts` future-table language. Do not implement separate account tables.
 
 Do not jump ahead to offline POS or full GL unless explicitly requested.
+
+## Phase 7C: Used Buyback — **Complete**
+
+Phase 7C was completed on 2026-06-23. See [docs/implementation/phase-7c-completion.md](docs/implementation/phase-7c-completion.md).
+
+- Buyback workspace at `/buybacks`; single payout mode per session (cash OR trade_credit OR no_value_donation)
+- Completion: `used_buyback` inventory posting, `source: BuybackSession`; void via `buyback_voids` + `buyback_void` posting
+- Workstation-scoped buyback numbers: `{store_number}-{workstation_number}-B{sequence:06d}`
+- Trade credit issues to `trade_credit` account with identifier for POS redemption
 
 ---
 
@@ -253,6 +271,11 @@ StoredValue::IdentifierCodec
 StoredValue::RebuildBalances
 StoredValue::BalanceIntegrityCheck
 StoredValue::LiabilityReport
+Buybacks::CompleteSession
+Buybacks::VoidSession
+Buybacks::PostVoidInventory
+Buybacks::PriceLine
+Buybacks::ResolveItem
 Purchasing::ReturnabilityResolver
 Purchasing::VendorCostCalculator
 Purchasing::SourcingLookup
@@ -581,6 +604,16 @@ product_variants.sub_department_id → sub_departments.id
 * POS completion posts stored value ledger via `Pos::PostStoredValueLedger` (tenders) and `Pos::PostGiftCardSaleLedger` (gift card sale lines); void reverses both via `Pos::ReverseStoredValueLedger`.
 * POS void reverses stored value ledger entries via `reverses_entry_id`; do not mutate originals.
 * Liability reporting is operational only — no GL export in 7B.
+
+## Phase 7C Rules
+
+* Dual eligibility: `sub_department.buyback_allowed` AND `product_condition.buyback_eligible`.
+* Single payout mode per session: `cash`, `trade_credit`, or `no_value_donation` (never both cash and credit).
+* Completion inventory: `posting_type: used_buyback`, `source: BuybackSession`; void: `posting_type: buyback_void`, `source: BuybackVoid`.
+* Movement type `used_buyback` for original and reversal lines; cost sources `buyback_offer` / `no_value_donation`.
+* Workstation-scoped buyback numbers via `buyback_sequences`.
+* Trade credit issues to `trade_credit` account; POS redemption via identifier or explicit account only.
+* `merged_into_customer_id` is schema-only in 7C; no merge workflow.
 
 ---
 

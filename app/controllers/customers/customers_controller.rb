@@ -72,7 +72,9 @@ module Customers
 
     def customer_params
       params.require(:customer).permit(
-        :display_name, :email, :phone, :preferred_contact_method, :notes, :home_store_id
+        :display_name, :first_name, :last_name,
+        :address_line1, :address_line2, :city, :region_code, :postal_code, :country_code,
+        :email, :phone, :preferred_contact_method, :notes, :home_store_id
       )
     end
 
@@ -97,7 +99,7 @@ module Customers
 
       uri = URI.parse(path)
       return nil unless uri.host.nil? || uri.host == request.host
-      return nil unless uri.path.start_with?("/customers")
+      return nil unless uri.path.start_with?("/customers", "/buybacks")
 
       path
     rescue URI::InvalidURIError
