@@ -4,11 +4,16 @@
 <% row_amount_cents = row.tender_type == "cash" ? (refund ? display_amount : pos_tendered_display_cents(row).to_i) : display_amount.to_i %>
 <% collapsed = row_amount_cents.positive? %>
 <% summary_parts = pos_settlement_row_summary_parts(row, transaction) %>
+<% stored_value_balance_cents = if !refund && row.tender_type.in?(%w[store_credit gift_card])
+     row.stored_value_account&.current_balance_cents ||
+       pos_customer_stored_value_account(transaction, tender_type: row.tender_type)&.current_balance_cents
+   end %>
 <tr class="ss-pos-settlement-row"
     data-settlement-row
     data-settlement-type="<%= row.tender_type %>"
     data-row-id="<%= row.id %>"
     data-settlement-index="<%= row_index %>"
+    <% if stored_value_balance_cents.present? %>data-stored-value-balance-cents="<%= stored_value_balance_cents %>"<% end %>
     data-collapsed="<%= collapsed %>"
     data-pos-settlement-panel-target="row">
   <td class="ss-pos-settlement-row__label-cell">

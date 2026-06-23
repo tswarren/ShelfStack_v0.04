@@ -115,6 +115,44 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
     assert tender.stored_value_identifier_id.present?
   end
 
+  test "caps store credit redemption to account balance" do
+    low_balance_account = create_stored_value_account!(issuing_store: @store, current_balance_cents: 2500)
+
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: 2, unit_price_cents: 3000, extended_price_cents: 6000 } ]
+    )
+    Pos::RecalculateTransaction.call!(transaction, business_date: @session.business_date)
+    total = transaction.total_cents
+    capped = Pos::StoredValueTenderSupport.capped_redeem_amount_cents(
+      transaction:,
+      tender_type: "store_credit",
+      amount_cents: total,
+      account: low_balance_account
+    )
+
+    Pos::SettlementSync.call!(
+      transaction: transaction,
+      tender_inputs: [
+        {
+          tender_type: "store_credit",
+          amount_cents: total,
+          stored_value_account_id: low_balance_account.id
+        },
+        {
+          tender_type: "cash",
+          amount_cents: total - capped
+        }
+      ],
+      actor: @user
+    )
+
+    tender = transaction.pos_tenders.settlement_rows.find_by!(tender_type: "store_credit")
+    assert_equal 2500, tender.amount_cents
+  end
+
   test "lookup endpoint returns masked account details" do
     identifier = generate_test_identifier!(account: @account, actor: @user)
     raw = StoredValue::IdentifierVault.decrypt(identifier.encrypted_value)

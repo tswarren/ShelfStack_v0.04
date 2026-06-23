@@ -53,5 +53,16 @@ module Pos
         !Pos::TenderTypePolicy.refund_transaction?(transaction) &&
         tender.amount_cents.positive?
     end
+
+    def capped_redeem_amount_cents(transaction:, tender_type:, amount_cents:, stored_value_account_id: nil, account: nil)
+      return amount_cents unless stored_value_tender?(tender_type)
+      return amount_cents if Pos::TenderTypePolicy.refund_transaction?(transaction)
+      return amount_cents unless amount_cents.to_i.positive?
+
+      account ||= StoredValueAccount.find_by(id: stored_value_account_id) if stored_value_account_id.present?
+      return amount_cents if account.blank?
+
+      [amount_cents, account.current_balance_cents].min
+    end
   end
 end

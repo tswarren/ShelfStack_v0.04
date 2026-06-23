@@ -18,7 +18,14 @@ module Pos
     def self.preview_sale_totals(transaction, parsed_rows)
       non_cash = parsed_rows.reject { |row| row.destroy || row.tender_type == "cash" }
       cash_rows = parsed_rows.reject { |row| row.destroy || row.tender_type != "cash" }
-      non_cash_sum = non_cash.sum(&:amount_cents)
+      non_cash_sum = non_cash.sum do |row|
+        StoredValueTenderSupport.capped_redeem_amount_cents(
+          transaction:,
+          tender_type: row.tender_type,
+          amount_cents: row.amount_cents,
+          stored_value_account_id: row.stored_value_account_id
+        )
+      end
       return nil if non_cash_sum > transaction.total_cents
 
       remaining = transaction.total_cents - non_cash_sum
@@ -121,7 +128,7 @@ module Pos
     def sync_sale_legacy!(rows)
       non_cash = rows.reject { |row| row.tender_type == "cash" }
       cash = rows.find { |row| row.tender_type == "cash" }
-      non_cash_sum = non_cash.sum(&:amount_cents)
+      non_cash_sum = non_cash.sum { |row| capped_redeem_amount_cents_for(prepare_stored_value_row!(row)) }
       raise Error, "Non-cash tenders exceed transaction total." if non_cash_sum > transaction.total_cents
 
       non_cash.each { |row| create_row_from_parsed!(row, amount_cents: row.amount_cents) }
@@ -144,7 +151,7 @@ module Pos
 
       non_cash = rows.reject { |row| row.tender_type == "cash" }
       cash = cash_rows.first
-      non_cash_sum = non_cash.sum(&:amount_cents)
+      non_cash_sum = non_cash.sum { |row| capped_redeem_amount_cents_for(prepare_stored_value_row!(row)) }
       raise Error, "Non-cash tenders exceed transaction total." if non_cash_sum > transaction.total_cents
 
       non_cash.each { |row| upsert_row!(row, amount_cents: row.amount_cents) }
@@ -214,6 +221,7 @@ module Pos
       validate_row_type!(row)
       validate_card_row!(row)
       row = prepare_stored_value_row!(row)
+      amount_cents = capped_redeem_amount_cents_for(row, amount_cents:)
 
       attrs = row_attributes(row, amount_cents:, tendered_cents:, change_cents:)
       tender = if row.id.present?
@@ -230,6 +238,7 @@ module Pos
       validate_row_type!(row)
       validate_card_row!(row)
       row = prepare_stored_value_row!(row)
+      amount_cents = capped_redeem_amount_cents_for(row, amount_cents:)
 
       tender = transaction.pos_tenders.create!(
         row_attributes(row, amount_cents:, tendered_cents:, change_cents:).merge(
@@ -305,6 +314,15 @@ module Pos
       else
         PosTender::PHASE6_ALLOWED_TYPES
       end
+    end
+
+    def capped_redeem_amount_cents_for(row, amount_cents: row.amount_cents)
+      StoredValueTenderSupport.capped_redeem_amount_cents(
+        transaction:,
+        tender_type: row.tender_type,
+        amount_cents: amount_cents,
+        stored_value_account_id: row.stored_value_account_id
+      )
     end
 
     def prepare_stored_value_row!(row)

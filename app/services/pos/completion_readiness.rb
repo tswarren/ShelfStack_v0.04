@@ -361,7 +361,14 @@ module Pos
         if transaction.total_cents.negative?
           cash.amount_cents
         else
-          non_cash_sum = parsed.reject(&:destroy).reject { |row| row.tender_type == "cash" }.sum(&:amount_cents)
+          non_cash_sum = parsed.reject(&:destroy).reject { |row| row.tender_type == "cash" }.sum do |row|
+            Pos::StoredValueTenderSupport.capped_redeem_amount_cents(
+              transaction:,
+              tender_type: row.tender_type,
+              amount_cents: row.amount_cents,
+              stored_value_account_id: row.stored_value_account_id
+            )
+          end
           remaining = transaction.total_cents - non_cash_sum
           if remaining.positive?
             [ cash.tendered_cents || cash.amount_cents, remaining ].min

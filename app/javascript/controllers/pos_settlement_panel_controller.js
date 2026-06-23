@@ -103,7 +103,10 @@ export default class extends Controller {
   }
 
   update() {
-    this.visibleRows().forEach((row) => this.updateRowSummary(row))
+    this.visibleRows().forEach((row) => {
+      this.clampStoredValueAmount(row)
+      this.updateRowSummary(row)
+    })
     this.updateHints()
     this.dispatchUpdate()
   }
@@ -173,6 +176,7 @@ export default class extends Controller {
       const identifierField = row.querySelector("[name*='[stored_value_identifier_id]']")
       if (accountField) accountField.value = payload.account_id
       if (identifierField) identifierField.value = payload.identifier_id
+      row.dataset.storedValueBalanceCents = String(payload.current_balance_cents)
 
       if (statusEl) {
         statusEl.textContent = `${payload.display_value_masked} · Balance ${this.formatMoney(payload.current_balance_cents)}`
@@ -256,6 +260,10 @@ export default class extends Controller {
     }
 
     displayCents = Math.max(0, displayCents)
+
+    if (tenderType === "store_credit" || tenderType === "gift_card") {
+      displayCents = this.cappedStoredValueAmountCents(row, displayCents)
+    }
 
     this.setRowAmountCents(row, displayCents)
     this.collapseRowIfReady(row)
@@ -479,5 +487,31 @@ export default class extends Controller {
       if (!Number.isNaN(index)) max = Math.max(max, index)
     })
     return max + 1
+  }
+
+  storedValueBalanceCents(row) {
+    const balance = parseInt(row.dataset.storedValueBalanceCents, 10)
+    return Number.isNaN(balance) ? null : balance
+  }
+
+  cappedStoredValueAmountCents(row, amountCents) {
+    const balanceCents = this.storedValueBalanceCents(row)
+    if (balanceCents == null) return amountCents
+
+    return Math.min(amountCents, balanceCents)
+  }
+
+  clampStoredValueAmount(row) {
+    if (this.refundValue) return
+    if (row.dataset.settlementType !== "store_credit" && row.dataset.settlementType !== "gift_card") return
+
+    const balanceCents = this.storedValueBalanceCents(row)
+    if (balanceCents == null) return
+
+    const amountCents = this.rowAmountCents(row)
+    if (amountCents <= balanceCents) return
+
+    this.setRowAmountCents(row, balanceCents)
+    this.updateRowSummary(row)
   }
 }
