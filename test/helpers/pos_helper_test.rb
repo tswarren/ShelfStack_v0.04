@@ -136,6 +136,32 @@ class PosHelperTest < ActionView::TestCase
 
     assert_equal 405, pos_receipt_line_header_amount_cents(line)
     assert_equal 450, pos_receipt_line_list_amount_cents(line)
+    assert_equal 450, pos_receipt_line_unit_list_amount_cents(line)
+  end
+
+  test "receipt line unit list price is per unit for multi-qty lines" do
+    line = PosTransactionLine.new(
+      quantity: 3,
+      unit_price_cents: 1500,
+      line_discount_cents: 150,
+      extended_price_cents: 4050
+    )
+
+    assert_equal 4500, pos_receipt_line_list_amount_cents(line)
+    assert_equal 1500, pos_receipt_line_unit_list_amount_cents(line)
+    assert pos_receipt_line_show_list_detail?(line)
+  end
+
+  test "receipt line unit paid price reflects net extended price per unit" do
+    line = PosTransactionLine.new(
+      quantity: 3,
+      unit_price_cents: 550,
+      line_discount_cents: 39,
+      extended_price_cents: 1011
+    )
+
+    assert_equal 550, pos_receipt_line_unit_list_amount_cents(line)
+    assert_equal 337, pos_receipt_line_unit_paid_amount_cents(line)
   end
 
   test "receipt line detail flags distinguish list and item discount" do
@@ -166,6 +192,18 @@ class PosHelperTest < ActionView::TestCase
 
     refute pos_receipt_line_show_list_detail?(return_line)
     refute pos_receipt_line_show_item_discount_detail?(return_line)
+  end
+
+  test "receipt line quantity detail shows for multi-qty merchandise lines only" do
+    single = PosTransactionLine.new(line_type: "variant", quantity: 1, unit_price_cents: 1500)
+    multi = PosTransactionLine.new(line_type: "variant", quantity: 2, unit_price_cents: 1500)
+    multi_return = PosTransactionLine.new(line_type: "variant", quantity: -2, unit_price_cents: 1500)
+    gift_card = PosTransactionLine.new(line_type: "gift_card_sale", quantity: 1, unit_price_cents: 2500)
+
+    refute pos_receipt_line_show_quantity_detail?(single)
+    assert pos_receipt_line_show_quantity_detail?(multi)
+    assert pos_receipt_line_show_quantity_detail?(multi_return)
+    refute pos_receipt_line_show_quantity_detail?(gift_card)
   end
 
   test "receipt discounted subtotal sums signed extended prices" do

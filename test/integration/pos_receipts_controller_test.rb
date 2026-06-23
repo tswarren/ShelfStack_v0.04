@@ -168,4 +168,49 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "New balance"
     assert_includes response.body, "$25.00"
   end
+
+  test "show renders multi-quantity line with qty and unit price" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      lines: [ {
+        product_variant: @variant,
+        quantity: 3,
+        unit_price_cents: 1500,
+        extended_price_cents: 4500
+      } ]
+    )
+    complete_pos_sale!(transaction: transaction, user: @cashier, register_session: @register_session)
+    receipt = transaction.reload.pos_receipt
+
+    get pos_receipt_path(receipt)
+    assert_response :success
+    assert_match(/3 @ .*?\$15\.00/, response.body)
+    assert_includes response.body, "$45.00"
+  end
+
+  test "show renders per-unit list price for discounted multi-quantity line" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      lines: [ {
+        product_variant: @variant,
+        quantity: 2,
+        unit_price_cents: 1500,
+        line_discount_cents: 100,
+        extended_price_cents: 2900
+      } ]
+    )
+    Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
+    complete_pos_sale!(transaction: transaction.reload, user: @cashier, register_session: @register_session)
+    receipt = transaction.reload.pos_receipt
+
+    get pos_receipt_path(receipt)
+    assert_response :success
+    assert_match(/2 @ .*?\$14\.50/, response.body)
+    assert_match(/List price \$15\.00/, response.body)
+    assert_no_match(/List price \$30\.00/, response.body)
+  end
 end

@@ -26,9 +26,15 @@
         <% if (source_label = pos_line_return_source_label(line)).present? %>
           <p class="ss-receipt-line__detail"><%= source_label %></p>
         <% end %>
+        <% if pos_receipt_line_show_quantity_detail?(line) %>
+          <p class="ss-receipt-line__detail"><%= line.quantity.abs %> @ <%= pos_receipt_money(pos_receipt_line_unit_paid_amount_cents(line)) %></p>
+        <% end %>
       <% else %>
+        <% if pos_receipt_line_show_quantity_detail?(line) %>
+          <p class="ss-receipt-line__detail"><%= line.quantity.abs %> @ <%= pos_receipt_money(pos_receipt_line_unit_paid_amount_cents(line)) %></p>
+        <% end %>
         <% if pos_receipt_line_show_list_detail?(line) %>
-          <p class="ss-receipt-line__detail">List price <%= pos_money(pos_receipt_line_list_amount_cents(line).abs) %></p>
+          <p class="ss-receipt-line__detail">List price <%= pos_money(pos_receipt_line_unit_list_amount_cents(line)) %></p>
         <% end %>
         <% if pos_receipt_line_show_item_discount_detail?(line) %>
           <p class="ss-receipt-line__detail">Item discount <%= pos_money(pos_receipt_line_item_discount_display_cents(line)) %></p>
