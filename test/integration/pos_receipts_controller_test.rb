@@ -143,4 +143,29 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Return value"
     assert_not_includes response.body, "Original price"
   end
+
+  test "show renders gift card sale line with card number and new balance" do
+    seed_phase7b_reference_data!
+    grant_pos_stored_value_tender_permissions!(@cashier, store: @store)
+    ensure_gift_card_sale_classification!(store: @store)
+
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @cashier)
+    add_gift_card_sale_line!(transaction: transaction, actor: @cashier, amount_cents: 2500)
+    complete_pos_sale!(transaction: transaction.reload, user: @cashier, register_session: @register_session)
+
+    line = transaction.pos_transaction_lines.first
+    card_number = StoredValue::IdentifierCodec.format_display(
+      StoredValue::IdentifierVault.decrypt(line.stored_value_identifier.encrypted_value)
+    )
+    receipt = transaction.reload.pos_receipt
+
+    get pos_receipt_path(receipt)
+    assert_response :success
+    assert_includes response.body, "Card number"
+    assert_includes response.body, card_number
+    assert_includes response.body, "Value"
+    assert_includes response.body, "$25.00"
+    assert_includes response.body, "New balance"
+    assert_includes response.body, "$25.00"
+  end
 end

@@ -74,4 +74,10 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
 
     assert_equal :gift_card_sale_offer, route.action
   end
+
+  test "balance command opens balance inquiry offer" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/balance")
+
+    assert_equal :balance_inquiry_offer, route.action
+  end
 end

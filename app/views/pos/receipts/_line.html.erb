@@ -33,6 +33,16 @@
         <% if pos_receipt_line_show_item_discount_detail?(line) %>
           <p class="ss-receipt-line__detail">Item discount <%= pos_money(pos_receipt_line_item_discount_display_cents(line)) %></p>
         <% end %>
+        <% if line.gift_card_sale_line? %>
+          <% if (card_number = pos_gift_card_sale_receipt_identifier_value(line)).present? %>
+            <p class="ss-receipt-line__detail">Card number <%= card_number %></p>
+          <% end %>
+          <% value_label = pos_gift_card_sale_receipt_reload?(line) ? "Reload amount" : "Value" %>
+          <p class="ss-receipt-line__detail"><%= value_label %> <%= pos_money(line.extended_price_cents) %></p>
+          <% if (balance_cents = pos_gift_card_sale_receipt_balance_cents(line)).present? %>
+            <p class="ss-receipt-line__detail ss-receipt-line__detail--emphasis">New balance <%= pos_money(balance_cents) %></p>
+          <% end %>
+        <% end %>
       <% end %>
     </div>
   </div>

@@ -15,7 +15,7 @@
       <% balance_cents = pos_stored_value_receipt_balance_cents(tender) %>
       <% if balance_cents.present? %>
         <div class="ss-receipt-row">
-          <span>Remaining balance</span>
+          <span><%= pos_stored_value_receipt_balance_label(tender) %></span>
           <strong><%= pos_receipt_money(balance_cents) %></strong>
         </div>
       <% end %>

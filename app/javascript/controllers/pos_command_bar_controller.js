@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,
@@ -71,6 +71,9 @@ export default class extends Controller {
       case "gift_card_sale_offer":
         this.showGiftCardPanel(data.payload)
         break
+      case "balance_inquiry_offer":
+        this.showBalancePanel()
+        break
       default:
         this.dispatchMessage(data.message)
     }
@@ -110,6 +113,37 @@ export default class extends Controller {
     if (priceField && payload.amount_cents) {
       priceField.value = (payload.amount_cents / 100).toFixed(2)
     }
+  }
+
+  showBalancePanel() {
+    if (!this.hasBalancePanelTarget) {
+      this.dispatchMessage("Balance inquiry is not available.")
+      return
+    }
+
+    this.balancePanelTarget.hidden = false
+    const input = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='input']")
+    input?.focus()
+  }
+
+  closeBalancePanel(event) {
+    event?.preventDefault()
+    if (!this.hasBalancePanelTarget) return
+
+    this.balancePanelTarget.hidden = true
+    const input = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='input']")
+    if (input) input.value = ""
+    const status = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='status']")
+    if (status) {
+      status.textContent = ""
+      status.hidden = true
+    }
+    const result = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='result']")
+    if (result) {
+      result.innerHTML = ""
+      result.hidden = true
+    }
+    this.focusInput()
   }
 
   addGiftCardSale(payload) {
@@ -160,6 +194,7 @@ export default class extends Controller {
     if (this.hasReceiptPanelTarget) this.receiptPanelTarget.hidden = true
     if (this.hasOpenRingPanelTarget) this.openRingPanelTarget.hidden = true
     if (this.hasGiftCardPanelTarget) this.giftCardPanelTarget.hidden = true
+    if (this.hasBalancePanelTarget) this.balancePanelTarget.hidden = true
   }
 
   closeOpenRingPanel(event) {

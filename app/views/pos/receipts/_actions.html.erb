@@ -6,4 +6,5 @@
     <%= button_to "New", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn ss-btn-secondary" %>
     <%= link_to "Menu", pos_root_path, class: "ss-btn ss-btn-secondary" %>
   </div>
+  <%= render "pos/transactions/issuance_slip_links", transaction: transaction %>
 </div>

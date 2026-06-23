@@ -272,6 +272,34 @@ source_type PosTransactionLine
 
 Permission: `pos.gift_cards.issue` (distinct from `pos.tenders.gift_card` redemption).
 
+## 10.8 Receipts, issuance slips, and balance inquiry
+
+### Sales receipt
+
+- Gift card sale lines show full card number, issue/reload amount, and **new balance** after completion
+- Store credit issue tenders show **New balance** (redemption tenders show **Remaining balance**)
+
+### Issuance slip
+
+Separate 80mm printable document per issuance event:
+
+| Source | When |
+| --- | --- |
+| `gift_card_sale` line | Every completed gift card sale or reload |
+| `store_credit` issue tender | Return/exchange credit issuance |
+
+Slip shows store header, transaction meta, document title (`GIFT CARD` / `STORE CREDIT`), full formatted identifier, value, new balance, and legal footer. Manual print from completion screen, receipt actions, or `GET /pos/stored_value_issuance_slips/:ledger_entry_id`. Reprint audits `pos.stored_value_slip.printed`.
+
+### Balance inquiry
+
+| Entry | Behavior |
+| --- | --- |
+| `/balance` command | Opens inline panel during transaction edit |
+| POS menu **Check Balance** | `GET /pos/stored_value_balance` |
+| Lookup | `GET /pos/stored_value_lookup?purpose=balance_inquiry` — masked identifier + balance only |
+
+Auth: any of `pos.tenders.gift_card`, `pos.tenders.store_credit`, `pos.gift_cards.issue`.
+
 ## 10.6 Void
 
 After inventory and tender reversals, create reversing ledger entries with `reverses_entry_id`. Do not mutate original entries.

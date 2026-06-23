@@ -217,6 +217,34 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal identifier.display_value_masked, payload["display_value_masked"]
   end
 
+  test "balance inquiry lookup returns masked balance for gift card and store credit" do
+    gift_card_account = create_stored_value_account!(issuing_store: @store, account_type: "gift_card", current_balance_cents: 4200)
+    gift_identifier = generate_test_identifier!(account: gift_card_account, actor: @user)
+    gift_raw = StoredValue::IdentifierVault.decrypt(gift_identifier.encrypted_value)
+
+    get pos_stored_value_lookup_path(code: gift_raw, purpose: "balance_inquiry")
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal "found", payload["status"]
+    assert_equal "gift_card", payload["account_type"]
+    assert_equal 4200, payload["current_balance_cents"]
+    assert_equal gift_identifier.display_value_masked, payload["display_value_masked"]
+
+    store_credit_identifier = generate_test_identifier!(account: @account, actor: @user)
+    store_credit_raw = StoredValue::IdentifierVault.decrypt(store_credit_identifier.encrypted_value)
+    get pos_stored_value_lookup_path(code: store_credit_raw, purpose: "balance_inquiry")
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal "merchandise_credit", payload["account_type"]
+    assert_equal @account.current_balance_cents, payload["current_balance_cents"]
+  end
+
+  test "balance inquiry page renders for authorized cashier" do
+    get pos_stored_value_balance_path
+    assert_response :success
+    assert_includes response.body, "Check balance"
+  end
+
   test "rejects store credit tender without actor permissions" do
     UserRoleAssignment.where(user: @user).delete_all
     grant_permission!(@user, "pos.access", store: @store)

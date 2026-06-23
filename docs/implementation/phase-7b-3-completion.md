@@ -138,6 +138,34 @@ Reason code: `pos_gift_card_sale`
 - Completion issues ledger credit linked to the line; void reverses
 - Register report separates **Gift Card Redemptions** (tender) vs **Gift Card Sales** (lines)
 
+## 7B-3 follow-up: receipts, issuance slips, balance inquiry (2026-06-21)
+
+### Receipt enhancements
+
+- Gift card sale lines on main receipt: card number, value/reload amount, new balance
+- Store credit issue tenders label balance as **New balance**
+
+### Issuance slip
+
+```text
+Pos::StoredValueIssuanceSlips
+Pos::StoredValueIssuanceSlipPresenter
+Pos::StoredValueIssuanceSlipsController
+GET /pos/stored_value_issuance_slips/:id
+```
+
+Print links on completion screen and receipt actions. Audit: `pos.stored_value_slip.printed`.
+
+### Balance inquiry
+
+```text
+/balance command -> inline panel
+GET /pos/stored_value_balance
+GET /pos/stored_value_lookup?purpose=balance_inquiry
+```
+
+POS menu **Check Balance** when register is open.
+
 ## Deferred (unchanged)
 
 Check refunds, deposits/prepayments, product SKU gift card catalog workflow, buyback intake, multi-store redemption restrictions, GL export.

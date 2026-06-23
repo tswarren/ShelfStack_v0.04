@@ -112,6 +112,7 @@ module PosHelper
   end
 
   def pos_receipt_line_sku(line)
+    return "Gift card" if line.gift_card_sale_line?
     return pos_open_ring_line_sku(line) if line.open_ring_line?
 
     line.variant_sku_snapshot.presence ||
@@ -334,6 +335,37 @@ module PosHelper
     StoredValue::IdentifierCodec.format_display(
       StoredValue::IdentifierVault.decrypt(identifier.encrypted_value)
     )
+  end
+
+  def pos_gift_card_sale_receipt_ledger_entry(line)
+    return unless line.gift_card_sale_line?
+
+    StoredValueLedgerEntry.where(source: line, entry_type: "issue").order(posted_at: :desc, id: :desc).first
+  end
+
+  def pos_gift_card_sale_receipt_balance_cents(line)
+    entry = pos_gift_card_sale_receipt_ledger_entry(line)
+    entry&.balance_after_cents || line.stored_value_account&.current_balance_cents
+  end
+
+  def pos_gift_card_sale_receipt_identifier_value(line)
+    identifier = line.stored_value_identifier
+    return if identifier.blank? || identifier.encrypted_value.blank?
+
+    StoredValue::IdentifierCodec.format_display(
+      StoredValue::IdentifierVault.decrypt(identifier.encrypted_value)
+    )
+  end
+
+  def pos_gift_card_sale_receipt_reload?(line)
+    entry = pos_gift_card_sale_receipt_ledger_entry(line)
+    return false if entry.blank?
+
+    entry.balance_after_cents.to_i > entry.amount_delta_cents.to_i
+  end
+
+  def pos_stored_value_receipt_balance_label(tender)
+    tender.issue_tender? ? "New balance" : "Remaining balance"
   end
 
   def pos_card_brand_options

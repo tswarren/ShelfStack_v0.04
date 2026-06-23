@@ -20,7 +20,7 @@
       <%= label_tag :pos_command_input, "Scan or enter item", class: "ss-pos-command-bar__scan-label" %>
       <%= text_field_tag :pos_command_input, nil,
             autocomplete: "off",
-            placeholder: "Scan / enter SKU, ISBN, receipt number, /giftcard, or amount",
+            placeholder: "Scan / enter SKU, ISBN, receipt number, /giftcard, /balance, or amount",
             class: "ss-pos-scan-input ss-pos-scan-input--primary",
             data: {
               pos_command_bar_target: "input",
@@ -46,5 +46,9 @@
 
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="giftCardPanel" hidden>
     <%= render "pos/transactions/gift_card_sale_drawer", transaction: transaction, inline: true %>
+  </div>
+
+  <div class="ss-pos-inline-panel" data-pos-command-bar-target="balancePanel" hidden>
+    <%= render "pos/shared/stored_value_balance_inquiry", show_close: true %>
   </div>
 </section>

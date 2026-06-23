@@ -3,6 +3,7 @@
 module Pos
   class CommandBarRouter
     RECEIPT_NUMBER_PATTERN = /\A\d+-\d+-\d{6}\z/
+    BALANCE_COMMAND_PATTERN = /\A\/balance\z/i
     GIFT_CARD_COMMAND_PATTERN = /\A\/giftcard(?:\s+(\d+(?:\.\d{1,2})?))?\z/i
 
     Route = Data.define(:action, :payload, :message)
@@ -22,6 +23,10 @@ module Pos
 
       if gift_card_command?
         return gift_card_route
+      end
+
+      if balance_command?
+        return Route.new(action: :balance_inquiry_offer, payload: {}, message: nil)
       end
 
       if lookup.variants.any?
@@ -61,6 +66,10 @@ module Pos
 
     def gift_card_command?
       input.match?(GIFT_CARD_COMMAND_PATTERN)
+    end
+
+    def balance_command?
+      input.match?(BALANCE_COMMAND_PATTERN)
     end
 
     def gift_card_route

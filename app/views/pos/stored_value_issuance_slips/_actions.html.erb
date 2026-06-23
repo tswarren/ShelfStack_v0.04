@@ -1,0 +1,11 @@
+<div class="ss-pos-no-print ss-receipt-actions" data-controller="pos-receipt-print" data-pos-receipt-print-print-url-value="<%= print_pos_stored_value_issuance_slip_path(ledger_entry) %>">
+  <button type="button" class="ss-btn ss-receipt-actions__print" data-action="pos-receipt-print#print">Print</button>
+
+  <div class="ss-receipt-actions__secondary">
+    <% if transaction.pos_receipt %>
+      <%= link_to "Receipt", pos_receipt_path(transaction.pos_receipt), class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+    <%= link_to "Summary", pos_transaction_path(transaction), class: "ss-btn ss-btn-secondary" %>
+    <%= link_to "Menu", pos_root_path, class: "ss-btn ss-btn-secondary" %>
+  </div>
+</div>
