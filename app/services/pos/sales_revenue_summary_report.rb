@@ -10,6 +10,7 @@ module Pos
       :net_sales_cents,
       :taxes_cents,
       :gift_card_cents,
+      :gift_card_sales_cents,
       :transaction_count,
       :void_count
     ) do
@@ -22,6 +23,7 @@ module Pos
           net_sales_cents: 0,
           taxes_cents: 0,
           gift_card_cents: 0,
+          gift_card_sales_cents: 0,
           transaction_count: 0,
           void_count: 0
         )
@@ -36,6 +38,7 @@ module Pos
           net_sales_cents: net_sales_cents + other.net_sales_cents,
           taxes_cents: taxes_cents + other.taxes_cents,
           gift_card_cents: gift_card_cents + other.gift_card_cents,
+          gift_card_sales_cents: gift_card_sales_cents + other.gift_card_sales_cents,
           transaction_count: transaction_count + other.transaction_count,
           void_count: void_count + other.void_count
         )
@@ -50,6 +53,7 @@ module Pos
           net_sales_cents: net_sales_cents,
           taxes_cents: taxes_cents,
           gift_card_cents: gift_card_cents,
+          gift_card_sales_cents: gift_card_sales_cents,
           transaction_count: transaction_count,
           void_count: count
         )
@@ -138,6 +142,9 @@ module Pos
     def transaction_metrics(transaction)
       metrics = ReportTransactionMetrics.from_transaction(transaction)
       gift_card_cents = transaction.pos_tenders.select { |tender| tender.tender_type == "gift_card" }.sum(&:amount_cents)
+      gift_card_sales_cents = transaction.pos_transaction_lines.select(&:gift_card_sale_line?).sum do |line|
+        line.extended_price_cents.to_i + line.tax_cents.to_i
+      end
 
       Metrics.new(
         sales_cents: metrics.sales_cents,
@@ -147,6 +154,7 @@ module Pos
         net_sales_cents: metrics.net_sales_cents,
         taxes_cents: metrics.taxes_cents,
         gift_card_cents: gift_card_cents,
+        gift_card_sales_cents: gift_card_sales_cents,
         transaction_count: 1,
         void_count: 0
       )

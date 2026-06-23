@@ -61,4 +61,23 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
 
     assert_nil route.payload[:amount_cents]
   end
+
+  test "gift card command with amount routes to gift card sale" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/giftcard 25")
+
+    assert_equal :gift_card_sale, route.action
+    assert_equal 2500, route.payload[:amount_cents]
+  end
+
+  test "gift card command without amount opens drawer offer" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/giftcard")
+
+    assert_equal :gift_card_sale_offer, route.action
+  end
+
+  test "balance command opens balance inquiry offer" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/balance")
+
+    assert_equal :balance_inquiry_offer, route.action
+  end
 end

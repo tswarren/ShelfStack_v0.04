@@ -69,6 +69,22 @@
               modal: true %>
       </template>
 
+      <template data-pos-settlement-panel-target="storeCreditTemplate">
+        <%= render "pos/transactions/settlement_row",
+              row: PosTender.new(tender_type: "store_credit", line_number: 0),
+              transaction: transaction,
+              row_index: "TEMPLATE",
+              modal: true %>
+      </template>
+
+      <template data-pos-settlement-panel-target="giftCardTemplate">
+        <%= render "pos/transactions/settlement_row",
+              row: PosTender.new(tender_type: "gift_card", line_number: 0),
+              transaction: transaction,
+              row_index: "TEMPLATE",
+              modal: true %>
+      </template>
+
       <div class="ss-pos-settlement-modal-footer">
         <div class="ss-pos-settlement-modal-footer__toolbar">
           <div class="ss-pos-settlement-modal-footer__left">
@@ -81,6 +97,14 @@
                   data: { action: "pos-settlement-panel#addCard" } %>
             <%= button_tag "Check", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
                   data: { action: "pos-settlement-panel#addCheck" } %>
+            <% if pos_can_use_stored_value_tender?(transaction, "store_credit") %>
+              <%= button_tag "Store credit", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
+                    data: { action: "pos-settlement-panel#addStoreCredit" } %>
+            <% end %>
+            <% if pos_can_use_stored_value_tender?(transaction, "gift_card") %>
+              <%= button_tag "Gift card", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
+                    data: { action: "pos-settlement-panel#addGiftCard" } %>
+            <% end %>
           </div>
           <div class="ss-pos-settlement-modal-footer__right">
             <%= button_tag "Back", type: "button", class: "ss-btn ss-btn-secondary ss-btn--small", data: { action: "pos-settlement-panel#close" } %>

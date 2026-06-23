@@ -2065,6 +2065,39 @@ h2 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.ss-pos-balance-page {
+  max-width: 32rem;
+}
+
+.ss-pos-balance-page__back {
+  margin-top: 1rem;
+}
+
+.ss-pos-balance-inquiry__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ss-pos-balance-inquiry__result {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ss-border-color, #d0d5dd);
+  border-radius: 0.5rem;
+  background: var(--ss-surface-muted, #f9fafb);
+}
+
+.ss-pos-balance-inquiry__identifier {
+  margin: 0.25rem 0;
+  font-size: 1.1rem;
+}
+
+.ss-pos-balance-inquiry__balance {
+  margin: 0.5rem 0 0;
+  font-size: 1.25rem;
+}
+
 .ss-pos-action-grid__btn {
   display: flex;
   align-items: center;
@@ -3605,6 +3638,44 @@ body.ss-pos-modal-open {
 .ss-receipt-footer {
   margin-top: 4mm;
   text-align: center;
+}
+
+.ss-stored-value-slip__title {
+  margin: 4mm 0;
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ss-stored-value-slip__value-row {
+  margin: 4mm 0;
+}
+
+.ss-stored-value-slip__value-label {
+  font-size: 12px;
+}
+
+.ss-stored-value-slip__value-amount {
+  font-size: 18px;
+}
+
+.ss-stored-value-slip-legal {
+  margin-top: 6mm;
+  font-size: 8px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.ss-stored-value-slip-legal p {
+  margin: 0;
+}
+
+.ss-pos-issuance-slip-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 @media print {

@@ -1,0 +1,18 @@
+<section class="ss-stored-value-slip">
+  <h1 class="ss-stored-value-slip__title"><%= presenter.document_title %></h1>
+
+  <div class="ss-receipt-row">
+    <span><%= presenter.gift_card? ? "Card Number" : "Credit Code" %></span>
+    <strong><%= presenter.formatted_identifier %></strong>
+  </div>
+
+  <div class="ss-receipt-row ss-stored-value-slip__value-row">
+    <span class="ss-stored-value-slip__value-label"><%= presenter.value_label %></span>
+    <strong class="ss-stored-value-slip__value-amount"><%= pos_receipt_money(presenter.amount_cents) %></strong>
+  </div>
+
+  <div class="ss-receipt-row">
+    <span>New balance</span>
+    <strong><%= pos_receipt_money(presenter.balance_after_cents) %></strong>
+  </div>
+</section>

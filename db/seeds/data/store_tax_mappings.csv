@@ -8,6 +8,7 @@ store_number,tax_category_name,store_tax_rate_name,effective_on
 001,Prepared Food,State Sales Tax,2020-01-01
 001,Services,Non-Taxable,2020-01-01
 001,Non-Merchandise,Non-Taxable,2020-01-01
+001,Gift Card,Non-Taxable,2020-01-01
 002,General Merchandise,State Sales Tax,2020-01-01
 002,Books,State Sales Tax,2020-01-01
 002,Periodicals,State Sales Tax,2020-01-01
@@ -17,3 +18,4 @@ store_number,tax_category_name,store_tax_rate_name,effective_on
 002,Prepared Food,Prepared Food & Beverage,2020-01-01
 002,Services,Non-Taxable,2020-01-01
 002,Non-Merchandise,Non-Taxable,2020-01-01
+002,Gift Card,Non-Taxable,2020-01-01

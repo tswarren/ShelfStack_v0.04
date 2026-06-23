@@ -8,6 +8,7 @@
     <%= link_to "Manage Session", pos_register_session_path(@register_session), class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
     <%= link_to "Cash In/Out", pos_register_session_path(@register_session, anchor: "cash-movement"), class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
     <%= link_to "Reports", pos_reports_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
+    <%= link_to "Check Balance", pos_stored_value_balance_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
   <% else %>
     <%= link_to "Open Register", new_pos_register_session_path, class: "ss-pos-action-grid__btn ss-btn" %>
     <%= link_to "Sessions (History)", drawer_pos_reports_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>

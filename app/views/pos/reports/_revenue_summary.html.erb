@@ -7,7 +7,8 @@
       <tr><th scope="row">Discounts Applied</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.discounts_cents) %></td></tr>
       <tr class="ss-pos-report-table__emphasis"><th scope="row">Net Sales</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.net_sales_cents) %></td></tr>
       <tr><th scope="row">Taxes Collected</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.taxes_cents) %></td></tr>
-      <tr><th scope="row">Gift Cards</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.gift_card_cents) %></td></tr>
+      <tr><th scope="row">Gift Card Redemptions</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.gift_card_cents) %></td></tr>
+      <tr><th scope="row">Gift Card Sales</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.gift_card_sales_cents) %></td></tr>
       <tr class="ss-pos-report-table__total"><th scope="row">Total Sales</th><td class="ss-pos-money-col"><%= pos_report_signed_money(summary.total_sales_cents) %></td></tr>
     </tbody>
   </table>

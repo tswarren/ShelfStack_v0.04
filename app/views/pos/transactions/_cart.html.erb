@@ -18,6 +18,9 @@
       <tbody>
         <% transaction.pos_transaction_lines.order(:line_number).each do |line| %>
           <%= render "pos/transactions/cart_line", transaction: transaction, line: line %>
+          <% if line.gift_card_sale_line? %>
+            <%= render "pos/transactions/gift_card_sale_activation", transaction: transaction, line: line %>
+          <% end %>
           <%= render "pos/transactions/cart_line_edit", transaction: transaction, line: line %>
         <% end %>
       </tbody>

@@ -1,0 +1,11 @@
+<div class="ss-receipt-80mm ss-stored-value-slip-80mm">
+  <%= render "pos/receipts/header", store: @presenter.transaction.store %>
+  <%= render "pos/receipts/meta", receipt: @presenter.receipt, transaction: @presenter.transaction %>
+
+  <hr class="ss-receipt-rule">
+
+  <%= render "slip_body", presenter: @presenter %>
+  <%= render "footer_legal" %>
+
+  <%= render "actions", ledger_entry: @ledger_entry, transaction: @presenter.transaction %>
+</div>

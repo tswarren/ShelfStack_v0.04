@@ -3,7 +3,7 @@
 module Pos
   class SettlementSync
     Error = Class.new(StandardError)
-    Result = Data.define(:change_cents, :remaining_cents, :message)
+    Result = Data.define(:change_cents, :remaining_cents, :message, :generated_identifiers)
 
     def self.call!(transaction:, tender_inputs:, actor: nil)
       new(transaction:, tender_inputs:, actor:).call!
@@ -18,7 +18,14 @@ module Pos
     def self.preview_sale_totals(transaction, parsed_rows)
       non_cash = parsed_rows.reject { |row| row.destroy || row.tender_type == "cash" }
       cash_rows = parsed_rows.reject { |row| row.destroy || row.tender_type != "cash" }
-      non_cash_sum = non_cash.sum(&:amount_cents)
+      non_cash_sum = non_cash.sum do |row|
+        StoredValueTenderSupport.capped_redeem_amount_cents(
+          transaction:,
+          tender_type: row.tender_type,
+          amount_cents: row.amount_cents,
+          stored_value_account_id: row.stored_value_account_id
+        )
+      end
       return nil if non_cash_sum > transaction.total_cents
 
       remaining = transaction.total_cents - non_cash_sum
@@ -39,13 +46,18 @@ module Pos
     end
 
     def call!
-      Pos::RecalculateTransaction.call!(transaction) if transaction.total_cents.zero? && transaction.pos_transaction_lines.any?
+      @generated_identifiers = []
+      if transaction.pos_transaction_lines.any?
+        Pos::RecalculateTransaction.call!(transaction)
+        @allowed_tender_types = nil
+      end
 
       parser = SettlementInputParser.new(transaction:, raw_inputs: normalized_inputs)
       parsed_rows = parser.parse
 
       change_cents = 0
       remaining_cents = 0
+      generated_identifiers = []
 
       transaction.transaction do
         if parser.legacy_input?
@@ -55,12 +67,14 @@ module Pos
         end
 
         record_sync_audit!(parsed_rows)
+        generated_identifiers = @generated_identifiers
       end
 
       Result.new(
         change_cents: change_cents,
         remaining_cents: remaining_cents,
-        message: build_message(change_cents, remaining_cents)
+        message: build_message(change_cents, remaining_cents),
+        generated_identifiers: generated_identifiers
       )
     end
 
@@ -69,14 +83,22 @@ module Pos
     attr_reader :transaction, :tender_inputs, :actor
 
     def normalized_inputs
-      return tender_inputs if tender_inputs.present?
+      return [] if tender_inputs.blank?
 
-      []
+      inputs = tender_inputs
+      if inputs.respond_to?(:to_unsafe_h)
+        hash = inputs.to_unsafe_h
+        if hash.keys.all? { |key| key.to_s.match?(/\A\d+\z/) }
+          return hash.sort_by { |key, _| key.to_i }.map { |_, value| value }
+        end
+      end
+
+      Array(inputs)
     end
 
     def sync_legacy_rows!(parsed_rows)
       active_rows = parsed_rows.reject(&:destroy)
-      transaction.pos_tenders.settlement_rows.where(tender_type: PosTender::PHASE6_ALLOWED_TYPES).destroy_all
+      transaction.pos_tenders.settlement_rows.where(tender_type: allowed_tender_types).destroy_all
 
       if transaction.total_cents.positive?
         sync_sale_legacy!(active_rows)
@@ -106,7 +128,7 @@ module Pos
     def sync_sale_legacy!(rows)
       non_cash = rows.reject { |row| row.tender_type == "cash" }
       cash = rows.find { |row| row.tender_type == "cash" }
-      non_cash_sum = non_cash.sum(&:amount_cents)
+      non_cash_sum = non_cash.sum { |row| capped_redeem_amount_cents_for(prepare_stored_value_row!(row)) }
       raise Error, "Non-cash tenders exceed transaction total." if non_cash_sum > transaction.total_cents
 
       non_cash.each { |row| create_row_from_parsed!(row, amount_cents: row.amount_cents) }
@@ -129,7 +151,7 @@ module Pos
 
       non_cash = rows.reject { |row| row.tender_type == "cash" }
       cash = cash_rows.first
-      non_cash_sum = non_cash.sum(&:amount_cents)
+      non_cash_sum = non_cash.sum { |row| capped_redeem_amount_cents_for(prepare_stored_value_row!(row)) }
       raise Error, "Non-cash tenders exceed transaction total." if non_cash_sum > transaction.total_cents
 
       non_cash.each { |row| upsert_row!(row, amount_cents: row.amount_cents) }
@@ -176,8 +198,15 @@ module Pos
       rows.each do |row|
         raise Error, "Cash refund must be negative on returns." if row.tender_type == "cash" && !row.amount_cents.negative?
         raise Error, "Check refunds are not supported." if row.tender_type == "check"
-        raise Error, "#{row.tender_type.humanize} refund must be negative on returns." if row.tender_type != "cash" && !row.amount_cents.negative?
+        if Pos::StoredValueTenderSupport.stored_value_tender?(row.tender_type) && !row.amount_cents.negative?
+          raise Error, "#{row.tender_type.humanize} refund must be negative on returns."
+        end
+        if !Pos::StoredValueTenderSupport.stored_value_tender?(row.tender_type) &&
+            row.tender_type != "cash" && !row.amount_cents.negative?
+          raise Error, "#{row.tender_type.humanize} refund must be negative on returns."
+        end
         validate_card_row!(row)
+        validate_stored_value_row!(row)
       end
     end
 
@@ -191,26 +220,32 @@ module Pos
     def upsert_row!(row, amount_cents:, tendered_cents: nil, change_cents: nil)
       validate_row_type!(row)
       validate_card_row!(row)
+      row = prepare_stored_value_row!(row)
+      amount_cents = capped_redeem_amount_cents_for(row, amount_cents:)
 
       attrs = row_attributes(row, amount_cents:, tendered_cents:, change_cents:)
-      if row.id.present?
-        tender = transaction.pos_tenders.settlement_rows.find(row.id)
-        tender.update!(attrs)
-        tender
+      tender = if row.id.present?
+        record = transaction.pos_tenders.settlement_rows.find(row.id)
+        record.update!(attrs)
+        record
       else
         transaction.pos_tenders.create!(attrs.merge(line_number: PosTender.next_line_number_for(transaction)))
       end
+      maybe_generate_stored_value_identifier!(tender)
     end
 
     def create_row_from_parsed!(row, amount_cents:, tendered_cents: nil, change_cents: nil)
       validate_row_type!(row)
       validate_card_row!(row)
+      row = prepare_stored_value_row!(row)
+      amount_cents = capped_redeem_amount_cents_for(row, amount_cents:)
 
-      transaction.pos_tenders.create!(
+      tender = transaction.pos_tenders.create!(
         row_attributes(row, amount_cents:, tendered_cents:, change_cents:).merge(
           line_number: PosTender.next_line_number_for(transaction)
         )
       )
+      maybe_generate_stored_value_identifier!(tender)
     end
 
     def destroy_row!(row)
@@ -230,14 +265,84 @@ module Pos
         card_authorization_code: row.card_authorization_code,
         check_number: row.check_number,
         notes: row.notes,
+        stored_value_account_id: row.stored_value_account_id,
+        stored_value_identifier_id: row.stored_value_identifier_id,
+        generate_stored_value_identifier: row.generate_identifier == true,
         reference_number: nil
       }
     end
 
     def validate_row_type!(row)
-      unless PosTender::PHASE6_ALLOWED_TYPES.include?(row.tender_type)
-        raise Error, "Tender type #{row.tender_type} is not enabled in Phase 7B-1."
+      return if allowed_tender_types.include?(row.tender_type)
+
+      raise Error, stored_value_tender_disabled_message(row.tender_type)
+    end
+
+    def stored_value_tender_disabled_message(tender_type)
+      return "Tender type #{tender_type} is not enabled." unless Pos::StoredValueTenderSupport.stored_value_tender?(tender_type)
+      return "Tender type #{tender_type} is not enabled." if actor.blank?
+
+      if TenderTypePolicy.refund_transaction?(transaction)
+        "Store credit refunds are not enabled for your role."
+      else
+        "Stored value tender #{tender_type} is not enabled for your role."
       end
+    end
+
+    def validate_stored_value_row!(row)
+      return unless Pos::StoredValueTenderSupport.stored_value_tender?(row.tender_type)
+
+      if row.stored_value_account_id.blank? && row.lookup_code.blank? &&
+          transaction.customer_id.blank? && !row.generate_identifier
+        raise Error, "Stored value account or lookup code is required."
+      end
+    end
+
+    def maybe_generate_stored_value_identifier!(tender)
+      return unless tender.generate_stored_value_identifier?
+      return if tender.stored_value_identifier_id.present?
+      return unless tender.issue_tender?(transaction)
+      raise Error, "Actor is required to generate stored value identifiers." if actor.blank?
+
+      generated = GenerateStoredValueIdentifier.call!(tender:, actor:, store: transaction.store)
+      @generated_identifiers << generated
+    end
+
+    def allowed_tender_types
+      @allowed_tender_types ||= if actor.present?
+        TenderTypePolicy.allowed_types(transaction, actor:, store: transaction.store)
+      else
+        PosTender::PHASE6_ALLOWED_TYPES
+      end
+    end
+
+    def capped_redeem_amount_cents_for(row, amount_cents: row.amount_cents)
+      StoredValueTenderSupport.capped_redeem_amount_cents(
+        transaction:,
+        tender_type: row.tender_type,
+        amount_cents: amount_cents,
+        stored_value_account_id: row.stored_value_account_id
+      )
+    end
+
+    def prepare_stored_value_row!(row)
+      return row unless Pos::StoredValueTenderSupport.stored_value_tender?(row.tender_type)
+      return row if row.stored_value_account_id.present? && row.lookup_code.blank?
+      raise Error, "Actor is required to resolve stored value accounts." if actor.blank?
+
+      result = StoredValueAccountResolver.resolve!(
+        transaction:,
+        tender_type: row.tender_type,
+        actor:,
+        stored_value_account_id: row.stored_value_account_id,
+        lookup_code: row.lookup_code,
+        generate_identifier: row.generate_identifier == true
+      )
+
+      row.with(
+        stored_value_account_id: result.account.id.to_s,
+        stored_value_identifier_id: result.identifier&.id&.to_s
+      )
     end
 
     def validate_card_row!(row)

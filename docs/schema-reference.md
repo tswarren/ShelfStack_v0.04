@@ -340,7 +340,7 @@ stored_value_ledger_entries
 stored_value_transfers
 ```
 
-Phase 7B also extends `pos_tenders` with settlement columns (7B-1 implemented) and stored-value linkage columns (7B-3 planned). See [phase-7b-data-model.md](specifications/phase-7b-data-model.md).
+Phase 7B also extends `pos_tenders` with settlement columns (7B-1) and stored-value linkage columns (`stored_value_account_id`, `stored_value_identifier_id`, `generate_stored_value_identifier`, 7B-3). See [phase-7b-data-model.md](specifications/phase-7b-data-model.md).
 
 Phase 7A tables (implemented):
 

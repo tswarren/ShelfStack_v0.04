@@ -91,6 +91,11 @@ module PosHelper
   end
 
   def pos_line_display_title(line)
+    if line.gift_card_sale_line?
+      amount = pos_money(line.unit_price_cents)
+      return "#{PosTransactionLine::GIFT_CARD_SALE_DESCRIPTION} #{amount}"
+    end
+
     if line.open_ring_line?
       return line.open_ring_description.presence || "Open ring item"
     end
@@ -107,6 +112,7 @@ module PosHelper
   end
 
   def pos_receipt_line_sku(line)
+    return "Gift card" if line.gift_card_sale_line?
     return pos_open_ring_line_sku(line) if line.open_ring_line?
 
     line.variant_sku_snapshot.presence ||
@@ -115,6 +121,8 @@ module PosHelper
   end
 
   def pos_line_display_sku(line)
+    return "Gift card" if line.gift_card_sale_line?
+
     return pos_open_ring_line_sku(line) if line.open_ring_line?
 
     line.variant_sku_snapshot.presence ||
@@ -267,6 +275,99 @@ module PosHelper
     PosTender::PHASE6_ALLOWED_TYPES.map { |value| [ value.humanize, value ] }
   end
 
+  def pos_can_use_stored_value_tender?(transaction, tender_type, user = current_user)
+    Pos::TenderTypePolicy.allowed?(transaction, actor: user, tender_type:, store: transaction.store)
+  end
+
+  def pos_can_issue_gift_card_sale?(transaction, user = current_user)
+    Pos::GiftCardSalePolicy.issue_permitted?(actor: user, store: transaction.store)
+  end
+
+  def pos_gift_card_sale_activation_status(line)
+    if line.stored_value_identifier&.display_value_masked.present?
+      if line.reload_gift_card_sale?
+        "Reloading card #{line.stored_value_identifier.display_value_masked}"
+      else
+        "Card #{line.stored_value_identifier.display_value_masked}"
+      end
+    elsif line.generate_stored_value_identifier?
+      "A card number will be auto-generated at completion."
+    else
+      "Leave blank to auto-generate, or enter an existing or new card number."
+    end
+  end
+
+  def pos_customer_stored_value_account(transaction, tender_type: "store_credit")
+    return if transaction.customer_id.blank?
+
+    account_type = Pos::StoredValueTenderSupport.default_account_type_for_tender(tender_type)
+    StoredValueAccount.active_records.find_by(
+      customer_id: transaction.customer_id,
+      issuing_store_id: transaction.store_id,
+      account_type: account_type
+    )
+  end
+
+  def pos_stored_value_tender_label(tender)
+    base = tender.tender_type == "gift_card" ? "Gift card" : "Store credit"
+    if tender.stored_value_identifier&.display_value_masked.present?
+      "#{base} #{tender.stored_value_identifier.display_value_masked}"
+    elsif tender.stored_value_account&.customer&.display_name.present?
+      "#{base} – #{tender.stored_value_account.customer.display_name}"
+    elsif tender.stored_value_account&.holder_name_snapshot.present?
+      "#{base} – #{tender.stored_value_account.holder_name_snapshot}"
+    else
+      base
+    end
+  end
+
+  def pos_stored_value_receipt_balance_cents(tender)
+    return unless tender.stored_value_account_id.present?
+
+    entry = StoredValueLedgerEntry.where(source: tender).order(posted_at: :desc, id: :desc).first
+    entry&.balance_after_cents || tender.stored_value_account&.current_balance_cents
+  end
+
+  def pos_stored_value_receipt_identifier_value(tender)
+    identifier = tender.stored_value_identifier
+    return if identifier.blank? || identifier.encrypted_value.blank?
+
+    StoredValue::IdentifierCodec.format_display(
+      StoredValue::IdentifierVault.decrypt(identifier.encrypted_value)
+    )
+  end
+
+  def pos_gift_card_sale_receipt_ledger_entry(line)
+    return unless line.gift_card_sale_line?
+
+    StoredValueLedgerEntry.where(source: line, entry_type: "issue").order(posted_at: :desc, id: :desc).first
+  end
+
+  def pos_gift_card_sale_receipt_balance_cents(line)
+    entry = pos_gift_card_sale_receipt_ledger_entry(line)
+    entry&.balance_after_cents || line.stored_value_account&.current_balance_cents
+  end
+
+  def pos_gift_card_sale_receipt_identifier_value(line)
+    identifier = line.stored_value_identifier
+    return if identifier.blank? || identifier.encrypted_value.blank?
+
+    StoredValue::IdentifierCodec.format_display(
+      StoredValue::IdentifierVault.decrypt(identifier.encrypted_value)
+    )
+  end
+
+  def pos_gift_card_sale_receipt_reload?(line)
+    entry = pos_gift_card_sale_receipt_ledger_entry(line)
+    return false if entry.blank?
+
+    entry.balance_after_cents.to_i > entry.amount_delta_cents.to_i
+  end
+
+  def pos_stored_value_receipt_balance_label(tender)
+    tender.issue_tender? ? "New balance" : "Remaining balance"
+  end
+
   def pos_card_brand_options
     PosTender::CARD_BRANDS.map { |brand| [ brand.humanize, brand ] }
   end
@@ -299,6 +400,10 @@ module PosHelper
       { label: label, amount: pos_money(amount_cents) }
     when "check"
       label = row.check_number.present? ? "Check ##{row.check_number}" : "Check"
+      amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
+      { label: label, amount: pos_money(amount_cents) }
+    when "store_credit", "gift_card"
+      label = pos_stored_value_tender_label(row)
       amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
       { label: label, amount: pos_money(amount_cents) }
     else
@@ -405,6 +510,12 @@ module PosHelper
       else
         "Cash"
       end
+    when "store_credit"
+      refund = tender.amount_cents.negative?
+      refund ? "Store credit issued" : "Store credit redeemed"
+    when "gift_card"
+      refund = tender.amount_cents.negative?
+      refund ? "Gift card credit issued" : "Gift card redeemed"
     else
       tender.tender_type.humanize
     end

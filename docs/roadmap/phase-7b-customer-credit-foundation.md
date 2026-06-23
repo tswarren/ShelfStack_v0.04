@@ -1,5 +1,7 @@
 # Phase 7B: Customer Credit Foundation
 
+**Status:** Complete (2026-06-21). See [phase-7b-2-completion.md](../implementation/phase-7b-2-completion.md) and [phase-7b-3-completion.md](../implementation/phase-7b-3-completion.md).
+
 ## Purpose
 
 Phase 7B introduces ShelfStack’s customer credit foundation in three dependent slices:

@@ -1,0 +1,15 @@
+<% if flash[:pos_generated_stored_value_identifiers].present? %>
+  <section class="ss-pos-generated-identifiers ss-panel">
+    <h2 class="ss-panel__title">Stored value issued</h2>
+    <p class="ss-hint">Print the gift card or store credit slip below and give it to the customer.</p>
+    <% flash[:pos_generated_stored_value_identifiers].each do |item| %>
+      <p class="ss-pos-generated-identifiers__value">
+        <% if item["pos_transaction_line_id"].present? %>
+          A gift card was issued.
+        <% else %>
+          Store credit was issued.
+        <% end %>
+      </p>
+    <% end %>
+  </section>
+<% end %>

@@ -111,8 +111,8 @@ Rules:
 ```text
 one pos_tender row per stored value account redeemed
 one ledger entry per pos_tender row
-redemption cannot exceed account balance
-redemption cannot exceed transaction amount due
+POS caps saved tender amount to min(amount entered, account balance)
+redemption cannot exceed transaction amount due (sum of tenders must equal transaction total)
 multiple accounts allowed in one transaction
 ```
 
@@ -175,7 +175,7 @@ Register reports include store-credit and gift-card tender totals. Liability rep
 5. POS redeems multiple stored value accounts in one transaction.
 6. Each redemption creates one POS tender row and one ledger entry.
 7. Each issuance creates one POS refund settlement row and one ledger entry.
-8. Redemption cannot exceed available account balance.
+8. Redemption tender amount is capped to available account balance (ledger never exceeds balance).
 9. Redemption cannot exceed transaction balance due.
 10. Issue/redeem operations are transactional with POS completion.
 11. POS void reverses stored value ledger entries without mutating originals.

@@ -4,7 +4,8 @@ module Pos
   class SettlementInputParser
     ParsedRow = Data.define(
       :id, :destroy, :tender_type, :amount_cents, :tendered_cents,
-      :card_brand, :card_last_four, :card_authorization_code, :check_number, :notes
+      :card_brand, :card_last_four, :card_authorization_code, :check_number, :notes,
+      :stored_value_account_id, :stored_value_identifier_id, :lookup_code, :generate_identifier
     )
 
     def self.parse(transaction:, raw_inputs:)
@@ -12,7 +13,7 @@ module Pos
     end
 
     def self.normalize_refund_amount_cents(transaction, amount_cents)
-      return amount_cents unless transaction.total_cents.negative?
+      return amount_cents unless Pos::TenderTypePolicy.refund_transaction?(transaction)
       return amount_cents if amount_cents.negative?
 
       -amount_cents.abs
@@ -55,7 +56,11 @@ module Pos
         card_last_four: attrs[:card_last_four].presence,
         card_authorization_code: attrs[:card_authorization_code].presence,
         check_number: attrs[:check_number].presence,
-        notes: attrs[:notes].presence
+        notes: attrs[:notes].presence,
+        stored_value_account_id: attrs[:stored_value_account_id].presence,
+        stored_value_identifier_id: attrs[:stored_value_identifier_id].presence,
+        lookup_code: attrs[:lookup_code].presence,
+        generate_identifier: parse_generate_identifier(attrs)
       )
     end
 
@@ -87,6 +92,13 @@ module Pos
 
     def truthy?(value)
       ActiveModel::Type::Boolean.new.cast(value)
+    end
+
+    def parse_generate_identifier(attrs)
+      return false unless Pos::StoredValueTenderSupport.stored_value_tender?(attrs[:tender_type])
+      return false unless Pos::TenderTypePolicy.refund_transaction?(transaction)
+
+      truthy?(attrs[:generate_identifier])
     end
 
     def normalize_attrs_hash(attrs)

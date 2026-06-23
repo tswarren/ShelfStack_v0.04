@@ -18,6 +18,8 @@ class PosTransaction < ApplicationRecord
   has_one :inventory_posting, as: :source, class_name: "InventoryPosting", dependent: :restrict_with_error
   has_many :pos_authorizations, dependent: :nullify
 
+  attr_accessor :pos_generated_stored_value_identifiers
+
   accepts_nested_attributes_for :pos_transaction_lines, allow_destroy: true
   accepts_nested_attributes_for :pos_tenders, allow_destroy: true
 

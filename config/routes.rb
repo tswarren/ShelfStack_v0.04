@@ -348,6 +348,8 @@ Rails.application.routes.draw do
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]
+    resource :stored_value_lookup, only: %i[show]
+    resource :stored_value_balance, only: %i[show], controller: "stored_value_balance"
     resource :pickup_lookup, only: %i[create]
     resources :authorizations, only: %i[create]
     resources :register_sessions, only: %i[new create show] do
@@ -368,6 +370,8 @@ Rails.application.routes.draw do
         post :add_reservation_line
         post :add_return_line
         post :add_open_ring_line
+        post :add_gift_card_sale_line
+        patch :update_gift_card_sale_line
         patch :update_line
         delete :remove_line
         patch :sync_tenders
@@ -376,6 +380,11 @@ Rails.application.routes.draw do
       end
     end
     resources :receipts, only: %i[show] do
+      member do
+        patch :print
+      end
+    end
+    resources :stored_value_issuance_slips, only: %i[show], path: "stored_value_issuance_slips" do
       member do
         patch :print
       end

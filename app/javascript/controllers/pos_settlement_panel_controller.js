@@ -8,8 +8,12 @@ export default class extends Controller {
     "cardTemplate",
     "checkTemplate",
     "cashTemplate",
+    "storeCreditTemplate",
+    "giftCardTemplate",
     "destroyField",
     "amountField",
+    "lookupCodeField",
+    "lookupStatus",
     "remainingBalance",
     "changeDue",
     "rowSummaryAmount"
@@ -17,7 +21,8 @@ export default class extends Controller {
 
   static values = {
     totalCents: Number,
-    refund: Boolean
+    refund: Boolean,
+    lookupUrl: String
   }
 
   connect() {
@@ -98,7 +103,10 @@ export default class extends Controller {
   }
 
   update() {
-    this.visibleRows().forEach((row) => this.updateRowSummary(row))
+    this.visibleRows().forEach((row) => {
+      this.clampStoredValueAmount(row)
+      this.updateRowSummary(row)
+    })
     this.updateHints()
     this.dispatchUpdate()
   }
@@ -129,13 +137,78 @@ export default class extends Controller {
     this.appendRow(this.cashTemplateTarget)
   }
 
+  addStoreCredit(event) {
+    event.preventDefault()
+    this.appendRow(this.storeCreditTemplateTarget)
+  }
+
+  addGiftCard(event) {
+    event.preventDefault()
+    this.appendRow(this.giftCardTemplateTarget)
+  }
+
+  async lookupStoredValue(event) {
+    const row = event.currentTarget.closest("[data-settlement-row]")
+    if (!row || !this.hasLookupUrlValue) return
+
+    const codeField = row.querySelector("[name*='[lookup_code]']")
+    const code = codeField?.value?.trim()
+    if (!code) return
+
+    const tenderType = row.dataset.settlementType
+    const statusEl = row.querySelector("[data-pos-settlement-panel-target='lookupStatus']")
+    const url = new URL(this.lookupUrlValue, window.location.origin)
+    url.searchParams.set("code", code)
+    url.searchParams.set("tender_type", tenderType)
+
+    try {
+      const response = await fetch(url.toString(), {
+        headers: { Accept: "application/json" },
+        credentials: "same-origin"
+      })
+      const payload = await response.json()
+      if (!response.ok) {
+        if (statusEl) statusEl.textContent = payload.message || "Lookup failed."
+        return
+      }
+
+      const accountField = row.querySelector("[name*='[stored_value_account_id]']")
+      const identifierField = row.querySelector("[name*='[stored_value_identifier_id]']")
+      if (accountField) accountField.value = payload.account_id
+      if (identifierField) identifierField.value = payload.identifier_id
+      row.dataset.storedValueBalanceCents = String(payload.current_balance_cents)
+
+      if (statusEl) {
+        statusEl.textContent = `${payload.display_value_masked} · Balance ${this.formatMoney(payload.current_balance_cents)}`
+      }
+
+      this.clampStoredValueAmount(row)
+      if (this.rowAmountCents(row) === 0) {
+        this.fillRemainingForRow(row, tenderType)
+      } else {
+        this.clampStoredValueAmount(row)
+      }
+      this.updateRowSummary(row)
+      this.updateHints()
+      this.dispatchUpdate()
+    } catch (_error) {
+      if (statusEl) statusEl.textContent = "Lookup failed."
+    }
+  }
+
   appendRow(template) {
     this.hideEmptyRow()
+    const index = this.nextSettlementIndex()
     const fragment = template.content.cloneNode(true)
     const row = fragment.querySelector("[data-settlement-row]")
     if (!row) return
 
+    fragment.querySelectorAll("[name]").forEach((field) => {
+      field.name = field.name.replace("[TEMPLATE]", `[${index}]`)
+    })
+
     row.dataset.rowId = ""
+    row.dataset.settlementIndex = String(index)
     row.removeAttribute("data-destroyed")
     row.dataset.collapsed = "false"
     this.rowsTarget.appendChild(fragment)
@@ -197,6 +270,10 @@ export default class extends Controller {
     }
 
     displayCents = Math.max(0, displayCents)
+
+    if (tenderType === "store_credit" || tenderType === "gift_card") {
+      displayCents = this.cappedStoredValueAmountCents(row, displayCents)
+    }
 
     this.setRowAmountCents(row, displayCents)
     this.collapseRowIfReady(row)
@@ -278,6 +355,13 @@ export default class extends Controller {
     if (tenderType === "check") {
       const checkNumber = row.querySelector("[name*='[check_number]']")?.value
       const label = checkNumber ? `Check #${checkNumber}` : "Check"
+      return { label, amount }
+    }
+
+    if (tenderType === "store_credit" || tenderType === "gift_card") {
+      const base = tenderType === "gift_card" ? "Gift card" : "Store credit"
+      const status = row.querySelector("[data-pos-settlement-panel-target='lookupStatus']")?.textContent
+      const label = status ? `${base} ${status.split("·")[0].trim()}` : base
       return { label, amount }
     }
 
@@ -403,5 +487,41 @@ export default class extends Controller {
     }
 
     row.querySelector("input:not([type='hidden']), select")?.focus()
+  }
+
+  nextSettlementIndex() {
+    const rows = this.rowsTarget.querySelectorAll("[data-settlement-row]")
+    let max = -1
+    rows.forEach((row) => {
+      const index = parseInt(row.dataset.settlementIndex, 10)
+      if (!Number.isNaN(index)) max = Math.max(max, index)
+    })
+    return max + 1
+  }
+
+  storedValueBalanceCents(row) {
+    const balance = parseInt(row.dataset.storedValueBalanceCents, 10)
+    return Number.isNaN(balance) ? null : balance
+  }
+
+  cappedStoredValueAmountCents(row, amountCents) {
+    const balanceCents = this.storedValueBalanceCents(row)
+    if (balanceCents == null) return amountCents
+
+    return Math.min(amountCents, balanceCents)
+  }
+
+  clampStoredValueAmount(row) {
+    if (this.refundValue) return
+    if (row.dataset.settlementType !== "store_credit" && row.dataset.settlementType !== "gift_card") return
+
+    const balanceCents = this.storedValueBalanceCents(row)
+    if (balanceCents == null) return
+
+    const amountCents = this.rowAmountCents(row)
+    if (amountCents <= balanceCents) return
+
+    this.setRowAmountCents(row, balanceCents)
+    this.updateRowSummary(row)
   }
 }

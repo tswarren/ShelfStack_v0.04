@@ -50,6 +50,12 @@ module Pos
         PostVoidInventory.call(pos_void:, posted_by_user: voided_by_user)
         ReverseReservationFulfillment.call!(transaction:, reversed_by_user: voided_by_user)
         reverse_tenders!(pos_void)
+        ReverseStoredValueLedger.call!(
+          transaction:,
+          actor: voided_by_user,
+          pos_void:,
+          store: transaction.store
+        )
 
         AuditEvents.record!(
           actor: voided_by_user,
@@ -101,6 +107,8 @@ module Pos
           card_authorization_code: tender.card_authorization_code,
           check_number: tender.check_number,
           notes: tender.notes,
+          stored_value_account_id: tender.stored_value_account_id,
+          stored_value_identifier_id: tender.stored_value_identifier_id,
           reverses_tender: tender
         )
         reversed_count += 1

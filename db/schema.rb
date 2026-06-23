@@ -342,7 +342,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["applied_at"], name: "index_external_catalog_imports_on_applied_at"
     t.index ["catalog_item_id"], name: "index_external_catalog_imports_on_catalog_item_id"
     t.index ["external_data_source_id"], name: "index_external_catalog_imports_on_external_data_source_id"
-    t.index ["external_lookup_result_id", "catalog_item_id", "action_type"], name: "index_external_catalog_imports_on_result_item_action_applied", unique: true, where: "(((status)::text = 'applied'::text) AND ((action_type)::text = ANY ((ARRAY['create_catalog_item'::character varying, 'link_existing_catalog_item'::character varying, 'fill_blank_existing_catalog_item'::character varying])::text[])))"
+    t.index ["external_lookup_result_id", "catalog_item_id", "action_type"], name: "index_external_catalog_imports_on_result_item_action_applied", unique: true, where: "(((status)::text = 'applied'::text) AND ((action_type)::text = ANY (ARRAY[('create_catalog_item'::character varying)::text, ('link_existing_catalog_item'::character varying)::text, ('fill_blank_existing_catalog_item'::character varying)::text])))"
     t.index ["external_lookup_result_id"], name: "index_external_catalog_imports_on_external_lookup_result_id"
     t.index ["imported_by_user_id"], name: "index_external_catalog_imports_on_imported_by_user_id"
     t.index ["product_id"], name: "index_external_catalog_imports_on_product_id"
@@ -721,23 +721,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "change_cents"
     t.string "check_number"
     t.datetime "created_at", null: false
+    t.boolean "generate_stored_value_identifier", default: false, null: false
     t.integer "line_number", null: false
     t.text "notes"
     t.bigint "pos_transaction_id", null: false
     t.string "reference_number"
     t.bigint "reverses_tender_id"
+    t.bigint "stored_value_account_id"
+    t.bigint "stored_value_identifier_id"
     t.string "tender_type", null: false
     t.integer "tendered_cents"
     t.datetime "updated_at", null: false
     t.index ["pos_transaction_id", "line_number"], name: "index_pos_tenders_on_pos_transaction_id_and_line_number", unique: true
     t.index ["pos_transaction_id"], name: "index_pos_tenders_on_pos_transaction_id"
     t.index ["reverses_tender_id"], name: "index_pos_tenders_on_reverses_tender_id"
+    t.index ["stored_value_account_id"], name: "index_pos_tenders_on_stored_value_account_id"
+    t.index ["stored_value_identifier_id"], name: "index_pos_tenders_on_stored_value_identifier_id"
   end
 
   create_table "pos_transaction_lines", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "customer_request_line_id"
     t.integer "extended_price_cents", default: 0, null: false
+    t.boolean "generate_stored_value_identifier", default: false, null: false
     t.string "inventory_behavior_snapshot"
     t.bigint "inventory_reservation_id"
     t.integer "line_discount_cents", default: 0, null: false
@@ -757,6 +763,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "special_order_id"
     t.bigint "store_tax_rate_id"
     t.string "store_tax_rate_short_name_snapshot"
+    t.bigint "stored_value_account_id"
+    t.bigint "stored_value_identifier_id"
     t.bigint "sub_department_id"
     t.string "sub_department_name_snapshot"
     t.bigint "tax_category_id"
@@ -778,6 +786,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["source_transaction_line_id"], name: "index_pos_transaction_lines_on_source_transaction_line_id"
     t.index ["special_order_id"], name: "index_pos_transaction_lines_on_special_order_id"
     t.index ["store_tax_rate_id"], name: "index_pos_transaction_lines_on_store_tax_rate_id"
+    t.index ["stored_value_account_id"], name: "index_pos_transaction_lines_on_stored_value_account_id"
+    t.index ["stored_value_identifier_id"], name: "index_pos_transaction_lines_on_stored_value_identifier_id"
     t.index ["sub_department_id"], name: "index_pos_transaction_lines_on_sub_department_id"
     t.index ["tax_category_id"], name: "index_pos_transaction_lines_on_tax_category_id"
   end
@@ -880,7 +890,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_variant_id", "vendor_id"], name: "idx_product_variant_vendors_variant_vendor", unique: true
     t.index ["product_variant_id"], name: "index_product_variant_vendors_on_product_variant_id"
     t.index ["vendor_id"], name: "index_product_variant_vendors_on_vendor_id"
-    t.check_constraint "returnability_status IS NULL OR (returnability_status::text = ANY (ARRAY['returnable'::character varying, 'non_returnable'::character varying, 'conditional'::character varying, 'unknown'::character varying]::text[]))", name: "chk_product_variant_vendors_returnability_status"
+    t.check_constraint "returnability_status IS NULL OR (returnability_status::text = ANY (ARRAY['returnable'::character varying::text, 'non_returnable'::character varying::text, 'conditional'::character varying::text, 'unknown'::character varying::text]))", name: "chk_product_variant_vendors_returnability_status"
     t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_product_variant_vendors_supplier_discount_bps"
   end
 
@@ -912,7 +922,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_id"], name: "index_product_variants_on_product_id"
     t.index ["sku"], name: "index_product_variants_on_sku", unique: true
     t.index ["sub_department_id"], name: "index_product_variants_on_sub_department_id"
-    t.check_constraint "returnability_status::text = ANY (ARRAY['returnable'::character varying, 'non_returnable'::character varying, 'conditional'::character varying, 'unknown'::character varying]::text[])", name: "chk_product_variants_returnability_status"
+    t.check_constraint "returnability_status::text = ANY (ARRAY['returnable'::character varying::text, 'non_returnable'::character varying::text, 'conditional'::character varying::text, 'unknown'::character varying::text])", name: "chk_product_variants_returnability_status"
     t.check_constraint "selling_price_cents >= 0", name: "chk_product_variants_selling_price_cents"
   end
 
@@ -930,7 +940,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_id", "vendor_id"], name: "index_product_vendors_on_product_id_and_vendor_id", unique: true
     t.index ["product_id"], name: "index_product_vendors_on_product_id"
     t.index ["vendor_id"], name: "index_product_vendors_on_vendor_id"
-    t.check_constraint "returnability_status IS NULL OR (returnability_status::text = ANY (ARRAY['returnable'::character varying, 'non_returnable'::character varying, 'conditional'::character varying, 'unknown'::character varying]::text[]))", name: "chk_product_vendors_returnability_status"
+    t.check_constraint "returnability_status IS NULL OR (returnability_status::text = ANY (ARRAY['returnable'::character varying::text, 'non_returnable'::character varying::text, 'conditional'::character varying::text, 'unknown'::character varying::text]))", name: "chk_product_vendors_returnability_status"
     t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_product_vendors_supplier_discount_bps"
   end
 
@@ -1743,6 +1753,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_register_sessions", "workstations"
   add_foreign_key "pos_tenders", "pos_tenders", column: "reverses_tender_id"
   add_foreign_key "pos_tenders", "pos_transactions"
+  add_foreign_key "pos_tenders", "stored_value_accounts"
+  add_foreign_key "pos_tenders", "stored_value_identifiers"
   add_foreign_key "pos_transaction_lines", "customer_request_lines"
   add_foreign_key "pos_transaction_lines", "inventory_reservations"
   add_foreign_key "pos_transaction_lines", "pos_transaction_lines", column: "source_transaction_line_id"
@@ -1752,6 +1764,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_transaction_lines", "products"
   add_foreign_key "pos_transaction_lines", "special_orders"
   add_foreign_key "pos_transaction_lines", "store_tax_rates"
+  add_foreign_key "pos_transaction_lines", "stored_value_accounts"
+  add_foreign_key "pos_transaction_lines", "stored_value_identifiers"
   add_foreign_key "pos_transaction_lines", "sub_departments"
   add_foreign_key "pos_transaction_lines", "tax_categories"
   add_foreign_key "pos_transactions", "customers"

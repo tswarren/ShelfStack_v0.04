@@ -13,6 +13,8 @@ module Seeds
           pos.transactions.cancel
           pos.lines.add pos.lines.update pos.lines.remove
           pos.tenders.cash pos.tenders.card pos.tenders.check
+          pos.tenders.store_credit pos.tenders.gift_card
+          pos.refunds.store_credit
           pos.register_sessions.view pos.register_sessions.open pos.register_sessions.close
           pos.cash_movements.view pos.cash_movements.create
           pos.receipts.view pos.receipts.print
@@ -29,7 +31,9 @@ module Seeds
           pos.transactions.complete pos.transactions.suspend pos.transactions.resume
           pos.transactions.resume.other_cashier pos.transactions.cancel
           pos.lines.add pos.lines.add.open_ring pos.lines.update pos.lines.remove
-          pos.tenders.cash pos.tenders.card pos.tenders.check pos.tenders.refund
+          pos.tenders.cash pos.tenders.card pos.tenders.check
+          pos.tenders.store_credit pos.tenders.gift_card
+          pos.refunds.store_credit pos.tenders.refund
           pos.register_sessions.view pos.register_sessions.open pos.register_sessions.close
           pos.cash_movements.view pos.cash_movements.create
           pos.receipts.view pos.receipts.print
@@ -41,7 +45,10 @@ module Seeds
       "pos_manager" => {
         name: "POS Manager",
         description: "Full POS operations including authorizations and exports",
-        permissions: Seeds::Phase6Permissions::PERMISSIONS.map { |attrs| attrs[:key] }
+        permissions: (
+          Seeds::Phase6Permissions::PERMISSIONS.map { |attrs| attrs[:key] } +
+          %w[pos.refunds.store_credit]
+        ).uniq
       }
     }.freeze
 

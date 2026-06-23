@@ -14,21 +14,53 @@ class Pos::TenderValidatorTest < ActiveSupport::TestCase
       workstation: @workstation,
       user: @user,
       attrs: { total_cents: 1000 },
-      tenders: [ { tender_type: "gift_card", amount_cents: 1000 } ]
+      tenders: [ { tender_type: "cash", amount_cents: 1000 } ]
     )
   end
 
-  test "rejects gift card in phase 6" do
+  test "rejects gift card without stored value permissions" do
+    account = create_stored_value_account!(issuing_store: @store, account_type: "gift_card")
+    @transaction.pos_tenders.destroy_all
+    @transaction.pos_tenders.create!(
+      tender_type: "gift_card",
+      amount_cents: 1000,
+      line_number: 1,
+      stored_value_account: account
+    )
     error = assert_raises(Pos::TenderValidator::Error) { Pos::TenderValidator.validate!(@transaction) }
-    assert_match(/gift_card/, error.message)
+    assert_match(/gift_card|not enabled/i, error.message)
   end
 
-  test "rejects store credit in phase 6" do
+  test "allows gift card with policy permissions" do
+    seed_phase7b_reference_data!
+    grant_permission!(@user, "pos.tenders.gift_card", store: @store)
+    account = create_stored_value_account!(issuing_store: @store, account_type: "gift_card")
+    issue_stored_value_credit!(account: account, store: @store, actor: @user, amount_cents: 5000)
     @transaction.pos_tenders.destroy_all
-    @transaction.pos_tenders.create!(tender_type: "store_credit", amount_cents: 1000, line_number: 1)
+    @transaction.pos_tenders.create!(
+      tender_type: "gift_card",
+      amount_cents: 1000,
+      line_number: 1,
+      stored_value_account: account
+    )
+
+    assert_nothing_raised do
+      Pos::TenderValidator.validate!(@transaction, actor: @user)
+    end
+  end
+
+  test "rejects store credit without permissions" do
+    account = create_stored_value_account!(issuing_store: @store)
+    @transaction.pos_tenders.destroy_all
+    @transaction.pos_tenders.create!(
+      tender_type: "store_credit",
+      amount_cents: 1000,
+      line_number: 1,
+      stored_value_account: account
+    )
 
     error = assert_raises(Pos::TenderValidator::Error) { Pos::TenderValidator.validate!(@transaction) }
-    assert_match(/store_credit/, error.message)
+    assert_match(/store_credit|not enabled/i, error.message)
   end
 
   test "rejects tender total mismatch" do

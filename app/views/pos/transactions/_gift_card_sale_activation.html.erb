@@ -1,0 +1,28 @@
+<tr class="ss-pos-cart-line-activation" id="<%= dom_id(line, :activation) %>"
+    data-controller="pos-gift-card-sale-line"
+    data-pos-gift-card-sale-line-lookup-url-value="<%= pos_stored_value_lookup_path %>"
+    data-pos-gift-card-sale-line-line-id-value="<%= line.id %>">
+  <td colspan="6">
+    <%= form_with url: update_gift_card_sale_line_pos_transaction_path(transaction),
+                  method: :patch,
+                  class: "ss-pos-gift-card-activation-form",
+                  data: { turbo_stream: true } do %>
+      <%= hidden_field_tag :line_id, line.id %>
+      <div class="ss-pos-gift-card-activation__fields">
+        <div class="ss-field">
+          <%= label_tag "gift_card_lookup_#{line.id}", "Card number (optional)" %>
+          <%= text_field_tag :lookup_code, nil,
+                id: "gift_card_lookup_#{line.id}",
+                placeholder: "Scan or enter card number; leave blank to auto-generate",
+                data: {
+                  pos_gift_card_sale_line_target: "lookupField",
+                  action: "change->pos-gift-card-sale-line#submitCardNumber"
+                } %>
+          <p class="ss-hint" data-pos-gift-card-sale-line-target="lookupStatus">
+            <%= pos_gift_card_sale_activation_status(line) %>
+          </p>
+        </div>
+      </div>
+    <% end %>
+  </td>
+</tr>
