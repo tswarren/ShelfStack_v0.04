@@ -225,6 +225,12 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
+    resources :stored_value_reason_codes do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
   end
 
   namespace :inventory do
@@ -273,6 +279,30 @@ Rails.application.routes.draw do
         post :record_contact
       end
     end
+    resources :stored_value_accounts do
+      collection do
+        get :lookup
+      end
+      member do
+        patch :suspend
+        patch :close
+        patch :reactivate
+      end
+      resources :identifiers, controller: "stored_value_identifiers", only: %i[create] do
+        member do
+          post :reveal
+          post :replace
+          patch :deactivate
+        end
+      end
+      resource :operations, controller: "stored_value_account_operations", only: [] do
+        post :issue
+        post :adjust
+        post :transfer
+        post :void_entry
+      end
+    end
+    resources :stored_value_reports, only: %i[index]
   end
 
   namespace :orders do

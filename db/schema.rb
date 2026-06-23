@@ -1379,6 +1379,88 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["store_id"], name: "index_store_tax_rates_on_store_id"
   end
 
+  create_table "stored_value_accounts", force: :cascade do |t|
+    t.string "account_type", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "current_balance_cents", default: 0, null: false
+    t.bigint "customer_id"
+    t.string "holder_name_snapshot"
+    t.bigint "issuing_store_id", null: false
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.index ["account_type"], name: "index_stored_value_accounts_on_account_type"
+    t.index ["customer_id"], name: "index_stored_value_accounts_on_customer_id"
+    t.index ["issuing_store_id"], name: "index_stored_value_accounts_on_issuing_store_id"
+  end
+
+  create_table "stored_value_identifiers", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "display_value_masked"
+    t.text "encrypted_value"
+    t.string "identifier_type", null: false
+    t.string "lookup_digest", null: false
+    t.bigint "replaced_by_identifier_id"
+    t.bigint "stored_value_account_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lookup_digest"], name: "index_sv_identifiers_on_active_lookup_digest", unique: true, where: "(active = true)"
+    t.index ["stored_value_account_id"], name: "index_stored_value_identifiers_on_stored_value_account_id"
+  end
+
+  create_table "stored_value_ledger_entries", force: :cascade do |t|
+    t.integer "amount_delta_cents", null: false
+    t.integer "balance_after_cents"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_user_id", null: false
+    t.string "entry_type", null: false
+    t.text "notes"
+    t.datetime "posted_at", null: false
+    t.bigint "reason_code_id"
+    t.bigint "reverses_entry_id"
+    t.bigint "source_id"
+    t.string "source_type"
+    t.bigint "store_id", null: false
+    t.bigint "stored_value_account_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_user_id"], name: "index_stored_value_ledger_entries_on_created_by_user_id"
+    t.index ["reason_code_id"], name: "index_stored_value_ledger_entries_on_reason_code_id"
+    t.index ["reverses_entry_id"], name: "index_stored_value_ledger_entries_on_reverses_entry_id"
+    t.index ["source_type", "source_id"], name: "index_sv_ledger_on_source"
+    t.index ["store_id", "posted_at"], name: "index_sv_ledger_on_store_posted_at"
+    t.index ["store_id"], name: "index_stored_value_ledger_entries_on_store_id"
+    t.index ["stored_value_account_id", "posted_at"], name: "index_sv_ledger_on_account_posted_at"
+    t.index ["stored_value_account_id"], name: "index_stored_value_ledger_entries_on_stored_value_account_id"
+  end
+
+  create_table "stored_value_reason_codes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.string "reason_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reason_key"], name: "index_stored_value_reason_codes_on_reason_key", unique: true
+  end
+
+  create_table "stored_value_transfers", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_user_id", null: false
+    t.bigint "from_account_id", null: false
+    t.bigint "reason_code_id", null: false
+    t.bigint "to_account_id", null: false
+    t.bigint "transfer_in_entry_id", null: false
+    t.bigint "transfer_out_entry_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_user_id"], name: "index_stored_value_transfers_on_created_by_user_id"
+    t.index ["from_account_id"], name: "index_stored_value_transfers_on_from_account_id"
+    t.index ["reason_code_id"], name: "index_stored_value_transfers_on_reason_code_id"
+    t.index ["to_account_id"], name: "index_stored_value_transfers_on_to_account_id"
+    t.index ["transfer_in_entry_id"], name: "index_stored_value_transfers_on_transfer_in_entry_id"
+    t.index ["transfer_out_entry_id"], name: "index_stored_value_transfers_on_transfer_out_entry_id"
+  end
+
   create_table "stores", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "address_line1"
@@ -1750,6 +1832,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "store_tax_category_rates", "stores"
   add_foreign_key "store_tax_category_rates", "tax_categories"
   add_foreign_key "store_tax_rates", "stores"
+  add_foreign_key "stored_value_accounts", "customers"
+  add_foreign_key "stored_value_accounts", "stores", column: "issuing_store_id"
+  add_foreign_key "stored_value_identifiers", "stored_value_accounts"
+  add_foreign_key "stored_value_identifiers", "stored_value_identifiers", column: "replaced_by_identifier_id"
+  add_foreign_key "stored_value_ledger_entries", "stored_value_accounts"
+  add_foreign_key "stored_value_ledger_entries", "stored_value_ledger_entries", column: "reverses_entry_id"
+  add_foreign_key "stored_value_ledger_entries", "stored_value_reason_codes", column: "reason_code_id"
+  add_foreign_key "stored_value_ledger_entries", "stores"
+  add_foreign_key "stored_value_ledger_entries", "users", column: "created_by_user_id"
+  add_foreign_key "stored_value_transfers", "stored_value_accounts", column: "from_account_id"
+  add_foreign_key "stored_value_transfers", "stored_value_accounts", column: "to_account_id"
+  add_foreign_key "stored_value_transfers", "stored_value_ledger_entries", column: "transfer_in_entry_id"
+  add_foreign_key "stored_value_transfers", "stored_value_ledger_entries", column: "transfer_out_entry_id"
+  add_foreign_key "stored_value_transfers", "stored_value_reason_codes", column: "reason_code_id"
+  add_foreign_key "stored_value_transfers", "users", column: "created_by_user_id"
   add_foreign_key "sub_departments", "departments"
   add_foreign_key "sub_departments", "tax_categories", column: "default_tax_category_id"
   add_foreign_key "user_role_assignments", "roles"

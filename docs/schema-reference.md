@@ -330,7 +330,7 @@ cycle_counts
 
 **Superseded future-table language:** Phase 6 docs referenced separate `gift_card_accounts` and `store_credit_accounts`. Phase 7B replaces these with the canonical stored value model below.
 
-Phase 7B tables (planned — not yet implemented):
+Phase 7B stored value tables (7B-2 implemented):
 
 ```text
 stored_value_reason_codes
@@ -340,7 +340,7 @@ stored_value_ledger_entries
 stored_value_transfers
 ```
 
-Phase 7B also extends `pos_tenders` with settlement and stored-value linkage columns. See [phase-7b-data-model.md](specifications/phase-7b-data-model.md).
+Phase 7B also extends `pos_tenders` with settlement columns (7B-1 implemented) and stored-value linkage columns (7B-3 planned). See [phase-7b-data-model.md](specifications/phase-7b-data-model.md).
 
 Phase 7A tables (implemented):
 

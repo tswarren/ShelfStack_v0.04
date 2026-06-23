@@ -182,9 +182,12 @@ Phase 6.5 was completed on 2026-06-21. ISBNdb local-first lookup, Add Item wizar
 
 Phase 7A was completed on 2026-06-21. See [docs/implementation/phase-7a-completion.md](docs/implementation/phase-7a-completion.md).
 
-## Phase 7B: Customer Credit Foundation — **Active**
+## Phase 7B: Customer Credit Foundation — **Active (7B-2 complete)**
 
-Phase 7B is the current development priority. Implement in order: **7B-1** POS settlement, **7B-2** stored value ledger, **7B-3** POS integration. See [docs/roadmap/phase-7b-customer-credit-foundation.md](docs/roadmap/phase-7b-customer-credit-foundation.md).
+Phase 7B is the current development priority. **7B-1** (POS settlement) and **7B-2** (stored value foundation) are complete. Next slice: **7B-3** POS stored value integration. See [docs/roadmap/phase-7b-customer-credit-foundation.md](docs/roadmap/phase-7b-customer-credit-foundation.md).
+
+- 7B-1: merged via PR #23 (POS settlement foundation)
+- 7B-2: [docs/implementation/phase-7b-2-completion.md](docs/implementation/phase-7b-2-completion.md)
 
 The canonical stored value model (`stored_value_*` tables) supersedes earlier `gift_card_accounts` / `store_credit_accounts` future-table language. Do not implement separate account tables.
 
@@ -214,6 +217,7 @@ Use services for:
 * Inventory posting, eligibility, cost estimation, and balance updates
 * Purchasing: returnability, vendor cost, sourcing lookup, receipt and RTV posting, moving average cost
 * POS: line lookup, transaction type derivation, return quantity validation, tax/discount/tender calculators, complete and void workflows, register session lifecycle, inventory posting via `pos_transaction` / `pos_void`
+* Stored value: issue, adjust, redeem, void, transfer, identifier codec, balance rebuild/integrity, liability reporting
 
 ## Centralize business rules
 
@@ -237,6 +241,17 @@ Inventory::Post
 Inventory::BalanceUpdater
 Inventory::RebuildBalances
 Inventory::BalanceIntegrityCheck
+StoredValue::Post
+StoredValue::BalanceUpdater
+StoredValue::Issue
+StoredValue::Adjust
+StoredValue::VoidEntry
+StoredValue::Transfer
+StoredValue::RedeemCredit
+StoredValue::IdentifierCodec
+StoredValue::RebuildBalances
+StoredValue::BalanceIntegrityCheck
+StoredValue::LiabilityReport
 Purchasing::ReturnabilityResolver
 Purchasing::VendorCostCalculator
 Purchasing::SourcingLookup
@@ -551,14 +566,16 @@ product_variants.sub_department_id → sub_departments.id
 * Partial receipt: FIFO allocation to PO line allocations; partial pickup/void/cancel per spec.
 * Header status derived via `CustomerRequests::HeaderStatusResolver`; manual override limited to terminal statuses.
 
-## Phase 7B Rules (planned — see phase 7B specs)
+## Phase 7B Rules
 
-* Implement in order: 7B-1 settlement → 7B-2 stored value ledger → 7B-3 POS integration.
+* Implement in order: 7B-1 settlement → 7B-2 stored value ledger → 7B-3 POS integration. **7B-2 foundation is implemented.**
 * Multiple `pos_tender` rows per transaction; one cash row only; `sum(amount_cents) == total_cents`.
 * Cash drawer math uses `amount_cents`, not `tendered_cents`; migrate legacy `reference_number` tendered hack.
 * Check refunds out of scope for 7B-1; check payments only.
 * Stored value: append-only ledger; `stored_value_*` supersedes `gift_card_accounts` / `store_credit_accounts`.
-* Negative stored value balances not allowed; account row locked on redeem/issue.
+* Negative stored value balances not allowed; account row locked on post via `StoredValue::Post`.
+* Manual issue/adjust/transfer/void require reason code and audit events (7B-2 admin UI).
+* `Pos::TenderValidator` still rejects `gift_card` / `store_credit` until 7B-3.
 * `store_credit` / `gift_card` POS tenders enabled in 7B-3 only with `stored_value_account_id` and ledger posting on completion.
 * POS void reverses stored value ledger entries via `reverses_entry_id`; do not mutate originals.
 * Liability reporting is operational only — no GL export in 7B.

@@ -1,0 +1,79 @@
+<%# locals: account:, reason_codes: %>
+<% if account.active? %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.issue", store: current_store) %>
+    <%= render "orders/shared/collapsible_panel", title: "Issue credit", open: false do %>
+      <%= form_with url: issue_customers_stored_value_account_operations_path(account), method: :post, class: "ss-form" do %>
+        <div class="ss-form-grid ss-form-grid--2">
+          <div class="ss-field">
+            <%= label_tag :amount_cents, "Amount (cents)", class: "ss-label" %>
+            <%= number_field_tag :amount_cents, nil, min: 1, required: true, class: "ss-num" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :reason_code_id, "Reason", class: "ss-label" %>
+            <%= select_tag :reason_code_id,
+                  options_from_collection_for_select(reason_codes, :id, :name),
+                  required: true %>
+          </div>
+        </div>
+        <div class="ss-field">
+          <%= label_tag :notes, "Notes", class: "ss-label" %>
+          <%= text_field_tag :notes %>
+        </div>
+        <%= submit_tag "Issue credit", class: "ss-btn" %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.adjust", store: current_store) %>
+    <%= render "orders/shared/collapsible_panel", title: "Adjust balance", open: false do %>
+      <%= form_with url: adjust_customers_stored_value_account_operations_path(account), method: :post, class: "ss-form" do %>
+        <div class="ss-form-grid ss-form-grid--2">
+          <div class="ss-field">
+            <%= label_tag :amount_delta_cents, "Adjustment (cents, signed)", class: "ss-label" %>
+            <%= number_field_tag :amount_delta_cents, nil, required: true, class: "ss-num" %>
+            <p class="ss-help">Use negative values to reduce the balance.</p>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :reason_code_id, "Reason", class: "ss-label" %>
+            <%= select_tag :reason_code_id,
+                  options_from_collection_for_select(reason_codes, :id, :name),
+                  required: true %>
+          </div>
+        </div>
+        <div class="ss-field">
+          <%= label_tag :notes, "Notes", class: "ss-label" %>
+          <%= text_field_tag :notes %>
+        </div>
+        <%= submit_tag "Adjust balance", class: "ss-btn" %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.transfer", store: current_store) %>
+    <%= render "orders/shared/collapsible_panel", title: "Transfer balance", open: false do %>
+      <%= form_with url: transfer_customers_stored_value_account_operations_path(account), method: :post, class: "ss-form" do %>
+        <div class="ss-form-grid ss-form-grid--2">
+          <div class="ss-field">
+            <%= label_tag :to_account_id, "Destination account ID", class: "ss-label" %>
+            <%= number_field_tag :to_account_id, nil, min: 1, required: true, class: "ss-num" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :amount_cents, "Amount (cents)", class: "ss-label" %>
+            <%= number_field_tag :amount_cents, nil, min: 1, required: true, class: "ss-num" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :reason_code_id, "Reason", class: "ss-label" %>
+            <%= select_tag :reason_code_id,
+                  options_from_collection_for_select(reason_codes, :id, :name),
+                  required: true %>
+          </div>
+        </div>
+        <div class="ss-field">
+          <%= label_tag :notes, "Notes", class: "ss-label" %>
+          <%= text_field_tag :notes %>
+        </div>
+        <%= submit_tag "Transfer balance", class: "ss-btn" %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

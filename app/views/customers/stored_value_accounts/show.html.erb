@@ -1,0 +1,182 @@
+<%= render "customers/shared/workspace_nav", active: :stored_value_accounts %>
+
+<%= render "customers/shared/document_header",
+      title: stored_value_account_title(@account),
+      metadata_lines: [
+        "Account ##{@account.id}",
+        "Type: #{stored_value_account_type_label(@account.account_type)}",
+        "Balance: #{format_cents(@account.current_balance_cents)}",
+        "Issuing store: #{@account.issuing_store.name}",
+        (@account.customer ? "Customer: #{@account.customer.display_name}" : "Holder: #{@account.holder_name_snapshot.presence || '—'}"),
+        "Status: #{status_label(@account.active?)}"
+      ] do %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.accounts.update", store: current_store) %>
+    <%= link_to "Edit", edit_customers_stored_value_account_path(@account), class: "ss-btn" %>
+  <% end %>
+  <% if @account.active? && Authorization.allowed?(user: current_user, permission_key: "stored_value.accounts.suspend", store: current_store) %>
+    <%= button_to "Suspend", suspend_customers_stored_value_account_path(@account), method: :patch, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Suspend this account?" } %>
+  <% end %>
+  <% if @account.active? && Authorization.allowed?(user: current_user, permission_key: "stored_value.accounts.close", store: current_store) %>
+    <%= button_to "Close", close_customers_stored_value_account_path(@account), method: :patch, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Close this account? Balance must be zero." } %>
+  <% end %>
+  <% if !@account.active? && Authorization.allowed?(user: current_user, permission_key: "stored_value.accounts.reactivate", store: current_store) %>
+    <%= button_to "Reactivate", reactivate_customers_stored_value_account_path(@account), method: :patch, class: "ss-btn" %>
+  <% end %>
+  <%= link_to "Back", customers_stored_value_accounts_path, class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<% if @account.notes.present? %>
+  <section class="ss-summary-block">
+    <h2>Notes</h2>
+    <p><%= simple_format(@account.notes) %></p>
+  </section>
+<% end %>
+
+<section class="ss-summary-block">
+  <h2>Identifiers</h2>
+  <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.identifiers.create", store: current_store) %>
+    <div class="ss-detail-actions">
+      <%= button_to "Generate identifier",
+            customers_stored_value_account_identifiers_path(@account),
+            params: { identifier_type: "generated" },
+            class: "ss-btn ss-btn-small" %>
+    </div>
+  <% end %>
+  <% if @identifiers.any? %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Masked value</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @identifiers.each do |identifier| %>
+          <% revealed_value = stored_value_revealed_identifier_for(identifier) %>
+          <tr>
+            <td>
+              <code><%= identifier.display_value_masked %></code>
+              <% if revealed_value.present? %>
+                <p class="ss-help">
+                  Full identifier (shown once):
+                  <code><%= revealed_value %></code>
+                </p>
+              <% end %>
+            </td>
+            <td><%= identifier.identifier_type.humanize %></td>
+            <td><span class="<%= status_class(identifier.active?) %>"><%= status_label(identifier.active?) %></span></td>
+            <td>
+              <% if identifier.revealable? && Authorization.allowed?(user: current_user, permission_key: "stored_value.identifiers.view_full", store: current_store) %>
+                <%= button_to "Reveal full value",
+                      reveal_customers_stored_value_account_identifier_path(@account, identifier),
+                      method: :post,
+                      class: "ss-btn ss-btn-small",
+                      data: { turbo_confirm: "Reveal the full identifier? This action is audited." } %>
+              <% end %>
+              <% if identifier.active? %>
+                <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.identifiers.replace", store: current_store) %>
+                  <%= button_to "Replace",
+                        replace_customers_stored_value_account_identifier_path(@account, identifier),
+                        method: :post,
+                        class: "ss-btn ss-btn-small ss-btn-secondary",
+                        data: { turbo_confirm: "Replace this identifier? The current code will be deactivated." } %>
+                <% end %>
+                <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.identifiers.deactivate", store: current_store) %>
+                  <%= button_to "Deactivate",
+                        deactivate_customers_stored_value_account_identifier_path(@account, identifier),
+                        method: :patch,
+                        class: "ss-btn ss-btn-small ss-btn-secondary",
+                        data: { turbo_confirm: "Deactivate this identifier?" } %>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="ss-muted">No identifiers on this account yet.</p>
+  <% end %>
+</section>
+
+<% if @account.active? %>
+  <section class="ss-summary-block">
+    <h2>Manual operations</h2>
+    <%= render "operations", account: @account, reason_codes: @reason_codes %>
+  </section>
+<% elsif !@account.active? %>
+  <p class="ss-muted">Manual operations are unavailable while this account is inactive.</p>
+<% end %>
+
+<% if Authorization.allowed?(user: current_user, permission_key: "stored_value.ledger.view", store: current_store) %>
+  <section class="ss-summary-block">
+    <h2>Ledger</h2>
+    <% if @ledger_entries.any? %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Posted</th>
+            <th>Type</th>
+            <th class="ss-num">Delta</th>
+            <th class="ss-num">Balance after</th>
+            <th>Store</th>
+            <th>Reason</th>
+            <th>By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @ledger_entries.each do |entry| %>
+            <tr>
+              <td><%= display_time(entry.posted_at) %></td>
+              <td><%= entry.entry_type.humanize %></td>
+              <td class="ss-num"><%= format_cents(entry.amount_delta_cents) %></td>
+              <td class="ss-num"><%= format_cents(entry.balance_after_cents) %></td>
+              <td><%= entry.store.name %></td>
+              <td><%= entry.reason_code&.name || "—" %></td>
+              <td><%= entry.created_by_user.display_name %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="ss-muted">No ledger activity yet.</p>
+    <% end %>
+  </section>
+
+  <% voidable_entries = @ledger_entries.select { |entry| entry.void_reversal.blank? } %>
+  <% if voidable_entries.any? && Authorization.allowed?(user: current_user, permission_key: "stored_value.void", store: current_store) %>
+    <%= render "orders/shared/collapsible_panel", title: "Void ledger entry", open: false do %>
+      <%= form_with url: void_entry_customers_stored_value_account_operations_path(@account), method: :post, class: "ss-form" do %>
+        <div class="ss-form-grid ss-form-grid--2">
+          <div class="ss-field">
+            <%= label_tag :entry_id, "Ledger entry", class: "ss-label" %>
+            <%= select_tag :entry_id,
+                  options_for_select(
+                    voidable_entries.map { |entry|
+                      ["#{display_time(entry.posted_at)} — #{entry.entry_type.humanize} (#{format_cents(entry.amount_delta_cents)})", entry.id]
+                    }
+                  ),
+                  required: true %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :reason_code_id, "Reason", class: "ss-label" %>
+            <%= select_tag :reason_code_id,
+                  options_from_collection_for_select(@reason_codes, :id, :name),
+                  required: true %>
+          </div>
+        </div>
+        <div class="ss-field">
+          <%= label_tag :notes, "Notes", class: "ss-label" %>
+          <%= text_field_tag :notes %>
+        </div>
+        <%= submit_tag "Void entry", class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Create a reversing entry for this ledger row?" } %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline", open: false do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

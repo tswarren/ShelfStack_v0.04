@@ -45,6 +45,11 @@
         <%= render "customers/customers/contact_form", customer: @customer %>
       </details>
     <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.accounts.view", store: current_store) %>
+      <%= link_to "Stored value accounts",
+            customers_stored_value_accounts_path(customer_id: @customer.id),
+            class: "ss-btn ss-btn-secondary" %>
+    <% end %>
   </div>
   <p class="ss-muted">
     <%= @profile_presenter.open_request_count %> open request<%= @profile_presenter.open_request_count == 1 ? "" : "s" %>

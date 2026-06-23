@@ -1,0 +1,34 @@
+<%# locals: f, account:, stores:, customers: %>
+<%= render "shared/forms/errors", record: account %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Account setup",
+  description: "Link to a customer or capture a standalone holder name for bearer accounts."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="<%= ss_field_css(account, :account_type) %>">
+      <%= f.label :account_type, class: "ss-label" %>
+      <%= f.select :account_type,
+            StoredValueAccount::ACCOUNT_TYPES.map { |type| [stored_value_account_type_label(type), type] } %>
+      <%= ss_field_error(account, :account_type) %>
+    </div>
+    <div class="<%= ss_field_css(account, :issuing_store_id) %>">
+      <%= f.label :issuing_store_id, "Issuing store", class: "ss-label" %>
+      <%= f.collection_select :issuing_store_id, stores, :id, :name %>
+      <%= ss_field_error(account, :issuing_store_id) %>
+    </div>
+    <div class="<%= ss_field_css(account, :customer_id) %>">
+      <%= f.label :customer_id, "Customer", class: "ss-label" %>
+      <%= f.collection_select :customer_id, customers, :id, :display_name, include_blank: "Standalone / bearer" %>
+      <%= ss_field_error(account, :customer_id) %>
+    </div>
+    <div class="<%= ss_field_css(account, :holder_name_snapshot) %>">
+      <%= f.label :holder_name_snapshot, "Holder name (standalone)", class: "ss-label" %>
+      <%= f.text_field :holder_name_snapshot %>
+      <%= ss_field_error(account, :holder_name_snapshot) %>
+    </div>
+  </div>
+  <%= render layout: "shared/forms/field", locals: { f: f, record: account, field: :notes } do %>
+    <%= f.text_area :notes, rows: 4 %>
+  <% end %>
+<% end %>

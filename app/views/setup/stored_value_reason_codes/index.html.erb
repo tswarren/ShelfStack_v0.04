@@ -1,0 +1,14 @@
+<h1>Stored Value Reason Codes <%= link_to "New", new_setup_stored_value_reason_code_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead><tr><th>Key</th><th>Name</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% @reason_codes.each do |reason_code| %>
+      <tr>
+        <td><code><%= reason_code.reason_key %></code></td>
+        <td><%= reason_code.name %></td>
+        <td><span class="<%= status_class(reason_code.active?) %>"><%= status_label(reason_code.active?) %></span></td>
+        <td><%= link_to "View", setup_stored_value_reason_code_path(reason_code) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
