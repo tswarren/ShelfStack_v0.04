@@ -591,6 +591,17 @@ module PosHelper
     pos_receipt_line_gross_cents(line)
   end
 
+  def pos_receipt_line_unit_list_amount_cents(line)
+    line.unit_price_cents.to_i
+  end
+
+  def pos_receipt_line_unit_paid_amount_cents(line)
+    qty = line.quantity.abs
+    return line.unit_price_cents.to_i if qty <= 1
+
+    (line.extended_price_cents.to_f / qty).round
+  end
+
   def pos_receipt_line_item_discount_display_cents(line)
     line.line_discount_cents.to_i.abs
   end
@@ -605,6 +616,13 @@ module PosHelper
     return false if line.return_line?
 
     line.line_discount_cents.to_i.positive?
+  end
+
+  def pos_receipt_line_show_quantity_detail?(line)
+    return false unless line.merchandise_line?
+    return false if line.gift_card_sale_line?
+
+    line.quantity.abs > 1
   end
 
   def pos_receipt_discounted_subtotal_cents(transaction)
