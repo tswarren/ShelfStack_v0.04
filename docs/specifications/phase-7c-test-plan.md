@@ -16,8 +16,15 @@ Roadmap §16 and §17 exit criteria apply.
 - Intake creates catalog_item and product with `source = buyback_intake`, `needs_review = true`; variant deferred to `UpdateProposalLine`
 - Pricing rule precedence; overrides require permission and reason; split cash/trade/resale override flags
 - Staged workflow: `SaveProposal` rejects unresolved lines; `CompleteSession` requires `decision` status
-- `proposed_*` vs `accepted_*` snapshot derivation at completion per payout mode
-- Payout branching: cash, trade credit, donation; mixed accepted+donated posting allowed
+- `proposed_*` vs `accepted_*` snapshot derivation inside `CompleteSession` transaction per payout mode
+- Payout branching: cash, trade credit, donation; mixed accepted+donated posting allowed; donated lines zero cost in all modes
+- `no_value_donation` rejects sessions with any `accepted_by_customer` posting line
+- Override edits: `UpdateProposalLine` requires `buybacks.price_override` + reason when proposed ≠ suggested
+- Store-rejected lines terminal (`decided`) and do not block completion; repricing clears customer decision
+- Authorization: unauthorized users cannot mutate via controller; trade-credit slip `show` requires print permission
+- Decision-aware payout totals via `DecisionTotalsBuilder`
+- Resale override recalculates offers from overridden base (`ApplyPriceOverride` / `resale_override_cents`)
+- Line removal for draft/intake lines
 - `buyback_number` assigned at proposal save from workstation sequence
 - Cash movement with `BuybackSession` source
 - Trade credit issue with `StoredValueReasonCode` and `source: BuybackSession`; issuance slip vs masked receipt
@@ -33,7 +40,10 @@ Roadmap §16 and §17 exit criteria apply.
 ```text
 test/models/buyback_*_test.rb
 test/services/buybacks/*_test.rb
+test/services/buybacks/complete_session_review_fixes_test.rb
+test/services/buybacks/apply_price_override_test.rb
 test/controllers/buybacks/*_test.rb
+test/controllers/buybacks/authorization_review_fixes_test.rb
 test/integration/buybacks_staged_workflow_integration_test.rb
 test/support/phase7c_test_helper.rb
 ```

@@ -210,13 +210,14 @@ Phase 7C was completed on 2026-06-23. Phase 7C-1 workflow refinement was complet
 
 - Staged workflow: intake → pricing/proposal → customer decision → payout → completion
 - `buyback_number` assigned at `SaveProposal`, not completion
-- `proposed_*` editable pre-complete; `accepted_*` snapshots set only in `CompleteSession`
+- `proposed_*` editable pre-complete; `accepted_*` snapshots set only in `CompleteSession` (inside transaction)
 - Graded used variant creation deferred to `UpdateProposalLine` (not scan/intake)
-- Trade-credit issuance slip (full identifier) separate from masked receipt
+- Trade-credit issuance slip (full identifier, audited reveal) separate from masked receipt; both `show` and `print` require `buybacks.trade_credit_slip.print`
 - Buyback workspace at `/buybacks`; single payout mode per session (cash OR trade_credit OR no_value_donation)
 - Completion: `used_buyback` inventory posting, `source: BuybackSession`; void via `buyback_voids` + `buyback_void` posting
 - Workstation-scoped buyback numbers: `{store_number}-{workstation_number}-B{sequence:06d}`
 - Trade credit issues to `trade_credit` account with identifier for POS redemption; SV ledger entries source-linked to buyback session/void
+- Review fixes (2026-06-24): auth halting, zero-cost donated lines in mixed payout sessions, override permission/reason on proposal edits, decision-aware payout totals, line removal, terminal store-rejected lines
 
 ---
 
@@ -616,14 +617,20 @@ product_variants.sub_department_id → sub_departments.id
 * Staged workflow: no cash/SV/inventory posting before `CompleteSession`; session statuses `draft`, `quoted`, `decision`, `completed`, `cancelled`, `voided`.
 * Line statuses: `pending`, `resolved`, `priced`, `offered`, `decided`, `posted`, `voided`; outcomes: `accepted_by_customer`, `declined_by_customer`, `donated_by_customer`, `rejected_by_store`, `recycle_with_permission`.
 * Posting eligibility: `accepted_by_customer` and `donated_by_customer` only; mixed accepted+donated sessions allowed.
-* `proposed_*` fields are staff/customer-facing pre-complete; `accepted_offer_cents` / `accepted_resale_price_cents` set only at completion from proposed values per payout mode.
-* `SaveProposal` assigns `buyback_number` and rejects unresolved lines; graded variant create/find in `UpdateProposalLine` only.
+* Donated lines always post at zero cost (`accepted_offer_cents = 0`, `cost_source: no_value_donation`) even in cash/trade-credit sessions; cash/trade payout sums only `accepted_by_customer`.
+* `no_value_donation` payout mode requires every posting line to be `donated_by_customer`.
+* `proposed_*` fields are staff/customer-facing pre-complete; `accepted_offer_cents` / `accepted_resale_price_cents` set only inside `CompleteSession` transaction from proposed values per payout mode.
+* Direct proposed-value edits in `UpdateProposalLine` that differ from suggested require `buybacks.price_override` and override reason; repricing clears `outcome` and `customer_decision_at`.
+* `SaveProposal` assigns `buyback_number` and rejects unresolved lines; graded variant create/find in `UpdateProposalLine` only; draft lines removable via `RemoveLine`.
+* Store rejection (`rejected_by_store`) sets terminal `status: decided` and does not block completion.
 * Dual eligibility: `sub_department.buyback_allowed` AND `product_condition.buyback_eligible`.
 * Single payout mode per session: `cash`, `trade_credit`, or `no_value_donation` (never both cash and credit).
 * Completion inventory: `posting_type: used_buyback`, `source: BuybackSession`; void: `posting_type: buyback_void`, `source: BuybackVoid`.
 * Movement type `used_buyback` for original and reversal lines; cost sources `buyback_offer` / `no_value_donation`; void line mapping by original ledger `line_number`.
 * Workstation-scoped buyback numbers via `buyback_sequences` at proposal save.
-* Trade credit: issuance slip shows full identifier (`buybacks.trade_credit_slip.print`); receipt masked only; SV issue `source: BuybackSession`, void `source: BuybackVoid`.
+* Trade credit: issuance slip `show` and `print` require `buybacks.trade_credit_slip.print`; full identifier via audited `RevealIdentifier`; receipt masked only; SV issue `source: BuybackSession`, void `source: BuybackVoid`.
+* Buyback controllers: `authorize_buyback!` returns `true/false` and mutating actions must halt when unauthorized.
+* `PriceLine` uses fixed line base-price precedence; `BuybackPricingRule#base_price_source` deferred.
 * `merged_into_customer_id` is schema-only in 7C; no merge workflow.
 
 ---
