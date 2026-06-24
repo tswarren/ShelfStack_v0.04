@@ -31,8 +31,8 @@ class Buybacks::ProposalBuilderTest < ActiveSupport::TestCase
 
     proposal = Buybacks::ProposalBuilder.build(@session.reload)
 
-    assert_equal [@offered_line.id], proposal.offered_lines.map(&:id)
-    assert_equal [@rejected_line.id], proposal.not_accepted_lines.map(&:id)
+    assert_equal [ @offered_line.id ], proposal.offered_lines.map(&:id)
+    assert_equal [ @rejected_line.id ], proposal.not_accepted_lines.map(&:id)
     assert_equal proposal.offered_lines, proposal.lines
     assert_equal 2000, proposal.totals[:resale_cents]
     assert_equal 500, proposal.totals[:cash_offer_cents]

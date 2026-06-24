@@ -30,7 +30,7 @@ module Buybacks
     end
 
     def checklist
-      return [{ key: :customer, label: "Customer", met: false, message: "Customer is required." }] if customer.blank?
+      return [ { key: :customer, label: "Customer", met: false, message: "Customer is required." } ] if customer.blank?
 
       [
         checklist_row(:first_name, "First name", customer.first_name),

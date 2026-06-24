@@ -39,9 +39,9 @@ module BuybacksHelper
   def buyback_proposal_store_lines(store)
     lines = []
     lines << store.name if store.name.present?
-    address = [store.address_line1, store.address_line2].compact_blank.join(", ")
+    address = [ store.address_line1, store.address_line2 ].compact_blank.join(", ")
     lines << address if address.present?
-    city_line = [store.city, store.region_code, store.postal_code].compact_blank.join(", ")
+    city_line = [ store.city, store.region_code, store.postal_code ].compact_blank.join(", ")
     lines << city_line if city_line.present?
     lines << store.phone if store.phone.present?
     lines
@@ -109,7 +109,7 @@ module BuybacksHelper
   end
 
   def buyback_payout_options
-    BuybackSession::PAYOUT_MODES.map { |mode| [mode.humanize, mode] }
+    BuybackSession::PAYOUT_MODES.map { |mode| [ mode.humanize, mode ] }
   end
 
   def buyback_payout_card_label(mode)
@@ -121,7 +121,7 @@ module BuybacksHelper
   end
 
   def buyback_decision_options
-    BuybackLine::OUTCOMES.map { |outcome| [buyback_outcome_label(outcome), outcome] }
+    BuybackLine::OUTCOMES.map { |outcome| [ buyback_outcome_label(outcome), outcome ] }
   end
 
   def buyback_proposed_or_suggested(line, field)
@@ -194,7 +194,7 @@ module BuybacksHelper
   end
 
   def buyback_external_lookup_link(session, line, label: "Search external sources", **options)
-    css = ["ss-btn", "ss-btn-secondary", "ss-btn--small", options.delete(:class)].compact.join(" ")
+    css = [ "ss-btn", "ss-btn-secondary", "ss-btn--small", options.delete(:class) ].compact.join(" ")
     link_to label,
             buyback_external_lookup_path(session, line),
             class: css,
@@ -203,7 +203,7 @@ module BuybacksHelper
   end
 
   def buyback_action_button(path:, method:, label:, enabled:, reason: nil, **options)
-    css = ["ss-btn", options.delete(:class)].compact.join(" ")
+    css = [ "ss-btn", options.delete(:class) ].compact.join(" ")
     data = options.delete(:data) || {}
     form_options = { data: data.merge(turbo_stream: true) }
     if enabled

@@ -72,7 +72,7 @@ module Buybacks
     end
 
     def intake_queue_text
-      parts = ["#{queue_summary.total_count} items"]
+      parts = [ "#{queue_summary.total_count} items" ]
       parts << "#{queue_summary.needs_match_count} need match" if queue_summary.needs_match_count.positive?
       parts << "#{queue_summary.needs_price_count} need price" if queue_summary.needs_price_count.positive?
       parts << "#{queue_summary.ready_for_proposal_count} ready for proposal" if queue_summary.ready_for_proposal_count.positive?

@@ -43,7 +43,7 @@ class Customer < ApplicationRecord
     return if display_name.present?
     return if first_name.blank? && last_name.blank?
 
-    self.display_name = [first_name, last_name].compact_blank.join(" ")
+    self.display_name = [ first_name, last_name ].compact_blank.join(" ")
   end
 
   def normalize_contact_fields
