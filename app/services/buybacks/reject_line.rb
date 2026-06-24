@@ -21,6 +21,9 @@ module Buybacks
       raise Error, "Invalid rejection outcome." unless outcome.in?(REJECT_OUTCOMES)
       raise Error, "Session is not editable." unless line.buyback_session.editable?
       raise Error, "Posted or voided lines cannot be changed." if line.status.in?(%w[posted voided])
+      if outcome == "rejected_by_store" && reject_reason.blank?
+        raise Error, "Reject reason is required for store-rejected lines."
+      end
 
       line.update!(
         status: "decided",

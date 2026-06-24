@@ -15,7 +15,7 @@ module Buybacks
     def updatable_from_buyback?
       return true if created_by_session?
 
-      on_hand_quantity.zero?
+      !on_hand_anywhere?
     end
 
     private
@@ -26,9 +26,10 @@ module Buybacks
       session.present? && variant.created_from_buyback_session_id == session.id
     end
 
-    def on_hand_quantity
-      balance = InventoryBalance.find_by(store: store, product_variant: variant)
-      balance&.quantity_on_hand.to_i
+    def on_hand_anywhere?
+      InventoryBalance.where(product_variant: variant)
+                      .where.not(quantity_on_hand: 0)
+                      .exists?
     end
   end
 end

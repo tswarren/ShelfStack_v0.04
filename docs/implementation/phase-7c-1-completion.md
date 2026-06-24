@@ -100,7 +100,7 @@ Mutating controller actions halt on failed `authorize_buyback!` (`return unless`
 
 ### Fresh review fixes (2026-06-24)
 
-- **Variant price policy:** `VariantPricePolicy` prevents mutating existing variant `selling_price_cents` when the store has on-hand stock unless the variant was created by the current buyback session; applies in `FindOrCreateGradedUsedVariant` and `PostInventory`
+- **Variant price policy:** `VariantPricePolicy` prevents mutating existing variant `selling_price_cents` when any store has non-zero on-hand stock unless the variant was created by the current buyback session; applies in `FindOrCreateGradedUsedVariant` and `PostInventory`
 - **Draft-only intake:** new lines and line removal only while `session.draft?`; completion blocks unresolved `pending`/`resolved`/`priced`/`offered` lines without outcomes
 - **Batch decisions:** `AcceptAllLines` / `DeclineAllLines` only process `offered` lines; repriced (`priced`) lines must be re-saved via proposal first
 - **Override re-save:** `UpdateProposalLine` preserves existing override reasons when values unchanged; form pre-fills reason fields
