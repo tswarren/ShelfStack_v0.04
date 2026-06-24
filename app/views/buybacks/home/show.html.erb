@@ -1,0 +1,44 @@
+<div class="ss-page-header">
+  <div>
+    <h1>Buybacks</h1>
+    <p class="ss-muted">Used buyback sessions — evaluate items, pay sellers, and receive inventory.</p>
+  </div>
+  <% if Authorization.allowed?(user: current_user, permission_key: "buybacks.create", store: current_store) %>
+    <%= link_to "New buyback", new_buybacks_session_path, class: "ss-btn" %>
+  <% end %>
+</div>
+
+<dl class="ss-stats-grid">
+  <div><dt>Completed</dt><dd><%= @summary.completed_count %></dd></div>
+  <div><dt>Cash paid</dt><dd><%= buyback_money(@summary.cash_paid_cents) %></dd></div>
+  <div><dt>Trade credit issued</dt><dd><%= buyback_money(@summary.trade_credit_issued_cents) %></dd></div>
+  <div><dt>Needs review intake</dt><dd><%= @summary.needs_review_count %></dd></div>
+</dl>
+
+<% if Authorization.allowed?(user: current_user, permission_key: "buybacks.reports.view", store: current_store) %>
+  <p><%= link_to "Buyback reports", buybacks_reports_path %></p>
+<% end %>
+
+<h2>Recent sessions</h2>
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>Number</th>
+      <th>Seller</th>
+      <th>Status</th>
+      <th>Payout</th>
+      <th>Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @sessions.each do |session| %>
+      <tr>
+        <td><%= link_to session.buyback_number.presence || "Draft ##{session.id}", buybacks_session_path(session) %></td>
+        <td><%= session.customer.display_name %></td>
+        <td><%= buyback_status_label(session.status) %></td>
+        <td><%= session.payout_mode&.humanize || "—" %></td>
+        <td><%= session.created_at %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

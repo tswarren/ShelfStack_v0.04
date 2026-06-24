@@ -278,6 +278,8 @@ module Items
                       notice: "Sellable SKU created. Add another or cancel to finish."
         elsif customer_request_match_draft.present?
           match_customer_request_line!(@variant)
+        elsif buyback_line_match_draft.present?
+          match_buyback_line!(@variant)
         else
           reset_draft!
           redirect_to ItemPresenter.from_product(@product).show_path, notice: "Item added successfully."
@@ -591,6 +593,17 @@ module Items
     end
 
     def capture_match_context!
+      if params[:return_to].to_s == Buybacks::LineMatchContext::RETURN_TO
+        return if params[:buyback_session_id].blank? || params[:line_id].blank?
+
+        save_draft!(
+          "return_to" => params[:return_to],
+          "buyback_session_id" => params[:buyback_session_id],
+          "buyback_line_id" => params[:line_id]
+        )
+        return
+      end
+
       return unless params[:return_to].to_s == Customers::RequestMatchContext::RETURN_TO
       return if params[:customer_request_id].blank? || params[:line_id].blank?
 
@@ -599,6 +612,26 @@ module Items
         "customer_request_id" => params[:customer_request_id],
         "customer_request_line_id" => params[:line_id]
       )
+    end
+
+    def buyback_line_match_draft
+      return nil unless @draft["return_to"] == Buybacks::LineMatchContext::RETURN_TO
+      return nil if @draft["buyback_session_id"].blank? || @draft["buyback_line_id"].blank?
+
+      @draft
+    end
+
+    def match_buyback_line!(variant)
+      context = Buybacks::LineMatchContext.from_draft(@draft, store: current_store)
+      session = context.session_record
+      line = context.line
+      Buybacks::SelectVariant.call!(line: line, session: session, variant: variant, actor: current_user)
+      reset_draft!
+      redirect_to buybacks_session_path(session, open_line: line.id, anchor: "line-#{line.id}"),
+                  notice: "Item added and matched to buyback line."
+    rescue Buybacks::SelectVariant::Error => e
+      reset_draft!
+      redirect_to ItemPresenter.from_product(@product).show_path, alert: e.message
     end
 
     def customer_request_match_draft
@@ -621,6 +654,10 @@ module Items
     end
 
     def load_match_context
+      if buyback_line_match_draft.present?
+        return Buybacks::LineMatchContext.from_draft(@draft, store: current_store)
+      end
+
       draft = customer_request_match_draft
       unless draft
         return Customers::RequestMatchContext.new(return_to: "", customer_request_id: nil, line_id: nil, store: current_store)
@@ -635,6 +672,10 @@ module Items
     end
 
     def add_item_match_params
+      if buyback_line_match_draft.present?
+        return Buybacks::LineMatchContext.from_draft(@draft, store: current_store).param_hash
+      end
+
       draft = customer_request_match_draft
       return {} unless draft
 
@@ -644,6 +685,7 @@ module Items
         line_id: draft["customer_request_line_id"]
       }
     end
-    helper_method :add_item_match_params, :customer_request_match_draft, :load_match_context, :add_item_cancel_path
+    helper_method :add_item_match_params, :customer_request_match_draft, :buyback_line_match_draft, :load_match_context,
+                   :add_item_cancel_path
   end
 end

@@ -19,6 +19,7 @@ module Items
       sub_department_id: nil,
       store_category_id: nil,
       include_inactive: false,
+      needs_review_intake: false,
       page: 1,
       per_page: DEFAULT_PER_PAGE
     )
@@ -28,6 +29,7 @@ module Items
       @sub_department_id = sub_department_id.presence
       @store_category_id = store_category_id.presence
       @include_inactive = ActiveModel::Type::Boolean.new.cast(include_inactive)
+      @needs_review_intake = ActiveModel::Type::Boolean.new.cast(needs_review_intake)
       @page = [ page.to_i, 1 ].max
       @per_page = per_page.to_i.clamp(1, MAX_PER_PAGE)
     end
@@ -88,6 +90,7 @@ module Items
     def catalog_item_scope
       scope = CatalogItem.all
       scope = scope.active_records unless @include_inactive
+      scope = scope.where(source: "buyback_intake", needs_review: true) if @needs_review_intake
       scope = scope.where(format_id: @format_id) if @format_id.present?
       scope = scope.where(store_category_id: resolved_store_category_ids) if resolved_store_category_ids.present?
       apply_classification_filter_to_catalog(scope)
@@ -96,6 +99,7 @@ module Items
     def non_catalog_product_scope
       scope = Product.where(catalog_item_id: nil)
       scope = scope.active_records unless @include_inactive
+      scope = scope.where(source: "buyback_intake", needs_review: true) if @needs_review_intake
       apply_classification_filter_to_products(scope)
     end
 
@@ -264,6 +268,12 @@ module Items
 
     def passes_filters?(entry)
       presenter = presenter_for(entry)
+
+      if @needs_review_intake
+        record = presenter.catalog_item || presenter.product
+        return false if record.blank?
+        return false unless record.source == "buyback_intake" && record.needs_review?
+      end
 
       if @format_id.present?
         return false if presenter.catalog_item.blank?

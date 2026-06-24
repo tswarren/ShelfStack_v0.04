@@ -8,13 +8,14 @@ module StoredValue
       new(**kwargs).call
     end
 
-    def initialize(account:, store:, actor:, amount_cents:, reason_code:, notes: nil)
+    def initialize(account:, store:, actor:, amount_cents:, reason_code:, notes: nil, source: nil)
       @account = account
       @store = store
       @actor = actor
       @amount_cents = amount_cents
       @reason_code = reason_code
       @notes = notes
+      @source = source
     end
 
     def call
@@ -28,6 +29,7 @@ module StoredValue
         entry_type: "issue",
         amount_delta_cents: amount_cents,
         reason_code: reason_code,
+        source: source,
         notes: notes,
         audit_event_name: "stored_value.ledger.issued"
       )
@@ -35,6 +37,6 @@ module StoredValue
 
     private
 
-    attr_reader :account, :store, :actor, :amount_cents, :reason_code, :notes
+    attr_reader :account, :store, :actor, :amount_cents, :reason_code, :notes, :source
   end
 end

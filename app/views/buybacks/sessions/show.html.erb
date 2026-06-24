@@ -1,0 +1,89 @@
+<div class="ss-page-header">
+  <div>
+    <h1><%= @buyback_session.buyback_number.presence || "Buyback session ##{@buyback_session.id}" %></h1>
+    <p class="ss-muted"><%= buyback_status_label(@buyback_session.status) %></p>
+  </div>
+  <div>
+    <% if @buyback_session.completed? %>
+      <%= link_to "Receipt", receipt_buybacks_session_path(@buyback_session), class: "ss-btn ss-btn-secondary" %>
+      <% if @buyback_session.payout_mode == "trade_credit" %>
+        <%= link_to "Trade credit slip", trade_credit_slip_buybacks_session_path(@buyback_session), class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    <% end %>
+    <% if @buyback_session.quoted? || @buyback_session.decision? %>
+      <%= link_to "Print proposal", print_proposal_buybacks_session_path(@buyback_session), class: "ss-btn ss-btn-secondary", target: "_blank" %>
+    <% end %>
+    <% if current_register_session %>
+      <%= link_to "Register session", pos_register_session_path(current_register_session), class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
+</div>
+
+<div data-controller="buyback-workspace buyback-line-drawer buyback-work-items buyback-intake"
+     id="buyback-workspace"
+     data-buyback-workspace-next-line-id-value="<%= @workflow.next_line_id %>"
+     data-buyback-intake-focus-on-connect-value="<%= @buyback_session.draft? %>">
+
+  <%= render "buybacks/sessions/workflow_stepper", workflow: @workflow %>
+
+  <% unless @buyback_session.completed? %>
+    <%= render "buybacks/sessions/next_action_panel", workflow: @workflow, buyback_session: @buyback_session %>
+  <% end %>
+
+  <%= render "buybacks/sessions/seller_panel", buyback_session: @buyback_session, seller_checklist: @seller_checklist %>
+
+  <% if @buyback_session.draft? %>
+    <%= render "buybacks/sessions/intake_panel", buyback_session: @buyback_session, workflow: @workflow %>
+  <% end %>
+
+  <%= render "buybacks/sessions/work_items_table",
+        buyback_session: @buyback_session,
+        lines: @lines,
+        conditions: @conditions,
+        sub_departments: @sub_departments,
+        reject_reasons: @reject_reasons,
+        workflow: @workflow %>
+
+  <%= render "buybacks/sessions/proposal_summary",
+        buyback_session: @buyback_session,
+        proposal: @proposal,
+        workflow: @workflow %>
+
+  <%= render "buybacks/sessions/decision_panel", buyback_session: @buyback_session, workflow: @workflow %>
+
+  <div id="buyback-payout-panel">
+    <%= render "buybacks/sessions/payout_panel",
+          buyback_session: @buyback_session,
+          decision_totals: @decision_totals,
+          workflow: @workflow,
+          register_session: current_register_session %>
+  </div>
+
+  <% if @buyback_session.editable? %>
+    <%= render "buybacks/sessions/sticky_footer", buyback_session: @buyback_session, workflow: @workflow %>
+  <% elsif @buyback_session.completed? %>
+    <section class="ss-panel">
+      <h2>Void</h2>
+      <% if @buyback_session.payout_mode == "cash" %>
+        <p class="ss-hint">Cash payout voids require supervisor authorization and an open register session.</p>
+      <% end %>
+      <%= form_with url: void_buybacks_session_path(@buyback_session), method: :patch, class: "ss-form" do %>
+        <%= text_field_tag :void_reason, nil, placeholder: "Void reason", required: true %>
+        <%= text_field_tag :pos_authorization_id, nil, placeholder: "Authorization ID (cash voids)" %>
+        <%= submit_tag "Void buyback", class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Void this completed buyback?" } %>
+      <% end %>
+    </section>
+  <% end %>
+
+  <%= render "buybacks/sessions/line_detail_drawer",
+        lines: @lines,
+        session: @buyback_session,
+        conditions: @conditions,
+        sub_departments: @sub_departments,
+        reject_reasons: @reject_reasons,
+        workflow: @workflow %>
+</div>
+
+<% if @receipt&.identifier_display.present? %>
+  <p class="ss-hint">Trade credit identifier (masked): <strong><%= @receipt.identifier_display %></strong></p>
+<% end %>

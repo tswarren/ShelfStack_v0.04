@@ -1,0 +1,11 @@
+<%= turbo_frame_tag "buyback-line-detail-frame", data: { buyback_line_drawer_target: "frame" } do %>
+  <div id="buyback-line-detail-content">
+    <%= render "buybacks/sessions/line_detail_content",
+          line: line,
+          session: session,
+          conditions: conditions,
+          sub_departments: sub_departments,
+          reject_reasons: reject_reasons,
+          workflow: workflow %>
+  </div>
+<% end %>

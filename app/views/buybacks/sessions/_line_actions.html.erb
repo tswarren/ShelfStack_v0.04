@@ -1,0 +1,11 @@
+<%# locals: line, session, conditions, sub_departments, reject_reasons, workflow %>
+<% if line.product.blank? || (session.editable? && !line.status.in?(%w[posted voided])) %>
+  <button type="button"
+          class="ss-btn ss-btn-secondary ss-btn--small"
+          data-action="buyback-line-drawer#open"
+          data-line-id="<%= line.id %>"
+          data-line-title="<%= line.title_snapshot %>"
+          data-detail-url="<%= detail_buybacks_session_line_path(session, line) %>">
+    Work item
+  </button>
+<% end %>

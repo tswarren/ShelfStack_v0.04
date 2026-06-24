@@ -1,0 +1,64 @@
+<%# locals: buyback_session, decision_totals, workflow, register_session %>
+<% if buyback_session.decision? %>
+  <section class="ss-panel">
+    <h2>Payout</h2>
+    <% if decision_totals.present? %>
+      <div class="ss-buyback-payout-summary">
+        <p>Customer accepted <strong><%= buyback_session.buyback_lines.count { |l| l.outcome == "accepted_by_customer" } %></strong> items</p>
+        <p>Cash payout: <strong><%= buyback_money(decision_totals.accepted_cash_cents) %></strong></p>
+        <p>Trade credit: <strong><%= buyback_money(decision_totals.accepted_trade_credit_cents) %></strong></p>
+        <p class="ss-muted">
+          Donated: <%= decision_totals.donation_count %>
+          · Declined/returned: <%= decision_totals.declined_count %>
+          · Store rejected: <%= decision_totals.rejected_count %>
+        </p>
+      </div>
+    <% end %>
+
+    <div class="ss-buyback-payout-cards">
+      <% cash_enabled = workflow.action_state(:save_payout).enabled && decision_totals&.accepted_cash_cents.to_i.positive? %>
+      <% cash_reason = register_session.blank? ? "Open a register session before completing a cash payout." : nil %>
+      <%= form_with model: buyback_session, url: buybacks_session_path(buyback_session), method: :patch, class: "ss-buyback-payout-card #{"ss-buyback-payout-card--selected" if buyback_session.payout_mode == "cash"}" do |f| %>
+        <%= f.hidden_field :payout_mode, value: "cash" %>
+        <h3><%= buyback_payout_card_label("cash") %></h3>
+        <p class="ss-buyback-payout-card__amount"><%= buyback_money(decision_totals&.accepted_cash_cents) %></p>
+        <% if cash_reason.present? && decision_totals&.accepted_cash_cents.to_i.positive? %>
+          <p class="ss-hint"><%= cash_reason %></p>
+        <% end %>
+        <%= f.submit "Select cash payout", class: "ss-btn ss-btn-secondary", disabled: !cash_enabled || cash_reason.present? %>
+      <% end %>
+
+      <% trade_enabled = workflow.action_state(:save_payout).enabled && decision_totals&.accepted_trade_credit_cents.to_i.positive? %>
+      <%= form_with model: buyback_session, url: buybacks_session_path(buyback_session), method: :patch, class: "ss-buyback-payout-card #{"ss-buyback-payout-card--selected" if buyback_session.payout_mode == "trade_credit"}" do |f| %>
+        <%= f.hidden_field :payout_mode, value: "trade_credit" %>
+        <h3><%= buyback_payout_card_label("trade_credit") %></h3>
+        <p class="ss-buyback-payout-card__amount"><%= buyback_money(decision_totals&.accepted_trade_credit_cents) %></p>
+        <%= f.submit "Select trade credit", class: "ss-btn ss-btn-secondary", disabled: !trade_enabled %>
+      <% end %>
+
+      <% donation_only = decision_totals.present? && decision_totals.donation_count.positive? && decision_totals.accepted_cash_cents.zero? && decision_totals.accepted_trade_credit_cents.zero? %>
+      <%= form_with model: buyback_session, url: buybacks_session_path(buyback_session), method: :patch, class: "ss-buyback-payout-card #{"ss-buyback-payout-card--selected" if buyback_session.payout_mode == "no_value_donation"}" do |f| %>
+        <%= f.hidden_field :payout_mode, value: "no_value_donation" %>
+        <h3><%= buyback_payout_card_label("no_value_donation") %></h3>
+        <p class="ss-muted">All posting lines are donated with zero payout.</p>
+        <%= f.submit "Select donation completion", class: "ss-btn ss-btn-secondary", disabled: !donation_only %>
+      <% end %>
+    </div>
+
+    <%= form_with model: buyback_session, url: buybacks_session_path(buyback_session), method: :patch, class: "ss-form" do |f| %>
+      <div class="ss-form-grid ss-form-grid--2">
+        <div>
+          <%= f.label :processing_notes, "Processing notes" %>
+          <%= f.text_area :processing_notes, rows: 2 %>
+        </div>
+      </div>
+      <div class="ss-form-grid ss-form-grid--4">
+        <%= render "shared/forms/checkbox", f: f, record: buyback_session, field: :needs_label %>
+        <%= render "shared/forms/checkbox", f: f, record: buyback_session, field: :needs_review %>
+        <%= render "shared/forms/checkbox", f: f, record: buyback_session, field: :needs_cleaning %>
+        <%= render "shared/forms/checkbox", f: f, record: buyback_session, field: :hold_for_review %>
+      </div>
+      <%= f.submit "Save processing options", class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </section>
+<% end %>

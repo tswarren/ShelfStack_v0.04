@@ -12,6 +12,7 @@ class ProductVariant < ApplicationRecord
   belongs_to :condition, class_name: "ProductCondition", optional: true
   belongs_to :sub_department
   belongs_to :display_location, optional: true
+  belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
 
   has_many :categorizations, as: :categorizable, dependent: :destroy
   has_many :product_variant_vendors, dependent: :restrict_with_error

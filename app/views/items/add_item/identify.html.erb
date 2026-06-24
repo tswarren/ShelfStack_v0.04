@@ -11,9 +11,14 @@
     <p>
       <%= link_to "Continue with this catalog item", items_add_item_path(step: "item_details"), class: "ss-btn ss-btn-secondary" %>
       <%= link_to "View catalog item", items_catalog_item_path(@local_catalog_item), class: "ss-btn ss-btn-secondary" %>
-      <% if @match_context&.valid? && @local_match_variant.present? %>
+      <% if @match_context&.from_customer_request? && @local_match_variant.present? %>
         <%= button_to "Match existing variant to request",
               match_variant_customers_customer_request_path(@match_context.request_record, line_id: @match_context.line_id, product_variant_id: @local_match_variant.id),
+              method: :post,
+              class: "ss-btn ss-btn-secondary" %>
+      <% elsif @match_context&.from_buyback_line? && @local_match_variant.present? %>
+        <%= button_to "Match existing variant to buyback line",
+              select_variant_buybacks_session_line_path(@match_context.session_record, @match_context.line, product_variant_id: @local_match_variant.id),
               method: :post,
               class: "ss-btn ss-btn-secondary" %>
       <% end %>

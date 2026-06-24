@@ -31,6 +31,7 @@ module Pos
       @summary = Pos::RegisterSessionSummary.for(@register_session)
       @completed_transactions = @register_session.pos_transactions.completed_records.order(completed_at: :desc).limit(50)
       @cash_movements = @register_session.pos_cash_movements.order(recorded_at: :desc)
+      @buyback_sessions = BuybackSession.where(pos_register_session: @register_session).order(completed_at: :desc)
     end
 
     def close

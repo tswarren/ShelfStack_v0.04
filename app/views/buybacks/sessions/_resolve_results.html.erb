@@ -1,0 +1,64 @@
+<%# locals: result, line, session, conditions, sub_departments %>
+<%= turbo_frame_tag dom_id(line, :resolve) do %>
+<div class="ss-buyback-resolve-results">
+  <% if result.catalog_item.blank? %>
+    <p class="ss-muted">No catalog match for this identifier or title.</p>
+    <p class="ss-form-actions">
+      <%= buyback_external_lookup_link(session, line) %>
+    </p>
+    <p class="ss-hint">Or use <strong>Create intake</strong> below to add a new item record.</p>
+  <% else %>
+    <p>
+      <strong><%= result.catalog_item.title %></strong>
+      <% if result.product.present? %>
+        <span class="ss-muted">· <%= result.product.sku %></span>
+      <% end %>
+    </p>
+
+    <% if result.variants.any? %>
+      <p class="ss-hint">Eligible used variants:</p>
+      <ul class="ss-buyback-resolve-results__variants">
+        <% result.variants.each do |variant| %>
+          <li>
+            <%= button_to variant.name,
+                  select_variant_buybacks_session_line_path(session, line, product_variant_id: variant.id),
+                  method: :post,
+                  class: "ss-btn ss-btn-secondary ss-btn--small",
+                  form: { data: { turbo_stream: true } } %>
+            <span class="ss-muted"><%= variant.sku %> · <%= variant.condition&.short_name %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="ss-muted">No buyback-eligible used variants found for this product.</p>
+      <p class="ss-form-actions">
+        <%= buyback_external_lookup_link(session, line) %>
+      </p>
+      <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline ss-buyback-add-used-variant", data: { turbo_stream: true } do %>
+        <%= hidden_field_tag :identifier, line.identifier_entered %>
+        <%= hidden_field_tag :title, result.catalog_item.title %>
+        <%= select_tag :sub_department_id,
+              options_from_collection_for_select(sub_departments, :id, :name),
+              include_blank: "Subdepartment",
+              required: true %>
+        <%= select_tag :product_condition_id,
+              options_from_collection_for_select(conditions, :id, :name),
+              include_blank: "Condition",
+              required: true %>
+        <%= submit_tag "Add used variant", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <% end %>
+    <% end %>
+
+    <% if result.warnings.any? %>
+      <details class="ss-buyback-resolve-results__warnings">
+        <summary><%= result.warnings.size %> ineligible variant(s)</summary>
+        <ul>
+          <% result.warnings.each do |warning| %>
+            <li class="ss-muted"><%= warning %></li>
+          <% end %>
+        </ul>
+      </details>
+    <% end %>
+  <% end %>
+</div>
+<% end %>

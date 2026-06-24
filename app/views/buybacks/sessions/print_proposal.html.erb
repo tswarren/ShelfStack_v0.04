@@ -1,0 +1,179 @@
+<% content_for :title, "Buyback Proposal #{@buyback_session.buyback_number}" %>
+<% session = @buyback_session %>
+<% customer = session.customer %>
+<% store = session.store %>
+<% totals = @proposal.totals %>
+
+<div class="no-print print-actions">
+  <button type="button" class="ss-btn" onclick="window.print()">Print proposal</button>
+  <%= link_to "Back to buyback", buybacks_session_path(session), class: "ss-btn ss-btn-secondary" %>
+</div>
+
+<section class="proposal-header">
+  <% buyback_proposal_store_lines(store).each do |line| %>
+    <% if line == store.name %>
+      <p class="proposal-store-name"><strong><%= line %></strong></p>
+    <% else %>
+      <p class="proposal-store-contact"><%= line %></p>
+    <% end %>
+  <% end %>
+
+  <h1>BUYBACK PROPOSAL &amp; SELLER ELECTION</h1>
+
+  <p class="proposal-disclaimer">
+    This proposal does not finalize payout. Final payout is issued only after the seller selects a payout option and staff completes the buyback.
+  </p>
+
+  <dl class="proposal-meta">
+    <dt>Proposal #</dt>
+    <dd><%= session.buyback_number %></dd>
+
+    <dt>Date/time</dt>
+    <dd><%= buyback_proposal_datetime(session, session.proposal_saved_at || Time.current) %></dd>
+
+    <dt>Staff</dt>
+    <dd><%= session.created_by_user&.display_name || "—" %></dd>
+
+    <dt>Seller</dt>
+    <dd><%= customer.display_name %></dd>
+
+    <% if customer.phone.present? %>
+      <dt>Phone</dt>
+      <dd><%= customer.phone %></dd>
+    <% end %>
+
+    <% if customer.email.present? %>
+      <dt>Email</dt>
+      <dd><%= customer.email %></dd>
+    <% end %>
+
+    <% if customer.customer_number.present? %>
+      <dt>Customer #</dt>
+      <dd><%= customer.customer_number %></dd>
+    <% end %>
+  </dl>
+</section>
+
+<section>
+  <h2>Seller Verification</h2>
+  <p class="proposal-checkbox">[ ] Seller/customer information verified</p>
+  <p class="proposal-checkbox">[ ] Required ID checked, if required by store policy</p>
+  <p class="proposal-checkbox">[ ] Seller confirms they are authorized to sell/trade these items</p>
+  <p>Verified by: <span class="signature-line"></span></p>
+</section>
+
+<section>
+  <h2>Items Offered for Purchase</h2>
+  <% if @proposal.offered_lines.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Item</th>
+          <th>Identifier</th>
+          <th>Condition</th>
+          <th>Resale</th>
+          <th>Cash</th>
+          <th>Credit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @proposal.offered_lines.each do |line| %>
+          <tr>
+            <td><%= line.line_number %></td>
+            <td><%= line.title_snapshot %></td>
+            <td><%= buyback_line_identifier(line) %></td>
+            <td><%= line.condition_snapshot || line.product_condition&.name %></td>
+            <td><%= buyback_money(line.proposed_resale_price_cents) %></td>
+            <td><%= buyback_money(line.proposed_cash_offer_cents) %></td>
+            <td><%= buyback_money(line.proposed_trade_credit_offer_cents) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>None</p>
+  <% end %>
+</section>
+
+<section>
+  <h2>Items Not Accepted for Purchase</h2>
+  <% if @proposal.not_accepted_lines.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Item</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @proposal.not_accepted_lines.each do |line| %>
+          <tr>
+            <td><%= line.line_number %></td>
+            <td><%= line.title_snapshot %></td>
+            <td><%= buyback_line_reject_reason(line) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>None</p>
+  <% end %>
+</section>
+
+<section>
+  <h2>Proposal Totals</h2>
+  <table class="proposal-totals">
+    <tbody>
+      <tr>
+        <th scope="row">Estimated resale value</th>
+        <td><%= buyback_money(totals[:resale_cents]) %></td>
+      </tr>
+      <tr>
+        <th scope="row">Cash offer</th>
+        <td><%= buyback_money(totals[:cash_offer_cents]) %></td>
+      </tr>
+      <tr>
+        <th scope="row">Trade-credit offer</th>
+        <td><%= buyback_money(totals[:trade_credit_offer_cents]) %></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Seller Election</h2>
+  <p>Choose one payout option:</p>
+  <p class="proposal-checkbox">[ ] I accept the cash offer of: <span class="signature-line"></span> <%= buyback_money(totals[:cash_offer_cents]) %></p>
+  <p class="proposal-checkbox">[ ] I accept the trade-credit offer of: <span class="signature-line"></span> <%= buyback_money(totals[:trade_credit_offer_cents]) %></p>
+  <p class="proposal-checkbox">[ ] I reject this offer and will reclaim my items today.</p>
+</section>
+
+<section>
+  <h2>Unaccepted Items</h2>
+  <p>Choose one option for items not accepted for purchase or declined by seller:</p>
+  <p class="proposal-checkbox">[ ] Return unaccepted items to me today.</p>
+  <p class="proposal-checkbox">[ ] I authorize the store to donate, recycle, or discard unaccepted items according to store policy.</p>
+  <p class="proposal-disclaimer">Items left behind may be handled according to store policy.</p>
+</section>
+
+<section>
+  <h2>Acknowledgment</h2>
+  <p>
+    By signing below, I confirm that I am authorized to sell or trade these items.
+    I understand that accepted items become final once payout is processed.
+  </p>
+  <p>Seller signature: <span class="signature-line"></span> Date: <span class="signature-line" style="min-width: 6em;"></span></p>
+  <p>Staff signature: <span class="signature-line"></span> Date: <span class="signature-line" style="min-width: 6em;"></span></p>
+</section>
+
+<section class="proposal-internal">
+  <h2>For Internal Use Only</h2>
+  <p class="proposal-checkbox">[ ] Cash paid out</p>
+  <p class="proposal-checkbox">[ ] Trade credit issued</p>
+  <p>Cash movement ID: <span class="signature-line"></span></p>
+  <p>Stored value account/reference: <span class="signature-line"></span></p>
+  <p>Processed by: <span class="signature-line"></span></p>
+  <p>Processed date/time: <span class="signature-line"></span></p>
+</section>

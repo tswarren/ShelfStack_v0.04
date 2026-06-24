@@ -2,12 +2,13 @@
 
 module Items
   class IndexController < BaseController
-    INDEX_PARAMS = %i[q page format_id department_id sub_department_id store_category_id include_inactive].freeze
+    INDEX_PARAMS = %i[q page format_id department_id sub_department_id store_category_id include_inactive needs_review_intake].freeze
 
     def index
       load_filter_collections
       @query = index_params[:q].to_s.strip
       @include_inactive = ActiveModel::Type::Boolean.new.cast(index_params[:include_inactive])
+      @needs_review_intake = ActiveModel::Type::Boolean.new.cast(index_params[:needs_review_intake])
 
       result = Items::IndexQuery.call(
         query: @query,
@@ -16,6 +17,7 @@ module Items
         sub_department_id: index_params[:sub_department_id],
         store_category_id: index_params[:store_category_id],
         include_inactive: @include_inactive,
+        needs_review_intake: @needs_review_intake,
         page: index_params[:page],
         per_page: Items::IndexQuery::DEFAULT_PER_PAGE
       )

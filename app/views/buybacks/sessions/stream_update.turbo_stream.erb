@@ -1,0 +1,87 @@
+<% if flash.now[:notice].present? || flash.now[:alert].present? %>
+  <%= turbo_stream.prepend "buyback-workspace" do %>
+    <% if flash.now[:notice].present? %>
+      <div class="flash flash-notice"><%= flash.now[:notice] %></div>
+    <% end %>
+    <% if flash.now[:alert].present? %>
+      <div class="flash flash-alert"><%= flash.now[:alert] %></div>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= turbo_stream.replace "buyback-workflow-stepper" do %>
+  <%= render "buybacks/sessions/workflow_stepper", workflow: @workflow %>
+<% end %>
+
+<%= turbo_stream.replace "buyback-next-action-panel" do %>
+  <%= render "buybacks/sessions/next_action_panel", workflow: @workflow, buyback_session: @buyback_session %>
+<% end %>
+
+<%= turbo_stream.replace "buyback-proposal-panel" do %>
+  <%= render "buybacks/sessions/proposal_summary",
+        buyback_session: @buyback_session,
+        proposal: @proposal,
+        workflow: @workflow %>
+<% end %>
+
+<%= turbo_stream.replace "buyback-decision-panel" do %>
+  <%= render "buybacks/sessions/decision_panel", buyback_session: @buyback_session, workflow: @workflow %>
+<% end %>
+
+<%= turbo_stream.replace "buyback-payout-panel" do %>
+  <div id="buyback-payout-panel">
+    <% if @buyback_session.decision? %>
+      <%= render "buybacks/sessions/payout_panel",
+            buyback_session: @buyback_session,
+            decision_totals: @decision_totals,
+            workflow: @workflow,
+            register_session: current_register_session %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= turbo_stream.replace "buyback-sticky-footer" do %>
+  <%= render "buybacks/sessions/sticky_footer", buyback_session: @buyback_session, workflow: @workflow %>
+<% end %>
+
+<% if @append_line && @stream_line.present? %>
+  <%= turbo_stream.append "buyback-work-items-tbody" do %>
+    <%= render "buybacks/sessions/line_row",
+          line: @stream_line,
+          buyback_session: @buyback_session,
+          conditions: @conditions,
+          sub_departments: @sub_departments,
+          reject_reasons: @reject_reasons,
+          workflow: @workflow %>
+  <% end %>
+<% elsif @stream_line.present? %>
+  <%= turbo_stream.replace "buyback-line-row-#{@stream_line.id}" do %>
+    <%= render "buybacks/sessions/line_row",
+          line: @stream_line,
+          buyback_session: @buyback_session,
+          conditions: @conditions,
+          sub_departments: @sub_departments,
+          reject_reasons: @reject_reasons,
+          workflow: @workflow %>
+  <% end %>
+
+  <%= turbo_stream.update "buyback-line-detail-content" do %>
+    <%= render "buybacks/sessions/line_detail_content",
+          line: @stream_line,
+          session: @buyback_session,
+          conditions: @conditions,
+          sub_departments: @sub_departments,
+          reject_reasons: @reject_reasons,
+          workflow: @workflow %>
+  <% end %>
+<% end %>
+
+<% if @remove_line_id.present? %>
+  <%= turbo_stream.remove "buyback-line-row-#{@remove_line_id}" %>
+<% end %>
+
+<% if @open_line_id.present? %>
+  <%= turbo_stream.append "buyback-workspace" do %>
+    <div data-buyback-open-line="<%= @open_line_id %>" hidden></div>
+  <% end %>
+<% end %>

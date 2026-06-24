@@ -1,0 +1,48 @@
+<%# locals: buyback_session, lines, conditions, sub_departments, reject_reasons, workflow %>
+<section class="ss-panel" id="work-items-panel">
+  <div class="ss-buyback-work-items__toolbar">
+    <h2>Work items</h2>
+    <div class="ss-buyback-filter-chips" role="tablist" aria-label="Filter work items">
+      <% Buybacks::SessionWorkflowPresenter::WORKFLOW_FILTER_STATES.each do |filter| %>
+        <button type="button"
+                class="ss-buyback-filter-chip"
+                data-buyback-work-items-target="filter"
+                data-filter="<%= filter %>"
+                data-action="buyback-work-items#filter"
+                aria-pressed="<%= filter == "all" ? "true" : "false" %>">
+          <%= buyback_workflow_filter_label(filter) %>
+        </button>
+      <% end %>
+    </div>
+    <% if workflow.next_line_id.present? %>
+      <%= link_to "Next item needing work", "#line-#{workflow.next_line_id}", class: "ss-btn ss-btn-secondary ss-btn--small", data: { action: "buyback-work-items#openNext" } %>
+    <% end %>
+  </div>
+
+  <table class="ss-table ss-buyback-work-items__table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th>Condition</th>
+        <th>Proposed sale</th>
+        <th>Cash offer</th>
+        <th>Trade credit</th>
+        <th>Decision</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="buyback-work-items-tbody">
+      <% lines.each do |line| %>
+        <%= render "buybacks/sessions/line_row",
+              line: line,
+              buyback_session: buyback_session,
+              conditions: conditions,
+              sub_departments: sub_departments,
+              reject_reasons: reject_reasons,
+              workflow: workflow %>
+      <% end %>
+    </tbody>
+  </table>
+</section>

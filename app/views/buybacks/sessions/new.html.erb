@@ -1,0 +1,25 @@
+<%= render "shared/forms/page_header",
+           eyebrow: "Buybacks",
+           title: "New Buyback Session",
+           description: "Select a seller to start evaluating used items." %>
+
+<%= form_with url: buybacks_sessions_path, class: "ss-form ss-form--standard" do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <div>
+      <%= label_tag :customer_id, "Customer" %>
+      <%= select_tag :customer_id,
+            options_from_collection_for_select(@customers, :id, :display_name),
+            include_blank: "Select customer",
+            required: true %>
+      <p class="ss-hint"><%= link_to "Create customer", new_customers_customer_path(return_to: new_buybacks_session_path) %></p>
+    </div>
+    <div>
+      <%= label_tag :notes, "Notes" %>
+      <%= text_area_tag :notes, nil, rows: 3 %>
+    </div>
+  </div>
+  <footer class="ss-form-actions">
+    <%= submit_tag "Start session", class: "ss-btn" %>
+    <%= link_to "Cancel", buybacks_root_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

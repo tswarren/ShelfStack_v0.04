@@ -8,12 +8,13 @@ module StoredValue
       new(**kwargs).call
     end
 
-    def initialize(entry:, store:, actor:, reason_code:, notes: nil)
+    def initialize(entry:, store:, actor:, reason_code:, notes: nil, source: nil)
       @entry = entry
       @store = store
       @actor = actor
       @reason_code = reason_code
       @notes = notes
+      @source = source
     end
 
     def call
@@ -27,6 +28,7 @@ module StoredValue
         entry_type: "void_reversal",
         amount_delta_cents: -entry.amount_delta_cents,
         reason_code: reason_code,
+        source: source,
         reverses_entry: entry,
         notes: notes,
         audit_event_name: "stored_value.ledger.voided"
@@ -35,6 +37,6 @@ module StoredValue
 
     private
 
-    attr_reader :entry, :store, :actor, :reason_code, :notes
+    attr_reader :entry, :store, :actor, :reason_code, :notes, :source
   end
 end

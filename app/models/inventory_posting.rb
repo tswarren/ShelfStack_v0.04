@@ -3,7 +3,7 @@
 class InventoryPosting < ApplicationRecord
   POSTING_TYPES = %w[
     opening_inventory manual_adjustment balance_correction
-    receiving pos_sale customer_return vendor_return used_buyback transfer
+    receiving pos_sale customer_return vendor_return used_buyback buyback_void transfer
     pos_transaction pos_void
   ].freeze
 

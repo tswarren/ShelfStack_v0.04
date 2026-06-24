@@ -1,0 +1,28 @@
+<%# locals: buyback_session, workflow %>
+<footer class="ss-buyback-footer" id="buyback-sticky-footer">
+  <div class="ss-buyback-footer__summary">
+    <p><%= workflow.footer_summary_text %></p>
+  </div>
+  <div class="ss-buyback-footer__actions">
+    <% if buyback_session.editable? %>
+      <% if buyback_session.decision? %>
+        <% complete_state = workflow.action_state(:complete) %>
+        <%= buyback_action_button(
+              path: complete_buybacks_session_path(buyback_session),
+              method: :patch,
+              label: "Complete buyback",
+              enabled: complete_state.enabled,
+              reason: complete_state.reason,
+              class: "ss-btn",
+              data: { turbo_confirm: "Complete this buyback?" }
+            ) %>
+      <% elsif buyback_session.editable? && (buyback_session.draft? || workflow.proposal_revision_needed?) %>
+        <% save_state = workflow.action_state(:save_proposal) %>
+        <% if save_state.enabled %>
+          <%= button_to workflow.save_proposal_label, save_proposal_buybacks_session_path(buyback_session), method: :patch, class: "ss-btn", form: { data: { turbo_stream: true } } %>
+        <% end %>
+      <% end %>
+      <%= button_to "Cancel session", cancel_buybacks_session_path(buyback_session), method: :patch, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Cancel this session?" } %>
+    <% end %>
+  </div>
+</footer>

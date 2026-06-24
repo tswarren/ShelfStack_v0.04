@@ -13,6 +13,7 @@ class ProductCondition < ApplicationRecord
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 10_000 }
 
   scope :active_records, -> { where(active: true) }
+  scope :buyback_eligible, -> { where(buyback_eligible: true) }
 
   before_validation :normalize_strings
 

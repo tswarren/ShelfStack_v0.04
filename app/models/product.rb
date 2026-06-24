@@ -7,6 +7,7 @@ class Product < ApplicationRecord
   belongs_to :catalog_item, optional: true
   belongs_to :default_display_location, class_name: "DisplayLocation", optional: true
   belongs_to :default_sub_department, class_name: "SubDepartment", optional: true
+  belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
   has_many :product_variants, dependent: :restrict_with_error
   has_many :product_vendors, dependent: :restrict_with_error
   has_one_attached :cover_image

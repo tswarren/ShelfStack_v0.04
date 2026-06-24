@@ -1,0 +1,11 @@
+<nav class="ss-buyback-stepper" id="buyback-workflow-stepper" aria-label="Buyback workflow">
+  <% workflow.steps.each_with_index do |step, index| %>
+    <div class="ss-buyback-step <%= buyback_workflow_step_class(step) %>">
+      <span class="ss-buyback-step__marker" aria-hidden="true"><%= buyback_workflow_step_marker(step) %></span>
+      <span class="ss-buyback-step__label"><%= step.label %></span>
+    </div>
+    <% if index < workflow.steps.length - 1 %>
+      <span class="ss-buyback-step__separator" aria-hidden="true">→</span>
+    <% end %>
+  <% end %>
+</nav>

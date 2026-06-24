@@ -45,6 +45,25 @@
       <% end %>
     </tbody>
   </table>
+
+  <% if @buyback_sessions.any? %>
+    <h3>Buyback payouts</h3>
+    <table class="ss-table ss-pos-table">
+      <thead>
+        <tr><th>Buyback</th><th>Payout</th><th>Amount</th><th>Completed</th></tr>
+      </thead>
+      <tbody>
+        <% @buyback_sessions.each do |session| %>
+          <tr>
+            <td><%= link_to session.buyback_number, buybacks_session_path(session) %></td>
+            <td><%= session.payout_mode %></td>
+            <td><%= pos_money(session.accepted_payout_cents) %></td>
+            <td><%= session.completed_at %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
 </section>
 
 <section class="ss-pos-panel" id="cash-movement">
