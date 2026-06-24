@@ -28,7 +28,7 @@
         <tbody>
           <% item.variants.each do |variant| %>
             <tr>
-              <td><%= variant.condition&.short_name || variant.name %></td>
+              <td><%= variant.list_label %></td>
               <td><%= variant.sku %></td>
               <td><%= variant.sub_department&.name || "—" %></td>
               <td><%= variant.display_location&.name || "—" %></td>

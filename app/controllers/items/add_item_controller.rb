@@ -266,7 +266,7 @@ module Items
           inventory_behavior: inventory_behavior
         )
       )
-      @variant.condition ||= default_condition
+      @variant.condition ||= default_condition if condition_variation_product?(@product)
       VariantClassificationSetup.apply!(variant: @variant)
       prepare_sellable_sku_form
 
@@ -451,9 +451,11 @@ module Items
     def prepare_sellable_sku_form
       load_variant_collections
       @variant ||= ProductVariant.new(product: @product, active: true)
-      condition = @variant.condition || default_condition
-      @variant.condition_id ||= condition&.id
-      @variant.condition ||= condition
+      if condition_variation_product?(@product)
+        condition = @variant.condition || default_condition
+        @variant.condition_id ||= condition&.id
+        @variant.condition ||= condition
+      end
       @variant.sub_department_id ||= @product.default_sub_department_id.presence || @sub_departments.first&.id
       @variant.inventory_behavior ||= AddItem::InventoryBehaviorMapper.for_product_type(@product.product_type)
       VariantClassificationSetup.apply!(variant: @variant) unless sellable_sku_params_submitted?
@@ -465,10 +467,14 @@ module Items
     end
 
     def apply_variant_defaults!
-      condition = @variant.condition || default_condition
+      condition = condition_variation_product?(@product) ? (@variant.condition || default_condition) : @variant.condition
       if @variant.selling_price_cents.to_i.zero?
         @variant.selling_price_cents = AddItem::DefaultSellingPrice.cents(product: @product, condition: condition)
       end
+    end
+
+    def condition_variation_product?(product = @product)
+      product.variation_type.in?(%w[standard conditional])
     end
 
     def default_condition

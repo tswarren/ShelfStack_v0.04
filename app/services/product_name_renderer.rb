@@ -39,4 +39,25 @@ class ProductNameRenderer
       base
     end
   end
+
+  def self.variant_list_label(variant)
+    return variant.name_override if variant.name_override.present?
+
+    product = variant.product
+
+    case product.variation_type
+    when "variable"
+      variant.attribute1_value.presence || variant.name
+    when "matrix"
+      if variant.attribute1_value.present? && variant.attribute2_value.present?
+        "#{variant.attribute1_value} / #{variant.attribute2_value}"
+      elsif variant.attribute1_value.present?
+        variant.attribute1_value
+      else
+        variant.name
+      end
+    else
+      variant.condition&.short_name.presence || variant.short_name.presence || variant.name
+    end
+  end
 end

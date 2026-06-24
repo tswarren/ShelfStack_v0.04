@@ -10,6 +10,7 @@
   </dl>
 
   <h2><%= items_user_facing_label("product_variants") %> Matrix</h2>
+  <% attribute_variation = item.product.variation_type.in?(%w[variable matrix]) %>
   <% if variants.any? %>
     <table class="ss-table">
       <thead>
@@ -25,10 +26,10 @@
       <tbody>
         <% variants.each do |variant| %>
           <tr class="<%= "ss-table-row--highlight" if local_assigns[:highlight_variant]&.id == variant.id %>">
-            <td><%= variant.condition&.short_name || "—" %></td>
-            <td><%= variant.condition&.sku_component.presence || "—" %></td>
+            <td><%= attribute_variation ? "—" : (variant.condition&.short_name || "—") %></td>
+            <td><%= attribute_variation ? "—" : (variant.condition&.sku_component.presence || "—") %></td>
             <td><%= variant.sku %></td>
-            <td><%= variant.name %></td>
+            <td><%= variant.list_label %></td>
             <td><%= format_cents(variant.selling_price_cents) %></td>
             <td>
               <%= link_to "Edit", edit_items_product_variant_path(variant, item_flow) %>

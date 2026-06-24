@@ -48,6 +48,10 @@ class ProductVariant < ApplicationRecord
     ProductNameRenderer.variant_name(self)
   end
 
+  def list_label
+    ProductNameRenderer.variant_list_label(self)
+  end
+
   def resolved_sub_department
     sub_department
   end
