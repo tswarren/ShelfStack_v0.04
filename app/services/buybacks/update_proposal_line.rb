@@ -87,7 +87,8 @@ module Buybacks
           suggested: line.suggested_resale_price_cents.to_i,
           reason: resale_override_reason,
           flag: :resale_price_overridden,
-          reason_field: :resale_price_override_reason
+          reason_field: :resale_price_override_reason,
+          proposed_field: :proposed_resale_price_cents
         )
         line.proposed_resale_price_cents = proposed_resale_price_cents.to_i
       end
@@ -98,7 +99,8 @@ module Buybacks
           suggested: line.suggested_cash_offer_cents.to_i,
           reason: cash_override_reason,
           flag: :cash_offer_overridden,
-          reason_field: :cash_offer_override_reason
+          reason_field: :cash_offer_override_reason,
+          proposed_field: :proposed_cash_offer_cents
         )
         line.proposed_cash_offer_cents = proposed_cash_offer_cents.to_i
       end
@@ -109,14 +111,21 @@ module Buybacks
           suggested: line.suggested_trade_credit_offer_cents.to_i,
           reason: trade_credit_override_reason,
           flag: :trade_credit_offer_overridden,
-          reason_field: :trade_credit_offer_override_reason
+          reason_field: :trade_credit_offer_override_reason,
+          proposed_field: :proposed_trade_credit_offer_cents
         )
         line.proposed_trade_credit_offer_cents = proposed_trade_credit_offer_cents.to_i
       end
     end
 
-    def apply_value_override!(value:, suggested:, reason:, flag:, reason_field:)
+    def apply_value_override!(value:, suggested:, reason:, flag:, reason_field:, proposed_field:)
       return if value == suggested
+
+      if value == line.public_send(proposed_field).to_i &&
+          line.public_send(flag) &&
+          line.public_send(reason_field).present?
+        return
+      end
 
       raise Error, "Override reason is required when proposed values differ from suggested." if reason.blank?
       raise Error, "Price override permission is required." unless override_allowed?

@@ -15,7 +15,7 @@ module Buybacks
     end
 
     def call!
-      raise ArgumentError, "Session is not editable." unless session.editable?
+      raise ArgumentError, "Lines can only be added while the session is in draft." unless session.draft?
 
       line_number = session.buyback_lines.maximum(:line_number).to_i + 1
       line = session.buyback_lines.create!(

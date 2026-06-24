@@ -12,7 +12,12 @@ module Buybacks
     end
 
     def call!
-      session.buyback_lines.where(status: %w[offered priced]).find_each do |line|
+      if session.buyback_lines.where(status: "priced").exists?
+        raise RecordCustomerDecision::Error,
+              "Repriced lines must be saved back into the proposal before batch decline."
+      end
+
+      session.buyback_lines.where(status: "offered").find_each do |line|
         RecordCustomerDecision.call!(line:, session:, actor:, outcome: "declined_by_customer")
       end
     end

@@ -73,8 +73,10 @@ module Buybacks
       posting_lines = session.buyback_lines.select(&:accepted_for_posting?)
       raise Error, "At least one accepted or donated line is required." if posting_lines.empty?
 
-      undecided = session.buyback_lines.where(status: %w[offered priced], outcome: nil).exists?
-      raise Error, "All proposal lines must have customer decisions before completion." if undecided
+      blocking = session.buyback_lines.where(status: %w[pending resolved priced offered], outcome: nil)
+      if blocking.exists?
+        raise Error, "All active lines must be resolved, priced, and decided before completion."
+      end
 
       validate_payout_mode!(posting_lines)
       posting_lines.each { |line| Eligibility.ensure_line_eligible!(line: line) }

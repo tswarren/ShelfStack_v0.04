@@ -17,6 +17,8 @@ module Buybacks
 
     def call!
       raise Error, "Invalid outcome." unless outcome.in?(BuybackLine::OUTCOMES)
+      raise Error, "Session is not editable." unless line.buyback_session.editable?
+      raise Error, "Posted or voided lines cannot be changed." if line.status.in?(%w[posted voided])
 
       line.update!(
         status: "decided",

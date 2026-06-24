@@ -23,7 +23,10 @@ module Buybacks
       existing = product.product_variants.active_records.find_by(condition: condition, sub_department: sub_department)
       if existing.present?
         Eligibility.ensure_variant_eligible!(variant: existing, condition: condition)
-        existing.update!(selling_price_cents: resale_price_cents.to_i) if resale_price_cents.present?
+        if resale_price_cents.present? &&
+            VariantPricePolicy.updatable_from_buyback?(variant: existing, store: session.store)
+          existing.update!(selling_price_cents: resale_price_cents.to_i)
+        end
         return existing
       end
 

@@ -38,15 +38,13 @@
   <% end %>
 </section>
 
-<% if @buyback_session.draft? || @buyback_session.editable? %>
+<% if @buyback_session.draft? %>
   <section class="ss-panel" id="intake-panel">
     <h2>Intake</h2>
-    <% if @buyback_session.editable? %>
-      <%= form_with url: buybacks_session_lines_path(@buyback_session), class: "ss-form ss-form-inline" do %>
-        <%= text_field_tag :identifier, nil, placeholder: "ISBN / identifier" %>
-        <%= text_field_tag :title, nil, placeholder: "Title (if no identifier)" %>
-        <%= submit_tag "Add line", class: "ss-btn" %>
-      <% end %>
+    <%= form_with url: buybacks_session_lines_path(@buyback_session), class: "ss-form ss-form-inline" do %>
+      <%= text_field_tag :identifier, nil, placeholder: "ISBN / identifier" %>
+      <%= text_field_tag :title, nil, placeholder: "Title (if no identifier)" %>
+      <%= submit_tag "Add line", class: "ss-btn" %>
     <% end %>
   </section>
 <% end %>

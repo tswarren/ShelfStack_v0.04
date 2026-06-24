@@ -217,7 +217,7 @@ Phase 7C was completed on 2026-06-23. Phase 7C-1 workflow refinement was complet
 - Completion: `used_buyback` inventory posting, `source: BuybackSession`; void via `buyback_voids` + `buyback_void` posting
 - Workstation-scoped buyback numbers: `{store_number}-{workstation_number}-B{sequence:06d}`
 - Trade credit issues to `trade_credit` account with identifier for POS redemption; SV ledger entries source-linked to buyback session/void
-- Review fixes (2026-06-24): auth halting, zero-cost donated lines in mixed payout sessions, override permission/reason on proposal edits, decision-aware payout totals, line removal, terminal store-rejected lines
+- Review fixes (2026-06-24): auth halting, zero-cost donated lines in mixed payout sessions, override permission/reason on proposal edits, decision-aware payout totals, line removal, terminal store-rejected lines, variant price policy when stock on hand, draft-only intake, batch decision status alignment
 
 ---
 
@@ -621,7 +621,10 @@ product_variants.sub_department_id → sub_departments.id
 * `no_value_donation` payout mode requires every posting line to be `donated_by_customer`.
 * `proposed_*` fields are staff/customer-facing pre-complete; `accepted_offer_cents` / `accepted_resale_price_cents` set only inside `CompleteSession` transaction from proposed values per payout mode.
 * Direct proposed-value edits in `UpdateProposalLine` that differ from suggested require `buybacks.price_override` and override reason; repricing clears `outcome` and `customer_decision_at`.
-* `SaveProposal` assigns `buyback_number` and rejects unresolved lines; graded variant create/find in `UpdateProposalLine` only; draft lines removable via `RemoveLine`.
+* `SaveProposal` assigns `buyback_number` and rejects unresolved lines; graded variant create/find in `UpdateProposalLine` only; draft lines removable via `RemoveLine`; new lines only in `draft` status.
+* Variant selling price from buyback updates only when `VariantPricePolicy.updatable_from_buyback?` (no on-hand stock at store); proposed/accepted resale stays on buyback line otherwise.
+* Completion blocks unresolved `pending`/`resolved`/`priced`/`offered` lines without customer outcomes.
+* Batch accept/decline processes `offered` lines only; repriced lines must be re-saved into proposal first.
 * Store rejection (`rejected_by_store`) sets terminal `status: decided` and does not block completion.
 * Dual eligibility: `sub_department.buyback_allowed` AND `product_condition.buyback_eligible`.
 * Single payout mode per session: `cash`, `trade_credit`, or `no_value_donation` (never both cash and credit).

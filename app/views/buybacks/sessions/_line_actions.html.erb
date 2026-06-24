@@ -28,9 +28,9 @@
     <%= number_field_tag :proposed_resale_price_cents, line.proposed_resale_price_cents || line.suggested_resale_price_cents, placeholder: "Resale (¢)", min: 0 %>
     <%= number_field_tag :proposed_cash_offer_cents, line.proposed_cash_offer_cents || line.suggested_cash_offer_cents, placeholder: "Cash (¢)", min: 0 %>
     <%= number_field_tag :proposed_trade_credit_offer_cents, line.proposed_trade_credit_offer_cents || line.suggested_trade_credit_offer_cents, placeholder: "Trade (¢)", min: 0 %>
-    <%= text_field_tag :resale_override_reason, nil, placeholder: "Resale override reason" %>
-    <%= text_field_tag :cash_override_reason, nil, placeholder: "Cash override reason" %>
-    <%= text_field_tag :trade_credit_override_reason, nil, placeholder: "Trade override reason" %>
+    <%= text_field_tag :resale_override_reason, line.resale_price_override_reason, placeholder: "Resale override reason" %>
+    <%= text_field_tag :cash_override_reason, line.cash_offer_override_reason, placeholder: "Cash override reason" %>
+    <%= text_field_tag :trade_credit_override_reason, line.trade_credit_offer_override_reason, placeholder: "Trade override reason" %>
     <%= submit_tag "Save line proposal", class: "ss-btn ss-btn--small" %>
   <% end %>
 

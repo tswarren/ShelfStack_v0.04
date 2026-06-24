@@ -83,6 +83,15 @@ Mutating controller actions halt on failed `authorize_buyback!` (`return unless`
 - **Resale override base:** `ApplyPriceOverride` sets `base_price_cents` / `manual_resale_price`; `PriceLine` accepts `resale_override_cents`
 - **Line removal:** `RemoveLine` service and `lines#destroy` for pending/resolved/priced lines
 
+### Fresh review fixes (2026-06-24)
+
+- **Variant price policy:** `VariantPricePolicy` prevents mutating existing variant `selling_price_cents` when the store has on-hand stock; applies in `FindOrCreateGradedUsedVariant` and `PostInventory`
+- **Draft-only intake:** new lines only while `session.draft?`; completion blocks unresolved `pending`/`resolved`/`priced`/`offered` lines without outcomes
+- **Batch decisions:** `AcceptAllLines` / `DeclineAllLines` only process `offered` lines; repriced (`priced`) lines must be re-saved via proposal first
+- **Override re-save:** `UpdateProposalLine` preserves existing override reasons when values unchanged; form pre-fills reason fields
+- **RejectLine guards:** service enforces session editability and blocks posted/voided lines
+- **Posting order:** `PostInventory` orders lines by `line_number`
+
 ### Pricing note (7C-1 MVP)
 
 `PriceLine` uses fixed base-price precedence on the line: `base_price_cents` → product list price → variant selling price → proposed/suggested values. `BuybackPricingRule#base_price_source` is schema-ready but not yet authoritative; rule-driven base selection is deferred.
@@ -100,6 +109,7 @@ Key review-fix test files:
 
 ```text
 test/services/buybacks/complete_session_review_fixes_test.rb
+test/services/buybacks/fresh_review_fixes_test.rb
 test/services/buybacks/apply_price_override_test.rb
 test/controllers/buybacks/authorization_review_fixes_test.rb
 test/controllers/buybacks/trade_credit_issuance_slips_controller_test.rb

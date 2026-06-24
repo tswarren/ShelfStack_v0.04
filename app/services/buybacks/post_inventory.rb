@@ -12,12 +12,15 @@ module Buybacks
     end
 
     def call
-      lines = session.buyback_lines.select(&:accepted_for_posting?)
+      lines = session.buyback_lines.order(:line_number).select(&:accepted_for_posting?)
       return nil if lines.empty?
 
       payloads = lines.map do |line|
         variant = line.product_variant
-        variant.update!(selling_price_cents: line.accepted_resale_price_cents) if line.accepted_resale_price_cents.present?
+        if line.accepted_resale_price_cents.present? &&
+            VariantPricePolicy.updatable_from_buyback?(variant: variant, store: session.store)
+          variant.update!(selling_price_cents: line.accepted_resale_price_cents)
+        end
 
         cost_source = line.donation? ? "no_value_donation" : "buyback_offer"
         Inventory::Post::LinePayload.new(

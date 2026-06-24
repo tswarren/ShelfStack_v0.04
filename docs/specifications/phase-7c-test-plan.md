@@ -25,6 +25,10 @@ Roadmap §16 and §17 exit criteria apply.
 - Decision-aware payout totals via `DecisionTotalsBuilder`
 - Resale override recalculates offers from overridden base (`ApplyPriceOverride` / `resale_override_cents`)
 - Line removal for draft/intake lines
+- Variant price policy: do not mutate existing variant selling price when store has on-hand stock
+- Draft-only line intake; completion blocks unresolved pending/resolved lines
+- Batch accept/decline limited to `offered` status; override reasons preserved on re-save
+- `RejectLine` enforces session editability; `PostInventory` orders by `line_number`
 - `buyback_number` assigned at proposal save from workstation sequence
 - Cash movement with `BuybackSession` source
 - Trade credit issue with `StoredValueReasonCode` and `source: BuybackSession`; issuance slip vs masked receipt
@@ -41,6 +45,7 @@ Roadmap §16 and §17 exit criteria apply.
 test/models/buyback_*_test.rb
 test/services/buybacks/*_test.rb
 test/services/buybacks/complete_session_review_fixes_test.rb
+test/services/buybacks/fresh_review_fixes_test.rb
 test/services/buybacks/apply_price_override_test.rb
 test/controllers/buybacks/*_test.rb
 test/controllers/buybacks/authorization_review_fixes_test.rb
