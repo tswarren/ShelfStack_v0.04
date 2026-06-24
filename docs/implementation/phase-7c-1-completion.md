@@ -145,9 +145,29 @@ Letter-size **Buyback Proposal & Seller Election** print document:
 - [`ProposalBuilder`](../../app/services/buybacks/proposal_builder.rb) exposes `offered_lines` and `not_accepted_lines` (totals from offered lines only)
 - Print allowed for `quoted`, `decision`, and `completed` sessions; records `proposal_printed_at` and `buyback.proposal.printed` audit
 
+## Workflow UX hardening (2026-06-24)
+
+Counter workflow improvements without a new session status:
+
+- **Proposal revision:** `proposal_revision_needed?` when quoted/decision sessions have repriced (`status: priced`) lines; save/open-decision gates and **Save revised proposal** label
+- **Next-action panel:** `SessionWorkflowPresenter::NextAction` keys mapped to routes/anchors in the view (presenter stays route-free)
+- **Turbo Streams:** `Buybacks::SessionStreamRendering` + `stream_update.turbo_stream.erb` refresh stepper, next action, proposal/decision/payout panels, sticky footer, line rows, and line-detail frame after line/session mutations
+- **Turbo-frame drawer:** `lines#detail` loads `_line_detail_frame` into `buyback-line-detail-frame`; Stimulus opens drawer via `data-detail-url` / `open_line` query param
+- **`Buybacks::SelectVariant`:** extracted variant-link service (audit `buyback.line.variant_selected`, `PricingFieldSync.refresh!`)
+- **External lookup return path:** `Buybacks::LineMatchContext` mirrors customer-request match context through Add Item / external lookup; resolve UI offers **Search external sources**
+- **Decision-stage revision:** `SaveProposal` on `decision?` sessions clears `customer_decision_at` and returns session to `quoted`
+
+Key test files:
+
+```text
+test/services/buybacks/select_variant_test.rb
+test/services/buybacks/line_match_context_test.rb
+test/integration/buybacks_external_lookup_match_test.rb
+test/integration/buybacks_staged_workflow_integration_test.rb
+```
+
 ## Deferred (unchanged)
 
 - Setup CRUD for pricing rules / reject reasons
-- External catalog lookup in resolve
 - Split payouts, copy-level inventory, customer merge
 - Rule-driven `base_price_source` in `PriceLine`

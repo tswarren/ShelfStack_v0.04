@@ -1,25 +1,70 @@
 <%# locals: workflow, buyback_session %>
-<section class="ss-panel ss-buyback-next-action" id="next-action-panel">
-  <h2 class="ss-buyback-next-action__title"><%= workflow.next_action.label %></h2>
+<section class="ss-panel ss-buyback-next-action" id="buyback-next-action-panel">
   <% action = workflow.next_action %>
+  <h2 class="ss-buyback-next-action__title"><%= action.label %></h2>
   <% case action.kind %>
   <% when :anchor %>
     <%= link_to action.label, "##{action.anchor}", class: "ss-btn" %>
+  <% when :action %>
+    <% case action.key %>
+    <% when :save_proposal %>
+      <% save_state = workflow.action_state(:save_proposal) %>
+      <%= buyback_action_button(
+            path: save_proposal_buybacks_session_path(buyback_session),
+            method: :patch,
+            label: workflow.save_proposal_label,
+            enabled: save_state.enabled,
+            reason: save_state.reason,
+            class: "ss-btn"
+          ) %>
+    <% when :open_decision %>
+      <% open_state = workflow.action_state(:open_decision) %>
+      <%= buyback_action_button(
+            path: open_decision_buybacks_session_path(buyback_session),
+            method: :patch,
+            label: action.label,
+            enabled: open_state.enabled,
+            reason: open_state.reason,
+            class: "ss-btn"
+          ) %>
+    <% when :complete %>
+      <% complete_state = workflow.action_state(:complete) %>
+      <%= buyback_action_button(
+            path: complete_buybacks_session_path(buyback_session),
+            method: :patch,
+            label: action.label,
+            enabled: complete_state.enabled,
+            reason: complete_state.reason,
+            class: "ss-btn",
+            data: { turbo_confirm: "Complete this buyback?" }
+          ) %>
+    <% end %>
   <% when :disabled %>
     <button type="button" class="ss-btn ss-btn--disabled" disabled><%= action.label %></button>
-    <% state = workflow.action_state(:save_proposal) %>
-    <% if state.reason.present? %>
-      <p class="ss-hint"><%= state.reason %></p>
+    <% disabled_state = case action.key
+       when :save_proposal then workflow.action_state(:save_proposal)
+       when :open_decision then workflow.action_state(:open_decision)
+       when :complete then workflow.action_state(:complete)
+       else nil
+       end %>
+    <% if disabled_state&.reason.present? %>
+      <p class="ss-hint"><%= disabled_state.reason %></p>
     <% end %>
   <% when :info %>
     <p class="ss-muted"><%= action.label %></p>
   <% end %>
+
   <% if action.secondary_label.present? %>
-    <% if buyback_session.quoted? && !buyback_session.decision? %>
+    <% case action.secondary_key %>
+    <% when :print_proposal %>
       <%= link_to action.secondary_label, print_proposal_buybacks_session_path(buyback_session), class: "ss-btn ss-btn-secondary", target: "_blank" %>
     <% end %>
   <% end %>
+
   <% if workflow.repriced_lines_blocking_batch? %>
-    <p class="ss-hint ss-hint-warning">Some lines changed since customer decision. Save proposal again before recording decisions.</p>
+    <p class="ss-hint ss-hint-warning">Some lines changed since customer decision. Save the revised proposal before recording decisions.</p>
+  <% end %>
+  <% if workflow.proposal_stale? && (buyback_session.quoted? || buyback_session.decision?) %>
+    <p class="ss-hint ss-hint-warning">Proposal changed since last print. Reprint before opening customer decisions.</p>
   <% end %>
 </section>

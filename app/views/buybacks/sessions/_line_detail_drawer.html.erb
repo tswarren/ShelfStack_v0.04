@@ -6,16 +6,10 @@
     <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="buyback-line-drawer#close">Close</button>
   </header>
   <div class="ss-buyback-line-drawer__body" data-buyback-line-drawer-target="body">
-    <% lines.each do |line| %>
-      <template id="buyback-line-panel-<%= line.id %>">
-        <%= render "buybacks/sessions/line_detail_content",
-              line: line,
-              session: session,
-              conditions: conditions,
-              sub_departments: sub_departments,
-              reject_reasons: reject_reasons,
-              workflow: workflow %>
-      </template>
+    <%= turbo_frame_tag "buyback-line-detail-frame", data: { buyback_line_drawer_target: "frame" } do %>
+      <div id="buyback-line-detail-content">
+        <p class="ss-muted">Select a work item to view details.</p>
+      </div>
     <% end %>
   </div>
 </aside>

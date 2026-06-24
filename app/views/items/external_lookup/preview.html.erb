@@ -1,7 +1,9 @@
 <%= render "shared/forms/page_header",
-           eyebrow: "Items",
+           eyebrow: "External Catalog Preview",
            title: "External Catalog Preview",
            description: "Review candidate metadata before importing into the local catalog." %>
+
+<%= render "shared/request_match_banner", context: @match_context if @match_context&.valid? %>
 
 <% if @preview.format_required %>
   <div class="ss-notice ss-notice--warning">
@@ -79,6 +81,7 @@
 <% end %>
 
 <%= form_with url: items_external_lookup_import_path(@lookup_result), method: :post, class: "ss-form ss-form--standard" do %>
+  <%= render "shared/request_match_params_fields", context: @match_context if @match_context&.valid? %>
   <% if @preview.format_required %>
     <%= render layout: "shared/forms/section", locals: { title: "Format Selection" } do %>
       <div class="ss-field">

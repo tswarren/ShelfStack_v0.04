@@ -13,7 +13,7 @@
     </dl>
   </div>
 
-  <%= form_with url: update_proposal_buybacks_session_line_path(session, line), method: :patch, class: "ss-buyback-pricing__column ss-form" do %>
+  <%= form_with url: update_proposal_buybacks_session_line_path(session, line), method: :patch, class: "ss-buyback-pricing__column ss-form", data: { turbo_stream: true } do %>
     <h4>Proposed to customer</h4>
     <div class="ss-form-grid ss-form-grid--2">
       <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name, line.product_condition_id), include_blank: "Condition" %>

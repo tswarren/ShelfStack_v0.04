@@ -4,7 +4,7 @@ module Buybacks
   class LinesController < BaseController
     before_action :set_session
     before_action :set_line, only: %i[
-      update reject price_override offer_override resolve select_variant intake
+      detail update reject price_override offer_override resolve select_variant intake
       update_proposal record_decision destroy
     ]
 
@@ -18,9 +18,18 @@ module Buybacks
         title_snapshot: params[:title],
         notes: params[:notes]
       )
-      redirect_to buybacks_session_path(@buyback_session, anchor: "line-#{line.id}")
+      respond_to_buyback_session_update(line: line, notice: "Line added.", open_line_id: line.id, append_line: true)
     rescue ArgumentError => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message)
+    end
+
+    def detail
+      return unless authorize_buyback!("buybacks.update")
+
+      prepare_buyback_session_view!(@buyback_session)
+      render partial: "buybacks/sessions/line_detail_frame",
+             locals: line_detail_locals(@line),
+             layout: false
     end
 
     def update
@@ -34,9 +43,9 @@ module Buybacks
         signed_copy: params.dig(:buyback_line, :signed_copy),
         notes: params.dig(:buyback_line, :notes)
       )
-      redirect_to buybacks_session_path(@buyback_session)
+      respond_to_buyback_session_update(line: @line.reload, notice: "Line updated.")
     rescue ArgumentError => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message)
     end
 
     def update_proposal
@@ -59,9 +68,9 @@ module Buybacks
         signed_copy: params[:signed_copy],
         notes: params[:notes]
       )
-      redirect_to buybacks_session_path(@buyback_session, anchor: "line-#{@line.id}"), notice: "Line proposal updated."
+      respond_to_buyback_session_update(line: @line.reload, notice: "Line proposal updated.")
     rescue Buybacks::UpdateProposalLine::Error, Buybacks::Eligibility::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message, line: @line)
     end
 
     def record_decision
@@ -73,18 +82,19 @@ module Buybacks
         actor: current_user,
         outcome: params[:outcome]
       )
-      redirect_to buybacks_session_path(@buyback_session), notice: "Customer decision recorded."
+      respond_to_buyback_session_update(line: @line.reload, notice: "Customer decision recorded.")
     rescue Buybacks::RecordCustomerDecision::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message, line: @line)
     end
 
     def destroy
       return unless authorize_buyback!("buybacks.update")
 
+      line_id = @line.id
       RemoveLine.call!(line: @line, session: @buyback_session, actor: current_user)
-      redirect_to buybacks_session_path(@buyback_session), notice: "Line removed."
+      respond_to_buyback_session_update(notice: "Line removed.", remove_line_id: line_id)
     rescue Buybacks::RemoveLine::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message, line: @line)
     end
 
     def resolve
@@ -99,26 +109,14 @@ module Buybacks
       respond_to do |format|
         format.html do
           render partial: "buybacks/sessions/resolve_results",
-                 locals: {
-                   result: result,
-                   line: @line,
-                   session: @buyback_session,
-                   conditions: buyback_conditions,
-                   sub_departments: buyback_sub_departments
-                 },
+                 locals: resolve_results_locals(result),
                  layout: false
         end
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
             helpers.dom_id(@line, :resolve),
             partial: "buybacks/sessions/resolve_results",
-            locals: {
-              result: result,
-              line: @line,
-              session: @buyback_session,
-              conditions: buyback_conditions,
-              sub_departments: buyback_sub_departments
-            }
+            locals: resolve_results_locals(result)
           )
         end
       end
@@ -128,24 +126,10 @@ module Buybacks
       return unless authorize_buyback!("buybacks.update")
 
       variant = ProductVariant.find(params[:product_variant_id])
-      catalog_item = variant.product.catalog_item
-
-      @line.update!(
-        product_variant: variant,
-        product: variant.product,
-        catalog_item: catalog_item,
-        product_condition: variant.condition,
-        sub_department: variant.sub_department,
-        title_snapshot: catalog_item&.title || variant.product.name,
-        variant_sku_snapshot: variant.sku,
-        condition_snapshot: variant.condition&.name,
-        list_price_cents: variant.product.list_price_cents,
-        status: "resolved"
-      )
-      PricingFieldSync.refresh!(line: @line.reload)
-      redirect_to buybacks_session_path(@buyback_session), notice: "Item linked to line."
-    rescue ActiveRecord::RecordNotFound, ArgumentError => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      SelectVariant.call!(line: @line, session: @buyback_session, variant: variant, actor: current_user)
+      respond_to_buyback_session_update(line: @line.reload, notice: "Item linked to line.")
+    rescue ActiveRecord::RecordNotFound, SelectVariant::Error => e
+      respond_to_buyback_session_update(alert: e.message, line: @line)
     end
 
     def intake
@@ -164,9 +148,9 @@ module Buybacks
         list_price_cents: params[:list_price_cents]
       )
       notice = result.created_new_catalog ? "Intake item created." : "Catalog item linked."
-      redirect_to buybacks_session_path(@buyback_session), notice: notice
+      respond_to_buyback_session_update(line: @line.reload, notice: notice)
     rescue Buybacks::CreateIntakeItem::Error, Buybacks::FindOrCreateGradedUsedVariant::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message, line: @line)
     end
 
     def reject
@@ -180,9 +164,9 @@ module Buybacks
         outcome: outcome,
         reject_reason: reason
       )
-      redirect_to buybacks_session_path(@buyback_session), notice: "Line rejected."
+      respond_to_buyback_session_update(line: @line.reload, notice: "Line rejected.")
     rescue Buybacks::RejectLine::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message, line: @line)
     end
 
     def price_override
@@ -222,6 +206,27 @@ module Buybacks
 
     def set_line
       @line = @buyback_session.buyback_lines.find(params[:id])
+    end
+
+    def line_detail_locals(line)
+      {
+        line: line,
+        session: @buyback_session,
+        conditions: @conditions,
+        sub_departments: @sub_departments,
+        reject_reasons: @reject_reasons,
+        workflow: @workflow
+      }
+    end
+
+    def resolve_results_locals(result)
+      {
+        result: result,
+        line: @line,
+        session: @buyback_session,
+        conditions: buyback_conditions,
+        sub_departments: buyback_sub_departments
+      }
     end
 
     def condition_from_params

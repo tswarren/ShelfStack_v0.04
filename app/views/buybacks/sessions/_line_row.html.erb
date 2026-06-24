@@ -1,0 +1,35 @@
+<%# locals: line, buyback_session, conditions, sub_departments, reject_reasons, workflow %>
+<tr id="buyback-line-row-<%= line.id %>"
+    data-buyback-work-items-target="row"
+    data-workflow-state="<%= buyback_line_workflow_state(line, workflow: workflow) %>">
+  <td><%= line.line_number %></td>
+  <td>
+    <%= line.title_snapshot %>
+    <% if line.variant_sku_snapshot.present? %>
+      <span class="ss-muted">(<%= line.variant_sku_snapshot %>)</span>
+    <% end %>
+  </td>
+  <td><%= line.condition_snapshot || line.product_condition&.name %></td>
+  <td><%= buyback_money(buyback_proposed_or_suggested(line, "resale_price_cents")) %></td>
+  <td><%= buyback_money(buyback_proposed_or_suggested(line, "cash_offer_cents")) %></td>
+  <td><%= buyback_money(buyback_proposed_or_suggested(line, "trade_credit_offer_cents")) %></td>
+  <td>
+    <% if buyback_session.decision? && line.status == "offered" && line.outcome.blank? %>
+      <%= render "buybacks/sessions/line_decision_buttons", line: line, session: buyback_session %>
+    <% else %>
+      <%= buyback_outcome_label(line.outcome) %>
+    <% end %>
+  </td>
+  <td><%= buyback_line_status_badge(line, workflow: workflow) %></td>
+  <td>
+    <% if buyback_session.editable? %>
+      <%= render "buybacks/sessions/line_actions",
+            line: line,
+            session: buyback_session,
+            conditions: conditions,
+            sub_departments: sub_departments,
+            reject_reasons: reject_reasons,
+            workflow: workflow %>
+    <% end %>
+  </td>
+</tr>

@@ -179,11 +179,35 @@ module BuybacksHelper
     end
   end
 
+  def buyback_line_match_params(session, line)
+    params = {
+      return_to: Buybacks::LineMatchContext::RETURN_TO,
+      buyback_session_id: session.id,
+      line_id: line.id
+    }
+    params[:isbn] = line.identifier_entered if line.identifier_entered.present?
+    params
+  end
+
+  def buyback_external_lookup_path(session, line)
+    items_add_item_path(step: "identify", **buyback_line_match_params(session, line))
+  end
+
+  def buyback_external_lookup_link(session, line, label: "Search external sources", **options)
+    css = ["ss-btn", "ss-btn-secondary", "ss-btn--small", options.delete(:class)].compact.join(" ")
+    link_to label,
+            buyback_external_lookup_path(session, line),
+            class: css,
+            data: { turbo_frame: "_top" },
+            **options
+  end
+
   def buyback_action_button(path:, method:, label:, enabled:, reason: nil, **options)
     css = ["ss-btn", options.delete(:class)].compact.join(" ")
     data = options.delete(:data) || {}
+    form_options = { data: data.merge(turbo_stream: true) }
     if enabled
-      button_to label, path, method: method, class: css, data: data, **options
+      button_to label, path, method: method, class: css, form: form_options, **options
     else
       tag.div(class: "ss-buyback-action-disabled") do
         safe_join([

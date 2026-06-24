@@ -1,6 +1,6 @@
 <%# locals: buyback_session, proposal, workflow %>
 <% if buyback_session.quoted? || buyback_session.decision? %>
-  <section class="ss-panel" id="proposal-panel">
+  <section class="ss-panel" id="buyback-proposal-panel">
     <h2>Proposal</h2>
     <div class="ss-buyback-proposal-card">
       <p class="ss-buyback-proposal-card__number"><strong><%= buyback_session.buyback_number %></strong></p>
@@ -12,11 +12,14 @@
       <% if buyback_session.proposal_printed_at.present? %>
         <p class="ss-muted">Proposal printed at <%= l(buyback_session.proposal_printed_at, format: :short) %></p>
       <% end %>
-      <% if workflow.proposal_stale? %>
+      <% if workflow.proposal_revision_needed? %>
+        <p class="ss-hint ss-hint-warning">Proposal revision needed. Reprice lines, save the revised proposal, then reprint.</p>
+      <% elsif workflow.proposal_stale? %>
         <p class="ss-hint ss-hint-warning">Proposal changed since last print.</p>
       <% end %>
       <div class="ss-form-actions">
         <%= link_to "Print proposal", print_proposal_buybacks_session_path(buyback_session), class: "ss-btn ss-btn-secondary", target: "_blank" %>
+        <%= link_to "Revise proposal", "#work-items-panel", class: "ss-btn ss-btn-secondary" %>
         <% if buyback_session.quoted? && !buyback_session.decision? %>
           <% open_state = workflow.action_state(:open_decision) %>
           <%= buyback_action_button(
@@ -30,30 +33,32 @@
         <% end %>
       </div>
     </div>
-    <% if buyback_session.editable? && (buyback_session.draft? || workflow.queue_summary.ready_for_proposal_count.positive?) %>
+    <% if buyback_session.editable? && (buyback_session.draft? || workflow.proposal_revision_needed? || workflow.queue_summary.ready_for_proposal_count.positive?) %>
       <% save_state = workflow.action_state(:save_proposal) %>
       <%= buyback_action_button(
             path: save_proposal_buybacks_session_path(buyback_session),
             method: :patch,
-            label: "Save proposal",
+            label: workflow.save_proposal_label,
             enabled: save_state.enabled,
             reason: save_state.reason,
             class: "ss-btn"
           ) %>
-      <% unless buyback_session.draft? %>
+      <% if workflow.proposal_revision_needed? %>
+        <p class="ss-hint">Save the revised proposal, reprint it, then reopen customer decisions if needed.</p>
+      <% elsif !buyback_session.draft? %>
         <p class="ss-hint">Re-save the proposal after repricing lines before recording customer decisions.</p>
       <% end %>
     <% end %>
   </section>
 <% elsif buyback_session.editable? && buyback_session.draft? %>
-  <section class="ss-panel" id="proposal-panel">
+  <section class="ss-panel" id="buyback-proposal-panel">
     <h2>Proposal</h2>
     <p class="ss-muted">Save the proposal to assign a buyback number and prepare for customer review.</p>
     <% save_state = workflow.action_state(:save_proposal) %>
     <%= buyback_action_button(
           path: save_proposal_buybacks_session_path(buyback_session),
           method: :patch,
-          label: "Save proposal",
+          label: workflow.save_proposal_label,
           enabled: save_state.enabled,
           reason: save_state.reason,
           class: "ss-btn"

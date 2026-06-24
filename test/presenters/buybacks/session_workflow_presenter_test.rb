@@ -68,6 +68,38 @@ class Buybacks::SessionWorkflowPresenterTest < ActiveSupport::TestCase
     assert_not workflow.action_state(:accept_all).enabled
   end
 
+  test "quoted session with repriced line enables save revised proposal" do
+    line = add_priced_line!
+    Buybacks::SaveProposal.call!(session: @session.reload, actor: @user)
+    line.reload.update!(status: "priced", outcome: nil)
+    workflow = build_workflow(status: "quoted")
+
+    assert workflow.proposal_revision_needed?
+    assert_equal "Save revised proposal", workflow.save_proposal_label
+    assert workflow.action_state(:save_proposal).enabled
+    assert_equal :current, workflow.steps.find { |s| s.key == :price_items }.state
+  end
+
+  test "open decision blocked when proposal revision needed or stale" do
+    line = add_priced_line!
+    Buybacks::SaveProposal.call!(session: @session.reload, actor: @user)
+    line.reload.update!(status: "priced", outcome: nil)
+    workflow = build_workflow(status: "quoted")
+
+    state = workflow.action_state(:open_decision)
+    assert_not state.enabled
+    assert_match(/revised proposal/i, state.reason)
+
+    line.update!(status: "offered")
+    @session.update!(proposal_printed_at: 1.hour.ago)
+    line.touch
+    workflow = build_workflow(status: "quoted")
+
+    state = workflow.action_state(:open_decision)
+    assert_not state.enabled
+    assert_match(/reprint/i, state.reason)
+  end
+
   private
 
   def build_workflow(status: @session.status, decision_totals: nil)

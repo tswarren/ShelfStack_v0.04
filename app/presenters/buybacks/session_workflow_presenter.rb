@@ -4,7 +4,7 @@ module Buybacks
   class SessionWorkflowPresenter
     Step = Data.define(:key, :label, :state)
     ActionState = Data.define(:enabled, :reason)
-    NextAction = Data.define(:label, :kind, :anchor, :path, :method, :secondary_label, :secondary_path, :secondary_method)
+    NextAction = Data.define(:key, :label, :kind, :anchor, :secondary_key, :secondary_label)
     QueueSummary = Data.define(
       :total_count,
       :needs_match_count,
@@ -150,6 +150,14 @@ module Buybacks
       stale_line || session.proposal_saved_at.to_i > session.proposal_printed_at.to_i
     end
 
+    def proposal_revision_needed?
+      (session.quoted? || session.decision?) && lines.any? { |l| l.status == "priced" }
+    end
+
+    def save_proposal_label
+      proposal_revision_needed? ? "Save revised proposal" : "Save proposal"
+    end
+
     def repriced_lines_blocking_batch?
       session.decision? && lines.any? { |l| l.status == "priced" }
     end
@@ -195,11 +203,13 @@ module Buybacks
 
         queue_summary.needs_match_count.positive? ? :current : :complete
       when :price_items
+        return :current if proposal_revision_needed?
         return :future if session.quoted? || session.decision?
         return :complete if session.draft? && pricing_complete?
 
         session.draft? ? :current : :future
       when :proposal
+        return :current if proposal_revision_needed?
         return :complete if session.decision? || session.quoted?
         return :current if session.draft? && pricing_complete?
 
@@ -231,74 +241,80 @@ module Buybacks
 
     def build_next_action
       if session.completed?
-        return NextAction.new(label: "Buyback completed", kind: :info, anchor: nil, path: nil, method: nil,
-                              secondary_label: nil, secondary_path: nil, secondary_method: nil)
+        return NextAction.new(
+          key: nil,
+          label: "Buyback completed",
+          kind: :info,
+          anchor: nil,
+          secondary_key: nil,
+          secondary_label: nil
+        )
+      end
+
+      if proposal_revision_needed?
+        return next_action_for(:revise_proposal, label: "Revise proposal", kind: :anchor, anchor: "work-items-panel")
       end
 
       if session.draft? && lines.empty?
-        return NextAction.new(label: "Scan or add item", kind: :anchor, anchor: "intake-panel",
-                              path: nil, method: nil, secondary_label: nil, secondary_path: nil, secondary_method: nil)
+        return next_action_for(:scan_item, label: "Scan or add item", kind: :anchor, anchor: "intake-panel")
       end
 
       if session.draft? && (queue_summary.needs_match_count.positive? || queue_summary.needs_price_count.positive?)
         anchor = next_line_id ? "line-#{next_line_id}" : "work-items-panel"
-        return NextAction.new(label: "Price remaining items", kind: :anchor, anchor: anchor,
-                              path: nil, method: nil, secondary_label: nil, secondary_path: nil, secondary_method: nil)
+        return next_action_for(:price_items, label: "Price remaining items", kind: :anchor, anchor: anchor)
       end
 
       if session.draft? && pricing_complete?
         state = save_proposal_state
-        return NextAction.new(
-          label: "Save proposal",
-          kind: state.enabled ? :path : :disabled,
-          anchor: "proposal-panel",
-          path: nil,
-          method: :patch,
-          secondary_label: nil,
-          secondary_path: nil,
-          secondary_method: nil
+        return next_action_for(
+          :save_proposal,
+          label: save_proposal_label,
+          kind: state.enabled ? :action : :disabled,
+          anchor: "buyback-proposal-panel"
         )
       end
 
       if session.quoted? && !session.decision?
-        return NextAction.new(
+        state = open_decision_state
+        return next_action_for(
+          :open_decision,
           label: "Open customer decisions",
-          kind: open_decision_state.enabled ? :path : :disabled,
-          anchor: "decision-panel",
-          path: nil,
-          method: :patch,
-          secondary_label: "Print proposal",
-          secondary_path: nil,
-          secondary_method: :get
+          kind: state.enabled ? :action : :disabled,
+          anchor: "buyback-decision-panel",
+          secondary_key: :print_proposal,
+          secondary_label: "Print proposal"
         )
       end
 
       if session.decision? && !all_lines_decided?
-        return NextAction.new(label: "Record customer decisions", kind: :anchor, anchor: "decision-panel",
-                              path: nil, method: nil, secondary_label: nil, secondary_path: nil, secondary_method: nil)
+        return next_action_for(:record_decisions, label: "Record customer decisions", kind: :anchor, anchor: "buyback-decision-panel")
       end
 
       if session.decision? && all_lines_decided? && session.payout_mode.blank?
-        return NextAction.new(label: "Select payout method", kind: :anchor, anchor: "payout-panel",
-                              path: nil, method: nil, secondary_label: nil, secondary_path: nil, secondary_method: nil)
+        return next_action_for(:select_payout, label: "Select payout method", kind: :anchor, anchor: "buyback-payout-panel")
       end
 
       if session.decision? && all_lines_decided? && session.payout_mode.present?
         state = complete_state
-        return NextAction.new(
+        return next_action_for(
+          :complete,
           label: "Complete buyback",
-          kind: state.enabled ? :path : :disabled,
-          anchor: nil,
-          path: nil,
-          method: :patch,
-          secondary_label: nil,
-          secondary_path: nil,
-          secondary_method: nil
+          kind: state.enabled ? :action : :disabled
         )
       end
 
-      NextAction.new(label: "Continue buyback", kind: :anchor, anchor: "work-items-panel",
-                     path: nil, method: nil, secondary_label: nil, secondary_path: nil, secondary_method: nil)
+      next_action_for(:price_items, label: "Continue buyback", kind: :anchor, anchor: "work-items-panel")
+    end
+
+    def next_action_for(key, label:, kind:, anchor: nil, enabled: true, reason: nil, secondary_key: nil, secondary_label: nil)
+      NextAction.new(
+        key: key,
+        label: label,
+        kind: kind,
+        anchor: anchor,
+        secondary_key: secondary_key,
+        secondary_label: secondary_label
+      )
     end
 
     def proposal_footer_text
@@ -322,6 +338,20 @@ module Buybacks
     end
 
     def save_proposal_state
+      if proposal_revision_needed?
+        if queue_summary.needs_match_count.positive?
+          return ActionState.new(enabled: false, reason: "#{queue_summary.needs_match_count} lines still need match.")
+        end
+        if queue_summary.needs_price_count.positive?
+          return ActionState.new(enabled: false, reason: "#{queue_summary.needs_price_count} lines still need pricing.")
+        end
+        if session.workstation.blank?
+          return ActionState.new(enabled: false, reason: "Workstation is required to save a proposal.")
+        end
+
+        return ActionState.new(enabled: true, reason: nil)
+      end
+
       if !session.draft?
         return ActionState.new(enabled: false, reason: "Proposal is already saved.")
       end
@@ -344,6 +374,12 @@ module Buybacks
     def open_decision_state
       return ActionState.new(enabled: false, reason: "Save proposal first.") unless session.quoted? || session.decision?
       return ActionState.new(enabled: false, reason: "Customer decision stage is already open.") if session.decision?
+      if proposal_revision_needed?
+        return ActionState.new(enabled: false, reason: "Save the revised proposal before opening customer decisions.")
+      end
+      if proposal_stale?
+        return ActionState.new(enabled: false, reason: "Reprint the proposal after saving revisions before opening customer decisions.")
+      end
 
       ActionState.new(enabled: true, reason: nil)
     end

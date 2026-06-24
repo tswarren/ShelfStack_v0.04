@@ -34,7 +34,8 @@ module Buybacks
         session.update!(
           status: "quoted",
           proposal_saved_at: Time.current,
-          quoted_at: Time.current
+          quoted_at: Time.current,
+          customer_decision_at: session.decision? ? nil : session.customer_decision_at
         )
 
         AuditEvents.record!(

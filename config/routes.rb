@@ -326,6 +326,7 @@ Rails.application.routes.draw do
       end
       resources :lines, only: %i[create update destroy] do
         member do
+          get :detail
           post :reject
           post :resolve
           post :select_variant

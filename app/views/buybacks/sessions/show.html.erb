@@ -20,6 +20,7 @@
 </div>
 
 <div data-controller="buyback-workspace buyback-line-drawer buyback-work-items buyback-intake"
+     id="buyback-workspace"
      data-buyback-workspace-next-line-id-value="<%= @workflow.next_line_id %>"
      data-buyback-intake-focus-on-connect-value="<%= @buyback_session.draft? %>">
 
@@ -50,11 +51,13 @@
 
   <%= render "buybacks/sessions/decision_panel", buyback_session: @buyback_session, workflow: @workflow %>
 
-  <%= render "buybacks/sessions/payout_panel",
-        buyback_session: @buyback_session,
-        decision_totals: @decision_totals,
-        workflow: @workflow,
-        register_session: current_register_session %>
+  <div id="buyback-payout-panel">
+    <%= render "buybacks/sessions/payout_panel",
+          buyback_session: @buyback_session,
+          decision_totals: @decision_totals,
+          workflow: @workflow,
+          register_session: current_register_session %>
+  </div>
 
   <% if @buyback_session.editable? %>
     <%= render "buybacks/sessions/sticky_footer", buyback_session: @buyback_session, workflow: @workflow %>

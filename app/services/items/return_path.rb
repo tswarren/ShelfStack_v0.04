@@ -5,7 +5,7 @@ module Items
     include Rails.application.routes.url_helpers
 
     def self.for(record:, return_to: nil, tab: nil, variant_id: nil, anchor: nil, from_tbo_filters: {},
-               customer_request_match: {})
+               customer_request_match: {}, buyback_line_match: {})
       new(
         record: record,
         return_to: return_to,
@@ -13,12 +13,13 @@ module Items
         variant_id: variant_id,
         anchor: anchor,
         from_tbo_filters: from_tbo_filters,
-        customer_request_match: customer_request_match
+        customer_request_match: customer_request_match,
+        buyback_line_match: buyback_line_match
       ).call
     end
 
     def initialize(record:, return_to: nil, tab: nil, variant_id: nil, anchor: nil, from_tbo_filters: {},
-                   customer_request_match: {})
+                   customer_request_match: {}, buyback_line_match: {})
       @record = record
       @return_to = return_to.to_s
       @tab = tab
@@ -26,10 +27,12 @@ module Items
       @anchor = anchor
       @from_tbo_filters = from_tbo_filters.to_h.symbolize_keys
       @customer_request_match = customer_request_match.to_h.symbolize_keys
+      @buyback_line_match = buyback_line_match.to_h.symbolize_keys
     end
 
     def call
       return from_customer_request_path if from_customer_request_flow?
+      return from_buyback_line_path if from_buyback_line_flow?
       return from_tbo_path if from_tbo_flow?
       return legacy_path unless item_flow?
 
@@ -48,7 +51,21 @@ module Items
       @return_to == Customers::RequestMatchContext::RETURN_TO
     end
 
+    def from_buyback_line_flow?
+      @return_to == Buybacks::LineMatchContext::RETURN_TO
+    end
+
     private
+
+    def from_buyback_line_path
+      context = Buybacks::LineMatchContext.new(
+        return_to: @return_to,
+        buyback_session_id: @buyback_line_match[:buyback_session_id],
+        line_id: @buyback_line_match[:line_id],
+        store: nil
+      )
+      context.return_path || items_root_path
+    end
 
     def from_customer_request_path
       context = Customers::RequestMatchContext.new(

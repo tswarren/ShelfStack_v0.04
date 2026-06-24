@@ -69,16 +69,16 @@ module Buybacks
     def save_proposal
       @buyback_session.update!(workstation: current_workstation) if @buyback_session.workstation.blank?
       SaveProposal.call!(session: @buyback_session, actor: current_user)
-      redirect_to buybacks_session_path(@buyback_session), notice: "Proposal saved."
+      respond_to_buyback_session_update(notice: "Proposal saved.")
     rescue Buybacks::SaveProposal::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message)
     end
 
     def open_decision
       OpenCustomerDecision.call!(session: @buyback_session, actor: current_user)
-      redirect_to buybacks_session_path(@buyback_session), notice: "Customer decision stage opened."
+      respond_to_buyback_session_update(notice: "Customer decision stage opened.")
     rescue Buybacks::OpenCustomerDecision::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message)
     end
 
     def print_proposal
@@ -90,23 +90,23 @@ module Buybacks
 
     def accept_all_lines
       AcceptAllLines.call!(session: @buyback_session, actor: current_user)
-      redirect_to buybacks_session_path(@buyback_session), notice: "All lines accepted by customer."
+      respond_to_buyback_session_update(notice: "All lines accepted by customer.")
     rescue Buybacks::RecordCustomerDecision::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message)
     end
 
     def decline_all_lines
       DeclineAllLines.call!(session: @buyback_session, actor: current_user)
-      redirect_to buybacks_session_path(@buyback_session), notice: "All lines declined by customer."
+      respond_to_buyback_session_update(notice: "All lines declined by customer.")
     rescue Buybacks::RecordCustomerDecision::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message)
     end
 
     def donate_declined_lines
       DonateDeclinedLines.call!(session: @buyback_session, actor: current_user)
-      redirect_to buybacks_session_path(@buyback_session), notice: "Declined lines marked as donated."
+      respond_to_buyback_session_update(notice: "Declined lines marked as donated.")
     rescue Buybacks::RecordCustomerDecision::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      respond_to_buyback_session_update(alert: e.message)
     end
 
     def complete

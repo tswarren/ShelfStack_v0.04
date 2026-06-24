@@ -53,5 +53,16 @@ test/controllers/buybacks/*_test.rb
 test/presenters/buybacks/session_workflow_presenter_test.rb
 test/services/buybacks/seller_requirements_checklist_test.rb
 test/integration/buybacks_staged_workflow_integration_test.rb
+test/integration/buybacks_external_lookup_match_test.rb
 test/support/phase7c_test_helper.rb
 ```
+
+## Workflow UX (7C-1 follow-up)
+
+- Proposal revision from `quoted` / `decision` without new session status (`proposal_revision_needed?`, repriced `priced` lines)
+- Presenter next-action keys, save/open-decision disabled reasons, stale-print warnings
+- Turbo Stream session updates for line mutations and proposal/decision batch actions
+- Turbo-frame line detail drawer (`lines#detail`)
+- `Buybacks::SelectVariant` service tests
+- `Buybacks::LineMatchContext` + Add Item / external lookup return path integration
+- `SaveProposal` revision from decision clears `customer_decision_at` and sets `quoted`

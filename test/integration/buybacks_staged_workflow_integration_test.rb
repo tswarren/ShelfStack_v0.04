@@ -76,5 +76,21 @@ class BuybacksStagedWorkflowIntegrationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Seller requirements"
     assert_includes response.body, "Work items"
     assert_includes response.body, "Needs match"
+    assert_includes response.body, "buyback-line-detail-frame"
+  end
+
+  test "select_variant turbo stream refreshes line row and detail content" do
+    post buybacks_sessions_path, params: { customer_id: @customer.id }
+    session = BuybackSession.order(:id).last
+    post buybacks_session_lines_path(session), params: { title: "Stream Book" }
+    line = session.buyback_lines.last
+
+    post select_variant_buybacks_session_line_path(session, line, product_variant_id: @variant.id),
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_includes response.body, "buyback-line-row-#{line.id}"
+    assert_includes response.body, "buyback-line-detail-content"
+    assert_includes response.body, "Proposed to customer"
   end
 end

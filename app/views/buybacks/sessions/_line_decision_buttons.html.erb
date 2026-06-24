@@ -6,24 +6,28 @@
           record_decision_buybacks_session_line_path(session, line),
           method: :patch,
           params: { outcome: "donated_by_customer" },
-          class: "ss-btn ss-btn-secondary ss-btn--small" %>
+          class: "ss-btn ss-btn-secondary ss-btn--small",
+          form: { data: { turbo_stream: true } } %>
   <% elsif line.status.in?(%w[offered decided]) && line.outcome.blank? %>
     <div class="ss-form-actions">
       <%= button_to "Accept",
             record_decision_buybacks_session_line_path(session, line),
             method: :patch,
             params: { outcome: "accepted_by_customer" },
-            class: "ss-btn ss-btn--small" %>
+            class: "ss-btn ss-btn--small",
+            form: { data: { turbo_stream: true } } %>
       <%= button_to "Decline",
             record_decision_buybacks_session_line_path(session, line),
             method: :patch,
             params: { outcome: "declined_by_customer" },
-            class: "ss-btn ss-btn-secondary ss-btn--small" %>
+            class: "ss-btn ss-btn-secondary ss-btn--small",
+            form: { data: { turbo_stream: true } } %>
       <%= button_to "Donate",
             record_decision_buybacks_session_line_path(session, line),
             method: :patch,
             params: { outcome: "donated_by_customer" },
-            class: "ss-btn ss-btn-secondary ss-btn--small" %>
+            class: "ss-btn ss-btn-secondary ss-btn--small",
+            form: { data: { turbo_stream: true } } %>
     </div>
   <% elsif line.outcome.present? %>
     <p class="ss-muted"><%= buyback_line_workflow_label(line) %></p>

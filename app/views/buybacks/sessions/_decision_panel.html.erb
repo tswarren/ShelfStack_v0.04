@@ -1,6 +1,6 @@
 <%# locals: buyback_session, workflow %>
 <% if buyback_session.decision? %>
-  <section class="ss-panel" id="decision-panel">
+  <section class="ss-panel" id="buyback-decision-panel">
     <h2>Customer decision</h2>
     <p class="ss-muted">Record per-line choices or use batch actions for offered lines.</p>
     <div class="ss-form-actions">
@@ -37,7 +37,7 @@
     </div>
   </section>
 <% elsif buyback_session.quoted? %>
-  <section class="ss-panel" id="decision-panel">
+  <section class="ss-panel" id="buyback-decision-panel">
     <h2>Customer decision</h2>
     <p class="ss-muted">Open the decision stage after the customer has reviewed the printed proposal.</p>
     <% open_state = workflow.action_state(:open_decision) %>

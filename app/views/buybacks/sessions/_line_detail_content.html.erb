@@ -19,7 +19,10 @@
       <%= turbo_frame_tag dom_id(line, :resolve) do %>
         <p class="ss-muted ss-hint">Click Resolve to search catalog matches.</p>
       <% end %>
-      <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline" do %>
+      <p class="ss-form-actions">
+      <%= buyback_external_lookup_link(session, line) %>
+      </p>
+      <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline", data: { turbo_stream: true } do %>
         <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment" %>
         <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
         <%= submit_tag "Create intake item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
@@ -42,7 +45,7 @@
     <% end %>
 
     <section class="ss-buyback-line-detail__section">
-      <%= form_with url: reject_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline" do %>
+      <%= form_with url: reject_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline", data: { turbo_stream: true } do %>
         <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
         <%= hidden_field_tag :outcome, "rejected_by_store" %>
         <%= submit_tag "Store reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
@@ -55,6 +58,6 @@
           buybacks_session_line_path(session, line),
           method: :delete,
           class: "ss-btn ss-btn-secondary ss-btn--small",
-          data: { turbo_confirm: "Remove this line?" } %>
+          form: { data: { turbo_stream: true, turbo_confirm: "Remove this line?" } } %>
   <% end %>
 </div>

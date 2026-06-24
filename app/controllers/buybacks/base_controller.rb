@@ -2,6 +2,8 @@
 
 module Buybacks
   class BaseController < ApplicationController
+    include Buybacks::SessionStreamRendering
+
     before_action :require_active_session
     before_action :require_buybacks_access
 
