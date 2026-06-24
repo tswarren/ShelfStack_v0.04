@@ -63,4 +63,18 @@ class BuybacksStagedWorkflowIntegrationTest < ActionDispatch::IntegrationTest
     assert session.inventory_posting.present?
     assert session.pos_cash_movement.present?
   end
+
+  test "session show renders guided counter workflow elements" do
+    post buybacks_sessions_path, params: { customer_id: @customer.id }
+    session = BuybackSession.order(:id).last
+    post buybacks_session_lines_path(session), params: { title: "UX Book" }
+
+    get buybacks_session_path(session)
+    assert_response :success
+    assert_includes response.body, "ss-buyback-stepper"
+    assert_includes response.body, "Price remaining items"
+    assert_includes response.body, "Seller requirements"
+    assert_includes response.body, "Work items"
+    assert_includes response.body, "Needs match"
+  end
 end

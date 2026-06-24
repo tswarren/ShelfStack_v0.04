@@ -24,6 +24,8 @@ Roadmap §16 and §17 exit criteria apply.
 - Authorization: unauthorized users cannot mutate via controller; trade-credit slip `show` requires print permission
 - Decision-aware payout totals via `DecisionTotalsBuilder`
 - Resale override recalculates offers from overridden base (`ApplyPriceOverride` / `resale_override_cents`)
+- Sticky footer with session totals and primary action
+- Counter UX presenter tests and session show integration coverage
 - Line removal for draft/intake lines
 - Variant price policy: do not mutate existing variant selling price when store has on-hand stock
 - Draft-only line intake; completion blocks unresolved pending/resolved lines
@@ -48,7 +50,8 @@ test/services/buybacks/complete_session_review_fixes_test.rb
 test/services/buybacks/fresh_review_fixes_test.rb
 test/services/buybacks/apply_price_override_test.rb
 test/controllers/buybacks/*_test.rb
-test/controllers/buybacks/authorization_review_fixes_test.rb
+test/presenters/buybacks/session_workflow_presenter_test.rb
+test/services/buybacks/seller_requirements_checklist_test.rb
 test/integration/buybacks_staged_workflow_integration_test.rb
 test/support/phase7c_test_helper.rb
 ```

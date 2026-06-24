@@ -1,0 +1,31 @@
+<%# locals: line, session %>
+<div class="ss-buyback-line-decisions">
+  <% if line.outcome == "declined_by_customer" %>
+    <p class="ss-muted">Declined</p>
+    <%= button_to "Mark donated",
+          record_decision_buybacks_session_line_path(session, line),
+          method: :patch,
+          params: { outcome: "donated_by_customer" },
+          class: "ss-btn ss-btn-secondary ss-btn--small" %>
+  <% elsif line.status.in?(%w[offered decided]) && line.outcome.blank? %>
+    <div class="ss-form-actions">
+      <%= button_to "Accept",
+            record_decision_buybacks_session_line_path(session, line),
+            method: :patch,
+            params: { outcome: "accepted_by_customer" },
+            class: "ss-btn ss-btn--small" %>
+      <%= button_to "Decline",
+            record_decision_buybacks_session_line_path(session, line),
+            method: :patch,
+            params: { outcome: "declined_by_customer" },
+            class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <%= button_to "Donate",
+            record_decision_buybacks_session_line_path(session, line),
+            method: :patch,
+            params: { outcome: "donated_by_customer" },
+            class: "ss-btn ss-btn-secondary ss-btn--small" %>
+    </div>
+  <% elsif line.outcome.present? %>
+    <p class="ss-muted"><%= buyback_line_workflow_label(line) %></p>
+  <% end %>
+</div>

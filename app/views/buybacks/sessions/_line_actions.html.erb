@@ -1,49 +1,10 @@
-<%# locals: line, session, conditions, sub_departments, reject_reasons %>
-
-<% if line.product.blank? %>
-  <%= button_to "Resolve",
-        resolve_buybacks_session_line_path(session, line),
-        method: :post,
-        class: "ss-btn ss-btn-secondary ss-btn--small",
-        form: { data: { turbo_frame: dom_id(line, :resolve) } } %>
-  <%= turbo_frame_tag dom_id(line, :resolve) do %>
-    <p class="ss-muted ss-hint">Click Resolve to search catalog matches.</p>
-  <% end %>
-  <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline" do %>
-    <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment" %>
-    <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
-    <%= submit_tag "Create intake item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
-  <% end %>
-  <% if session.draft? && line.status.in?(%w[pending resolved priced]) %>
-    <%= button_to "Remove", buybacks_session_line_path(session, line), method: :delete, class: "ss-btn ss-btn-secondary ss-btn--small", data: { turbo_confirm: "Remove this line?" } %>
-  <% end %>
-<% elsif session.editable? && !line.status.in?(%w[posted voided]) %>
-  <% if line.outcome.present? %>
-    <p class="ss-hint">Changing pricing clears the recorded customer decision.</p>
-  <% end %>
-  <%= form_with url: update_proposal_buybacks_session_line_path(session, line), method: :patch, class: "ss-form-inline" do %>
-    <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name, line.product_condition_id), include_blank: "Condition" %>
-    <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name, line.sub_department_id), include_blank: "Subdepartment" %>
-    <%= number_field_tag :base_price_cents, line.base_price_cents || line.list_price_cents, placeholder: "Base price (¢)", min: 0 %>
-    <%= number_field_tag :proposed_resale_price_cents, line.proposed_resale_price_cents || line.suggested_resale_price_cents, placeholder: "Resale (¢)", min: 0 %>
-    <%= number_field_tag :proposed_cash_offer_cents, line.proposed_cash_offer_cents || line.suggested_cash_offer_cents, placeholder: "Cash (¢)", min: 0 %>
-    <%= number_field_tag :proposed_trade_credit_offer_cents, line.proposed_trade_credit_offer_cents || line.suggested_trade_credit_offer_cents, placeholder: "Trade (¢)", min: 0 %>
-    <%= text_field_tag :resale_override_reason, line.resale_price_override_reason, placeholder: "Resale override reason" %>
-    <%= text_field_tag :cash_override_reason, line.cash_offer_override_reason, placeholder: "Cash override reason" %>
-    <%= text_field_tag :trade_credit_override_reason, line.trade_credit_offer_override_reason, placeholder: "Trade override reason" %>
-    <%= submit_tag "Save line proposal", class: "ss-btn ss-btn--small" %>
-  <% end %>
-
-  <% if session.decision? && line.status.in?(%w[offered decided]) %>
-    <%= form_with url: record_decision_buybacks_session_line_path(session, line), method: :patch, class: "ss-form-inline" do %>
-      <%= select_tag :outcome, options_for_select(buyback_decision_options, line.outcome), include_blank: "Decision" %>
-      <%= submit_tag "Record decision", class: "ss-btn ss-btn-secondary ss-btn--small" %>
-    <% end %>
-  <% end %>
-
-  <%= form_with url: reject_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline" do %>
-    <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
-    <%= hidden_field_tag :outcome, "rejected_by_store" %>
-    <%= submit_tag "Store reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
-  <% end %>
+<%# locals: line, session, conditions, sub_departments, reject_reasons, workflow %>
+<% if line.product.blank? || (session.editable? && !line.status.in?(%w[posted voided])) %>
+  <button type="button"
+          class="ss-btn ss-btn-secondary ss-btn--small"
+          data-action="buyback-line-drawer#open"
+          data-line-id="<%= line.id %>"
+          data-line-title="<%= line.title_snapshot %>">
+    Work item
+  </button>
 <% end %>

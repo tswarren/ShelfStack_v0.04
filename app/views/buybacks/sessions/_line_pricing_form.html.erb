@@ -1,0 +1,50 @@
+<%# locals: line, session, conditions, sub_departments %>
+<div class="ss-buyback-pricing" data-controller="buyback-line-pricing">
+  <div class="ss-buyback-pricing__column">
+    <h4>Suggested values</h4>
+    <dl class="ss-dl-compact">
+      <dt>Sale price</dt>
+      <dd><%= buyback_money(line.suggested_resale_price_cents) %></dd>
+      <dt>Cash offer</dt>
+      <dd><%= buyback_money(line.suggested_cash_offer_cents) %></dd>
+      <dt>Trade credit</dt>
+      <dd><%= buyback_money(line.suggested_trade_credit_offer_cents) %></dd>
+    </dl>
+  </div>
+
+  <%= form_with url: update_proposal_buybacks_session_line_path(session, line), method: :patch, class: "ss-buyback-pricing__column ss-form" do %>
+    <h4>Proposed to customer</h4>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name, line.product_condition_id), include_blank: "Condition" %>
+      <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name, line.sub_department_id), include_blank: "Subdepartment" %>
+      <%= number_field_tag :base_price_cents, line.base_price_cents || line.list_price_cents, placeholder: "Base price (¢)", min: 0 %>
+    </div>
+
+    <% [
+      [:proposed_resale_price_cents, line.proposed_resale_price_cents || line.suggested_resale_price_cents, line.suggested_resale_price_cents, :resale_override_reason, line.resale_price_override_reason, "Sale price"],
+      [:proposed_cash_offer_cents, line.proposed_cash_offer_cents || line.suggested_cash_offer_cents, line.suggested_cash_offer_cents, :cash_override_reason, line.cash_offer_override_reason, "Cash offer"],
+      [:proposed_trade_credit_offer_cents, line.proposed_trade_credit_offer_cents || line.suggested_trade_credit_offer_cents, line.suggested_trade_credit_offer_cents, :trade_credit_override_reason, line.trade_credit_offer_override_reason, "Trade credit"]
+    ].each do |field, value, suggested, reason_field, reason_value, label| %>
+      <div class="ss-buyback-pricing__field">
+        <%= label_tag field, "#{label} (¢)" %>
+        <%= number_field_tag field, value, min: 0,
+              data: {
+                buyback_line_pricing_target: "proposed",
+                buyback_line_pricing_suggested_value: suggested.to_i,
+                buyback_line_pricing_label: label
+              } %>
+      </div>
+      <div class="ss-buyback-pricing__override" data-buyback-line-pricing-target="reasonGroup" hidden>
+        <%= label_tag reason_field, "#{label} override reason" %>
+        <%= text_field_tag reason_field, reason_value, data: { buyback_line_pricing_target: "reason" } %>
+        <p class="ss-hint" data-buyback-line-pricing-target="hint"></p>
+      </div>
+    <% end %>
+
+    <% if line.outcome.present? %>
+      <p class="ss-hint">Changing pricing clears the recorded customer decision.</p>
+    <% end %>
+
+    <%= submit_tag "Save line proposal", class: "ss-btn ss-btn--small" %>
+  <% end %>
+</div>

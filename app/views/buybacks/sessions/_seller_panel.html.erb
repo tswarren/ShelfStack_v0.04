@@ -1,0 +1,25 @@
+<%# locals: buyback_session, seller_checklist %>
+<section class="ss-panel" id="seller-panel">
+  <h2>Seller</h2>
+  <p><strong><%= buyback_session.customer.display_name %></strong></p>
+  <% if seller_checklist.present? %>
+    <div class="ss-buyback-checklist">
+      <h3 class="ss-buyback-checklist__title">Seller requirements</h3>
+      <ul class="ss-buyback-checklist__list">
+        <% seller_checklist.each do |row| %>
+          <li class="<%= row[:met] ? "ss-buyback-checklist__item--met" : "ss-buyback-checklist__item--missing" %>">
+            <span aria-hidden="true"><%= row[:met] ? "✓" : "✗" %></span>
+            <%= row[:label] %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <% if buyback_session.editable? %>
+    <p class="ss-form-actions">
+      <%= link_to "New customer", new_customers_customer_path(return_to: buybacks_session_path(buyback_session)), class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <%= link_to "Edit customer", edit_customers_customer_path(buyback_session.customer, return_to: buybacks_session_path(buyback_session)), class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <%= link_to "Change customer", new_buybacks_session_path, class: "ss-btn ss-btn-secondary ss-btn--small" %>
+    </p>
+  <% end %>
+</section>

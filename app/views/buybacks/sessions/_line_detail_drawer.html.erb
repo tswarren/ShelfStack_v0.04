@@ -1,0 +1,21 @@
+<%# locals: lines, session, conditions, sub_departments, reject_reasons, workflow %>
+<div class="ss-buyback-line-drawer__backdrop" data-buyback-line-drawer-target="backdrop" data-action="click->buyback-line-drawer#close" hidden></div>
+<aside class="ss-buyback-line-drawer__panel" data-buyback-line-drawer-target="panel" hidden aria-label="Work item detail">
+  <header class="ss-buyback-line-drawer__header">
+    <h2 data-buyback-line-drawer-target="title">Work item</h2>
+    <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="buyback-line-drawer#close">Close</button>
+  </header>
+  <div class="ss-buyback-line-drawer__body" data-buyback-line-drawer-target="body">
+    <% lines.each do |line| %>
+      <template id="buyback-line-panel-<%= line.id %>">
+        <%= render "buybacks/sessions/line_detail_content",
+              line: line,
+              session: session,
+              conditions: conditions,
+              sub_departments: sub_departments,
+              reject_reasons: reject_reasons,
+              workflow: workflow %>
+      </template>
+    <% end %>
+  </div>
+</aside>

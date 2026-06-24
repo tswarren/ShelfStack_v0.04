@@ -1,0 +1,53 @@
+<%# locals: buyback_session, workflow %>
+<% if buyback_session.decision? %>
+  <section class="ss-panel" id="decision-panel">
+    <h2>Customer decision</h2>
+    <p class="ss-muted">Record per-line choices or use batch actions for offered lines.</p>
+    <div class="ss-form-actions">
+      <% accept_state = workflow.action_state(:accept_all) %>
+      <%= buyback_action_button(
+            path: accept_all_lines_buybacks_session_path(buyback_session),
+            method: :patch,
+            label: "Accept all offered lines",
+            enabled: accept_state.enabled,
+            reason: accept_state.reason,
+            class: "ss-btn ss-btn-secondary"
+          ) %>
+      <% decline_state = workflow.action_state(:decline_all) %>
+      <%= buyback_action_button(
+            path: decline_all_lines_buybacks_session_path(buyback_session),
+            method: :patch,
+            label: "Decline all offered lines",
+            enabled: decline_state.enabled,
+            reason: decline_state.reason,
+            class: "ss-btn ss-btn-secondary"
+          ) %>
+      <% donate_state = workflow.action_state(:donate_declined) %>
+      <%= buyback_action_button(
+            path: donate_declined_lines_buybacks_session_path(buyback_session),
+            method: :patch,
+            label: "Donate all declined items",
+            enabled: donate_state.enabled,
+            reason: donate_state.reason,
+            class: "ss-btn ss-btn-secondary",
+            data: {
+              turbo_confirm: "Mark all customer-declined items as donated to the store? These items will be added to inventory with zero payout."
+            }
+          ) %>
+    </div>
+  </section>
+<% elsif buyback_session.quoted? %>
+  <section class="ss-panel" id="decision-panel">
+    <h2>Customer decision</h2>
+    <p class="ss-muted">Open the decision stage after the customer has reviewed the printed proposal.</p>
+    <% open_state = workflow.action_state(:open_decision) %>
+    <%= buyback_action_button(
+          path: open_decision_buybacks_session_path(buyback_session),
+          method: :patch,
+          label: "Open customer decisions",
+          enabled: open_state.enabled,
+          reason: open_state.reason,
+          class: "ss-btn"
+        ) %>
+  </section>
+<% end %>

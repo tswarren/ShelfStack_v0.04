@@ -10,6 +10,7 @@ module Buybacks
     before_action :require_update_permission!, only: %i[update]
     before_action :require_save_proposal_permission!, only: %i[save_proposal]
     before_action :require_print_proposal_permission!, only: %i[print_proposal]
+    before_action :require_printable_proposal!, only: %i[print_proposal]
     before_action :require_batch_decision_permission!,
                     only: %i[accept_all_lines decline_all_lines donate_declined_lines open_decision]
     before_action :require_complete_permission!, only: :complete
@@ -44,6 +45,15 @@ module Buybacks
       @decision_totals = DecisionTotalsBuilder.build(@buyback_session) if @buyback_session.decision?
       @receipt = ReceiptBuilder.build(@buyback_session) if @buyback_session.completed?
       @seller_requirements = SellerRequirements.check(customer: @buyback_session.customer)
+      @seller_checklist = SellerRequirements.checklist(customer: @buyback_session.customer)
+      @workflow = SessionWorkflowPresenter.new(
+        session: @buyback_session,
+        lines: @lines,
+        proposal: @proposal,
+        decision_totals: @decision_totals,
+        seller_requirements: @seller_requirements,
+        register_session: current_register_session
+      )
     end
 
     def update
@@ -75,7 +85,7 @@ module Buybacks
       @proposal = ProposalBuilder.build(@buyback_session)
       @buyback_session.update!(proposal_printed_at: Time.current)
       AuditEvents.record!(actor: current_user, event_name: "buyback.proposal.printed", auditable: @buyback_session)
-      render layout: "application"
+      render layout: "print"
     end
 
     def accept_all_lines
@@ -173,6 +183,14 @@ module Buybacks
 
     def require_print_proposal_permission!
       authorize_buyback!("buybacks.proposal.print")
+    end
+
+    def require_printable_proposal!
+      return if @buyback_session.buyback_number.present? &&
+                @buyback_session.status.in?(%w[quoted decision completed])
+
+      redirect_to buybacks_session_path(@buyback_session),
+                  alert: "Proposal printing is available after the proposal is saved."
     end
 
     def require_batch_decision_permission!

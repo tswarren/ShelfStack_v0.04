@@ -43,6 +43,21 @@ Removed: `AcceptLine` payout acceptance behavior and `lines#accept` route.
 
 Staged session screen sections: Seller, Intake, Work items, Proposal, Customer decision, Payout, Complete/Void.
 
+**Counter UX (guided workflow):**
+
+- `Buybacks::SessionWorkflowPresenter` drives stepper, next-action panel, disabled states, queue summary, and sticky footer
+- Seven-step horizontal progress: Seller → Intake → Price items → Proposal → Customer decision → Payout → Complete
+- Work items table is read-mostly with status chips, filter chips, and **Work item** drawer for line editing
+- Suggested vs proposed pricing layout with conditional override reason fields (`buyback-line-pricing` Stimulus)
+- Per-line **Accept / Decline / Donate** buttons (no decision dropdown); batch actions with clearer labels and donate confirmation
+- Seller requirements checklist (✓/✗ per field)
+- Proposal summary card with print staleness warning
+- Payout choice cards (cash / trade credit / no-value donation) with decision-oriented totals
+- Scanner-friendly intake: autofocus, `/` and Ctrl+K shortcuts, `N` for next item needing work
+- Sticky footer with session totals and primary action
+
+Legacy inline details also retained in drawer partials:
+
 - Separate cash/trade-credit proposal columns
 - Proposal save/print with `buybacks.proposal.*` permissions
 - Customer decision per-line and batch actions
@@ -111,9 +126,24 @@ Key review-fix test files:
 test/services/buybacks/complete_session_review_fixes_test.rb
 test/services/buybacks/fresh_review_fixes_test.rb
 test/services/buybacks/apply_price_override_test.rb
-test/controllers/buybacks/authorization_review_fixes_test.rb
+test/presenters/buybacks/session_workflow_presenter_test.rb
+test/services/buybacks/seller_requirements_checklist_test.rb
 test/controllers/buybacks/trade_credit_issuance_slips_controller_test.rb
+test/controllers/buybacks/sessions_print_proposal_test.rb
+test/services/buybacks/proposal_builder_test.rb
 ```
+
+## Phase 7C-2: Printable Buyback Proposal (2026-06-24)
+
+Authority: [docs/phase-7c-2-printed-proposal.md](../phase-7c-2-printed-proposal.md)
+
+Letter-size **Buyback Proposal & Seller Election** print document:
+
+- Dedicated [`app/views/layouts/print.html.erb`](../../app/views/layouts/print.html.erb) (no app chrome)
+- Print CSS for US letter in `shelfstack.css` (`.buyback-proposal-print`, `@page buyback-proposal`)
+- [`print_proposal`](../../app/controllers/buybacks/sessions_controller.rb) renders structured sections: header, seller verification, offered/not-accepted tables, totals, seller election, unaccepted disposition, signatures, internal-use block
+- [`ProposalBuilder`](../../app/services/buybacks/proposal_builder.rb) exposes `offered_lines` and `not_accepted_lines` (totals from offered lines only)
+- Print allowed for `quoted`, `decision`, and `completed` sessions; records `proposal_printed_at` and `buyback.proposal.printed` audit
 
 ## Deferred (unchanged)
 

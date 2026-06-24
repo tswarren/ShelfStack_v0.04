@@ -1,0 +1,60 @@
+<%# locals: line, session, conditions, sub_departments, reject_reasons, workflow %>
+<div class="ss-buyback-line-detail">
+  <header class="ss-buyback-line-detail__header">
+    <h3><%= line.title_snapshot %></h3>
+    <% if line.variant_sku_snapshot.present? %>
+      <p class="ss-muted"><%= line.variant_sku_snapshot %></p>
+    <% end %>
+    <%= buyback_line_status_badge(line, workflow: workflow) %>
+  </header>
+
+  <% if line.product.blank? %>
+    <section class="ss-buyback-line-detail__section">
+      <h4>Match / create record</h4>
+      <%= button_to "Resolve",
+            resolve_buybacks_session_line_path(session, line),
+            method: :post,
+            class: "ss-btn ss-btn-secondary ss-btn--small",
+            form: { data: { turbo_frame: dom_id(line, :resolve) } } %>
+      <%= turbo_frame_tag dom_id(line, :resolve) do %>
+        <p class="ss-muted ss-hint">Click Resolve to search catalog matches.</p>
+      <% end %>
+      <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline" do %>
+        <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment" %>
+        <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
+        <%= submit_tag "Create intake item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <% end %>
+    </section>
+  <% elsif session.editable? && !line.status.in?(%w[posted voided]) %>
+    <section class="ss-buyback-line-detail__section">
+      <%= render "buybacks/sessions/line_pricing_form",
+            line: line,
+            session: session,
+            conditions: conditions,
+            sub_departments: sub_departments %>
+    </section>
+
+    <% if session.decision? && line.status.in?(%w[offered decided]) %>
+      <section class="ss-buyback-line-detail__section">
+        <h4>Customer decision</h4>
+        <%= render "buybacks/sessions/line_decision_buttons", line: line, session: session %>
+      </section>
+    <% end %>
+
+    <section class="ss-buyback-line-detail__section">
+      <%= form_with url: reject_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline" do %>
+        <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
+        <%= hidden_field_tag :outcome, "rejected_by_store" %>
+        <%= submit_tag "Store reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <% end %>
+    </section>
+  <% end %>
+
+  <% if session.draft? && line.status.in?(%w[pending resolved priced]) %>
+    <%= button_to "Remove line",
+          buybacks_session_line_path(session, line),
+          method: :delete,
+          class: "ss-btn ss-btn-secondary ss-btn--small",
+          data: { turbo_confirm: "Remove this line?" } %>
+  <% end %>
+</div>
