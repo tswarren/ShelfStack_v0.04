@@ -22,6 +22,7 @@ module Items
           variant: @product_variant
         )
       end
+      @source_hint = current_store.present? ? Inventory::SourceHint.for(variant: @product_variant, store: current_store) : nil
     end
 
     def new
@@ -33,7 +34,8 @@ module Items
     end
 
     def create
-      @product_variant = ProductVariant.new(product_variant_params)
+      @product_variant = ProductVariant.new(product_variant_params.except(:inventory_tracking, :inventory_behavior))
+      apply_tracking_sync! if params.dig(:product_variant, :inventory_tracking).present?
       VariantClassificationSetup.apply!(variant: @product_variant)
       load_form_collections
       if @product_variant.save
@@ -46,11 +48,33 @@ module Items
 
     def edit
       load_form_collections
+      preview_tracking_change if legacy_behavior_changed_in_params?
     end
 
     def update
       load_form_collections
-      if @product_variant.update(product_variant_params)
+      preview_tracking_change if legacy_behavior_changed_in_params?
+
+      attrs = product_variant_params.except(:inventory_tracking)
+
+      if legacy_behavior_changed_in_params?
+        Items::InventoryTrackingSync.apply_legacy_behavior_edit!(
+          variant: @product_variant,
+          inventory_behavior: product_variant_params[:inventory_behavior]
+        )
+        attrs = attrs.except(:inventory_behavior).merge(
+          inventory_tracking_override: nil,
+          inventory_behavior: @product_variant.inventory_behavior
+        )
+      elsif tracking_selection_changed?
+        apply_tracking_sync!
+        attrs = attrs.except(:inventory_behavior).merge(
+          inventory_tracking_override: @product_variant.inventory_tracking_override,
+          inventory_behavior: @product_variant.inventory_behavior
+        )
+      end
+
+      if @product_variant.update(attrs)
         record_audit!("product_variant.updated", @product_variant)
         redirect_to variant_return_path(@product_variant), notice: "Product variant updated."
       else
@@ -114,6 +138,30 @@ module Items
       VariantClassificationSetup.apply!(variant: @product_variant)
     end
 
+    def apply_tracking_sync!
+      Items::InventoryTrackingSync.apply_tracking_selection!(
+        variant: @product_variant,
+        tracking: params.dig(:product_variant, :inventory_tracking)
+      )
+    end
+
+    def legacy_behavior_changed_in_params?
+      behavior = product_variant_params[:inventory_behavior]
+      behavior.present? && behavior != @product_variant.inventory_behavior
+    end
+
+    def tracking_selection_changed?
+      tracking = params.dig(:product_variant, :inventory_tracking)
+      tracking.present? && tracking != @product_variant.inventory_tracking
+    end
+
+    def preview_tracking_change
+      @tracking_change_preview = Items::InventoryTrackingSync.preview_legacy_behavior_edit(
+        variant: @product_variant,
+        inventory_behavior: product_variant_params[:inventory_behavior]
+      )
+    end
+
     def variant_return_path(variant = @product_variant)
       Items::ReturnPath.for(
         record: variant.product,
@@ -128,7 +176,7 @@ module Items
         :product_id, :name, :name_override, :short_name, :sku, :condition_id, :sub_department_id,
         :display_location_id, :attribute1_value, :attribute1_sku_component, :attribute2_value,
         :attribute2_sku_component, :selling_price_cents, :pricing_model_override,
-        :inventory_behavior, :active
+        :inventory_behavior, :inventory_tracking, :active
       )
     end
   end

@@ -75,6 +75,13 @@ module Pos
       @summary = @session && Pos::RegisterSessionSummary.for(@session)
     end
 
+    def operational_margin
+      authorize_pos!("pos.reports.summary")
+      @sessions = PosRegisterSession.where(store: pos_store).order(opened_at: :desc).limit(50)
+      @scope = Pos::ReportScope.from_params(store: pos_store, params: summary_filter_params)
+      @report = @scope && Pos::OperationalMarginReport.call(scope: @scope)
+    end
+
     private
 
     def summary_filter_params

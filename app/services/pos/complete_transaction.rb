@@ -43,6 +43,7 @@ module Pos
         )
 
         snapshot_lines!
+        snapshot_cogs!
         RecalculateTransaction.call!(transaction, business_date: register_session.business_date)
         transaction.transaction_type = DeriveTransactionType.call(transaction)
         TenderValidator.validate!(transaction, actor: completed_by_user, pos_authorization_id: pos_authorization_id)
@@ -154,9 +155,11 @@ module Pos
         product_name_snapshot: product.name,
         variant_name_snapshot: variant.name,
         inventory_behavior_snapshot: variant.inventory_behavior,
+        inventory_tracking_snapshot: Inventory::TrackingResolver.resolve(variant),
         sub_department: variant.sub_department,
         sub_department_name_snapshot: variant.sub_department&.name
       )
+      assign_cogs_snapshot!(line)
       line.save!
     end
 
@@ -164,6 +167,7 @@ module Pos
       line.assign_attributes(
         sub_department_name_snapshot: line.sub_department&.name
       )
+      assign_cogs_snapshot!(line)
       line.save!
     end
 
@@ -171,9 +175,28 @@ module Pos
       line.assign_attributes(
         sub_department_name_snapshot: line.sub_department&.name,
         open_ring_description: line.open_ring_description.presence || PosTransactionLine::GIFT_CARD_SALE_DESCRIPTION,
-        inventory_behavior_snapshot: "pure_financial"
+        inventory_behavior_snapshot: "pure_financial",
+        inventory_tracking_snapshot: Inventory::TrackingResolver::NON_INVENTORY_TRACKING
       )
+      assign_cogs_snapshot!(line)
       line.save!
+    end
+
+    def snapshot_cogs!
+      transaction.pos_transaction_lines.each { |line| assign_cogs_snapshot!(line) && line.save! }
+    end
+
+    def assign_cogs_snapshot!(line)
+      result = LineCogsCalculator.call(line: line, store: transaction.store)
+      line.assign_attributes(
+        unit_cogs_cents: result.unit_cogs_cents,
+        total_cogs_cents: result.total_cogs_cents,
+        cogs_source: result.cogs_source,
+        costing_method_snapshot: result.costing_method_snapshot,
+        revenue_treatment: result.revenue_treatment,
+        cogs_estimated: result.cogs_estimated
+      )
+      true
     end
 
     def validate_gift_card_sales!

@@ -42,6 +42,7 @@ module Purchasing
         name: variant.name,
         condition: variant.condition&.short_name,
         inventory_behavior: variant.inventory_behavior,
+        inventory_tracking: Inventory::TrackingResolver.resolve(variant),
         eligible: Inventory::Eligibility.eligible?(variant),
         vendor_item_number: sourcing&.vendor_item_number,
         sourcing_record_present: sourcing&.sourcing_record_present || false,

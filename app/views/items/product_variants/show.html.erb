@@ -8,7 +8,11 @@
   <dt>Subdepartment</dt><dd><%= @product_variant.sub_department.name %></dd>
   <dt>Condition</dt><dd><%= @product_variant.condition&.name || "—" %></dd>
   <dt>Selling price</dt><dd><%= format_cents(@product_variant.selling_price_cents) %></dd>
+  <dt>Inventory tracking</dt><dd><%= humanize_controlled_value(@product_variant.inventory_tracking) %></dd>
   <dt>Inventory behavior</dt><dd><%= humanize_controlled_value(@product_variant.inventory_behavior) %></dd>
+  <% if @source_hint %>
+    <dt>Last stock source</dt><dd><%= @source_hint.label %></dd>
+  <% end %>
   <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.balances.view", store: current_store) %>
     <dt>On hand (<%= current_store.name %>)</dt>
     <dd><%= Inventory::Availability.on_hand(store: current_store, variant: @product_variant) %></dd>

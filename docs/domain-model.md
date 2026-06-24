@@ -202,13 +202,13 @@ Product-level, department-level, and enterprise quantities are rollups from vari
 
 ## Eligibility
 
-Only product variants with:
+Only **inventory-eligible** product variants receive ledger entries in Phase 4.
+
+Implementation: `Inventory::Eligibility` / `Inventory::TrackingResolver` (`inventory` / `non_inventory`). Legacy stored value:
 
 ```text
 inventory_behavior = standard_physical
 ```
-
-receive ledger entries in Phase 4.
 
 ## Design Direction
 

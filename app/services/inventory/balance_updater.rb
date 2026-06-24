@@ -36,7 +36,7 @@ module Inventory
         balance.inventory_retail_value_cents += retail_delta
       end
 
-      if valuation.cost_source == "receipt_cost" && quantity_delta.positive?
+      if valuation.cost_source.in?(%w[receipt_cost buyback_offer no_value_donation]) && quantity_delta.positive?
         Purchasing::MovingAverageCost.apply!(
           balance: balance,
           prior_on_hand: prior_on_hand,

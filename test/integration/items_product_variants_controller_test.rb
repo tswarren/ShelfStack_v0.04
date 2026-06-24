@@ -75,6 +75,25 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "update variant with inventory tracking selection syncs behavior" do
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
+
+    patch items_product_variant_path(variant, return_to: "item"), params: {
+      product_variant: {
+        product_id: @product.id,
+        condition_id: variant.condition_id,
+        sub_department_id: variant.sub_department_id,
+        selling_price_cents: variant.selling_price_cents,
+        inventory_tracking: "non_inventory",
+        active: true
+      }
+    }
+
+    variant.reload
+    assert_equal "non_inventory", variant.inventory_tracking_override
+    assert_equal "non_inventory", variant.inventory_behavior
+  end
+
   test "update variant without return_to param still redirects to item selling tab" do
     variant = create_product_variant!(product: @product, sub_department: @sub_department)
 

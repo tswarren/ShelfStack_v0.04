@@ -31,7 +31,7 @@ module Buybacks
       raise Error, "Variant condition does not match selected buyback condition." if variant.condition_id != condition.id
       raise Error, "Condition is not buyback-eligible." unless condition.buyback_eligible?
       raise Error, "Subdepartment does not allow buyback." unless sub_department.buyback_allowed?
-      raise Error, "Variant is not standard physical inventory." unless variant.inventory_behavior == "standard_physical"
+      raise Error, "Variant is not standard physical inventory." unless Inventory::Eligibility.eligible?(variant)
       raise Error, "Variant is not active." unless variant.active?
     end
 

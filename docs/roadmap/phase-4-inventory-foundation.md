@@ -41,7 +41,7 @@ A product variant may receive inventory ledger entries only when its inventory b
 Initial enforcement (Phase 3 `product_variants.inventory_behavior` values):
 
 ```
-standard_physical    -> inventory ledger eligible
+standard_physical    -> inventory ledger eligible (Phase 8: `Inventory::TrackingResolver` → `inventory`)
 digital_asset        -> not eligible
 drop_ship            -> not eligible for store on-hand inventory
 composite_recipe     -> not eligible as finished-good inventory in Phase 4
@@ -50,7 +50,7 @@ pure_financial       -> not inventory; future stored-value ledger
 non_inventory        -> not eligible
 ```
 
-Condition, source, and pricing distinctions do not determine inventory eligibility. New, used, signed, remainder, damaged, and consignment variants may all eventually be physical inventory if their `inventory_behavior` is `standard_physical`.
+Condition, source, and pricing distinctions do not determine inventory eligibility. New, used, signed, remainder, damaged, and consignment variants may all be inventory-eligible when tracking resolves to `inventory` (legacy: `inventory_behavior = standard_physical`).
 
 ## In Scope
 

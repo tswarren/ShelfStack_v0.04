@@ -971,12 +971,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   end
 
   create_table "pos_transaction_lines", force: :cascade do |t|
+    t.boolean "cogs_estimated", default: false, null: false
+    t.string "cogs_source"
+    t.string "costing_method_snapshot"
     t.datetime "created_at", null: false
     t.bigint "customer_request_line_id"
     t.integer "extended_price_cents", default: 0, null: false
     t.boolean "generate_stored_value_identifier", default: false, null: false
     t.string "inventory_behavior_snapshot"
     t.bigint "inventory_reservation_id"
+    t.string "inventory_tracking_snapshot"
     t.integer "line_discount_cents", default: 0, null: false
     t.integer "line_number", null: false
     t.string "line_type", null: false
@@ -988,6 +992,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "product_variant_id"
     t.integer "quantity", null: false
     t.string "return_disposition"
+    t.string "revenue_treatment"
     t.integer "source_sold_quantity_snapshot"
     t.bigint "source_transaction_id"
     t.bigint "source_transaction_line_id"
@@ -1002,7 +1007,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "tax_cents", default: 0, null: false
     t.string "tax_identifier_snapshot", limit: 1
     t.integer "tax_rate_bps"
+    t.integer "total_cogs_cents"
     t.integer "transaction_discount_cents", default: 0, null: false
+    t.integer "unit_cogs_cents"
     t.integer "unit_price_cents", null: false
     t.datetime "updated_at", null: false
     t.string "variant_name_snapshot"
@@ -1021,6 +1028,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["stored_value_identifier_id"], name: "index_pos_transaction_lines_on_stored_value_identifier_id"
     t.index ["sub_department_id"], name: "index_pos_transaction_lines_on_sub_department_id"
     t.index ["tax_category_id"], name: "index_pos_transaction_lines_on_tax_category_id"
+    t.check_constraint "cogs_source IS NULL OR (cogs_source::text = ANY (ARRAY['moving_average'::character varying, 'unit_cost'::character varying, 'receipt_cost'::character varying, 'buyback_offer'::character varying, 'margin_estimate'::character varying, 'return_reversal'::character varying, 'none'::character varying, 'unknown'::character varying]::text[]))", name: "pos_transaction_lines_cogs_source_chk"
+    t.check_constraint "revenue_treatment IS NULL OR (revenue_treatment::text = ANY (ARRAY['merchandise'::character varying, 'service'::character varying, 'liability'::character varying, 'passthrough'::character varying, 'none'::character varying]::text[]))", name: "pos_transaction_lines_revenue_treatment_chk"
+    t.check_constraint "unit_cogs_cents IS NULL OR unit_cogs_cents >= 0", name: "pos_transaction_lines_unit_cogs_cents_chk"
   end
 
   create_table "pos_transactions", force: :cascade do |t|
@@ -1141,6 +1151,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "created_from_buyback_session_id"
     t.bigint "display_location_id"
     t.string "inventory_behavior", default: "standard_physical", null: false
+    t.string "inventory_tracking_override"
     t.string "name", null: false
     t.string "name_override"
     t.boolean "needs_review", default: false, null: false
@@ -1162,6 +1173,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_id"], name: "index_product_variants_on_product_id"
     t.index ["sku"], name: "index_product_variants_on_sku", unique: true
     t.index ["sub_department_id"], name: "index_product_variants_on_sub_department_id"
+    t.check_constraint "inventory_tracking_override IS NULL OR (inventory_tracking_override::text = ANY (ARRAY['inventory'::character varying, 'non_inventory'::character varying]::text[]))", name: "product_variants_inventory_tracking_override_chk"
     t.check_constraint "returnability_status::text = ANY (ARRAY['returnable'::character varying::text, 'non_returnable'::character varying::text, 'conditional'::character varying::text, 'unknown'::character varying::text])", name: "chk_product_variants_returnability_status"
     t.check_constraint "selling_price_cents >= 0", name: "chk_product_variants_selling_price_cents"
   end
@@ -1190,6 +1202,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.datetime "created_at", null: false
     t.bigint "created_from_buyback_session_id"
     t.bigint "default_display_location_id"
+    t.string "default_inventory_tracking"
     t.bigint "default_sub_department_id"
     t.integer "list_price_cents", default: 0, null: false
     t.string "name", null: false
@@ -1212,6 +1225,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_type"], name: "index_products_on_product_type"
     t.index ["sku"], name: "index_products_on_sku", unique: true
     t.index ["variation_type"], name: "index_products_on_variation_type"
+    t.check_constraint "default_inventory_tracking IS NULL OR (default_inventory_tracking::text = ANY (ARRAY['inventory'::character varying, 'non_inventory'::character varying]::text[]))", name: "products_default_inventory_tracking_chk"
     t.check_constraint "list_price_cents >= 0", name: "chk_products_list_price_cents"
   end
 

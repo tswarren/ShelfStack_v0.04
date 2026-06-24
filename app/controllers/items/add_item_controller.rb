@@ -200,12 +200,6 @@ module Items
       else
         redirect_to items_add_item_path(step: "selling_setup")
       end
-    rescue CatalogIdentifierService::IdentifierError => e
-      @catalog_item.errors.add(:base, e.message)
-      @step = "item_details"
-      load_bisac_form_state(@catalog_item)
-      load_store_category_collections
-      render "items/add_item/item_details", status: :unprocessable_entity
     end
 
     def handle_selling_setup
@@ -293,46 +287,48 @@ module Items
     def save_catalog_item!(catalog_item)
       saved = false
       lookup_result = external_lookup_result
-      CatalogItem.transaction do
-        raise ActiveRecord::Rollback unless catalog_item.save
+      begin
+        CatalogItem.transaction do
+          raise ActiveRecord::Rollback unless catalog_item.save
 
-        if lookup_result.present?
-          ExternalCatalog::CatalogItemBuilder.add_identifiers!(
-            catalog_item: catalog_item,
-            candidate: lookup_result,
-            actor: current_user
-          )
-        elsif identifier_value_param.present?
-          CatalogIdentifierService.add_identifier!(
-            catalog_item: catalog_item,
-            identifier_type: identifier_type_param,
-            value: identifier_value_param,
-            primary: true,
-            actor: current_user
-          )
-        else
-          CatalogIdentifierService.generate_local!(catalog_item: catalog_item, actor: current_user)
+          if lookup_result.present?
+            ExternalCatalog::CatalogItemBuilder.add_identifiers!(
+              catalog_item: catalog_item,
+              candidate: lookup_result,
+              actor: current_user
+            )
+          elsif identifier_value_param.present?
+            CatalogIdentifierService.add_identifier!(
+              catalog_item: catalog_item,
+              identifier_type: identifier_type_param,
+              value: identifier_value_param,
+              primary: true,
+              actor: current_user
+            )
+          else
+            CatalogIdentifierService.generate_local!(catalog_item: catalog_item, actor: current_user)
+          end
+
+          saved = catalog_item.reload.primary_identifier.present?
+          raise ActiveRecord::Rollback unless saved
         end
-
-        saved = catalog_item.reload.primary_identifier.present?
-        raise ActiveRecord::Rollback unless saved
+      rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
+        apply_catalog_item_save_failure!(catalog_item, e)
+        saved = false
       end
 
       unless saved
-        @step = "item_details"
-        @external_lookup_staged = external_lookup_staged?
-        load_bisac_form_state(catalog_item)
-        load_store_category_collections
-        render "items/add_item/item_details", status: :unprocessable_entity
+        render_item_details_errors(catalog_item)
       end
 
       saved
     end
 
     def persist_catalog_item_updates!(catalog_item)
-      return false unless catalog_item.save
+      return true if catalog_item.save
 
-      true
+      render_item_details_errors(catalog_item)
+      false
     end
 
     def finalize_external_lookup_import!(catalog_item)
@@ -422,7 +418,9 @@ module Items
         attrs.delete(:name_override)
       end
 
-      Product.new(attrs)
+      Product.new(attrs).tap do |product|
+        product.default_inventory_tracking ||= AddItem::InventoryTrackingMapper.for_product_type(product.product_type)
+      end
     end
 
     def apply_store_category_product_defaults!(target)
@@ -588,6 +586,37 @@ module Items
 
     def identifier_value_param
       params.dig(:catalog_item, :initial_identifier_value).to_s.strip
+    end
+
+    def render_item_details_errors(catalog_item)
+      @step = "item_details"
+      @catalog_item = catalog_item
+      @external_lookup_staged = external_lookup_staged?
+      load_bisac_form_state(catalog_item)
+      load_store_category_collections
+      render "items/add_item/item_details", status: :unprocessable_entity
+    end
+
+    def apply_catalog_item_save_failure!(catalog_item, error)
+      case error
+      when CatalogIdentifierService::IdentifierError
+        catalog_item.errors.add(:base, error.message)
+      when ActiveRecord::RecordInvalid
+        record = error.record
+        if record.is_a?(CatalogItemIdentifier)
+          catalog_item.errors.add(:base, identifier_conflict_message(record))
+        else
+          catalog_item.errors.merge!(record.errors)
+        end
+      end
+    end
+
+    def identifier_conflict_message(identifier)
+      if identifier.normalized_identifier.present?
+        "Identifier #{identifier.normalized_identifier} is already in use."
+      else
+        "Identifier is already in use."
+      end
     end
 
     def done_commit?

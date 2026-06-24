@@ -1,0 +1,71 @@
+<div class="ss-pos-report">
+  <header class="ss-pos-report__header">
+    <div>
+      <h1>Operational Margin</h1>
+      <% if @report %>
+        <p class="ss-pos-report__scope"><%= @scope.label %></p>
+        <p class="ss-pos-report__print-meta"><%= pos_store.name %> · Printed <%= l(Time.current, format: :long) %></p>
+      <% end %>
+    </div>
+  </header>
+
+  <div class="ss-pos-no-print">
+    <%= render "filter", sessions: @sessions %>
+  </div>
+
+  <% if @scope.blank? && params.except(:controller, :action).present? %>
+    <p class="ss-hint ss-hint--warning ss-pos-no-print">Choose a valid filter and run the report.</p>
+  <% elsif @report %>
+    <div class="ss-pos-report__grid">
+      <section class="ss-pos-report__panel">
+        <h2>Summary</h2>
+        <dl class="ss-summary">
+          <dt>Net merchandise revenue</dt>
+          <dd><%= format_cents(@report.net_revenue_cents) %></dd>
+          <dt>Total COGS</dt>
+          <dd><%= format_cents(@report.total_cogs_cents) %></dd>
+          <dt>Actual gross margin</dt>
+          <dd><%= format_cents(@report.actual_margin_cents) %></dd>
+          <dt>Estimated gross margin</dt>
+          <dd><%= format_cents(@report.estimated_margin_cents) %></dd>
+          <dt>Unknown-cost revenue</dt>
+          <dd><%= format_cents(@report.unknown_cost_revenue_cents) %></dd>
+        </dl>
+        <p class="ss-field-help">Voided transactions are excluded. Non-inventory and liability lines are omitted from merchandise totals.</p>
+      </section>
+    </div>
+
+    <section class="ss-pos-report__panel">
+      <h2>Line detail</h2>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Txn #</th>
+            <th>SKU</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Net revenue</th>
+            <th>COGS</th>
+            <th>Est.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report.rows.each do |row| %>
+            <% next unless row.revenue_treatment == "merchandise" %>
+            <tr>
+              <td><%= l(row.business_date) %></td>
+              <td><%= row.transaction_number %></td>
+              <td><%= row.sku %></td>
+              <td><%= row.variant_name %></td>
+              <td><%= row.quantity %></td>
+              <td><%= format_cents(row.net_revenue_cents) %></td>
+              <td><%= row.total_cogs_cents.nil? ? "—" : format_cents(row.total_cogs_cents) %></td>
+              <td><%= row.cogs_estimated ? "Yes" : "No" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+  <% end %>
+</div>

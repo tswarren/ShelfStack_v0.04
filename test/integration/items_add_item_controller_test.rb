@@ -275,6 +275,39 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "ISBN-13 check digit is invalid"
   end
 
+  test "duplicate primary identifier re-renders item details with warning and preserved fields" do
+    existing = create_catalog_item!
+    CatalogIdentifierService.add_identifier!(
+      catalog_item: existing,
+      identifier_type: "isbn13",
+      value: "9780306406157",
+      primary: true
+    )
+
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+
+    assert_no_difference -> { CatalogItem.count } do
+      post items_add_item_path(step: "item_details"), params: {
+        catalog_item: {
+          title: "Duplicate ISBN Book",
+          catalog_item_type: "book",
+          format_id: @format.id,
+          creators: "Someone New",
+          initial_identifier_type: "isbn13",
+          initial_identifier_value: "978-0-306-40615-7"
+        },
+        commit: "Create Selling Setup"
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "already assigned"
+    assert_includes response.body, existing.title
+    assert_includes response.body, "Duplicate ISBN Book"
+    assert_includes response.body, "Someone New"
+    assert_includes response.body, 'value="978-0-306-40615-7"'
+  end
+
   test "selling setup attaches cover image during add item wizard" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
 

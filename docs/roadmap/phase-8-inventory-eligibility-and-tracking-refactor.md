@@ -1,6 +1,6 @@
 # Phase 8: Inventory Eligibility and Tracking Refactor
 
-> **Status:** Planned — Phase 8-1 and Phase 8-2 ready for implementation.
+> **Status:** Phase 8 **complete** (8-1 through 8-5, 2026-06-23).
 >
 > **Primary code surface:** Inventory posting eligibility, POS inventory posting, buyback eligibility, inventory lookups, and item setup terminology.
 >
@@ -57,11 +57,11 @@ Phase 8 is intentionally positioned after Phase 7 customer demand work because i
 
 | Slice   | Focus                                               | Status        |
 | ------- | --------------------------------------------------- | ------------- |
-| **8-1** | `Inventory::TrackingResolver` + central eligibility | Implement now |
-| **8-2** | Replace direct gates; docs + tests                  | Implement now |
-| **8-3** | Product defaults + variant overrides                | Deferred      |
-| **8-4** | UI cleanup: Inventory / Non-Inventory               | Deferred      |
-| **8-5** | POS COGS / operational margin subsystem             | Deferred      |
+| **8-1** | `Inventory::TrackingResolver` + central eligibility | Complete |
+| **8-2** | Replace direct gates; docs + tests                  | Complete |
+| **8-3** | Product defaults + variant overrides                | Complete |
+| **8-4** | UI cleanup: Inventory / Non-Inventory               | Complete |
+| **8-5** | POS COGS / operational margin subsystem             | Complete |
 
 > **Note:** Phase 8-5 is downstream operational margin work that depends on inventory cost basis. It is not part of the Phase 8 tracking refactor and is not full GL export. Full accounting/reporting remains Phase 9.
 
@@ -596,9 +596,9 @@ Those are separate product/UX decisions.
 Create:
 
 ```text
-docs/roadmap/phase-8-inventory-tracking.md
-docs/specifications/phase-8-inventory-tracking-spec.md
-docs/implementation/phase-8-inventory-tracking.md
+docs/roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md
+docs/specifications/phase-8-inventory-eligibility-and-tracking-spec.md
+docs/implementation/phase-8-1-8-2-completion.md
 ```
 
 Update:
@@ -1357,9 +1357,9 @@ Phase 8-1 and 8-2 are complete when all of the following are true.
 
 ### Documentation
 
-1. `docs/roadmap/phase-8-inventory-tracking.md` exists.
-2. `docs/specifications/phase-8-inventory-tracking-spec.md` exists.
-3. `docs/implementation/phase-8-inventory-tracking.md` exists after completion.
+1. `docs/roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md` exists.
+2. `docs/specifications/phase-8-inventory-eligibility-and-tracking-spec.md` exists.
+3. `docs/implementation/phase-8-1-8-2-completion.md` exists after completion.
 4. `docs/roadmap.md` adds Phase 8.
 5. Reporting and Accounting is renumbered to Phase 9.
 6. `AGENTS.md` references Phase 8 as current development priority.
@@ -1428,12 +1428,12 @@ docs/roadmap/phase-4-inventory-foundation.md
 docs/roadmap/phase-5-purchasing-and-receiving.md
 docs/roadmap/phase-6-pos-foundation.md
 docs/roadmap/phase-7a-customer-demand.md
-docs/roadmap/phase-8-inventory-tracking.md
+docs/roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md
 
-docs/specifications/phase-4-inventory-foundation-spec.md
-docs/specifications/phase-8-inventory-tracking-spec.md
+docs/specifications/phase-8-inventory-eligibility-and-tracking-spec.md
+docs/specifications/phase-8-test-plan.md
 
-docs/implementation/phase-8-inventory-tracking.md
+docs/implementation/phase-8-1-8-2-completion.md
 
 AGENTS.md
 

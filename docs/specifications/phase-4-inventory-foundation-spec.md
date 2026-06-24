@@ -109,17 +109,17 @@ Inventory locations are **context only** in Phase 4. They do not maintain author
 
 # 2. Inventory Eligibility
 
-Only product variants with:
+Only product variants that are **inventory-eligible** may receive ledger entries in Phase 4.
+
+Implementation (Phase 8): `Inventory::Eligibility` / `Inventory::TrackingResolver`. Legacy stored field:
 
 ```text
-inventory_behavior = standard_physical
+inventory_behavior = standard_physical  →  inventory tracking
 ```
-
-may receive ledger entries in Phase 4.
 
 | `inventory_behavior` | Phase 4 ledger |
 | --- | --- |
-| `standard_physical` | Eligible |
+| `standard_physical` | Eligible (`inventory`) |
 | `digital_asset` | Not eligible |
 | `drop_ship` | Not eligible |
 | `composite_recipe` | Not eligible |
@@ -127,9 +127,11 @@ may receive ledger entries in Phase 4.
 | `pure_financial` | Not eligible |
 | `non_inventory` | Not eligible |
 
-Condition (new, used, signed, etc.) does not determine eligibility. A used copy with `standard_physical` is eligible.
+Condition (new, used, signed, etc.) does not determine eligibility. A used copy that is inventory-eligible (legacy: `standard_physical`) is eligible.
 
-`Inventory::Eligibility` enforces this rule at post time. UI should warn when users add ineligible variants to draft adjustments.
+`Inventory::Eligibility` enforces this rule at post time (via `Inventory::TrackingResolver`). UI should warn when users add ineligible variants to draft adjustments.
+
+Phase 8: [phase-8-inventory-eligibility-and-tracking-spec.md](phase-8-inventory-eligibility-and-tracking-spec.md).
 
 ---
 

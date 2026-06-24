@@ -75,8 +75,8 @@ module Items
         load_store_category_collections
         render :new, status: :unprocessable_entity
       end
-    rescue CatalogIdentifierService::IdentifierError => e
-      @catalog_item.errors.add(:base, e.message)
+    rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
+      @catalog_item.errors.add(:base, identifier_error_message(e))
       load_bisac_form_state(@catalog_item)
       load_store_category_collections
       render :new, status: :unprocessable_entity
@@ -224,6 +224,23 @@ module Items
 
     def identifier_value_param
       params.dig(:catalog_item, :initial_identifier_value).to_s.strip
+    end
+
+    def identifier_error_message(error)
+      case error
+      when CatalogIdentifierService::IdentifierError
+        error.message
+      when ActiveRecord::RecordInvalid
+        record = error.record
+        if record.is_a?(CatalogItemIdentifier)
+          normalized = record.normalized_identifier
+          normalized.present? ? "Identifier #{normalized} is already in use." : "Identifier is already in use."
+        else
+          error.message
+        end
+      else
+        error.message
+      end
     end
 
     def identifier_return_path

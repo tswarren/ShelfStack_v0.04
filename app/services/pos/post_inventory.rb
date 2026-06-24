@@ -43,9 +43,7 @@ module Pos
 
     def self.eligible_line?(line)
       return false unless line.product_variant_id.present?
-
-      behavior = line.inventory_behavior_snapshot.presence || line.product_variant&.inventory_behavior
-      return false unless behavior == "standard_physical"
+      return false unless Inventory::Eligibility.eligible_for_pos_line?(line)
       return false if line.return_line? && line.return_disposition.present? && line.return_disposition != "return_to_stock"
 
       true

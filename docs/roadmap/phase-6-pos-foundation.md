@@ -75,7 +75,7 @@ inventory_postings.source = PosTransaction
 inventory_ledger_entries.movement_type = sold | customer_return (per line)
 ```
 
-Only lines with `product_variant_id` and `inventory_behavior = standard_physical` post. Open-ring lines without a variant do not post.
+Only lines with `product_variant_id` that are inventory-eligible post (Phase 8: `Inventory::Eligibility.eligible_for_pos_line?`; legacy snapshot `inventory_behavior = standard_physical`). Open-ring lines without a variant do not post.
 
 Do **not** store `inventory_posting_id` on `pos_transactions`. Discover postings via polymorphic `source`.
 
