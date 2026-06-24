@@ -8,18 +8,31 @@ module Buybacks
       new(customer:).validate!
     end
 
+    def self.check(customer:)
+      new(customer:).check
+    end
+
     def initialize(customer:)
       @customer = customer
     end
 
     def validate!
-      raise Error, "Customer is required." if customer.blank?
-      raise Error, "Customer first name is required." if customer.first_name.blank?
-      raise Error, "Customer last name is required." if customer.last_name.blank?
-      raise Error, "Customer address is required." if customer.address_line1.blank?
-      raise Error, "Customer city is required." if customer.city.blank?
-      raise Error, "Customer state/province is required." if customer.region_code.blank?
-      raise Error, "Customer postal code is required." if customer.postal_code.blank?
+      missing = check
+      raise Error, missing.first if missing.any?
+    end
+
+    def check
+      [].tap do |messages|
+        messages << "Customer is required." if customer.blank?
+        next if customer.blank?
+
+        messages << "Customer first name is required." if customer.first_name.blank?
+        messages << "Customer last name is required." if customer.last_name.blank?
+        messages << "Customer address is required." if customer.address_line1.blank?
+        messages << "Customer city is required." if customer.city.blank?
+        messages << "Customer state/province is required." if customer.region_code.blank?
+        messages << "Customer postal code is required." if customer.postal_code.blank?
+      end
     end
 
     private

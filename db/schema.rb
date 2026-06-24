@@ -71,9 +71,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   create_table "buyback_lines", force: :cascade do |t|
     t.integer "accepted_offer_cents"
     t.integer "accepted_resale_price_cents"
+    t.integer "base_price_cents"
+    t.string "base_price_source"
     t.bigint "buyback_pricing_rule_id"
     t.bigint "buyback_reject_reason_id"
     t.bigint "buyback_session_id", null: false
+    t.boolean "cash_offer_overridden", default: false, null: false
+    t.text "cash_offer_override_reason"
     t.bigint "catalog_item_id"
     t.string "condition_snapshot"
     t.datetime "created_at", null: false
@@ -82,6 +86,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "created_product_variant_id"
     t.string "creator_snapshot"
     t.integer "current_selling_price_cents"
+    t.datetime "customer_decision_at"
     t.string "format_snapshot"
     t.boolean "hold_for_review", default: false, null: false
     t.string "identifier_entered"
@@ -99,8 +104,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "product_condition_id"
     t.bigint "product_id"
     t.bigint "product_variant_id"
+    t.integer "proposed_cash_offer_cents"
+    t.integer "proposed_resale_price_cents"
+    t.integer "proposed_trade_credit_offer_cents"
     t.integer "quantity", default: 1, null: false
     t.boolean "resale_price_overridden", default: false, null: false
+    t.text "resale_price_override_reason"
     t.boolean "signed_copy", default: false, null: false
     t.text "special_notes"
     t.string "status", default: "pending", null: false
@@ -109,6 +118,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "suggested_resale_price_cents"
     t.integer "suggested_trade_credit_offer_cents"
     t.string "title_snapshot"
+    t.boolean "trade_credit_offer_overridden", default: false, null: false
+    t.text "trade_credit_offer_override_reason"
     t.datetime "updated_at", null: false
     t.string "variant_sku_snapshot"
     t.bigint "void_inventory_ledger_entry_id"
@@ -176,6 +187,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "completed_by_user_id"
     t.datetime "created_at", null: false
     t.bigint "created_by_user_id", null: false
+    t.datetime "customer_decision_at"
     t.bigint "customer_id", null: false
     t.integer "donation_value_cents", default: 0, null: false
     t.boolean "hold_for_review", default: false, null: false
@@ -185,9 +197,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.boolean "needs_review", default: false, null: false
     t.text "notes"
     t.string "payout_mode"
+    t.datetime "payout_selected_at"
     t.bigint "pos_cash_movement_id"
     t.bigint "pos_register_session_id"
     t.text "processing_notes"
+    t.datetime "proposal_printed_at"
+    t.datetime "proposal_saved_at"
     t.datetime "quoted_at"
     t.string "seller_address_line1_snapshot"
     t.string "seller_address_line2_snapshot"

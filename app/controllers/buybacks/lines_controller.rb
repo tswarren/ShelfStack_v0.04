@@ -3,7 +3,10 @@
 module Buybacks
   class LinesController < BaseController
     before_action :set_session
-    before_action :set_line, only: %i[update accept reject price_override offer_override resolve select_variant intake]
+    before_action :set_line, only: %i[
+      update accept reject price_override offer_override resolve select_variant intake
+      update_proposal record_decision
+    ]
 
     def create
       authorize_buyback!("buybacks.update")
@@ -31,6 +34,40 @@ module Buybacks
       )
       redirect_to buybacks_session_path(@buyback_session)
     rescue ArgumentError => e
+      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+    end
+
+    def update_proposal
+      authorize_buyback!("buybacks.update")
+      UpdateProposalLine.call!(
+        line: @line,
+        session: @buyback_session,
+        actor: current_user,
+        product_condition: condition_from_params,
+        sub_department: sub_department_from_params,
+        base_price_cents: params[:base_price_cents],
+        base_price_source: params[:base_price_source],
+        proposed_resale_price_cents: params[:proposed_resale_price_cents],
+        proposed_cash_offer_cents: params[:proposed_cash_offer_cents],
+        proposed_trade_credit_offer_cents: params[:proposed_trade_credit_offer_cents],
+        signed_copy: params[:signed_copy],
+        notes: params[:notes]
+      )
+      redirect_to buybacks_session_path(@buyback_session, anchor: "line-#{@line.id}"), notice: "Line proposal updated."
+    rescue Buybacks::UpdateProposalLine::Error, Buybacks::Eligibility::Error => e
+      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+    end
+
+    def record_decision
+      authorize_buyback!("buybacks.decisions.update")
+      RecordCustomerDecision.call!(
+        line: @line,
+        session: @buyback_session,
+        actor: current_user,
+        outcome: params[:outcome]
+      )
+      redirect_to buybacks_session_path(@buyback_session), notice: "Customer decision recorded."
+    rescue Buybacks::RecordCustomerDecision::Error => e
       redirect_to buybacks_session_path(@buyback_session), alert: e.message
     end
 
@@ -83,13 +120,8 @@ module Buybacks
         sub_department: variant.sub_department,
         title_snapshot: catalog_item&.title || variant.product.name,
         variant_sku_snapshot: variant.sku,
-        condition_snapshot: variant.condition&.name
-      )
-      UpdateLine.call!(
-        line: @line,
-        actor: current_user,
-        product_condition: variant.condition,
-        sub_department: variant.sub_department
+        condition_snapshot: variant.condition&.name,
+        status: "resolved"
       )
       redirect_to buybacks_session_path(@buyback_session), notice: "Item linked to line."
     rescue ActiveRecord::RecordNotFound, ArgumentError => e
@@ -117,38 +149,24 @@ module Buybacks
     end
 
     def accept
-      authorize_buyback!("buybacks.accept")
-      variant = ProductVariant.find(params[:product_variant_id])
-      condition = ProductCondition.find(params[:product_condition_id])
-      sub_department = SubDepartment.find(params[:sub_department_id])
-      outcome = outcome_for_payout_mode(params[:outcome])
-
-      AcceptLine.call!(
-        line: @line,
-        session: @buyback_session,
-        actor: current_user,
-        outcome: outcome,
-        product_variant: variant,
-        product_condition: condition,
-        sub_department: sub_department,
-        resale_price_cents: params[:resale_price_cents] || @line.suggested_resale_price_cents,
-        offer_cents: offer_cents_for_mode(outcome)
-      )
-      redirect_to buybacks_session_path(@buyback_session), notice: "Line accepted."
-    rescue Buybacks::AcceptLine::Error, Buybacks::Eligibility::Error => e
-      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+      authorize_buyback!("buybacks.update")
+      redirect_to buybacks_session_path(@buyback_session),
+                  alert: "Use Save line proposal instead of Accept."
     end
 
     def reject
       authorize_buyback!("buybacks.reject")
       reason = BuybackRejectReason.find(params[:buyback_reject_reason_id]) if params[:buyback_reject_reason_id].present?
+      outcome = params[:outcome].presence || "rejected_by_store"
       RejectLine.call!(
         line: @line,
         actor: current_user,
-        outcome: params[:outcome],
+        outcome: outcome,
         reject_reason: reason
       )
       redirect_to buybacks_session_path(@buyback_session), notice: "Line rejected."
+    rescue Buybacks::RejectLine::Error => e
+      redirect_to buybacks_session_path(@buyback_session), alert: e.message
     end
 
     def price_override
@@ -170,7 +188,8 @@ module Buybacks
         line: @line,
         actor: current_user,
         offer_cents: params[:offer_cents].to_i,
-        override_reason: params[:override_reason]
+        override_reason: params[:override_reason],
+        offer_type: params[:offer_type].presence || "cash"
       )
       redirect_to buybacks_session_path(@buyback_session), notice: "Offer updated."
     rescue Buybacks::ApplyOfferOverride::Error => e
@@ -195,27 +214,6 @@ module Buybacks
     def sub_department_from_params
       id = params.dig(:buyback_line, :sub_department_id) || params[:sub_department_id]
       SubDepartment.find(id) if id.present?
-    end
-
-    def outcome_for_payout_mode(outcome)
-      return outcome if outcome.present?
-
-      case @buyback_session.payout_mode
-      when "cash" then "accepted_for_cash"
-      when "trade_credit" then "accepted_for_trade_credit"
-      when "no_value_donation" then "accepted_as_donation"
-      else "accepted_for_cash"
-      end
-    end
-
-    def offer_cents_for_mode(outcome)
-      case outcome
-      when "accepted_as_donation" then 0
-      when "accepted_for_trade_credit"
-        params[:offer_cents] || @line.accepted_offer_cents || @line.suggested_trade_credit_offer_cents
-      else
-        params[:offer_cents] || @line.accepted_offer_cents || @line.suggested_cash_offer_cents
-      end
     end
 
     def buyback_conditions

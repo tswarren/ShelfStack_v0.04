@@ -4,6 +4,8 @@ Normative roadmap summary: [phase-7c-used-buyback.md](../roadmap/phase-7c-used-b
 
 Functional behavior: [phase-7c-used-buyback-spec.md](phase-7c-used-buyback-spec.md)
 
+7C-1 refinement: [phase-7c-1-buyback-refinement.md](../roadmap/phase-7c-1-buyback-refinement.md)
+
 Test plan: [phase-7c-test-plan.md](phase-7c-test-plan.md)
 
 ---
@@ -43,4 +45,24 @@ Movement type remains `used_buyback` for original and reversal lines.
 
 # 5. Numbering
 
-`buyback_number` at completion: `{store_number}-{workstation_number}-B{sequence:06d}` via `buyback_sequences` (one row per workstation).
+`buyback_number` at proposal save (`SaveProposal`): `{store_number}-{workstation_number}-B{sequence:06d}` via `buyback_sequences` (one row per workstation). Proposal and final receipt share the same number.
+
+# 6. Phase 7C-1 line/session fields
+
+**Session statuses:** `draft`, `quoted`, `decision`, `completed`, `cancelled`, `voided`
+
+**Line statuses:** `pending`, `resolved`, `priced`, `offered`, `decided`, `posted`, `voided`
+
+**Outcomes:** `accepted_by_customer`, `declined_by_customer`, `donated_by_customer`, `rejected_by_store`, `recycle_with_permission`
+
+**Pricing (buyback_lines):**
+
+```text
+suggested_* / proposed_* / accepted_* (resale, cash offer, trade credit offer)
+base_price_cents, base_price_source
+resale_price_overridden, cash_offer_overridden, trade_credit_offer_overridden
+*_override_reason columns
+customer_decision_at
+```
+
+**Session timestamps:** `proposal_saved_at`, `proposal_printed_at`, `customer_decision_at`, `payout_selected_at`

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BuybackSession < ApplicationRecord
-  STATUSES = %w[draft quoted completed cancelled voided].freeze
+  STATUSES = %w[draft quoted decision completed cancelled voided].freeze
   PAYOUT_MODES = %w[cash trade_credit no_value_donation].freeze
 
   belongs_to :store
@@ -36,6 +36,10 @@ class BuybackSession < ApplicationRecord
     status == "quoted"
   end
 
+  def decision?
+    status == "decision"
+  end
+
   def completed?
     status == "completed"
   end
@@ -49,6 +53,6 @@ class BuybackSession < ApplicationRecord
   end
 
   def editable?
-    draft? || quoted?
+    draft? || quoted? || decision?
   end
 end

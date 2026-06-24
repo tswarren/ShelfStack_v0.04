@@ -100,6 +100,7 @@ module Buybacks
         store: session.store,
         actor: actor,
         reason_code: reason,
+        source: buyback_void,
         notes: "Void buyback #{session.buyback_number}"
       )
       buyback_void.update!(void_stored_value_ledger_entry: entry)

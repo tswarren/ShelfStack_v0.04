@@ -315,6 +315,14 @@ Rails.application.routes.draw do
         patch :cancel
         patch :void
         get :receipt
+        get :trade_credit_slip, to: "trade_credit_issuance_slips#show"
+        post :print_trade_credit_slip, to: "trade_credit_issuance_slips#print"
+        patch :save_proposal
+        patch :open_decision
+        get :print_proposal
+        patch :accept_all_lines
+        patch :decline_all_lines
+        patch :donate_declined_lines
       end
       resources :lines, only: %i[create update] do
         member do
@@ -325,6 +333,8 @@ Rails.application.routes.draw do
           post :intake
           patch :price_override
           patch :offer_override
+          patch :update_proposal
+          patch :record_decision
         end
       end
     end

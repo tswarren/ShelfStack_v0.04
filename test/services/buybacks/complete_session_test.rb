@@ -50,22 +50,37 @@ class Buybacks::CompleteSessionTest < ActiveSupport::TestCase
 
   test "completes trade credit buyback and issues identifier" do
     @session.update!(payout_mode: "trade_credit")
-    @line.update!(outcome: "accepted_for_trade_credit")
+    accept_buyback_line!(
+      line: @line,
+      session: @session,
+      actor: @user,
+      variant: @variant,
+      condition: @condition,
+      sub_department: @sub,
+      payout_mode: "trade_credit"
+    )
 
-    Buybacks::CompleteSession.call!(session: @session, actor: @user)
+    Buybacks::CompleteSession.call!(session: @session.reload, actor: @user)
 
     @session.reload
     assert @session.completed?
     assert_equal "trade_credit", @session.stored_value_account.account_type
     assert @session.stored_value_ledger_entry.present?
+    assert_equal @session, @session.stored_value_ledger_entry.source
     assert @session.stored_value_account.stored_value_identifiers.active_records.exists?
   end
 
   test "completes donation buyback with zero payout" do
     @session.update!(payout_mode: "no_value_donation")
-    @line.update!(outcome: "accepted_as_donation", accepted_offer_cents: 0)
+    @line.update!(outcome: nil, status: "offered")
+    Buybacks::RecordCustomerDecision.call!(
+      line: @line,
+      session: @session.reload,
+      actor: @user,
+      outcome: "donated_by_customer"
+    )
 
-    Buybacks::CompleteSession.call!(session: @session, actor: @user)
+    Buybacks::CompleteSession.call!(session: @session.reload, actor: @user)
 
     @session.reload
     assert @session.completed?

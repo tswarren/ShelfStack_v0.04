@@ -36,7 +36,7 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     )
   end
 
-  test "adds used variant to existing catalog item instead of duplicating identifier" do
+  test "links existing catalog item and product without creating variant" do
     result = Buybacks::CreateIntakeItem.call!(
       session: @session,
       actor: @user,
@@ -50,8 +50,43 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     assert_not result.created_new_catalog
     assert_equal @catalog_item.id, result.catalog_item.id
     assert_equal @product.id, result.product.id
-    assert_equal @used_condition.id, result.product_variant.condition_id
-    assert_equal "buyback_intake", result.product_variant.source
+    assert_nil result.product_variant
+    @line.reload
+    assert_equal "resolved", @line.status
     assert_equal 1, CatalogItem.where(title: "Cher: The Memoir").count
+  end
+
+  test "creates product when catalog exists without active product" do
+    catalog_only = create_catalog_item!(title: "Orphan Catalog")
+    CatalogIdentifierService.add_identifier!(
+      catalog_item: catalog_only,
+      identifier_type: "isbn13",
+      value: "9780316769174",
+      primary: true,
+      actor: @user
+    )
+    line = Buybacks::AddLine.call!(
+      session: @session,
+      actor: @user,
+      identifier_entered: "9780316769174",
+      title_snapshot: "Orphan Catalog"
+    )
+
+    result = Buybacks::CreateIntakeItem.call!(
+      session: @session,
+      actor: @user,
+      line: line,
+      title: "Orphan Catalog",
+      sub_department: @sub,
+      condition: @used_condition,
+      identifier: "9780316769174"
+    )
+
+    assert_equal catalog_only.id, result.catalog_item.id
+    assert result.product.present?
+    assert result.product.active?
+    assert_equal "buyback_intake", result.product.source
+    assert_nil result.product_variant
+    assert_equal "resolved", line.reload.status
   end
 end

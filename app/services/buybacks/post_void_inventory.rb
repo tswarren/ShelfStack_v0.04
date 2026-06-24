@@ -42,7 +42,9 @@ module Buybacks
 
       buyback_void.update!(inventory_posting: posting)
       session.buyback_lines.where(status: "posted").find_each do |line|
-        entry = posting.inventory_ledger_entries.find_by(product_variant_id: line.product_variant_id)
+        next if line.inventory_ledger_entry.blank?
+
+        entry = posting.inventory_ledger_entries.find_by(line_number: line.inventory_ledger_entry.line_number)
         line.update!(void_inventory_ledger_entry: entry, status: "voided") if entry
       end
 

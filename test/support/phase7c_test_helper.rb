@@ -68,24 +68,52 @@ module Phase7cTestHelper
     Buybacks::StartSession.call!(store: store, customer: customer, actor: actor, **attrs)
   end
 
-  def accept_buyback_line!(line:, session:, actor:, variant:, condition:, sub_department:, payout_mode: "cash", **attrs)
-    session.update!(payout_mode: payout_mode) if session.payout_mode.blank?
-    outcome = case payout_mode
-    when "trade_credit" then "accepted_for_trade_credit"
-    when "no_value_donation" then "accepted_as_donation"
-    else "accepted_for_cash"
-    end
+  def accept_buyback_line!(line:, session:, actor:, variant:, condition:, sub_department:, payout_mode: "cash",
+                           save_proposal: true, record_decision: true, **attrs)
+    session.update!(payout_mode: payout_mode) if session.payout_mode.blank? || payout_mode != "cash"
+    session.update!(workstation: create_workstation!(store: session.store)) if session.workstation.blank?
+
     offer = payout_mode == "no_value_donation" ? 0 : (attrs[:offer_cents] || 500)
-    Buybacks::AcceptLine.call!(
+    resale = attrs[:resale_price_cents] || 2000
+    trade_offer = attrs[:trade_offer_cents] || (offer + 100)
+
+    line.update!(
+      product: variant.product,
+      catalog_item: variant.product.catalog_item,
+      list_price_cents: variant.product.list_price_cents
+    )
+
+    Buybacks::UpdateProposalLine.call!(
       line: line,
       session: session,
       actor: actor,
-      outcome: outcome,
-      product_variant: variant,
       product_condition: condition,
       sub_department: sub_department,
-      resale_price_cents: attrs[:resale_price_cents] || 2000,
-      offer_cents: offer
+      proposed_resale_price_cents: resale,
+      proposed_cash_offer_cents: offer,
+      proposed_trade_credit_offer_cents: trade_offer
+    )
+
+    if save_proposal
+      Buybacks::SaveProposal.call!(session: session, actor: actor) if session.reload.buyback_number.blank?
+      if session.buyback_number.present? && (session.quoted? || session.decision?)
+        line.reload.update!(status: "offered")
+      end
+      Buybacks::OpenCustomerDecision.call!(session: session.reload, actor: actor) unless session.decision?
+    end
+
+    return line unless record_decision
+
+    outcome = case payout_mode
+    when "no_value_donation" then "donated_by_customer"
+    else "accepted_by_customer"
+    end
+
+    Buybacks::RecordCustomerDecision.call!(
+      line: line.reload,
+      session: session.reload,
+      actor: actor,
+      outcome: attrs[:outcome] || outcome
     )
   end
 

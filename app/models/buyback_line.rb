@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class BuybackLine < ApplicationRecord
-  STATUSES = %w[pending priced accepted rejected posted voided].freeze
+  STATUSES = %w[pending resolved priced offered decided posted voided].freeze
   OUTCOMES = %w[
-    accepted_for_cash
-    accepted_for_trade_credit
-    accepted_as_donation
-    rejected_returned_to_seller
-    rejected_recycle
+    accepted_by_customer
+    declined_by_customer
+    donated_by_customer
+    rejected_by_store
+    recycle_with_permission
   ].freeze
 
   belongs_to :buyback_session
@@ -31,14 +31,18 @@ class BuybackLine < ApplicationRecord
   validates :quantity, numericality: { only_integer: true, greater_than: 0 }
 
   def accepted_for_posting?
-    outcome.in?(%w[accepted_for_cash accepted_for_trade_credit accepted_as_donation])
+    outcome.in?(%w[accepted_by_customer donated_by_customer])
   end
 
   def donation?
-    outcome == "accepted_as_donation"
+    outcome == "donated_by_customer"
   end
 
   def rejected?
-    outcome.in?(%w[rejected_returned_to_seller rejected_recycle])
+    outcome.in?(%w[declined_by_customer rejected_by_store recycle_with_permission])
+  end
+
+  def store_rejected?
+    outcome == "rejected_by_store"
   end
 end

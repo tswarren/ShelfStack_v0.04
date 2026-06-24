@@ -4,7 +4,9 @@ Completed: 2026-06-23
 
 ## Summary
 
-Phase 7C delivers used buyback as an operational workspace (`/buybacks`) with draft session workflow, dual eligibility gates, single payout mode per session (cash, trade credit, or no-value donation), inventory posting via `used_buyback`, and void via `buyback_voids` mirroring POS void patterns.
+Phase 7C delivers used buyback as an operational workspace (`/buybacks`) with staged session workflow (refined in 7C-1), dual eligibility gates, single payout mode per session (cash, trade credit, or no-value donation), inventory posting via `used_buyback`, and void via `buyback_voids` mirroring POS void patterns.
+
+See [phase-7c-1-completion.md](phase-7c-1-completion.md) for the 7C-1 workflow refinement.
 
 ## Deliverables
 
@@ -22,13 +24,15 @@ Phase 7C delivers used buyback as an operational workspace (`/buybacks`) with dr
 Buybacks::Eligibility
 Buybacks::SellerRequirements
 Buybacks::StartSession
-Buybacks::AddLine / UpdateLine
+Buybacks::AddLine / UpdateLine / UpdateProposalLine
+Buybacks::SaveProposal / ProposalBuilder / OpenCustomerDecision
+Buybacks::RecordCustomerDecision / AcceptAllLines / DeclineAllLines / DonateDeclinedLines
 Buybacks::ResolveItem
 Buybacks::CreateIntakeItem
 Buybacks::FindOrCreateGradedUsedVariant
-Buybacks::PriceLine
+Buybacks::PriceLine / PricingFieldSync
 Buybacks::ApplyPriceOverride / ApplyOfferOverride
-Buybacks::AcceptLine / RejectLine
+Buybacks::RejectLine
 Buybacks::CancelSession
 Buybacks::CompleteSession
 Buybacks::PostInventory

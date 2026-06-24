@@ -5,6 +5,8 @@ module Seeds
     ACTIONS = %w[
       view create update create_intake_item price_override accept reject
       complete pay_cash pay_trade_credit accept_donation cancel void
+      trade_credit_slip.print proposal.save proposal.print
+      decisions.update decisions.batch_update
     ].freeze
 
     def self.permission_attrs(key_suffix, name, description)

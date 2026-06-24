@@ -30,7 +30,7 @@ module Buybacks
 
       existing_catalog = find_existing_catalog_item
       if existing_catalog.present?
-        return add_used_variant_to_existing!(existing_catalog)
+        return link_existing_catalog!(existing_catalog)
       end
 
       create_full_intake!
@@ -50,60 +50,40 @@ module Buybacks
       resolve.catalog_item
     end
 
-    def add_used_variant_to_existing!(catalog_item)
+    def link_existing_catalog!(catalog_item)
       product = catalog_item.products.active_records.first
-      raise Error, "Catalog item exists but has no active product to attach a used variant." if product.blank?
+      product = create_intake_product!(catalog_item) if product.blank?
 
-      variant = nil
       CatalogItem.transaction do
-        variant = FindOrCreateGradedUsedVariant.call!(
-          product: product,
-          condition: condition,
-          sub_department: sub_department,
-          resale_price_cents: line.accepted_resale_price_cents || line.suggested_resale_price_cents || 0,
-          session: session,
-          actor: actor
-        )
-
         line.update!(
           catalog_item: catalog_item,
           product: product,
-          product_variant: variant,
-          created_product_variant: variant,
           product_condition: condition,
           sub_department: sub_department,
           title_snapshot: catalog_item.title,
-          variant_sku_snapshot: variant.sku,
-          condition_snapshot: condition.name
-        )
-
-        UpdateLine.call!(
-          line: line,
-          actor: actor,
-          product_condition: condition,
-          sub_department: sub_department
+          list_price_cents: list_price_cents || product.list_price_cents,
+          status: "resolved"
         )
       end
 
       AuditEvents.record!(
         actor: actor,
-        event_name: "buyback.intake.used_variant_added",
-        auditable: variant,
+        event_name: "buyback.intake.linked",
+        auditable: catalog_item,
         source: session,
         details: { "catalog_item_id" => catalog_item.id, "product_id" => product.id }
       )
 
-      Result.new(catalog_item:, product:, product_variant: variant, created_new_catalog: false)
+      Result.new(catalog_item:, product:, product_variant: nil, created_new_catalog: false)
     end
 
     def create_full_intake!
       format = Format.active_records.find_by(format_key: "hardcover") ||
-        Format.active_records.order(:sort_order).first
+        Format.active_records.order(:name).first
       raise Error, "No active format available for intake." if format.blank?
 
       catalog_item = nil
       product = nil
-      variant = nil
 
       CatalogItem.transaction do
         catalog_item = CatalogItem.create!(
@@ -142,39 +122,21 @@ module Buybacks
           active: true
         )
 
-        variant = FindOrCreateGradedUsedVariant.call!(
-          product: product,
-          condition: condition,
-          sub_department: sub_department,
-          resale_price_cents: line.accepted_resale_price_cents || line.suggested_resale_price_cents || 0,
-          session: session,
-          actor: actor
-        )
-
         line.update!(
           catalog_item: catalog_item,
           product: product,
-          product_variant: variant,
           created_catalog_item: catalog_item,
           created_product: product,
-          created_product_variant: variant,
           product_condition: condition,
           sub_department: sub_department,
           title_snapshot: title,
-          variant_sku_snapshot: variant.sku,
-          condition_snapshot: condition.name
-        )
-
-        UpdateLine.call!(
-          line: line,
-          actor: actor,
-          product_condition: condition,
-          sub_department: sub_department
+          list_price_cents: list_price_cents.to_i,
+          status: "resolved"
         )
       end
 
       AuditEvents.record!(actor: actor, event_name: "buyback.intake.created", auditable: catalog_item, source: session)
-      Result.new(catalog_item:, product:, product_variant: variant, created_new_catalog: true)
+      Result.new(catalog_item:, product:, product_variant: nil, created_new_catalog: true)
     end
 
     def default_condition
@@ -189,6 +151,20 @@ module Buybacks
     def infer_identifier_type(value)
       normalized = normalize_identifier(value)
       normalized.length == 13 ? "isbn13" : "isbn10"
+    end
+
+    def create_intake_product!(catalog_item)
+      Product.create!(
+        catalog_item: catalog_item,
+        product_type: "physical",
+        variation_type: "conditional",
+        list_price_cents: list_price_cents.to_i,
+        default_sub_department: sub_department,
+        source: "buyback_intake",
+        needs_review: true,
+        created_from_buyback_session: session,
+        active: true
+      )
     end
   end
 end

@@ -47,18 +47,24 @@ module Buybacks
     end
 
     def base_price_cents(rule)
-      source = rule&.base_price_source || "variant_selling_price"
-      case source
-      when "product_list_price"
-        line.product&.list_price_cents || line.list_price_cents || 0
-      when "variant_selling_price"
-        line.product_variant&.selling_price_cents || line.current_selling_price_cents || 0
-      when "condition_adjusted_list_price"
-        list = line.product&.list_price_cents || line.list_price_cents || 0
-        apply_factor(list, condition_factor_bps)
-      else
-        line.accepted_resale_price_cents || line.suggested_resale_price_cents || 0
+      return line.base_price_cents if line.base_price_cents.to_i.positive?
+
+      list = line.product&.list_price_cents || line.list_price_cents
+      return list if list.to_i.positive?
+
+      if line.product_variant_id.present?
+        variant_price = line.product_variant&.selling_price_cents || line.current_selling_price_cents
+        return variant_price if variant_price.to_i.positive?
       end
+
+      line.proposed_resale_price_cents || line.suggested_resale_price_cents || manual_base(rule)
+    end
+
+    def manual_base(rule)
+      source = rule&.base_price_source
+      return 0 unless source == "manual_resale_price"
+
+      line.proposed_resale_price_cents || line.suggested_resale_price_cents || 0
     end
 
     def condition_factor_bps
@@ -77,8 +83,8 @@ module Buybacks
       rounded = (raw.to_f / increment).round * increment
       min = rule&.minimum_offer_cents || 0
       max = rule&.maximum_offer_cents
-      amount = [rounded, min].max
-      max.present? ? [amount, max].min : amount
+      amount = [ rounded, min ].max
+      max.present? ? [ amount, max ].min : amount
     end
   end
 end

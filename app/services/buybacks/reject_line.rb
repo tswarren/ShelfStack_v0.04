@@ -2,6 +2,8 @@
 
 module Buybacks
   class RejectLine
+    class Error < StandardError; end
+
     def self.call!(line:, actor:, outcome:, reject_reason: nil)
       new(line:, actor:, outcome:, reject_reason:).call!
     end
@@ -14,17 +16,22 @@ module Buybacks
     end
 
     def call!
+      raise Error, "Invalid outcome." unless outcome.in?(BuybackLine::OUTCOMES)
+
+      status = outcome == "rejected_by_store" ? line.status : "decided"
       line.update!(
-        status: "rejected",
+        status: status,
         outcome: outcome,
-        buyback_reject_reason: reject_reason
+        buyback_reject_reason: reject_reason,
+        customer_decision_at: Time.current
       )
 
       AuditEvents.record!(
         actor: actor,
         event_name: "buyback.line.rejected",
         auditable: line,
-        source: line.buyback_session
+        source: line.buyback_session,
+        details: { "outcome" => outcome }
       )
       line
     end

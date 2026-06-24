@@ -15,17 +15,19 @@ module Buybacks
     end
 
     def call!
-      raise Error, "Session is not editable." unless session.editable?
+      raise Error, "Session must be in customer decision stage." unless session.decision?
       raise Error, "Payout mode is required." if session.payout_mode.blank?
       raise Error, "Workstation is required." if session.workstation.blank?
+      raise Error, "Buyback number is required." if session.buyback_number.blank?
 
       SellerRequirements.validate!(customer: session.customer)
       validate_lines!
+      derive_accepted_snapshots!
 
       BuybackSession.transaction do
         session.workstation ||= Current.workstation
         session.business_date ||= register_session&.business_date || Date.current
-        BuybackNumberAssigner.call!(session: session)
+        session.update!(payout_selected_at: Time.current) if session.payout_selected_at.blank?
 
         case session.payout_mode
         when "cash"
@@ -70,25 +72,28 @@ module Buybacks
       posting_lines = session.buyback_lines.select(&:accepted_for_posting?)
       raise Error, "At least one accepted or donated line is required." if posting_lines.empty?
 
+      undecided = session.buyback_lines.where(status: %w[offered priced]).exists?
+      raise Error, "All proposal lines must have customer decisions before completion." if undecided
+
       posting_lines.each { |line| Eligibility.ensure_line_eligible!(line: line) }
-      validate_payout_alignment!(posting_lines)
     end
 
-    def validate_payout_alignment!(lines)
+    def derive_accepted_snapshots!
+      session.buyback_lines.select(&:accepted_for_posting?).each do |line|
+        line.accepted_resale_price_cents = line.proposed_resale_price_cents
+        line.accepted_offer_cents = payout_offer_cents(line)
+        line.save!
+      end
+    end
+
+    def payout_offer_cents(line)
       case session.payout_mode
       when "cash"
-        lines.each do |line|
-          raise Error, "Cash payout requires accepted_for_cash lines." unless line.outcome == "accepted_for_cash"
-        end
+        line.proposed_cash_offer_cents.to_i
       when "trade_credit"
-        lines.each do |line|
-          raise Error, "Trade credit payout requires accepted_for_trade_credit lines." unless line.outcome == "accepted_for_trade_credit"
-        end
-      when "no_value_donation"
-        lines.each do |line|
-          raise Error, "Donation payout requires accepted_as_donation lines." unless line.outcome == "accepted_as_donation"
-          raise Error, "Donation lines must have zero offer." if line.accepted_offer_cents.to_i.positive?
-        end
+        line.proposed_trade_credit_offer_cents.to_i
+      else
+        0
       end
     end
 
@@ -124,6 +129,7 @@ module Buybacks
         actor: actor,
         amount_cents: amount,
         reason_code: reason,
+        source: session,
         notes: "Buyback #{session.buyback_number}"
       )
 
@@ -178,8 +184,8 @@ module Buybacks
       lines = session.buyback_lines.select(&:accepted_for_posting?)
       {
         payout_cents: lines.sum { |l| l.accepted_offer_cents.to_i },
-        cash_offer_cents: lines.sum { |l| l.suggested_cash_offer_cents.to_i },
-        trade_credit_offer_cents: lines.sum { |l| l.suggested_trade_credit_offer_cents.to_i }
+        cash_offer_cents: lines.sum { |l| l.proposed_cash_offer_cents.to_i },
+        trade_credit_offer_cents: lines.sum { |l| l.proposed_trade_credit_offer_cents.to_i }
       }
     end
   end

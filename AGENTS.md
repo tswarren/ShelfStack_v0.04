@@ -144,6 +144,7 @@ docs/specifications/phase-7b-test-plan.md
 
 ```text
 docs/roadmap/phase-7c-used-buyback.md
+docs/roadmap/phase-7c-1-buyback-refinement.md
 docs/specifications/phase-7c-used-buyback-spec.md
 docs/specifications/phase-7c-data-model.md
 docs/specifications/phase-7c-test-plan.md
@@ -203,14 +204,19 @@ The canonical stored value model (`stored_value_*` tables) supersedes earlier `g
 
 Do not jump ahead to offline POS or full GL unless explicitly requested.
 
-## Phase 7C: Used Buyback — **Complete**
+## Phase 7C: Used Buyback — **Complete** (7C-1 refined)
 
-Phase 7C was completed on 2026-06-23. See [docs/implementation/phase-7c-completion.md](docs/implementation/phase-7c-completion.md).
+Phase 7C was completed on 2026-06-23. Phase 7C-1 workflow refinement was completed on 2026-06-23. See [docs/implementation/phase-7c-completion.md](docs/implementation/phase-7c-completion.md) and [docs/implementation/phase-7c-1-completion.md](docs/implementation/phase-7c-1-completion.md).
 
+- Staged workflow: intake → pricing/proposal → customer decision → payout → completion
+- `buyback_number` assigned at `SaveProposal`, not completion
+- `proposed_*` editable pre-complete; `accepted_*` snapshots set only in `CompleteSession`
+- Graded used variant creation deferred to `UpdateProposalLine` (not scan/intake)
+- Trade-credit issuance slip (full identifier) separate from masked receipt
 - Buyback workspace at `/buybacks`; single payout mode per session (cash OR trade_credit OR no_value_donation)
 - Completion: `used_buyback` inventory posting, `source: BuybackSession`; void via `buyback_voids` + `buyback_void` posting
 - Workstation-scoped buyback numbers: `{store_number}-{workstation_number}-B{sequence:06d}`
-- Trade credit issues to `trade_credit` account with identifier for POS redemption
+- Trade credit issues to `trade_credit` account with identifier for POS redemption; SV ledger entries source-linked to buyback session/void
 
 ---
 
@@ -607,12 +613,17 @@ product_variants.sub_department_id → sub_departments.id
 
 ## Phase 7C Rules
 
+* Staged workflow: no cash/SV/inventory posting before `CompleteSession`; session statuses `draft`, `quoted`, `decision`, `completed`, `cancelled`, `voided`.
+* Line statuses: `pending`, `resolved`, `priced`, `offered`, `decided`, `posted`, `voided`; outcomes: `accepted_by_customer`, `declined_by_customer`, `donated_by_customer`, `rejected_by_store`, `recycle_with_permission`.
+* Posting eligibility: `accepted_by_customer` and `donated_by_customer` only; mixed accepted+donated sessions allowed.
+* `proposed_*` fields are staff/customer-facing pre-complete; `accepted_offer_cents` / `accepted_resale_price_cents` set only at completion from proposed values per payout mode.
+* `SaveProposal` assigns `buyback_number` and rejects unresolved lines; graded variant create/find in `UpdateProposalLine` only.
 * Dual eligibility: `sub_department.buyback_allowed` AND `product_condition.buyback_eligible`.
 * Single payout mode per session: `cash`, `trade_credit`, or `no_value_donation` (never both cash and credit).
 * Completion inventory: `posting_type: used_buyback`, `source: BuybackSession`; void: `posting_type: buyback_void`, `source: BuybackVoid`.
-* Movement type `used_buyback` for original and reversal lines; cost sources `buyback_offer` / `no_value_donation`.
-* Workstation-scoped buyback numbers via `buyback_sequences`.
-* Trade credit issues to `trade_credit` account; POS redemption via identifier or explicit account only.
+* Movement type `used_buyback` for original and reversal lines; cost sources `buyback_offer` / `no_value_donation`; void line mapping by original ledger `line_number`.
+* Workstation-scoped buyback numbers via `buyback_sequences` at proposal save.
+* Trade credit: issuance slip shows full identifier (`buybacks.trade_credit_slip.print`); receipt masked only; SV issue `source: BuybackSession`, void `source: BuybackVoid`.
 * `merged_into_customer_id` is schema-only in 7C; no merge workflow.
 
 ---

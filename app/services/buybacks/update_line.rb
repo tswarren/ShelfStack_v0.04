@@ -27,13 +27,9 @@ module Buybacks
 
       if product_condition.present? || sub_department.present?
         pricing = PriceLine.call(line: line)
-        line.assign_attributes(
-          suggested_resale_price_cents: pricing.resale_price_cents,
-          suggested_cash_offer_cents: pricing.cash_offer_cents,
-          suggested_trade_credit_offer_cents: pricing.trade_credit_offer_cents,
-          buyback_pricing_rule: pricing.pricing_rule,
-          status: "priced"
-        )
+        PricingFieldSync.apply_suggested_values!(line, pricing)
+        line.status = "priced" if line.proposed_resale_price_cents.to_i.positive?
+        line.status = "resolved" if line.status == "pending" && line.product_variant_id.blank?
       end
 
       line.save!

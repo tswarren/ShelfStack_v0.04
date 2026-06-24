@@ -1,5 +1,6 @@
 <%# locals: line, session, conditions, sub_departments, reject_reasons %>
-<% if line.product_variant.blank? %>
+
+<% if line.product.blank? %>
   <%= button_to "Resolve",
         resolve_buybacks_session_line_path(session, line),
         method: :post,
@@ -11,18 +12,29 @@
   <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline" do %>
     <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment" %>
     <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
-    <%= submit_tag "Create new catalog item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+    <%= submit_tag "Create intake item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
   <% end %>
-<% else %>
-  <%= form_with url: accept_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline" do %>
-    <%= hidden_field_tag :product_variant_id, line.product_variant_id %>
-    <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name, line.product_condition_id), include_blank: false %>
-    <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name, line.sub_department_id), include_blank: false %>
-    <%= submit_tag "Accept", class: "ss-btn ss-btn--small" %>
+<% elsif session.editable? && !line.status.in?(%w[posted voided]) %>
+  <%= form_with url: update_proposal_buybacks_session_line_path(session, line), method: :patch, class: "ss-form-inline" do %>
+    <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name, line.product_condition_id), include_blank: "Condition" %>
+    <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name, line.sub_department_id), include_blank: "Subdepartment" %>
+    <%= number_field_tag :base_price_cents, line.base_price_cents || line.list_price_cents, placeholder: "Base price (¢)", min: 0 %>
+    <%= number_field_tag :proposed_resale_price_cents, line.proposed_resale_price_cents || line.suggested_resale_price_cents, placeholder: "Resale (¢)", min: 0 %>
+    <%= number_field_tag :proposed_cash_offer_cents, line.proposed_cash_offer_cents || line.suggested_cash_offer_cents, placeholder: "Cash (¢)", min: 0 %>
+    <%= number_field_tag :proposed_trade_credit_offer_cents, line.proposed_trade_credit_offer_cents || line.suggested_trade_credit_offer_cents, placeholder: "Trade (¢)", min: 0 %>
+    <%= submit_tag "Save line proposal", class: "ss-btn ss-btn--small" %>
   <% end %>
+
+  <% if session.decision? && line.status.in?(%w[offered decided]) %>
+    <%= form_with url: record_decision_buybacks_session_line_path(session, line), method: :patch, class: "ss-form-inline" do %>
+      <%= select_tag :outcome, options_for_select(buyback_decision_options, line.outcome), include_blank: "Decision" %>
+      <%= submit_tag "Record decision", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+    <% end %>
+  <% end %>
+
   <%= form_with url: reject_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline" do %>
     <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
-    <%= hidden_field_tag :outcome, "rejected_returned_to_seller" %>
-    <%= submit_tag "Reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+    <%= hidden_field_tag :outcome, "rejected_by_store" %>
+    <%= submit_tag "Store reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
   <% end %>
 <% end %>

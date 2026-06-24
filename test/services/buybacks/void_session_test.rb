@@ -21,6 +21,32 @@ class Buybacks::VoidSessionTest < ActiveSupport::TestCase
     @session.reload
   end
 
+  test "void reverses trade credit with buyback void source" do
+    trade_session = create_buyback_session!(store: @store, customer: @customer, actor: @user, workstation: @workstation)
+    line = Buybacks::AddLine.call!(session: trade_session, actor: @user, title_snapshot: "Trade Credit Void")
+    trade_session.update!(payout_mode: "trade_credit")
+    accept_buyback_line!(
+      line: line,
+      session: trade_session,
+      actor: @user,
+      variant: @variant,
+      condition: @condition,
+      sub_department: @sub,
+      payout_mode: "trade_credit"
+    )
+    Buybacks::CompleteSession.call!(session: trade_session, actor: @user)
+
+    buyback_void = Buybacks::VoidSession.call!(
+      session: trade_session.reload,
+      actor: @user,
+      void_reason: "Customer returned items"
+    )
+
+    reversal = buyback_void.void_stored_value_ledger_entry
+    assert reversal.present?
+    assert_equal buyback_void, reversal.source
+  end
+
   test "void reverses inventory and cash with authorization" do
     @register.reload
     auth = grant_void_buyback_authorization!(register_session: @register, requested_by: @user, manager: @user)
