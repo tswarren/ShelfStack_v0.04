@@ -125,7 +125,36 @@ module BuybacksHelper
   end
 
   def buyback_proposed_or_suggested(line, field)
-    line.public_send("proposed_#{field}") || line.public_send("suggested_#{field}")
+    proposed = line.public_send("proposed_#{field}")
+    return proposed if proposed.present?
+
+    suggested = line.public_send("suggested_#{field}")
+    return suggested if suggested.present?
+
+    pricing = buyback_resolved_pricing(line)
+    return nil unless pricing
+
+    case field.to_s
+    when "resale_price_cents" then pricing.resale_price_cents
+    when "cash_offer_cents" then pricing.cash_offer_cents
+    when "trade_credit_offer_cents" then pricing.trade_credit_offer_cents
+    end
+  end
+
+  def buyback_resolved_pricing(line)
+    return nil if line.product_condition.blank? || line.sub_department.blank?
+
+    if line.suggested_resale_price_cents.present? || line.suggested_cash_offer_cents.present? ||
+       line.suggested_trade_credit_offer_cents.present?
+      return Buybacks::PriceLine::Result.new(
+        resale_price_cents: line.suggested_resale_price_cents.to_i,
+        cash_offer_cents: line.suggested_cash_offer_cents.to_i,
+        trade_credit_offer_cents: line.suggested_trade_credit_offer_cents.to_i,
+        pricing_rule: line.buyback_pricing_rule
+      )
+    end
+
+    Buybacks::PriceLine.call(line: line)
   end
 
   def buyback_workflow_filter_label(filter)

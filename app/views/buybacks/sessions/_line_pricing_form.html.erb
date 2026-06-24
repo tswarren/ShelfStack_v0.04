@@ -1,14 +1,15 @@
 <%# locals: line, session, conditions, sub_departments %>
+<% pricing = buyback_resolved_pricing(line) %>
 <div class="ss-buyback-pricing" data-controller="buyback-line-pricing">
   <div class="ss-buyback-pricing__column">
     <h4>Suggested values</h4>
     <dl class="ss-dl-compact">
       <dt>Sale price</dt>
-      <dd><%= buyback_money(line.suggested_resale_price_cents) %></dd>
+      <dd><%= buyback_money(pricing&.resale_price_cents) %></dd>
       <dt>Cash offer</dt>
-      <dd><%= buyback_money(line.suggested_cash_offer_cents) %></dd>
+      <dd><%= buyback_money(pricing&.cash_offer_cents) %></dd>
       <dt>Trade credit</dt>
-      <dd><%= buyback_money(line.suggested_trade_credit_offer_cents) %></dd>
+      <dd><%= buyback_money(pricing&.trade_credit_offer_cents) %></dd>
     </dl>
   </div>
 
@@ -21,9 +22,9 @@
     </div>
 
     <% [
-      [:proposed_resale_price_cents, line.proposed_resale_price_cents || line.suggested_resale_price_cents, line.suggested_resale_price_cents, :resale_override_reason, line.resale_price_override_reason, "Sale price"],
-      [:proposed_cash_offer_cents, line.proposed_cash_offer_cents || line.suggested_cash_offer_cents, line.suggested_cash_offer_cents, :cash_override_reason, line.cash_offer_override_reason, "Cash offer"],
-      [:proposed_trade_credit_offer_cents, line.proposed_trade_credit_offer_cents || line.suggested_trade_credit_offer_cents, line.suggested_trade_credit_offer_cents, :trade_credit_override_reason, line.trade_credit_offer_override_reason, "Trade credit"]
+      [:proposed_resale_price_cents, line.proposed_resale_price_cents || pricing&.resale_price_cents, pricing&.resale_price_cents, :resale_override_reason, line.resale_price_override_reason, "Sale price"],
+      [:proposed_cash_offer_cents, line.proposed_cash_offer_cents || pricing&.cash_offer_cents, pricing&.cash_offer_cents, :cash_override_reason, line.cash_offer_override_reason, "Cash offer"],
+      [:proposed_trade_credit_offer_cents, line.proposed_trade_credit_offer_cents || pricing&.trade_credit_offer_cents, pricing&.trade_credit_offer_cents, :trade_credit_override_reason, line.trade_credit_offer_override_reason, "Trade credit"]
     ].each do |field, value, suggested, reason_field, reason_value, label| %>
       <div class="ss-buyback-pricing__field">
         <%= label_tag field, "#{label} (¢)" %>

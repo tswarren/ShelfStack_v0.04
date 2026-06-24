@@ -52,7 +52,10 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     assert_equal @product.id, result.product.id
     assert_nil result.product_variant
     @line.reload
-    assert_equal "resolved", @line.status
+    assert_equal "priced", @line.status
+    assert @line.suggested_resale_price_cents.to_i.positive?
+    assert @line.suggested_cash_offer_cents.to_i.positive?
+    assert @line.suggested_trade_credit_offer_cents.to_i.positive?
     assert_equal 1, CatalogItem.where(title: "Cher: The Memoir").count
   end
 

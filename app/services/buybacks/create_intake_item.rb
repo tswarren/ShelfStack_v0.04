@@ -64,6 +64,7 @@ module Buybacks
           list_price_cents: list_price_cents || product.list_price_cents,
           status: "resolved"
         )
+        PricingFieldSync.refresh!(line: line.reload)
       end
 
       AuditEvents.record!(
@@ -133,6 +134,7 @@ module Buybacks
           list_price_cents: list_price_cents.to_i,
           status: "resolved"
         )
+        PricingFieldSync.refresh!(line: line.reload)
       end
 
       AuditEvents.record!(actor: actor, event_name: "buyback.intake.created", auditable: catalog_item, source: session)

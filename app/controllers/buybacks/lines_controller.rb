@@ -139,8 +139,10 @@ module Buybacks
         title_snapshot: catalog_item&.title || variant.product.name,
         variant_sku_snapshot: variant.sku,
         condition_snapshot: variant.condition&.name,
+        list_price_cents: variant.product.list_price_cents,
         status: "resolved"
       )
+      PricingFieldSync.refresh!(line: @line.reload)
       redirect_to buybacks_session_path(@buyback_session), notice: "Item linked to line."
     rescue ActiveRecord::RecordNotFound, ArgumentError => e
       redirect_to buybacks_session_path(@buyback_session), alert: e.message
