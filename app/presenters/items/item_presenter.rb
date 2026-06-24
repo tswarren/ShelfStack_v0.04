@@ -371,7 +371,7 @@ module Items
     private
 
     def variant_label(variant)
-      variant.condition&.short_name.presence || variant.short_name.presence || variant.name
+      variant.list_label
     end
 
     def edit_catalog_action(helper: self)

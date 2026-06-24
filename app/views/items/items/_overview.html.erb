@@ -113,7 +113,7 @@
               <% classification = item.classification_summary_for(variant) %>
               <% defaults = classification[:defaults] %>
               <tr>
-                <td><%= variant.condition&.short_name || variant.name %></td>
+                <td><%= variant.list_label %></td>
                 <td><%= variant.sku %></td>
                 <td><%= item.variant_location_label(variant) %></td>
                 <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>

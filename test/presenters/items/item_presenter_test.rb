@@ -58,6 +58,42 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     assert_includes presenter.variant_summary_label, variant.condition.short_name
   end
 
+  test "variant summary label uses attribute values for matrix products" do
+    product = create_product!(name: "Store T-Shirt", variation_type: "matrix")
+    sub_department = create_sub_department!
+    create_product_variant!(
+      product: product,
+      sub_department: sub_department,
+      condition: nil,
+      sku: "#{product.sku}-BLU-LG",
+      attribute1_value: "Blue",
+      attribute1_sku_component: "BLU",
+      attribute2_value: "Large",
+      attribute2_sku_component: "LG",
+      name: "Store T-Shirt - Blue / Large"
+    )
+    presenter = Items::ItemPresenter.from_product(product.reload)
+
+    assert_equal "Blue / Large", presenter.variant_summary_label
+  end
+
+  test "variant summary label uses attribute value for variable products" do
+    product = create_product!(name: "Store Mug", variation_type: "variable", sku: "MUG-001")
+    sub_department = create_sub_department!
+    create_product_variant!(
+      product: product,
+      sub_department: sub_department,
+      condition: nil,
+      sku: "MUG-001-RED",
+      attribute1_value: "Red",
+      attribute1_sku_component: "RED",
+      name: "Store Mug - Red"
+    )
+    presenter = Items::ItemPresenter.from_product(product.reload)
+
+    assert_equal "Red", presenter.variant_summary_label
+  end
+
   test "price range label formats min and max selling prices" do
     product = create_product!
     sub_department = create_sub_department!
