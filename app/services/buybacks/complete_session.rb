@@ -22,12 +22,13 @@ module Buybacks
 
       SellerRequirements.validate!(customer: session.customer)
       validate_lines!
-      derive_accepted_snapshots!
 
       BuybackSession.transaction do
         session.workstation ||= Current.workstation
         session.business_date ||= register_session&.business_date || Date.current
         session.update!(payout_selected_at: Time.current) if session.payout_selected_at.blank?
+
+        derive_accepted_snapshots!
 
         case session.payout_mode
         when "cash"
@@ -72,21 +73,39 @@ module Buybacks
       posting_lines = session.buyback_lines.select(&:accepted_for_posting?)
       raise Error, "At least one accepted or donated line is required." if posting_lines.empty?
 
-      undecided = session.buyback_lines.where(status: %w[offered priced]).exists?
+      undecided = session.buyback_lines.where(status: %w[offered priced], outcome: nil).exists?
       raise Error, "All proposal lines must have customer decisions before completion." if undecided
 
+      validate_payout_mode!(posting_lines)
       posting_lines.each { |line| Eligibility.ensure_line_eligible!(line: line) }
+    end
+
+    def validate_payout_mode!(posting_lines)
+      case session.payout_mode
+      when "no_value_donation"
+        non_donated = posting_lines.reject(&:donation?)
+        if non_donated.any?
+          raise Error, "No-value donation payout requires every posting line to be donated by the customer."
+        end
+      when "cash", "trade_credit"
+        if paying_lines.empty?
+          raise Error, "Cash or trade credit payout requires at least one line accepted by the customer."
+        end
+      end
     end
 
     def derive_accepted_snapshots!
       session.buyback_lines.select(&:accepted_for_posting?).each do |line|
-        line.accepted_resale_price_cents = line.proposed_resale_price_cents
-        line.accepted_offer_cents = payout_offer_cents(line)
-        line.save!
+        line.update!(
+          accepted_resale_price_cents: line.proposed_resale_price_cents,
+          accepted_offer_cents: payout_offer_cents(line)
+        )
       end
     end
 
     def payout_offer_cents(line)
+      return 0 if line.donation?
+
       case session.payout_mode
       when "cash"
         line.proposed_cash_offer_cents.to_i
@@ -97,10 +116,14 @@ module Buybacks
       end
     end
 
+    def paying_lines
+      session.buyback_lines.select { |l| l.outcome == "accepted_by_customer" }
+    end
+
     def post_cash_payout!
       raise Error, "Open register session is required for cash payout." unless register_session&.open?
 
-      amount = session.buyback_lines.select(&:accepted_for_posting?).sum { |l| l.accepted_offer_cents.to_i }
+      amount = paying_lines.sum { |l| l.accepted_offer_cents.to_i }
       raise Error, "Cash payout amount must be positive." unless amount.positive?
 
       movement = register_session.pos_cash_movements.create!(
@@ -118,7 +141,7 @@ module Buybacks
     end
 
     def post_trade_credit_payout!
-      amount = session.buyback_lines.select(&:accepted_for_posting?).sum { |l| l.accepted_offer_cents.to_i }
+      amount = paying_lines.sum { |l| l.accepted_offer_cents.to_i }
       raise Error, "Trade credit payout amount must be positive." unless amount.positive?
 
       account = find_or_create_trade_credit_account!
@@ -181,11 +204,13 @@ module Buybacks
     end
 
     def compute_totals
-      lines = session.buyback_lines.select(&:accepted_for_posting?)
+      accepted = paying_lines
+      donated = session.buyback_lines.select(&:donation?)
       {
-        payout_cents: lines.sum { |l| l.accepted_offer_cents.to_i },
-        cash_offer_cents: lines.sum { |l| l.proposed_cash_offer_cents.to_i },
-        trade_credit_offer_cents: lines.sum { |l| l.proposed_trade_credit_offer_cents.to_i }
+        payout_cents: accepted.sum { |l| l.accepted_offer_cents.to_i },
+        cash_offer_cents: accepted.sum { |l| l.proposed_cash_offer_cents.to_i },
+        trade_credit_offer_cents: accepted.sum { |l| l.proposed_trade_credit_offer_cents.to_i },
+        donation_count: donated.size
       }
     end
   end

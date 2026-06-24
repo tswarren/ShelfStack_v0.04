@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Buybacks
+  # 7C-1 uses fixed base-price precedence on the line (see #base_price_cents).
+  # BuybackPricingRule#base_price_source is reserved for future rule-driven bases.
   class PriceLine
     Result = Data.define(
       :resale_price_cents,
@@ -9,18 +11,22 @@ module Buybacks
       :pricing_rule
     )
 
-    def self.call(line:)
-      new(line:).call
+    def self.call(line:, resale_override_cents: nil)
+      new(line:, resale_override_cents:).call
     end
 
-    def initialize(line:)
+    def initialize(line:, resale_override_cents: nil)
       @line = line
+      @resale_override_cents = resale_override_cents
     end
 
     def call
       rule = matching_rule
-      base = base_price_cents(rule)
-      resale = apply_factor(base, rule&.resale_price_factor_bps || condition_factor_bps)
+      resale = if resale_override_cents.present?
+        resale_override_cents.to_i
+      else
+        apply_factor(base_price_cents(rule), rule&.resale_price_factor_bps || condition_factor_bps)
+      end
       cash = apply_offer(resale, rule&.cash_offer_bps || 2500, rule)
       credit = apply_offer(resale, rule&.trade_credit_offer_bps || 3000, rule)
 
@@ -34,7 +40,7 @@ module Buybacks
 
     private
 
-    attr_reader :line
+    attr_reader :line, :resale_override_cents
 
     def matching_rule
       scope = BuybackPricingRule.active_records.order(:sort_order)
@@ -46,7 +52,7 @@ module Buybacks
         scope.find_by(sub_department_id: nil, product_condition_id: nil)
     end
 
-    def base_price_cents(rule)
+    def base_price_cents(_rule)
       return line.base_price_cents if line.base_price_cents.to_i.positive?
 
       list = line.product&.list_price_cents || line.list_price_cents
@@ -56,13 +62,6 @@ module Buybacks
         variant_price = line.product_variant&.selling_price_cents || line.current_selling_price_cents
         return variant_price if variant_price.to_i.positive?
       end
-
-      line.proposed_resale_price_cents || line.suggested_resale_price_cents || manual_base(rule)
-    end
-
-    def manual_base(rule)
-      source = rule&.base_price_source
-      return 0 unless source == "manual_resale_price"
 
       line.proposed_resale_price_cents || line.suggested_resale_price_cents || 0
     end

@@ -127,9 +127,15 @@
 
   <section class="ss-panel" id="payout-panel">
     <h2>Payout</h2>
-    <% if @proposal.present? %>
-      <p>Cash total: <strong><%= buyback_money(@proposal.totals[:cash_offer_cents]) %></strong></p>
-      <p>Trade credit total: <strong><%= buyback_money(@proposal.totals[:trade_credit_offer_cents]) %></strong></p>
+    <% if @decision_totals.present? %>
+      <p>Accepted cash payout: <strong><%= buyback_money(@decision_totals.accepted_cash_cents) %></strong></p>
+      <p>Accepted trade credit payout: <strong><%= buyback_money(@decision_totals.accepted_trade_credit_cents) %></strong></p>
+      <p class="ss-muted">
+        Donated: <%= @decision_totals.donation_count %>
+        · Declined: <%= @decision_totals.declined_count %>
+        · Store rejected: <%= @decision_totals.rejected_count %>
+        · Recycle: <%= @decision_totals.recycle_count %>
+      </p>
     <% end %>
     <% if @buyback_session.payout_mode == "cash" && current_register_session.blank? %>
       <p class="ss-hint">Open a register session before completing a cash payout.</p>

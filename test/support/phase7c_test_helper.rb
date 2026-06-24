@@ -91,7 +91,10 @@ module Phase7cTestHelper
       sub_department: sub_department,
       proposed_resale_price_cents: resale,
       proposed_cash_offer_cents: offer,
-      proposed_trade_credit_offer_cents: trade_offer
+      proposed_trade_credit_offer_cents: trade_offer,
+      resale_override_reason: attrs[:resale_override_reason] || "Test setup",
+      cash_override_reason: attrs[:cash_override_reason] || "Test setup",
+      trade_credit_override_reason: attrs[:trade_credit_override_reason] || "Test setup"
     )
 
     if save_proposal

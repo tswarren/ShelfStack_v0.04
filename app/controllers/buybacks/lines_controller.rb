@@ -4,12 +4,13 @@ module Buybacks
   class LinesController < BaseController
     before_action :set_session
     before_action :set_line, only: %i[
-      update accept reject price_override offer_override resolve select_variant intake
-      update_proposal record_decision
+      update reject price_override offer_override resolve select_variant intake
+      update_proposal record_decision destroy
     ]
 
     def create
-      authorize_buyback!("buybacks.update")
+      return unless authorize_buyback!("buybacks.update")
+
       line = AddLine.call!(
         session: @buyback_session,
         actor: current_user,
@@ -23,7 +24,8 @@ module Buybacks
     end
 
     def update
-      authorize_buyback!("buybacks.update")
+      return unless authorize_buyback!("buybacks.update")
+
       UpdateLine.call!(
         line: @line,
         actor: current_user,
@@ -38,7 +40,8 @@ module Buybacks
     end
 
     def update_proposal
-      authorize_buyback!("buybacks.update")
+      return unless authorize_buyback!("buybacks.update")
+
       UpdateProposalLine.call!(
         line: @line,
         session: @buyback_session,
@@ -50,6 +53,9 @@ module Buybacks
         proposed_resale_price_cents: params[:proposed_resale_price_cents],
         proposed_cash_offer_cents: params[:proposed_cash_offer_cents],
         proposed_trade_credit_offer_cents: params[:proposed_trade_credit_offer_cents],
+        resale_override_reason: params[:resale_override_reason],
+        cash_override_reason: params[:cash_override_reason],
+        trade_credit_override_reason: params[:trade_credit_override_reason],
         signed_copy: params[:signed_copy],
         notes: params[:notes]
       )
@@ -59,7 +65,8 @@ module Buybacks
     end
 
     def record_decision
-      authorize_buyback!("buybacks.decisions.update")
+      return unless authorize_buyback!("buybacks.decisions.update")
+
       RecordCustomerDecision.call!(
         line: @line,
         session: @buyback_session,
@@ -71,8 +78,18 @@ module Buybacks
       redirect_to buybacks_session_path(@buyback_session), alert: e.message
     end
 
+    def destroy
+      return unless authorize_buyback!("buybacks.update")
+
+      RemoveLine.call!(line: @line, session: @buyback_session, actor: current_user)
+      redirect_to buybacks_session_path(@buyback_session), notice: "Line removed."
+    rescue Buybacks::RemoveLine::Error => e
+      redirect_to buybacks_session_path(@buyback_session), alert: e.message
+    end
+
     def resolve
-      authorize_buyback!("buybacks.update")
+      return unless authorize_buyback!("buybacks.update")
+
       result = ResolveItem.call(
         store: buybacks_store,
         identifier: params[:identifier] || @line.identifier_entered,
@@ -108,7 +125,8 @@ module Buybacks
     end
 
     def select_variant
-      authorize_buyback!("buybacks.update")
+      return unless authorize_buyback!("buybacks.update")
+
       variant = ProductVariant.find(params[:product_variant_id])
       catalog_item = variant.product.catalog_item
 
@@ -129,7 +147,8 @@ module Buybacks
     end
 
     def intake
-      authorize_buyback!("buybacks.create_intake_item")
+      return unless authorize_buyback!("buybacks.create_intake_item")
+
       sub_department = SubDepartment.find(params[:sub_department_id])
       condition = ProductCondition.find(params[:product_condition_id]) if params[:product_condition_id].present?
       result = CreateIntakeItem.call!(
@@ -142,20 +161,15 @@ module Buybacks
         identifier: params[:identifier] || @line.identifier_entered,
         list_price_cents: params[:list_price_cents]
       )
-      notice = result.created_new_catalog ? "Intake item created." : "Used variant added to existing product."
+      notice = result.created_new_catalog ? "Intake item created." : "Catalog item linked."
       redirect_to buybacks_session_path(@buyback_session), notice: notice
     rescue Buybacks::CreateIntakeItem::Error, Buybacks::FindOrCreateGradedUsedVariant::Error => e
       redirect_to buybacks_session_path(@buyback_session), alert: e.message
     end
 
-    def accept
-      authorize_buyback!("buybacks.update")
-      redirect_to buybacks_session_path(@buyback_session),
-                  alert: "Use Save line proposal instead of Accept."
-    end
-
     def reject
-      authorize_buyback!("buybacks.reject")
+      return unless authorize_buyback!("buybacks.reject")
+
       reason = BuybackRejectReason.find(params[:buyback_reject_reason_id]) if params[:buyback_reject_reason_id].present?
       outcome = params[:outcome].presence || "rejected_by_store"
       RejectLine.call!(
@@ -170,7 +184,8 @@ module Buybacks
     end
 
     def price_override
-      authorize_buyback!("buybacks.price_override")
+      return unless authorize_buyback!("buybacks.price_override")
+
       ApplyPriceOverride.call!(
         line: @line,
         actor: current_user,
@@ -183,7 +198,8 @@ module Buybacks
     end
 
     def offer_override
-      authorize_buyback!("buybacks.price_override")
+      return unless authorize_buyback!("buybacks.price_override")
+
       ApplyOfferOverride.call!(
         line: @line,
         actor: current_user,

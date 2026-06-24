@@ -34,7 +34,10 @@ class BuybacksStagedWorkflowIntegrationTest < ActionDispatch::IntegrationTest
       sub_department_id: @sub.id,
       proposed_resale_price_cents: 2000,
       proposed_cash_offer_cents: 500,
-      proposed_trade_credit_offer_cents: 600
+      proposed_trade_credit_offer_cents: 600,
+      resale_override_reason: "Staff proposal",
+      cash_override_reason: "Staff proposal",
+      trade_credit_override_reason: "Staff proposal"
     }
     assert_response :redirect
 

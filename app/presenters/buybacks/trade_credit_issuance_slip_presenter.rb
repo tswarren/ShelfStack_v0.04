@@ -18,7 +18,7 @@ module Buybacks
       identifier = ledger_entry.stored_value_account.stored_value_identifiers.active_records.order(id: :desc).first
       return if identifier.blank?
 
-      value = StoredValue::RevealIdentifier.call(identifier: identifier, actor: actor, audit: false)
+      value = StoredValue::RevealIdentifier.call(identifier: identifier, actor: actor, audit: true)
       StoredValue::IdentifierCodec.format_display(value)
     end
 

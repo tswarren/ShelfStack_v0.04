@@ -3,7 +3,7 @@
 module Buybacks
   class TradeCreditIssuanceSlipsController < BaseController
     before_action :set_session
-    before_action -> { authorize_buyback!("buybacks.trade_credit_slip.print") }, only: :print
+    before_action :require_trade_credit_slip_print!, only: %i[show print]
 
     def show
       verify_trade_credit_session!
@@ -28,6 +28,10 @@ module Buybacks
     end
 
     private
+
+    def require_trade_credit_slip_print!
+      authorize_buyback!("buybacks.trade_credit_slip.print")
+    end
 
     def verify_trade_credit_session!
       unless @buyback_session.completed? &&

@@ -8,6 +8,7 @@ class Buybacks::SaveProposalTest < ActiveSupport::TestCase
     @store = create_store!
     @workstation = create_workstation!(store: @store)
     @user = create_user!
+    grant_all_phase7c_permissions!(@user, store: @store)
     @customer = create_buyback_customer!
     @sub = buyback_sub_department!
     @condition = buyback_used_condition!
@@ -31,7 +32,10 @@ class Buybacks::SaveProposalTest < ActiveSupport::TestCase
       sub_department: @sub,
       proposed_resale_price_cents: 2000,
       proposed_cash_offer_cents: 500,
-      proposed_trade_credit_offer_cents: 600
+      proposed_trade_credit_offer_cents: 600,
+      resale_override_reason: "Test setup",
+      cash_override_reason: "Test setup",
+      trade_credit_override_reason: "Test setup"
     )
 
     Buybacks::SaveProposal.call!(session: @session, actor: @user)

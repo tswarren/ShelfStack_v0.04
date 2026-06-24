@@ -14,7 +14,13 @@
     <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
     <%= submit_tag "Create intake item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
   <% end %>
+  <% if line.status.in?(%w[pending resolved priced]) %>
+    <%= button_to "Remove", buybacks_session_line_path(session, line), method: :delete, class: "ss-btn ss-btn-secondary ss-btn--small", data: { turbo_confirm: "Remove this line?" } %>
+  <% end %>
 <% elsif session.editable? && !line.status.in?(%w[posted voided]) %>
+  <% if line.outcome.present? %>
+    <p class="ss-hint">Changing pricing clears the recorded customer decision.</p>
+  <% end %>
   <%= form_with url: update_proposal_buybacks_session_line_path(session, line), method: :patch, class: "ss-form-inline" do %>
     <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name, line.product_condition_id), include_blank: "Condition" %>
     <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name, line.sub_department_id), include_blank: "Subdepartment" %>
@@ -22,6 +28,9 @@
     <%= number_field_tag :proposed_resale_price_cents, line.proposed_resale_price_cents || line.suggested_resale_price_cents, placeholder: "Resale (¢)", min: 0 %>
     <%= number_field_tag :proposed_cash_offer_cents, line.proposed_cash_offer_cents || line.suggested_cash_offer_cents, placeholder: "Cash (¢)", min: 0 %>
     <%= number_field_tag :proposed_trade_credit_offer_cents, line.proposed_trade_credit_offer_cents || line.suggested_trade_credit_offer_cents, placeholder: "Trade (¢)", min: 0 %>
+    <%= text_field_tag :resale_override_reason, nil, placeholder: "Resale override reason" %>
+    <%= text_field_tag :cash_override_reason, nil, placeholder: "Cash override reason" %>
+    <%= text_field_tag :trade_credit_override_reason, nil, placeholder: "Trade override reason" %>
     <%= submit_tag "Save line proposal", class: "ss-btn ss-btn--small" %>
   <% end %>
 
@@ -36,5 +45,9 @@
     <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
     <%= hidden_field_tag :outcome, "rejected_by_store" %>
     <%= submit_tag "Store reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+  <% end %>
+
+  <% if line.status.in?(%w[pending resolved priced]) %>
+    <%= button_to "Remove", buybacks_session_line_path(session, line), method: :delete, class: "ss-btn ss-btn-secondary ss-btn--small", data: { turbo_confirm: "Remove this line?" } %>
   <% end %>
 <% end %>

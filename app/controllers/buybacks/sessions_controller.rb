@@ -6,15 +6,15 @@ module Buybacks
       show update complete cancel void receipt save_proposal open_decision print_proposal
       accept_all_lines decline_all_lines donate_declined_lines
     ]
-    before_action -> { authorize_buyback!("buybacks.create") }, only: %i[new create]
-    before_action -> { authorize_buyback!("buybacks.update") }, only: %i[update]
-    before_action -> { authorize_buyback!("buybacks.proposal.save") }, only: %i[save_proposal]
-    before_action -> { authorize_buyback!("buybacks.proposal.print") }, only: %i[print_proposal]
-    before_action -> { authorize_buyback!("buybacks.decisions.batch_update") },
+    before_action :require_create_permission!, only: %i[new create]
+    before_action :require_update_permission!, only: %i[update]
+    before_action :require_save_proposal_permission!, only: %i[save_proposal]
+    before_action :require_print_proposal_permission!, only: %i[print_proposal]
+    before_action :require_batch_decision_permission!,
                     only: %i[accept_all_lines decline_all_lines donate_declined_lines open_decision]
-    before_action -> { authorize_buyback!("buybacks.complete") }, only: :complete
-    before_action -> { authorize_buyback!("buybacks.cancel") }, only: :cancel
-    before_action -> { authorize_buyback!("buybacks.void") }, only: :void
+    before_action :require_complete_permission!, only: :complete
+    before_action :require_cancel_permission!, only: :cancel
+    before_action :require_void_permission!, only: :void
 
     def new
       @buyback_session = BuybackSession.new
@@ -22,7 +22,6 @@ module Buybacks
     end
 
     def create
-      authorize_buyback!("buybacks.create")
       customer = Customer.find(params[:customer_id])
       session = StartSession.call!(
         store: buybacks_store,
@@ -42,6 +41,7 @@ module Buybacks
       @sub_departments = SubDepartment.active_records.where(buyback_allowed: true).order(:name)
       @reject_reasons = BuybackRejectReason.active_records.order(:sort_order)
       @proposal = ProposalBuilder.build(@buyback_session) if @buyback_session.quoted? || @buyback_session.decision?
+      @decision_totals = DecisionTotalsBuilder.build(@buyback_session) if @buyback_session.decision?
       @receipt = ReceiptBuilder.build(@buyback_session) if @buyback_session.completed?
       @seller_requirements = SellerRequirements.check(customer: @buyback_session.customer)
     end
@@ -106,7 +106,7 @@ module Buybacks
       when "no_value_donation" then "buybacks.accept_donation"
       else nil
       end
-      authorize_buyback!(payout_permission) if payout_permission.present?
+      return unless authorize_buyback!(payout_permission) if payout_permission.present?
 
       @buyback_session.update!(workstation: current_workstation) if @buyback_session.workstation.blank?
       CompleteSession.call!(
@@ -157,6 +157,38 @@ module Buybacks
         :payout_mode, :needs_label, :needs_review, :needs_cleaning,
         :hold_for_review, :processing_notes, :notes
       )
+    end
+
+    def require_create_permission!
+      authorize_buyback!("buybacks.create")
+    end
+
+    def require_update_permission!
+      authorize_buyback!("buybacks.update")
+    end
+
+    def require_save_proposal_permission!
+      authorize_buyback!("buybacks.proposal.save")
+    end
+
+    def require_print_proposal_permission!
+      authorize_buyback!("buybacks.proposal.print")
+    end
+
+    def require_batch_decision_permission!
+      authorize_buyback!("buybacks.decisions.batch_update")
+    end
+
+    def require_complete_permission!
+      authorize_buyback!("buybacks.complete")
+    end
+
+    def require_cancel_permission!
+      authorize_buyback!("buybacks.cancel")
+    end
+
+    def require_void_permission!
+      authorize_buyback!("buybacks.void")
     end
   end
 end

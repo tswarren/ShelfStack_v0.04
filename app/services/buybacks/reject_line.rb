@@ -18,9 +18,8 @@ module Buybacks
     def call!
       raise Error, "Invalid outcome." unless outcome.in?(BuybackLine::OUTCOMES)
 
-      status = outcome == "rejected_by_store" ? line.status : "decided"
       line.update!(
-        status: status,
+        status: "decided",
         outcome: outcome,
         buyback_reject_reason: reject_reason,
         customer_decision_at: Time.current

@@ -60,4 +60,21 @@ class Buybacks::TradeCreditIssuanceSlipsControllerTest < ActionDispatch::Integra
     assert_redirected_to trade_credit_slip_buybacks_session_path(@session)
     assert AuditEvent.exists?(event_name: "buyback.trade_credit_slip.reprinted", auditable: @session)
   end
+
+  test "show requires trade credit slip permission" do
+    delete logout_path
+    viewer = create_user!(username: "slip_viewer")
+    grant_permission!(viewer, "buybacks.view", store: @store)
+    assert_not Authorization.allowed?(
+      user: viewer,
+      permission_key: "buybacks.trade_credit_slip.print",
+      store: @store
+    )
+    login_user!(viewer, workstation: @workstation)
+
+    get trade_credit_slip_buybacks_session_path(@session)
+
+    assert_response :redirect
+    assert_match(/not authorized/i, flash[:alert].to_s)
+  end
 end

@@ -19,9 +19,10 @@ module Buybacks
     end
 
     def authorize_buyback!(permission_key)
-      return if Authorization.allowed?(user: current_user, permission_key: permission_key, store: current_store)
+      return true if Authorization.allowed?(user: current_user, permission_key: permission_key, store: current_store)
 
-      redirect_back fallback_location: buybacks_root_path, alert: "You are not authorized for this action."
+      redirect_to buybacks_root_path, alert: "You are not authorized for this action."
+      false
     end
 
     def buybacks_store

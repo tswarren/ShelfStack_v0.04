@@ -7,11 +7,14 @@ module Buybacks
     def self.call!(line:, session:, actor:, product_condition: nil, sub_department: nil,
                    base_price_cents: nil, base_price_source: nil,
                    proposed_resale_price_cents: nil, proposed_cash_offer_cents: nil,
-                   proposed_trade_credit_offer_cents: nil, signed_copy: nil, notes: nil)
+                   proposed_trade_credit_offer_cents: nil,
+                   resale_override_reason: nil, cash_override_reason: nil, trade_credit_override_reason: nil,
+                   signed_copy: nil, notes: nil)
       new(
         line:, session:, actor:, product_condition:, sub_department:,
         base_price_cents:, base_price_source:,
         proposed_resale_price_cents:, proposed_cash_offer_cents:, proposed_trade_credit_offer_cents:,
+        resale_override_reason:, cash_override_reason:, trade_credit_override_reason:,
         signed_copy:, notes:
       ).call!
     end
@@ -19,7 +22,9 @@ module Buybacks
     def initialize(line:, session:, actor:, product_condition: nil, sub_department: nil,
                    base_price_cents: nil, base_price_source: nil,
                    proposed_resale_price_cents: nil, proposed_cash_offer_cents: nil,
-                   proposed_trade_credit_offer_cents: nil, signed_copy: nil, notes: nil)
+                   proposed_trade_credit_offer_cents: nil,
+                   resale_override_reason: nil, cash_override_reason: nil, trade_credit_override_reason: nil,
+                   signed_copy: nil, notes: nil)
       @line = line
       @session = session
       @actor = actor
@@ -30,6 +35,9 @@ module Buybacks
       @proposed_resale_price_cents = proposed_resale_price_cents
       @proposed_cash_offer_cents = proposed_cash_offer_cents
       @proposed_trade_credit_offer_cents = proposed_trade_credit_offer_cents
+      @resale_override_reason = resale_override_reason
+      @cash_override_reason = cash_override_reason
+      @trade_credit_override_reason = trade_credit_override_reason
       @signed_copy = signed_copy
       @notes = notes
     end
@@ -54,6 +62,7 @@ module Buybacks
       apply_explicit_proposed_values!
       validate_proposed_resale_price!
       ensure_product_and_variant!
+      clear_stale_decision!
 
       Eligibility.ensure_line_eligible!(line: line)
       line.status = "priced"
@@ -68,18 +77,56 @@ module Buybacks
     attr_reader :line, :session, :actor, :product_condition, :sub_department,
                 :base_price_cents, :base_price_source,
                 :proposed_resale_price_cents, :proposed_cash_offer_cents, :proposed_trade_credit_offer_cents,
+                :resale_override_reason, :cash_override_reason, :trade_credit_override_reason,
                 :signed_copy, :notes
 
     def apply_explicit_proposed_values!
       if proposed_resale_price_cents.present?
-        line.proposed_resale_price_cents = proposed_resale_price_cents
+        apply_value_override!(
+          value: proposed_resale_price_cents.to_i,
+          suggested: line.suggested_resale_price_cents.to_i,
+          reason: resale_override_reason,
+          flag: :resale_price_overridden,
+          reason_field: :resale_price_override_reason
+        )
+        line.proposed_resale_price_cents = proposed_resale_price_cents.to_i
       end
+
       if proposed_cash_offer_cents.present?
-        line.proposed_cash_offer_cents = proposed_cash_offer_cents
+        apply_value_override!(
+          value: proposed_cash_offer_cents.to_i,
+          suggested: line.suggested_cash_offer_cents.to_i,
+          reason: cash_override_reason,
+          flag: :cash_offer_overridden,
+          reason_field: :cash_offer_override_reason
+        )
+        line.proposed_cash_offer_cents = proposed_cash_offer_cents.to_i
       end
+
       if proposed_trade_credit_offer_cents.present?
-        line.proposed_trade_credit_offer_cents = proposed_trade_credit_offer_cents
+        apply_value_override!(
+          value: proposed_trade_credit_offer_cents.to_i,
+          suggested: line.suggested_trade_credit_offer_cents.to_i,
+          reason: trade_credit_override_reason,
+          flag: :trade_credit_offer_overridden,
+          reason_field: :trade_credit_offer_override_reason
+        )
+        line.proposed_trade_credit_offer_cents = proposed_trade_credit_offer_cents.to_i
       end
+    end
+
+    def apply_value_override!(value:, suggested:, reason:, flag:, reason_field:)
+      return if value == suggested
+
+      raise Error, "Override reason is required when proposed values differ from suggested." if reason.blank?
+      raise Error, "Price override permission is required." unless override_allowed?
+
+      line.public_send("#{flag}=", true)
+      line.public_send("#{reason_field}=", reason)
+    end
+
+    def override_allowed?
+      Authorization.allowed?(user: actor, permission_key: "buybacks.price_override", store: session.store)
     end
 
     def validate_proposed_resale_price!
@@ -88,6 +135,13 @@ module Buybacks
       return if line.resale_price_overridden? && line.resale_price_override_reason.present?
 
       raise Error, "Proposed resale price must be greater than zero."
+    end
+
+    def clear_stale_decision!
+      return unless line.outcome.present? || line.status == "decided"
+
+      line.outcome = nil
+      line.customer_decision_at = nil
     end
 
     def ensure_product_and_variant!

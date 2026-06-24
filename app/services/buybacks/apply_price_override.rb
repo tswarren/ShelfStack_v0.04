@@ -19,8 +19,11 @@ module Buybacks
       raise Error, "Override reason is required." if override_reason.blank?
       raise Error, "Session is not editable." unless line.buyback_session.editable?
 
+      line.base_price_cents = resale_price_cents
+      line.base_price_source = "manual_resale_price"
       line.proposed_resale_price_cents = resale_price_cents
-      pricing = PriceLine.call(line: line)
+
+      pricing = PriceLine.call(line: line, resale_override_cents: resale_price_cents)
       line.assign_attributes(
         suggested_resale_price_cents: pricing.resale_price_cents,
         suggested_cash_offer_cents: pricing.cash_offer_cents,
@@ -32,6 +35,7 @@ module Buybacks
       )
       line.proposed_cash_offer_cents = pricing.cash_offer_cents unless line.cash_offer_overridden?
       line.proposed_trade_credit_offer_cents = pricing.trade_credit_offer_cents unless line.trade_credit_offer_overridden?
+      clear_stale_decision!(line)
       line.save!
 
       AuditEvents.record!(actor: actor, event_name: "buyback.line.price_overridden", auditable: line)
@@ -41,5 +45,12 @@ module Buybacks
     private
 
     attr_reader :line, :actor, :resale_price_cents, :override_reason
+
+    def clear_stale_decision!(line)
+      return unless line.outcome.present? || line.status == "decided"
+
+      line.outcome = nil
+      line.customer_decision_at = nil
+    end
   end
 end

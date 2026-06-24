@@ -324,9 +324,8 @@ Rails.application.routes.draw do
         patch :decline_all_lines
         patch :donate_declined_lines
       end
-      resources :lines, only: %i[create update] do
+      resources :lines, only: %i[create update destroy] do
         member do
-          post :accept
           post :reject
           post :resolve
           post :select_variant
