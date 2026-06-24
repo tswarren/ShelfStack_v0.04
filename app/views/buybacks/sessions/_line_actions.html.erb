@@ -14,7 +14,7 @@
     <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
     <%= submit_tag "Create intake item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
   <% end %>
-  <% if line.status.in?(%w[pending resolved priced]) %>
+  <% if session.draft? && line.status.in?(%w[pending resolved priced]) %>
     <%= button_to "Remove", buybacks_session_line_path(session, line), method: :delete, class: "ss-btn ss-btn-secondary ss-btn--small", data: { turbo_confirm: "Remove this line?" } %>
   <% end %>
 <% elsif session.editable? && !line.status.in?(%w[posted voided]) %>
@@ -45,9 +45,5 @@
     <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
     <%= hidden_field_tag :outcome, "rejected_by_store" %>
     <%= submit_tag "Store reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
-  <% end %>
-
-  <% if line.status.in?(%w[pending resolved priced]) %>
-    <%= button_to "Remove", buybacks_session_line_path(session, line), method: :delete, class: "ss-btn ss-btn-secondary ss-btn--small", data: { turbo_confirm: "Remove this line?" } %>
   <% end %>
 <% end %>

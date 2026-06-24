@@ -4,6 +4,8 @@ module Buybacks
   class RejectLine
     class Error < StandardError; end
 
+    REJECT_OUTCOMES = %w[declined_by_customer rejected_by_store recycle_with_permission].freeze
+
     def self.call!(line:, actor:, outcome:, reject_reason: nil)
       new(line:, actor:, outcome:, reject_reason:).call!
     end
@@ -16,7 +18,7 @@ module Buybacks
     end
 
     def call!
-      raise Error, "Invalid outcome." unless outcome.in?(BuybackLine::OUTCOMES)
+      raise Error, "Invalid rejection outcome." unless outcome.in?(REJECT_OUTCOMES)
       raise Error, "Session is not editable." unless line.buyback_session.editable?
       raise Error, "Posted or voided lines cannot be changed." if line.status.in?(%w[posted voided])
 

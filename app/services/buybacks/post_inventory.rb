@@ -18,7 +18,7 @@ module Buybacks
       payloads = lines.map do |line|
         variant = line.product_variant
         if line.accepted_resale_price_cents.present? &&
-            VariantPricePolicy.updatable_from_buyback?(variant: variant, store: session.store)
+            VariantPricePolicy.updatable_from_buyback?(variant: variant, store: session.store, session: session)
           variant.update!(selling_price_cents: line.accepted_resale_price_cents)
         end
 

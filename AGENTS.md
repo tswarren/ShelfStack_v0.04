@@ -622,10 +622,10 @@ product_variants.sub_department_id → sub_departments.id
 * `proposed_*` fields are staff/customer-facing pre-complete; `accepted_offer_cents` / `accepted_resale_price_cents` set only inside `CompleteSession` transaction from proposed values per payout mode.
 * Direct proposed-value edits in `UpdateProposalLine` that differ from suggested require `buybacks.price_override` and override reason; repricing clears `outcome` and `customer_decision_at`.
 * `SaveProposal` assigns `buyback_number` and rejects unresolved lines; graded variant create/find in `UpdateProposalLine` only; draft lines removable via `RemoveLine`; new lines only in `draft` status.
-* Variant selling price from buyback updates only when `VariantPricePolicy.updatable_from_buyback?` (no on-hand stock at store); proposed/accepted resale stays on buyback line otherwise.
-* Completion blocks unresolved `pending`/`resolved`/`priced`/`offered` lines without customer outcomes.
+* Variant selling price from buyback updates only when `VariantPricePolicy.updatable_from_buyback?` (variant created by current session or no on-hand stock at store); proposed/accepted resale stays on buyback line otherwise.
+* New buyback lines and line removal only in `draft` status; completion blocks unresolved active lines.
 * Batch accept/decline processes `offered` lines only; repriced lines must be re-saved into proposal first.
-* Store rejection (`rejected_by_store`) sets terminal `status: decided` and does not block completion.
+* `RejectLine` accepts only rejection outcomes (`declined_by_customer`, `rejected_by_store`, `recycle_with_permission`); donations use `RecordCustomerDecision`; store rejection sets terminal `status: decided`.
 * Dual eligibility: `sub_department.buyback_allowed` AND `product_condition.buyback_eligible`.
 * Single payout mode per session: `cash`, `trade_credit`, or `no_value_donation` (never both cash and credit).
 * Completion inventory: `posting_type: used_buyback`, `source: BuybackSession`; void: `posting_type: buyback_void`, `source: BuybackVoid`.

@@ -17,7 +17,7 @@ module Buybacks
     end
 
     def call!
-      raise Error, "Session is not editable." unless session.editable?
+      raise Error, "Lines can only be removed while the session is in draft." unless session.draft?
       raise Error, "Line does not belong to session." unless line.buyback_session_id == session.id
       raise Error, "Only intake/pricing lines can be removed." unless line.status.in?(REMOVABLE_STATUSES)
 

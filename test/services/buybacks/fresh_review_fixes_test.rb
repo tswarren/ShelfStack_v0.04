@@ -184,6 +184,55 @@ class Buybacks::FreshReviewFixesTest < ActiveSupport::TestCase
     assert_match(/not editable|cannot be changed/i, error.message)
   end
 
+  test "reject line rejects non-rejection outcomes" do
+    line = add_priced_line!(title: "Reject Outcome Book", cash: 500, trade: 600)
+
+    error = assert_raises(Buybacks::RejectLine::Error) do
+      Buybacks::RejectLine.call!(
+        line: line,
+        actor: @user,
+        outcome: "accepted_by_customer"
+      )
+    end
+    assert_match(/rejection outcome/i, error.message)
+  end
+
+  test "variant created by current session allows price update when stock exists" do
+    variant = create_product_variant!(
+      sub_department: @sub,
+      condition: @condition,
+      selling_price_cents: 1500,
+      product: create_product!(list_price_cents: 3000),
+      created_from_buyback_session: @session
+    )
+    InventoryBalance.create!(
+      store: @store,
+      product_variant: variant,
+      quantity_on_hand: 1,
+      quantity_available: 1,
+      inventory_cost_value_cents: 0,
+      inventory_retail_value_cents: 0
+    )
+    line = Buybacks::AddLine.call!(session: @session, actor: @user, title_snapshot: "Session Variant")
+    line.update!(product: variant.product, catalog_item: variant.product.catalog_item)
+
+    Buybacks::UpdateProposalLine.call!(
+      line: line,
+      session: @session,
+      actor: @user,
+      product_condition: @condition,
+      sub_department: @sub,
+      proposed_resale_price_cents: 2200,
+      proposed_cash_offer_cents: 500,
+      proposed_trade_credit_offer_cents: 600,
+      resale_override_reason: "Test setup",
+      cash_override_reason: "Test setup",
+      trade_credit_override_reason: "Test setup"
+    )
+
+    assert_equal 2200, variant.reload.selling_price_cents
+  end
+
   private
 
   def add_priced_line!(title:, cash:, trade:)
