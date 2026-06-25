@@ -29,14 +29,14 @@ module Inventory
       cost_delta = valuation.total_cost_cents || 0
       retail_delta = valuation.total_retail_cents || 0
       if quantity_delta.negative?
-        balance.inventory_cost_value_cents = [ balance.inventory_cost_value_cents + cost_delta, 0 ].max
-        balance.inventory_retail_value_cents = [ balance.inventory_retail_value_cents + retail_delta, 0 ].max
+        balance.inventory_cost_value_cents = [ balance.inventory_cost_value_cents - cost_delta, 0 ].max
+        balance.inventory_retail_value_cents = [ balance.inventory_retail_value_cents - retail_delta, 0 ].max
       else
         balance.inventory_cost_value_cents += cost_delta
         balance.inventory_retail_value_cents += retail_delta
       end
 
-      if valuation.cost_source == "receipt_cost" && quantity_delta.positive?
+      if valuation.cost_source.in?(%w[receipt_cost buyback_offer no_value_donation]) && quantity_delta.positive?
         Purchasing::MovingAverageCost.apply!(
           balance: balance,
           prior_on_hand: prior_on_hand,

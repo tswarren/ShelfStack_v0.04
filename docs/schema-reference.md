@@ -205,7 +205,7 @@ Example:
 
 ```text
 product_variants.inventory_behavior:
-  standard_physical
+  standard_physical   # legacy; maps to inventory tracking (Phase 8)
   digital_asset
   drop_ship
   composite_recipe

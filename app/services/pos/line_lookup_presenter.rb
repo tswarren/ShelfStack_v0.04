@@ -38,6 +38,7 @@ module Pos
         condition: variant.condition&.short_name,
         selling_price_cents: variant.selling_price_cents,
         inventory_behavior: variant.inventory_behavior,
+        inventory_tracking: Inventory::TrackingResolver.resolve(variant),
         active: variant.active?,
         product_active: variant.product.active?,
         quantity_on_hand: on_hand,

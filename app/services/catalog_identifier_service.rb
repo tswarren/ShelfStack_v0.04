@@ -15,6 +15,7 @@ class CatalogIdentifierService
         add_isbn10!(catalog_item:, value:, actor:, source:)
       else
         normalized = normalize_value(identifier_type, value)
+        ensure_unique_identifier!(catalog_item:, identifier_type:, normalized:)
         validation = validate_standard_identifier(identifier_type, normalized)
 
         identifier = catalog_item.catalog_item_identifiers.create!(
@@ -101,6 +102,12 @@ class CatalogIdentifierService
     CatalogItem.transaction do
       identifier_type = identifier.identifier_type
       normalized = normalize_value(identifier_type, value)
+      ensure_unique_identifier!(
+        catalog_item: identifier.catalog_item,
+        identifier_type: identifier_type,
+        normalized: normalized,
+        excluding_identifier_id: identifier.id
+      )
       validation = validate_standard_identifier(identifier_type, normalized)
 
       identifier.update!(
@@ -204,8 +211,51 @@ class CatalogIdentifierService
     }
   end
 
+  def self.ensure_unique_identifier!(catalog_item:, identifier_type:, normalized:, excluding_identifier_id: nil)
+    conflicting = find_conflicting_identifier(
+      catalog_item: catalog_item,
+      identifier_type: identifier_type,
+      normalized: normalized,
+      excluding_identifier_id: excluding_identifier_id
+    )
+    return if conflicting.blank?
+
+    item = conflicting.catalog_item
+    raise IdentifierError,
+      "Identifier #{normalized} is already assigned to \"#{item.title}\"."
+  end
+
+  def self.find_conflicting_identifier(catalog_item:, identifier_type:, normalized:, excluding_identifier_id: nil)
+    return if normalized.blank?
+
+    types = conflicting_lookup_types(identifier_type)
+    return if types.empty?
+
+    scope = CatalogItemIdentifier.active_records
+      .where(identifier_type: types, normalized_identifier: normalized)
+      .where.not(catalog_item_id: catalog_item.id)
+    scope = scope.where.not(id: excluding_identifier_id) if excluding_identifier_id.present?
+    scope.includes(:catalog_item).first
+  end
+
+  def self.conflicting_lookup_types(identifier_type)
+    case identifier_type.to_s
+    when "isbn13" then %w[isbn13 ean]
+    when "isbn10" then %w[isbn10]
+    when "ean" then %w[isbn13 ean]
+    when "local" then %w[local]
+    when "publisher_number" then %w[publisher_number]
+    when "upc", "gtin" then [ identifier_type.to_s ]
+    else []
+    end
+  end
+  private_class_method :conflicting_lookup_types
+
   def self.add_isbn10!(catalog_item:, value:, actor:, source:)
     normalized = normalize_standard_digits(value)
+    ensure_unique_identifier!(catalog_item:, identifier_type: "isbn10", normalized:)
+    isbn13_normalized = convert_isbn10_to_isbn13(normalized)
+    ensure_unique_identifier!(catalog_item:, identifier_type: "isbn13", normalized: isbn13_normalized)
     validation = validate_isbn10(normalized)
 
     isbn10 = catalog_item.catalog_item_identifiers.create!(
@@ -219,7 +269,6 @@ class CatalogIdentifierService
       active: true
     )
 
-    isbn13_normalized = convert_isbn10_to_isbn13(normalized)
     isbn13_validation = validate_isbn13(isbn13_normalized)
 
     isbn13 = catalog_item.catalog_item_identifiers.find_or_initialize_by(

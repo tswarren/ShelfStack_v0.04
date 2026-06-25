@@ -31,4 +31,17 @@ class Buybacks::EligibilityTest < ActiveSupport::TestCase
 
     assert_raises(Buybacks::Eligibility::Error) { Buybacks::Eligibility.ensure_line_eligible!(line: line) }
   end
+
+  test "rejects non-inventory variant" do
+    @variant.update!(inventory_behavior: "non_inventory")
+    line = BuybackLine.new(
+      product_variant: @variant,
+      product_condition: @condition,
+      sub_department: @sub
+    )
+
+    assert_raises(Buybacks::Eligibility::Error, match: /not standard physical inventory/) do
+      Buybacks::Eligibility.ensure_line_eligible!(line: line)
+    end
+  end
 end

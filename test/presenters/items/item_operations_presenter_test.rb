@@ -62,4 +62,31 @@ class ItemOperationsPresenterTest < ActiveSupport::TestCase
 
     assert_equal 1, row.ready_for_pickup_qty
   end
+
+  test "non-inventory variant omits order action" do
+    grant_permission!(@user, "orders.purchase_orders.create", store: @store)
+    @variant.update!(inventory_behavior: "digital_asset")
+
+    presenter = Items::ItemOperationsPresenter.new(
+      item: Items::ItemPresenter.from_product(@product),
+      store: @store,
+      user: @user
+    )
+    row = presenter.variant_rows.find { |candidate| candidate.variant.id == @variant.id }
+
+    refute row.actions.map(&:label).include?("Order")
+  end
+
+  test "header add to po requires inventory eligible variant" do
+    grant_permission!(@user, "orders.purchase_orders.create", store: @store)
+    @variant.update!(inventory_behavior: "digital_asset")
+
+    presenter = Items::ItemOperationsPresenter.new(
+      item: Items::ItemPresenter.from_product(@product),
+      store: @store,
+      user: @user
+    )
+
+    refute presenter.header_actions.map(&:label).include?("Add to PO")
+  end
 end

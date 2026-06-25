@@ -22,6 +22,9 @@ class ProductVariant < ApplicationRecord
   validates :short_name, length: { maximum: 40 }, allow_blank: true
   validates :selling_price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :inventory_behavior, presence: true, inclusion: { in: INVENTORY_BEHAVIORS }
+  validates :inventory_tracking_override,
+    inclusion: { in: Inventory::TrackingResolver::TRACKING_VALUES },
+    allow_nil: true
   validates :returnability_status, presence: true, inclusion: { in: ReturnabilityStatus::RETURNABILITY_STATUSES }
   validates :pricing_model_override, inclusion: { in: PricingModels::PRICING_MODELS }, allow_blank: true
   validates :attribute1_sku_component, length: { maximum: 5 }, allow_blank: true
@@ -50,6 +53,10 @@ class ProductVariant < ApplicationRecord
 
   def list_label
     ProductNameRenderer.variant_list_label(self)
+  end
+
+  def inventory_tracking
+    Inventory::TrackingResolver.resolve(self)
   end
 
   def resolved_sub_department

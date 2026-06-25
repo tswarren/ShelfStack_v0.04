@@ -3,6 +3,14 @@
 
 <% if lock_product %>
   <%= f.hidden_field :product_id, value: product.id %>
+  <div class="ss-form-card ss-form-card--nested">
+    <p class="ss-hint">
+      <strong>Variation type:</strong> <%= humanize_controlled_value(product.variation_type) %>
+      <% if local_assigns.fetch(:show_product_select, true) == false %>
+        <%= link_to "Change variation type", edit_items_product_path(product, return_to: "item"), class: "ss-btn-link" %>
+      <% end %>
+    </p>
+  </div>
 <% elsif local_assigns.fetch(:show_product_select, true) %>
   <%= render layout: "shared/forms/section", locals: { title: "Product" } do %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :product_id, label: "Product", required: true } do %>
@@ -26,5 +34,8 @@
 <% end %>
 
 <% if show_advanced %>
-  <%= render "items/shared/variant_forms/advanced", f: f, variant: variant %>
+  <%= render "items/shared/variant_forms/advanced",
+             f: f,
+             variant: variant,
+             manage_inventory_behavior: local_assigns.fetch(:manage_inventory_behavior, false) %>
 <% end %>

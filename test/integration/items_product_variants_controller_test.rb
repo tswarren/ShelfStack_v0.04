@@ -4,6 +4,7 @@ require "test_helper"
 
 class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    Seeds::Phase3Permissions.seed!
     @store = create_store!
     @workstation = create_workstation!(store: @store)
     @admin = create_user!(username: "variantadmin", password: "Password123!")
@@ -75,6 +76,25 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "update variant with inventory tracking selection syncs behavior" do
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
+
+    patch items_product_variant_path(variant, return_to: "item"), params: {
+      product_variant: {
+        product_id: @product.id,
+        condition_id: variant.condition_id,
+        sub_department_id: variant.sub_department_id,
+        selling_price_cents: variant.selling_price_cents,
+        inventory_tracking: "non_inventory",
+        active: true
+      }
+    }
+
+    variant.reload
+    assert_equal "non_inventory", variant.inventory_tracking_override
+    assert_equal "non_inventory", variant.inventory_behavior
+  end
+
   test "update variant without return_to param still redirects to item selling tab" do
     variant = create_product_variant!(product: @product, sub_department: @sub_department)
 
@@ -103,6 +123,98 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'input[type=hidden][name="product_variant[product_id]"][value=?]', @product.id.to_s
     assert_select "select[name='product_variant[product_id]']", count: 0
     assert_select 'input[type=hidden][name="return_to"][value="item"]', count: 1
+    assert_match "Variation type", response.body
+    assert_match "Conditional", response.body
+  end
+
+  test "new variant without product shows product picker helper" do
+    get new_items_product_variant_path(return_to: "item")
+
+    assert_response :success
+    assert_select "select[name='product_variant[product_id]']", count: 1
+    assert_match "variation type", response.body
+    assert_match "variant-product-picker", response.body
+  end
+
+  test "new variant for digital product defaults to non-inventory tracking" do
+    digital_product = create_product!(product_type: "digital", sku: "DIG-#{SecureRandom.hex(3)}")
+
+    get new_items_product_variant_path(product_id: digital_product.id, return_to: "item")
+
+    assert_response :success
+    assert_select "select[name='product_variant[inventory_tracking]']" do |elements|
+      assert_equal Inventory::TrackingResolver::NON_INVENTORY_TRACKING, elements.first.css("option[selected]").first["value"]
+    end
+  end
+
+  test "edit variant hides legacy behavior editor without manage permission" do
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
+
+    get edit_items_product_variant_path(variant, return_to: "item")
+
+    assert_response :success
+    assert_select "select[name='product_variant[inventory_behavior]']", count: 0
+    assert_match "Legacy inventory behavior can only be edited by support staff", response.body
+  end
+
+  test "edit variant shows legacy behavior editor with manage permission" do
+    grant_permission!(@admin, "items.product_variants.manage_inventory_behavior")
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
+
+    get edit_items_product_variant_path(variant, return_to: "item")
+
+    assert_response :success
+    assert_select "select[name='product_variant[inventory_behavior]']", count: 1
+  end
+
+  test "create variant for digital product seeds non-inventory behavior" do
+    digital_product = create_product!(product_type: "digital", sku: "DIG-#{SecureRandom.hex(3)}")
+
+    assert_difference -> { ProductVariant.count }, 1 do
+      post items_product_variants_path(return_to: "item"), params: {
+        product_variant: {
+          product_id: digital_product.id,
+          condition_id: @used_condition.id,
+          sub_department_id: @sub_department.id,
+          selling_price_cents: 899,
+          inventory_tracking: Inventory::TrackingResolver::NON_INVENTORY_TRACKING,
+          active: true
+        }
+      }
+    end
+
+    variant = ProductVariant.order(:id).last
+    assert_equal "digital_asset", variant.inventory_behavior
+    assert_equal "non_inventory", variant.inventory_tracking_override
+  end
+
+  test "update variant without manage permission ignores submitted legacy behavior" do
+    variant = create_product_variant!(product: @product, sub_department: @sub_department)
+    variant.update!(
+      inventory_tracking_override: Inventory::TrackingResolver::NON_INVENTORY_TRACKING,
+      inventory_behavior: "non_inventory"
+    )
+
+    patch items_product_variant_path(variant, return_to: "item"), params: {
+      product_variant: {
+        product_id: @product.id,
+        condition_id: variant.condition_id,
+        sub_department_id: variant.sub_department_id,
+        selling_price_cents: 1499,
+        inventory_behavior: "standard_physical",
+        active: true
+      }
+    }
+
+    assert_redirected_to items_item_path(
+      catalog_item_id: @product.catalog_item_id,
+      tab: "item_setup",
+      variant_id: variant.id
+    )
+    variant.reload
+    assert_equal 1499, variant.selling_price_cents
+    assert_equal "non_inventory", variant.inventory_tracking_override
+    assert_equal "non_inventory", variant.inventory_behavior
   end
 
   test "variant show includes back to item link" do

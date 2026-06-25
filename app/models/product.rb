@@ -21,6 +21,9 @@ class Product < ApplicationRecord
   validates :product_type, presence: true, inclusion: { in: PRODUCT_TYPES }
   validates :variation_type, presence: true, inclusion: { in: VARIATION_TYPES }
   validates :list_price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :default_inventory_tracking,
+    inclusion: { in: Inventory::TrackingResolver::TRACKING_VALUES },
+    allow_nil: true
   validate :catalog_item_must_be_active
   validate :default_display_location_must_be_active
   validate :default_sub_department_must_be_active

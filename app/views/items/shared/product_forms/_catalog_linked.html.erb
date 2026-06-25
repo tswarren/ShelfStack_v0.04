@@ -24,7 +24,10 @@
         <%= f.text_field :sku, value: product.sku.presence || catalog_item.primary_identifier&.normalized_identifier %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
-        <%= f.select :product_type, %w[physical digital].map { |t| [humanize_controlled_value(t), t] }, selected: product.product_type || "physical" %>
+        <%= f.select :product_type,
+              Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] },
+              { selected: product.product_type || "physical" },
+              { data: { product_form_target: "productType" } } %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
         <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>

@@ -150,6 +150,15 @@ docs/specifications/phase-7c-data-model.md
 docs/specifications/phase-7c-test-plan.md
 ```
 
+## Phase 8 Documents
+
+```text
+docs/roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md
+docs/specifications/phase-8-inventory-eligibility-and-tracking-spec.md
+docs/specifications/phase-8-data-model.md
+docs/specifications/phase-8-test-plan.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -219,6 +228,16 @@ Phase 7C was completed on 2026-06-23. Phase 7C-1 workflow refinement was complet
 - Trade credit issues to `trade_credit` account with identifier for POS redemption; SV ledger entries source-linked to buyback session/void
 - Review fixes (2026-06-24): auth halting, zero-cost donated lines in mixed payout sessions, override permission/reason on proposal edits, decision-aware payout totals, line removal, terminal store-rejected lines, variant price policy when stock on hand, draft-only intake, batch decision status alignment
 
+## Phase 8: Inventory Eligibility and Tracking Refactor — **Complete**
+
+Phase 8 was completed on 2026-06-23. See [docs/implementation/phase-8-1-8-2-completion.md](docs/implementation/phase-8-1-8-2-completion.md) and [docs/implementation/phase-8-3-4-5-completion.md](docs/implementation/phase-8-3-4-5-completion.md).
+
+- **8-1/8-2:** `Inventory::TrackingResolver` + `Inventory::Eligibility` centralize posting gate; behavior-neutral
+- **8-3:** `products.default_inventory_tracking`, `product_variants.inventory_tracking_override`; resolver chain override → behavior → product default → product_type; no override backfill
+- **8-4:** Staff UI Inventory / Non-Inventory via `Items::InventoryTrackingSync`; `Inventory::SourceHint`; POS `inventory_tracking_snapshot`
+- **8-5:** `Pos::LineCogsCalculator`, pre-sale COGS snapshots, `Pos::OperationalMarginReport`; buyback MAC includes `buyback_offer` inbound
+- Legacy `inventory_behavior` column retained; do not remove without explicit scope
+
 ---
 
 # Architectural Principles
@@ -261,7 +280,13 @@ CatalogIdentifierService
 SkuGenerator
 ProductNameRenderer
 MetadataParser
+Inventory::TrackingResolver
 Inventory::Eligibility
+Inventory::SourceHint
+Items::InventoryTrackingSync
+AddItem::InventoryTrackingMapper
+Pos::LineCogsCalculator
+Pos::OperationalMarginReport
 Inventory::CostEstimator
 Inventory::Post
 Inventory::BalanceUpdater
@@ -549,7 +574,7 @@ product_variants.sub_department_id → sub_departments.id
 ## Phase 4 Rules
 
 * Authoritative inventory grain is `store_id + product_variant_id`.
-* Only `inventory_behavior = standard_physical` variants are ledger-eligible.
+* Only inventory-eligible variants (via `Inventory::Eligibility` / `Inventory::TrackingResolver`) receive ledger entries; legacy field `inventory_behavior = standard_physical` maps to inventory.
 * Balances are cached from posted ledger entries; do not mutate balances outside `Inventory::Post` / `Inventory::BalanceUpdater`.
 * `quantity_available = quantity_on_hand - quantity_reserved` after Phase 7A on-hand holds (`quantity_reserved` cached from active `on_hand_hold` / `special_order_reserve` reservations).
 * Negative on-hand is allowed; treat as an operational exception.
@@ -571,7 +596,7 @@ product_variants.sub_department_id → sub_departments.id
 
 * POS uses `pos_*` tables; inventory only via `Inventory::Post`.
 * Completed transaction: one posting with `posting_type: pos_transaction`, `source: PosTransaction`; ledger lines use `movement_type: sold` or `customer_return`.
-* Only `inventory_behavior = standard_physical` lines with `product_variant_id` post; open-ring without variant does not post.
+* Only inventory-eligible lines with `product_variant_id` post (via `Inventory::Eligibility.eligible_for_pos_line?`; legacy `inventory_behavior_snapshot = standard_physical` maps to inventory); open-ring without variant does not post.
 * Do not store `inventory_posting_id` on `pos_transactions`.
 * `pos_sale` and `customer_return` posting types are reserved on the enum; do not use for new POS postings.
 * Completed void: `pos_voids` source, `posting_type: pos_void`, reversal FKs; reversing `pos_tenders`; original transaction immutable.
@@ -635,6 +660,20 @@ product_variants.sub_department_id → sub_departments.id
 * Buyback controllers: `authorize_buyback!` returns `true/false` and mutating actions must halt when unauthorized.
 * `PriceLine` uses fixed line base-price precedence; `BuybackPricingRule#base_price_source` deferred.
 * `merged_into_customer_id` is schema-only in 7C; no merge workflow.
+
+## Phase 8 Rules
+
+* **Complete (8-1 through 8-5):** `Inventory::TrackingResolver` resolves override → legacy behavior → product default → product_type; `Inventory::Eligibility` is the mutation gate.
+* Resolver may be used directly by presenters/lookups; inventory mutation paths use `Inventory::Eligibility`.
+* POS eligibility read order: `inventory_tracking_snapshot` → `inventory_behavior_snapshot` → variant effective tracking.
+* Staff variant UI: Inventory / Non-Inventory via `Items::InventoryTrackingSync`; physical non-inventory maps to `non_inventory` behavior (never `standard_physical`).
+* Admin legacy `inventory_behavior` edit clears `inventory_tracking_override`.
+* Product `default_inventory_tracking` is create-time seed + backfill from product type only; changing it must not affect variants with populated `inventory_behavior`.
+* `inventory_tracking_override` is not backfilled.
+* POS completion snapshots `inventory_tracking_snapshot` and COGS pre-sale (before inventory post); voided transactions excluded from operational margin MVP.
+* Non-inventory COGS MVP: null; `pricing_model` untouched.
+* Buyback MAC: positive inbound `buyback_offer` / `no_value_donation` update moving average.
+* Legacy `inventory_behavior` column remains; do not remove without explicit scope.
 
 ---
 

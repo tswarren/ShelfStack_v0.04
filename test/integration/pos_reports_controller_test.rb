@@ -55,4 +55,17 @@ class PosReportsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Exceptions:/i, response.body)
     assert_match(/Print/i, response.body)
   end
+
+  test "operational margin report renders for register session filter" do
+    get operational_margin_pos_reports_path(filter_type: "register_session", register_session_id: @session.id)
+    assert_response :success
+    assert_match(/Operational Margin/i, response.body)
+    assert_match(/Actual gross margin/i, response.body)
+  end
+
+  test "operational margin filter form submits to operational margin report" do
+    get operational_margin_pos_reports_path(filter_type: "register_session", register_session_id: @session.id)
+    assert_response :success
+    assert_select "form.ss-pos-report-filter__form[action=?]", operational_margin_pos_reports_path
+  end
 end

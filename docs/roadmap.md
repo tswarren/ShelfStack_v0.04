@@ -28,8 +28,9 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 7A | Customer Demand               | Customers, requests, special orders, holds/reservations, PO/receipt allocations, ready-for-pickup, POS fulfillment. **Complete.** |
 | Phase 7B | Customer Credit Foundation    | POS multi-row settlement (7B-1), stored value accounts/ledger (7B-2), POS issue/redeem (7B-3). **Complete.** |
 | Phase 7C | Used Buyback                  | Customer-required buyback sessions, graded used variants, cash/trade-credit/donation payout, inventory posting. **Complete** (2026-06-23). |
+| Phase 8 | Inventory Eligibility and Tracking | Centralized inventory tracking gate (`inventory` / `non_inventory`); behavior-neutral resolver/eligibility refactor. **8-1/8-2 complete** (2026-06-23). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
-| Phase 8 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
+| Phase 9 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
 Later phases may be split or reordered as implementation details become clearer.
 
@@ -474,11 +475,32 @@ consignment_accounts
 
 ---
 
-# Phase 8: Reporting and Accounting
+# Phase 8: Inventory Eligibility and Tracking Refactor
 
 ## Purpose
 
-Phase 8 should provide reporting, analysis, tax summaries, inventory valuation, and accounting export support.
+Phase 8 centralizes whether a product variant participates in the stock ledger.
+
+Legacy gate: `inventory_behavior == "standard_physical"`. Phase 8 introduces `Inventory::TrackingResolver` (`inventory` / `non_inventory`) and `Inventory::Eligibility` as the mutation gate.
+
+## Status
+
+Phase 8-1 and 8-2 are **complete** (2026-06-23). Slices 8-3 (schema defaults), 8-4 (UI), and 8-5 (COGS/margin) are deferred.
+
+## Detailed Documents
+
+* [roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md](roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md)
+* [specifications/phase-8-inventory-eligibility-and-tracking-spec.md](specifications/phase-8-inventory-eligibility-and-tracking-spec.md)
+* [specifications/phase-8-test-plan.md](specifications/phase-8-test-plan.md)
+* [implementation/phase-8-1-8-2-completion.md](implementation/phase-8-1-8-2-completion.md)
+
+---
+
+# Phase 9: Reporting and Accounting
+
+## Purpose
+
+Phase 9 should provide reporting, analysis, tax summaries, inventory valuation, and accounting export support.
 
 ## Expected Capabilities
 
@@ -535,13 +557,13 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 # Current Priority
 
-Phases 1–6.5, 7A, and 7B are complete. See implementation records under `docs/implementation/`.
+Phases 1–6.5, 7A, 7B, 7C, and Phase 8-1/8-2 are complete. See implementation records under `docs/implementation/`.
 
 ```text
-Phase 1 ✓ → … → Phase 7A ✓ → Phase 7B ✓ → Phase 7 (Advanced Store Operations) ← next
+Phase 1 ✓ → … → Phase 7C ✓ → Phase 8-1/8-2 ✓ → Phase 8-3+ / Phase 9 ← next
 ```
 
-**Active work:** Phase 7 advanced store operations (transfers, cycle counts, buybacks, consignment) and Phase 8 reporting/accounting — not yet started.
+**Active work:** Phase 8 deferred slices (8-3 schema defaults, 8-4 UI, 8-5 COGS/margin), Phase 7 advanced store operations, and Phase 9 reporting/accounting.
 
 Implementation records:
 

@@ -191,4 +191,8 @@ module ItemsHelper
   def item_vendor_sourcing_path(variant)
     Items::VendorSourcingPath.for(variant)
   end
+
+  def inventory_source_hint_label(source_hint)
+    source_hint.movement_type.present? ? "Last stock source" : "Stock source hint"
+  end
 end

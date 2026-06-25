@@ -109,6 +109,9 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-product-form-target="variant1Label"'
     assert_includes response.body, 'data-product-form-target="variant2Label"'
     assert_includes response.body, 'data-product-form-target="variationType"'
+    assert_includes response.body, 'data-product-form-target="productType"'
+    assert_includes response.body, 'data-product-form-target="variationBlock"'
+    assert_select "select[name=\"product[variation_type]\"]", count: 1
   end
 
   test "update product can remove cover image" do

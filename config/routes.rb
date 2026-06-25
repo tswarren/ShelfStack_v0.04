@@ -431,6 +431,7 @@ Rails.application.routes.draw do
         get :drawer
         get :summary
         get :register_summary
+        get :operational_margin
       end
     end
   end

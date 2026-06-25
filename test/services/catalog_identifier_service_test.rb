@@ -161,4 +161,32 @@ class CatalogIdentifierServiceTest < ActiveSupport::TestCase
       CatalogIdentifierService.remove_identifier!(identifier: identifier)
     end
   end
+
+  test "rejects duplicate standard identifier on another catalog item" do
+    other = CatalogItem.create!(
+      catalog_item_type: "book",
+      title: "Existing Book",
+      publication_status: "active",
+      format: create_format!(format_key: "dup_fmt_#{SecureRandom.hex(2)}"),
+      active: true
+    )
+    CatalogIdentifierService.add_identifier!(
+      catalog_item: other,
+      identifier_type: "isbn13",
+      value: "9780306406157",
+      primary: true
+    )
+
+    error = assert_raises(CatalogIdentifierService::IdentifierError) do
+      CatalogIdentifierService.add_identifier!(
+        catalog_item: @item,
+        identifier_type: "isbn13",
+        value: "978-0-306-40615-7",
+        primary: true
+      )
+    end
+
+    assert_match(/already assigned/i, error.message)
+    assert_match(/Existing Book/, error.message)
+  end
 end

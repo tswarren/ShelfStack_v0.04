@@ -18,6 +18,8 @@
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :display_location_id, label: "Display location" } do %>
       <%= tree_collection_select(f, :display_location_id, display_locations, include_blank: true) %>
     <% end %>
+
+    <%= render "items/shared/variant_forms/inventory_tracking", f: f, variant: variant %>
   </div>
 
   <% if classification_defaults.present? %>

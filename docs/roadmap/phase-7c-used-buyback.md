@@ -659,7 +659,7 @@ sub_department_id present
 sub_department.buyback_allowed == true
 product_variant.condition_id == product_condition_id
 product_condition.buyback_eligible == true
-product_variant.inventory_behavior == "standard_physical"
+Inventory::Eligibility.eligible?(product_variant)  # legacy: inventory_behavior == standard_physical
 product_variant.active == true
 ```
 

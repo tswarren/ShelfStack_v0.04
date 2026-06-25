@@ -1,14 +1,46 @@
+<% manage_inventory_behavior = local_assigns.fetch(:manage_inventory_behavior, false) %>
+
 <%= render layout: "shared/forms/section", locals: { title: "Advanced Settings" } do %>
   <div class="ss-form-grid ss-form-grid--2">
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :short_name, label: "Short name" } do %>
       <%= f.text_field :short_name, maxlength: 40 %>
     <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :inventory_behavior, label: "Inventory behavior" } do %>
-      <%= f.select :inventory_behavior, ProductVariant::INVENTORY_BEHAVIORS.map { |b| [humanize_controlled_value(b), b] } %>
-    <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :pricing_model_override, label: "Pricing model override" } do %>
       <%= f.select :pricing_model_override, PricingModels::PRICING_MODELS.map { |m| [humanize_controlled_value(m), m] }, include_blank: true %>
     <% end %>
   </div>
+
+  <details class="ss-form-subsection">
+    <summary>Legacy inventory behavior (support)</summary>
+    <% if manage_inventory_behavior %>
+      <div class="ss-form-grid ss-form-grid--2">
+        <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :inventory_behavior, label: "Inventory behavior" } do %>
+          <%= f.select :inventory_behavior, ProductVariant::INVENTORY_BEHAVIORS.map { |b| [humanize_controlled_value(b), b] } %>
+          <p class="ss-field-help">Editing clears the inventory tracking override. Effective tracking is derived from this value.</p>
+        <% end %>
+      </div>
+      <% if @tracking_change_preview.present? %>
+        <p class="ss-alert ss-alert--warning">
+          Effective tracking will change from
+          <%= humanize_controlled_value(@tracking_change_preview.previous_tracking) %>
+          to
+          <%= humanize_controlled_value(@tracking_change_preview.new_tracking) %>.
+          Stock posting eligibility:
+          <%= @tracking_change_preview.previous_eligible ? "eligible" : "not eligible" %>
+          →
+          <%= @tracking_change_preview.new_eligible ? "eligible" : "not eligible" %>.
+        </p>
+      <% end %>
+    <% else %>
+      <dl class="ss-summary">
+        <dt>Legacy behavior</dt>
+        <dd><%= humanize_controlled_value(variant.inventory_behavior) %></dd>
+        <dt>Effective tracking</dt>
+        <dd><%= humanize_controlled_value(variant.inventory_tracking) %></dd>
+      </dl>
+      <p class="ss-field-help">Legacy inventory behavior can only be edited by support staff.</p>
+    <% end %>
+  </details>
+
   <%= render "shared/forms/checkbox", f: f, record: variant, field: :active %>
 <% end %>

@@ -150,6 +150,8 @@
 <% end %>
 
 <% if include_identifier %>
+  <% initial_identifier_type = local_assigns.fetch(:initial_identifier_type) { params.dig(:catalog_item, :initial_identifier_type).presence || "isbn13" } %>
+  <% initial_identifier_value = local_assigns.fetch(:initial_identifier_value) { params.dig(:catalog_item, :initial_identifier_value) } %>
   <%= render layout: "shared/forms/section", locals: { title: "Initial Identifier" } do %>
     <div data-controller="identifier-preview"
          data-identifier-preview-url-value="<%= items_identifier_preview_path %>"
@@ -158,12 +160,12 @@
         <div class="ss-field">
           <%= label_tag "catalog_item[initial_identifier_type]", "Identifier type", class: "ss-label" %>
           <%= select_tag "catalog_item[initial_identifier_type]",
-                options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, "isbn13"),
+                options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, initial_identifier_type),
                 data: { identifier_preview_target: "identifierType" } %>
         </div>
         <div class="ss-field">
           <%= label_tag "catalog_item[initial_identifier_value]", "Identifier value", class: "ss-label" %>
-          <%= text_field_tag "catalog_item[initial_identifier_value]", nil,
+          <%= text_field_tag "catalog_item[initial_identifier_value]", initial_identifier_value,
                 data: { identifier_preview_target: "identifierValue" } %>
         </div>
       </div>

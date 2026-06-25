@@ -5,6 +5,13 @@ class PosTransactionLine < ApplicationRecord
   RETURN_DISPOSITIONS = %w[
     return_to_stock damaged defective return_to_vendor_candidate other
   ].freeze
+  COGS_SOURCES = Pos::LineCogsCalculator::COGS_SOURCES
+  REVENUE_TREATMENTS = Pos::LineCogsCalculator::REVENUE_TREATMENTS
+  INVENTORY_TRACKING_SNAPSHOTS = Inventory::TrackingResolver::TRACKING_VALUES
+  COSTING_METHOD_SNAPSHOTS = %w[
+    moving_average unit_cost receipt_cost buyback_offer margin_estimate
+    return_reversal none unknown
+  ].freeze
   GIFT_CARD_SALE_DESCRIPTION = "Gift card"
 
   belongs_to :pos_transaction
@@ -30,6 +37,12 @@ class PosTransactionLine < ApplicationRecord
   validates :extended_price_cents, numericality: { only_integer: true }
   validates :tax_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :return_disposition, inclusion: { in: RETURN_DISPOSITIONS }, allow_nil: true
+  validates :cogs_source, inclusion: { in: COGS_SOURCES }, allow_nil: true
+  validates :revenue_treatment, inclusion: { in: REVENUE_TREATMENTS }, allow_nil: true
+  validates :inventory_tracking_snapshot, inclusion: { in: INVENTORY_TRACKING_SNAPSHOTS }, allow_nil: true
+  validates :costing_method_snapshot, inclusion: { in: COSTING_METHOD_SNAPSHOTS }, allow_nil: true
+  validates :unit_cogs_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :total_cogs_cents, numericality: { only_integer: true }, allow_nil: true
   validate :variant_required_for_variant_line
   validate :gift_card_sale_line_constraints
   validate :cannot_edit_when_transaction_locked, on: :update

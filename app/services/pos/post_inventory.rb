@@ -15,20 +15,7 @@ module Pos
       lines = eligible_lines
       return nil if lines.empty?
 
-      payloads = lines.map do |line|
-        movement_type = line.quantity.positive? ? "sold" : "customer_return"
-        quantity_delta = -line.quantity
-
-        Inventory::Post::LinePayload.new(
-          product_variant: line.product_variant,
-          quantity_delta: quantity_delta,
-          movement_type: movement_type,
-          manual_unit_cost_cents: nil,
-          cost_source: nil,
-          inventory_location: nil,
-          inventory_reason_code: nil
-        )
-      end
+      payloads = lines.map { |line| line_payload(line) }
 
       Inventory::Post.call(
         store: transaction.store,
@@ -43,9 +30,7 @@ module Pos
 
     def self.eligible_line?(line)
       return false unless line.product_variant_id.present?
-
-      behavior = line.inventory_behavior_snapshot.presence || line.product_variant&.inventory_behavior
-      return false unless behavior == "standard_physical"
+      return false unless Inventory::Eligibility.eligible_for_pos_line?(line)
       return false if line.return_line? && line.return_disposition.present? && line.return_disposition != "return_to_stock"
 
       true
@@ -57,6 +42,34 @@ module Pos
 
     def eligible_lines
       transaction.pos_transaction_lines.select { |line| self.class.eligible_line?(line) }
+    end
+
+    def line_payload(line)
+      movement_type = line.quantity.positive? ? "sold" : "customer_return"
+      quantity_delta = -line.quantity
+      manual_unit_cost_cents = line.unit_cogs_cents
+      cost_source = ledger_cost_source(line.cogs_source) if manual_unit_cost_cents.present?
+
+      Inventory::Post::LinePayload.new(
+        product_variant: line.product_variant,
+        quantity_delta: quantity_delta,
+        movement_type: movement_type,
+        manual_unit_cost_cents: manual_unit_cost_cents,
+        cost_source: cost_source,
+        inventory_location: nil,
+        inventory_reason_code: nil
+      )
+    end
+
+    LEDGER_COST_SOURCES = InventoryLedgerEntry::COST_SOURCES.freeze
+
+    def ledger_cost_source(cogs_source)
+      case cogs_source
+      when *LEDGER_COST_SOURCES
+        cogs_source
+      when "unit_cost", "return_reversal"
+        "manual"
+      end
     end
   end
 end

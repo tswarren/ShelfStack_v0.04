@@ -46,7 +46,7 @@ module Buybacks
     end
 
     def variant_eligible?(variant)
-      variant.inventory_behavior == "standard_physical" &&
+      Inventory::Eligibility.eligible?(variant) &&
         variant.condition&.buyback_eligible? &&
         variant.sub_department&.buyback_allowed?
     end

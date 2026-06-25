@@ -10,18 +10,28 @@ module Inventory
       new(variant).ensure_eligible!
     end
 
+    def self.eligible_for_pos_line?(line)
+      tracking_input = line.inventory_tracking_snapshot.presence ||
+        line.inventory_behavior_snapshot.presence ||
+        line.product_variant
+      TrackingResolver.inventory?(tracking_input)
+    end
+
     def initialize(variant)
       @variant = variant
     end
 
     def eligible?
-      variant.inventory_behavior == "standard_physical"
+      TrackingResolver.inventory?(variant)
     end
 
     def ensure_eligible!
       return if eligible?
 
-      raise IneligibleVariantError, "Variant #{variant.sku} is not inventory-eligible (#{variant.inventory_behavior})"
+      tracking = TrackingResolver.resolve(variant)
+      raise IneligibleVariantError,
+        "Variant #{variant.sku} is not inventory-eligible " \
+        "(tracking: #{tracking}, inventory_behavior: #{variant.inventory_behavior})"
     end
 
     private

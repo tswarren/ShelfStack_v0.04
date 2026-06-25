@@ -248,7 +248,7 @@ Applied in a single validation path before completion:
 | --- | --- |
 | `selling_price_cents == 0` | Allowed; prompt for price |
 | Missing subdepartment or tax | **Block completion** |
-| `inventory_behavior != standard_physical` | Sell allowed; **no inventory posting** |
+| `inventory_behavior != standard_physical` (legacy) / non-inventory tracking | Sell allowed; **no inventory posting** (Phase 8: `Inventory::Eligibility.eligible_for_pos_line?`) |
 | Inactive product or variant | **Warn + confirm** in UI |
 
 ---

@@ -8,7 +8,10 @@
   <dt>Subdepartment</dt><dd><%= @product_variant.sub_department.name %></dd>
   <dt>Condition</dt><dd><%= @product_variant.condition&.name || "—" %></dd>
   <dt>Selling price</dt><dd><%= format_cents(@product_variant.selling_price_cents) %></dd>
-  <dt>Inventory behavior</dt><dd><%= humanize_controlled_value(@product_variant.inventory_behavior) %></dd>
+  <dt>Inventory tracking</dt><dd><%= humanize_controlled_value(@product_variant.inventory_tracking) %></dd>
+  <% if @source_hint %>
+    <dt><%= inventory_source_hint_label(@source_hint) %></dt><dd><%= @source_hint.label %></dd>
+  <% end %>
   <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.balances.view", store: current_store) %>
     <dt>On hand (<%= current_store.name %>)</dt>
     <dd><%= Inventory::Availability.on_hand(store: current_store, variant: @product_variant) %></dd>
@@ -21,12 +24,22 @@
   <% end %>
   <dt>Status</dt><dd><span class="<%= status_class(@product_variant.active?) %>"><%= status_label(@product_variant.active?) %></span></dd>
 </dl>
+
+<% if @manage_inventory_behavior %>
+  <details class="ss-form-subsection">
+    <summary>Support: legacy inventory behavior</summary>
+    <dl class="ss-summary">
+      <dt>Inventory behavior</dt><dd><%= humanize_controlled_value(@product_variant.inventory_behavior) %></dd>
+    </dl>
+  </details>
+<% end %>
+
 <div class="ss-detail-actions">
   <%= link_to "Back to Item", item.tab_path("item_setup", variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
   <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store) %>
     <%= link_to "Inventory Ledger", inventory_variant_path(@product_variant), class: "ss-btn ss-btn-secondary" %>
   <% end %>
-  <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
+  <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
     <%= link_to "Mark TBO", new_orders_purchase_request_path(product_variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
   <% end %>
   <%= link_to "Edit", edit_items_product_variant_path(@product_variant, item_flow), class: "ss-btn" %>
