@@ -1,0 +1,22 @@
+<%= render "setup/shared/back_link", path: setup_tax_exception_reasons_path, label: "Tax Exception Reasons" %>
+
+<h1><%= @tax_exception_reason.name %></h1>
+<dl class="ss-summary">
+  <dt>Key</dt><dd><code><%= @tax_exception_reason.reason_key %></code></dd>
+  <dt>Exception type</dt><dd><%= @tax_exception_reason.exception_type.humanize %></dd>
+  <dt>Sort order</dt><dd><%= @tax_exception_reason.sort_order %></dd>
+  <dt>Requires note</dt><dd><%= @tax_exception_reason.requires_note? ? "Yes" : "No" %></dd>
+  <dt>Requires certificate</dt><dd><%= @tax_exception_reason.requires_certificate? ? "Yes" : "No" %></dd>
+  <dt>Status</dt><dd><span class="<%= status_class(@tax_exception_reason.active?) %>"><%= status_label(@tax_exception_reason.active?) %></span></dd>
+</dl>
+<div class="ss-detail-actions">
+  <%= link_to "Edit", edit_setup_tax_exception_reason_path(@tax_exception_reason), class: "ss-btn" %>
+  <% if @tax_exception_reason.active? %>
+    <%= button_to "Inactivate", inactivate_setup_tax_exception_reason_path(@tax_exception_reason), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% else %>
+    <%= button_to "Reactivate", reactivate_setup_tax_exception_reason_path(@tax_exception_reason), method: :patch, class: "ss-btn" %>
+  <% end %>
+</div>
+<%= render "orders/shared/collapsible_panel", title: "Audit timeline", open: false do %>
+  <%= render "shared/audit_timeline", audit_events: @audit_events %>
+<% end %>

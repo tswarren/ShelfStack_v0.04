@@ -274,6 +274,46 @@ module PosHelper
     DiscountReason.active_records.find_by(id: reason_id)&.requires_authorization?
   end
 
+  def pos_tax_exception_reason_options
+    TaxExceptionReason.active_records.for_exemption.order(:sort_order, :name)
+  end
+
+  def pos_tax_override_reason_options
+    TaxExceptionReason.active_records.for_rate_override.order(:sort_order, :name)
+  end
+
+  def pos_tax_category_options
+    TaxCategory.active_records.order(:name)
+  end
+
+  def pos_line_tax_override_eligible?(line)
+    return false if line.return_line? && line.source_transaction_line_id.present?
+    return false if line.gift_card_sale_line?
+    return false if line.open_ring_line? && line.tax_category_id.blank?
+    return false unless line.quantity.positive?
+
+    true
+  end
+
+  def pos_transaction_tax_exemption_summary(transaction)
+    expected_tax_cents = transaction.normal_tax_cents.to_i
+    applied_tax_cents = transaction.tax_cents.to_i
+    {
+      expected_tax_cents: expected_tax_cents,
+      tax_removed_cents: [ expected_tax_cents - applied_tax_cents, 0 ].max
+    }
+  end
+
+  def pos_receipt_tax_exemption(transaction)
+    exemption = transaction.pos_tax_exemptions.active_records.first
+    return if exemption.blank?
+
+    {
+      reason_name: exemption.tax_exception_reason.name,
+      certificate_number: exemption.certificate_number
+    }
+  end
+
   def pos_transaction_item_discount_cents(transaction)
     transaction.pos_transaction_lines.sum(&:line_discount_cents)
   end

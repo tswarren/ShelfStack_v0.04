@@ -332,6 +332,35 @@ pos_transaction_lines.line_discount_cents
 pos_transaction_lines.transaction_discount_cents
 ```
 
+## Tax Exception Model (Phase 8.5-2)
+
+Phase 8.5-2 adds structured tax exception records while preserving cached tax totals:
+
+| Concept | Meaning |
+| --- | --- |
+| Tax Exception Reason | Admin-maintainable reason (`tax_exception_reasons`) |
+| Transaction Tax Exemption | One active exemption per transaction (`pos_tax_exemptions`) |
+| Line Tax Override | One active override per line (`pos_line_tax_overrides`) |
+| Normal Tax Snapshot | Expected tax before exceptions on each line |
+| Applied Tax Source | Why final tax differs (`applied_tax_source`) |
+
+Services:
+
+```text
+Pos::TaxRecalculator
+Pos::TaxExceptionApplicationService
+Pos::VoidTaxException
+```
+
+Cached fields:
+
+```text
+pos_transactions.tax_cents
+pos_transactions.normal_tax_cents
+pos_transaction_lines.tax_cents
+pos_transaction_lines.normal_tax_cents
+```
+
 ## Related Documents
 
 ```text

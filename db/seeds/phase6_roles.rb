@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "phase85_permissions"
+require_relative "phase852_permissions"
 
 module Seeds
   module Phase6Roles
@@ -23,6 +24,8 @@ module Seeds
           pos.reports.view pos.reports.drawer pos.reports.sales
           pos.returns.receipted pos.returns.partial
           pos.discounts.line.apply pos.discounts.transaction.apply
+          pos.tax_exemptions.apply pos.tax_exemptions.void
+          pos.tax_overrides.line.apply pos.tax_overrides.line.void
         ]
       },
       "pos_lead" => {
@@ -44,6 +47,8 @@ module Seeds
           pos.returns.receipted pos.returns.partial pos.returns.no_receipt
           pos.lines.sell_inactive
           pos.discounts.line.apply pos.discounts.transaction.apply pos.discounts.void
+          pos.tax_exemptions.apply pos.tax_exemptions.void
+          pos.tax_overrides.line.apply pos.tax_overrides.line.void
         ]
       },
       "pos_manager" => {
@@ -52,6 +57,7 @@ module Seeds
         permissions: (
           Seeds::Phase6Permissions::PERMISSIONS.map { |attrs| attrs[:key] } +
           Seeds::Phase85Permissions::PERMISSIONS.map { |attrs| attrs[:key] } +
+          Seeds::Phase852Permissions::PERMISSIONS.map { |attrs| attrs[:key] } +
           %w[pos.refunds.store_credit]
         ).uniq
       }

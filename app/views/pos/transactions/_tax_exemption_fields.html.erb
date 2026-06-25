@@ -1,0 +1,17 @@
+<div class="ss-form-grid">
+  <div class="ss-field">
+    <%= label_tag :tax_exception_reason_id, "Reason" %>
+    <%= select_tag :tax_exception_reason_id,
+          options_from_collection_for_select(pos_tax_exception_reason_options, :id, :name),
+          include_blank: "Select reason",
+          required: true %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :certificate_number, "Certificate/reference" %>
+    <%= text_field_tag :certificate_number %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :tax_exemption_note, "Note" %>
+    <%= text_area_tag :tax_exemption_note, nil, rows: 2 %>
+  </div>
+</div>

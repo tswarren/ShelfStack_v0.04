@@ -1,0 +1,35 @@
+<%= render "shared/forms/errors", record: tax_exception_reason %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Tax Exception Reason Details",
+  description: "Reason codes staff select when applying POS tax exemptions or overrides."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: tax_exception_reason, field: :reason_key, required: true } do %>
+      <%= f.text_field :reason_key, maxlength: 40 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: tax_exception_reason, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: tax_exception_reason, field: :exception_type, required: true } do %>
+      <%= f.select :exception_type, TaxExceptionReason::EXCEPTION_TYPES.map { |type| [type.humanize, type] } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: tax_exception_reason, field: :sort_order } do %>
+      <%= f.number_field :sort_order, step: 1, min: 0 %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "POS Behavior" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render "shared/forms/checkbox", f: f, record: tax_exception_reason, field: :requires_note,
+               help: "Staff must enter a note when using this reason." %>
+    <%= render "shared/forms/checkbox", f: f, record: tax_exception_reason, field: :requires_certificate,
+               help: "Staff must enter a certificate/reference when using this reason." %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: tax_exception_reason, field: :active,
+             help: "Inactive reasons remain for history but cannot be selected at the register." %>
+<% end %>

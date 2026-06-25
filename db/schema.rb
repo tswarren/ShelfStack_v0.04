@@ -996,6 +996,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.check_constraint "source::text = ANY (ARRAY['manual'::character varying, 'system'::character varying, 'promotion'::character varying, 'legacy'::character varying]::text[])", name: "pos_discount_applications_source_chk"
   end
 
+  create_table "pos_line_tax_overrides", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "details", default: {}, null: false
+    t.text "note"
+    t.datetime "overridden_at", null: false
+    t.bigint "overridden_by_user_id", null: false
+    t.bigint "override_store_tax_rate_id", null: false
+    t.string "override_store_tax_rate_short_name_snapshot"
+    t.bigint "override_tax_category_id", null: false
+    t.string "override_tax_identifier_snapshot", limit: 1
+    t.integer "override_tax_rate_bps", null: false
+    t.bigint "pos_transaction_id", null: false
+    t.bigint "pos_transaction_line_id", null: false
+    t.bigint "tax_exception_reason_id", null: false
+    t.datetime "updated_at", null: false
+    t.text "void_reason"
+    t.datetime "voided_at"
+    t.bigint "voided_by_user_id"
+    t.index ["overridden_by_user_id"], name: "index_pos_line_tax_overrides_on_overridden_by_user_id"
+    t.index ["override_store_tax_rate_id"], name: "index_pos_line_tax_overrides_on_override_store_tax_rate_id"
+    t.index ["override_tax_category_id"], name: "index_pos_line_tax_overrides_on_override_tax_category_id"
+    t.index ["pos_transaction_id"], name: "index_pos_line_tax_overrides_on_pos_transaction_id"
+    t.index ["pos_transaction_line_id"], name: "index_pos_line_tax_overrides_on_pos_transaction_line_id"
+    t.index ["pos_transaction_line_id"], name: "index_pos_line_tax_overrides_one_active_per_line", unique: true, where: "(voided_at IS NULL)"
+    t.index ["tax_exception_reason_id"], name: "index_pos_line_tax_overrides_on_tax_exception_reason_id"
+    t.index ["voided_by_user_id"], name: "index_pos_line_tax_overrides_on_voided_by_user_id"
+  end
+
   create_table "pos_receipts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "issued_at", null: false
@@ -1034,6 +1062,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["workstation_id"], name: "index_pos_register_sessions_one_open_per_workstation", unique: true, where: "((status)::text = 'open'::text)"
   end
 
+  create_table "pos_tax_exemptions", force: :cascade do |t|
+    t.string "certificate_number"
+    t.datetime "created_at", null: false
+    t.jsonb "details", default: {}, null: false
+    t.datetime "exempted_at", null: false
+    t.bigint "exempted_by_user_id", null: false
+    t.text "note"
+    t.bigint "pos_transaction_id", null: false
+    t.bigint "tax_exception_reason_id", null: false
+    t.datetime "updated_at", null: false
+    t.text "void_reason"
+    t.datetime "voided_at"
+    t.bigint "voided_by_user_id"
+    t.index ["exempted_by_user_id"], name: "index_pos_tax_exemptions_on_exempted_by_user_id"
+    t.index ["pos_transaction_id"], name: "index_pos_tax_exemptions_on_pos_transaction_id"
+    t.index ["pos_transaction_id"], name: "index_pos_tax_exemptions_one_active_per_transaction", unique: true, where: "(voided_at IS NULL)"
+    t.index ["tax_exception_reason_id"], name: "index_pos_tax_exemptions_on_tax_exception_reason_id"
+    t.index ["voided_by_user_id"], name: "index_pos_tax_exemptions_on_voided_by_user_id"
+  end
+
   create_table "pos_tenders", force: :cascade do |t|
     t.integer "amount_cents", null: false
     t.string "card_authorization_code"
@@ -1061,6 +1109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   end
 
   create_table "pos_transaction_lines", force: :cascade do |t|
+    t.string "applied_tax_source"
     t.boolean "cogs_estimated", default: false, null: false
     t.string "cogs_source"
     t.string "costing_method_snapshot"
@@ -1074,6 +1123,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "line_discount_cents", default: 0, null: false
     t.integer "line_number", null: false
     t.string "line_type", null: false
+    t.bigint "normal_store_tax_rate_id"
+    t.string "normal_store_tax_rate_short_name_snapshot"
+    t.bigint "normal_tax_category_id"
+    t.integer "normal_tax_cents", default: 0, null: false
+    t.string "normal_tax_identifier_snapshot", limit: 1
+    t.integer "normal_tax_rate_bps"
     t.string "open_ring_description"
     t.bigint "pos_transaction_id", null: false
     t.bigint "product_id"
@@ -1106,6 +1161,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "variant_sku_snapshot"
     t.index ["customer_request_line_id"], name: "index_pos_transaction_lines_on_customer_request_line_id"
     t.index ["inventory_reservation_id"], name: "index_pos_transaction_lines_on_inventory_reservation_id"
+    t.index ["normal_store_tax_rate_id"], name: "index_pos_transaction_lines_on_normal_store_tax_rate_id"
+    t.index ["normal_tax_category_id"], name: "index_pos_transaction_lines_on_normal_tax_category_id"
     t.index ["pos_transaction_id", "line_number"], name: "index_pos_transaction_lines_on_transaction_and_line_number", unique: true
     t.index ["pos_transaction_id"], name: "index_pos_transaction_lines_on_pos_transaction_id"
     t.index ["product_id"], name: "index_pos_transaction_lines_on_product_id"
@@ -1118,6 +1175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["stored_value_identifier_id"], name: "index_pos_transaction_lines_on_stored_value_identifier_id"
     t.index ["sub_department_id"], name: "index_pos_transaction_lines_on_sub_department_id"
     t.index ["tax_category_id"], name: "index_pos_transaction_lines_on_tax_category_id"
+    t.check_constraint "applied_tax_source IS NULL OR (applied_tax_source::text = ANY (ARRAY['normal'::character varying, 'non_taxable'::character varying, 'transaction_exemption'::character varying, 'sourced_return'::character varying, 'line_override'::character varying]::text[]))", name: "pos_transaction_lines_applied_tax_source_chk"
     t.check_constraint "cogs_source IS NULL OR (cogs_source::text = ANY (ARRAY['moving_average'::character varying, 'unit_cost'::character varying, 'receipt_cost'::character varying, 'buyback_offer'::character varying, 'margin_estimate'::character varying, 'return_reversal'::character varying, 'none'::character varying, 'unknown'::character varying]::text[]))", name: "pos_transaction_lines_cogs_source_chk"
     t.check_constraint "costing_method_snapshot IS NULL OR (costing_method_snapshot::text = ANY (ARRAY['moving_average'::character varying, 'unit_cost'::character varying, 'receipt_cost'::character varying, 'buyback_offer'::character varying, 'margin_estimate'::character varying, 'return_reversal'::character varying, 'none'::character varying, 'unknown'::character varying]::text[]))", name: "pos_transaction_lines_costing_method_snapshot_chk"
     t.check_constraint "inventory_tracking_snapshot IS NULL OR (inventory_tracking_snapshot::text = ANY (ARRAY['inventory'::character varying, 'non_inventory'::character varying]::text[]))", name: "pos_transaction_lines_inventory_tracking_snapshot_chk"
@@ -1132,6 +1190,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.datetime "created_at", null: false
     t.bigint "customer_id"
     t.integer "discount_cents", default: 0, null: false
+    t.integer "normal_tax_cents", default: 0, null: false
     t.text "notes"
     t.bigint "pos_register_session_id"
     t.integer "rounding_cents", default: 0, null: false
@@ -1884,6 +1943,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["sort_order"], name: "index_tax_categories_on_sort_order"
   end
 
+  create_table "tax_exception_reasons", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "exception_type", null: false
+    t.string "name", null: false
+    t.string "reason_key", null: false
+    t.boolean "requires_certificate", default: false, null: false
+    t.boolean "requires_note", default: false, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_tax_exception_reasons_on_name", unique: true
+    t.index ["reason_key"], name: "index_tax_exception_reasons_on_reason_key", unique: true
+    t.check_constraint "exception_type::text = ANY (ARRAY['exemption'::character varying, 'rate_override'::character varying, 'both'::character varying]::text[])", name: "tax_exception_reasons_exception_type_chk"
+  end
+
   create_table "user_role_assignments", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "assigned_at"
@@ -2156,12 +2230,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_discount_applications", "users", column: "applied_by_user_id"
   add_foreign_key "pos_discount_applications", "users", column: "approved_by_user_id"
   add_foreign_key "pos_discount_applications", "users", column: "voided_by_user_id"
+  add_foreign_key "pos_line_tax_overrides", "pos_transaction_lines"
+  add_foreign_key "pos_line_tax_overrides", "pos_transactions"
+  add_foreign_key "pos_line_tax_overrides", "store_tax_rates", column: "override_store_tax_rate_id"
+  add_foreign_key "pos_line_tax_overrides", "tax_categories", column: "override_tax_category_id"
+  add_foreign_key "pos_line_tax_overrides", "tax_exception_reasons"
+  add_foreign_key "pos_line_tax_overrides", "users", column: "overridden_by_user_id"
+  add_foreign_key "pos_line_tax_overrides", "users", column: "voided_by_user_id"
   add_foreign_key "pos_receipts", "pos_transactions"
   add_foreign_key "pos_receipts", "stores"
   add_foreign_key "pos_register_sessions", "stores"
   add_foreign_key "pos_register_sessions", "users", column: "closed_by_user_id"
   add_foreign_key "pos_register_sessions", "users", column: "opened_by_user_id"
   add_foreign_key "pos_register_sessions", "workstations"
+  add_foreign_key "pos_tax_exemptions", "pos_transactions"
+  add_foreign_key "pos_tax_exemptions", "tax_exception_reasons"
+  add_foreign_key "pos_tax_exemptions", "users", column: "exempted_by_user_id"
+  add_foreign_key "pos_tax_exemptions", "users", column: "voided_by_user_id"
   add_foreign_key "pos_tenders", "pos_tenders", column: "reverses_tender_id"
   add_foreign_key "pos_tenders", "pos_transactions"
   add_foreign_key "pos_tenders", "stored_value_accounts"
@@ -2175,10 +2260,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_transaction_lines", "products"
   add_foreign_key "pos_transaction_lines", "special_orders"
   add_foreign_key "pos_transaction_lines", "store_tax_rates"
+  add_foreign_key "pos_transaction_lines", "store_tax_rates", column: "normal_store_tax_rate_id"
   add_foreign_key "pos_transaction_lines", "stored_value_accounts"
   add_foreign_key "pos_transaction_lines", "stored_value_identifiers"
   add_foreign_key "pos_transaction_lines", "sub_departments"
   add_foreign_key "pos_transaction_lines", "tax_categories"
+  add_foreign_key "pos_transaction_lines", "tax_categories", column: "normal_tax_category_id"
   add_foreign_key "pos_transactions", "customers"
   add_foreign_key "pos_transactions", "pos_register_sessions"
   add_foreign_key "pos_transactions", "stores"

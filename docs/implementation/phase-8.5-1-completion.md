@@ -64,7 +64,7 @@ Pos::VoidDiscountApplication
 | --- | --- |
 | Promotion/coupon/loyalty engines | Future |
 | Full discount activity report UI | Future (data model ready) |
-| Tax-exempt / tax-override | Phase 8.5 Epic 2 |
+| Tax-exempt / tax-override | Phase 8.5-2 (8.5-2a exemption + 8.5-2b line override) |
 | Tender/customer cleanup | Phase 8.5 Epic 3 |
 
 ## Related documents

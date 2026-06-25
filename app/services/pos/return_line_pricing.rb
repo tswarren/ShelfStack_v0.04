@@ -38,7 +38,9 @@ module Pos
       line.store_tax_rate_id = source_line.store_tax_rate_id
       line.tax_identifier_snapshot = source_line.tax_identifier_snapshot
       line.store_tax_rate_short_name_snapshot = source_line.store_tax_rate_short_name_snapshot
+      apply_normal_tax_from_source!(source_line, return_quantity, sold_quantity)
       line.sub_department_id = source_line.sub_department_id
+      line.applied_tax_source = "sourced_return"
       line.save!
       line
     end
@@ -46,6 +48,24 @@ module Pos
     private
 
     attr_reader :line
+
+    def apply_normal_tax_from_source!(source_line, return_quantity, sold_quantity)
+      if source_line.normal_tax_cents.to_i.positive? || source_line.normal_tax_category_id.present?
+        line.normal_tax_cents = prorate(source_line.normal_tax_cents, return_quantity, sold_quantity)
+        line.normal_tax_category_id = source_line.normal_tax_category_id
+        line.normal_store_tax_rate_id = source_line.normal_store_tax_rate_id
+        line.normal_tax_rate_bps = source_line.normal_tax_rate_bps
+        line.normal_tax_identifier_snapshot = source_line.normal_tax_identifier_snapshot
+        line.normal_store_tax_rate_short_name_snapshot = source_line.normal_store_tax_rate_short_name_snapshot
+      else
+        line.normal_tax_cents = prorate(source_line.tax_cents, return_quantity, sold_quantity)
+        line.normal_tax_category_id = source_line.tax_category_id
+        line.normal_store_tax_rate_id = source_line.store_tax_rate_id
+        line.normal_tax_rate_bps = source_line.tax_rate_bps
+        line.normal_tax_identifier_snapshot = source_line.tax_identifier_snapshot
+        line.normal_store_tax_rate_short_name_snapshot = source_line.store_tax_rate_short_name_snapshot
+      end
+    end
 
     def prorate(amount_cents, return_quantity, sold_quantity)
       ((amount_cents * return_quantity) / sold_quantity.to_f).round

@@ -163,6 +163,8 @@ Gift card sale lines should always be system non-discountable.
 
 # Epic 2 — POS tax exception tracking
 
+**Status:** Implemented in Phase 8.5-2 (8.5-2a transaction exemption + 8.5-2b line override). See [phase-8.5-2_pos_tax_exemption_tracking.md](phase-8.5-2_pos_tax_exemption_tracking.md).
+
 ## Problem
 
 Reporting needs to explain tax results, especially when tax differs from the default calculation.

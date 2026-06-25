@@ -1,0 +1,9 @@
+<% exemption = pos_receipt_tax_exemption(transaction) %>
+<% if exemption.present? %>
+  <div class="ss-receipt-tax-exemption">
+    <p>Tax exemption: <%= exemption[:reason_name] %></p>
+    <% if exemption[:certificate_number].present? %>
+      <p>Certificate: <%= exemption[:certificate_number] %></p>
+    <% end %>
+  </div>
+<% end %>
