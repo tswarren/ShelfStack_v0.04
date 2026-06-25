@@ -12,6 +12,7 @@ class PosTransactionLine < ApplicationRecord
     moving_average unit_cost receipt_cost buyback_offer margin_estimate
     return_reversal none unknown
   ].freeze
+  GIFT_CARD_SALE_DESCRIPTION = "Gift card"
   APPLIED_TAX_SOURCES = Pos::TaxRecalculator::APPLIED_TAX_SOURCES
 
   belongs_to :pos_transaction
