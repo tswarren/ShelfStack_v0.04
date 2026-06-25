@@ -221,6 +221,7 @@ module PosHelper
   def pos_supervisor_auth_message(check)
     case check.key
     when :discount_auth then "This discount exceeds the cashier limit. A manager must enter their username and PIN to approve."
+    when :discount_reason_auth then "This discount reason requires manager approval before it can be applied."
     when :no_receipt_return then "This return has no receipt. A manager must enter their username and PIN to approve."
     when :cash_refund_auth then "This cash refund exceeds the limit. A manager must enter their username and PIN to approve."
     when :reserved_stock_auth then "This sale uses stock reserved for customer pickup. A manager must approve selling without a reservation line."
@@ -255,6 +256,37 @@ module PosHelper
 
   def pos_discount_type_options
     [ [ "Amount ($)", "amount" ], [ "Percent (%)", "percent" ] ]
+  end
+
+  def pos_discount_reason_options
+    DiscountReason.active_records.order(:sort_order, :name).map do |reason|
+      [
+        reason.name,
+        reason.id,
+        { data: { requires_authorization: reason.requires_authorization? } }
+      ]
+    end
+  end
+
+  def pos_discount_reason_requires_authorization?(reason_id)
+    return false if reason_id.blank?
+
+    DiscountReason.active_records.find_by(id: reason_id)&.requires_authorization?
+  end
+
+  def pos_transaction_item_discount_cents(transaction)
+    transaction.pos_transaction_lines.sum(&:line_discount_cents)
+  end
+
+  def pos_transaction_discount_base_cents(transaction)
+    transaction.pos_transaction_lines.sum do |line|
+      next 0 unless line.quantity.positive?
+
+      eligibility = Pos::DiscountEligibilityResolver.call(line)
+      next 0 unless eligibility.discountable
+
+      [ Pos::DiscountInput.line_base_cents(line) - line.line_discount_cents.to_i - line.transaction_discount_cents.to_i, 0 ].max
+    end
   end
 
   def pos_discount_amount_display(cents)
@@ -427,11 +459,36 @@ module PosHelper
   end
 
   def pos_line_discount_breakdown(line)
-    parts = []
-    parts << "line #{pos_money(line.line_discount_cents)}" if line.line_discount_cents.to_i.positive?
+    parts = pos_line_discount_breakdown_parts(line)
+    return parts.join(", ") if parts.any?
+
+    legacy_parts = []
+    legacy_parts << "line #{pos_money(line.line_discount_cents)}" if line.line_discount_cents.to_i.positive?
     txn_share = pos_line_transaction_discount_cents(line)
-    parts << "order #{pos_money(txn_share)}" if txn_share.positive?
-    parts.join(", ")
+    legacy_parts << "order #{pos_money(txn_share)}" if txn_share.positive?
+    legacy_parts.join(", ")
+  end
+
+  def pos_line_discount_breakdown_parts(line)
+    parts = []
+    line.pos_discount_applications.active_records.order(:stack_order).each do |application|
+      parts << "#{application.discount_reason.name} #{pos_money(application.applied_discount_cents)}"
+    end
+
+    transaction_allocations_for_line(line).each do |allocation|
+      reason_name = allocation.pos_discount_application.discount_reason.name
+      parts << "order #{reason_name} #{pos_money(allocation.allocated_discount_cents)}"
+    end
+
+    parts
+  end
+
+  def transaction_allocations_for_line(line)
+    line.pos_discount_allocations
+      .joins(:pos_discount_application)
+      .merge(PosDiscountApplication.active_records.where(scope: "transaction"))
+      .includes(pos_discount_application: :discount_reason)
+      .order("pos_discount_applications.stack_order")
   end
 
   def pos_line_tax_indicator(line)
@@ -602,20 +659,71 @@ module PosHelper
     (line.extended_price_cents.to_f / qty).round
   end
 
-  def pos_receipt_line_item_discount_display_cents(line)
-    line.line_discount_cents.to_i.abs
+  def pos_receipt_line_per_unit_discount_cents(line, total_discount_cents)
+    qty = line.quantity.abs
+    return total_discount_cents.to_i if qty <= 1
+
+    (total_discount_cents.to_f / qty).round
+  end
+
+  ReceiptLineDiscountDetail = Data.define(:label, :amount_cents)
+
+  def pos_receipt_line_discount_details(line)
+    return [] if line.return_line? || line.gift_card_sale_line?
+
+    details = pos_receipt_line_discount_details_from_applications(line)
+    details = legacy_receipt_line_discount_details(line) if details.empty?
+
+    details.map do |detail|
+      ReceiptLineDiscountDetail.new(
+        label: detail.label,
+        amount_cents: pos_receipt_line_per_unit_discount_cents(line, detail.amount_cents)
+      )
+    end
+  end
+
+  def pos_receipt_line_discount_details_from_applications(line)
+    details = []
+    line.pos_discount_applications.active_records.order(:stack_order).each do |application|
+      details << ReceiptLineDiscountDetail.new(
+        label: application.discount_reason.name,
+        amount_cents: application.applied_discount_cents.to_i
+      )
+    end
+
+    transaction_allocations_for_line(line).each do |allocation|
+      reason_name = allocation.pos_discount_application.discount_reason.name
+      details << ReceiptLineDiscountDetail.new(
+        label: "Order discount — #{reason_name}",
+        amount_cents: allocation.allocated_discount_cents.to_i
+      )
+    end
+
+    details
+  end
+
+  def legacy_receipt_line_discount_details(line)
+    details = []
+    if line.line_discount_cents.to_i.positive?
+      details << ReceiptLineDiscountDetail.new(label: "Item discount", amount_cents: line.line_discount_cents.to_i)
+    end
+
+    txn_share = pos_line_transaction_discount_cents(line)
+    if txn_share.positive?
+      details << ReceiptLineDiscountDetail.new(label: "Order discount", amount_cents: txn_share)
+    end
+
+    details
+  end
+
+  def pos_receipt_line_show_discount_details?(line)
+    pos_receipt_line_discount_details(line).any?
   end
 
   def pos_receipt_line_show_list_detail?(line)
     return false if line.return_line?
 
     pos_receipt_line_list_amount_cents(line) != pos_receipt_line_header_amount_cents(line)
-  end
-
-  def pos_receipt_line_show_item_discount_detail?(line)
-    return false if line.return_line?
-
-    line.line_discount_cents.to_i.positive?
   end
 
   def pos_receipt_line_show_quantity_detail?(line)

@@ -75,7 +75,7 @@ module Setup
 
     def department_params
       params.require(:department).permit(
-        :department_number, :name, :short_name, :gl_account_code, :description, :active
+        :department_number, :name, :short_name, :gl_account_code, :description, :discountable, :active
       )
     end
   end

@@ -186,7 +186,7 @@ module Items
         :product_id, :name, :name_override, :short_name, :sku, :condition_id, :sub_department_id,
         :display_location_id, :attribute1_value, :attribute1_sku_component, :attribute2_value,
         :attribute2_sku_component, :selling_price_cents, :pricing_model_override,
-        :inventory_behavior, :inventory_tracking, :active
+        :inventory_behavior, :inventory_tracking, :discountable, :active
       )
       permitted.delete(:inventory_behavior) unless manage_inventory_behavior?
       permitted

@@ -95,7 +95,10 @@ module Pos
     attr_reader :transaction, :completed_by_user, :register_session, :confirmed_inactive, :pos_authorization_id
 
     def validate_authorizations!
-      if transaction.discount_cents.to_i > AuthorizationRequest::TRANSACTION_DISCOUNT_LIMIT_CENTS
+      total_discount = transaction.pos_transaction_lines.sum do |line|
+        line.line_discount_cents.to_i + line.transaction_discount_cents.to_i
+      end
+      if total_discount > AuthorizationRequest::TRANSACTION_DISCOUNT_LIMIT_CENTS
         require_authorization!(:discount_over_limit, "Transaction discount exceeds limit; supervisor authorization required.")
       end
 

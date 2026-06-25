@@ -211,6 +211,8 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/2 @ .*?\$14\.50/, response.body)
     assert_match(/List price \$15\.00/, response.body)
+    assert_match(/Item discount −\$0\.50/, response.body)
     assert_no_match(/List price \$30\.00/, response.body)
+    assert_no_match(/Item discount −\$1\.00/, response.body)
   end
 end

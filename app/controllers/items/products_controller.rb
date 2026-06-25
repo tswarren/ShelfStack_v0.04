@@ -129,7 +129,7 @@ module Items
       permitted = params.require(:product).permit(
         :catalog_item_id, :name, :name_override, :short_name, :sku, :product_type, :variation_type,
         :list_price_cents, :default_display_location_id, :default_sub_department_id,
-        :variant1_label, :variant2_label, :active, :cover_image
+        :variant1_label, :variant2_label, :discountable, :active, :cover_image
       )
 
       if catalog_linked_product?

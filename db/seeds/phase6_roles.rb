@@ -20,6 +20,7 @@ module Seeds
           pos.receipts.view pos.receipts.print
           pos.reports.view pos.reports.drawer pos.reports.sales
           pos.returns.receipted pos.returns.partial
+          pos.discounts.line.apply pos.discounts.transaction.apply
         ]
       },
       "pos_lead" => {
@@ -40,6 +41,7 @@ module Seeds
           pos.reports.view pos.reports.drawer pos.reports.sales pos.reports.returns pos.reports.summary pos.reports.register_summary
           pos.returns.receipted pos.returns.partial pos.returns.no_receipt
           pos.lines.sell_inactive
+          pos.discounts.line.apply pos.discounts.transaction.apply pos.discounts.void
         ]
       },
       "pos_manager" => {
@@ -47,6 +49,7 @@ module Seeds
         description: "Full POS operations including authorizations and exports",
         permissions: (
           Seeds::Phase6Permissions::PERMISSIONS.map { |attrs| attrs[:key] } +
+          Seeds::Phase85Permissions::PERMISSIONS.map { |attrs| attrs[:key] } +
           %w[pos.refunds.store_credit]
         ).uniq
       }

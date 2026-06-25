@@ -29,6 +29,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 7B | Customer Credit Foundation    | POS multi-row settlement (7B-1), stored value accounts/ledger (7B-2), POS issue/redeem (7B-3). **Complete.** |
 | Phase 7C | Used Buyback                  | Customer-required buyback sessions, graded used variants, cash/trade-credit/donation payout, inventory posting. **Complete** (2026-06-23). |
 | Phase 8 | Inventory Eligibility and Tracking | Centralized inventory tracking gate (`inventory` / `non_inventory`); behavior-neutral resolver/eligibility refactor. **8-1/8-2 complete** (2026-06-23). |
+| Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **Complete** (2026-06-25). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
 | Phase 9 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
@@ -493,6 +494,27 @@ Phase 8-1 and 8-2 are **complete** (2026-06-23). Slices 8-3 (schema defaults), 8
 * [specifications/phase-8-inventory-eligibility-and-tracking-spec.md](specifications/phase-8-inventory-eligibility-and-tracking-spec.md)
 * [specifications/phase-8-test-plan.md](specifications/phase-8-test-plan.md)
 * [implementation/phase-8-1-8-2-completion.md](implementation/phase-8-1-8-2-completion.md)
+
+---
+
+# Phase 8.5-1: POS Discount Model & Calculation
+
+## Purpose
+
+Phase 8.5-1 makes POS discounts structured, auditable, stackable, and report-ready before Phase 9 reporting. It introduces discount reasons, application and allocation records, stacking, non-discountable eligibility, and gift card sale protection while preserving existing cached discount cents fields.
+
+## Status
+
+**Complete** (2026-06-25). See [implementation/phase-8.5-1-completion.md](implementation/phase-8.5-1-completion.md).
+
+## Detailed Documents
+
+* [roadmap/phase-8.5-1-pos-discount-mdel](roadmap/phase-8.5-1-pos-discount-mdel)
+* [specifications/phase-8.5-1-pos-discount-spec.md](specifications/phase-8.5-1-pos-discount-spec.md)
+* [specifications/phase-8.5-1-data-model.md](specifications/phase-8.5-1-data-model.md)
+* [specifications/phase-8.5-1-test-plan.md](specifications/phase-8.5-1-test-plan.md)
+
+Related operational context: [roadmap/phase-8.5-operational-cleanup.md](roadmap/phase-8.5-operational-cleanup.md)
 
 ---
 

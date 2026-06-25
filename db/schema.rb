@@ -525,6 +525,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.datetime "created_at", null: false
     t.string "department_number", limit: 3, null: false
     t.text "description"
+    t.boolean "discountable", default: true, null: false
     t.string "gl_account_code", limit: 20
     t.string "name", null: false
     t.string "short_name", limit: 20, null: false
@@ -534,6 +535,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["gl_account_code"], name: "index_departments_on_gl_account_code"
     t.index ["name"], name: "index_departments_on_name", unique: true
     t.index ["short_name"], name: "index_departments_on_short_name", unique: true
+  end
+
+  create_table "discount_reasons", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.string "reason_key", null: false
+    t.boolean "requires_authorization", default: false, null: false
+    t.boolean "requires_note", default: false, null: false
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_discount_reasons_on_name", unique: true
+    t.index ["reason_key"], name: "index_discount_reasons_on_reason_key", unique: true
   end
 
   create_table "display_locations", force: :cascade do |t|
@@ -906,6 +921,81 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["store_id"], name: "index_pos_cash_movements_on_store_id"
   end
 
+  create_table "pos_discount_allocations", force: :cascade do |t|
+    t.integer "allocated_discount_cents", default: 0, null: false
+    t.integer "allocation_base_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "department_id"
+    t.string "department_name_snapshot"
+    t.integer "line_number_snapshot"
+    t.bigint "pos_discount_application_id", null: false
+    t.bigint "pos_transaction_id", null: false
+    t.bigint "pos_transaction_line_id", null: false
+    t.bigint "product_id"
+    t.string "product_name_snapshot"
+    t.bigint "product_variant_id"
+    t.string "scope", null: false
+    t.bigint "sub_department_id"
+    t.string "sub_department_name_snapshot"
+    t.bigint "tax_category_id"
+    t.datetime "updated_at", null: false
+    t.string "variant_name_snapshot"
+    t.string "variant_sku_snapshot"
+    t.index ["department_id"], name: "index_pos_discount_allocations_on_department_id"
+    t.index ["pos_discount_application_id"], name: "index_pos_discount_allocations_on_pos_discount_application_id"
+    t.index ["pos_transaction_id"], name: "index_pos_discount_allocations_on_pos_transaction_id"
+    t.index ["pos_transaction_line_id"], name: "index_pos_discount_allocations_on_pos_transaction_line_id"
+    t.index ["product_id"], name: "index_pos_discount_allocations_on_product_id"
+    t.index ["product_variant_id"], name: "index_pos_discount_allocations_on_product_variant_id"
+    t.index ["sub_department_id"], name: "index_pos_discount_allocations_on_sub_department_id"
+    t.index ["tax_category_id"], name: "index_pos_discount_allocations_on_tax_category_id"
+    t.check_constraint "allocated_discount_cents >= 0", name: "pos_discount_allocations_allocated_discount_cents_chk"
+    t.check_constraint "allocation_base_cents >= 0", name: "pos_discount_allocations_allocation_base_cents_chk"
+    t.check_constraint "scope::text = ANY (ARRAY['line'::character varying, 'transaction'::character varying]::text[])", name: "pos_discount_allocations_scope_chk"
+  end
+
+  create_table "pos_discount_applications", force: :cascade do |t|
+    t.datetime "applied_at", null: false
+    t.bigint "applied_by_user_id", null: false
+    t.integer "applied_discount_cents", default: 0, null: false
+    t.bigint "approved_by_user_id"
+    t.integer "base_amount_cents", default: 0, null: false
+    t.integer "calculated_discount_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.jsonb "details", default: {}, null: false
+    t.string "discount_method", null: false
+    t.bigint "discount_reason_id", null: false
+    t.integer "entered_amount_cents"
+    t.integer "entered_percent_bps"
+    t.text "note"
+    t.bigint "pos_authorization_id"
+    t.bigint "pos_transaction_id", null: false
+    t.bigint "pos_transaction_line_id"
+    t.string "scope", null: false
+    t.string "source", null: false
+    t.integer "stack_order", null: false
+    t.integer "target_price_cents"
+    t.datetime "updated_at", null: false
+    t.text "void_reason"
+    t.datetime "voided_at"
+    t.bigint "voided_by_user_id"
+    t.index ["applied_by_user_id"], name: "index_pos_discount_applications_on_applied_by_user_id"
+    t.index ["approved_by_user_id"], name: "index_pos_discount_applications_on_approved_by_user_id"
+    t.index ["discount_reason_id"], name: "index_pos_discount_applications_on_discount_reason_id"
+    t.index ["pos_authorization_id"], name: "index_pos_discount_applications_on_pos_authorization_id"
+    t.index ["pos_transaction_id", "voided_at", "stack_order"], name: "index_pos_discount_apps_on_txn_voided_stack"
+    t.index ["pos_transaction_id"], name: "index_pos_discount_applications_on_pos_transaction_id"
+    t.index ["pos_transaction_line_id"], name: "index_pos_discount_applications_on_pos_transaction_line_id"
+    t.index ["voided_by_user_id"], name: "index_pos_discount_applications_on_voided_by_user_id"
+    t.check_constraint "applied_discount_cents >= 0", name: "pos_discount_applications_applied_discount_cents_chk"
+    t.check_constraint "base_amount_cents >= 0", name: "pos_discount_applications_base_amount_cents_chk"
+    t.check_constraint "calculated_discount_cents >= 0", name: "pos_discount_applications_calculated_discount_cents_chk"
+    t.check_constraint "discount_method::text = ANY (ARRAY['amount'::character varying, 'percent'::character varying, 'price_override'::character varying]::text[])", name: "pos_discount_applications_discount_method_chk"
+    t.check_constraint "entered_percent_bps IS NULL OR entered_percent_bps >= 0 AND entered_percent_bps <= 10000", name: "pos_discount_applications_entered_percent_bps_chk"
+    t.check_constraint "scope::text = ANY (ARRAY['line'::character varying, 'transaction'::character varying]::text[])", name: "pos_discount_applications_scope_chk"
+    t.check_constraint "source::text = ANY (ARRAY['manual'::character varying, 'system'::character varying, 'promotion'::character varying, 'legacy'::character varying]::text[])", name: "pos_discount_applications_source_chk"
+  end
+
   create_table "pos_receipts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "issued_at", null: false
@@ -1151,6 +1241,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "condition_id"
     t.datetime "created_at", null: false
     t.bigint "created_from_buyback_session_id"
+    t.boolean "discountable", default: true, null: false
     t.bigint "display_location_id"
     t.string "inventory_behavior", default: "standard_physical", null: false
     t.string "inventory_tracking_override"
@@ -1206,6 +1297,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.bigint "default_display_location_id"
     t.string "default_inventory_tracking"
     t.bigint "default_sub_department_id"
+    t.boolean "discountable", default: true, null: false
     t.integer "list_price_cents", default: 0, null: false
     t.string "name", null: false
     t.string "name_override"
@@ -1765,6 +1857,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "default_pricing_model"
     t.bigint "default_tax_category_id", null: false
     t.bigint "department_id", null: false
+    t.boolean "discountable", default: true, null: false
     t.string "name", null: false
     t.string "short_name", null: false
     t.string "sub_department_key", null: false
@@ -2047,6 +2140,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "pos_cash_movements", "pos_register_sessions"
   add_foreign_key "pos_cash_movements", "stores"
   add_foreign_key "pos_cash_movements", "users", column: "recorded_by_user_id"
+  add_foreign_key "pos_discount_allocations", "departments"
+  add_foreign_key "pos_discount_allocations", "pos_discount_applications"
+  add_foreign_key "pos_discount_allocations", "pos_transaction_lines"
+  add_foreign_key "pos_discount_allocations", "pos_transactions"
+  add_foreign_key "pos_discount_allocations", "product_variants"
+  add_foreign_key "pos_discount_allocations", "products"
+  add_foreign_key "pos_discount_allocations", "sub_departments"
+  add_foreign_key "pos_discount_allocations", "tax_categories"
+  add_foreign_key "pos_discount_applications", "discount_reasons"
+  add_foreign_key "pos_discount_applications", "pos_authorizations"
+  add_foreign_key "pos_discount_applications", "pos_transaction_lines"
+  add_foreign_key "pos_discount_applications", "pos_transactions"
+  add_foreign_key "pos_discount_applications", "users", column: "applied_by_user_id"
+  add_foreign_key "pos_discount_applications", "users", column: "approved_by_user_id"
+  add_foreign_key "pos_discount_applications", "users", column: "voided_by_user_id"
   add_foreign_key "pos_receipts", "pos_transactions"
   add_foreign_key "pos_receipts", "stores"
   add_foreign_key "pos_register_sessions", "stores"

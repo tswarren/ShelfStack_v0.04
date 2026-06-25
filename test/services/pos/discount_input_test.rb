@@ -66,6 +66,15 @@ class Pos::DiscountInputTest < ActiveSupport::TestCase
     assert_match(/cannot exceed/i, error.message)
   end
 
+  test "transaction base excludes line and transaction discounts already applied" do
+    lines = @transaction.pos_transaction_lines.order(:line_number).to_a
+    lines.first.update!(line_discount_cents: 200, transaction_discount_cents: 100, extended_price_cents: 1700)
+
+    base = Pos::DiscountInput.discountable_transaction_base_cents(@transaction.reload)
+
+    assert_equal 3500, base
+  end
+
   test "ten percent transaction discount on mixed lines" do
     base = Pos::DiscountInput.discountable_transaction_base_cents(@transaction)
     discount_cents = Pos::DiscountInput.resolve_cents(value: "10", input_type: "percent", base_cents: base)

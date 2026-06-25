@@ -69,5 +69,7 @@
       <p class="ss-hint">Default subdepartment for sellable SKUs created for this product.</p>
     <% end %>
   </div>
+  <%= render "shared/forms/checkbox", f: f, record: product, field: :discountable,
+             help: "When unchecked, sellable SKUs for this product cannot receive POS discounts unless overridden at the variant." %>
   <%= render "shared/forms/checkbox", f: f, record: product, field: :active %>
 <% end %>

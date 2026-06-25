@@ -1,0 +1,26 @@
+<% allocations = line.pos_discount_allocations
+     .joins(:pos_discount_application)
+     .merge(PosDiscountApplication.active_records)
+     .includes(pos_discount_application: :discount_reason)
+     .order("pos_discount_applications.stack_order") %>
+<% if allocations.any? %>
+  <ul class="ss-pos-discount-list">
+    <% allocations.each do |allocation| %>
+      <% application = allocation.pos_discount_application %>
+      <li>
+        <span>
+          <%= application.discount_reason.name %>
+          <% if application.transaction_scope? %><span class="ss-hint">(order)</span><% end %>
+          −<%= pos_money(allocation.allocated_discount_cents) %>
+        </span>
+        <% if application.line_scope? && transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.discounts.void", store: current_store) %>
+          <%= button_to "Remove",
+                void_discount_application_pos_transaction_path(transaction, application_id: application.id),
+                method: :delete,
+                class: "ss-btn ss-btn-secondary ss-btn--small",
+                form: { data: { turbo_stream: true } } %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

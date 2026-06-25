@@ -185,7 +185,10 @@ module Pos
     end
 
     def discount_authorization_check
-      return unless transaction.discount_cents.to_i > AuthorizationRequest::TRANSACTION_DISCOUNT_LIMIT_CENTS
+      total_discount = transaction.pos_transaction_lines.sum do |line|
+        line.line_discount_cents.to_i + line.transaction_discount_cents.to_i
+      end
+      return unless total_discount > AuthorizationRequest::TRANSACTION_DISCOUNT_LIMIT_CENTS
 
       if authorization_valid?(:discount_over_limit)
         Check.new(key: :discount_auth, status: :ok, message: "Discount authorized", action_key: nil, action_label: nil)

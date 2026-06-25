@@ -42,6 +42,7 @@ module Pos
       attrs = normalize_attrs_hash(attrs)
       amount_cents = parse_amount_cents(attrs)
       tendered_cents = parse_tendered_cents(attrs)
+      amount_cents = coalesce_cash_refund_amount_cents(attrs, amount_cents, tendered_cents)
       return if amount_cents.zero? && tendered_cents.nil? && !zero_total_input?(attrs, amount_cents) && !truthy?(attrs[:_destroy])
 
       amount_cents = self.class.normalize_refund_amount_cents(transaction, amount_cents)
@@ -62,6 +63,15 @@ module Pos
         lookup_code: attrs[:lookup_code].presence,
         generate_identifier: parse_generate_identifier(attrs)
       )
+    end
+
+    def coalesce_cash_refund_amount_cents(attrs, amount_cents, tendered_cents)
+      return amount_cents unless attrs[:tender_type] == "cash"
+      return amount_cents unless Pos::TenderTypePolicy.refund_transaction?(transaction)
+      return amount_cents if amount_cents.nonzero?
+      return amount_cents if tendered_cents.to_i.zero?
+
+      tendered_cents.to_i
     end
 
     def parse_amount_cents(attrs)

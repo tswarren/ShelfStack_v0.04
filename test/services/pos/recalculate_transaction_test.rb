@@ -66,4 +66,35 @@ class Pos::RecalculateTransactionTest < ActiveSupport::TestCase
     assert_equal 1000, line.line_discount_cents
     assert_equal 0, line.extended_price_cents
   end
+
+  test "structured line discount recalculates tax and total from discounted extended price" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
+    )
+    reason = DiscountReason.create!(reason_key: "recalc_structured", name: "Recalc structured")
+    line = transaction.pos_transaction_lines.first
+    PosDiscountApplication.create!(
+      pos_transaction: transaction,
+      pos_transaction_line: line,
+      discount_reason: reason,
+      scope: "line",
+      source: "manual",
+      discount_method: "amount",
+      entered_amount_cents: 100,
+      stack_order: 1,
+      applied_by_user: @user,
+      applied_at: Time.current
+    )
+
+    Pos::RecalculateTransaction.call!(transaction.reload)
+    line.reload
+
+    assert_equal 100, line.line_discount_cents
+    assert_equal 900, line.extended_price_cents
+    assert_operator line.tax_cents, :<, 60
+    assert_equal line.extended_price_cents + line.tax_cents, transaction.total_cents
+  end
 end

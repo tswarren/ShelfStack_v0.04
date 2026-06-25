@@ -5,6 +5,8 @@ module Pos
     RECEIPT_NUMBER_PATTERN = /\A\d+-\d+-\d{6}\z/
     BALANCE_COMMAND_PATTERN = /\A\/balance\z/i
     GIFT_CARD_COMMAND_PATTERN = /\A\/giftcard(?:\s+(\d+(?:\.\d{1,2})?))?\z/i
+    LINE_DISCOUNT_COMMAND_PATTERN = /\A\/d\z/i
+    TRANSACTION_DISCOUNT_COMMAND_PATTERN = /\A\/dt\z/i
 
     Route = Data.define(:action, :payload, :message)
 
@@ -21,11 +23,19 @@ module Pos
     def call
       return Route.new(action: :empty, payload: {}, message: "Enter a SKU, ISBN, receipt number, or amount.") if input.blank?
 
-      if gift_card_command?
-        return gift_card_route
-      end
+    if gift_card_command?
+      return gift_card_route
+    end
 
-      if balance_command?
+    if line_discount_command?
+      return Route.new(action: :line_discount_offer, payload: {}, message: nil)
+    end
+
+    if transaction_discount_command?
+      return Route.new(action: :transaction_discount_offer, payload: {}, message: nil)
+    end
+
+    if balance_command?
         return Route.new(action: :balance_inquiry_offer, payload: {}, message: nil)
       end
 
@@ -70,6 +80,14 @@ module Pos
 
     def balance_command?
       input.match?(BALANCE_COMMAND_PATTERN)
+    end
+
+    def line_discount_command?
+      input.match?(LINE_DISCOUNT_COMMAND_PATTERN)
+    end
+
+    def transaction_discount_command?
+      input.match?(TRANSACTION_DISCOUNT_COMMAND_PATTERN)
     end
 
     def gift_card_route
