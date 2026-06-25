@@ -75,8 +75,11 @@ export default class extends Controller {
         this.showBalancePanel()
         break
       case "line_discount_offer":
-        this.openTransactionDiscountPanel(false)
-        this.dispatchMessage("Edit the previous line to apply a line discount.")
+        if (data.payload?.line_id) {
+          this.openLineDiscount(data.payload.line_id)
+        } else {
+          this.dispatchMessage(data.message || "No line available for discount.")
+        }
         break
       case "transaction_discount_offer":
         this.openTransactionDiscountPanel(true)
@@ -238,6 +241,13 @@ export default class extends Controller {
 
   focusInput() {
     this.inputTarget?.focus()
+  }
+
+  openLineDiscount(lineId) {
+    this.inputTarget.value = ""
+    document.dispatchEvent(new CustomEvent("pos:open-line-discount", {
+      detail: { lineId: String(lineId) }
+    }))
   }
 
   openTransactionDiscountPanel(open = true) {

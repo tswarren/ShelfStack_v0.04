@@ -44,4 +44,26 @@ class PosLineDiscountWorkspaceTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-total-cents="' + @transaction.total_cents.to_s + '"'
     assert_match(/pos-settlement-open-btn/, response.body)
   end
+
+  test "update line requires pos.lines.update permission" do
+    delete logout_path
+
+    limited_user = create_user!(username: "line_update_denied")
+    grant_permission!(limited_user, "pos.access", store: @store)
+    grant_permission!(limited_user, "pos.transactions.create", store: @store)
+    grant_permission!(limited_user, "pos.transactions.update", store: @store)
+    grant_permission!(limited_user, "pos.lines.add", store: @store)
+    grant_permission!(limited_user, "pos.discounts.line.apply", store: @store)
+
+    login_user!(limited_user, workstation: @ctx[:workstation])
+
+    patch update_line_pos_transaction_path(@transaction), params: {
+      line_id: @line.id,
+      quantity: 2
+    }, as: :turbo_stream
+
+    assert_redirected_to pos_root_path
+    assert_equal "You are not authorized to perform that action.", flash[:alert]
+    assert_equal 1, @line.reload.quantity
+  end
 end

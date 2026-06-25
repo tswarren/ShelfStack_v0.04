@@ -61,6 +61,12 @@ module Pos
       remaining = remaining_line_amount(line)
       return if remaining.zero?
 
+      eligibility = DiscountEligibilityResolver.call(line, remaining_discountable_cents: remaining)
+      unless eligibility.discountable
+        update_application_totals!(application, remaining, 0)
+        return
+      end
+
       discount = calculate_discount(application, remaining)
       return if discount.zero?
 

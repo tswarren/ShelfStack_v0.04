@@ -6,6 +6,7 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
     before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview]
     before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line route_command]
+    before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
     before_action -> { authorize_pos!("pos.gift_cards.issue") }, only: %i[add_gift_card_sale_line update_gift_card_sale_line]
     before_action -> { authorize_pos!("pos.discounts.line.apply") }, only: :apply_line_discount
@@ -90,6 +91,7 @@ module Pos
     def route_command
       route = Pos::CommandBarRouter.call(
         store: pos_store,
+        transaction: @transaction,
         input: params[:input],
         return_mode: ActiveModel::Type::Boolean.new.cast(params[:return_mode])
       )
@@ -619,7 +621,6 @@ module Pos
 
     def transaction_params
       params.require(:pos_transaction).permit(
-        :discount_cents,
         :rounding_cents,
         :notes,
         pos_tenders_attributes: %i[id tender_type amount_cents reference_number _destroy]

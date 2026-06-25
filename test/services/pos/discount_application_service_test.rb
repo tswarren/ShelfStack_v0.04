@@ -68,6 +68,38 @@ class Pos::DiscountApplicationServiceTest < ActiveSupport::TestCase
     assert_match(/Authorize discount/i, error.message)
   end
 
+  test "rejects zero amount discount" do
+    error = assert_raises(Pos::DiscountApplicationService::Error) do
+      Pos::DiscountApplicationService.call!(
+        transaction: @transaction,
+        scope: "line",
+        line: @line,
+        discount_reason: @reason,
+        discount_method: "amount",
+        entered_amount_cents: 0,
+        actor: @user
+      )
+    end
+
+    assert_match(/greater than zero/i, error.message)
+  end
+
+  test "rejects zero percent discount" do
+    error = assert_raises(Pos::DiscountApplicationService::Error) do
+      Pos::DiscountApplicationService.call!(
+        transaction: @transaction,
+        scope: "line",
+        line: @line,
+        discount_reason: @reason,
+        discount_method: "percent",
+        entered_percent_bps: 0,
+        actor: @user
+      )
+    end
+
+    assert_match(/greater than zero/i, error.message)
+  end
+
   test "rejects gift card line discount" do
     gift_card_line = @transaction.pos_transaction_lines.create!(
       line_number: 2,

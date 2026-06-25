@@ -41,6 +41,20 @@ class PosDiscountApplicationTest < ActiveSupport::TestCase
     assert_includes application.errors[:pos_transaction_line], "must be present for line-scope discounts"
   end
 
+  test "line must belong to same transaction" do
+    other_transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000 } ]
+    )
+    application = build_application
+    application.pos_transaction = other_transaction
+
+    assert_not application.valid?
+    assert_includes application.errors[:pos_transaction_line], "must belong to the same transaction"
+  end
+
   test "amount method requires entered_amount_cents" do
     application = build_application(discount_method: "amount", entered_amount_cents: nil)
 

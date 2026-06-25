@@ -173,6 +173,22 @@ class Pos::DiscountRecalculatorTest < ActiveSupport::TestCase
     assert_equal gross - savings, @transaction.pos_transaction_lines.sum(&:extended_price_cents)
   end
 
+  test "line discount is not allocated when variant becomes non-discountable" do
+    application = create_application!(scope: "line", line: line(1), method: "amount", entered_amount_cents: 100)
+
+    Pos::DiscountRecalculator.call!(@transaction.reload)
+
+    assert_equal 100, line(1).line_discount_cents
+    assert_equal 100, application.reload.applied_discount_cents
+
+    @variant_one.update!(discountable: false)
+    Pos::DiscountRecalculator.call!(@transaction.reload)
+
+    assert_equal 0, line(1).reload.line_discount_cents
+    assert_equal 0, application.reload.applied_discount_cents
+    assert_equal 0, @transaction.pos_discount_allocations.count
+  end
+
   private
 
   def line(number)

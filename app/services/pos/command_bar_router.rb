@@ -10,14 +10,15 @@ module Pos
 
     Route = Data.define(:action, :payload, :message)
 
-    def self.call(store:, input:, return_mode: false)
-      new(store:, input:, return_mode:).call
+    def self.call(store:, input:, return_mode: false, transaction: nil)
+      new(store:, input:, return_mode:, transaction:).call
     end
 
-    def initialize(store:, input:, return_mode: false)
+    def initialize(store:, input:, return_mode: false, transaction: nil)
       @store = store
       @input = input.to_s.strip
       @return_mode = return_mode
+      @transaction = transaction
     end
 
     def call
@@ -28,7 +29,7 @@ module Pos
     end
 
     if line_discount_command?
-      return Route.new(action: :line_discount_offer, payload: {}, message: nil)
+      return line_discount_route
     end
 
     if transaction_discount_command?
@@ -72,7 +73,30 @@ module Pos
 
     private
 
-    attr_reader :store, :input, :return_mode
+    attr_reader :store, :input, :return_mode, :transaction
+
+    def line_discount_route
+      line = previous_discountable_line
+      if line.blank?
+        return Route.new(
+          action: :line_discount_offer,
+          payload: {},
+          message: "No line available for discount."
+        )
+      end
+
+      Route.new(action: :line_discount_offer, payload: { line_id: line.id }, message: nil)
+    end
+
+    def previous_discountable_line
+      return if transaction.blank?
+
+      transaction.pos_transaction_lines
+               .where("quantity > 0")
+               .where.not(line_type: "gift_card_sale")
+               .reorder(line_number: :desc, id: :desc)
+               .first
+    end
 
     def gift_card_command?
       input.match?(GIFT_CARD_COMMAND_PATTERN)

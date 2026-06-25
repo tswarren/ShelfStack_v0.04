@@ -45,6 +45,7 @@ module Pos
       validate_transaction_eligibility!
       validate_note!
       validate_authorization!
+      validate_positive_discount!
 
       application = nil
       transaction.transaction do
@@ -128,6 +129,51 @@ module Pos
 
     def next_stack_order
       transaction.pos_discount_applications.active_records.maximum(:stack_order).to_i + 1
+    end
+
+    def validate_positive_discount!
+      raise Error, "Discount must be greater than zero." if entered_discount_zero?
+      raise Error, "Discount must be greater than zero." if preview_applied_discount_cents.zero?
+    end
+
+    def entered_discount_zero?
+      case discount_method
+      when "amount"
+        entered_amount_cents.to_i <= 0
+      when "percent"
+        entered_percent_bps.to_i <= 0
+      when "price_override"
+        target_price_cents.blank?
+      else
+        true
+      end
+    end
+
+    def preview_applied_discount_cents
+      base_cents = preview_discount_base_cents
+      return 0 if base_cents.zero?
+
+      case discount_method
+      when "amount"
+        [ entered_amount_cents.to_i, base_cents ].min
+      when "percent"
+        raw = ((base_cents * entered_percent_bps.to_i) / 10_000.0).round
+        [ raw, base_cents ].min
+      when "price_override"
+        [ base_cents - target_price_cents.to_i, 0 ].max.clamp(0, base_cents)
+      else
+        0
+      end
+    end
+
+    def preview_discount_base_cents
+      if line_scope?
+        line.reload
+        base = line.unit_price_cents.to_i * line.quantity.abs
+        [ base - line.line_discount_cents.to_i - line.transaction_discount_cents.to_i, 0 ].max
+      else
+        DiscountInput.discountable_transaction_base_cents(transaction.reload)
+      end
     end
   end
 end
