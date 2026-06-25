@@ -181,6 +181,7 @@ docs/specifications/phase-8.5-1-pos-discount-spec.md
 docs/specifications/phase-8.5-1-data-model.md
 docs/specifications/phase-8.5-1-test-plan.md
 docs/implementation/phase-8.5-1-completion.md
+docs/implementation/phase-8.5-2-spec-fix-guide.md
 ```
 
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
