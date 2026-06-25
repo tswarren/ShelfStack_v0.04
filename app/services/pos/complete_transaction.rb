@@ -159,7 +159,6 @@ module Pos
         sub_department: variant.sub_department,
         sub_department_name_snapshot: variant.sub_department&.name
       )
-      assign_cogs_snapshot!(line)
       line.save!
     end
 
@@ -167,7 +166,6 @@ module Pos
       line.assign_attributes(
         sub_department_name_snapshot: line.sub_department&.name
       )
-      assign_cogs_snapshot!(line)
       line.save!
     end
 
@@ -178,7 +176,6 @@ module Pos
         inventory_behavior_snapshot: "pure_financial",
         inventory_tracking_snapshot: Inventory::TrackingResolver::NON_INVENTORY_TRACKING
       )
-      assign_cogs_snapshot!(line)
       line.save!
     end
 

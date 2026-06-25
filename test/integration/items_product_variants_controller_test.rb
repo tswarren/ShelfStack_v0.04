@@ -190,6 +190,10 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
 
   test "update variant without manage permission ignores submitted legacy behavior" do
     variant = create_product_variant!(product: @product, sub_department: @sub_department)
+    variant.update!(
+      inventory_tracking_override: Inventory::TrackingResolver::NON_INVENTORY_TRACKING,
+      inventory_behavior: "non_inventory"
+    )
 
     patch items_product_variant_path(variant, return_to: "item"), params: {
       product_variant: {
@@ -197,7 +201,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
         condition_id: variant.condition_id,
         sub_department_id: variant.sub_department_id,
         selling_price_cents: 1499,
-        inventory_behavior: "non_inventory",
+        inventory_behavior: "standard_physical",
         active: true
       }
     }
@@ -209,8 +213,8 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     )
     variant.reload
     assert_equal 1499, variant.selling_price_cents
-    assert_equal "standard_physical", variant.inventory_behavior
-    assert_nil variant.inventory_tracking_override
+    assert_equal "non_inventory", variant.inventory_tracking_override
+    assert_equal "non_inventory", variant.inventory_behavior
   end
 
   test "variant show includes back to item link" do
