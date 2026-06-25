@@ -162,7 +162,7 @@ docs/specifications/phase-8-test-plan.md
 ## Phase 8.5-1 Documents
 
 ```text
-docs/roadmap/phase-8.5-1-pos-discount-mdel
+docs/roadmap/phase-8.5-1-pos-discount-model.md
 docs/specifications/phase-8.5-1-pos-discount-spec.md
 docs/specifications/phase-8.5-1-data-model.md
 docs/specifications/phase-8.5-1-test-plan.md
@@ -248,9 +248,9 @@ Phase 8 was completed on 2026-06-23. See [docs/implementation/phase-8-1-8-2-comp
 - **8-5:** `Pos::LineCogsCalculator`, pre-sale COGS snapshots, `Pos::OperationalMarginReport`; buyback MAC includes `buyback_offer` inbound
 - Legacy `inventory_behavior` column retained; do not remove without explicit scope
 
-## Phase 8.5-1: POS Discount Model & Calculation — **Complete**
+## Phase 8.5-1: POS Discount Model & Calculation — **In review**
 
-Phase 8.5-1 was completed on 2026-06-25. See [docs/implementation/phase-8.5-1-completion.md](docs/implementation/phase-8.5-1-completion.md).
+Branch `phase-8.5-operational-cleanup` implements structured POS discounts. See [docs/implementation/phase-8.5-1-completion.md](docs/implementation/phase-8.5-1-completion.md) for deliverables and verification. Mark **Complete** only after merge.
 
 - Structured discount reasons, applications, and allocations under cached aggregate cents fields
 - `Pos::DiscountEligibilityResolver`, `Pos::DiscountRecalculator`, `Pos::DiscountApplicationService`, `Pos::VoidDiscountApplication`
@@ -700,15 +700,15 @@ product_variants.sub_department_id → sub_departments.id
 
 ## Phase 8.5-1 Rules
 
-* **Complete:** Structured POS discounts via `discount_reasons`, `pos_discount_applications`, and `pos_discount_allocations`.
+* **In review:** Structured POS discounts via `discount_reasons`, `pos_discount_applications`, and `pos_discount_allocations`.
 * Cached aggregate fields remain authoritative for reports: `pos_transactions.discount_cents`, `line_discount_cents`, `transaction_discount_cents`.
 * Application records are the audit source of truth; every application requires a `discount_reason_id` (including legacy backfill).
-* `Pos::DiscountRecalculator` rebuilds allocations and cached cents from active applications in `stack_order`.
+* `Pos::DiscountRecalculator` rebuilds allocations and cached cents from active applications in `stack_order`; must not reset or reallocate sourced return lines (`Pos::ReturnLinePricing`).
 * Legacy bridge: when zero active applications exist, `Pos::RecalculateTransaction` preserves existing `DiscountCalculator` behavior.
 * `Pos::DiscountEligibilityResolver` is the discountability gate; gift card sale lines are never discountable.
 * Catalog `discountable` flags on department/subdepartment/product/variant use strictest-wins precedence.
 * Allocation reporting uses allocation snapshot columns, not live catalog joins.
-* Permissions: keep `pos.discounts.line.apply`, `pos.discounts.transaction.apply`, `pos.discounts.override_limit`; add `pos.discounts.void` for removal before completion.
+* Permissions: `pos.discounts.line.apply`, `pos.discounts.transaction.apply`, `pos.discounts.void`; reason approval via `pos.authorizations.grant` and `discount_reason_approval` (not a separate discount authorize key). `pos.discounts.override_limit` is a Phase 6 permission key only; Phase 8.5-1 does not implement configurable discount thresholds.
 
 ---
 

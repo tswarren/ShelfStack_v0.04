@@ -79,31 +79,26 @@ Example reasons:
 
 #### `pos_discount_applications`
 
-This should be the audit record for each discount applied.
+Audit record for each discount applied. **Implemented field names** (see [phase-8.5-1-data-model.md](../specifications/phase-8.5-1-data-model.md)):
 
 | Field | Notes |
 | :---- | :---- |
-| `id` | Primary key |
 | `pos_transaction_id` | Required |
-| `pos_transaction_line_id` | Nullable; present for line-level discount |
+| `pos_transaction_line_id` | Required for `scope: line`; must be blank for `scope: transaction` |
 | `scope` | `line`, `transaction` |
-| `source` | `manual`, `promotion`, `system`, future `coupon` |
-| `discount_type` | `percent`, `amount`, `price_override`, future `free_item` |
-| `discount_reason_id` | Required for manual discounts |
-| `entered_percent` | Nullable decimal |
-| `entered_amount_cents` | Nullable |
-| `target_price_cents` | Nullable; for price override |
-| `calculated_discount_cents` | Actual discount impact |
-| `allocated_discount_cents` | For transaction-level discount allocation |
-| `stack_order` | Integer |
-| `note` | Optional/required based on reason |
-| `applied_by_user_id` | Required |
-| `approved_by_user_id` | Nullable |
-| `applied_at` | Timestamp |
-| `voided_at` | Nullable |
-| `voided_by_user_id` | Nullable |
-| `void_reason` | Nullable |
-| `details` | JSONB, default `{}`, not null |
+| `source` | `manual`, `system`, `promotion`, `legacy` |
+| `discount_method` | `amount`, `percent`, `price_override` |
+| `discount_reason_id` | Required |
+| `entered_percent_bps` | Basis points when method is percent |
+| `entered_amount_cents` | Cents when method is amount |
+| `target_price_cents` | For price override |
+| `base_amount_cents`, `calculated_discount_cents`, `applied_discount_cents` | Application totals |
+| `stack_order` | Stacking sequence |
+| `note`, `applied_by_user_id`, `approved_by_user_id`, `applied_at` | Audit |
+| `voided_at`, `voided_by_user_id`, `void_reason` | Void before completion |
+| `details` | JSONB, default `{}` |
+
+Line-level allocated amounts live on `pos_discount_allocations`, not on the application row.
 
 ### Discount calculation rules
 

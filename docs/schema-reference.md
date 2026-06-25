@@ -17,6 +17,7 @@ docs/specifications/phase-1-data-model.md
 docs/specifications/phase-2-data-model.md
 docs/specifications/phase-3-data-model.md
 docs/specifications/phase-4-data-model.md
+docs/specifications/phase-8.5-1-data-model.md
 ```
 
 Each phase data model should include:

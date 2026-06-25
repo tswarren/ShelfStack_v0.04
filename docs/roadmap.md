@@ -29,7 +29,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 7B | Customer Credit Foundation    | POS multi-row settlement (7B-1), stored value accounts/ledger (7B-2), POS issue/redeem (7B-3). **Complete.** |
 | Phase 7C | Used Buyback                  | Customer-required buyback sessions, graded used variants, cash/trade-credit/donation payout, inventory posting. **Complete** (2026-06-23). |
 | Phase 8 | Inventory Eligibility and Tracking | Centralized inventory tracking gate (`inventory` / `non_inventory`); behavior-neutral resolver/eligibility refactor. **8-1/8-2 complete** (2026-06-23). |
-| Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **Complete** (2026-06-25). |
+| Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **In review** (branch merge pending). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
 | Phase 9 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
 
@@ -505,11 +505,11 @@ Phase 8.5-1 makes POS discounts structured, auditable, stackable, and report-rea
 
 ## Status
 
-**Complete** (2026-06-25). See [implementation/phase-8.5-1-completion.md](implementation/phase-8.5-1-completion.md).
+**In review** (target completion after branch merge). See [implementation/phase-8.5-1-completion.md](implementation/phase-8.5-1-completion.md).
 
 ## Detailed Documents
 
-* [roadmap/phase-8.5-1-pos-discount-mdel](roadmap/phase-8.5-1-pos-discount-mdel)
+* [roadmap/phase-8.5-1-pos-discount-model.md](roadmap/phase-8.5-1-pos-discount-model.md)
 * [specifications/phase-8.5-1-pos-discount-spec.md](specifications/phase-8.5-1-pos-discount-spec.md)
 * [specifications/phase-8.5-1-data-model.md](specifications/phase-8.5-1-data-model.md)
 * [specifications/phase-8.5-1-test-plan.md](specifications/phase-8.5-1-test-plan.md)
@@ -579,13 +579,13 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 # Current Priority
 
-Phases 1–6.5, 7A, 7B, 7C, and Phase 8-1/8-2 are complete. See implementation records under `docs/implementation/`.
+Phases 1–6.5, 7A, 7B, 7C, and Phase 8 are complete. See implementation records under `docs/implementation/`.
 
 ```text
-Phase 1 ✓ → … → Phase 7C ✓ → Phase 8-1/8-2 ✓ → Phase 8-3+ / Phase 9 ← next
+Phase 8 ✓ → Phase 8.5-1 in review / complete after merge → Phase 8.5-2 POS tax exceptions → Phase 8.5-3 tender/customer cleanup → Phase 9 reporting/accounting
 ```
 
-**Active work:** Phase 8 deferred slices (8-3 schema defaults, 8-4 UI, 8-5 COGS/margin), Phase 7 advanced store operations, and Phase 9 reporting/accounting.
+**Active work:** Phase 8.5-1 branch review and merge; then Phase 8.5 operational cleanup epics (tax exceptions, tender/customer cleanup) and Phase 9 reporting/accounting.
 
 Implementation records:
 

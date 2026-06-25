@@ -27,6 +27,7 @@ class PosDiscountApplication < ApplicationRecord
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 10_000 },
             allow_nil: true
   validate :line_scope_requires_line
+  validate :transaction_scope_must_not_have_line
   validate :line_belongs_to_transaction
   validate :method_specific_fields
   validate :cannot_change_when_transaction_locked, on: :update
@@ -63,6 +64,13 @@ class PosDiscountApplication < ApplicationRecord
     return if pos_transaction_line.pos_transaction_id == pos_transaction_id
 
     errors.add(:pos_transaction_line, "must belong to the same transaction")
+  end
+
+  def transaction_scope_must_not_have_line
+    return unless transaction_scope?
+    return if pos_transaction_line_id.blank?
+
+    errors.add(:pos_transaction_line, "must be blank for transaction-scope discounts")
   end
 
   def method_specific_fields

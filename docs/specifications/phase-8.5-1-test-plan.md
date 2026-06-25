@@ -4,7 +4,7 @@ Functional spec: [phase-8.5-1-pos-discount-spec.md](phase-8.5-1-pos-discount-spe
 
 Data model: [phase-8.5-1-data-model.md](phase-8.5-1-data-model.md)
 
-Roadmap: [phase-8.5-1-pos-discount-mdel](../roadmap/phase-8.5-1-pos-discount-mdel)
+Roadmap: [phase-8.5-1-pos-discount-model.md](../roadmap/phase-8.5-1-pos-discount-model.md)
 
 ---
 
@@ -37,7 +37,8 @@ File: `test/models/pos_discount_application_test.rb`
 | --- | --- |
 | missing transaction | invalid |
 | line scope without line | invalid |
-| transaction scope with line id | invalid per model rules |
+| transaction scope with line id | invalid |
+| line on different transaction | invalid |
 | amount method without `entered_amount_cents` | invalid |
 | percent method without `entered_percent_bps` | invalid |
 | price override without `target_price_cents` | invalid |
@@ -87,11 +88,19 @@ File: `test/services/pos/discount_recalculator_test.rb`
 | transaction percent discount | allocated across eligible subtotal |
 | transaction discount with gift card line | gift card receives zero allocation |
 | transaction discount with non-discountable line | non-discountable line receives zero allocation |
-| transaction discount with rounding remainder | total allocations equal application amount |
+| transaction discount with rounding remainder | total allocations equal application amount; no negative shares |
+| four 1¢ lines with 2¢ transaction discount | deterministic floor/remainder allocation; no validation error |
 | discount exceeds eligible subtotal | capped |
 | void one discount in stack | remaining allocations recalculate |
+| line discount when variant becomes non-discountable | zero allocation on recalc |
 | allocation snapshots written | text snapshot columns populated |
 | zero active applications | legacy bridge delegates to `Pos::DiscountCalculator` |
+
+File: `test/services/pos/recalculate_transaction_test.rb`
+
+| Scenario | Expected |
+| --- | --- |
+| exchange with sourced return + structured sale discount | sourced return `extended_price_cents`, `line_discount_cents`, `tax_cents` preserved |
 
 ---
 
@@ -104,6 +113,7 @@ File: `test/services/pos/discount_application_service_test.rb`
 | inactive reason | rejected |
 | reason requires note, blank note | rejected |
 | reason requires authorization, missing auth | rejected |
+| zero amount or percent | rejected |
 | valid application | creates application, invokes recalculator |
 | stack order assignment | sequential per transaction |
 
@@ -111,11 +121,16 @@ File: `test/services/pos/discount_application_service_test.rb`
 
 # 6. Controller / UI tests
 
-File: `test/integration/pos_discounts_controller_test.rb` (or equivalent)
+Files:
+
+* `test/integration/pos_discount_authorization_test.rb`
+* `test/integration/pos_line_discount_workspace_test.rb`
+* `test/services/pos/command_bar_router_test.rb`
 
 | Case | Expected |
 | --- | --- |
-| `/d` command | routes to previous-line discount workflow |
+| `/d` command | routes to previous discountable line; opens line discount UI |
+| `/d` with non-discountable last line | selects previous eligible line |
 | `/dt` command | opens transaction discount workflow |
 | line discount without reason | rejected |
 | transaction discount without reason | rejected |
@@ -124,6 +139,7 @@ File: `test/integration/pos_discounts_controller_test.rb` (or equivalent)
 | gift card line discount attempt | friendly error |
 | non-discountable line discount attempt | friendly error |
 | void discount | totals update; requires `pos.discounts.void` |
+| `update_line` without `pos.lines.update` | forbidden |
 
 ---
 
@@ -133,8 +149,8 @@ File: `test/integration/pos_discounts_controller_test.rb` (or equivalent)
 | --- | --- | --- |
 | `pos.discounts.line.apply` | missing on line discount | forbidden |
 | `pos.discounts.transaction.apply` | missing on transaction discount | forbidden |
-| `pos.discounts.override_limit` | threshold override without permission | rejected |
 | `pos.discounts.void` | void without permission | forbidden |
+| `pos.authorizations.grant` | reason requires authorization | manager PIN grants `discount_reason_approval` |
 | `setup.discount_reasons.*` | reason admin CRUD | enforced in Setup |
 
 ---
@@ -152,19 +168,20 @@ Preserve current report and recalculation behavior:
 | completed transactions | discount records immutable |
 | transaction with no applications | `Pos::DiscountCalculator` path unchanged |
 
-Files: extend `test/services/pos/discount_calculator_test.rb`, `test/services/pos/recalculate_transaction_test.rb`, `test/integration/pos_reports_controller_test.rb` as needed.
+Files: `test/services/pos/discount_calculator_test.rb`, `test/services/pos/recalculate_transaction_test.rb`, `test/integration/pos_receipts_controller_test.rb`, `test/services/pos/report_transaction_metrics_test.rb`.
 
 ---
 
 # 9. Backfill tests
 
-File: `test/tasks/phase_8_5_1_discount_backfill_test.rb` (or migration test)
+Migration: `db/migrate/20250706120100_backfill_phase85_1_pos_discounts.rb`
 
 | Case | Expected |
 | --- | --- |
 | line with `line_discount_cents > 0` | legacy application + allocation |
-| transaction with `transaction_discount_cents` sum > 0 | legacy application + per-line allocations |
+| transaction with `transaction_discount_cents` sum > 0 | legacy application (`stack_order: 2`) + per-line allocations |
 | `legacy_unspecified` reason | used for all backfill rows |
+| partial rerun | `find_or_create_by!` repairs missing allocations |
 | historical totals | unchanged after backfill |
 
 ---
@@ -172,7 +189,19 @@ File: `test/tasks/phase_8_5_1_discount_backfill_test.rb` (or migration test)
 # 10. Full regression
 
 ```bash
-bin/rails test test/models/discount_reason_test.rb test/models/pos_discount_application_test.rb test/models/pos_discount_allocation_test.rb test/services/pos/discount_eligibility_resolver_test.rb test/services/pos/discount_recalculator_test.rb test/services/pos/discount_application_service_test.rb test/services/pos/discount_calculator_test.rb test/services/pos/recalculate_transaction_test.rb test/integration/pos_discounts_controller_test.rb
+bin/rails test \
+  test/models/discount_reason_test.rb \
+  test/models/pos_discount_application_test.rb \
+  test/models/pos_discount_allocation_test.rb \
+  test/services/pos/discount_eligibility_resolver_test.rb \
+  test/services/pos/discount_recalculator_test.rb \
+  test/services/pos/discount_application_service_test.rb \
+  test/services/pos/discount_calculator_test.rb \
+  test/services/pos/recalculate_transaction_test.rb \
+  test/integration/pos_discount_authorization_test.rb \
+  test/integration/pos_line_discount_workspace_test.rb \
+  test/services/pos/command_bar_router_test.rb \
+  test/integration/pos_receipts_controller_test.rb
 ```
 
 Existing POS completion, void, and report integration tests must pass unchanged.

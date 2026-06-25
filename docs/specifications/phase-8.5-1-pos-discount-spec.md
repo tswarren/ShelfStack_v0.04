@@ -408,11 +408,13 @@ Pos::DiscountRecalculator.call!(transaction)
 ### Responsibilities
 
 1. Clear existing discount allocations.
-2. Reset cached line fields:
+2. Reset cached line fields for **non–sourced-return** sale lines only:
 
    * `line_discount_cents = 0`
    * `transaction_discount_cents = 0`
    * `extended_price_cents = unit_price_cents * quantity.abs`
+
+   **Sourced return lines** (`return_line?` with `source_transaction_line_id`) are priced by `Pos::ReturnLinePricing` in `Pos::RecalculateTransaction` before the discount phase. `Pos::DiscountRecalculator` must **not** reset or reallocate discounts on those lines.
 3. Load active discount applications ordered by:
 
    * `stack_order`
@@ -529,13 +531,14 @@ discount = [discount, transaction_discount_base].min
 
 Allocate proportionally by each line’s remaining line amount.
 
-Use the current rounding pattern:
+Transaction discount allocations must:
 
-* calculate each line’s share,
-* round each share,
-* assign any rounding remainder to the final eligible line.
+* sum exactly to `applied_discount_cents`,
+* never allocate less than zero to any line,
+* never allocate more than the line’s remaining discountable amount,
+* distribute rounding remainders deterministically (floor each proportional share, then assign leftover cents to lines with the largest fractional remainders).
 
-The current calculator already uses this general pattern for single transaction discounts.
+Do **not** use independent per-line rounding with a final-line remainder; that can produce negative final shares on low-cent lines.
 
 Update each line:
 
@@ -806,11 +809,10 @@ Use Phase 6 POS discount permission keys and Setup admin keys:
 | ----------------------------------- | ---------------------------------------------------- |
 | `pos.discounts.line.apply`          | Apply line discount                                  |
 | `pos.discounts.transaction.apply`   | Apply transaction discount                           |
-| `pos.discounts.override_limit`      | Override configured discount threshold               |
 | `pos.discounts.void`                | Remove/void discount before completion               |
 | `setup.discount_reasons.*`          | Administer discount reasons (Setup workspace)        |
 
-Manager PIN approval continues via the existing `pos.authorizations.grant` framework and `Pos::AuthorizationRequest`; do not introduce a separate `pos.discounts.authorize` key in 8.5-1.
+Reasons with `requires_authorization` use manager PIN approval via `pos.authorizations.grant` and `Pos::AuthorizationRequest` (`discount_reason_approval`). Phase 8.5-1 does **not** implement configurable discount thresholds; `pos.discounts.override_limit` (Phase 6 permission key) is reserved for a future threshold feature.
 
 ---
 

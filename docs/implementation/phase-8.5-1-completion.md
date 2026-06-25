@@ -1,6 +1,7 @@
 # Phase 8.5-1 — Completion Record
 
-Completed: 2026-06-25
+**Status:** In review  
+**Target completion:** after branch merge
 
 ## Summary
 
@@ -52,7 +53,8 @@ Pos::VoidDiscountApplication
 ./dev/rails-docker bin/rails test test/models/discount_reason_test.rb test/models/pos_discount_application_test.rb test/models/pos_discount_allocation_test.rb
 ./dev/rails-docker bin/rails test test/services/pos/discount_eligibility_resolver_test.rb test/services/pos/discount_recalculator_test.rb
 ./dev/rails-docker bin/rails test test/services/pos/discount_application_service_test.rb test/services/pos/discount_activity_query_test.rb
-./dev/rails-docker bin/rails test test/services/pos/recalculate_transaction_test.rb test/services/pos/return_line_pricing_test.rb
+./dev/rails-docker bin/rails test test/integration/pos_discount_authorization_test.rb test/integration/pos_line_discount_workspace_test.rb
+./dev/rails-docker bin/rails test test/services/pos/command_bar_router_test.rb test/services/pos/recalculate_transaction_test.rb
 ./dev/rails-docker bin/rails test test/services/pos/report_transaction_metrics_test.rb
 ```
 
