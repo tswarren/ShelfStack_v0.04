@@ -26,6 +26,7 @@ class ApplicationController < ActionController::Base
     return unless @user_session
 
     if @user_session.locked? && !session_lock_allowed?
+      capture_locked_return_path_if_needed!
       redirect_to session_unlock_path
     elsif @user_session.terminal?
       SessionLifecycle.clear_session_cookie(cookies)
@@ -38,6 +39,14 @@ class ApplicationController < ActionController::Base
 
   def session_lock_allowed?
     controller_name == "session_locks" || (controller_name == "sessions" && action_name.in?(%w[destroy]))
+  end
+
+  def capture_locked_return_path_if_needed!
+    return if @user_session.locked_return_path.present?
+    return unless request.get? || request.head?
+
+    path = SessionReturnLocation.sanitize(request.fullpath)
+    @user_session.update!(locked_return_path: path) if path
   end
 
   def current_user

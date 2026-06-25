@@ -365,6 +365,7 @@ Sessions may be active, locked, ended, expired, or force-ended.
 | `user_sessions` | `status`               |   string | null false, default `active`   | Controlled value: `active`, `locked`, `ended`, `expired`, `force_ended`. |
 | `user_sessions` | `last_activity_at`     | datetime | null false                     | Used for inactivity tracking.                                            |
 | `user_sessions` | `locked_at`            | datetime |                                | Set when session is locked.                                              |
+| `user_sessions` | `locked_return_path`   |   string | limit 2048                     | Internal path to restore after unlock; cleared on unlock.                |
 | `user_sessions` | `unlocked_at`          | datetime |                                | Optional last successful unlock timestamp.                               |
 | `user_sessions` | `ended_at`             | datetime |                                | Set when session ends, expires, or is force-ended.                       |
 | `user_sessions` | `ended_by_user_id`     |   bigint | references `users`             | Used for forced session termination.                                     |

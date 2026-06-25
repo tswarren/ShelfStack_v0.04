@@ -499,6 +499,7 @@ If enforced:
 - `unlocked_at` updates.
 - `last_activity_at` updates.
 - `session.unlocked` audit event is created.
+- User is redirected to the stored pre-lock page when safe; otherwise application root.
 
 
 ## 8.4 Unlock With Wrong PIN
