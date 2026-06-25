@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "phase85_permissions"
+
 module Seeds
   module Phase6Roles
     ROLE_BUNDLES = {

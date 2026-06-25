@@ -38,7 +38,7 @@ module Pos
 
     if balance_command?
         return Route.new(action: :balance_inquiry_offer, payload: {}, message: nil)
-      end
+    end
 
       if lookup.variants.any?
         return Route.new(
