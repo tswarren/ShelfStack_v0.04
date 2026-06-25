@@ -34,8 +34,10 @@ class UserSession < ApplicationRecord
     update!(last_activity_at: Time.current)
   end
 
-  def lock!
-    update!(status: "locked", locked_at: Time.current)
+  def lock!(return_path: nil)
+    attributes = { status: "locked", locked_at: Time.current }
+    attributes[:locked_return_path] = return_path if return_path.present?
+    update!(attributes)
   end
 
   def unlock!
@@ -43,6 +45,7 @@ class UserSession < ApplicationRecord
       status: "active",
       unlocked_at: Time.current,
       locked_at: nil,
+      locked_return_path: nil,
       last_activity_at: Time.current
     )
   end

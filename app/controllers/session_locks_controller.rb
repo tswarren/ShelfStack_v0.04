@@ -11,12 +11,13 @@ class SessionLocksController < ApplicationController
 
   def create
     begin
+      return_path = SessionReturnLocation.redirect_path_for(current_user_session)
       if current_user.pin_set?
         SessionLifecycle.unlock!(session: current_user_session, user: current_user, pin: params[:pin])
       else
         SessionLifecycle.unlock!(session: current_user_session, user: current_user, password: params[:password])
       end
-      redirect_to root_path, notice: "Session unlocked."
+      redirect_to return_path || root_path, notice: "Session unlocked."
     rescue SessionLifecycle::Error
       flash.now[:alert] = current_user.pin_set? ? "Invalid PIN." : "Invalid password."
       render :show, status: :unprocessable_entity
@@ -27,7 +28,11 @@ class SessionLocksController < ApplicationController
     require_active_session
     return if performed?
 
-    SessionLifecycle.lock!(session: current_user_session, actor: current_user)
+    SessionLifecycle.lock!(
+      session: current_user_session,
+      actor: current_user,
+      return_path: SessionReturnLocation.sanitize(params[:return_to])
+    )
     redirect_to session_unlock_path
   end
 

@@ -1911,6 +1911,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "ip_address"
     t.datetime "last_activity_at", null: false
     t.datetime "locked_at"
+    t.string "locked_return_path", limit: 2048
     t.string "session_token_digest", null: false
     t.string "status", default: "active", null: false
     t.bigint "store_id"

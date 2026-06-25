@@ -68,8 +68,8 @@ class SessionLifecycle
     reset_current_context
   end
 
-  def self.lock!(session:, actor:)
-    session.lock!
+  def self.lock!(session:, actor:, return_path: nil)
+    session.lock!(return_path: return_path)
     AuditEvents.record!(actor: actor, event_name: "session.locked", auditable: session)
   end
 

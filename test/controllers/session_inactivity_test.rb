@@ -14,10 +14,11 @@ class SessionInactivityTest < ActionDispatch::IntegrationTest
   end
 
   test "inactivity redirects to unlock screen not login" do
-    get root_path
+    get items_root_path
 
     assert_redirected_to session_unlock_path
     assert @session.reload.locked?
+    assert_equal items_root_path, @session.locked_return_path
     assert_not_equal "expired", @session.status
   end
 end
