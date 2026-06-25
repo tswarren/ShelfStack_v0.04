@@ -66,23 +66,29 @@ module Inventory
     end
 
     def sum_total_cost(store_id, variant_id)
-      signed_value_sum(:total_cost_cents, store_id, variant_id)
+      pick_signed_sum(store_id, variant_id, SIGNED_COST_SUM)
     end
 
     def sum_total_retail(store_id, variant_id)
-      signed_value_sum(:total_retail_cents, store_id, variant_id)
+      pick_signed_sum(store_id, variant_id, SIGNED_RETAIL_SUM)
     end
 
-    def signed_value_sum(column, store_id, variant_id)
-      sql = <<~SQL.squish
-        SUM(CASE WHEN quantity_delta < 0 THEN -COALESCE(#{column}, 0)
-                 ELSE COALESCE(#{column}, 0)
-            END)
-      SQL
+    SIGNED_COST_SUM = Arel.sql(<<~SQL.squish)
+      SUM(CASE WHEN quantity_delta < 0 THEN -COALESCE(total_cost_cents, 0)
+               ELSE COALESCE(total_cost_cents, 0)
+          END)
+    SQL
 
+    SIGNED_RETAIL_SUM = Arel.sql(<<~SQL.squish)
+      SUM(CASE WHEN quantity_delta < 0 THEN -COALESCE(total_retail_cents, 0)
+               ELSE COALESCE(total_retail_cents, 0)
+          END)
+    SQL
+
+    def pick_signed_sum(store_id, variant_id, aggregate_sql)
       value = InventoryLedgerEntry
         .where(store_id: store_id, product_variant_id: variant_id)
-        .pick(Arel.sql(sql))
+        .pick(aggregate_sql)
 
       [ value.to_i, 0 ].max
     end
