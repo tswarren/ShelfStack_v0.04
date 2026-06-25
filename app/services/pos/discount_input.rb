@@ -11,9 +11,17 @@ module Pos
     end
 
     def self.discountable_transaction_base_cents(transaction)
-      transaction.pos_transaction_lines.reject(&:return_line?).sum do |line|
-        line_base_cents(line) - line.line_discount_cents.to_i
-      end.clamp(0..)
+      transaction.pos_transaction_lines.sum do |line|
+        next 0 unless line.quantity.positive?
+
+        eligibility = DiscountEligibilityResolver.call(line)
+        next 0 unless eligibility.discountable
+
+        [
+          line_base_cents(line) - line.line_discount_cents.to_i - line.transaction_discount_cents.to_i,
+          0
+        ].max
+      end
     end
 
     def self.line_base_cents(line)

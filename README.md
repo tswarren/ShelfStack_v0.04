@@ -10,19 +10,28 @@ ShelfStack separates descriptive catalog metadata from store-facing products and
 
 ## Project Status
 
-ShelfStack has **complete Phase 1–5 implementations** and complete Phase 1–5 **documentation**. **Phase 6** (POS foundation) is **complete**. See [Phase 6 completion record](docs/implementation/phase-6-completion.md).
+ShelfStack is developed in phases. **Phases 1–8**, **6.5**, and **7A–7C** are **complete**. **Phase 8.5-1** (structured POS discounts) is **in review** on branch `phase-8.5-operational-cleanup` (target completion after merge).
 
-| Phase         | Focus                                                                                                                                         | Documentation | Implementation |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------- |
-| Phase 1       | Foundation: users, roles, permissions, stores, workstations, sessions, and audit events.                                                      | Complete      | **Complete**   |
-| Phase 2       | Classification and taxes: departments, tax categories, store tax rates, and effective-dated tax mappings.                                     | Complete      | **Complete**   |
-| Phase 3       | Catalog, products, and product variants: catalog metadata, identifiers, products, SKUs, variants, conditions, display locations, and vendors. | Complete      | **Complete**   |
-| Phase 4       | Inventory foundation: ledger, balances, adjustments, valuation, read surfaces, and integrity tooling.                                          | Complete      | **Complete**   |
-| Phase 5       | Purchasing and receiving: vendor sourcing, TBO, purchase orders, receiving, moving average cost, and returns to vendor.                        | Complete      | **Complete**   |
-| Phase 6       | POS foundation: register sessions, transactions, tax/tenders, inventory posting, void reversals, receipts, and reports.                       | Complete      | **Complete**   |
-| Future phases | Advanced store operations, reporting, and accounting.                                                                                          | Roadmap only  | Not started    |
+| Phase | Focus | Status |
+| ----- | ----- | ------ |
+| 1 | Foundation: users, roles, permissions, stores, workstations, sessions, audit | **Complete** |
+| 2 | Classification and taxes | **Complete** |
+| 3 | Catalog, products, and variants | **Complete** |
+| 4 | Inventory foundation | **Complete** |
+| 5 | Purchasing and receiving | **Complete** |
+| 6 | POS foundation | **Complete** |
+| 6.5 | External catalog lookup (ISBNdb) | **Complete** |
+| 7A | Customer demand (requests, holds, special orders) | **Complete** |
+| 7B | Customer credit (settlement, stored value, POS integration) | **Complete** |
+| 7C | Used buyback | **Complete** |
+| 8 | Inventory eligibility and tracking refactor | **Complete** |
+| 8.5-1 | POS discount model and calculation | **In review** |
+| 8.5+ | Operational cleanup (tax exceptions, tender/customer) | Roadmap |
+| 9 | Reporting and accounting | Roadmap |
 
-Completion records: [Phase 1](docs/implementation/phase-1-completion.md) · [Phase 2](docs/implementation/phase-2-completion.md) · [Phase 3](docs/implementation/phase-3-completion.md) · [Phase 4](docs/implementation/phase-4-completion.md) · [Phase 5](docs/implementation/phase-5-completion.md) · [Phase 6](docs/implementation/phase-6-completion.md).
+See [docs/roadmap.md](docs/roadmap.md) for the full phase sequence and [docs/implementation/](docs/implementation/) for completion records.
+
+Recent completion records: [Phase 6](docs/implementation/phase-6-completion.md) · [Phase 7A](docs/implementation/phase-7a-completion.md) · [Phase 7C](docs/implementation/phase-7c-completion.md) · [Phase 8](docs/implementation/phase-8-3-4-5-completion.md) · [Phase 8.5-1](docs/implementation/phase-8.5-1-completion.md) (in review).
 
 ---
 
@@ -38,7 +47,7 @@ Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
 * **Product** — store-facing product grouping; may or may not link to a catalog item.
 * **Product variant** — the actual sellable SKU (new copy, used condition, size/color, and so on).
 
-Future POS, inventory, purchasing, receiving, and reporting workflows operate at the product variant level.
+Future POS, inventory, purchasing, receiving, buyback, and reporting workflows operate at the product variant level (with structured POS discounts under Phase 8.5-1).
 
 See [docs/overview.md](docs/overview.md) and [docs/domain-model.md](docs/domain-model.md) for more detail.
 
@@ -140,13 +149,23 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 
 ## Current Scope
 
-**Phases 1–5 are implemented.** See completion records under [docs/implementation/](docs/implementation/).
+**Implemented:** Phases 1–8, 6.5, and 7A–7C. See [docs/implementation/](docs/implementation/) for completion records and verification steps.
 
-Current design and implementation focus:
+**In review:** Phase 8.5-1 structured POS discounts (reasons, applications, allocations, eligibility, stacking). See [phase-8.5-1-completion.md](docs/implementation/phase-8.5-1-completion.md).
 
-1. **Phase 7+** — advanced store operations and reporting (per roadmap)
+**Next (roadmap):** Phase 8.5 operational cleanup (tax exceptions, tender/customer), then Phase 9 reporting and accounting. See [docs/roadmap.md](docs/roadmap.md).
 
-Operational catalog work uses **Items** (`/items`); admin reference data uses **Setup** (`/setup`); store inventory uses **Inventory** (`/inventory`); purchasing uses **Orders** (`/orders`); point of sale uses **POS** (`/pos`).
+### Workspaces
+
+| Workspace | Path | Purpose |
+| --------- | ---- | ------- |
+| Items | `/items` | Catalog, products, variants, add-item flows |
+| Setup | `/setup` | Admin reference data, users, tax, discount reasons |
+| Inventory | `/inventory` | Balances, adjustments, locations |
+| Orders | `/orders` | Purchasing, receiving, vendor returns |
+| POS | `/pos` | Register, transactions, settlement, receipts |
+| Buybacks | `/buybacks` | Used buyback sessions |
+| Customers | `/customers` | Demand, stored value, customer records |
 
 ---
 

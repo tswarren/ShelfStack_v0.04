@@ -305,6 +305,33 @@ Do not store `inventory_posting_id` on `pos_transactions`.
 
 POS lines snapshot SKU, name, price, tax category, tax rate, and classification context at completion so later catalog or tax setup changes do not rewrite history.
 
+## Discount Model (Phase 8.5-1)
+
+Phase 8.5-1 adds structured discount records while preserving cached aggregate fields:
+
+| Concept | Meaning |
+| --- | --- |
+| Discount Reason | Admin-maintained reason code (`discount_reasons`) |
+| Discount Application | One discount action with scope, method, reason, and stack order |
+| Discount Allocation | Line-level allocation with classification snapshots for reporting |
+
+Services:
+
+```text
+Pos::DiscountEligibilityResolver
+Pos::DiscountRecalculator
+Pos::DiscountApplicationService
+Pos::VoidDiscountApplication
+```
+
+Cached fields remain report-stable:
+
+```text
+pos_transactions.discount_cents
+pos_transaction_lines.line_discount_cents
+pos_transaction_lines.transaction_discount_cents
+```
+
 ## Related Documents
 
 ```text

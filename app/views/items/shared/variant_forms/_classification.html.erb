@@ -20,6 +20,8 @@
     <% end %>
 
     <%= render "items/shared/variant_forms/inventory_tracking", f: f, variant: variant %>
+    <%= render "shared/forms/checkbox", f: f, record: variant, field: :discountable,
+               help: "When unchecked, this sellable SKU cannot receive POS discounts." %>
   </div>
 
   <% if classification_defaults.present? %>

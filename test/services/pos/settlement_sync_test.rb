@@ -139,6 +139,28 @@ class Pos::SettlementSyncTest < ActiveSupport::TestCase
     Pos::TenderValidator.validate!(return_txn)
   end
 
+  test "accepts cash refund via sale-mode tendered_dollars field" do
+    return_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: -1, unit_price_cents: 1500, extended_price_cents: -1500 } ]
+    )
+    Pos::RecalculateTransaction.call!(return_txn)
+    total = return_txn.total_cents.abs
+
+    Pos::SettlementSync.call!(
+      transaction: return_txn,
+      tender_inputs: [
+        { tender_type: "cash", tendered_dollars: format("%.2f", total / 100.0) }
+      ]
+    )
+
+    cash = return_txn.pos_tenders.settlement_rows.find_by!(tender_type: "cash")
+    assert_equal return_txn.total_cents, cash.amount_cents
+    Pos::TenderValidator.validate!(return_txn)
+  end
+
   test "upserts settlement rows by id and marks destroy" do
     Pos::SettlementSync.call!(
       transaction: @transaction,

@@ -1,0 +1,10 @@
+<%= render "setup/shared/back_link", path: setup_discount_reasons_path, label: "Discount Reasons" %>
+
+<h1>New Discount Reason</h1>
+<%= form_with model: @discount_reason, url: setup_discount_reasons_path, class: "ss-form ss-form--standard" do |f| %>
+  <%= render "form", f: f, discount_reason: @discount_reason %>
+  <footer class="ss-form-actions">
+    <%= f.submit "Create discount reason", class: "ss-btn" %>
+    <%= link_to "Cancel", setup_discount_reasons_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

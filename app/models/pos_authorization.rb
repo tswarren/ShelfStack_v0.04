@@ -3,6 +3,8 @@
 class PosAuthorization < ApplicationRecord
   AUTHORIZATION_TYPES = %w[
     discount_over_limit
+    discount_reason_approval
+    discount_threshold_override
     no_receipt_return
     cash_refund_over_threshold
     force_close_register
@@ -18,6 +20,8 @@ class PosAuthorization < ApplicationRecord
   belongs_to :pos_register_session, optional: true
   belongs_to :requested_by_user, class_name: "User"
   belongs_to :granted_by_user, class_name: "User", optional: true
+
+  has_many :pos_discount_applications, dependent: :nullify
 
   validates :authorization_type, presence: true, inclusion: { in: AUTHORIZATION_TYPES }
 

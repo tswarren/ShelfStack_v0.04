@@ -17,6 +17,7 @@ docs/specifications/phase-1-data-model.md
 docs/specifications/phase-2-data-model.md
 docs/specifications/phase-3-data-model.md
 docs/specifications/phase-4-data-model.md
+docs/specifications/phase-8.5-1-data-model.md
 ```
 
 Each phase data model should include:
@@ -369,7 +370,12 @@ pos_tenders
 pos_receipts
 pos_authorizations
 pos_voids
+pos_discount_applications
+pos_discount_allocations
+discount_reasons
 ```
+
+Phase 8.5-1 extends `departments`, `sub_departments`, `products`, and `product_variants` with `discountable` (default `true`).
 
 Phase 6 extends `inventory_postings.posting_type` with `pos_transaction` and `pos_void`.
 

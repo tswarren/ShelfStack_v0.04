@@ -256,6 +256,26 @@ Department numbers are fixed-width, zero-padded strings such as `001`, `010`, an
 
 ---
 
+## Department
+
+Operational top-level merchandise grouping (Phase 2). Departments carry GL account codes and, after Phase 8.5-1, a `discountable` flag.
+
+## Discount Application
+
+A single discount action on a POS transaction (`pos_discount_applications`). Each application has a required reason, scope (`line` or `transaction`), method, stack order, and applying user.
+
+## Discount Allocation
+
+The line-level impact of a discount application (`pos_discount_allocations`). Used for department, SKU, and reason reporting without relying on live catalog joins.
+
+## Discount Reason
+
+Seedable/admin-maintainable reason code required for every POS discount application (`discount_reasons`).
+
+## Discountable
+
+Catalog or system flag indicating whether a POS line may receive discounts. Phase 8.5-1 uses strictest-wins precedence across department, subdepartment, product, and variant; gift card sale lines are always non-discountable.
+
 ## Display Location
 
 A merchandising or shelving location.

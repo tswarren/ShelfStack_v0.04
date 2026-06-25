@@ -17,6 +17,8 @@ class PosTransaction < ApplicationRecord
   has_one :pos_void, dependent: :restrict_with_error
   has_one :inventory_posting, as: :source, class_name: "InventoryPosting", dependent: :restrict_with_error
   has_many :pos_authorizations, dependent: :nullify
+  has_many :pos_discount_applications, dependent: :destroy
+  has_many :pos_discount_allocations, dependent: :destroy
 
   attr_accessor :pos_generated_stored_value_identifiers
 

@@ -3,7 +3,13 @@
   <p class="ss-pos-amount-due"><%= pos_money(transaction.total_cents) %></p>
   <dl class="ss-pos-totals-list">
     <div><dt>Subtotal</dt><dd><%= pos_money(transaction.subtotal_cents) %></dd></div>
-    <div><dt>Discount</dt><dd><%= pos_money(transaction.discount_cents) %></dd></div>
+    <% item_discounts = pos_transaction_item_discount_cents(transaction) %>
+    <% if item_discounts.positive? %>
+      <div><dt>Item discounts</dt><dd>−<%= pos_money(item_discounts) %></dd></div>
+    <% end %>
+    <% if transaction.discount_cents.to_i.positive? %>
+      <div><dt>Order discount</dt><dd>−<%= pos_money(transaction.discount_cents) %></dd></div>
+    <% end %>
     <%= render "pos/transactions/tax_totals", transaction: transaction %>
     <div><dt>Rounding</dt><dd><%= pos_money(transaction.rounding_cents) %></dd></div>
     <div class="ss-pos-totals-list__total"><dt>Amount due</dt><dd><%= pos_money(transaction.total_cents) %></dd></div>

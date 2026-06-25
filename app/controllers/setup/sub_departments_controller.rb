@@ -83,7 +83,7 @@ module Setup
     def sub_department_params
       params.require(:sub_department).permit(
         :sub_department_key, :name, :short_name, :department_id, :default_pricing_model, :default_tax_category_id,
-        :vendor_returnable_default, :buyback_allowed, :active
+        :vendor_returnable_default, :buyback_allowed, :discountable, :active
       )
     end
   end

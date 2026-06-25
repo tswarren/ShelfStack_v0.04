@@ -6,9 +6,12 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
     before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview]
     before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line route_command]
+    before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
     before_action -> { authorize_pos!("pos.gift_cards.issue") }, only: %i[add_gift_card_sale_line update_gift_card_sale_line]
-    before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
+    before_action -> { authorize_pos!("pos.discounts.line.apply") }, only: :apply_line_discount
+    before_action -> { authorize_pos!("pos.discounts.transaction.apply") }, only: :apply_transaction_discount
+    before_action -> { authorize_pos!("pos.discounts.void") }, only: :void_discount_application
     before_action -> { authorize_pos!("pos.lines.remove") }, only: %i[remove_line]
     before_action -> { authorize_pos!("pos.returns.receipted") }, only: %i[add_return_line]
     before_action -> { authorize_pos!("pos.transactions.complete") }, only: %i[complete]
@@ -18,12 +21,13 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.cancel") }, only: %i[cancel]
     before_action :set_transaction, only: %i[
       show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
-      update_line update_gift_card_sale_line remove_line
+      update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount void_discount_application
       sync_tenders complete suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
       edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
-      update_line update_gift_card_sale_line remove_line sync_tenders route_command
+      update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount
+      void_discount_application sync_tenders route_command
     ]
     before_action :load_edit_context, only: %i[
       edit add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
@@ -60,13 +64,10 @@ module Pos
       if params.dig(:pos_transaction, :rounding_dollars).present?
         attrs[:rounding_cents] = parse_dollar_param(params.dig(:pos_transaction, :rounding_dollars))
       end
-      apply_transaction_discount_attrs!(attrs)
 
       @transaction.update!(attrs)
       Pos::RecalculateTransaction.call!(@transaction)
       redirect_to edit_pos_transaction_path(@transaction), notice: "Transaction updated."
-    rescue Pos::DiscountInput::Error => e
-      redirect_to edit_pos_transaction_path(@transaction), alert: e.message
     end
 
     def readiness_preview
@@ -90,6 +91,7 @@ module Pos
     def route_command
       route = Pos::CommandBarRouter.call(
         store: pos_store,
+        transaction: @transaction,
         input: params[:input],
         return_mode: ActiveModel::Type::Boolean.new.cast(params[:return_mode])
       )
@@ -286,7 +288,6 @@ module Pos
       end
 
       attrs[:unit_price_cents] = parse_dollar_param(params[:unit_price]) if params[:unit_price].present? && line_price_editable?(line)
-      apply_line_discount_attrs!(line, attrs)
       attrs[:return_disposition] = params[:return_disposition] if params.key?(:return_disposition)
 
       if attrs.key?(:quantity) && attrs[:quantity].to_i.zero?
@@ -297,7 +298,72 @@ module Pos
 
       Pos::RecalculateTransaction.call!(@transaction.reload)
       respond_to_workspace(notice: "Line updated.")
-    rescue Pos::DiscountInput::Error => e
+    end
+
+    def apply_line_discount
+      line = @transaction.pos_transaction_lines.find(params[:line_id])
+      reason = DiscountReason.active_records.find(params[:discount_reason_id])
+      method, entered_amount_cents, entered_percent_bps = discount_entry_params(line)
+
+      Pos::DiscountApplicationService.call!(
+        transaction: @transaction,
+        scope: "line",
+        line: line,
+        discount_reason: reason,
+        discount_method: method,
+        entered_amount_cents: entered_amount_cents,
+        entered_percent_bps: entered_percent_bps,
+        note: params[:discount_note],
+        actor: current_user,
+        pos_authorization: pos_discount_authorization
+      )
+      refresh_transaction_after_discount_change!
+      respond_to_workspace(notice: "Line discount applied.")
+    rescue Pos::DiscountApplicationService::Error, Pos::DiscountInput::Error, ActiveRecord::RecordNotFound => e
+      flash.now[:alert] = e.message
+      load_edit_context
+      respond_to do |format|
+        format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
+        format.html { redirect_to edit_pos_transaction_path(@transaction), alert: e.message }
+      end
+    end
+
+    def apply_transaction_discount
+      reason = DiscountReason.active_records.find(params[:discount_reason_id])
+      method, entered_amount_cents, entered_percent_bps = discount_entry_params(@transaction)
+
+      Pos::DiscountApplicationService.call!(
+        transaction: @transaction,
+        scope: "transaction",
+        discount_reason: reason,
+        discount_method: method,
+        entered_amount_cents: entered_amount_cents,
+        entered_percent_bps: entered_percent_bps,
+        note: params[:discount_note],
+        actor: current_user,
+        pos_authorization: pos_discount_authorization
+      )
+      refresh_transaction_after_discount_change!
+      respond_to_workspace(notice: "Transaction discount applied.")
+    rescue Pos::DiscountApplicationService::Error, Pos::DiscountInput::Error, ActiveRecord::RecordNotFound => e
+      flash.now[:alert] = e.message
+      load_edit_context
+      respond_to do |format|
+        format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
+        format.html { redirect_to edit_pos_transaction_path(@transaction), alert: e.message }
+      end
+    end
+
+    def void_discount_application
+      application = @transaction.pos_discount_applications.find(params[:application_id])
+      Pos::VoidDiscountApplication.call!(
+        application: application,
+        actor: current_user,
+        void_reason: params[:void_reason]
+      )
+      refresh_transaction_after_discount_change!
+      respond_to_workspace(notice: "Discount removed.")
+    rescue Pos::VoidDiscountApplication::Error, ActiveRecord::RecordNotFound => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
@@ -506,30 +572,55 @@ module Pos
       !(line.return_line? && line.source_transaction_line_id.present?)
     end
 
-    def apply_transaction_discount_attrs!(attrs)
-      return unless params.dig(:pos_transaction)&.key?(:discount_value)
+    def discount_entry_params(target)
+      base_cents = discount_entry_base_cents(target)
+      input_type = params[:discount_type].presence || "amount"
+      method = input_type == "percent" ? "percent" : "amount"
 
-      attrs[:discount_cents] = Pos::DiscountInput.resolve_cents(
-        value: params.dig(:pos_transaction, :discount_value),
-        input_type: params.dig(:pos_transaction, :discount_type),
-        base_cents: Pos::DiscountInput.discountable_transaction_base_cents(@transaction)
-      )
+      if method == "percent"
+        percent = BigDecimal(params[:discount_value].to_s)
+        raise Pos::DiscountInput::Error, "Percent must be between 0 and 100." if percent.negative? || percent > 100
+
+        entered_percent_bps = (percent * 100).to_i
+        entered_amount_cents = nil
+      else
+        entered_amount_cents = Pos::DiscountInput.resolve_cents(
+          value: params[:discount_value],
+          input_type: "amount",
+          base_cents: base_cents
+        )
+        entered_percent_bps = nil
+      end
+
+      [ method, entered_amount_cents, entered_percent_bps ]
     end
 
-    def apply_line_discount_attrs!(line, attrs)
-      return unless params.key?(:line_discount_value)
+    def discount_entry_base_cents(target)
+      if target.is_a?(PosTransaction)
+        Pos::DiscountInput.discountable_transaction_base_cents(target.reload)
+      else
+        [ Pos::DiscountInput.line_base_cents(target) - target.line_discount_cents.to_i - target.transaction_discount_cents.to_i, 0 ].max
+      end
+    end
 
-      authorize_pos!("pos.discounts.line.apply")
-      attrs[:line_discount_cents] = Pos::DiscountInput.resolve_cents(
-        value: params[:line_discount_value],
-        input_type: params[:line_discount_type],
-        base_cents: Pos::DiscountInput.line_base_cents(line)
+    def refresh_transaction_after_discount_change!
+      @transaction = Pos::RecalculateTransaction.call!(
+        @transaction.reload,
+        business_date: current_register_session&.business_date || @transaction.business_date || Date.current
       )
+      @transaction.reload
+    end
+
+    def pos_discount_authorization
+      return @pos_discount_authorization if defined?(@pos_discount_authorization)
+
+      @pos_discount_authorization = if params[:pos_authorization_id].present?
+        PosAuthorization.find_by(id: params[:pos_authorization_id])
+      end
     end
 
     def transaction_params
       params.require(:pos_transaction).permit(
-        :discount_cents,
         :rounding_cents,
         :notes,
         pos_tenders_attributes: %i[id tender_type amount_cents reference_number _destroy]

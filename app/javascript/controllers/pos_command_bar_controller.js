@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "transactionDiscountPanel"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,
@@ -73,6 +73,16 @@ export default class extends Controller {
         break
       case "balance_inquiry_offer":
         this.showBalancePanel()
+        break
+      case "line_discount_offer":
+        if (data.payload?.line_id) {
+          this.openLineDiscount(data.payload.line_id)
+        } else {
+          this.dispatchMessage(data.message || "No line available for discount.")
+        }
+        break
+      case "transaction_discount_offer":
+        this.openTransactionDiscountPanel(true)
         break
       default:
         this.dispatchMessage(data.message)
@@ -231,6 +241,23 @@ export default class extends Controller {
 
   focusInput() {
     this.inputTarget?.focus()
+  }
+
+  openLineDiscount(lineId) {
+    this.inputTarget.value = ""
+    document.dispatchEvent(new CustomEvent("pos:open-line-discount", {
+      detail: { lineId: String(lineId) }
+    }))
+  }
+
+  openTransactionDiscountPanel(open = true) {
+    const panel = this.hasTransactionDiscountPanelTarget
+      ? this.transactionDiscountPanelTarget
+      : document.querySelector("[data-pos-command-bar-target='transactionDiscountPanel']")
+    if (!panel) return
+
+    panel.open = open
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }
 
   dispatchMessage(message) {

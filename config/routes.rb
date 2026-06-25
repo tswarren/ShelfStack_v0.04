@@ -231,6 +231,12 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
+    resources :discount_reasons do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
   end
 
   namespace :inventory do
@@ -408,6 +414,9 @@ Rails.application.routes.draw do
         post :add_gift_card_sale_line
         patch :update_gift_card_sale_line
         patch :update_line
+        post :apply_line_discount
+        post :apply_transaction_discount
+        delete :void_discount_application
         delete :remove_line
         patch :sync_tenders
         post :readiness_preview

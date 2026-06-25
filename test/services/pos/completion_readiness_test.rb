@@ -117,6 +117,25 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     assert result.tender_ready?
   end
 
+  test "accepts cash refund submitted via sale-mode tendered_dollars field" do
+    return_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: -1, unit_price_cents: 1000, extended_price_cents: -1000 } ]
+    )
+    Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
+    total = return_txn.total_cents.abs
+
+    result = Pos::CompletionReadiness.check(
+      transaction: return_txn,
+      register_session: @session,
+      tender_inputs: [ { tender_type: "cash", tendered_dollars: format("%.2f", total / 100.0) } ]
+    )
+
+    assert result.tender_ready?
+  end
+
   test "ready for even exchange without tender rows when total is zero" do
     exchange = create_pos_transaction!(
       store: @store,

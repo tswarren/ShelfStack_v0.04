@@ -50,6 +50,7 @@ module Pos
     def authorization_type_for(key)
       case key
       when :discount_auth then "discount_over_limit"
+      when :discount_reason_auth then "discount_reason_approval"
       when :no_receipt_return then "no_receipt_return"
       when :cash_refund_auth then "cash_refund_over_threshold"
       when :reserved_stock_auth then "sell_reserved_stock_override"

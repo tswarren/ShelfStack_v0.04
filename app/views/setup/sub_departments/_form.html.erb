@@ -38,6 +38,8 @@
   <div class="ss-form-grid ss-form-grid--2">
     <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :vendor_returnable_default %>
     <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :buyback_allowed %>
+    <%= render "shared/forms/checkbox", f: f, record: sub_department, field: :discountable,
+               help: "When unchecked, sellable SKUs in this subdepartment cannot receive POS discounts." %>
   </div>
 <% end %>
 

@@ -1,0 +1,114 @@
+<%# locals: (transaction:, readiness:, inactive_warnings:) %>
+<% confirm_inactive = params[:confirm_inactive].present? %>
+<% complete_label = pos_complete_button_label(transaction, confirm_inactive: confirm_inactive && inactive_warnings.any?) %>
+<% settlement_rows = transaction.pos_tenders.settlement_rows.order(:line_number) %>
+
+<div class="ss-pos-modal__backdrop" data-action="click->pos-settlement-panel#close"></div>
+<div class="ss-pos-modal__panel ss-pos-modal__panel--settlement" role="dialog" aria-labelledby="pos-settlement-title" aria-modal="true">
+  <% complete_params = {} %>
+  <% complete_params[:confirm_inactive] = 1 if confirm_inactive %>
+  <%= form_with url: complete_pos_transaction_path(transaction, complete_params), method: :patch, class: "ss-form ss-pos-settlement-form", data: {
+        action: "input->pos-settlement-panel#update change->pos-settlement-panel#update input->pos-transaction-edit#updateChange change->pos-transaction-edit#updateChange"
+      } do %>
+    <%= hidden_field_tag :pos_authorization_id, params[:pos_authorization_id], data: { pos_transaction_edit_target: "authorizationId" } %>
+    <%= hidden_field_tag :confirm_inactive, 1, data: { pos_transaction_edit_target: "confirmInactiveField" }, disabled: !confirm_inactive, id: nil %>
+
+    <h2 id="pos-settlement-title" class="ss-pos-modal__title">Settlement</h2>
+
+    <table class="ss-pos-settlement-table ss-pos-settlement-table--modal">
+      <tbody class="ss-pos-settlement-table__summary">
+        <tr>
+          <td>Remaining balance</td>
+          <td data-pos-settlement-panel-target="remainingBalance">—</td>
+          <td class="ss-pos-settlement-table__summary-action"></td>
+        </tr>
+        <tr>
+          <td>Change due</td>
+          <td data-pos-settlement-panel-target="changeDue">—</td>
+          <td class="ss-pos-settlement-table__summary-action"></td>
+        </tr>
+      </tbody>
+      <tbody data-pos-settlement-panel-target="rows" data-action="focusout->pos-settlement-panel#rowFocusOut">
+        <% if settlement_rows.any? %>
+          <% settlement_rows.each_with_index do |row, index| %>
+            <%= render "pos/transactions/settlement_row", row: row, transaction: transaction, row_index: index, modal: true %>
+          <% end %>
+        <% else %>
+          <tr class="ss-pos-settlement-empty" data-pos-settlement-panel-target="emptyRow">
+            <td colspan="3">No tenders yet. Add cash, card, or check.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <template data-pos-settlement-panel-target="cardTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "card", card_brand: "other", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE",
+            modal: true %>
+    </template>
+
+    <template data-pos-settlement-panel-target="checkTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "check", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE",
+            modal: true %>
+    </template>
+
+    <template data-pos-settlement-panel-target="cashTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "cash", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE",
+            modal: true %>
+    </template>
+
+    <template data-pos-settlement-panel-target="storeCreditTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "store_credit", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE",
+            modal: true %>
+    </template>
+
+    <template data-pos-settlement-panel-target="giftCardTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "gift_card", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE",
+            modal: true %>
+    </template>
+
+    <div class="ss-pos-settlement-modal-footer">
+      <div class="ss-pos-settlement-modal-footer__toolbar">
+        <div class="ss-pos-settlement-modal-footer__left">
+          <%= render "pos/transactions/settlement_secondary_actions", transaction: transaction, compact: true %>
+        </div>
+        <div class="ss-pos-settlement-modal-footer__center">
+          <%= button_tag "Cash", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
+                data: { action: "pos-settlement-panel#addCash" } %>
+          <%= button_tag "Card", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
+                data: { action: "pos-settlement-panel#addCard" } %>
+          <%= button_tag "Check", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
+                data: { action: "pos-settlement-panel#addCheck" } %>
+          <% if pos_can_use_stored_value_tender?(transaction, "store_credit") %>
+            <%= button_tag "Store credit", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
+                  data: { action: "pos-settlement-panel#addStoreCredit" } %>
+          <% end %>
+          <% if pos_can_use_stored_value_tender?(transaction, "gift_card") %>
+            <%= button_tag "Gift card", type: "button", class: "ss-btn ss-btn-secondary ss-pos-settlement-add-btn",
+                  data: { action: "pos-settlement-panel#addGiftCard" } %>
+          <% end %>
+        </div>
+        <div class="ss-pos-settlement-modal-footer__right">
+          <%= button_tag "Back", type: "button", class: "ss-btn ss-btn-secondary ss-btn--small", data: { action: "pos-settlement-panel#close" } %>
+        </div>
+      </div>
+      <div class="ss-pos-settlement-modal-footer__complete">
+        <%= submit_tag complete_label, class: "ss-btn ss-pos-complete-btn ss-pos-settlement-complete-btn", disabled: !readiness.complete_ready?, data: { pos_transaction_edit_target: "completeButton" } %>
+      </div>
+    </div>
+  <% end %>
+</div>

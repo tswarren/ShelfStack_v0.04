@@ -1,0 +1,986 @@
+# Phase 8.5-1 Spec — POS Discount Model & Calculation
+
+## Purpose
+
+Make POS discounts **structured, auditable, stackable, and report-ready** before the reporting phase begins.
+
+Current main already has aggregate discount fields: `pos_transactions.discount_cents`, `pos_transaction_lines.line_discount_cents`, and `pos_transaction_lines.transaction_discount_cents`.  The current calculator allocates a single transaction discount across non-return lines, but it does not yet track discount reasons, multiple discount applications, line-level allocation by reason, or non-discountable eligibility beyond returns.
+
+This phase should preserve the existing aggregate fields as cached totals, but introduce first-class discount records underneath them.
+
+---
+
+# 1. Scope
+
+## In scope
+
+Phase 8.5-1 should deliver:
+
+1. **Discount reasons**
+2. **Discount application records**
+3. **Discount allocation records**
+4. **Stacking support**
+5. **Non-discountable resolver**
+6. **Gift card sale exclusion**
+7. **Basic POS UI for line and transaction discounts**
+8. **Backfill/migration support for existing aggregate discounts**
+9. **Tests for calculation, eligibility, reporting integrity, and UI/controller flows**
+
+## Out of scope
+
+Do **not** include these in 8.5-1:
+
+* Automated promotion engine.
+* Buy 2 get 1 free logic.
+* Coupon code engine.
+* Loyalty program logic.
+* Customer-specific discount rules.
+* Full discount activity report UI.
+* Tax-exempt or tax-override work.
+* Tender/customer cleanup.
+
+The goal is to make the discount data clean enough that those future features can be built on it.
+
+---
+
+# 2. Current-state assumptions from main
+
+## Current POS transaction structure
+
+`PosTransaction` already has:
+
+* `customer`
+* `pos_transaction_lines`
+* `pos_tenders`
+* `pos_authorizations`
+* completed/voided immutability rules.
+
+## Current POS line structure
+
+`PosTransactionLine` already supports these line types:
+
+```ruby
+variant
+open_ring
+gift_card_sale
+```
+
+Gift card sale lines are already a distinct line type, and the model enforces gift card sale constraints such as quantity `1`, positive unit price, and no catalog product reference.
+
+## Current report dependency
+
+Current reporting metrics already separate:
+
+* `line_discount_cents`
+* `order_discount_cents`
+
+The report service derives those from line-level cached values.
+
+That means the safest design is:
+
+> Add detailed discount records, but continue maintaining the current cached cents fields so existing reports and transaction totals remain stable.
+
+---
+
+# 3. Design decision
+
+## Keep existing columns as cached totals
+
+Do **not** remove or immediately rename:
+
+* `pos_transactions.discount_cents`
+* `pos_transaction_lines.line_discount_cents`
+* `pos_transaction_lines.transaction_discount_cents`
+
+Instead, after Phase 8.5-1:
+
+| Existing field                                     | New meaning                                                                |
+| -------------------------------------------------- | -------------------------------------------------------------------------- |
+| `pos_transactions.discount_cents`                  | Cached total of active transaction-scope discount applications             |
+| `pos_transaction_lines.line_discount_cents`        | Cached total of active line-scope discount allocations for the line        |
+| `pos_transaction_lines.transaction_discount_cents` | Cached total of active transaction-scope discount allocations for the line |
+
+The new source of truth should be:
+
+* `discount_reasons`
+* `pos_discount_applications`
+* `pos_discount_allocations`
+
+---
+
+# 4. Data model
+
+## 4.1 `discount_reasons`
+
+Purpose: seedable/admin-maintainable list of reasons users must select when applying a manual discount.
+
+### Fields
+
+| Field                       |     Type | Notes             |
+| --------------------------- | -------: | ----------------- |
+| `id`                        |   bigint | PK                |
+| `reason_key`                |   string | Unique stable key |
+| `name`                      |   string | User-facing name  |
+| `description`               |     text | Optional          |
+| `requires_note`             |  boolean | Default `false`   |
+| `requires_authorization`    |  boolean | Default `false`   |
+| `active`                    |  boolean | Default `true`    |
+| `sort_order`                |  integer | Default `0`       |
+| `created_at` / `updated_at` | datetime | Standard          |
+
+### Suggested seed records
+
+| Key                  | Name                        | Note                                          |
+| -------------------- | --------------------------- | --------------------------------------------- |
+| `promotion`          | Promotion                   | General manual promo                          |
+| `damaged`            | Damaged Item                | May require note                              |
+| `price_match`        | Price Match                 | May require note                              |
+| `staff_discount`     | Staff Discount              | May require authorization depending on policy |
+| `customer_service`   | Customer Service Adjustment | Usually requires note                         |
+| `manager_adjustment` | Manager Adjustment          | Requires authorization                        |
+| `loyalty`            | Loyalty Discount            | Future-ready                                  |
+| `legacy_unspecified` | Legacy / Unspecified        | Used for backfill                             |
+| `other`              | Other                       | Requires note                                 |
+
+### Validation
+
+* `reason_key` required, unique, normalized lowercase/snake case.
+* `name` required.
+* inactive reasons should not be available for new discounts.
+* inactive reasons remain valid for historical records.
+
+---
+
+## 4.2 `pos_discount_applications`
+
+Purpose: record each discount the user/system applies.
+
+One row = one discount action.
+
+Examples:
+
+* “10% damaged discount on line 2”
+* “$5 transaction discount”
+* “20% staff discount on transaction”
+* “Legacy line discount from pre-8.5 data migration”
+
+### Fields
+
+| Field                       |     Type | Notes                                           |
+| --------------------------- | -------: | ----------------------------------------------- |
+| `id`                        |   bigint | PK                                              |
+| `pos_transaction_id`        |   bigint | Required                                        |
+| `pos_transaction_line_id`   |   bigint | Nullable; required for line-scope discounts     |
+| `discount_reason_id`        |   bigint | Required (NOT NULL) for every application including legacy/system/promotion |
+| `pos_authorization_id`      |   bigint | Nullable                                        |
+| `scope`                     |   string | `line`, `transaction`                           |
+| `source`                    |   string | `manual`, `system`, `promotion`, `legacy`       |
+| `discount_method`           |   string | `amount`, `percent`, `price_override`           |
+| `entered_amount_cents`      |  integer | Nullable                                        |
+| `entered_percent_bps`       |  integer | Nullable; 10% = `1000`                          |
+| `target_price_cents`        |  integer | Nullable; future-ready                          |
+| `base_amount_cents`         |  integer | Snapshot of basis used for calculation          |
+| `calculated_discount_cents` |  integer | Total calculated discount for this application  |
+| `applied_discount_cents`    |  integer | Total actually applied after caps/eligibility   |
+| `stack_order`               |  integer | Required                                        |
+| `note`                      |     text | Required when reason requires note              |
+| `applied_by_user_id`        |   bigint | Required                                        |
+| `approved_by_user_id`       |   bigint | Nullable, derived from authorization if present |
+| `applied_at`                | datetime | Required                                        |
+| `voided_at`                 | datetime | Nullable                                        |
+| `voided_by_user_id`         |   bigint | Nullable                                        |
+| `void_reason`               |     text | Nullable                                        |
+| `details`                   |    jsonb | `default: {}, null: false`                      |
+| `created_at` / `updated_at` | datetime | Standard                                        |
+
+### Associations
+
+```ruby
+belongs_to :pos_transaction
+belongs_to :pos_transaction_line, optional: true
+belongs_to :discount_reason
+belongs_to :pos_authorization, optional: true
+belongs_to :applied_by_user, class_name: "User"
+belongs_to :approved_by_user, class_name: "User", optional: true
+belongs_to :voided_by_user, class_name: "User", optional: true
+
+has_many :pos_discount_allocations, dependent: :destroy
+```
+
+### Validation
+
+| Rule                           | Requirement                                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Scope                          | Must be `line` or `transaction`                                                                |
+| Source                         | Must be `manual`, `system`, `promotion`, or `legacy`                                           |
+| Method                         | Must be `amount`, `percent`, or `price_override`                                               |
+| Line-scope discount            | Must have `pos_transaction_line_id`                                                            |
+| Transaction-scope discount     | Must not require a line                                                                        |
+| Amount method                  | Requires `entered_amount_cents`                                                                |
+| Percent method                 | Requires `entered_percent_bps`                                                                 |
+| Price override method          | Requires `target_price_cents`                                                                  |
+| Reason requiring note          | Requires `note`                                                                                |
+| Reason requiring authorization | Requires valid `pos_authorization_id` or manager approval                                      |
+| Completed transaction          | Discount applications cannot be added/changed after completion, except backfill/data migration |
+
+---
+
+## 4.3 `pos_discount_allocations`
+
+Purpose: preserve the line-level impact of every discount application.
+
+This is necessary for reporting. Without allocation records, a transaction-level discount can be reported only at the transaction level, not by item, department, subdepartment, tax category, or product type.
+
+One application may allocate to many lines.
+
+### Fields
+
+| Field                         |     Type | Notes                                          |
+| ----------------------------- | -------: | ---------------------------------------------- |
+| `id`                          |   bigint | PK                                             |
+| `pos_discount_application_id` |   bigint | Required                                       |
+| `pos_transaction_id`          |   bigint | Required, denormalized for easier querying     |
+| `pos_transaction_line_id`     |   bigint | Required                                       |
+| `scope`                       |   string | Copied from application: `line`, `transaction` |
+| `allocation_base_cents`       |  integer | Basis for this line before this application    |
+| `allocated_discount_cents`    |  integer | Discount allocated to this line                |
+| `line_number_snapshot`        |  integer | For audit readability                          |
+| `product_variant_id`          |   bigint | Nullable snapshot/reference                    |
+| `product_id`                  |   bigint | Nullable snapshot/reference                    |
+| `sub_department_id`           |   bigint | Nullable snapshot/reference                    |
+| `department_id`               |   bigint | Nullable snapshot/reference                    |
+| `tax_category_id`             |   bigint | Nullable snapshot/reference                    |
+| `variant_sku_snapshot`        |   string | Nullable text snapshot                         |
+| `variant_name_snapshot`       |   string | Nullable text snapshot                         |
+| `product_name_snapshot`       |   string | Nullable text snapshot                         |
+| `sub_department_name_snapshot`|   string | Nullable text snapshot                         |
+| `department_name_snapshot`    |   string | Nullable text snapshot                         |
+| `created_at` / `updated_at`   | datetime | Standard                                       |
+
+### Validation
+
+* `allocated_discount_cents >= 0`
+* `allocation_base_cents >= 0`
+* allocation must belong to the same transaction as its application.
+* allocation line must belong to the same transaction as its application.
+
+---
+
+# 5. Discount eligibility model
+
+## 5.1 New discountable fields
+
+Add `discountable`, default `true`, to:
+
+| Table              | Field                                              |
+| ------------------ | -------------------------------------------------- |
+| `departments`      | `discountable:boolean, default: true, null: false` |
+| `sub_departments`  | `discountable:boolean, default: true, null: false` |
+| `products`         | `discountable:boolean, default: true, null: false` |
+| `product_variants` | `discountable:boolean, default: true, null: false` |
+
+## 5.2 Eligibility rule
+
+Use the strictest rule:
+
+> If any governing level says the line is not discountable, the line is not discountable.
+
+Precedence should be evaluated as:
+
+1. System rule.
+2. Line type.
+3. Variant.
+4. Product.
+5. Subdepartment.
+6. Department.
+
+This is not an override chain. A child record cannot make itself discountable if a parent level is non-discountable.
+
+## 5.3 System non-discountable rules
+
+The following should always be non-discountable:
+
+| Line type / condition                         | Reason                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------ |
+| `gift_card_sale`                              | Liability issuance; must not be discounted                               |
+| return lines                                  | Return amount should be based on return pricing/source transaction logic |
+| voided/locked/completed lines                 | Transaction immutability                                                 |
+| lines with zero remaining discountable amount | Nothing to discount                                                      |
+
+Gift card sale exclusion is especially important because `gift_card_sale` already exists as a POS line type in main.
+
+---
+
+# 6. Service objects
+
+## 6.1 `Pos::DiscountEligibilityResolver`
+
+Purpose: determine whether a line can receive discounts and explain why not.
+
+### Public API
+
+```ruby
+Pos::DiscountEligibilityResolver.call(line)
+```
+
+Returns a result object:
+
+```ruby
+Result = Data.define(
+  :discountable,
+  :reason_code,
+  :message,
+  :source
+)
+```
+
+Example sources:
+
+* `system`
+* `line_type`
+* `department`
+* `sub_department`
+* `product`
+* `product_variant`
+
+### Example results
+
+| Scenario                           | Result                                                            |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| Normal book sale line              | `discountable: true`                                              |
+| Gift card sale line                | `discountable: false, reason_code: "gift_card_sale"`              |
+| Variant marked non-discountable    | `discountable: false, reason_code: "variant_non_discountable"`    |
+| Department marked non-discountable | `discountable: false, reason_code: "department_non_discountable"` |
+| Return line                        | `discountable: false, reason_code: "return_line"`                 |
+
+---
+
+## 6.2 `Pos::DiscountApplicationService`
+
+Purpose: create, validate, authorize, and apply a discount application.
+
+### Public API
+
+```ruby
+Pos::DiscountApplicationService.call!(
+  transaction:,
+  scope:,
+  line: nil,
+  discount_reason:,
+  discount_method:,
+  entered_amount_cents: nil,
+  entered_percent_bps: nil,
+  target_price_cents: nil,
+  note: nil,
+  actor:,
+  pos_authorization: nil
+)
+```
+
+### Responsibilities
+
+* Verify transaction is editable.
+* Verify line belongs to transaction.
+* Verify reason is active.
+* Verify note requirement.
+* Verify authorization requirement.
+* Assign next `stack_order`.
+* Create `pos_discount_application`.
+* Recalculate all discount applications for the transaction via `Pos::DiscountRecalculator`.
+* Return the application.
+
+---
+
+## 6.3 `Pos::DiscountRecalculator`
+
+Implementation file: `app/services/pos/discount_recalculator.rb`
+
+Purpose: rebuild discount allocations and cached discount totals from active applications.
+
+This supersedes the current single-purpose allocation behavior in `Pos::DiscountCalculator` whenever the transaction has one or more active discount applications.
+
+### Public API
+
+```ruby
+Pos::DiscountRecalculator.call!(transaction)
+```
+
+### Responsibilities
+
+1. Clear existing discount allocations.
+2. Reset cached line fields for **non–sourced-return** sale lines only:
+
+   * `line_discount_cents = 0`
+   * `transaction_discount_cents = 0`
+   * `extended_price_cents = unit_price_cents * quantity.abs`
+
+   **Sourced return lines** (`return_line?` with `source_transaction_line_id`) are priced by `Pos::ReturnLinePricing` in `Pos::RecalculateTransaction` before the discount phase. `Pos::DiscountRecalculator` must **not** reset or reallocate discounts on those lines.
+3. Load active discount applications ordered by:
+
+   * `stack_order`
+   * `created_at`
+   * `id`
+4. Apply each discount sequentially.
+5. Create allocation records (including text snapshot columns).
+6. Update application calculated/applied totals.
+7. Update line cached totals.
+8. Update transaction cached discount total.
+9. Leave tax calculation to `Pos::RecalculateTransaction`.
+
+---
+
+# 7. Calculation rules
+
+## 7.1 Base line amount
+
+For a positive sale line:
+
+```ruby
+base_line_amount = unit_price_cents * quantity.abs
+```
+
+For return lines:
+
+```ruby
+discountable_amount = 0
+```
+
+## 7.2 Remaining line amount
+
+For each line during recalculation:
+
+```ruby
+remaining_line_amount =
+  base_line_amount -
+  line_discount_cents -
+  transaction_discount_cents
+```
+
+Do not allow remaining line amount below zero.
+
+## 7.3 Line-scope discount
+
+A line discount applies only to the selected line.
+
+### Amount discount
+
+```ruby
+discount = [entered_amount_cents, remaining_line_amount].min
+```
+
+### Percent discount
+
+```ruby
+discount = (remaining_line_amount * entered_percent_bps / 10_000.0).round
+```
+
+Then cap:
+
+```ruby
+discount = [discount, remaining_line_amount].min
+```
+
+### Allocation
+
+Create one `pos_discount_allocation` for the line.
+
+Update:
+
+```ruby
+line.line_discount_cents += discount
+line.extended_price_cents = base - line.line_discount_cents - line.transaction_discount_cents
+```
+
+---
+
+## 7.4 Transaction-scope discount
+
+A transaction discount applies only to currently eligible lines with remaining discountable amount.
+
+### Eligible line set
+
+A line is eligible if:
+
+* quantity is positive,
+* not a return line,
+* not gift card sale,
+* discount eligibility resolver returns true,
+* remaining line amount > 0.
+
+### Transaction discount base
+
+```ruby
+transaction_discount_base =
+  eligible_lines.sum { |line| remaining_line_amount(line) }
+```
+
+### Amount discount
+
+```ruby
+discount = [entered_amount_cents, transaction_discount_base].min
+```
+
+### Percent discount
+
+```ruby
+discount = (transaction_discount_base * entered_percent_bps / 10_000.0).round
+discount = [discount, transaction_discount_base].min
+```
+
+### Allocation
+
+Allocate proportionally by each line’s remaining line amount.
+
+Transaction discount allocations must:
+
+* sum exactly to `applied_discount_cents`,
+* never allocate less than zero to any line,
+* never allocate more than the line’s remaining discountable amount,
+* distribute rounding remainders deterministically (floor each proportional share, then assign leftover cents to lines with the largest fractional remainders).
+
+Do **not** use independent per-line rounding with a final-line remainder; that can produce negative final shares on low-cent lines.
+
+Update each line:
+
+```ruby
+line.transaction_discount_cents += allocated_discount
+line.extended_price_cents =
+  base - line.line_discount_cents - line.transaction_discount_cents
+```
+
+---
+
+## 7.5 Stacking behavior
+
+Discounts apply in stack order.
+
+Example:
+
+| Step | Line base | Action                   | Result |
+| ---: | --------: | ------------------------ | -----: |
+|    1 |    $20.00 | 10% line discount        | $18.00 |
+|    2 |    $18.00 | $3.00 manager adjustment | $15.00 |
+|    3 |    $15.00 | 20% transaction discount | $12.00 |
+
+Each step creates or updates allocation records.
+
+Important:
+
+> Later discounts apply to the remaining discounted amount, not the original list amount.
+
+---
+
+## 7.6 Caps and safeguards
+
+| Rule                                                               | Behavior                                          |
+| ------------------------------------------------------------------ | ------------------------------------------------- |
+| Discount cannot reduce a line below zero                           | Cap at remaining line amount                      |
+| Transaction discount cannot exceed eligible subtotal               | Cap at eligible subtotal                          |
+| Gift card sale lines cannot receive any discount allocation        | Exclude completely                                |
+| Non-discountable lines cannot receive any discount allocation      | Exclude completely                                |
+| Return lines cannot receive new discounts                          | Exclude completely                                |
+| If no eligible lines exist                                         | Reject transaction discount with friendly message |
+| If reason requires note and note is blank                          | Reject                                            |
+| If reason requires authorization and no valid authorization exists | Reject                                            |
+
+---
+
+# 8. Interaction with existing transaction recalculation
+
+`Pos::RecalculateTransaction` currently recalculates lines, calls `Pos::DiscountCalculator.apply_transaction_discount!`, then applies tax.
+
+Update the flow to:
+
+```ruby
+transaction.pos_transaction_lines.each do |line|
+  recalculate_line_before_discounts!(line)
+end
+
+if transaction.pos_discount_applications.active.any?
+  Pos::DiscountRecalculator.call!(transaction)
+else
+  Pos::DiscountCalculator.apply_transaction_discount!(transaction)
+end
+
+transaction.pos_transaction_lines.each do |line|
+  apply_line_tax!(line)
+end
+
+recalculate_transaction_totals!
+```
+
+## Legacy bridge
+
+When a transaction has **zero** active (non-voided) `pos_discount_applications`, preserve the current `Pos::DiscountCalculator` behavior using the aggregate `pos_transactions.discount_cents` field. Once any discount application exists, `Pos::DiscountRecalculator` (`app/services/pos/discount_recalculator.rb`) is the sole recalculation path for structured discounts.
+
+## Important change
+
+The old line recalculation must not overwrite stacked discount results after `Pos::DiscountRecalculator` runs.
+
+Recommended split:
+
+```ruby
+recalculate_line_base!(line)
+recalculate_discounts!(transaction)
+recalculate_tax!(line)
+recalculate_totals!(transaction)
+```
+
+---
+
+# 9. UI requirements
+
+## 9.1 Line discount UI
+
+Each eligible line should expose:
+
+* discount action button,
+* `/d` command support for previous line,
+* current discount total,
+* discount detail popover/list.
+
+### Form fields
+
+| Field                                    |      Required |
+| ---------------------------------------- | ------------: |
+| Discount type: `$ amount` or `% percent` |           Yes |
+| Value                                    |           Yes |
+| Reason                                   |           Yes |
+| Note                                     | Conditionally |
+| Manager authorization                    | Conditionally |
+
+### Behavior
+
+* If line is non-discountable, disable discount action and show reason.
+* If line is a gift card sale, show: “Gift card sale lines cannot be discounted.”
+* If line has existing discounts, show them individually.
+* User can void/remove a discount while transaction is editable.
+* Removing one discount recalculates the remaining stack via `Pos::DiscountRecalculator`.
+
+---
+
+## 9.2 Transaction discount UI
+
+Transaction-level discount action should expose:
+
+* `/dt` command support,
+* eligible subtotal,
+* excluded line count,
+* reason,
+* value,
+* optional note,
+* manager authorization if required.
+
+### Display example
+
+```text
+Eligible discount base: $42.95
+Excluded: 1 gift card line, 1 non-discountable item
+```
+
+### Behavior
+
+* Transaction discount is allocated only to eligible lines.
+* UI should show the total calculated discount before saving.
+* After saving, affected line totals update immediately.
+
+---
+
+## 9.3 Discount details display
+
+On each POS line, show:
+
+```text
+Discounts: -$4.30
+```
+
+Expanded detail:
+
+| Type           | Reason       | Amount | Applied by |
+| -------------- | ------------ | -----: | ---------- |
+| Line 10%       | Damaged Item | -$2.00 | Cashier    |
+| Transaction 5% | Promotion    | -$2.30 | Cashier    |
+
+---
+
+# 10. Authorization behavior
+
+Existing `Pos::AuthorizationRequest` can grant transaction-scoped authorizations with `authorization_type`, manager PIN, details, and store/transaction references.
+
+Use that pattern for discount approvals.
+
+## Suggested authorization types
+
+| Type                          | Used when                             |
+| ----------------------------- | ------------------------------------- |
+| `discount_reason_approval`    | Reason requires approval              |
+| `discount_threshold_override` | Discount exceeds configured threshold |
+| `non_discountable_override`   | Future only; not enabled in 8.5-1     |
+
+For 8.5-1:
+
+* Do **not** allow overriding non-discountable gift card sale lines.
+* Do **not** allow overriding system non-discountable rules.
+* Manager approval may allow a discount reason or high amount, but not gift card discounting.
+
+---
+
+# 11. Backfill existing data
+
+## 11.1 Seed backfill reason
+
+Create:
+
+```ruby
+reason_key: "legacy_unspecified"
+name: "Legacy / Unspecified"
+active: true
+```
+
+## 11.2 Backfill line discounts
+
+For each existing `pos_transaction_line` where:
+
+```ruby
+line_discount_cents > 0
+```
+
+Create:
+
+* one `pos_discount_application`
+
+  * scope: `line`
+  * source: `legacy`
+  * discount_method: `amount`
+  * reason: `legacy_unspecified`
+  * applied amount: existing `line_discount_cents`
+* one `pos_discount_allocation`
+
+  * allocated amount: existing `line_discount_cents`
+  * linked to that line.
+
+## 11.3 Backfill transaction discounts
+
+For each transaction where the sum of line `transaction_discount_cents` is greater than zero:
+
+Create:
+
+* one `pos_discount_application`
+
+  * scope: `transaction`
+  * source: `legacy`
+  * discount_method: `amount`
+  * reason: `legacy_unspecified`
+  * applied amount: sum of existing `transaction_discount_cents`
+* one allocation per line with existing `transaction_discount_cents > 0`.
+
+## 11.4 Do not recalculate historical totals
+
+Backfill should preserve existing historical totals exactly.
+
+Use direct inserts or migration-safe writes. Do not run normal recalculation against completed historical transactions.
+
+---
+
+# 12. Reporting requirements enabled by this phase
+
+This phase does not need to build the full discount report UI, but the data must support these future report questions:
+
+| Report question                                           | Supported by                                         |
+| --------------------------------------------------------- | ---------------------------------------------------- |
+| How much was discounted by reason?                        | `discount_reasons` + `pos_discount_applications`     |
+| How much discount affected each department/subdepartment? | `pos_discount_allocations`                           |
+| Which cashier applied discounts?                          | `applied_by_user_id`                                 |
+| Which discounts required approval?                        | `pos_authorization_id`, `approved_by_user_id`        |
+| Which discounts were line-level vs transaction-level?     | `scope`                                              |
+| Which discounts were manual vs promotion/system/legacy?   | `source`                                             |
+| Which products/variants received discounts?               | allocation snapshots                                 |
+| Were gift cards discounted?                               | should always be zero; reportable as exception check |
+
+**Allocation reporting rule:** discount activity and allocation reports must use the denormalized snapshot columns on `pos_discount_allocations` (IDs and text snapshots), not live joins to current catalog or classification records. Mutable setup changes must not rewrite historical discount reporting.
+
+---
+
+# 13. Permissions
+
+Use Phase 6 POS discount permission keys and Setup admin keys:
+
+| Permission                          | Purpose                                              |
+| ----------------------------------- | ---------------------------------------------------- |
+| `pos.discounts.line.apply`          | Apply line discount                                  |
+| `pos.discounts.transaction.apply`   | Apply transaction discount                           |
+| `pos.discounts.void`                | Remove/void discount before completion               |
+| `setup.discount_reasons.*`          | Administer discount reasons (Setup workspace)        |
+
+Reasons with `requires_authorization` use manager PIN approval via `pos.authorizations.grant` and `Pos::AuthorizationRequest` (`discount_reason_approval`). Phase 8.5-1 does **not** implement configurable discount thresholds; `pos.discounts.override_limit` (Phase 6 permission key) is reserved for a future threshold feature.
+
+---
+
+# 14. Tests
+
+## 14.1 Model tests
+
+### `DiscountReason`
+
+* requires key/name.
+* normalizes key.
+* inactive reason cannot be selected for new manual discount.
+* reason requiring note enforces note through service.
+
+### `PosDiscountApplication`
+
+* requires transaction.
+* line-scope requires line.
+* transaction-scope does not require line.
+* validates method-specific fields.
+* cannot be changed after transaction completion.
+
+### `PosDiscountAllocation`
+
+* allocation line must belong to same transaction.
+* allocated amount cannot be negative.
+
+---
+
+## 14.2 Service tests
+
+### Eligibility resolver
+
+| Scenario                                         | Expected         |
+| ------------------------------------------------ | ---------------- |
+| normal variant line                              | discountable     |
+| gift card sale line                              | not discountable |
+| return line                                      | not discountable |
+| department non-discountable                      | not discountable |
+| subdepartment non-discountable                   | not discountable |
+| product non-discountable                         | not discountable |
+| variant non-discountable                         | not discountable |
+| open-ring line in discountable subdepartment     | discountable     |
+| open-ring line in non-discountable subdepartment | not discountable |
+
+### Recalculator
+
+| Scenario                                        | Expected                                       |
+| ----------------------------------------------- | ---------------------------------------------- |
+| one line amount discount                        | line discount cache updated                    |
+| one line percent discount                       | line discount cache updated                    |
+| two stacked line discounts                      | second applies to remaining amount             |
+| transaction amount discount                     | allocated across eligible lines                |
+| transaction percent discount                    | allocated across eligible subtotal             |
+| transaction discount with gift card line        | gift card receives zero allocation             |
+| transaction discount with non-discountable line | non-discountable line receives zero allocation |
+| transaction discount with rounding remainder    | total allocations equal application amount     |
+| discount exceeds eligible subtotal              | capped                                         |
+| void one discount in stack                      | all remaining allocations recalculate          |
+
+---
+
+## 14.3 Controller/UI tests
+
+* `/d` opens or routes to previous-line discount workflow.
+* `/dt` opens transaction discount workflow.
+* applying line discount requires reason.
+* applying transaction discount requires reason.
+* reason requiring note rejects blank note.
+* reason requiring authorization rejects missing authorization.
+* gift card line discount attempt returns friendly error.
+* non-discountable line discount attempt returns friendly error.
+* voiding a discount updates totals.
+
+---
+
+## 14.4 Regression tests
+
+Preserve current report behavior:
+
+* `line_discount_cents` still feeds line discount metrics.
+* `transaction_discount_cents` still feeds order/transaction discount metrics.
+* `extended_price_cents` still reflects net line amount after discounts.
+* tax is calculated after discounts.
+* completed transactions remain immutable.
+
+Current reporting depends on cached line discount and order discount values, so these must remain accurate.
+
+---
+
+# 15. Acceptance criteria
+
+## Functional
+
+* User can apply a line discount with amount or percent.
+* User can apply a transaction discount with amount or percent.
+* User must select a discount reason.
+* Reasons can require notes.
+* Reasons can require manager authorization.
+* Multiple discounts can be stacked.
+* Discounts apply in stack order.
+* Transaction discounts allocate only to eligible lines.
+* Gift card sale lines are never discountable.
+* Departments, subdepartments, products, and variants can be marked non-discountable.
+* Existing cached discount fields remain accurate.
+* Completed transactions preserve discount audit details.
+
+## Reporting-readiness
+
+* Every discount has a reason.
+* Every discount has a scope.
+* Every discount has a source.
+* Every discount has an applying user.
+* Every transaction-level discount is allocated to lines.
+* Discount allocations preserve enough item/dept/tax context for later reporting.
+* Existing historical discounts are backfilled as legacy/unspecified.
+
+## Technical
+
+* Discount recalculation is idempotent.
+* Rounding is deterministic.
+* Recalculating a transaction does not duplicate allocations.
+* Voiding/removing one discount rebuilds the stack correctly.
+* Tests cover gift card exclusion, non-discountable rules, stacking, and allocation.
+
+---
+
+# 16. Recommended implementation sequence
+
+## Step 1 — Data foundation
+
+* Add `discount_reasons`.
+* Add `pos_discount_applications`.
+* Add `pos_discount_allocations`.
+* Add `discountable` fields to department/subdepartment/product/variant.
+* Seed discount reasons.
+
+## Step 2 — Eligibility resolver
+
+* Implement `Pos::DiscountEligibilityResolver`.
+* Add tests for all eligibility paths.
+
+## Step 3 — Recalculator
+
+* Implement `Pos::DiscountRecalculator` in `app/services/pos/discount_recalculator.rb`.
+* Wire legacy bridge when zero active applications.
+* Keep existing cached columns updated.
+* Add stacking/allocation tests.
+
+## Step 4 — Application service
+
+* Implement `Pos::DiscountApplicationService`.
+* Handle notes, authorization, stack order, and recalculation.
+
+## Step 5 — POS UI
+
+* Basic line discount form.
+* Basic transaction discount form.
+* Show discount details.
+* Disable discount controls on ineligible lines.
+
+## Step 6 — Backfill
+
+* Seed `legacy_unspecified`.
+* Backfill current aggregate discounts into applications/allocations.
+* Do not alter historical totals.
+
+## Step 7 — Regression and report-readiness tests
+
+* Verify existing register summary/report metrics still work.
+* Verify detailed discount activity can be queried from new tables.

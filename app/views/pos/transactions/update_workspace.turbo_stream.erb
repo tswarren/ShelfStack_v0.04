@@ -21,6 +21,13 @@
         inactive_warnings: @inactive_warnings %>
 <% end %>
 
+<%= turbo_stream.update "pos_settlement_modal_content" do %>
+  <%= render "pos/transactions/settlement_modal_content",
+        transaction: @transaction,
+        readiness: @readiness,
+        inactive_warnings: @inactive_warnings %>
+<% end %>
+
 <%= turbo_stream.append "pos_workspace_events" do %>
   <div data-controller="pos-workspace-focus"></div>
 <% end %>

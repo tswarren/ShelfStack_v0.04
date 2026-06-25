@@ -38,6 +38,8 @@
 <% end %>
 
 <%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: department, field: :discountable,
+             help: "When unchecked, items in this department cannot receive POS discounts." %>
   <%= render "shared/forms/checkbox", f: f, record: department, field: :active,
              help: "Inactive departments remain for history but cannot be selected for new categories." %>
 <% end %>

@@ -82,7 +82,11 @@ export default class extends Controller {
     if (Number.isNaN(cents)) return
 
     this.totalCentsValue = cents
+    if (this.hasRefundValue) {
+      this.refundValue = cents < 0
+    }
     this.update()
+    this.element.dispatchEvent(new CustomEvent("pos:settlement-updated", { bubbles: true }))
   }
 
   fillCashFromReadiness() {

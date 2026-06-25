@@ -1,0 +1,37 @@
+<%= render "shared/forms/errors", record: discount_reason %>
+
+<%= render layout: "shared/forms/section", locals: {
+  title: "Discount Reason Details",
+  description: "Reason codes staff select when applying POS discounts."
+} do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: discount_reason, field: :reason_key, required: true } do %>
+      <%= f.text_field :reason_key, maxlength: 40 %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: discount_reason, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: discount_reason, field: :sort_order } do %>
+      <%= f.number_field :sort_order, step: 1, min: 0 %>
+    <% end %>
+  </div>
+  <div class="ss-form-grid">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: discount_reason, field: :description } do %>
+      <%= f.text_area :description, rows: 3 %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "POS Behavior" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render "shared/forms/checkbox", f: f, record: discount_reason, field: :requires_note,
+               help: "Staff must enter a note when using this reason." %>
+    <%= render "shared/forms/checkbox", f: f, record: discount_reason, field: :requires_authorization,
+               help: "Applying this reason requires manager authorization." %>
+  </div>
+<% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Status" } do %>
+  <%= render "shared/forms/checkbox", f: f, record: discount_reason, field: :active,
+             help: "Inactive reasons remain for history but cannot be selected at the register." %>
+<% end %>

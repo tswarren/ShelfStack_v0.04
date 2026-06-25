@@ -28,6 +28,9 @@ class PosTransactionLine < ApplicationRecord
   belongs_to :stored_value_account, optional: true
   belongs_to :stored_value_identifier, optional: true
 
+  has_many :pos_discount_applications, dependent: :destroy
+  has_many :pos_discount_allocations, dependent: :destroy
+
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :line_number, uniqueness: { scope: :pos_transaction_id }
   validates :line_type, presence: true, inclusion: { in: LINE_TYPES }

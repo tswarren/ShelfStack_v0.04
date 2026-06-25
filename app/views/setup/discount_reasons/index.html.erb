@@ -1,0 +1,27 @@
+<h1>Discount Reasons <%= link_to "New", new_setup_discount_reason_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Name</th>
+      <th>Sort</th>
+      <th>Note</th>
+      <th>Auth</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @discount_reasons.each do |discount_reason| %>
+      <tr>
+        <td><code><%= discount_reason.reason_key %></code></td>
+        <td><%= discount_reason.name %></td>
+        <td><%= discount_reason.sort_order %></td>
+        <td><%= discount_reason.requires_note? ? "Yes" : "No" %></td>
+        <td><%= discount_reason.requires_authorization? ? "Yes" : "No" %></td>
+        <td><span class="<%= status_class(discount_reason.active?) %>"><%= status_label(discount_reason.active?) %></span></td>
+        <td><%= link_to "View", setup_discount_reason_path(discount_reason) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

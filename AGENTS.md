@@ -159,6 +159,16 @@ docs/specifications/phase-8-data-model.md
 docs/specifications/phase-8-test-plan.md
 ```
 
+## Phase 8.5-1 Documents
+
+```text
+docs/roadmap/phase-8.5-1-pos-discount-model.md
+docs/specifications/phase-8.5-1-pos-discount-spec.md
+docs/specifications/phase-8.5-1-data-model.md
+docs/specifications/phase-8.5-1-test-plan.md
+docs/implementation/phase-8.5-1-completion.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -238,6 +248,15 @@ Phase 8 was completed on 2026-06-23. See [docs/implementation/phase-8-1-8-2-comp
 - **8-5:** `Pos::LineCogsCalculator`, pre-sale COGS snapshots, `Pos::OperationalMarginReport`; buyback MAC includes `buyback_offer` inbound
 - Legacy `inventory_behavior` column retained; do not remove without explicit scope
 
+## Phase 8.5-1: POS Discount Model & Calculation — **In review**
+
+Branch `phase-8.5-operational-cleanup` implements structured POS discounts. See [docs/implementation/phase-8.5-1-completion.md](docs/implementation/phase-8.5-1-completion.md) for deliverables and verification. Mark **Complete** only after merge.
+
+- Structured discount reasons, applications, and allocations under cached aggregate cents fields
+- `Pos::DiscountEligibilityResolver`, `Pos::DiscountRecalculator`, `Pos::DiscountApplicationService`, `Pos::VoidDiscountApplication`
+- Stacking, gift card exclusion, catalog `discountable` flags, legacy bridge, and historical backfill
+- POS discount UI with reason/note/auth; Setup discount reasons CRUD
+
 ---
 
 # Architectural Principles
@@ -261,7 +280,7 @@ Use services for:
 * Metadata parsing
 * Inventory posting, eligibility, cost estimation, and balance updates
 * Purchasing: returnability, vendor cost, sourcing lookup, receipt and RTV posting, moving average cost
-* POS: line lookup, transaction type derivation, return quantity validation, tax/discount/tender calculators, complete and void workflows, register session lifecycle, inventory posting via `pos_transaction` / `pos_void`
+* POS: line lookup, transaction type derivation, return quantity validation, tax/discount/tender calculators, discount eligibility/application/recalculation, complete and void workflows, register session lifecycle, inventory posting via `pos_transaction` / `pos_void`
 * Stored value: issue, adjust, redeem, void, transfer, identifier codec, balance rebuild/integrity, liability reporting
 
 ## Centralize business rules
@@ -287,6 +306,10 @@ Items::InventoryTrackingSync
 AddItem::InventoryTrackingMapper
 Pos::LineCogsCalculator
 Pos::OperationalMarginReport
+Pos::DiscountEligibilityResolver
+Pos::DiscountRecalculator
+Pos::DiscountApplicationService
+Pos::VoidDiscountApplication
 Inventory::CostEstimator
 Inventory::Post
 Inventory::BalanceUpdater
@@ -675,6 +698,18 @@ product_variants.sub_department_id → sub_departments.id
 * Buyback MAC: positive inbound `buyback_offer` / `no_value_donation` update moving average.
 * Legacy `inventory_behavior` column remains; do not remove without explicit scope.
 
+## Phase 8.5-1 Rules
+
+* **In review:** Structured POS discounts via `discount_reasons`, `pos_discount_applications`, and `pos_discount_allocations`.
+* Cached aggregate fields remain authoritative for reports: `pos_transactions.discount_cents`, `line_discount_cents`, `transaction_discount_cents`.
+* Application records are the audit source of truth; every application requires a `discount_reason_id` (including legacy backfill).
+* `Pos::DiscountRecalculator` rebuilds allocations and cached cents from active applications in `stack_order`; must not reset or reallocate sourced return lines (`Pos::ReturnLinePricing`).
+* Legacy bridge: when zero active applications exist, `Pos::RecalculateTransaction` preserves existing `DiscountCalculator` behavior.
+* `Pos::DiscountEligibilityResolver` is the discountability gate; gift card sale lines are never discountable.
+* Catalog `discountable` flags on department/subdepartment/product/variant use strictest-wins precedence.
+* Allocation reporting uses allocation snapshot columns, not live catalog joins.
+* Permissions: `pos.discounts.line.apply`, `pos.discounts.transaction.apply`, `pos.discounts.void`; reason approval via `pos.authorizations.grant` and `discount_reason_approval` (not a separate discount authorize key). `pos.discounts.override_limit` is a Phase 6 permission key only; Phase 8.5-1 does not implement configurable discount thresholds.
+
 ---
 
 # Testing Expectations
@@ -783,6 +818,7 @@ Use stable keys:
 | Format            | `format_key`            |
 | Product Condition | `condition_key`         |
 | Inventory Reason Code | `reason_key`        |
+| Discount Reason       | `reason_key`        |
 
 Classification CSV files and load order: `docs/specifications/seed-data-spec.md`, `docs/implementation/csv-seeds.md`. Importer: `db/seeds/concerns/csv_classification_importer.rb`.
 
