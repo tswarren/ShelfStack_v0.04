@@ -25,6 +25,8 @@ require_relative "seeds/phase3b_templates"
 require_relative "seeds/phase4_inventory"
 require_relative "seeds/phase5_inventory"
 require_relative "seeds/phase85_discount_reasons"
+require_relative "seeds/phase852_permissions"
+require_relative "seeds/phase852_tax_exception_reasons"
 
 puts "Seeding Phase 1 foundation..."
 
@@ -40,6 +42,7 @@ Seeds::Phase7aPermissions.seed!
 Seeds::Phase7bPermissions.seed!
 Seeds::Phase7cPermissions.seed!
 Seeds::Phase85Permissions.seed!
+Seeds::Phase852Permissions.seed!
 Seeds::Phase6Roles.seed!
 
 system_user = User.find_or_initialize_by(username: "system")
@@ -185,6 +188,10 @@ puts "Phase 7C buyback seed complete."
 puts "Seeding Phase 8.5-1 discount reasons..."
 Seeds::Phase85DiscountReasons.seed!
 puts "Phase 8.5-1 discount reasons seed complete."
+
+puts "Seeding Phase 8.5-2 tax exception reasons..."
+Seeds::Phase852TaxExceptionReasons.seed!
+puts "Phase 8.5-2 tax exception reasons seed complete."
 
 ExternalDataSource.find_or_initialize_by(source_key: "isbndb").tap do |source|
   source.assign_attributes(

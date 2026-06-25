@@ -1,0 +1,64 @@
+<details class="ss-pos-panel ss-pos-adjustments" data-pos-command-bar-target="transactionDiscountPanel">
+  <summary>Discount/Adjustment</summary>
+  <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) %>
+    <p class="ss-hint">Eligible discount base: <%= pos_money(pos_transaction_discount_base_cents(transaction)) %></p>
+    <%= form_with url: apply_transaction_discount_pos_transaction_path(transaction), method: :post, class: "ss-form", data: { turbo_stream: true } do %>
+      <%= render "pos/transactions/discount_fields",
+            transaction: transaction,
+            label: "Transaction discount",
+            id_prefix: "transaction_discount",
+            type_name: :discount_type,
+            value_name: :discount_value %>
+      <%= submit_tag "Apply discount", class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+    <% transaction.pos_discount_applications.active_records.where(scope: "transaction").order(:stack_order).each do |application| %>
+      <div class="ss-pos-discount-list__item">
+        <span><%= application.discount_reason.name %> −<%= pos_money(application.applied_discount_cents) %></span>
+        <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.discounts.void", store: current_store) %>
+          <%= button_to "Remove",
+                void_discount_application_pos_transaction_path(transaction, application_id: application.id),
+                method: :delete,
+                class: "ss-btn ss-btn-secondary ss-btn--small",
+                form: { data: { turbo_stream: true } } %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+  <%= form_with model: transaction, url: pos_transaction_path(transaction), method: :patch, class: "ss-form" do |f| %>
+    <div class="ss-field">
+      <%= label_tag :pos_transaction_rounding_dollars, "Cash rounding" %>
+      <%= pos_money_field "pos_transaction[rounding_dollars]", transaction.rounding_cents %>
+    </div>
+    <%= f.submit "Recalculate", class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+</details>
+
+<details class="ss-pos-panel ss-pos-adjustments" data-pos-command-bar-target="transactionTaxExemptionPanel">
+  <summary>Tax Exemption</summary>
+  <% exemption = transaction.active_tax_exemption %>
+  <% if exemption.present? %>
+    <% summary = pos_transaction_tax_exemption_summary(transaction) %>
+    <div class="ss-pos-tax-exemption-summary">
+      <p><strong>Tax exemption:</strong> <%= exemption.tax_exception_reason.name %></p>
+      <% if exemption.certificate_number.present? %>
+        <p><strong>Certificate:</strong> <%= exemption.certificate_number %></p>
+      <% end %>
+      <% if summary[:expected_tax_cents].positive? %>
+        <p><strong>Expected tax:</strong> <%= pos_money(summary[:expected_tax_cents]) %></p>
+        <p><strong>Tax removed:</strong> −<%= pos_money(summary[:tax_removed_cents]) %></p>
+      <% end %>
+      <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.void", store: current_store) %>
+        <%= button_to "Remove exemption",
+              void_tax_exemption_pos_transaction_path(transaction, exemption_id: exemption.id),
+              method: :delete,
+              class: "ss-btn ss-btn-secondary ss-btn--small",
+              form: { data: { turbo_stream: true } } %>
+      <% end %>
+    </div>
+  <% elsif Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.apply", store: current_store) && transaction.editable? %>
+    <%= form_with url: apply_tax_exemption_pos_transaction_path(transaction), method: :post, class: "ss-form", data: { turbo_stream: true } do %>
+      <%= render "pos/transactions/tax_exemption_fields", transaction: transaction %>
+      <%= submit_tag "Apply tax exemption", class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  <% end %>
+</details>

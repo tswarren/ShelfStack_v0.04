@@ -373,7 +373,12 @@ pos_voids
 pos_discount_applications
 pos_discount_allocations
 discount_reasons
+tax_exception_reasons
+pos_tax_exemptions
+pos_line_tax_overrides
 ```
+
+Phase 8.5-2 extends `pos_transaction_lines` with `normal_tax_*`, `applied_tax_source`, and `pos_transactions.normal_tax_cents`.
 
 Phase 8.5-1 extends `departments`, `sub_departments`, `products`, and `product_variants` with `discountable` (default `true`).
 

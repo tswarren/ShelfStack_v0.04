@@ -44,5 +44,37 @@
         <p class="ss-hint"><%= eligibility.message %></p>
       <% end %>
     <% end %>
+
+    <% if Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.apply", store: current_store) && pos_line_tax_override_eligible?(line) %>
+      <%= render "pos/transactions/line_tax_override_summary", transaction: transaction, line: line %>
+      <% unless line.pos_line_tax_overrides.active_records.exists? %>
+        <%= form_with url: apply_line_tax_override_pos_transaction_path(transaction), method: :post, class: "ss-pos-line-tax-override-form", data: { turbo_stream: true } do %>
+          <%= hidden_field_tag :line_id, line.id %>
+          <div class="ss-form-grid">
+            <div class="ss-field">
+              <%= label_tag "override_tax_category_id_#{line.id}", "Override tax category" %>
+              <%= select_tag :override_tax_category_id,
+                    options_from_collection_for_select(pos_tax_category_options, :id, :name),
+                    include_blank: "Select category",
+                    id: "override_tax_category_id_#{line.id}",
+                    required: true %>
+            </div>
+            <div class="ss-field">
+              <%= label_tag "tax_exception_reason_id_#{line.id}", "Reason" %>
+              <%= select_tag :tax_exception_reason_id,
+                    options_from_collection_for_select(pos_tax_override_reason_options, :id, :name),
+                    include_blank: "Select reason",
+                    id: "tax_exception_reason_id_#{line.id}",
+                    required: true %>
+            </div>
+            <div class="ss-field">
+              <%= label_tag "tax_override_note_#{line.id}", "Note" %>
+              <%= text_area_tag :tax_override_note, nil, id: "tax_override_note_#{line.id}", rows: 2 %>
+            </div>
+          </div>
+          <%= submit_tag "Apply tax override", class: "ss-btn ss-btn-secondary" %>
+        <% end %>
+      <% end %>
+    <% end %>
   </td>
 </tr>

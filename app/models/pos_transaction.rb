@@ -19,6 +19,8 @@ class PosTransaction < ApplicationRecord
   has_many :pos_authorizations, dependent: :nullify
   has_many :pos_discount_applications, dependent: :destroy
   has_many :pos_discount_allocations, dependent: :destroy
+  has_many :pos_tax_exemptions, dependent: :destroy
+  has_many :pos_line_tax_overrides, dependent: :destroy
 
   attr_accessor :pos_generated_stored_value_identifiers
 
@@ -53,6 +55,10 @@ class PosTransaction < ApplicationRecord
 
   def editable?
     draft? || suspended?
+  end
+
+  def active_tax_exemption
+    pos_tax_exemptions.active_records.first
   end
 
   private

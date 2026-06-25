@@ -14,6 +14,10 @@
   <%= render "pos/transactions/totals_panel", transaction: @transaction %>
 <% end %>
 
+<%= turbo_stream.update "pos_adjustments" do %>
+  <%= render "pos/transactions/adjustments_panel", transaction: @transaction %>
+<% end %>
+
 <%= turbo_stream.update "pos_settlement_actions" do %>
   <%= render "pos/transactions/settlement_actions",
         transaction: @transaction,

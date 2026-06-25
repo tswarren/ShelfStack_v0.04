@@ -1,0 +1,29 @@
+<h1>Tax Exception Reasons <%= link_to "New", new_setup_tax_exception_reason_path, class: "ss-btn" %></h1>
+<table class="ss-table">
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Sort</th>
+      <th>Note</th>
+      <th>Certificate</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @tax_exception_reasons.each do |reason| %>
+      <tr>
+        <td><code><%= reason.reason_key %></code></td>
+        <td><%= reason.name %></td>
+        <td><%= reason.exception_type.humanize %></td>
+        <td><%= reason.sort_order %></td>
+        <td><%= reason.requires_note? ? "Yes" : "No" %></td>
+        <td><%= reason.requires_certificate? ? "Yes" : "No" %></td>
+        <td><span class="<%= status_class(reason.active?) %>"><%= status_label(reason.active?) %></span></td>
+        <td><%= link_to "View", setup_tax_exception_reason_path(reason) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

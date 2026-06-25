@@ -1,0 +1,18 @@
+<% override = line.pos_line_tax_overrides.active_records.first %>
+<% if override.present? %>
+  <div class="ss-pos-line-tax-override">
+    <p>
+      <strong>Override category:</strong> <%= override.override_tax_category.name %>
+      · <%= pos_line_tax_short_name(line) || override.override_store_tax_rate_short_name_snapshot %>
+      · <%= pos_money(line.tax_cents) %>
+    </p>
+    <p class="ss-hint">Reason: <%= override.tax_exception_reason.name %></p>
+    <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.void", store: current_store) %>
+      <%= button_to "Remove override",
+            void_line_tax_override_pos_transaction_path(transaction, override_id: override.id),
+            method: :delete,
+            class: "ss-btn ss-btn-secondary ss-btn--small",
+            form: { data: { turbo_stream: true } } %>
+    <% end %>
+  </div>
+<% end %>

@@ -12,6 +12,10 @@ module Pos
     before_action -> { authorize_pos!("pos.discounts.line.apply") }, only: :apply_line_discount
     before_action -> { authorize_pos!("pos.discounts.transaction.apply") }, only: :apply_transaction_discount
     before_action -> { authorize_pos!("pos.discounts.void") }, only: :void_discount_application
+    before_action -> { authorize_pos!("pos.tax_exemptions.apply") }, only: :apply_tax_exemption
+    before_action -> { authorize_pos!("pos.tax_exemptions.void") }, only: :void_tax_exemption
+    before_action -> { authorize_pos!("pos.tax_overrides.line.apply") }, only: :apply_line_tax_override
+    before_action -> { authorize_pos!("pos.tax_overrides.line.void") }, only: :void_line_tax_override
     before_action -> { authorize_pos!("pos.lines.remove") }, only: %i[remove_line]
     before_action -> { authorize_pos!("pos.returns.receipted") }, only: %i[add_return_line]
     before_action -> { authorize_pos!("pos.transactions.complete") }, only: %i[complete]
@@ -22,12 +26,13 @@ module Pos
     before_action :set_transaction, only: %i[
       show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount void_discount_application
+      apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override
       sync_tenders complete suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
       edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount
-      void_discount_application sync_tenders route_command
+      void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command
     ]
     before_action :load_edit_context, only: %i[
       edit add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
@@ -364,6 +369,79 @@ module Pos
       refresh_transaction_after_discount_change!
       respond_to_workspace(notice: "Discount removed.")
     rescue Pos::VoidDiscountApplication::Error, ActiveRecord::RecordNotFound => e
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+    end
+
+    def apply_tax_exemption
+      reason = TaxExceptionReason.active_records.for_exemption.find(params[:tax_exception_reason_id])
+
+      Pos::TaxExceptionApplicationService.call!(
+        transaction: @transaction,
+        scope: "transaction",
+        tax_exception_reason: reason,
+        certificate_number: params[:certificate_number],
+        note: params[:tax_exemption_note],
+        actor: current_user
+      )
+      refresh_transaction_after_discount_change!
+      respond_to_workspace(notice: "Tax exemption applied.")
+    rescue Pos::TaxExceptionApplicationService::Error, ActiveRecord::RecordNotFound => e
+      flash.now[:alert] = e.message
+      load_edit_context
+      respond_to do |format|
+        format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
+        format.html { redirect_to edit_pos_transaction_path(@transaction), alert: e.message }
+      end
+    end
+
+    def void_tax_exemption
+      exemption = @transaction.pos_tax_exemptions.find(params[:exemption_id])
+      Pos::VoidTaxException.call!(
+        record: exemption,
+        actor: current_user,
+        void_reason: params[:void_reason]
+      )
+      refresh_transaction_after_discount_change!
+      respond_to_workspace(notice: "Tax exemption removed.")
+    rescue Pos::VoidTaxException::Error, ActiveRecord::RecordNotFound => e
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+    end
+
+    def apply_line_tax_override
+      line = @transaction.pos_transaction_lines.find(params[:line_id])
+      reason = TaxExceptionReason.active_records.for_rate_override.find(params[:tax_exception_reason_id])
+      category = TaxCategory.active_records.find(params[:override_tax_category_id])
+
+      Pos::TaxExceptionApplicationService.call!(
+        transaction: @transaction,
+        scope: "line",
+        line: line,
+        tax_exception_reason: reason,
+        override_tax_category: category,
+        note: params[:tax_override_note],
+        actor: current_user
+      )
+      refresh_transaction_after_discount_change!
+      respond_to_workspace(notice: "Line tax override applied.")
+    rescue Pos::TaxExceptionApplicationService::Error, ActiveRecord::RecordNotFound => e
+      flash.now[:alert] = e.message
+      load_edit_context
+      respond_to do |format|
+        format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
+        format.html { redirect_to edit_pos_transaction_path(@transaction), alert: e.message }
+      end
+    end
+
+    def void_line_tax_override
+      override = @transaction.pos_line_tax_overrides.find(params[:override_id])
+      Pos::VoidTaxException.call!(
+        record: override,
+        actor: current_user,
+        void_reason: params[:void_reason]
+      )
+      refresh_transaction_after_discount_change!
+      respond_to_workspace(notice: "Line tax override removed.")
+    rescue Pos::VoidTaxException::Error, ActiveRecord::RecordNotFound => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 

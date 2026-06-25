@@ -159,6 +159,20 @@ docs/specifications/phase-8-data-model.md
 docs/specifications/phase-8-test-plan.md
 ```
 
+## Phase 8.5-2 Documents
+
+```text
+docs/roadmap/phase-8.5-2_pos_tax_exemption_tracking.md
+docs/specifications/phase-8.5-2a-pos-tax-exemption-spec.md
+docs/specifications/phase-8.5-2a-data-model.md
+docs/specifications/phase-8.5-2a-test-plan.md
+docs/specifications/phase-8.5-2b-pos-line-tax-override-spec.md
+docs/specifications/phase-8.5-2b-data-model.md
+docs/specifications/phase-8.5-2b-test-plan.md
+docs/implementation/phase-8.5-2a-completion.md
+docs/implementation/phase-8.5-2b-completion.md
+```
+
 ## Phase 8.5-1 Documents
 
 ```text
@@ -167,6 +181,7 @@ docs/specifications/phase-8.5-1-pos-discount-spec.md
 docs/specifications/phase-8.5-1-data-model.md
 docs/specifications/phase-8.5-1-test-plan.md
 docs/implementation/phase-8.5-1-completion.md
+docs/implementation/phase-8.5-2-spec-fix-guide.md
 ```
 
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
@@ -248,6 +263,13 @@ Phase 8 was completed on 2026-06-23. See [docs/implementation/phase-8-1-8-2-comp
 - **8-5:** `Pos::LineCogsCalculator`, pre-sale COGS snapshots, `Pos::OperationalMarginReport`; buyback MAC includes `buyback_offer` inbound
 - Legacy `inventory_behavior` column retained; do not remove without explicit scope
 
+## Phase 8.5-2: POS Tax Exception Tracking — **In review**
+
+See [docs/implementation/phase-8.5-2a-completion.md](docs/implementation/phase-8.5-2a-completion.md) and [docs/implementation/phase-8.5-2b-completion.md](docs/implementation/phase-8.5-2b-completion.md).
+
+- 8.5-2a: transaction tax exemption, normal tax snapshots, `Pos::TaxRecalculator`
+- 8.5-2b: line tax category override (rate resolved via `TaxRateLookup`)
+
 ## Phase 8.5-1: POS Discount Model & Calculation — **In review**
 
 Branch `phase-8.5-operational-cleanup` implements structured POS discounts. See [docs/implementation/phase-8.5-1-completion.md](docs/implementation/phase-8.5-1-completion.md) for deliverables and verification. Mark **Complete** only after merge.
@@ -310,6 +332,9 @@ Pos::DiscountEligibilityResolver
 Pos::DiscountRecalculator
 Pos::DiscountApplicationService
 Pos::VoidDiscountApplication
+Pos::TaxRecalculator
+Pos::TaxExceptionApplicationService
+Pos::VoidTaxException
 Inventory::CostEstimator
 Inventory::Post
 Inventory::BalanceUpdater
@@ -709,6 +734,17 @@ product_variants.sub_department_id → sub_departments.id
 * Catalog `discountable` flags on department/subdepartment/product/variant use strictest-wins precedence.
 * Allocation reporting uses allocation snapshot columns, not live catalog joins.
 * Permissions: `pos.discounts.line.apply`, `pos.discounts.transaction.apply`, `pos.discounts.void`; reason approval via `pos.authorizations.grant` and `discount_reason_approval` (not a separate discount authorize key). `pos.discounts.override_limit` is a Phase 6 permission key only; Phase 8.5-1 does not implement configurable discount thresholds.
+
+## Phase 8.5-2 Rules
+
+* **Complete (8.5-2a/8.5-2b):** `Pos::TaxRecalculator` resolves normal tax via `Pos::TaxCalculator`, then line override (8.5-2b), then transaction exemption (8.5-2a); cached `tax_cents` and `normal_tax_cents` remain authoritative for totals/reports.
+* Normal tax snapshots on lines distinguish exempt taxable sales from genuinely non-taxable sales.
+* `applied_tax_source` values: `normal`, `non_taxable`, `transaction_exemption`, `sourced_return`, `line_override`.
+* Exemption/override records are audit source of truth; void, do not delete; immutable after transaction completion.
+* Line override: staff select override tax category; rate resolved via `TaxRateLookup`; same-category rate correction without category change is not supported.
+* Sourced return lines preserve/prorate source tax via `ReturnLinePricing`; gift card lines remain non-taxable.
+* Audit events: `pos.tax_exemption.applied/voided`, `pos.line_tax_override.applied/voided`.
+* Permissions: `pos.tax_exemptions.apply/void`, `pos.tax_overrides.line.apply/void`, `setup.tax_exception_reasons.*`.
 
 ---
 

@@ -13,6 +13,7 @@ class PosTransactionLine < ApplicationRecord
     return_reversal none unknown
   ].freeze
   GIFT_CARD_SALE_DESCRIPTION = "Gift card"
+  APPLIED_TAX_SOURCES = Pos::TaxRecalculator::APPLIED_TAX_SOURCES
 
   belongs_to :pos_transaction
   belongs_to :product_variant, optional: true
@@ -20,6 +21,8 @@ class PosTransactionLine < ApplicationRecord
   belongs_to :sub_department, optional: true
   belongs_to :tax_category, optional: true
   belongs_to :store_tax_rate, optional: true
+  belongs_to :normal_tax_category, class_name: "TaxCategory", optional: true
+  belongs_to :normal_store_tax_rate, class_name: "StoreTaxRate", optional: true
   belongs_to :source_transaction, class_name: "PosTransaction", optional: true
   belongs_to :source_transaction_line, class_name: "PosTransactionLine", optional: true
   belongs_to :customer_request_line, optional: true
@@ -30,6 +33,7 @@ class PosTransactionLine < ApplicationRecord
 
   has_many :pos_discount_applications, dependent: :destroy
   has_many :pos_discount_allocations, dependent: :destroy
+  has_many :pos_line_tax_overrides, dependent: :destroy
 
   validates :line_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :line_number, uniqueness: { scope: :pos_transaction_id }
@@ -39,6 +43,8 @@ class PosTransactionLine < ApplicationRecord
   validates :line_discount_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :extended_price_cents, numericality: { only_integer: true }
   validates :tax_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :normal_tax_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :applied_tax_source, inclusion: { in: APPLIED_TAX_SOURCES }, allow_nil: true
   validates :return_disposition, inclusion: { in: RETURN_DISPOSITIONS }, allow_nil: true
   validates :cogs_source, inclusion: { in: COGS_SOURCES }, allow_nil: true
   validates :revenue_treatment, inclusion: { in: REVENUE_TREATMENTS }, allow_nil: true

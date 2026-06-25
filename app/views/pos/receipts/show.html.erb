@@ -10,6 +10,7 @@
 
   <%= render "pos/receipts/totals", transaction: @transaction %>
   <%= render "pos/receipts/tenders", transaction: @transaction %>
+  <%= render "pos/receipts/tax_exemption", transaction: @transaction %>
   <%= render "pos/receipts/footer" %>
 
   <%= render "pos/receipts/actions", receipt: @receipt, transaction: @transaction %>

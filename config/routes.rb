@@ -237,6 +237,12 @@ Rails.application.routes.draw do
         patch :reactivate
       end
     end
+    resources :tax_exception_reasons do
+      member do
+        patch :inactivate
+        patch :reactivate
+      end
+    end
   end
 
   namespace :inventory do
@@ -417,6 +423,10 @@ Rails.application.routes.draw do
         post :apply_line_discount
         post :apply_transaction_discount
         delete :void_discount_application
+        post :apply_tax_exemption
+        delete :void_tax_exemption
+        post :apply_line_tax_override
+        delete :void_line_tax_override
         delete :remove_line
         patch :sync_tenders
         post :readiness_preview

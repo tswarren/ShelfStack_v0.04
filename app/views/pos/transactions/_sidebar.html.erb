@@ -2,40 +2,9 @@
   <%= render "pos/transactions/totals_panel", transaction: transaction %>
 </div>
 
-<details class="ss-pos-panel ss-pos-adjustments" data-pos-command-bar-target="transactionDiscountPanel">
-  <summary>Discount/Adjustment</summary>
-  <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) %>
-    <p class="ss-hint">Eligible discount base: <%= pos_money(pos_transaction_discount_base_cents(transaction)) %></p>
-    <%= form_with url: apply_transaction_discount_pos_transaction_path(transaction), method: :post, class: "ss-form", data: { turbo_stream: true } do %>
-      <%= render "pos/transactions/discount_fields",
-            transaction: transaction,
-            label: "Transaction discount",
-            id_prefix: "transaction_discount",
-            type_name: :discount_type,
-            value_name: :discount_value %>
-      <%= submit_tag "Apply discount", class: "ss-btn ss-btn-secondary" %>
-    <% end %>
-    <% transaction.pos_discount_applications.active_records.where(scope: "transaction").order(:stack_order).each do |application| %>
-      <div class="ss-pos-discount-list__item">
-        <span><%= application.discount_reason.name %> −<%= pos_money(application.applied_discount_cents) %></span>
-        <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.discounts.void", store: current_store) %>
-          <%= button_to "Remove",
-                void_discount_application_pos_transaction_path(transaction, application_id: application.id),
-                method: :delete,
-                class: "ss-btn ss-btn-secondary ss-btn--small",
-                form: { data: { turbo_stream: true } } %>
-        <% end %>
-      </div>
-    <% end %>
-  <% end %>
-  <%= form_with model: transaction, url: pos_transaction_path(transaction), method: :patch, class: "ss-form" do |f| %>
-    <div class="ss-field">
-      <%= label_tag :pos_transaction_rounding_dollars, "Cash rounding" %>
-      <%= pos_money_field "pos_transaction[rounding_dollars]", transaction.rounding_cents %>
-    </div>
-    <%= f.submit "Recalculate", class: "ss-btn ss-btn-secondary" %>
-  <% end %>
-</details>
+<div id="pos_adjustments">
+  <%= render "pos/transactions/adjustments_panel", transaction: transaction %>
+</div>
 
 <div id="pos_settlement_actions">
   <%= render "pos/transactions/settlement_actions",
