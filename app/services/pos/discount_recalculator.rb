@@ -33,6 +33,8 @@ module Pos
 
     def reset_line_discount_caches!
       transaction.pos_transaction_lines.each do |line|
+        next if sourced_return_line?(line)
+
         base = line_base_cents(line)
         line.update!(
           line_discount_cents: 0,
@@ -55,6 +57,7 @@ module Pos
     def apply_line_application!(application)
       line = application.pos_transaction_line
       return if line.blank?
+      return if sourced_return_line?(line)
 
       line.reload
 
@@ -86,20 +89,13 @@ module Pos
       discount = calculate_discount(application, base_total)
       return if discount.zero?
 
-      remaining_discount = discount
-      eligible_lines.each_with_index do |line, index|
-        line.reload
-        line_remaining = remaining_line_amount(line)
-        next if line_remaining.zero?
-
-        share = if index == eligible_lines.length - 1
-                  remaining_discount
-                else
-                  ((discount * line_remaining) / base_total.to_f).round
-                end
-        remaining_discount -= share
+      allocate_transaction_discount_shares(eligible_lines, discount, base_total).each do |entry|
+        line = entry[:line]
+        share = entry[:share]
+        line_remaining = entry[:line_remaining]
         next if share.zero?
 
+        line.reload
         create_allocation!(application, line, line_remaining, share)
         line.transaction_discount_cents += share
         line.extended_price_cents = [ line_base_cents(line) - line.line_discount_cents - line.transaction_discount_cents, 0 ].max
@@ -107,6 +103,35 @@ module Pos
       end
 
       update_application_totals!(application, base_total, discount)
+    end
+
+    def allocate_transaction_discount_shares(eligible_lines, discount, base_total)
+      weighted = eligible_lines.filter_map do |line|
+        line_remaining = remaining_line_amount(line)
+        next if line_remaining.zero?
+
+        exact = Rational(discount * line_remaining, base_total)
+        {
+          line: line,
+          line_remaining: line_remaining,
+          floor: exact.floor.to_i,
+          fraction: exact - exact.floor
+        }
+      end
+
+      remainder = discount - weighted.sum { |entry| entry[:floor] }
+      if remainder.positive?
+        weighted.sort_by { |entry| [ -entry[:fraction], entry[:line].line_number, entry[:line].id ] }
+                .first(remainder)
+                .each { |entry| entry[:floor] += 1 }
+      end
+
+      weighted.filter_map do |entry|
+        share = [ entry[:floor], entry[:line_remaining] ].min
+        next if share.zero?
+
+        { line: entry[:line], line_remaining: entry[:line_remaining], share: share }
+      end
     end
 
     def calculate_discount(application, base_cents)
@@ -125,6 +150,7 @@ module Pos
 
     def eligible_transaction_lines
       transaction.pos_transaction_lines.select do |line|
+        next false if sourced_return_line?(line)
         next false unless line.quantity.positive?
 
         remaining = remaining_line_amount(line)
@@ -132,6 +158,10 @@ module Pos
 
         DiscountEligibilityResolver.call(line, remaining_discountable_cents: remaining).discountable
       end
+    end
+
+    def sourced_return_line?(line)
+      line.return_line? && line.source_transaction_line_id.present?
     end
 
     def remaining_line_amount(line)

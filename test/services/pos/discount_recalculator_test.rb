@@ -189,6 +189,32 @@ class Pos::DiscountRecalculatorTest < ActiveSupport::TestCase
     assert_equal 0, @transaction.pos_discount_allocations.count
   end
 
+  test "transaction discount allocation never creates negative rounding remainder" do
+    @transaction.pos_transaction_lines.destroy_all
+    4.times do |index|
+      variant = create_product_variant!(sub_department: @sub_department, sku: "PENNY-#{index}", selling_price_cents: 1)
+      @transaction.pos_transaction_lines.create!(
+        line_number: index + 1,
+        line_type: "variant",
+        product_variant: variant,
+        product: variant.product,
+        quantity: 1,
+        unit_price_cents: 1,
+        extended_price_cents: 1
+      )
+    end
+    create_application!(scope: "transaction", method: "amount", entered_amount_cents: 2)
+
+    assert_nothing_raised do
+      Pos::DiscountRecalculator.call!(@transaction.reload)
+    end
+
+    shares = @transaction.pos_transaction_lines.order(:line_number).map(&:transaction_discount_cents)
+    assert_equal [ 1, 1, 0, 0 ], shares
+    assert_equal 2, shares.sum
+    assert @transaction.pos_discount_allocations.all? { |allocation| allocation.allocated_discount_cents.positive? }
+  end
+
   private
 
   def line(number)

@@ -108,4 +108,29 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_nil route.payload[:line_id]
     assert_match(/No line available/i, route.message)
   end
+
+  test "/d skips non-discountable previous line" do
+    user = create_user!
+    workstation = create_workstation!(store: @store)
+    non_discountable_variant = create_product_variant!(
+      sub_department: @variant.sub_department,
+      sku: "DISC-NO-#{SecureRandom.hex(3)}",
+      selling_price_cents: 1000,
+      discountable: false
+    )
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: workstation,
+      user: user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 },
+        { product_variant: non_discountable_variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    discountable_line = transaction.pos_transaction_lines.order(:line_number).first
+
+    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/d")
+
+    assert_equal discountable_line.id, route.payload[:line_id]
+  end
 end

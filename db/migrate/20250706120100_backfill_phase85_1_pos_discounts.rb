@@ -131,7 +131,7 @@ class BackfillPhase851PosDiscounts < ActiveRecord::Migration[8.1]
       base_amount_cents: total_transaction_discount,
       calculated_discount_cents: total_transaction_discount,
       applied_discount_cents: total_transaction_discount,
-      stack_order: 1,
+      stack_order: 2,
       applied_by_user_id: transaction.cashier_user_id,
       applied_at: transaction.completed_at || transaction.updated_at
     )

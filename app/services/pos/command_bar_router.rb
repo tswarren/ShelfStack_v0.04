@@ -95,7 +95,16 @@ module Pos
                .where("quantity > 0")
                .where.not(line_type: "gift_card_sale")
                .reorder(line_number: :desc, id: :desc)
-               .first
+               .detect do |line|
+        remaining = [
+          line.unit_price_cents.to_i * line.quantity.abs -
+            line.line_discount_cents.to_i -
+            line.transaction_discount_cents.to_i,
+          0
+        ].max
+
+        DiscountEligibilityResolver.call(line, remaining_discountable_cents: remaining).discountable
+      end
     end
 
     def gift_card_command?
