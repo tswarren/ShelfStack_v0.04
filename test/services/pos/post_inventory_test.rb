@@ -28,6 +28,25 @@ class Pos::PostInventoryTest < ActiveSupport::TestCase
     assert_equal 3, InventoryBalance.find_by!(store: @store, product_variant: @variant).quantity_on_hand
   end
 
+  test "sale posts ledger cost from line cogs snapshot" do
+    @variant.sub_department.update!(default_margin_target_bps: 4000)
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 } ]
+    )
+    complete_pos_sale!(transaction: transaction, user: @user, register_session: @register_session)
+
+    entry = transaction.reload.inventory_posting.inventory_ledger_entries.sole
+    assert_equal 800, entry.unit_cost_cents
+    assert_equal "moving_average", entry.cost_source
+    assert_equal 800, entry.total_cost_cents
+
+    balance = InventoryBalance.find_by!(store: @store, product_variant: @variant)
+    assert_equal 3200, balance.inventory_cost_value_cents
+  end
+
   test "return to stock posts positive quantity delta and increments on hand" do
     sale = create_pos_transaction!(
       store: @store,

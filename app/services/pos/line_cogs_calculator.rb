@@ -82,7 +82,7 @@ module Pos
         unit_cogs_cents: unit,
         total_cogs_cents: unit * line.quantity,
         cogs_source: source,
-        costing_method_snapshot: estimated ? "margin_estimate" : "moving_average",
+        costing_method_snapshot: estimated ? "margin_estimate" : source,
         revenue_treatment: "merchandise",
         cogs_estimated: estimated
       )

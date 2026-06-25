@@ -226,6 +226,35 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, product.product_variants.count
   end
 
+  test "add item sellable sku honors non-inventory tracking selection" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: {
+        sku: "NONINV-001",
+        name: "Non-Inventory Physical",
+        product_type: "physical",
+        variation_type: "standard",
+        list_price_cents: 1500,
+        default_sub_department_id: @sub_department.id
+      }
+    }
+
+    assert_difference -> { ProductVariant.count }, 1 do
+      post items_add_item_path(step: "sellable_sku"), params: {
+        product_variant: {
+          sub_department_id: @sub_department.id,
+          selling_price_cents: 1500,
+          inventory_tracking: Inventory::TrackingResolver::NON_INVENTORY_TRACKING
+        },
+        commit: "Create SKU"
+      }
+    end
+
+    variant = ProductVariant.order(:id).last
+    assert_equal "non_inventory", variant.inventory_tracking_override
+    assert_equal "non_inventory", variant.inventory_behavior
+  end
+
   test "sellable sku step defaults selling price from list price" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
     post items_add_item_path(step: "selling_setup"), params: {

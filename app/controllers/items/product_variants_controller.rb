@@ -153,6 +153,7 @@ module Items
     end
 
     def legacy_behavior_changed_in_params?
+      return false unless manage_inventory_behavior?
       return false if params[:product_variant].blank?
 
       behavior = params[:product_variant][:inventory_behavior]

@@ -252,14 +252,20 @@ module Items
     def handle_sellable_sku
       ensure_product_in_draft!
       @product = Product.find(@draft["product_id"])
-      inventory_behavior = AddItem::InventoryBehaviorMapper.for_product_type(@product.product_type)
       @variant = ProductVariant.new(
-        product_variant_params.merge(
+        product_variant_params.except(:inventory_tracking).merge(
           product: @product,
-          active: true,
-          inventory_behavior: inventory_behavior
+          active: true
         )
       )
+      if params.dig(:product_variant, :inventory_tracking).present?
+        Items::InventoryTrackingSync.apply_tracking_selection!(
+          variant: @variant,
+          tracking: params.dig(:product_variant, :inventory_tracking)
+        )
+      else
+        Items::InventoryTrackingSync.seed_defaults_from_product!(variant: @variant)
+      end
       @variant.condition ||= default_condition if condition_variation_product?(@product)
       VariantClassificationSetup.apply!(variant: @variant)
       prepare_sellable_sku_form
@@ -453,7 +459,7 @@ module Items
         @variant.condition ||= condition
       end
       @variant.sub_department_id ||= @product.default_sub_department_id.presence || @sub_departments.first&.id
-      @variant.inventory_behavior ||= AddItem::InventoryBehaviorMapper.for_product_type(@product.product_type)
+      Items::InventoryTrackingSync.seed_defaults_from_product!(variant: @variant) unless sellable_sku_params_submitted?
       VariantClassificationSetup.apply!(variant: @variant) unless sellable_sku_params_submitted?
       apply_variant_defaults! unless sellable_sku_params_submitted?
     end
@@ -560,7 +566,7 @@ module Items
       params.require(:product_variant).permit(
         :condition_id, :sub_department_id, :selling_price_cents, :display_location_id, :sku,
         :name_override, :attribute1_value, :attribute1_sku_component,
-        :attribute2_value, :attribute2_sku_component
+        :attribute2_value, :attribute2_sku_component, :inventory_tracking
       )
     end
 

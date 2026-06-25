@@ -28,6 +28,20 @@ class Pos::LineCogsCalculatorTest < ActiveSupport::TestCase
     assert_not result.cogs_estimated
   end
 
+  test "sale uses unit cost when moving average is absent" do
+    receive_inventory!(store: @store, vendor: create_vendor!, variant: @variant, user: @user, quantity: 2, unit_cost_cents: 750)
+    balance = InventoryBalance.find_by!(store: @store, product_variant: @variant)
+    balance.update_columns(moving_average_unit_cost_cents: nil, unit_cost_cents: 750)
+
+    line = build_line(product_variant: @variant, quantity: 1, unit_price_cents: 2000, extended_price_cents: 2000)
+    result = Pos::LineCogsCalculator.call(line: line, store: @store)
+
+    assert_equal 750, result.unit_cogs_cents
+    assert_equal "unit_cost", result.cogs_source
+    assert_equal "unit_cost", result.costing_method_snapshot
+    assert_not result.cogs_estimated
+  end
+
   test "non-inventory variant has null cogs" do
     @variant.update!(inventory_behavior: "digital_asset")
     line = build_line(product_variant: @variant, quantity: 1, unit_price_cents: 2000, extended_price_cents: 2000)

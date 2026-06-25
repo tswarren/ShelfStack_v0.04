@@ -66,15 +66,25 @@ module Inventory
     end
 
     def sum_total_cost(store_id, variant_id)
-      InventoryLedgerEntry
-        .where(store_id: store_id, product_variant_id: variant_id)
-        .sum(:total_cost_cents) || 0
+      signed_value_sum(:total_cost_cents, store_id, variant_id)
     end
 
     def sum_total_retail(store_id, variant_id)
-      InventoryLedgerEntry
+      signed_value_sum(:total_retail_cents, store_id, variant_id)
+    end
+
+    def signed_value_sum(column, store_id, variant_id)
+      sql = <<~SQL.squish
+        SUM(CASE WHEN quantity_delta < 0 THEN -COALESCE(#{column}, 0)
+                 ELSE COALESCE(#{column}, 0)
+            END)
+      SQL
+
+      value = InventoryLedgerEntry
         .where(store_id: store_id, product_variant_id: variant_id)
-        .sum(:total_retail_cents) || 0
+        .pick(Arel.sql(sql))
+
+      [ value.to_i, 0 ].max
     end
   end
 end
