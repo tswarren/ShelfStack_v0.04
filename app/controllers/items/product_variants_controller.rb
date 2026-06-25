@@ -16,6 +16,7 @@ module Items
 
     def show
       @audit_events = AuditEvent.for_auditable(@product_variant).limit(50)
+      @manage_inventory_behavior = manage_inventory_behavior?
       if current_store.present? && Inventory::Eligibility.eligible?(@product_variant)
         @order_quantity = Purchasing::OrderQuantityLookup.for_variant(
           store: current_store,
@@ -26,16 +27,21 @@ module Items
     end
 
     def new
-      @product_variant = ProductVariant.new(active: true, inventory_behavior: "standard_physical")
+      @product_variant = ProductVariant.new(active: true)
       @product_variant.product = Product.find(params[:product_id]) if params[:product_id].present?
       @product_variant.condition = ProductCondition.find(params[:condition_id]) if params[:condition_id].present?
       apply_variant_defaults!
+      Items::InventoryTrackingSync.seed_defaults_from_product!(variant: @product_variant)
       load_form_collections
     end
 
     def create
       @product_variant = ProductVariant.new(product_variant_params.except(:inventory_tracking, :inventory_behavior))
-      apply_tracking_sync! if params.dig(:product_variant, :inventory_tracking).present?
+      if params.dig(:product_variant, :inventory_tracking).present?
+        apply_tracking_sync!
+      else
+        Items::InventoryTrackingSync.seed_defaults_from_product!(variant: @product_variant)
+      end
       VariantClassificationSetup.apply!(variant: @product_variant)
       load_form_collections
       if @product_variant.save
@@ -123,6 +129,7 @@ module Items
       @conditions = ProductCondition.active_records.order(:sort_order, :name)
       @display_locations = DisplayLocation.active_for_tree_select
       @classification_defaults = @product_variant&.sub_department.present? ? ClassificationDefaultsResolver.for(variant: @product_variant) : nil
+      @manage_inventory_behavior = manage_inventory_behavior?
     end
 
     def apply_variant_defaults!
@@ -146,7 +153,9 @@ module Items
     end
 
     def legacy_behavior_changed_in_params?
-      behavior = product_variant_params[:inventory_behavior]
+      return false if params[:product_variant].blank?
+
+      behavior = params[:product_variant][:inventory_behavior]
       behavior.present? && behavior != @product_variant.inventory_behavior
     end
 
@@ -158,7 +167,7 @@ module Items
     def preview_tracking_change
       @tracking_change_preview = Items::InventoryTrackingSync.preview_legacy_behavior_edit(
         variant: @product_variant,
-        inventory_behavior: product_variant_params[:inventory_behavior]
+        inventory_behavior: params.dig(:product_variant, :inventory_behavior)
       )
     end
 
@@ -172,11 +181,20 @@ module Items
     end
 
     def product_variant_params
-      params.require(:product_variant).permit(
+      permitted = params.require(:product_variant).permit(
         :product_id, :name, :name_override, :short_name, :sku, :condition_id, :sub_department_id,
         :display_location_id, :attribute1_value, :attribute1_sku_component, :attribute2_value,
         :attribute2_sku_component, :selling_price_cents, :pricing_model_override,
         :inventory_behavior, :inventory_tracking, :active
+      )
+      permitted.delete(:inventory_behavior) unless manage_inventory_behavior?
+      permitted
+    end
+
+    def manage_inventory_behavior?
+      Authorization.allowed?(
+        user: current_user,
+        permission_key: "items.product_variants.manage_inventory_behavior"
       )
     end
   end

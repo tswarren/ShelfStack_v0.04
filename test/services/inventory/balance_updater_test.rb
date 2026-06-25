@@ -35,6 +35,23 @@ class Inventory::BalanceUpdaterTest < ActiveSupport::TestCase
     assert_equal 800, balance.moving_average_unit_cost_cents
   end
 
+  test "outbound movement decreases inventory cost value" do
+    receive_inventory!(store: @store, vendor: create_vendor!, variant: @variant, user: @user, quantity: 5, unit_cost_cents: 800)
+
+    balance = InventoryBalance.find_by!(store: @store, product_variant: @variant)
+    assert_equal 4000, balance.inventory_cost_value_cents
+
+    adjustment = create_inventory_adjustment!(
+      store: @store,
+      lines: [ { product_variant: @variant, quantity_delta: -1, line_number: 1, unit_cost_cents: 800 } ]
+    )
+    Inventory::PostAdjustment.call(adjustment: adjustment, posted_by_user: @user)
+
+    balance.reload
+    assert_equal 4, balance.quantity_on_hand
+    assert_equal 3200, balance.inventory_cost_value_cents
+  end
+
   private
 
   def apply_inbound!(quantity:, unit_cost_cents:, cost_source:)

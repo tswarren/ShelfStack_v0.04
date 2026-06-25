@@ -440,9 +440,7 @@ module Items
       end
     end
 
-    def resolved_variation_type(product_type, variation_type)
-      return "standard" if product_type.in?(%w[service financial non_inventory])
-
+    def resolved_variation_type(_product_type, variation_type)
       variation_type.presence || "standard"
     end
 

@@ -8,16 +8,7 @@ export default class extends Controller {
   }
 
   refresh() {
-    this.updateVariationVisibility()
     this.updateLabelVisibility()
-  }
-
-  updateVariationVisibility() {
-    if (!this.hasProductTypeTarget || !this.hasVariationBlockTarget) return
-
-    const type = this.productTypeTarget.value
-    const hideVariation = type === "service" || type === "financial" || type === "non_inventory"
-    this.variationBlockTarget.style.display = hideVariation ? "none" : ""
   }
 
   updateLabelVisibility() {

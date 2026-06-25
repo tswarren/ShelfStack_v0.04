@@ -45,9 +45,16 @@ module Seeds
       description: "Import catalog items from Ingram spreadsheets"
     }.freeze
 
+    MANAGE_INVENTORY_BEHAVIOR_PERMISSION = {
+      key: "items.product_variants.manage_inventory_behavior",
+      group: "items",
+      name: "Manage variant inventory behavior",
+      description: "Edit legacy inventory behavior on product variants (support)"
+    }.freeze
+
     PERMISSIONS = (
       ACCESS_PERMISSIONS +
-      [ INGRAM_IMPORT_PERMISSION ] +
+      [ INGRAM_IMPORT_PERMISSION, MANAGE_INVENTORY_BEHAVIOR_PERMISSION ] +
       items_permissions +
       setup_catalog_permissions
     ).freeze

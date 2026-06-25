@@ -52,4 +52,22 @@ class Items::InventoryTrackingSyncTest < ActiveSupport::TestCase
     assert preview.previous_eligible
     assert_not preview.new_eligible
   end
+
+  test "seed_defaults_from_product uses product type when default tracking blank" do
+    @product.update!(product_type: "digital", default_inventory_tracking: nil)
+    @variant.inventory_behavior = "standard_physical"
+
+    Items::InventoryTrackingSync.seed_defaults_from_product!(variant: @variant)
+
+    assert_equal "digital_asset", @variant.inventory_behavior
+  end
+
+  test "seed_defaults_from_product prefers product default inventory tracking" do
+    @product.update!(product_type: "physical", default_inventory_tracking: "non_inventory")
+    @variant.inventory_behavior = "standard_physical"
+
+    Items::InventoryTrackingSync.seed_defaults_from_product!(variant: @variant)
+
+    assert_equal "non_inventory", @variant.inventory_behavior
+  end
 end

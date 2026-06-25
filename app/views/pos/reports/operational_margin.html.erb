@@ -10,7 +10,7 @@
   </header>
 
   <div class="ss-pos-no-print">
-    <%= render "filter", sessions: @sessions %>
+    <%= render "filter", sessions: @sessions, url: operational_margin_pos_reports_path %>
   </div>
 
   <% if @scope.blank? && params.except(:controller, :action).present? %>

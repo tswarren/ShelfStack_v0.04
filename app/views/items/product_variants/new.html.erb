@@ -15,9 +15,11 @@
              category_nodes: @category_nodes,
              primary_category_node_id: @primary_category_node_id,
              classification_defaults: @classification_defaults,
-             show_advanced: false %>
+             show_advanced: false,
+             manage_inventory_behavior: @manage_inventory_behavior %>
   <footer class="ss-form-actions">
     <%= f.submit "Create Variant", class: "ss-btn" %>
-    <%= link_to "Cancel", item_flow_cancel_path(@product_variant.product || @product_variant, tab: "item_setup"), class: "ss-btn ss-btn-secondary" %>
+    <% cancel_path = @product_variant.product.present? ? item_flow_cancel_path(@product_variant.product, tab: "item_setup") : items_product_variants_path %>
+    <%= link_to "Cancel", cancel_path, class: "ss-btn ss-btn-secondary" %>
   </footer>
 <% end %>

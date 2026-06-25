@@ -36,9 +36,9 @@ module Pos
       rows = line_scope.map { |line| build_row(line) }
 
       merchandise_rows = rows.select { |row| row.revenue_treatment == "merchandise" }
-      actual_rows = merchandise_rows.reject(&:cogs_estimated)
-      estimated_rows = merchandise_rows.select(&:cogs_estimated)
       unknown_rows = merchandise_rows.select { |row| row.total_cogs_cents.nil? }
+      estimated_rows = merchandise_rows.select { |row| row.cogs_estimated && row.total_cogs_cents.present? }
+      actual_rows = merchandise_rows.reject(&:cogs_estimated).select { |row| row.total_cogs_cents.present? }
 
       net_revenue = merchandise_rows.sum(&:net_revenue_cents)
       total_cogs = merchandise_rows.sum { |row| row.total_cogs_cents.to_i }
@@ -65,6 +65,10 @@ module Pos
         .order("pos_transactions.business_date", "pos_transactions.transaction_number", :line_number)
     end
 
+    def signed_extended_price_cents(line)
+      line.quantity.negative? ? -line.extended_price_cents : line.extended_price_cents
+    end
+
     def build_row(line)
       Row.new(
         pos_transaction_line_id: line.id,
@@ -73,7 +77,7 @@ module Pos
         sku: line.variant_sku_snapshot || line.product_variant&.sku,
         variant_name: line.variant_name_snapshot || line.product_variant&.name,
         quantity: line.quantity,
-        net_revenue_cents: line.extended_price_cents - line.line_discount_cents.to_i - line.transaction_discount_cents.to_i,
+        net_revenue_cents: signed_extended_price_cents(line),
         total_cogs_cents: line.total_cogs_cents,
         cogs_estimated: line.cogs_estimated?,
         revenue_treatment: line.revenue_treatment

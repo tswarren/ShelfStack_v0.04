@@ -3,11 +3,21 @@
 <% product = product_variant.product || products.find { |entry| entry.id == product_variant.product_id.to_i } %>
 <% lock_product = product.present? %>
 <% show_advanced = local_assigns.fetch(:show_advanced, false) %>
+<% manage_inventory_behavior = local_assigns.fetch(:manage_inventory_behavior, false) %>
 
 <% unless lock_product %>
   <%= render layout: "shared/forms/section", locals: { title: "Product" } do %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: product_variant, field: :product_id, label: "Product", required: true } do %>
-      <%= f.collection_select :product_id, products, :id, :name %>
+      <div data-controller="variant-product-picker"
+           data-variant-product-picker-url-value="<%= new_items_product_variant_path %>">
+        <%= f.collection_select :product_id,
+              products,
+              :id,
+              :name,
+              {},
+              { data: { action: "change->variant-product-picker#visit" } } %>
+        <p class="ss-field-help">Choosing a product reloads this form with the correct sellable SKU fields for that product's variation type.</p>
+      </div>
     <% end %>
   <% end %>
 <% end %>
@@ -24,5 +34,6 @@
              classification_defaults: local_assigns[:classification_defaults],
              lock_product: lock_product,
              show_product_select: false,
-             show_advanced: show_advanced %>
+             show_advanced: show_advanced,
+             manage_inventory_behavior: manage_inventory_behavior %>
 <% end %>

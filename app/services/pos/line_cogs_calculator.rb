@@ -41,13 +41,15 @@ module Pos
       variant = line.product_variant
       return no_cogs(revenue_treatment: "none") if variant.blank?
 
-      unless Inventory::Eligibility.eligible?(variant)
-        return no_cogs(revenue_treatment: "service")
+      if line.return_line? && line.source_transaction_line&.unit_cogs_cents.present?
+        return sourced_return_cogs(line.source_transaction_line)
       end
 
-      if line.return_line?
-        return return_cogs
+      unless Inventory::Eligibility.eligible?(variant)
+        return no_cogs(revenue_treatment: non_inventory_revenue_treatment(variant))
       end
+
+      return blind_return_cogs if line.return_line?
 
       inventory_sale_cogs
     end
@@ -86,20 +88,19 @@ module Pos
       )
     end
 
-    def return_cogs
-      source_line = line.source_transaction_line
-      if source_line&.unit_cogs_cents.present?
-        unit = source_line.unit_cogs_cents
-        return Result.new(
-          unit_cogs_cents: unit,
-          total_cogs_cents: unit * line.quantity,
-          cogs_source: "return_reversal",
-          costing_method_snapshot: source_line.costing_method_snapshot || "return_reversal",
-          revenue_treatment: "merchandise",
-          cogs_estimated: source_line.cogs_estimated?
-        )
-      end
+    def sourced_return_cogs(source_line)
+      unit = source_line.unit_cogs_cents
+      Result.new(
+        unit_cogs_cents: unit,
+        total_cogs_cents: unit * line.quantity,
+        cogs_source: "return_reversal",
+        costing_method_snapshot: source_line.costing_method_snapshot || "return_reversal",
+        revenue_treatment: "merchandise",
+        cogs_estimated: source_line.cogs_estimated?
+      )
+    end
 
+    def blind_return_cogs
       fallback = inventory_sale_cogs
       Result.new(
         unit_cogs_cents: fallback.unit_cogs_cents,
@@ -109,6 +110,17 @@ module Pos
         revenue_treatment: "merchandise",
         cogs_estimated: true
       )
+    end
+
+    def non_inventory_revenue_treatment(variant)
+      case variant.product.product_type
+      when "financial"
+        "liability"
+      when "service"
+        "service"
+      else
+        "none"
+      end
     end
 
     def open_ring_cogs

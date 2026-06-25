@@ -37,7 +37,46 @@ class Pos::LineCogsCalculatorTest < ActiveSupport::TestCase
     assert_nil result.unit_cogs_cents
     assert_nil result.total_cogs_cents
     assert_equal "none", result.cogs_source
-    assert_equal "service", result.revenue_treatment
+    assert_equal "none", result.revenue_treatment
+  end
+
+  test "financial non-inventory variant uses liability revenue treatment" do
+    @variant.product.update!(product_type: "financial")
+    @variant.update!(inventory_behavior: "digital_asset")
+    line = build_line(product_variant: @variant, quantity: 1, unit_price_cents: 2000, extended_price_cents: 2000)
+
+    result = Pos::LineCogsCalculator.call(line: line, store: @store)
+
+    assert_equal "liability", result.revenue_treatment
+  end
+
+  test "sourced return reverses source cogs when variant is now non-inventory" do
+    sale = complete_sale_line!(quantity: 1)
+    source_line = sale.pos_transaction_lines.first
+    @variant.update!(inventory_behavior: "digital_asset")
+
+    return_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        {
+          product_variant: @variant,
+          quantity: -1,
+          unit_price_cents: 2000,
+          extended_price_cents: 2000,
+          source_transaction_line_id: source_line.id
+        }
+      ]
+    )
+    return_line = return_txn.pos_transaction_lines.first
+
+    result = Pos::LineCogsCalculator.call(line: return_line, store: @store)
+
+    assert_equal source_line.unit_cogs_cents, result.unit_cogs_cents
+    assert_equal(-source_line.unit_cogs_cents, result.total_cogs_cents)
+    assert_equal "return_reversal", result.cogs_source
+    assert_not result.cogs_estimated
   end
 
   test "return reverses source cogs with signed total" do

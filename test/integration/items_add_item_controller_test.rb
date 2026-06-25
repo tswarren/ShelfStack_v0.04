@@ -91,6 +91,22 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_equal @sub_department.id, product.default_sub_department_id
   end
 
+  test "catalog-linked selling setup shows variation type for service product type" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        title: "Service Catalog Item",
+        catalog_item_type: "sideline",
+        format_id: @format.id
+      },
+      commit: "Create Selling Setup"
+    }
+    follow_redirect!
+
+    assert_select "select[name=\"product[variation_type]\"]", count: 1
+    assert_select "select[name=\"product[product_type]\"] option[value='service']", count: 1
+  end
+
   test "catalog-linked done after item details saves catalog only" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
 
@@ -123,6 +139,9 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         sku: "FEE-001",
         name: "Bag Fee",
         product_type: "financial",
+        variation_type: "matrix",
+        variant1_label: "Denomination",
+        variant2_label: "Series",
         list_price_cents: 10,
         default_sub_department_id: @sub_department.id
       }
@@ -133,14 +152,18 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
       post items_add_item_path(step: "sellable_sku"), params: {
         product_variant: {
           sub_department_id: @sub_department.id,
-          selling_price_cents: 10
+          selling_price_cents: 10,
+          attribute1_value: "25",
+          attribute1_sku_component: "25",
+          attribute2_value: "2024",
+          attribute2_sku_component: "24"
         }
       }
     end
 
     product = Product.find_by!(sku: "FEE-001")
     assert_nil product.catalog_item
-    assert_equal "standard", product.variation_type
+    assert_equal "matrix", product.variation_type
     assert_equal "pure_financial", product.product_variants.first.inventory_behavior
     assert_redirected_to items_item_path(product_id: product.id)
   end

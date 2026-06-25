@@ -57,6 +57,25 @@ module Items
       )
     end
 
+    def self.seed_defaults_from_product!(variant:)
+      new(variant:).seed_defaults_from_product!
+    end
+
+    def seed_defaults_from_product!
+      product = variant.product
+      return variant if product.blank?
+
+      tracking = product.default_inventory_tracking.presence ||
+        AddItem::InventoryTrackingMapper.for_product_type(product.product_type)
+
+      variant.inventory_behavior = if tracking == Inventory::TrackingResolver::INVENTORY_TRACKING
+        "standard_physical"
+      else
+        AddItem::InventoryBehaviorMapper.non_inventory_behavior_for_product_type(product.product_type)
+      end
+      variant
+    end
+
     private
 
     attr_reader :variant

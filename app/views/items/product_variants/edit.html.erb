@@ -15,7 +15,8 @@
              category_nodes: @category_nodes,
              primary_category_node_id: @primary_category_node_id,
              classification_defaults: @classification_defaults,
-             show_advanced: true %>
+             show_advanced: true,
+             manage_inventory_behavior: @manage_inventory_behavior %>
   <footer class="ss-form-actions">
     <%= f.submit "Update Variant", class: "ss-btn" %>
     <%= link_to "Cancel", item_flow_cancel_path(@product_variant.product, tab: "item_setup", variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>

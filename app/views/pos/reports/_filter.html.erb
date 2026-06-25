@@ -1,6 +1,6 @@
 <section class="ss-pos-panel ss-pos-report-filter">
   <h2 class="ss-pos-panel__title">Report filter</h2>
-  <%= form_with url: summary_pos_reports_path, method: :get, class: "ss-form ss-pos-report-filter__form" do %>
+  <%= form_with url: local_assigns.fetch(:url, summary_pos_reports_path), method: :get, class: "ss-form ss-pos-report-filter__form" do %>
     <fieldset class="ss-pos-report-filter__types">
       <legend class="ss-visually-hidden">Filter type</legend>
       <label>

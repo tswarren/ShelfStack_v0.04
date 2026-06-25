@@ -1,0 +1,9 @@
+<%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :inventory_tracking, label: "Inventory tracking" } do %>
+  <%= f.select :inventory_tracking,
+        [
+          [ "Inventory", Inventory::TrackingResolver::INVENTORY_TRACKING ],
+          [ "Non-Inventory", Inventory::TrackingResolver::NON_INVENTORY_TRACKING ]
+        ],
+        { selected: variant.inventory_tracking } %>
+  <p class="ss-field-help">Inventory items post to the stock ledger. Non-inventory items can be sold without stock posting.</p>
+<% end %>

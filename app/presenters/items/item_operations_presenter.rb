@@ -77,7 +77,7 @@ module Items
         )
       end
 
-      if allowed?("orders.purchase_orders.create")
+      if eligible_variant && allowed?("orders.purchase_orders.create")
         actions << Action.new(
           label: "Add to PO",
           url: from_tbo_orders_purchase_orders_path,
@@ -179,7 +179,7 @@ module Items
           permission_key: "orders.purchase_requests.create"
         )
       end
-      if allowed?("orders.purchase_orders.create")
+      if inventory_eligible?(variant) && allowed?("orders.purchase_orders.create")
         vendor_id = suggested_vendor_id(variant)
         actions << Action.new(
           label: "Order",
