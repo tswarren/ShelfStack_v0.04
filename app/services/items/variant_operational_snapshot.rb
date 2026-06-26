@@ -110,11 +110,15 @@ module Items
     def expected_unit_cost_cents(variant:, vendor:, sourcing:)
       return nil if vendor.blank?
 
-      Purchasing::LinePriceDefaults.resolve(
+      defaults = Purchasing::LinePriceDefaults.resolve(
         variant: variant,
         vendor: vendor,
         sourcing: sourcing
-      ).unit_cost_cents
+      )
+      return nil if defaults.unit_cost_cents.nil?
+      return nil if defaults.unit_cost_cents.zero? && defaults.unit_list_price_cents.to_i.zero?
+
+      defaults.unit_cost_cents
     end
 
     def ready_for_pickup_quantities_for

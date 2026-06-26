@@ -25,4 +25,14 @@ class Items::VariantOperationalSnapshotTest < ActiveSupport::TestCase
 
     assert_equal 900, row.expected_unit_cost_cents
   end
+
+  test "expected unit cost is nil when list and selling price are zero" do
+    @variant.product.update!(list_price_cents: 0, preferred_vendor: @vendor)
+    @variant.update!(selling_price_cents: 0)
+
+    snapshot = Items::VariantOperationalSnapshot.for_variants(store: @store, variants: [ @variant ])
+    row = snapshot.rows.fetch(@variant.id)
+
+    assert_nil row.expected_unit_cost_cents
+  end
 end
