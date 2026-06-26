@@ -31,7 +31,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 8 | Inventory Eligibility and Tracking | Centralized inventory tracking gate (`inventory` / `non_inventory`); behavior-neutral resolver/eligibility refactor. **8-1/8-2 complete** (2026-06-23). |
 | Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **In review** (branch merge pending). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
-| Phase 9 | Reporting and Accounting        | Sales reporting, inventory valuation, tax reporting, GL export, and operational dashboards.                  |
+| Phase 9 | Reporting and Accounting        | Operational reports (9b), report UX foundation (9a), GL-shaped financial postings and export (9c).          |
 
 Later phases may be split or reordered as implementation details become clearer.
 
@@ -522,34 +522,56 @@ Related operational context: [roadmap/phase-8.5-operational-cleanup.md](roadmap/
 
 ## Purpose
 
-Phase 9 should provide reporting, analysis, tax summaries, inventory valuation, and accounting export support.
+Phase 9 gives ShelfStack reliable operational visibility and accounting-grade financial data without turning ShelfStack into a full accounting system.
+
+## Sub-Phases
+
+| Sub-phase | Focus |
+| --------- | ----- |
+| **9a** | Report-facing UX standards, formatting, and reporting semantics |
+| **9b** | Operational reports — consolidate and extend daily reconciliation and management reports |
+| **9c** | GL-shaped financial posting layer — balanced entries, mappings, export-ready journals |
+
+See [roadmap/phase-9-reporting-and-accounting.md](roadmap/phase-9-reporting-and-accounting.md).
 
 ## Expected Capabilities
 
-* Sales reports
-* Department/category reports
-* Tax reports
-* Inventory valuation
-* Stock aging
-* Purchase reports
-* Vendor reports
-* Audit reports
-* GL/accounting export
+* Shared report view contract and formatting (9a)
+* Sales, tax, discount, cash, buyback, inventory, purchasing, stored value, and customer-request reports (9b)
+* Operational margin and liability reports (9b)
+* Simple print and CSV export for operational reports (9b)
+* Balanced financial postings from operational events (9c)
+* Accounting mappings and export-ready journal summaries (9c)
+* GL/accounting export to external systems (9c)
+
+Deferred to Phase 10 or later: comprehensive POS/items/modal/drawer UX; advanced dashboards; scheduled reports; full chart-of-accounts administration.
 
 ## Expected Design Direction
 
 Reports should prefer immutable transaction snapshots and ledger entries rather than mutable setup records.
 
-Departments, categories, tax rates, and product names should be snapshot where needed in transaction history.
+Departments, subdepartments, tax rates, and product names should be snapshot where needed in transaction history.
+
+Operational reports (9b) may use POS and ledger sources before 9c is complete. Financial reports and GL export require 9c posted entries.
+
+## Detailed Documents
+
+```text
+docs/roadmap/phase-9-reporting-and-accounting.md
+docs/roadmap/phase-9a-ux-foundation-for-reporting.md
+docs/roadmap/phase-9b-reports.md
+docs/roadmap/phase-9c-gl-shaped-financial-layer.md
+```
 
 ## Major Risks
 
 * Historical accuracy
-* Reconciliation
+* Reconciliation between operational and financial totals
 * Tax reporting
 * Inventory valuation
 * Cost methodology
 * Performance on large datasets
+* Posting rule errors creating misleading financial entries
 
 ---
 

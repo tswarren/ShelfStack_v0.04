@@ -1,5 +1,7 @@
 # Phase 9c — GL-Shaped Financial Posting Layer
 
+Part of [Phase 9 — Reporting and Accounting](phase-9-reporting-and-accounting.md).
+
 ## Purpose
 
 Phase 9c introduces a GL-shaped financial posting layer for ShelfStack.
@@ -59,6 +61,27 @@ Without a financial posting layer, reports risk being built from raw operational
 * What should be exported to external accounting software
 
 Phase 9c creates a controlled financial layer that translates operational activity into balanced financial entries.
+
+---
+
+# Relationship to Phase 9b
+
+Phase 9b can ship operational reports before Phase 9c is complete. Phase 9c introduces accounting-grade postings, reconciliation, and GL export readiness. It does **not** require rewriting all Phase 9b reports.
+
+Phase 9b reports may initially use operational tables, snapshots, and ledgers defined in [Phase 9a reporting semantics](phase-9a-ux-foundation-for-reporting.md). After 9c, selected 9b reports may gain financial tie-out sections or alternate financial sources.
+
+| Report | Phase 9b source | After Phase 9c |
+| ------ | --------------- | -------------- |
+| Customer request queue | Operational tables | Unchanged |
+| Register summary | POS/session data | Add financial tie-out |
+| Sales summary | POS snapshots | Optional financial-entry source |
+| Tax collected | POS tax snapshots | Tie to tax payable entries |
+| Discount summary | POS discount applications | Optional contra-revenue tie-out |
+| Stored value liability | Stored value ledger | Tie to liability postings |
+| Operational margin | COGS snapshots | Remains operational; not GL COGS |
+| GL export | Not in 9b | **Phase 9c deliverable** |
+
+Hybrid reports (e.g. register summary) combine operational context from 9b with financial totals from 9c.
 
 ---
 
@@ -146,6 +169,7 @@ id
 event_type
 source_type
 source_id
+idempotency_key
 store_id
 register_session_id
 business_date
@@ -161,12 +185,25 @@ timestamps
 
 ### Notes
 
+* `idempotency_key` prevents duplicate financial events for the same source action. Use a stable key such as `pos_sale_completed:PosTransaction:10482` or enforce uniqueness on `(event_type, source_type, source_id)`.
 * `source_type` and `source_id` link the event to the operational record.
 * `business_date` supports register/session reporting.
 * `occurred_at` records when the operational event happened.
 * `posted_at` records when the financial posting was generated.
 * `reversal_of_id` links reversal events to the original event.
 * `metadata` stores source snapshots, rule versions, or export context where appropriate.
+
+### Event Status Values
+
+```text
+pending
+posted
+reversed
+error
+no_posting_required
+```
+
+* `no_posting_required` — operational event recorded for audit visibility but no balanced entry expected (e.g. zero-value donation line, fully informational event).
 
 ### Example Event Types
 
@@ -204,7 +241,7 @@ entry_type
 description
 business_date
 posted_at
-status
+posting_status
 currency
 total_debits_cents
 total_credits_cents
@@ -216,16 +253,16 @@ timestamps
 ### Notes
 
 * A financial event may produce one or more entries, though most events should produce one.
-* `is_balanced` should be true before an entry can be posted/exported.
+* `is_balanced` should be true before an entry can be posted or exported.
 * `posting_rule_version` helps audit changes if posting rules evolve.
+* Export state is **not** part of posting lifecycle. Posted entries remain posted after export.
 
-### Status Values
+### Posting Status Values
 
 ```text
 draft
 posted
 reversed
-exported
 error
 ```
 
@@ -234,7 +271,22 @@ Recommended first-pass rule:
 ```text
 Only posted entries are used in financial reports and exports.
 Draft/error entries are visible for review but excluded from official financial totals.
+An entry with posting_status = posted remains posted even after export.
 ```
+
+### Export State
+
+Export membership is tracked separately from posting status:
+
+```text
+Derived from financial_export_entries join records, or
+Optional cached export_status on financial_entries:
+  unexported
+  exported
+  reexported
+```
+
+Financial report queries should filter on `posting_status = posted`, not on export state. Export batches determine which posted entries have been included in a given export file.
 
 ---
 
@@ -252,13 +304,16 @@ account_code_snapshot
 account_name_snapshot
 account_type_snapshot
 normal_balance_snapshot
+external_account_ref_snapshot
 side
 amount_cents
 store_id
 department_id
-subdepartment_id
-merchandise_class_id
+sub_department_id
 tax_category_id
+store_tax_rate_id
+tax_rate_label_snapshot
+tax_rate_bps_snapshot
 tender_type
 procurement_path
 vendor_id
@@ -283,8 +338,11 @@ credit
 ### Notes
 
 * Snapshot account fields protect historical entries if account names/codes change later.
-* Dimensional fields allow financial reports by store, department, merchandise class, vendor, tender type, etc.
+* `external_account_ref_snapshot` preserves the external GL mapping reference at posting time.
+* Tax lines may snapshot `store_tax_rate_id`, label, and `tax_rate_bps` from the effective store tax rate at transaction business date (via `TaxRateLookup` context). Tax category alone is not always sufficient when rates change.
+* Dimensional fields allow financial reports by store, department, subdepartment, vendor, tender type, procurement path, etc.
 * Not every line needs every dimension.
+* `procurement_path` is a derived reporting dimension (see Phase 9a); it may be resolved at posting time.
 
 ---
 
@@ -348,6 +406,10 @@ clearing
 
 Maps ShelfStack operational concepts to accounting accounts.
 
+### Historical Note
+
+A prior `accounting_mappings` table existed briefly in Phase 3 rework but was **removed in 2025-06** because it was never wired into runtime. GL resolution currently falls back to `departments.gl_account_code`. Phase 9c mappings supersede that table with a resolver-driven model. See [classification-cleanup.md](../implementation/classification-cleanup.md).
+
 ### Suggested Fields
 
 ```text
@@ -355,8 +417,7 @@ id
 mapping_type
 store_id
 department_id
-subdepartment_id
-merchandise_class_id
+sub_department_id
 tax_category_id
 tender_type
 procurement_path
@@ -395,14 +456,24 @@ buyback_trade_credit_payout
 
 ### Priority
 
-Mappings should support fallback priority.
-
-Example:
+Mappings should support fallback priority:
 
 ```text
-Specific subdepartment mapping
-  overrides department mapping
-    overrides merchandise class mapping
+specific accounting mapping (most specific scope wins)
+  → sub_department mapping
+    → department mapping
+      → departments.gl_account_code fallback (transitional)
+        → system default account
+```
+
+`departments.gl_account_code` remains a transitional fallback until seeded `accounting_accounts` and mappings are in place. Seeded accounts may be created from existing department GL codes where appropriate.
+
+Example scope specificity:
+
+```text
+sub_department + mapping_type
+  overrides department + mapping_type
+    overrides store-wide default
       overrides system default
 ```
 
@@ -446,8 +517,8 @@ error
 ### Notes
 
 * Export records should link to included entries, likely through a join table such as `financial_export_entries`.
-* Exporting should not mutate the financial entry amounts.
-* Entries may be marked exported or linked to export batches for audit.
+* Exporting should not mutate the financial entry amounts or change `posting_status`.
+* Export membership is recorded via `financial_export_entries`; optional cached `export_status` on entries is derived from batch membership.
 
 ---
 
@@ -550,6 +621,9 @@ Accepted buyback inventory creates used inventory value.
 Cash payout credits cash.
 Trade credit payout credits store credit liability.
 Rejected lines do not post.
+Zero-value donated lines do not inflate used inventory value.
+Mixed-payout sessions post only accepted value by payout type.
+Voided completed buybacks create reversing entries aligned with buyback_void inventory reversal.
 ```
 
 ## Inventory Receipts
@@ -778,6 +852,93 @@ Entries that fail validation should not be marked posted or exported.
 
 ---
 
+# Posting Integration
+
+## Idempotency
+
+Financial posting must be idempotent. A source event should not create duplicate financial events.
+
+Requirements:
+
+```text
+Posting services use stable idempotency keys.
+Unique constraint on idempotency_key, or on (event_type, source_type, source_id).
+Retry of the same source action returns the existing financial event.
+```
+
+Follow the same pattern as `Inventory::Post` idempotency keys.
+
+## Hook Points
+
+Financial posting should be triggered from operational completion paths:
+
+```text
+POS transaction completed
+POS return/refund completed
+POS transaction voided
+Buyback session completed
+Buyback session voided
+Stored value ledger entry posted
+Register cash movement posted (paid in, paid out, drop)
+Register session closed (over/short)
+Inventory receipt posted
+Inventory adjustment posted
+Return to vendor posted
+```
+
+Posting should run **after** operational records are finalized. Operational completion should succeed even if financial posting fails, unless explicitly configured otherwise. Failures must be visible and retryable.
+
+### Transaction Flow
+
+```text
+Operational transaction completes (POS, buyback, receipt, etc.).
+Financial event is created or enqueued (idempotent).
+Posting service attempts to build and post entries.
+If posting succeeds, financial entry posting_status = posted.
+If posting fails, source record remains completed; financial event/entry posting_status = error.
+Error appears in financial posting review queue.
+Authorized user can retry after fixing mapping or data issue.
+```
+
+Operational events with no accounting amount should not create zero-dollar entry lines. The financial event may be marked `no_posting_required` when audit visibility is needed without a balanced entry.
+
+## Zero-Amount Posting Rule
+
+```text
+Financial entry lines must not post zero-dollar amounts.
+Operational events with no accounting impact may create no financial entry.
+Alternatively, create a financial event with status no_posting_required for audit visibility.
+Examples: zero-value buyback donations, no-charge informational events, fully offset internal movements.
+```
+
+## Failure, Retry, and Backfill
+
+```text
+Posting errors create financial events or entries in error posting_status.
+Admins can review failed postings and retry via FinancialPosting::Poster or equivalent.
+Audit events should record posting, reversal, retry, and export actions.
+```
+
+See **Open Decisions — Backfill Strategy** for backfill policy. Default: forward-only from go-live date.
+
+## POS Snapshot Dependency
+
+POS financial postings must use finalized POS transaction, line, tax, discount, tender, and stored-value **snapshots**.
+
+Posting services should **not** re-run pricing, tax, or discount logic except for validation/cross-checking against `Pos::TaxRecalculator`, `Pos::DiscountRecalculator`, and receipt totals.
+
+Gift card sale lines are liability activity, not merchandise revenue. Structured discount applications (Phase 8.5-1) and tax exception snapshots (Phase 8.5-2) must be respected.
+
+## COGS Boundary
+
+```text
+Operational margin (Pos::OperationalMarginReport) remains operational reporting in Phase 9.
+COGS journal posting (inventory_sale_cogs_posted) is optional/deferred until moving cost is sufficiently reliable.
+If COGS posting is enabled, it must use sale-time cost snapshots from Pos::LineCogsCalculator, not live recalculated MAC.
+```
+
+---
+
 # Reversals and Corrections
 
 Historical financial entries should not be edited after posting.
@@ -889,10 +1050,18 @@ external_gl_transfer_file
 
 ```text
 Only posted, balanced entries can be exported.
-Entries should not be exported twice unless re-export is explicitly allowed.
-Export batches should be auditable.
-Exports should preserve the exact entry amounts.
+Export batches are append-only.
+Default export includes only posted, balanced, unexported entries.
+Re-export requires explicit permission and creates a new export batch marked as re-export.
+Voiding an export batch does not delete entries; it only invalidates that batch record.
 Export does not change operational records.
+```
+
+Optional soft-close (not full period close):
+
+```text
+An export cutoff date may prevent casual re-export of entries on or before exported dates.
+Full accounting period close/reopen remains deferred.
 ```
 
 ---
@@ -900,6 +1069,36 @@ Export does not change operational records.
 # User Interface Scope
 
 Phase 9c should include a minimal admin/reporting UI.
+
+## Placement
+
+| Area | Location |
+| ---- | -------- |
+| Accounting accounts | Setup / Accounting |
+| Accounting mappings | Setup / Accounting |
+| Financial events | Reports or Manager Desk / Accounting |
+| Financial entries | Reports or Manager Desk / Accounting |
+| Export batches | Reports or Manager Desk / Accounting |
+| Posting error review | Reports or Manager Desk / Accounting |
+
+Financial admin screens should use the Phase 9a report view contract for list/filter/detail layouts where applicable.
+
+## Permissions
+
+Suggested permission keys:
+
+```text
+accounting.accounts.view
+accounting.mappings.manage
+financial_events.view
+financial_entries.view
+financial_exports.generate
+financial_exports.download
+financial_postings.retry
+financial_exports.reexport
+```
+
+Store-scoped authorization should apply where financial data is store-specific.
 
 ## In Scope
 
@@ -1009,9 +1208,9 @@ Export status
 
 ```text
 Define account types and normal balances.
-Seed default accounting accounts.
-Seed default accounting mappings.
-Document posting rules.
+Seed default accounting_accounts (optionally from departments.gl_account_code).
+Seed default accounting_mappings.
+Document posting rules and mapping priority chain.
 ```
 
 ## Step 2 — Core Tables
@@ -1029,12 +1228,13 @@ financial_export_entries
 ## Step 3 — Posting Engine
 
 ```text
-Mapping resolver
+Mapping resolver (including gl_account_code fallback)
 Entry builder
 Line builder
 Validator
-Poster
+Poster (idempotent)
 Reverser
+Retry/repair path for error status
 ```
 
 ## Step 4 — POS and Stored Value Posting
@@ -1108,11 +1308,14 @@ Phase 9c is complete when:
 
 ```text
 - Financial events can be generated from supported operational records.
-- Financial entries contain balanced debit/credit lines.
+- Financial posting is idempotent; duplicate source events do not create duplicate entries.
+- Financial entries contain balanced debit/credit lines with no zero-dollar amounts.
+- Zero-impact operational events may use financial event status no_posting_required.
 - Financial entries are traceable back to source records.
-- Posted entries are immutable.
+- posting_status = posted entries are immutable; export state is tracked separately.
 - Reversals are represented as reversing entries, not edits.
-- Posting failures are visible for review.
+- Posting failures are visible for review and retry.
+- Operational completion is not silently blocked by posting failure unless explicitly configured.
 ```
 
 ## Account Mapping
@@ -1142,6 +1345,8 @@ Phase 9c is complete when:
 - Completed cash buyback posts used inventory and cash reduction.
 - Completed trade credit buyback posts used inventory and store credit liability.
 - Rejected buyback lines do not post.
+- Zero-value donated lines do not inflate used inventory value.
+- Voided completed buybacks create reversing entries.
 ```
 
 ## Inventory / Purchasing
@@ -1157,7 +1362,9 @@ Phase 9c is complete when:
 
 ```text
 - Posted balanced entries can be included in export batches.
-- Export batch records preserve date range, store, exported by, and included entries.
+- Export batches are append-only and auditable.
+- Default export excludes already-exported entries.
+- Re-export requires explicit permission and a new batch.
 - Journal summary CSV can be generated.
 - Journal detail CSV can be generated.
 - Exported entries are traceable.
@@ -1226,12 +1433,13 @@ export batch includes correct entries
 Test that reports:
 
 ```text
-include posted entries
+include entries with posting_status = posted
 exclude draft/error entries
 respect date range
 respect store/register filters
 handle refunds/reversals correctly
 handle stored value liability correctly
+do not conflate export state with posting status
 ```
 
 ---
@@ -1313,6 +1521,24 @@ Recommended:
 Support journal summary first, with detail export available for audit.
 ```
 
+## 6. Backfill Strategy
+
+Choose one:
+
+```text
+A. Forward-only from Phase 9c go-live date.
+B. Backfill completed operational records from a selected historical date.
+C. Backfill only selected domains (e.g. POS and stored value).
+```
+
+Recommended:
+
+```text
+Forward-only first, with optional backfill as a separate controlled effort.
+```
+
+Backfill can be expensive and risky. Treat it as a deliberate follow-on project, not a default Phase 9c requirement.
+
 ---
 
 # Risks
@@ -1379,3 +1605,12 @@ ShelfStack stays GL-shaped, not full-GL, in this phase.
 ```
 
 This gives ShelfStack accurate financial data for reporting while avoiding the scope and risk of building a complete accounting system too early.
+
+## Related Documents
+
+```text
+docs/roadmap/phase-9-reporting-and-accounting.md
+docs/roadmap/phase-9a-ux-foundation-for-reporting.md
+docs/roadmap/phase-9b-reports.md
+docs/implementation/classification-cleanup.md
+```

@@ -1,53 +1,38 @@
-# Phase TBD — Comprehensive UI/UX Expansion
+# Phase 10 — Comprehensive UI/UX Expansion
 
 ## Purpose
 
 This phase implements the broader ShelfStack UI/UX vision that was intentionally deferred from Phase 9a.
 
-Phase 9a establishes the minimum user-interface and semantic foundation needed for reports. Phase 9b implements initial reports. This later phase returns to the larger application experience: POS workflow modernization, item cockpit redesign, app-wide modal and drawer patterns, keyboard-first interaction standards, command shortcuts, progressive disclosure, and consistency across operational pages.
+Phase 9a establishes the report-facing UX and semantic foundation. Phase 9b implements operational reports. Phase 9c adds GL-shaped financial postings. This phase returns to the larger application experience: POS workflow modernization, item cockpit redesign, app-wide modal and drawer patterns, keyboard-first interaction standards, command shortcuts, progressive disclosure, and consistency across operational pages.
 
 The goal is to make ShelfStack feel like a cohesive, fast, operational bookstore system rather than a collection of Rails CRUD screens.
 
-## Working Phase Name Options
+## Relationship to Phase 9
 
-Possible names:
-
-```text
-Phase TBD — Comprehensive UI/UX Expansion
-Phase TBD — Operational Interface Modernization
-Phase TBD — ShelfStack Interaction System
-Phase TBD — Workflow UX and Command Interface
-Phase TBD — Frontline UX Expansion
-```
-
-Recommended name:
-
-```text
-Phase TBD — Comprehensive UI/UX Expansion
-```
-
-## Relationship to Phase 9a and Phase 9b
+Parent roadmap: [phase-9-reporting-and-accounting.md](phase-9-reporting-and-accounting.md).
 
 ### Phase 9a — UX Foundation for Reporting
 
-Phase 9a standardizes the minimum necessary foundations:
+Phase 9a standardizes the report-facing subset of the UX direction:
 
-* Page headers
-* Buttons
-* Forms
-* Selects
-* Tables
-* Metric cards
 * Report view contract
-* Message taxonomy
+* Report filters, tables, metric cards, and print/export patterns
+* Message taxonomy for report screens
 * Money/percentage/quantity/date formatting
-* Reporting semantics
+* Reporting semantics and operational-vs-financial rules
 
-### Phase 9b — Reports
+Phase 9a does not implement modal, drawer, POS workspace, or item cockpit systems.
 
-Phase 9b uses those standards to build initial operational reports.
+### Phase 9b — Operational Reports
 
-### This Phase
+Phase 9b uses those standards to build and consolidate operational reports.
+
+### Phase 9c — GL-Shaped Financial Posting Layer
+
+Phase 9c generates balanced financial postings from operational events and produces export-ready journal summaries for external accounting systems. Export and financial admin screens should use Phase 9a report patterns. See [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md).
+
+### Phase 10 — Comprehensive UI/UX Expansion
 
 This phase completes the larger interaction vision:
 
@@ -149,6 +134,7 @@ This phase does not include:
 * Accounting/GL export
 * Mobile-native app
 * Complete redesign of every setup/admin page
+* Redesigning Phase 9 report screens except for shared component upgrades, accessibility improvements, or compatibility updates
 * Changing core business rules without separate domain approval
 
 ---
@@ -1061,7 +1047,7 @@ Rules:
 
 # Suggested Implementation Order
 
-## Phase TBD-A — Interaction Infrastructure
+## Phase 10-A — Interaction Infrastructure
 
 ```text
 1. Modal shell and controller
@@ -1073,7 +1059,7 @@ Rules:
 7. Turbo target conventions
 ```
 
-## Phase TBD-B — POS Workspace
+## Phase 10-B — POS Workspace
 
 ```text
 1. POS transaction-first landing behavior
@@ -1088,7 +1074,7 @@ Rules:
 10. Command registry
 ```
 
-## Phase TBD-C — Items Cockpit
+## Phase 10-C — Items Cockpit
 
 ```text
 1. Overview cockpit cleanup
@@ -1101,7 +1087,7 @@ Rules:
 8. Item command ideas if approved
 ```
 
-## Phase TBD-D — Workflow Pages
+## Phase 10-D — Workflow Pages
 
 ```text
 1. Customer requests index/detail
@@ -1112,7 +1098,7 @@ Rules:
 6. Inventory adjustment line UX
 ```
 
-## Phase TBD-E — Polish and Consistency Sweep
+## Phase 10-E — Polish and Consistency Sweep
 
 ```text
 1. Remove one-off button/filter/table styles

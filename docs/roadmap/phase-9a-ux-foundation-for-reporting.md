@@ -1,10 +1,14 @@
 # Phase 9a — UX Foundation for Reporting
 
+Part of [Phase 9 — Reporting and Accounting](phase-9-reporting-and-accounting.md).
+
 ## Purpose
 
-Phase 9a prepares ShelfStack for the reporting phase by standardizing the minimum user-interface patterns, formatting rules, and reporting semantics needed to build trustworthy reports.
+Phase 9a prepares ShelfStack for operational and financial reporting by standardizing the report-facing user-interface patterns, formatting rules, and reporting semantics needed to build trustworthy reports.
 
-This phase is intentionally limited. It is not the full ShelfStack UX redesign. It does not attempt to complete the POS command workspace, full item cockpit redesign, global drawer system, or advanced modal rollout. Instead, it creates the foundation reports need: consistent page structure, filters, tables, metrics, messages, money/date/status formatting, and report inclusion rules.
+Phase 9a implements the **report-facing subset** of the ShelfStack UX direction. It does not complete the comprehensive interaction system. That work belongs in [Phase 10 — Comprehensive UI/UX Expansion](Phase-x10-comprehensive-ux-expansion.md).
+
+This phase is intentionally limited. It does not attempt to complete the POS command workspace, full item cockpit redesign, global drawer system, modal rollout, or advanced workflow UX. Instead, it creates the foundation reports need: consistent page structure, filters, tables, metrics, messages, money/date/status formatting, inclusion/exclusion rules, and operational-vs-financial reporting semantics.
 
 ## Problem Statement
 
@@ -27,14 +31,15 @@ If reports are built before these conventions are defined, the reporting layer w
 
 Phase 9a should:
 
-1. Define the minimum ShelfStack UX standards needed before reports.
+1. Define the minimum report-facing UX standards needed before Phase 9b and 9c.
 2. Standardize report-facing UI components.
 3. Standardize money, percentage, quantity, date, and status formatting.
 4. Define reporting semantics for core operational records.
-5. Clarify item behavior and procurement distinctions that affect reporting.
-6. Prepare POS/register data for register summary reporting.
-7. Establish a report view contract that Phase 9b can reuse.
-8. Avoid delaying reports with the full long-term UX vision.
+5. Define operational vs financial reporting semantics.
+6. Clarify item behavior and procurement-path distinctions that affect reporting.
+7. Prepare POS/register data for register summary reporting.
+8. Establish a report view contract that Phase 9b can reuse.
+9. Avoid delaying reports with the full long-term UX vision.
 
 ## Non-Goals
 
@@ -47,44 +52,34 @@ Phase 9a does not include:
 * Full item cockpit redesign
 * Full POS transaction-first routing overhaul
 * Complete modal system rollout
+* Full workflow UX contracts (Index, Form, Workflow, POS workspace, Modal, Drawer)
 * Advanced dashboards
 * Charts and visual analytics
 * Saved report views
 * Custom report builder
 * Scheduled reports
+* GL-shaped financial postings or export (Phase 9c)
 * Full RubyUI/DaisyUI/framework migration
 * Offline POS
 * A reporting data warehouse
 
+Modal, drawer, POS workspace, and full item cockpit contracts belong in Phase 10. Phase 9a may **reference** [ui-ux-concept.md](../specifications/ui-ux-concept.md) for broader direction but must not redefine or implement those systems.
+
 ## Scope
 
-### 1. UX Direction and View Contracts
+### 1. UX Direction (Report-Facing Subset)
 
-Create or update documentation defining ShelfStack’s UX direction:
+Reference [ui-ux-concept.md](../specifications/ui-ux-concept.md) for the long-term ShelfStack UX direction. Phase 9a codifies only what reports need:
 
 * Operational, not decorative
 * Fast, not flashy
 * Dense enough for bookstore work, but not cramped
-* Keyboard-friendly by default
 * Clear primary action on every screen
 * Summary first, detail on demand
 * Brand colors used as accents, not visual noise
-* Predictable fields, buttons, validation, focus, and feedback
+* Predictable fields, buttons, validation, and feedback on report screens
 
-Define or confirm view contracts for:
-
-* Index/search
-* Detail/overview
-* Item overview
-* Form/edit
-* Workflow
-* POS/register
-* Report
-* Setup list
-* Modal
-* Drawer
-
-Phase 9a should make the **Report** view contract explicit.
+Phase 9a must make the **Report** view contract explicit. Item report drill-down must follow [phase-9-item-drill-down-contract.md](../handoff/phase-9-item-drill-down-contract.md) from Phase 8.5-4; do not redefine the item overview cockpit here.
 
 ### 2. Report View Contract
 
@@ -98,7 +93,7 @@ Report header
 
 Filter bar
   Date range
-  Store/register/user/vendor/category filters as applicable
+  Store/register/user/vendor/department/subdepartment filters as applicable
   Run/update action
   Reset action where useful
 
@@ -124,7 +119,18 @@ Report screens should prioritize correctness, readability, reconciliation, and p
 
 ### 3. Core UI Component Standards
 
-Standardize or refine the following shared components before reports are built:
+Do not treat this as a greenfield CSS rewrite. Phase 9a UI work should:
+
+```text
+1. Audit existing ss-* components and existing report screens.
+2. Identify missing report-facing primitives.
+3. Add only the missing classes/components needed for reports.
+4. Migrate existing reports gradually as part of Phase 9b.
+```
+
+Many classes already exist (`ss-page-header`, `ss-metric-strip`, `ss-metric-card`, `ss-table`, `ss-num`, `ss-empty-state`). Report-specific classes may still need to be added (`ss-filter-bar`, `ss-date-range`, `ss-table--report`, `ss-report-actions`).
+
+Standardize or refine the following shared components for reports:
 
 #### Page and Layout
 
@@ -135,24 +141,13 @@ Standardize or refine the following shared components before reports are built:
 * `ss-section`
 * `ss-panel`
 * `ss-card`
-* `ss-sidebar`
 * `ss-empty-state`
 
 #### Buttons and Actions
 
-* `ss-btn`
-* `ss-btn--primary`
-* `ss-btn--secondary`
-* `ss-btn--neutral`
-* `ss-btn--danger`
-* `ss-btn--ghost`
-* `ss-btn--link`
-* `ss-btn--sm`
-* `ss-btn--lg`
-* `ss-btn--block`
+* `ss-btn` and variants
 * `ss-action-group`
 * `ss-form-actions`
-* `ss-row-actions`
 * `ss-report-actions`
 
 The base button class should not own page spacing. Spacing belongs to layout/action containers.
@@ -164,9 +159,6 @@ The base button class should not own page spacing. Spacing belongs to layout/act
 * `ss-label`
 * `ss-input`
 * `ss-select`
-* `ss-textarea`
-* `ss-help`
-* `ss-field-error`
 * `ss-filter-bar`
 * `ss-filter-group`
 * `ss-filter-actions`
@@ -184,7 +176,6 @@ Select lists should visually match other fields. Report filters should not look 
 * `ss-num`
 * `ss-money`
 * `ss-percent`
-* `ss-actions-cell`
 * `ss-table-row--subtotal`
 * `ss-table-row--total`
 * `ss-empty-row`
@@ -194,32 +185,17 @@ Money, quantities, percentages, and totals should be right-aligned and formatted
 #### Metrics and Status
 
 * `ss-metric-strip`
-* `ss-metric-card`
-* `ss-metric-card__label`
-* `ss-metric-card__value`
-* `ss-metric-card__detail`
-* `ss-badge`
-* `ss-badge--success`
-* `ss-badge--warning`
-* `ss-badge--danger`
-* `ss-badge--neutral`
-* `ss-badge--info`
+* `ss-metric-card` and sub-elements
+* `ss-badge` and variants
 
 Badges should communicate status. They should not look like primary actions.
 
 #### Messages
 
-* `ss-flash-region`
-* `ss-flash`
-* `ss-flash--success`
-* `ss-flash--warning`
-* `ss-flash--error`
-* `ss-flash--info`
+* `ss-flash-region` and flash variants
 * `ss-attention-panel`
 * `ss-section-notice`
-* `ss-workflow-alert`
 * `ss-inline-note`
-* `ss-field-error`
 
 Reports should use empty states and section notices rather than large alert banners for ordinary “no data” conditions.
 
@@ -234,6 +210,7 @@ Define helpers and conventions for:
 * Right-align currency columns.
 * Use consistent negative/refund formatting.
 * Avoid exposing raw `_cents` fields to users.
+* Consolidate scattered helpers (e.g. `format_cents`) into report-facing conventions.
 
 Examples:
 
@@ -248,13 +225,6 @@ $12.99
 * Display as decimal percentages.
 * Store internally as basis points where applicable.
 * Avoid exposing raw `bps` values to users.
-
-Examples:
-
-```text
-6.25%
-10.00%
-```
 
 #### Quantities
 
@@ -286,7 +256,26 @@ Audit views use created_at.
 Register summaries use register session boundaries.
 ```
 
-### 5. Reporting Semantics
+### 5. Operational vs Financial Reporting Semantics
+
+Phase 9a defines how operational and financial reporting differ. Phase 9b primarily uses operational sources; Phase 9c introduces financial postings.
+
+| Concern | Operational reporting (9b) | Financial reporting (9c) |
+| ------- | -------------------------- | ------------------------ |
+| Primary source | POS snapshots, ledgers, workflow tables | `financial_entries` and lines |
+| Gift card sale | Liability activity in stored-value ledger | Credit gift card liability account |
+| Sales total | Completed POS transaction totals | Revenue accounts from posted entries |
+| Inventory value | Inventory balances / ledger | Inventory asset accounts when posted |
+| Reconciliation | POS/register/inventory tie-out | Operational totals vs financial entries |
+
+Rules:
+
+* Operational reports may ship before Phase 9c is complete.
+* Financial reports and GL export require Phase 9c posted entries.
+* Hybrid reports (e.g. register summary) may combine operational context with financial tie-out after 9c.
+* Phase 9c posting rules must follow the inclusion/exclusion semantics defined here.
+
+### 6. Reporting Semantics
 
 Define inclusion/exclusion rules before Phase 9b.
 
@@ -310,6 +299,8 @@ Sales totals include completed transactions only.
 Draft, cancelled, and voided transactions are excluded from sales totals unless a specific exception/audit report includes them.
 ```
 
+POS tax and discount reports should use Phase 8.5-1/8.5-2 snapshot fields (`pos_discount_applications`, `normal_tax_cents`, `applied_tax_source`) where applicable, not live catalog joins.
+
 #### Register Sessions
 
 Clarify how reports treat:
@@ -332,9 +323,11 @@ Clarify how reports treat:
 * Quoted buybacks
 * Accepted/completed buybacks
 * Rejected lines
+* Donated / zero-value lines
 * Cash payout
 * Trade credit payout
 * Inventory posted from buyback
+* Voided completed buybacks
 * Records marked `needs_review`
 
 #### Purchasing and Receiving
@@ -380,7 +373,7 @@ Clarify:
 * Trade credit redemption applies payment.
 * Stored value adjustments should be separately reportable.
 
-### 6. Item Behavior and Procurement Path
+### 7. Item Behavior and Procurement Path
 
 Define reporting-relevant item behavior before reports.
 
@@ -396,15 +389,32 @@ Minimum behavior profiles:
 * Digital/non-physical item
 * Non-inventory item
 
-Define procurement path values:
+#### Procurement Path (Derived Reporting Dimension)
+
+Phase 9a defines procurement path as a **reporting dimension**. It may be derived from existing records unless a later schema decision persists it. Phase 9c may use the same dimension for accounting mappings.
+
+Phase 9a does **not** require adding a persisted `procurement_path` column. Persistence should be a separate schema decision only if derived resolution proves insufficient or too expensive.
+
+Values:
 
 ```text
 vendor_order
 buyback
 donation
+buyback_donation
 manual_stock
 not_applicable
 ```
+
+Example derived rules:
+
+| Condition | Derived procurement path |
+| --------- | ------------------------ |
+| Variant with vendor source / orderable | `vendor_order` |
+| Variant created through buyback | `buyback` |
+| Accepted buyback line with zero offer / donation | `buyback_donation` or `donation` |
+| Manual inventory setup | `manual_stock` |
+| Gift card / service / non-inventory | `not_applicable` |
 
 Reporting implications:
 
@@ -414,15 +424,15 @@ Reporting implications:
 * Non-inventory/service/stored-value items should not be included in inventory value reports.
 * Gift cards and stored value should be treated as liability activity, not ordinary merchandise sales.
 
-### 7. POS/Register Reporting Readiness
+### 8. POS/Register Reporting Readiness
 
 Before Phase 9b, confirm:
 
 * Tender type categories
 * Cash movement categories
 * Refund handling
-* Tax subtotal rules
-* Discount subtotal rules
+* Tax subtotal rules (including exemption and line override snapshots)
+* Discount subtotal rules (including structured discount applications)
 * Gift card sale/redemption treatment
 * Store credit issue/redemption treatment
 * Register session inclusion rules
@@ -430,49 +440,54 @@ Before Phase 9b, confirm:
 
 Phase 9a does not need the full POS command registry, but POS data must be semantically ready for reporting.
 
-### 8. Documentation Deliverables
+### 9. Documentation Deliverables
 
 Create or update documentation:
 
 ```text
-docs/specifications/phase-9a-ux-foundation-for-reporting.md
-docs/specifications/view-contracts.md
-docs/specifications/reporting-semantics.md
+docs/specifications/phase-9a-ux-foundation-for-reporting-spec.md
 docs/specifications/report-view-contract.md
-docs/specifications/ui-components.md
+docs/specifications/reporting-semantics.md
 ```
 
-If preferred, some of these can be sections in a single Phase 9a document rather than separate files.
+Reference, do not duplicate:
+
+```text
+docs/specifications/ui-ux-concept.md
+docs/handoff/phase-9-item-drill-down-contract.md
+```
+
+If preferred, some deliverables can be sections in a single Phase 9a specification rather than separate files.
 
 ## Suggested Implementation Order
 
-1. Document target UX feel and view contracts.
-2. Define report view contract.
-3. Standardize buttons/actions and remove button spacing side effects.
-4. Standardize forms/selects/filter bars.
-5. Standardize tables, metric cards, badges, and empty states.
-6. Standardize flash/notice/attention/message placement.
-7. Add money/percentage/quantity/date formatting helpers.
-8. Define reporting statuses and inclusion/exclusion rules.
-9. Define item behavior profiles and procurement path.
-10. Confirm POS/register reporting semantics.
-11. Create one or two sample report shells using placeholder data to prove the layout.
+1. Document report view contract and operational-vs-financial semantics.
+2. Audit existing `ss-*` components and report screens; identify gaps.
+3. Add missing report-facing CSS primitives only.
+4. Standardize report filters, tables, metric cards, badges, and empty states.
+5. Consolidate money/percentage/quantity/date formatting helpers.
+6. Document reporting statuses and inclusion/exclusion rules.
+7. Document item behavior profiles and derived procurement path rules.
+8. Confirm POS/register reporting semantics (including 8.5-1/8.5-2 snapshots).
+9. Create two sample report shells using placeholder data to prove the layout:
+   * A reconciliation-style shell (e.g. POS Register Summary or Tax Collected)
+   * An operational queue-style shell (e.g. Customer Request Queue or Buyback Summary)
 
 ## Acceptance Criteria
 
 Phase 9a is complete when:
 
 * A report view contract is documented.
-* Core report UI components exist or are standardized.
-* Buttons, filters, tables, metrics, badges, and empty states have defined CSS classes.
-* Select lists and form fields visually match the app’s standard field style.
+* Operational vs financial reporting semantics are documented.
+* Core report UI components are audited; missing report-facing primitives are defined or added.
 * Money, percentage, quantity, and date formatting helpers are defined.
 * Reportable status rules are documented for POS, register sessions, buybacks, purchasing/receiving, inventory, customer requests, and stored value.
-* Item behavior profiles and procurement path are defined enough to prevent misleading reports.
+* Procurement path is documented as a derived reporting dimension with resolution rules (no persisted column required by default).
 * Gift card/stored value reporting treatment is documented.
 * POS/register inclusion rules are clear enough to build a register summary.
-* At least one report shell can be built without inventing new UI patterns.
-* The full POS command/drawer/item cockpit vision remains explicitly deferred.
+* Item drill-down contract from Phase 8.5-4 is referenced for report links.
+* At least **two** report shells are proven without inventing new UI patterns: one reconciliation-style report and one operational queue-style report.
+* Modal, drawer, POS workspace, and full item cockpit work remain explicitly deferred to Phase 10.
 
 ## Risks
 
@@ -491,3 +506,12 @@ Reports built on unclear status/date/tax/tender rules will look polished but pro
 ### Over-Designing Reports
 
 Initial reports should be accurate and printable before they become dashboards.
+
+## Related Documents
+
+```text
+docs/roadmap/phase-9-reporting-and-accounting.md
+docs/roadmap/phase-9b-reports.md
+docs/roadmap/phase-9c-gl-shaped-financial-layer.md
+docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
+```
