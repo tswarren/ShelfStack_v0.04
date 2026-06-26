@@ -2,6 +2,7 @@
 
 module ItemsHelper
   include SetupFormatHelper
+
   USER_FACING_LABELS = {
     "catalog_items" => "Item Details",
     "products" => "Selling Setup",
@@ -16,6 +17,28 @@ module ItemsHelper
     "operations" => "Operations",
     "item_setup" => "Item setup",
     "activity" => "Activity"
+  }.freeze
+
+  COVER_IMAGE_SIZES = {
+    hero: [ 112, 160 ],
+    search: [ 48, 70 ],
+    index: [ 40, 58 ]
+  }.freeze
+
+  CATALOG_ITEM_PLACEHOLDER_IMAGES = {
+    "audiobook" => "audiobook.png",
+    "book" => "book.png",
+    "cafe" => "cafe.png",
+    "calendar" => "calendar.png",
+    "ebook" => "ebook.png",
+    "game" => "game.png",
+    "gift" => "gift_sideline.png",
+    "map" => "map.png",
+    "other" => "other.png",
+    "periodical" => "periodical.png",
+    "recorded_music" => "music.png",
+    "sideline" => "gift_sideline.png",
+    "videorecording" => "video.png"
   }.freeze
 
   def items_tab_label(tab)
@@ -37,12 +60,6 @@ module ItemsHelper
     tag.span(status.to_s.tr("_", " ").titleize, class: "ss-status-badge #{css_class}")
   end
 
-  COVER_IMAGE_SIZES = {
-    hero: [ 112, 160 ],
-    search: [ 48, 70 ],
-    index: [ 40, 58 ]
-  }.freeze
-
   def product_cover_image_representation(attachment, size: :hero)
     return unless attachment&.attached?
 
@@ -51,13 +68,13 @@ module ItemsHelper
     attachment.variant(resize_to_limit: COVER_IMAGE_SIZES.fetch(size))
   end
 
-  def product_cover_image_tag(attachment, size: :hero, alt: "Cover image")
+  def product_cover_image_tag(attachment, size: :hero, alt: "Cover image", item: nil)
     if attachment&.attached?
       image_tag product_cover_image_representation(attachment, size: size),
                 class: "ss-item-cover-image ss-item-cover-image--#{size}",
                 alt: alt
     else
-      item_cover_placeholder(size: size)
+      item_cover_placeholder(item: item, size: size)
     end
   end
 
@@ -66,7 +83,8 @@ module ItemsHelper
     product_cover_image_tag(
       resolved.attachment,
       size: size,
-      alt: "Cover image for #{item.title}"
+      alt: "Cover image for #{item.title}",
+      item: item
     )
   end
 
@@ -90,9 +108,28 @@ module ItemsHelper
     end
   end
 
-  def item_cover_placeholder(size: :hero)
-    tag.div(class: "ss-item-cover ss-item-cover-placeholder ss-item-cover--#{size}", aria: { hidden: true }) do
-      tag.span("Cover", class: "ss-item-cover-label")
+  def item_cover_placeholder(item: nil, size: :hero)
+    image_tag(
+      catalog_item_placeholder_image_path(item),
+      class: "ss-item-cover-image ss-item-cover-image--#{size} ss-item-cover-placeholder-image",
+      alt: catalog_item_placeholder_alt(item)
+    )
+  end
+
+  def catalog_item_placeholder_image_path(item)
+    catalog_item_type = item&.catalog_item&.catalog_item_type
+    filename = CATALOG_ITEM_PLACEHOLDER_IMAGES.fetch(catalog_item_type, "other.png")
+
+    "placeholders/catalog/#{filename}"
+  end
+
+  def catalog_item_placeholder_alt(item)
+    catalog_item_type = item&.catalog_item&.catalog_item_type
+
+    if catalog_item_type.present?
+      "#{catalog_item_type.humanize} placeholder image"
+    else
+      "Generic product placeholder image"
     end
   end
 
