@@ -1429,6 +1429,11 @@ h2 {
   justify-content: center;
 }
 
+.ss-item-cover-placeholder-image {
+  object-fit: contain;
+  background: var(--color-base-100);
+}
+
 .ss-item-creators {
   margin: 0.5rem 0 0;
   font-size: 0.9375rem;
