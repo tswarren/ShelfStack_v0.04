@@ -36,7 +36,8 @@ module Items
         store: store,
         user: user,
         contexts: OperationalWarningBuilder.default_contexts,
-        snapshot: snapshot
+        snapshot: snapshot,
+        eligibility_by_variant: order_eligibility
       ).fetch(item, [])
     end
 
@@ -131,7 +132,9 @@ module Items
         store: store,
         variants: variants,
         context: :item_page,
-        vendors_by_variant_id: snapshot.suggested_vendors.transform_values { |result| result.vendor }
+        vendors_by_variant_id: snapshot.suggested_vendors.transform_values { |result| result.vendor },
+        sourcing_by_variant_id: snapshot.sourcing_by_variant_id,
+        suggested_vendors_by_variant_id: snapshot.suggested_vendors
       )
     end
 

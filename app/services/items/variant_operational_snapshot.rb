@@ -102,19 +102,19 @@ module Items
           orderable: variant.orderable?,
           inventory_tracking: Inventory::TrackingResolver.resolve(variant),
           sourcing_record_present: sourcing&.sourcing_record_present == true,
-          expected_unit_cost_cents: expected_unit_cost_cents(variant:, sourcing:)
+          expected_unit_cost_cents: expected_unit_cost_cents(variant:, vendor:, sourcing:)
         )
       end.transform_keys(&:id)
     end
 
-    def expected_unit_cost_cents(variant:, sourcing:)
-      list_price = variant.product&.list_price_cents
-      return nil if list_price.nil? || sourcing.blank?
+    def expected_unit_cost_cents(variant:, vendor:, sourcing:)
+      return nil if vendor.blank?
 
-      Purchasing::VendorCostCalculator.unit_cost_cents(
-        unit_list_price_cents: list_price,
-        supplier_discount_bps: sourcing.supplier_discount_bps
-      )
+      Purchasing::LinePriceDefaults.resolve(
+        variant: variant,
+        vendor: vendor,
+        sourcing: sourcing
+      ).unit_cost_cents
     end
 
     def ready_for_pickup_quantities_for

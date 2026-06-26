@@ -13,15 +13,16 @@ module Purchasing
       new(line).apply!
     end
 
-    def self.resolve(variant:, vendor:, purchase_order_line: nil)
-      new(variant:, vendor:, purchase_order_line:).resolve
+    def self.resolve(variant:, vendor:, purchase_order_line: nil, sourcing: nil)
+      new(variant:, vendor:, purchase_order_line:, sourcing:).resolve
     end
 
-    def initialize(line = nil, variant: nil, vendor: nil, purchase_order_line: nil)
+    def initialize(line = nil, variant: nil, vendor: nil, purchase_order_line: nil, sourcing: nil)
       @line = line
       @variant = variant || line&.product_variant
       @vendor = vendor || line_vendor(line)
       @purchase_order_line = purchase_order_line || line&.try(:purchase_order_line)
+      @sourcing = sourcing
     end
 
     def apply!
@@ -40,9 +41,12 @@ module Purchasing
     def resolve
       return from_purchase_order_line if purchase_order_line.present?
 
-      sourcing = vendor.present? ? SourcingLookup.for(variant: variant, vendor: vendor) : nil
+      sourcing_result = sourcing
+      if sourcing_result.nil? && vendor.present?
+        sourcing_result = SourcingLookup.for(variant: variant, vendor: vendor)
+      end
       list_price = variant_list_price_cents
-      discount_bps = sourcing&.supplier_discount_bps
+      discount_bps = sourcing_result&.supplier_discount_bps
 
       Result.new(
         unit_list_price_cents: list_price,
@@ -51,13 +55,13 @@ module Purchasing
           unit_list_price_cents: list_price,
           supplier_discount_bps: discount_bps
         ),
-        product_variant_vendor: sourcing&.product_variant_vendor
+        product_variant_vendor: sourcing_result&.product_variant_vendor
       )
     end
 
     private
 
-    attr_reader :line, :variant, :vendor, :purchase_order_line
+    attr_reader :line, :variant, :vendor, :purchase_order_line, :sourcing
 
     def from_purchase_order_line
       Result.new(

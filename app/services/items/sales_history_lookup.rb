@@ -46,16 +46,25 @@ module Items
     def rollups_by_variant
       return {} if store.blank? || variant_ids.empty?
 
-      variant_ids.index_with do |variant_id|
-        days.index_with do |day_count|
-          since = day_count.days.ago
-          lines = scoped_lines.where("pos_transactions.completed_at >= ?", since).where(product_variant_id: variant_id)
-          Rollup.new(
-            units_sold: lines.sum(:quantity),
-            net_sales_cents: lines.sum(net_sales_sql)
+      rollups = variant_ids.index_with do |_variant_id|
+        days.index_with { |_day_count| Rollup.new(units_sold: 0, net_sales_cents: 0) }
+      end
+
+      days.each do |day_count|
+        since = day_count.days.ago
+        window_scope = scoped_lines.where("pos_transactions.completed_at >= ?", since)
+        units_by_variant = window_scope.group(:product_variant_id).sum(:quantity)
+        net_by_variant = window_scope.group(:product_variant_id).sum(net_sales_sql)
+
+        variant_ids.each do |variant_id|
+          rollups[variant_id][day_count] = Rollup.new(
+            units_sold: units_by_variant.fetch(variant_id, 0),
+            net_sales_cents: net_by_variant.fetch(variant_id, 0)
           )
         end
       end
+
+      rollups
     end
 
     private

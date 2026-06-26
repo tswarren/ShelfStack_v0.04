@@ -8,36 +8,38 @@ class Items::OverviewQueryBudgetTest < ActiveSupport::TestCase
     @store = create_store!
     @user = create_user!
     @product = create_product!
-    create_product_variant!(product: @product)
-    @item = Items::ItemPresenter.from_product(@product)
+    @sub_department = create_product_variant!(product: @product).sub_department
+    9.times do |index|
+      create_product_variant!(
+        product: @product,
+        sub_department: @sub_department,
+        sku: "#{@product.sku}-V#{index + 2}"
+      )
+    end
+    @item = Items::ItemPresenter.from_product(@product.reload)
     grant_all_phase5_permissions!(@user, store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
+    grant_permission!(@user, "pos.transactions.view", store: @store)
   end
 
-  test "overview presenter batch loads without per-variant warning builder calls in view layer" do
-    queries = count_queries do
+  test "overview batches order eligibility across variants" do
+    resolver_calls = 0
+    original = Purchasing::OrderEligibilityResolver.method(:for_variants)
+    Purchasing::OrderEligibilityResolver.singleton_class.define_method(:for_variants) do |**args|
+      resolver_calls += 1
+      original.call(**args)
+    end
+
+    begin
       overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
       overview.warnings
       overview.matrix_rows
       overview.summary_cards
+    ensure
+      Purchasing::OrderEligibilityResolver.singleton_class.define_method(:for_variants, original)
     end
 
-    assert queries < 100, "expected bounded query count, got #{queries}"
-  end
-
-  private
-
-  def count_queries
-    count = 0
-    callback = lambda do |_name, _start, _finish, _id, payload|
-      count += 1 unless payload[:name].in?(%w[SCHEMA CACHE])
-    end
-
-    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
-      yield
-    end
-
-    count
+    assert_equal 1, resolver_calls
   end
 end

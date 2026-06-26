@@ -46,6 +46,56 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
     assert warnings_by_variant.key?(@variant.id)
   end
 
+  test "missing identifier appears once under data quality on item pages" do
+    catalog_item = create_catalog_item!
+    catalog_item.catalog_item_identifiers.destroy_all
+    @product.update!(catalog_item: catalog_item)
+
+    warnings = Items::OperationalWarningBuilder.for_item(item: @item, store: @store, user: @user).fetch(@item, [])
+    identifier_warnings = warnings.select { |warning| warning.code == :missing_identifier }
+
+    assert_equal 1, identifier_warnings.size
+    assert_equal :data_quality, identifier_warnings.first.category
+  end
+
+  test "data quality context excludes open tbo warnings" do
+    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+
+    warnings = Items::OperationalWarningBuilder.for_item(
+      item: @item,
+      store: @store,
+      user: @user,
+      contexts: [ :data_quality ]
+    ).fetch(@item, [])
+
+    refute warnings.any? { |warning| warning.code == :open_tbo }
+  end
+
+  test "for_variants batches order eligibility resolver" do
+    resolver_calls = 0
+    original = Purchasing::OrderEligibilityResolver.method(:for_variants)
+    Purchasing::OrderEligibilityResolver.singleton_class.define_method(:for_variants) do |**args|
+      resolver_calls += 1
+      original.call(**args)
+    end
+
+    begin
+      Items::OperationalWarningBuilder.for_variants(
+        store: @store,
+        variants: [ @variant, create_product_variant!(product: @product, sub_department: @variant.sub_department, sku: "#{@product.sku}-ALT") ],
+        contexts: [ :ordering, :selling ]
+      )
+    ensure
+      Purchasing::OrderEligibilityResolver.singleton_class.define_method(:for_variants, original)
+    end
+
+    assert_equal 1, resolver_calls
+  end
+
   test "inventory tracking mismatch when override conflicts with behavior" do
     @variant.update!(
       inventory_tracking_override: "inventory",

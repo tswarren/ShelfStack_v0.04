@@ -24,7 +24,7 @@ module Items
       end
     end
 
-    def self.for_item(item:, store:, user:, contexts: default_contexts, snapshot: nil)
+    def self.for_item(item:, store:, user:, contexts: default_contexts, snapshot: nil, eligibility_by_variant: nil)
       variants = item.variants.to_a
       snapshot ||= VariantOperationalSnapshot.for_variants(store:, variants:, user:, item:)
       variant_warnings = for_variants(
@@ -32,19 +32,32 @@ module Items
         variants:,
         contexts:,
         snapshot:,
-        item:
+        item:,
+        eligibility_by_variant:
       )
 
       item_warnings = new(item:, store:, user:, contexts:, snapshot:).item_level_warnings
       { item => item_warnings + variant_warnings.values.flatten }
     end
 
-    def self.for_variants(store:, variants:, contexts: default_contexts, snapshot: nil, item: nil, vendors_by_variant_id: nil)
+    def self.for_variants(store:, variants:, contexts: default_contexts, snapshot: nil, item: nil, vendors_by_variant_id: nil, eligibility_by_variant: nil)
       variants = Array(variants).compact
       return {} if variants.empty?
 
       snapshot ||= VariantOperationalSnapshot.for_variants(store:, variants:, item:, user: nil)
       vendors_by_variant_id ||= snapshot.suggested_vendors.transform_values { |result| result.vendor }
+      eligibility_by_variant ||= if contexts.include?(:ordering)
+        Purchasing::OrderEligibilityResolver.for_variants(
+          store:,
+          variants:,
+          context: :item_page,
+          vendors_by_variant_id:,
+          sourcing_by_variant_id: snapshot.sourcing_by_variant_id,
+          suggested_vendors_by_variant_id: snapshot.suggested_vendors
+        )
+      else
+        {}
+      end
 
       variants.each_with_object({}) do |variant, results|
         row = snapshot.rows[variant.id]
@@ -54,7 +67,8 @@ module Items
           store:,
           item:,
           snapshot:,
-          row:
+          row:,
+          eligibility_result: eligibility_by_variant[variant.id]
         ).variant_warnings(variant, vendor: vendors_by_variant_id[variant.id])
       end
     end
@@ -86,7 +100,7 @@ module Items
       %i[selling ordering inventory data_quality]
     end
 
-    def initialize(product_variant: nil, item: nil, store: nil, user: nil, contexts: default_contexts, vendor: nil, snapshot: nil, row: nil)
+    def initialize(product_variant: nil, item: nil, store: nil, user: nil, contexts: default_contexts, vendor: nil, snapshot: nil, row: nil, eligibility_result: nil)
       @product_variant = product_variant
       @item = item
       @store = store
@@ -95,6 +109,7 @@ module Items
       @vendor = vendor
       @snapshot = snapshot
       @row = row
+      @eligibility_result = eligibility_result
     end
 
     def variant_warnings(variant = product_variant, vendor: @vendor)
@@ -108,7 +123,7 @@ module Items
 
     def item_level_warnings
       warnings = []
-      warnings.concat(open_tbo_warnings) if snapshot.present?
+      warnings.concat(open_tbo_warnings) if contexts.include?(:ordering) && snapshot.present?
       warnings.concat(identifier_warnings) if contexts.include?(:data_quality) && item.present?
       warnings.concat(missing_catalog_thumbnail_warnings) if contexts.include?(:data_quality) && item.present?
       warnings
@@ -116,17 +131,16 @@ module Items
 
     private
 
-    attr_reader :product_variant, :item, :store, :user, :contexts, :vendor, :snapshot, :row
+    attr_reader :product_variant, :item, :store, :user, :contexts, :vendor, :snapshot, :row, :eligibility_result
 
     def ordering_warnings(variant, vendor)
-      resolved_vendor = vendor || snapshot&.suggested_vendors&.dig(variant.id)&.vendor ||
-        Purchasing::SuggestedVendorResolver.for_variant(variant).vendor
-
-      result = Purchasing::OrderEligibilityResolver.call(
+      result = eligibility_result || Purchasing::OrderEligibilityResolver.call(
         product_variant: variant,
-        vendor: resolved_vendor,
+        vendor: vendor || snapshot&.suggested_vendors&.dig(variant.id)&.vendor,
         context: :item_page,
-        store: store
+        store: store,
+        sourcing: snapshot&.sourcing_by_variant_id&.[](variant.id),
+        suggested_vendor_result: snapshot&.suggested_vendors&.[](variant.id)
       )
 
       (result.blocking_reasons + result.warnings + result.infos).map do |reason|

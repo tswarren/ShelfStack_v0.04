@@ -57,6 +57,23 @@ class Items::SalesHistoryLookupTest < ActiveSupport::TestCase
     assert_equal 2598, rollup.net_sales_cents
   end
 
+  test "rollup_for_variants uses bounded queries for multiple variants" do
+    variants = 5.times.map do
+      create_product_variant!(
+        sub_department: @variant.sub_department,
+        inventory_behavior: "standard_physical",
+        selling_price_cents: 500
+      )
+    end
+    variant_ids = variants.map(&:id)
+
+    queries = count_queries do
+      Items::SalesHistoryLookup.rollup_for_variants(store: @store, variant_ids: variant_ids, days: [ 30, 90 ])
+    end
+
+    assert queries <= 4, "expected at most 2 queries per day window, got #{queries}"
+  end
+
   test "excludes other stores" do
     other_store = create_store!(store_number: "999")
     other_workstation = create_workstation!(store: other_store, attrs: { workstation_number: "99", workstation_code: "999-REG099" })
@@ -83,5 +100,20 @@ class Items::SalesHistoryLookupTest < ActiveSupport::TestCase
 
     assert_equal 1, rows.size
     assert_equal @sale.id, rows.first.transaction.id
+  end
+
+  private
+
+  def count_queries
+    count = 0
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      count += 1 unless payload[:name].in?(%w[SCHEMA CACHE])
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      yield
+    end
+
+    count
   end
 end
