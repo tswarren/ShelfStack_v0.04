@@ -1,4 +1,4 @@
-# Phase 8.5-D — Item Data Quality and Operational Item Pages
+# Phase 8.5-4 — Item Data Quality and Operational Item Pages
 
 **Status:** Draft (revised)
 
@@ -18,11 +18,11 @@ docs/specifications/phase-8.5-3-order-handling-readiness-spec.md
 
 Make `/items` the **trusted operational landing page** before Phase 9 reporting begins linking users into item detail.
 
-This is a **preliminary reorganization**, not the full Items UX revamp. 8.5-D improves how operational state is presented, batched, and linked — it does not redesign navigation, the Add Item wizard, or setup flows.
+This is a **preliminary reorganization**, not the full Items UX revamp. 8.5-4 improves how operational state is presented, batched, and linked — it does not redesign navigation, the Add Item wizard, or setup flows.
 
 The key distinction from 8.5-3:
 
-> **8.5-3 makes order handling safer. 8.5-D makes item pages explain the item’s operational state clearly.**
+> **8.5-3 makes order handling safer. 8.5-4 makes item pages explain the item’s operational state clearly.**
 
 `/items` already has the correct tab structure (`overview`, `operations`, `item_setup`, `activity`), operational rollups, attention presenters, and index signals. The problem is **layering and duplication**: the same facts appear in PR in multiple tabs, warnings are ad hoc, and overview does not yet answer ordering/readiness questions that 8.5-3 already computes elsewhere.
 
@@ -32,7 +32,7 @@ The key distinction from 8.5-3:
 
 **Make item pages reliable, warning-driven, and operationally useful enough to serve as report drill-down targets.**
 
-At the end of 8.5-D, a bookseller should be able to open an item and immediately answer:
+At the end of 8.5-4, a bookseller should be able to open an item and immediately answer:
 
 | Question                          | Page responsibility                                                                  |
 | --------------------------------- | ------------------------------------------------------------------------------------ |
@@ -47,9 +47,9 @@ At the end of 8.5-D, a bookseller should be able to open an item and immediately
 
 # 0. Overlap with Phase 8.5-3 (do not redo)
 
-Phase 8.5-3 delivers the **ordering data foundation**. 8.5-D **consumes and surfaces** that work; it must not re-implement it.
+Phase 8.5-3 delivers the **ordering data foundation**. 8.5-4 **consumes and surfaces** that work; it must not re-implement it.
 
-| Deliverable | Owner | 8.5-D action |
+| Deliverable | Owner | 8.5-4 action |
 | ----------- | ----- | ------------ |
 | `products.preferred_vendor_id`, `product_variants.preferred_vendor_id` | 8.5-3 | Use in UI; no new migration |
 | `product_variants.orderable` | 8.5-3 | Display in variant matrix and readiness cards |
@@ -60,18 +60,18 @@ Phase 8.5-3 delivers the **ordering data foundation**. 8.5-D **consumes and surf
 | Preferred vendor + orderable fields on item setup forms | 8.5-3 | Link from overview warnings; no duplicate editors |
 | `Purchasing::SourcingWarnings` (Orders workspace) | 8.5-3 | Keep separate; item warnings use `Items::OperationalWarningBuilder` |
 
-**Net-new in 8.5-D (data model):**
+**Net-new in 8.5-4 (data model):**
 
 * `catalog_items.primary_thumbnail` (Active Storage)
 * Read-only sales/receiving history lookups and aggregates (`last_sold_at`, etc.)
 
-Everything else in 8.5-D is **presentation, batching, information architecture, and the report drill-down contract**.
+Everything else in 8.5-4 is **presentation, batching, information architecture, and the report drill-down contract**.
 
 ---
 
 # 1. Report drill-down contract
 
-Phase 9 reporting will link from aggregate views into item detail. 8.5-D defines what reports can rely on **without** building reporting itself.
+Phase 9 reporting will link from aggregate views into item detail. 8.5-4 defines what reports can rely on **without** building reporting itself.
 
 ## 1.1 Contract
 
@@ -108,7 +108,7 @@ Optional anchors for drill-down within a tab (introduce as needed during D2/D3):
 
 ## 1.3 Out of scope for the contract
 
-Reports must **not** assume in 8.5-D:
+Reports must **not** assume in 8.5-4:
 
 * Full sales analytics, margin reporting, or export (Phase 9)
 * Variant-level image overrides
@@ -123,7 +123,7 @@ Reports listing many items may link to `/items` index with filters. The index ma
 
 # 2. Performance guardrails
 
-`/items` index and overview are query-heavy by nature. 8.5-D must batch reads and avoid per-row resolver or warning N+1 queries.
+`/items` index and overview are query-heavy by nature. 8.5-4 must batch reads and avoid per-row resolver or warning N+1 queries.
 
 ## 2.1 Principles
 
@@ -143,7 +143,7 @@ Extend or add lookup objects that accept **`variant_ids:`** (or **`item_ids:`** 
 # Existing — keep batch-oriented
 Purchasing::LastReceivedLookup.for_variants(store:, variant_ids:)
 
-# New in 8.5-D
+# New in 8.5-4
 Items::SalesHistoryLookup.for_variants(store:, variant_ids:, limit: 20)
 Items::SalesHistoryLookup.last_sold_at_for_variants(store:, variant_ids:)
 Items::SalesHistoryLookup.rollup_for_variants(store:, variant_ids:, days: [30, 90])
@@ -184,14 +184,14 @@ Implementation sketch:
 
 # 3. Information architecture (tab roles)
 
-Clarify tab responsibilities to reduce clutter. 8.5-D reorganizes content; it does not add new tabs.
+Clarify tab responsibilities to reduce clutter. 8.5-4 reorganizes content; it does not add new tabs.
 
-| Tab | Role after 8.5-D |
+| Tab | Role after 8.5-4 |
 | --- | ---------------- |
 | **Overview** | Answers the six operational questions; variant readiness matrix; compact sales/receiving history; warning summary |
 | **Operations** | Document-level drill-down only — open TBO/PO lines, full receipt list, RTV, holds, special orders; defers duplicate metric strips to overview |
 | **Item setup** | Edit/catalog and selling configuration; vendor source editors; link targets for warning corrective actions |
-| **Activity** | Audit events + document trail; inventory ledger remains but may move to collapsible section (no removal in 8.5-D unless UX review agrees) |
+| **Activity** | Audit events + document trail; inventory ledger remains but may move to collapsible section (no removal in 8.5-4 unless UX review agrees) |
 
 **De-duplication rules:**
 
@@ -201,7 +201,7 @@ Clarify tab responsibilities to reduce clutter. 8.5-D reorganizes content; it do
 
 ---
 
-# 4. Data model work (8.5-D only)
+# 4. Data model work (8.5-4 only)
 
 ## 4.1 Catalog thumbnail
 
@@ -241,7 +241,7 @@ The item page must distinguish:
 | Suggested vendor              | Resolved vendor after precedence (`SuggestedVendorResolver`) |
 | Missing vendor source warning | Preferred/suggested vendor exists, but no usable source row |
 
-Resolution precedence is defined in 8.5-3; 8.5-D displays it consistently on overview and variant matrix.
+Resolution precedence is defined in 8.5-3; 8.5-4 displays it consistently on overview and variant matrix.
 
 ---
 
@@ -316,7 +316,7 @@ Index rows use **worst severity** and optional counts derived from the same buil
 
 ---
 
-# 6. Reorganized item overview (8.5-D2)
+# 6. Reorganized item overview (8.5-42)
 
 The overview becomes a **question-based operational dashboard**, not a second operations tab.
 
@@ -368,7 +368,7 @@ Reuse Orders UI patterns where applicable: `metric_strip`, `attention_panel`, re
 
 ---
 
-# 7. Sales history panel (8.5-D3)
+# 7. Sales history panel (8.5-43)
 
 Read-only, lightweight. Deeper reporting belongs in Phase 9.
 
@@ -401,7 +401,7 @@ net_sales_last_90_days_cents
 
 ---
 
-# 8. Receiving history panel (8.5-D3)
+# 8. Receiving history panel (8.5-43)
 
 Move a **compact** version of operations-tab receipt data onto overview. Operations tab keeps full document depth.
 
@@ -425,7 +425,7 @@ Limit: latest **5–10 rows** on overview; batched query shared with operations 
 
 # 9. Item setup (minimal changes)
 
-8.5-3 already adds preferred vendor, orderable, and vendor source editing. 8.5-D setup work is limited to:
+8.5-3 already adds preferred vendor, orderable, and vendor source editing. 8.5-4 setup work is limited to:
 
 * Catalog **primary thumbnail** upload on catalog item section of item setup
 * Obvious **vendor source vs preferred vendor** labeling and “missing source” callout when they diverge
@@ -444,7 +444,7 @@ Operations tab is the **deep drill-down** behind overview.
 * Open TBO lines, open PO lines, recent receipts, RTV lines
 * Customer requests / holds / special orders (permission-gated)
 
-**Change in 8.5-D:**
+**Change in 8.5-4:**
 
 * Remove duplicate metric strip and attention formatting when overview shows the same data
 * Add warning **grouped by variant** (from shared builder, drill-down render mode)
@@ -461,7 +461,7 @@ Operations tab is the **deep drill-down** behind overview.
 
 * Phase 8.5-3 merged; preferred vendor, orderable, resolvers, and ordering warning foundation available.
 
-## Data model (8.5-D only)
+## Data model (8.5-4 only)
 
 * Catalog items support `primary_thumbnail`.
 * Products continue supporting image override via existing `cover_image`.
@@ -507,7 +507,7 @@ Operations tab is the **deep drill-down** behind overview.
 
 # 12. Explicitly deferred
 
-Do not implement in 8.5-D unless explicitly rescoped:
+Do not implement in 8.5-4 unless explicitly rescoped:
 
 * Full `/items` UX revamp (navigation, Add Item wizard, unified create flow)
 * Variant-level image overrides
@@ -521,7 +521,7 @@ Do not implement in 8.5-D unless explicitly rescoped:
 
 # 13. Suggested phase split
 
-## 8.5-D1 — Presentation foundation
+## 8.5-41 — Presentation foundation
 
 * Catalog item `primary_thumbnail` migration + setup UI
 * Extend `Items::OperationalWarningBuilder` (full categories); retire `ItemAttentionPresenter`
@@ -531,7 +531,7 @@ Do not implement in 8.5-D unless explicitly rescoped:
 
 **Depends on 8.5-3.** No preferred vendor / orderable / Ingram work unless 8.5-3 gaps are found in QA.
 
-## 8.5-D2 — Overview reorganization
+## 8.5-42 — Overview reorganization
 
 * Question-based overview layout and summary cards
 * Variant readiness matrix (columns per §6.3)
@@ -539,7 +539,7 @@ Do not implement in 8.5-D unless explicitly rescoped:
 * Report drill-down anchors and contract documentation for Phase 9
 * Reuse Orders UI components (`metric_strip`, `attention_panel`, badges)
 
-## 8.5-D3 — History and contract completion
+## 8.5-43 — History and contract completion
 
 * `Items::SalesHistoryLookup` + compact sales panel on overview
 * Compact receiving history panel on overview (batched)
@@ -555,9 +555,9 @@ This split keeps PRs reviewable and avoids combining data, IA, and history into 
 
 ```text
 1. Merge Phase 8.5-3
-2. 8.5-D1 — thumbnails, unified warnings, batch lookups, index severity
-3. 8.5-D2 — overview IA, variant matrix, tab de-duplication, drill-down contract
-4. 8.5-D3 — sales/receiving history panels, last_sold, performance verification
+2. 8.5-41 — thumbnails, unified warnings, batch lookups, index severity
+3. 8.5-42 — overview IA, variant matrix, tab de-duplication, drill-down contract
+4. 8.5-43 — sales/receiving history panels, last_sold, performance verification
 5. Phase 9 reporting — consume drill-down contract; build analytics elsewhere
 6. Future — full Items UX revamp builds on stable overview contract
 ```
