@@ -74,8 +74,7 @@ module Purchasing
     def apply_vendor_recalc!(attrs)
       defaults = LinePriceDefaults.resolve(
         variant: line.product_variant,
-        vendor: line.vendor,
-        purchase_order_line: line
+        vendor: line.vendor
       )
       attrs[:unit_list_price_cents] = defaults.unit_list_price_cents
       attrs[:supplier_discount_bps] = defaults.supplier_discount_bps

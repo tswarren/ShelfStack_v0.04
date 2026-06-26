@@ -67,12 +67,7 @@ module Purchasing
     end
 
     def prepare_line_economics!(line)
-      LinePriceDefaults.apply!(line)
-      LineEconomicsCalculator.apply!(
-        line,
-        changed_field: LineEconomicsSync.changed_field_for(line),
-        recalculate_from_vendor: false
-      )
+      LineEconomicsSync.apply!(line, apply_defaults: :always)
     end
 
     def snapshot_line!(line)

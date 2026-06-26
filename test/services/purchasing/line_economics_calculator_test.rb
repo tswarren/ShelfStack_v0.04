@@ -62,4 +62,28 @@ class Purchasing::LineEconomicsCalculatorTest < ActiveSupport::TestCase
 
     assert_equal 1500, @line.unit_cost_cents
   end
+
+  test "recalculate_from_vendor loads vendor source defaults not current line values" do
+    ProductVendor.create!(
+      product: @variant.product,
+      vendor: @vendor,
+      supplier_discount_bps: 4000,
+      active: true
+    )
+    @line.assign_attributes(
+      unit_list_price_cents: 9999,
+      supplier_discount_bps: 0,
+      unit_cost_cents: 9999,
+      manual_cost_override: true,
+      cost_source: "manual"
+    )
+
+    Purchasing::LineEconomicsCalculator.apply!(@line, recalculate_from_vendor: true)
+
+    assert_equal 2000, @line.unit_list_price_cents
+    assert_equal 4000, @line.supplier_discount_bps
+    assert_equal 1200, @line.unit_cost_cents
+    assert_equal "vendor_source", @line.cost_source
+    assert_not @line.manual_cost_override
+  end
 end

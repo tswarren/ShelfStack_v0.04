@@ -53,4 +53,38 @@ class Purchasing::LineEconomicsSyncTest < ActiveSupport::TestCase
     assert @line.manual_price_override
     assert_equal "manual", @line.price_source
   end
+
+  test "apply marks manual cost source when supplier discount override recalculates cost" do
+    @line.assign_attributes(
+      unit_list_price_cents: 2000,
+      supplier_discount_bps: 3000,
+      unit_cost_cents: 1400,
+      manual_cost_override: true
+    )
+
+    Purchasing::LineEconomicsSync.apply!(@line)
+
+    assert @line.manual_cost_override
+    assert_equal "manual", @line.cost_source
+    assert_equal 3000, @line.supplier_discount_bps
+    assert_equal 1400, @line.unit_cost_cents
+  end
+
+  test "apply sets both cost and price source manual when both overrides set" do
+    @line.assign_attributes(
+      unit_list_price_cents: 2000,
+      supplier_discount_bps: 4000,
+      unit_cost_cents: 1500,
+      expected_retail_price_cents: 3200,
+      manual_cost_override: true,
+      manual_price_override: true
+    )
+
+    Purchasing::LineEconomicsSync.apply!(@line)
+
+    assert_equal "manual", @line.cost_source
+    assert_equal "manual", @line.price_source
+    assert_equal 3200, @line.expected_retail_price_cents
+    assert_equal 1500, @line.unit_cost_cents
+  end
 end

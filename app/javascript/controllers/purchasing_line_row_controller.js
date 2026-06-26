@@ -415,7 +415,7 @@ export default class extends Controller {
 
     this.pricingRecalcLock = true
     if (field === listField || field === discountField) {
-      this.setManualCostOverride(false)
+      this.setManualCostOverride(true)
       if (list != null && costField) {
         const calculated = unitCostCents(list, discount ?? 0)
         costField.value = calculated ?? ""
