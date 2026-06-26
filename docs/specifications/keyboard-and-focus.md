@@ -22,9 +22,18 @@ Global keyboard and focus behavior for ShelfStack operational UI.
 
 ## POS-specific
 
-See [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md) and [pos-keyboard-workspace.md](pos-keyboard-workspace.md).
+See [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md).
 
-Function keys F2–F4, F7–F10 in POS; avoid F1, F5, F6, F11, F12 (browser/OS conflicts).
+### Required
+
+* Command field focus on transaction edit
+* Enter/Esc behavior as specified in 10-C roadmap
+* Focus restoration after modal/drawer and line edit
+* Visible shortcut/help affordances; mouse-accessible fallbacks for all primary actions
+
+### Enhancement (non-blocking for 10-C)
+
+Function keys F2–F4, F7–F10 where reliable. Avoid F1, F5, F6, F11, F12. Settlement and other primary actions must work without F-keys.
 
 ## Scoping
 

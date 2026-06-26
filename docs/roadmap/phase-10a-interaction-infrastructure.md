@@ -29,12 +29,13 @@ Toast system
 Expanded row pattern
 Inline edit pattern
 Lookup/search component
-Command field pattern
-Shortcut strip
+Shortcut strip (generic legend/help chrome only)
 Focus restoration helper
 Keyboard event scoping
 Turbo Frame/Stream target conventions
 ```
+
+**10-A does not implement:** POS command parsing, `Pos::CommandRegistry`, command permission rules, or workspace-specific command routing. Those belong to **10-C**. The scope item “command field pattern” means reusable scan/input field styling and focus behavior for bounded contexts (e.g. item lookup), not a POS command language.
 
 ---
 
@@ -143,11 +144,12 @@ focus_controller
 modal_controller
 drawer_controller
 keyboard_scope_controller
-command_controller
 lookup_controller
 line_entry_controller
 toast_controller
 ```
+
+Do **not** add a generic `command_controller` in 10-A. POS command routing stays in existing `pos_command_bar_controller.js` and future `Pos::CommandRegistry` (10-C).
 
 Shortcuts must be scoped. Keyboard speed must not reduce transaction safety.
 
@@ -237,11 +239,21 @@ Rules:
 8. Pilot: item customer demand drawer → shared drawer
 ```
 
+### Pilot success checklist
+
+The item customer demand drawer pilot is successful when:
+
+* One existing ad-hoc drawer is replaced with the shared drawer shell
+* Open/close/focus behavior is covered by tests
+* Page state is preserved while the drawer is open
+* Turbo update works while the drawer is open
+* The pattern is documented in [ui-components.md](../specifications/ui-components.md) for 10-B reuse
+
 ---
 
 ## Acceptance Criteria
 
-Phase 10-A is complete when:
+Implementation-ready criteria are in [phase-10a-interaction-infrastructure-spec.md](../specifications/phase-10a-interaction-infrastructure-spec.md). Summary:
 
 * Shared modal, drawer, toast, and expanded-row components are documented in [ui-components.md](../specifications/ui-components.md).
 * Modal focus trap and focus restoration on close are implemented and tested.
@@ -253,14 +265,9 @@ Phase 10-A is complete when:
 
 ---
 
-## Test Plan (outline)
+## Test Plan
 
-* Modal: focus trap, first-control focus, Esc when safe, validation stays in modal, focus restore on close
-* Drawer: overlay, body scroll lock, focus restore, Turbo update while open
-* Toast: append to region, non-blocking, no blocker misuse
-* Expanded row: save/cancel local, focus after collapse
-* Turbo stream: focus restoration after row/panel replace
-* Pilot migration: item demand drawer integration test
+See [phase-10a-interaction-infrastructure-spec.md](../specifications/phase-10a-interaction-infrastructure-spec.md#test-plan).
 
 ---
 

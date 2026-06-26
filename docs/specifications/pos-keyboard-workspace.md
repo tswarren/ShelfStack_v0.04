@@ -20,11 +20,21 @@ First focus: scan/command field. Primary action: settle/complete. See [view-cont
 
 ## Landing
 
-When register session open: route to transaction workspace per `Pos::LandingRouter` rules in roadmap doc.
+When register session is open:
+
+* **One draft** (cashier + workstation): redirect to transaction edit
+* **Multiple drafts**: compact picker
+* **No drafts**: compact workspace with explicit **New sale** — **no silent auto-create**
+
+After the user starts a sale, transaction edit opens with command field focused.
+
+Authoritative detail: [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md).
 
 ## Commands and function keys
 
-Full command set and F2–F10 mapping in [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md).
+Command set and registry: [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md).
+
+Function keys F2–F10 are **enhancement-tier**; required keyboard behavior does not depend on F-key reliability.
 
 ## Reports
 

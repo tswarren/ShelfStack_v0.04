@@ -4,7 +4,13 @@
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
-**Depends on:** [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md)
+**Depends on:** [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) — **hard dependencies only:**
+
+* Shared **drawer shell** (pilot complete)
+* Shared **modal shell**
+* **Focus restoration** on modal/drawer close
+
+10-B may start once those 10-A deliverables land; toasts and expanded rows may still be in progress.
 
 **Spec:** [phase-10b-item-cockpit-spec.md](../specifications/phase-10b-item-cockpit-spec.md)
 
@@ -98,24 +104,13 @@ Deliverables:
 
 ## Acceptance Criteria
 
-Phase 10-B is complete when:
-
-* `/items` setup uses modals for bounded edits (identifier, price, vendor source, tax category).
-* `/items` operations use summary tables plus drawer detail (demand drawer on shared shell).
-* Phase 9 drill-down contract preserved (`#warnings`, `#variant-matrix`, link conventions).
-* Used/buyback variants do not show inappropriate vendor-source warnings.
-* `items_item_overview_contract_test.rb` passes.
-* 10-C POS item-detail drawer can reuse the same drawer shell.
+See [phase-10b-item-cockpit-spec.md](../specifications/phase-10b-item-cockpit-spec.md#acceptance-criteria).
 
 ---
 
-## Test Plan (outline)
+## Test Plan
 
-* Integration: drill-down contract anchors and tab links
-* Integration: setup modal save/cancel, validation inside modal
-* Integration: operations drawer open/close, focus restore
-* Service/presenter: behavior-aware warnings for used vs new vs non-inventory variants
-* Regression: 8.5-4 item overview and operations presenter tests
+See [phase-10b-item-cockpit-spec.md](../specifications/phase-10b-item-cockpit-spec.md#test-plan).
 
 ---
 

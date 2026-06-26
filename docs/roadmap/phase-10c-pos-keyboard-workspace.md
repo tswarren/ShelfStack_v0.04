@@ -72,13 +72,17 @@ Implement via `Pos::LandingRouter` (or equivalent in `Pos::HomeController#show`)
 | No POS permission | Permission-aware screen / locked out |
 | No register session open | Focused open-register workflow |
 | Session open, one draft (current cashier + workstation) | Redirect to that draft transaction |
-| Session open, multiple drafts | Compact draft picker (not full dashboard) |
-| Session open, no drafts | Create new sale transaction → redirect to edit |
+| Session open, multiple drafts | Compact draft/held-sale picker (not full dashboard) |
+| Session open, no drafts | **Compact POS workspace** with explicit **New sale** as primary action (focused); **do not auto-create** a draft |
 | Suspended (held) sales | **Do not auto-resume** — access via held-sale list, `/hold`, or session drawer |
 
-Draft ownership matches today: drafts scoped to **current cashier + workstation**; suspended sales are **workstation-scoped**.
+### Landing policy (decided)
 
-Held sales are distinct from accidental drafts.
+**ShelfStack POS does not silently auto-create draft sales.** When a register session is open and the current cashier has no in-progress draft on this workstation, `/pos` shows a compact register workspace with **New sale** as the explicit primary action. The user (or Enter on a focused New sale control) creates the draft deliberately.
+
+Auto-continue applies only when **exactly one** in-progress `draft` exists for the current cashier + workstation. Held (`suspended`) sales never auto-resume on landing.
+
+A future store/register setting for auto-create on session open is **out of scope** for initial 10-C unless explicitly approved later.
 
 ### Closed Session
 
@@ -91,7 +95,7 @@ Primary: Open Register
 Secondary: Session history, Reports, Stored value balance lookup (if allowed)
 ```
 
-After opening register, route to new transaction with command field focused.
+After opening register, land on the compact POS workspace with **New sale** as the primary action. When the user starts a sale, open the transaction edit screen with the command field focused.
 
 ---
 
@@ -187,7 +191,20 @@ When an in-progress draft exists, `/reports` and utility-menu report links show 
 
 ## Function Keys
 
-Initial set (avoid F1, F5, F6, F11, F12 — browser/OS reserved):
+Function keys are an **enhancement tier**, not a gate for 10-C completion. Browser/OS conflicts (F1, F5, F6, F11, F12) may make some bindings unreliable — mouse and command paths must always remain available.
+
+### Required (keyboard/focus acceptance)
+
+* Command field focus on transaction load and after line add
+* Enter in command field routes command or adds item
+* Esc closes modal/drawer when safe, then clears command field
+* Focus restoration after modal/drawer close and line edit save/cancel
+* Visible shortcut strip and `/help` (commands and optional F-key legend)
+* Mouse-accessible equivalents for all primary actions
+
+### Enhancement (where reliable in target deployment)
+
+Initial bindings (avoid F1, F5, F6, F11, F12):
 
 | Key | Action |
 | --- | ------ |
@@ -199,9 +216,7 @@ Initial set (avoid F1, F5, F6, F11, F12 — browser/OS reserved):
 | F9 | Print last receipt |
 | F10 | Lock register |
 
-Shortcuts scoped to POS context. Esc: close modal/drawer first, then clear command field.
-
-Visible shortcut strip and `/help` required for discoverability.
+Shortcuts scoped to POS context. F8 settlement binding is enhancement-tier; settlement must remain reachable via visible control and command.
 
 ---
 
@@ -267,8 +282,8 @@ Secondary tasks (session management, cash movements, reports) via utility menu, 
 
 | Phase | Deliverable | 10-A dependency |
 | ----- | ----------- | --------------- |
-| 1 Landing and focus | `/pos` routing, command autofocus, refocus after line add | Minimal |
-| 2 Function keys | POS keyboard controller, F2–F10, shortcut strip | Keyboard scope |
+| 1 Landing and focus | `/pos` routing (explicit New sale when no draft), command autofocus on transaction edit, refocus after line add | Minimal |
+| 2 Function keys (enhancement) | POS keyboard controller, F2–F10 where reliable, shortcut strip | Keyboard scope |
 | 3 Command registry | Aliases, permissions, `/help`, core commands | — |
 | 4 Modal standardization | Settlement, customer, auth, tax, cash drawer on shared shell | **Required** |
 | 5 Cart line UX | Expanded row polish, Save/Cancel focus | **Required** |
@@ -278,33 +293,40 @@ Secondary tasks (session management, cash movements, reports) via utility menu, 
 
 ## Keyboard/Focus Acceptance Criteria
 
-* Transaction load focuses command field
+### Required
+
+* Transaction edit load focuses command field
 * Line add returns focus to command field
 * Enter routes command; Esc closes modal/drawer before clearing command
 * Modals trap and restore focus
 * Expanded line edit focuses first editable field
-* Settlement focuses likely tender field
-* Complete sale opens next transaction focused
-* Function keys documented visually
+* Settlement focuses likely tender field (via open action, not only F8)
+* After complete sale, next transaction or New sale path returns focus appropriately
 * Shortcuts disabled in inappropriate form fields
 * Visible focus indicators
 * Touch targets ~44px minimum on expanded row and settlement actions
+* Visible settlement and primary actions without function keys
+
+### Enhancement (non-blocking)
+
+* F2–F10 bindings documented in shortcut strip and working in target browser/OS where tested
 
 ---
 
 ## Acceptance Criteria
 
-Phase 10-C is complete when:
+See [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md#acceptance-criteria).
 
-* `/pos` routes to transaction workspace when session is open (per landing rules above)
-* Command field is primary focus target
+Summary:
+
+* `/pos` landing follows explicit **New sale** policy (no silent auto-create)
+* Command field primary focus on transaction edit
 * Line edits use polished expanded-row pattern
 * Settlement uses standardized modal system
 * Readiness blockers appear where user can act
-* Documented keyboard/focus behavior passes acceptance list
-* Command registry (or approved subset) implemented with permission checks
+* Required keyboard/focus criteria met; function keys enhancement-tier only
+* Command registry (or approved subset) with permission checks
 * `/reports` confirms before navigate when draft exists
-* POS item-detail drawer reuses 10-A drawer shell where applicable
 
 ---
 

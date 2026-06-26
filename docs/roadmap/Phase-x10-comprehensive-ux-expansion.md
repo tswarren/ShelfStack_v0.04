@@ -307,116 +307,48 @@ Rules:
 
 ---
 
-## Workstream 5 — Purchasing, Receiving, and Build PO UX (Phase 10-D)
+## Workstream 5 — Purchasing and Receiving Line UX (Phase 10-D)
 
-**Scope limit:** Line-entry UX patterns reusing 10-A expanded row. No full TBO wizard redesign in initial 10-D.
+**Scope limit (initial 10-D):** Line-entry UX patterns reusing 10-A expanded row. **No** full TBO wizard redesign.
 
-### Scope
+### Initial scope
 
-### 5.1 Build Purchase Order from TBO
-
-Recommended structure:
-
-```text
-Build Purchase Order from TBO
-
-Step 1 — Choose grouping
-  Vendor-first
-  Suggested vendor
-
-Step 2 — Filter demand
-  Department
-  Format
-  Vendor
-  Store
-  Request type
-
-Step 3 — Review TBO lines
-  Item
-  Variant
-  Quantity
-  Suggested vendor
-  Existing stock
-  On order
-  Customer demand
-  Action
-
-Step 4 — Build PO
-  Confirm vendor
-  Confirm selected lines
-  Create draft PO
-```
-
-Rules:
-
-* Select lists should use standard field styling.
-* Display mode toggles should not look like primary submit buttons.
-* Vendor choice should feel like part of a guided workflow.
-* TBO line review should use a consistent table/line-entry pattern.
-
-### 5.2 Purchase Order and Receiving Line UX
-
-Improve:
-
-* Lookup fields
-* Quantity fields
-* Cost/price fields
-* Discount percent fields
-* Exception/rejection controls
-* Warning placement
-* Add-line behavior
-* Keyboard flow
-
-Rules:
-
-* Money inputs use decimal dollars.
-* Discounts use decimal percentages.
-* Accepted/rejected/received quantities are visually grouped.
-* Warnings are inline or section-level, not random alerts.
-* After adding a line, focus moves to the next expected input.
+* Lookup, quantity, cost/price, and discount percent fields use standard controls
+* Money inputs use decimal dollars; discounts use decimal percentages
+* Accepted/rejected/received quantities visually grouped
+* Warnings inline or section-level, not random alerts
+* After adding a line, focus moves to the next expected input
+* Expanded-row pattern where useful for PO/receiving line edits
 
 ---
 
-## Workstream 6 — Buyback UX Expansion (Phase 10-D)
+## Workstream 6 — Buyback Index Alignment (Phase 10-D)
 
-**Scope limit:** Header, metric, and table layout alignment only. Buyback session workflow was refined in Phase 7C-1 — do not re-refine.
+**Scope limit (initial 10-D):** Header, metric strip, and table layout alignment only. Buyback session workflow was refined in Phase 7C-1 — **do not re-refine**.
 
-### Scope
+### Initial scope
 
-### 6.1 Buybacks Index
+* Buybacks index: page header, metric strip, recent sessions table, needs-review queue, primary **New buyback** action
+* Shared metric-card and table patterns consistent with other operational indexes
 
-Improve:
+---
+
+## Future 10-D+ / deferred workflow ideas
+
+The following are **not** in initial 10-D scope. Preserve as design direction for a later sub-phase or dedicated doc (`phase-10d-workflow-polish.md` when 10-D starts).
+
+### Build Purchase Order from TBO (full wizard)
 
 ```text
-Page header
-Metric strip
-Recent sessions table
-Needs review queue
-Primary action: New buyback
+Step 1 — Choose grouping (vendor-first / suggested vendor)
+Step 2 — Filter demand (department, format, vendor, store, request type)
+Step 3 — Review TBO lines (item, variant, qty, vendor, stock, on order, demand, action)
+Step 4 — Build PO (confirm vendor, selected lines, create draft PO)
 ```
 
-The header should visually connect to the body. Metrics should use the shared metric-card pattern.
+### Buyback session workflow refinements
 
-### 6.2 Buyback Session Workflow
-
-Refine:
-
-* Stepper
-* Current action panel
-* Proposal/decision/payout panels
-* Line entry
-* Line details
-* Review-needed messages
-* Payout summary
-* Completion readiness
-
-Rules:
-
-* Buyback remains a full workflow, not a modal.
-* Line detail may use expanded rows or drawer.
-* Routine success should use workflow message or toast.
-* Blocking issues belong in the workflow panel.
-* Accepted buyback lines should connect clearly to inventory intake.
+Stepper, proposal/decision/payout panels, line entry polish beyond index alignment — deferred because 7C-1 already refined the session workflow.
 
 ---
 
@@ -457,6 +389,18 @@ Turbo/Stimulus interaction standards are part of Phase 10-A. Server remains sour
 10. Touch targets ~44px on POS expanded row and settlement actions
 ```
 
+### Phase 9b report regression checklist
+
+After shared CSS or layout component changes, verify:
+
+* `/reports` hub index renders and permission-union nav works
+* Register summary report renders and prints
+* Tax collected report renders (summary, rate, adjustment sections)
+* Customer request queue report renders with status badges
+* No report filter, button, or table layout regressions from shared component changes
+
+Future: dedicated [phase-10e-consistency-sweep.md](phase-10e-consistency-sweep.md) when 10-E starts.
+
 ---
 
 # Acceptance Criteria
@@ -480,12 +424,13 @@ Phase 10 is complete when all sub-phases meet their criteria.
 
 ## Phase 10-C
 
-* POS landing routes to transaction workspace when session open
-* Command field primary focus; keyboard/focus acceptance criteria met
+* POS landing: explicit **New sale** when no draft (**no silent auto-create**); auto-continue only for single cashier+workstation draft
+* Command field primary focus on transaction edit; **required** keyboard/focus criteria met
 * Expanded-row line edits; settlement on shared modal
 * Readiness blockers actionable near completion
 * Command registry (or approved subset) with permissions
 * `/reports` confirms before navigate when draft exists
+* Function keys (F2–F10) are **enhancement-tier**, not blocking
 
 ## Phase 10-D
 
@@ -499,7 +444,7 @@ Phase 10 is complete when all sub-phases meet their criteria.
 * Keyboard/focus intentional across major workflows
 * Routine confirmations not disruptive full-page alerts
 * No new page-specific UI without shared component standard
-* Phase 9b report screens pass smoke/regression after shared CSS changes
+* Phase 9b report regression checklist passes (see Phase 10-E section above)
 * Accessibility improvements where shared components touch reports
 
 ---
@@ -557,9 +502,9 @@ A keyboard-first interface is faster but may require visible hints and gradual a
 
 Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match delivery order.
 
-## POS Landing Regression
+## POS Landing Policy
 
-Auto-create draft and auto-continue affect multi-cashier stores. Mitigate with draft picker, cashier-scoped drafts, and held-sale separation.
+ShelfStack POS **does not auto-create draft sales** when no draft exists. Landing shows an explicit **New sale** action. Auto-continue applies only for a single in-progress draft (cashier + workstation scoped). See [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md).
 
 ## Items Before POS
 
