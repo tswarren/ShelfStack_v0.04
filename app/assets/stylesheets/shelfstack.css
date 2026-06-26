@@ -2176,6 +2176,25 @@ h2 {
   margin-top: 1rem;
 }
 
+.ss-report-section {
+  margin-bottom: 1.5rem;
+}
+
+.ss-report-section__title {
+  font-size: 1.05rem;
+  margin: 0 0 0.75rem;
+}
+
+.ss-report-notes {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #5c5347;
+}
+
+.ss-report-notes li + li {
+  margin-top: 0.35rem;
+}
+
 .ss-link-list {
   list-style: none;
   padding: 0;

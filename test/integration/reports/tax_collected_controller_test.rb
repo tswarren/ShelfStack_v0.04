@@ -25,6 +25,7 @@ class Reports::TaxCollectedControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".ss-report.report-print"
     assert_select ".ss-filter-bar"
+    assert_select ".ss-report-section__title", text: "Tax collected by rate/category"
     assert_select ".ss-table.ss-table--report"
   end
 end

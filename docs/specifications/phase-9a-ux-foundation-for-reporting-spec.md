@@ -12,7 +12,7 @@ Related:
 
 **Prerequisite:** Phase 8.5-4 complete (item drill-down contract).
 
----
+**Historical note:** Section 6 (sample shells) and `reports.foundation.view` were Phase 9a deliverables superseded by Phase 9b live reports. Shell routes now 302 to `/reports/tax_collected` and `/reports/customer_requests`.
 
 ## 1. Purpose
 
@@ -57,7 +57,7 @@ Included via `ApplicationHelper`.
 | `format_report_date(time, basis:, format: :short)` | Timestamp with optional basis label |
 | `report_date_basis_label(basis)` | Human label for date basis key |
 
-POS `pos_report_signed_money` (parentheses negatives) remains until 9b migration.
+POS `pos_report_signed_money` (parentheses negatives) remains in embedded POS report partials reused by migrated 9b reports (register summary, sales summary). Greenfield 9b report views use `format_report_money`.
 
 ---
 
@@ -81,23 +81,21 @@ Query scopes for 9b reports (POS completed, buyback completed, inventory ledger,
 
 ---
 
-## 6. Sample report shells
+## 6. Sample report shells (superseded by Phase 9b)
 
-Routes:
+Phase 9a shipped proof shells. Phase 9b removed them and replaced with live reports:
 
-```text
-GET /reports/shells/reconciliation
-GET /reports/shells/queue
-```
+| 9a route | 9b canonical route |
+| -------- | ------------------- |
+| `GET /reports/shells/reconciliation` | `GET /reports/tax_collected` (302 redirect) |
+| `GET /reports/shells/queue` | `GET /reports/customer_requests` (302 redirect) |
 
-Permission: `reports.foundation.view`
+The `reports.foundation.view` permission and `Seeds::Phase9aPermissions` seed module were removed in 9b.
 
-| Shell | Proves |
-| ----- | ------ |
-| Reconciliation | Metrics, signed money, subtotal/total rows, date filter, print |
-| Queue | Status badges, aging, filters, item drill-down links, empty state |
-
-Placeholder data only; no production query logic.
+| Shell | Proved (now live in 9b) |
+| ----- | ----------------------- |
+| Reconciliation | Tax Collected — metrics, signed money, subtotal/total rows, date filter, print |
+| Queue | Customer Request Queue — status badges, aging, filters, item drill-down links, empty state |
 
 ---
 

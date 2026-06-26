@@ -50,10 +50,10 @@ ShelfStack is organized around these major domains:
 | Classification | Departments, categories, tax categories, store tax rates, and tax mappings.        |
 | Catalog        | Metadata records for books, media, sidelines, and other cataloged items.           |
 | Products       | Store-facing product records and product variants/SKUs.                            |
-| Inventory      | Future stock ledger, stock balances, receiving, transfers, and adjustments.        |
-| Purchasing     | Future vendors, purchase orders, receiving, returns to vendor, and supplier terms. |
-| POS            | Future sales, returns, tendering, taxes, receipts, and drawer behavior.            |
-| Reporting      | Future sales, tax, inventory valuation, purchasing, and operational reports.       |
+| Inventory      | Stock ledger, store balances, adjustments, and valuation snapshots.                 |
+| Purchasing     | Vendors, purchase orders, receiving, returns to vendor, and supplier terms.       |
+| POS            | Register sessions, transactions, tax/tender snapshots, voids, and receipts.       |
+| Reporting      | Operational reports at `/reports` (Phase 9a/9b complete): sales, tax, discounts, cash, buybacks, inventory value, purchasing, stored value, customer requests. GL export deferred (Phase 9c). |
 
 ---
 
@@ -113,7 +113,9 @@ Categories, vendors, product conditions, and catalog metadata can provide defaul
 | Phase 1       | Foundation: users, roles, stores, workstations, sessions, permissions, and audit events.                                              |
 | Phase 2       | Classification and tax setup: departments, categories, tax categories, store tax rates, and effective-dated tax mappings.             |
 | Phase 3       | Catalog, products, and product variants: metadata, identifiers, products, SKUs, variants, display locations, conditions, and vendors. |
-| Future Phases | Inventory ledger, purchasing, receiving, POS, reporting, and operational workflows.                                                   |
+| Phase 4–8.5   | Inventory, purchasing, POS, customer demand, buyback, and operational polish — see [roadmap.md](roadmap.md). |
+| Phase 9a/9b   | Report UX foundation and operational reports (`/reports`). **Complete.** |
+| Next          | Phase 10 comprehensive UX expansion; Phase 9c GL layer **deferred**. |
 
 ---
 

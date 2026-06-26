@@ -1,0 +1,27 @@
+<section class="ss-report-section">
+  <h2 class="ss-report-section__title">Exemptions, overrides, and exceptions</h2>
+  <table class="ss-table ss-table--report">
+    <thead>
+      <tr>
+        <th>Reason</th>
+        <th class="ss-num">Lines</th>
+        <th class="ss-num ss-money">Affected sales</th>
+        <th class="ss-num ss-money">Normal tax</th>
+        <th class="ss-num ss-money">Actual tax</th>
+        <th class="ss-num ss-money">Difference</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.each do |row| %>
+        <tr class="<%= row.row_type == :total ? 'ss-table-row--total' : nil %>">
+          <th scope="row"><%= row.label %></th>
+          <td class="ss-num"><%= format_report_quantity(row.line_count) %></td>
+          <td class="ss-num ss-money"><%= format_report_money(row.affected_sales_cents) %></td>
+          <td class="ss-num ss-money"><%= format_report_money(row.normal_tax_cents) %></td>
+          <td class="ss-num ss-money"><%= format_report_money(row.actual_tax_cents) %></td>
+          <td class="ss-num ss-money"><%= row.difference_cents.nil? ? "—" : format_report_money(row.difference_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

@@ -20,14 +20,24 @@ Master spec: [phase-9b-operational-reports-spec.md](phase-9b-operational-reports
 | ------ | ------------- | ----------------- |
 | Register Summary | Session scope totals | Auth, filter bar, print regions |
 | Sales Summary | Date/session scope, revenue totals | CSV export auth |
-| Tax Collected | Exempt vs non-taxable, rate grouping | Contract regions |
+| Tax Collected | Exempt vs non-taxable, rate/category rollup, adjustments by source | Summary + rate + adjustment sections |
 | Discount Summary | Reason grouping, void exclusion | Contract regions |
 | Operational Margin | Void excluded, COGS columns | Empty state |
 | Buyback Summary | Completed-only, cash vs trade credit | Contract regions |
 | Stored Value | Balance sum, activity date filter | Date filter UI |
 | Inventory Value | Non-inventory exclusion | Enterprise section gated |
 | Purchasing Summary | PO status counts, accepted qty | Contract regions |
-| Customer Requests | Status filter, aging | Item drill-down links |
+| Customer Requests | Status filter, aging, truncation notice | Item drill-down links; no date filter |
+
+---
+
+## Scope and redirect regression
+
+| Test | Focus |
+| ---- | ----- |
+| `Pos::ReportScopeTest` | `filter_type` selects register session, business date, or date range |
+| `Reports::RedirectsControllerTest` | Legacy `session_id` normalization; shell redirects |
+| `Reports::SalesControllerTest` | Sales list excludes returns/exchanges |
 
 ---
 

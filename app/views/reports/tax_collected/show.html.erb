@@ -5,36 +5,30 @@
              actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
 
   <%= render "reports/shared/pos_scope_filter", url: reports_tax_collected_path, sessions: @sessions %>
-  <%= render "reports/shared/section_notice", message: "Date basis: business date on completed POS transactions. Grouped by applied tax category/rate and tax source snapshots." %>
+  <%= render "reports/shared/section_notice", message: "Date basis: POS transaction business date. Source: completed POS line tax snapshots." %>
 
   <% if @scope.blank? && params.except(:controller, :action).present? %>
     <%= render "reports/shared/section_notice", message: "Choose a valid filter and run the report." %>
   <% elsif @report %>
-    <%= render "reports/shared/metric_strip", metrics: @report.metrics.map { |m| m[:value_cents] ? m.merge(value: format_report_money(m[:value_cents])) : m } %>
+    <%= render "reports/shared/metric_strip", metrics: @report.summary_metrics.map { |m| m[:value_cents] ? m.merge(value: format_report_money(m[:value_cents])) : m } %>
 
     <div class="ss-report-body">
-      <table class="ss-table ss-table--report">
-        <thead>
-          <tr>
-            <th>Rate / category</th>
-            <th class="ss-num ss-money">Taxable sales</th>
-            <th class="ss-num ss-money">Normal tax</th>
-            <th class="ss-num ss-money">Tax collected</th>
-            <th class="ss-num ss-money">Exempt / overridden</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @report.rows.each do |row| %>
-            <tr class="<%= row.row_type == :total ? 'ss-table-row--total' : nil %>">
-              <th scope="row"><%= row.label %></th>
-              <td class="ss-num ss-money"><%= format_report_money(row.taxable_sales_cents) %></td>
-              <td class="ss-num ss-money"><%= format_report_money(row.normal_tax_cents) %></td>
-              <td class="ss-num ss-money"><%= format_report_money(row.tax_cents) %></td>
-              <td class="ss-num ss-money"><%= format_report_money(row.exempt_overridden_cents) %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+      <%= render "reports/tax_collected/rate_table", rows: @report.rate_rows %>
+
+      <% if @report.adjustment_rows.any? %>
+        <%= render "reports/tax_collected/adjustment_table", rows: @report.adjustment_rows %>
+      <% else %>
+        <%= render "reports/shared/section_notice", message: "No exemptions, overrides, or exceptions in this period." %>
+      <% end %>
+
+      <section class="ss-report-section">
+        <h2 class="ss-report-section__title">Notes</h2>
+        <ul class="ss-report-notes">
+          <li>Draft, cancelled, and voided transactions are excluded.</li>
+          <li>Returns reduce taxable sales and tax collected.</li>
+          <li>Rate/category labels use sale-time tax snapshots on completed lines.</li>
+        </ul>
+      </section>
     </div>
   <% end %>
 </div>

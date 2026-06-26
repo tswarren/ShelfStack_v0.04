@@ -4,6 +4,12 @@ Phase 8.5-4 establishes what Phase 9 reporting may rely on when linking into `/i
 
 Spec: [phase-8.5-4-item-data-quality-spec.md](../specifications/phase-8.5-4-item-data-quality-spec.md)
 
+Phase 9b operational reports that consume this contract:
+
+* **Customer Request Queue** — item links via `product_variant_id` to overview tab
+* **Inventory Value Snapshot** — variant links where applicable
+* Future report drill-downs should follow the same link conventions
+
 ---
 
 ## Link conventions

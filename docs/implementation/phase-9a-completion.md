@@ -6,7 +6,7 @@
 
 ### Specifications
 
-- [docs/specifications/phase-9a-ux-foundation-for-reporting-spec.md](../specifications/phase-9a-ux-foundation-for-reporting-spec.md) — master spec, CSS audit, helper API, shell acceptance
+- [docs/specifications/phase-9a-ux-foundation-for-reporting-spec.md](../specifications/phase-9a-ux-foundation-for-reporting-spec.md) — master spec, CSS audit, helper API, shell acceptance (shells superseded in 9b)
 - [docs/specifications/report-view-contract.md](../specifications/report-view-contract.md) — canonical report layout regions and print rules
 - [docs/specifications/reporting-semantics.md](../specifications/reporting-semantics.md) — operational vs financial semantics, inclusion rules, procurement path
 - [docs/specifications/phase-9a-test-plan.md](../specifications/phase-9a-test-plan.md)
@@ -15,7 +15,7 @@
 
 - `ReportsHelper` with `format_report_money`, `format_report_basis_points`, `format_report_quantity`, `format_report_date`, `report_date_basis_label`, `report_print_button`
 - Included in `ApplicationHelper`
-- Signed money convention: `- $4.50` (POS parentheses format unchanged until 9b migration)
+- Signed money convention: `- $4.50` for report helpers; embedded POS report partials may still use `pos_report_signed_money` (parentheses) until those partials migrate
 
 ### CSS primitives
 
@@ -40,36 +40,41 @@ Under `app/views/reports/shared/`:
 - `Reports::ProcurementPathResolver` — derived procurement path (no DB column)
 - `Reports::InclusionRules` — documented query scopes for Phase 9b report objects
 
-### Sample report shells
+### Sample report shells (superseded in Phase 9b)
 
-- `Reports::ShellsController` at `/reports/shells/reconciliation` and `/reports/shells/queue`
-- Placeholder presenters: `Reports::Shells::ReconciliationPresenter`, `Reports::Shells::QueuePresenter`
-- Permission: `reports.foundation.view` (seeded via `Seeds::Phase9aPermissions`, granted to `pos_manager`)
+Phase 9a shipped two proof-of-contract shells. Phase 9b replaced them with live reports and removed shell controllers:
+
+| 9a shell route | 9b replacement |
+| -------------- | -------------- |
+| `/reports/shells/reconciliation` | `/reports/tax_collected` (302 redirect) |
+| `/reports/shells/queue` | `/reports/customer_requests` (302 redirect) |
+
+The deprecated `reports.foundation.view` permission and `Seeds::Phase9aPermissions` seed module were removed in 9b.
 
 ## Verification
 
 ```bash
 ./dev/rails-docker bin/rails test \
   test/helpers/reports_helper_test.rb \
-  test/services/reports/ \
-  test/integration/reports_shells_controller_test.rb
+  test/services/reports/procurement_path_resolver_test.rb \
+  test/services/reports/inclusion_rules_test.rb
 ```
 
-Manual:
+Manual (post-9b):
 
-1. Grant `reports.foundation.view` (or log in as a user with `pos_manager` role after seed).
-2. Visit `/reports/shells/reconciliation` — confirm filter bar, metric strip, grouped table with total row, print button.
-3. Visit `/reports/shells/queue` — confirm status badges and item drill-down links.
-4. Visit `/reports/shells/queue?empty=1` — confirm empty-state partial.
+1. Visit `/reports/tax_collected` — confirm filter bar, metric strip, rate/category table, and print action.
+2. Visit `/reports/customer_requests` — confirm status badges and item drill-down links.
+3. Confirm `/reports/shells/reconciliation` redirects to `/reports/tax_collected`.
 
-## Known gaps (deferred)
+## Known gaps (deferred at 9a close; addressed or still open)
 
-- **Phase 9b:** Migrate existing `/pos/reports/*`, buyback reports, and stored value reports to shared contract; unified Reports hub navigation
-- **Phase 9c:** Financial posting layer; no `financial_*` tables in 9a
+- **Addressed in 9b:** Report migration, Reports hub, live operational queries
+- **Phase 9c:** Financial posting layer — **deferred**
 - **Phase 10:** Modal/drawer/POS command UX; item cockpit interaction patterns
-- POS report money still uses `pos_report_signed_money` parentheses format until 9b migration
-- Shell presenters use placeholder data only — no live operational queries yet
+- **Remaining:** POS partials embedded in migrated reports still use `pos_report_signed_money` in some revenue/drawer tables
 
 ## Next phase
 
-Phase **9b** — operational report migration and Reports hub. See [docs/roadmap/phase-9b-reports.md](../roadmap/phase-9b-reports.md).
+Phase **9b** — operational reports. See [phase-9b-completion.md](phase-9b-completion.md).
+
+Phase **9c** (financial posting layer) is documented but **deferred**. See [phase-9c-gl-shaped-financial-layer.md](../roadmap/phase-9c-gl-shaped-financial-layer.md).

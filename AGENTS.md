@@ -356,7 +356,22 @@ See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-co
 - Unified `/reports` hub with permission-union navigation
 - 13 operational reports on Phase 9a view contract; legacy URLs redirect (302)
 - Greenfield: tax collected, discount summary, inventory value, purchasing summary, customer request queue
-- **Next:** Phase 9c — GL-shaped financial layer
+- **Next:** Phase 10 — comprehensive UI/UX expansion
+- **Deferred:** Phase 9c — GL-shaped financial layer (design reference retained)
+
+## Phase 9c: GL-Shaped Financial Layer — **Deferred**
+
+See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-gl-shaped-financial-layer.md). Not scheduled for the current roadmap cycle. Operational reports in 9b remain authoritative for store reconciliation until 9c is resumed.
+
+## Phase 10: Comprehensive UI/UX Expansion — **Next**
+
+See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). POS workspace modernization, modal/drawer patterns, item cockpit, and keyboard-first interaction standards.
+
+## Phase 10 Documents
+
+```text
+docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
+```
 
 ---
 

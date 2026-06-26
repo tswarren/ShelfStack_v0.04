@@ -31,7 +31,8 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 8 | Inventory Eligibility and Tracking | Centralized inventory tracking gate (`inventory` / `non_inventory`); behavior-neutral resolver/eligibility refactor. **8-1/8-2 complete** (2026-06-23). |
 | Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **In review** (branch merge pending). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
-| Phase 9 | Reporting and Accounting        | Operational reports (9b), report UX foundation (9a), GL-shaped financial postings and export (9c).          |
+| Phase 9 | Reporting and Accounting        | Report UX foundation (9a) and operational reports (9b) **complete**. GL-shaped financial postings and export (9c) **deferred**; see Phase 10. |
+| Phase 10 | Comprehensive UI/UX Expansion  | POS workspace, modals/drawers, item cockpit, keyboard-first interaction — **next** after Phase 9b. |
 
 Later phases may be split or reordered as implementation details become clearer.
 
@@ -522,15 +523,15 @@ Related operational context: [roadmap/phase-8.5-operational-cleanup.md](roadmap/
 
 ## Purpose
 
-Phase 9 gives ShelfStack reliable operational visibility and accounting-grade financial data without turning ShelfStack into a full accounting system.
+Phase 9 gives ShelfStack reliable operational visibility. Phase 9a and 9b are **complete**. Phase 9c (accounting-grade financial postings) is **deferred**; see [Phase 10](roadmap/Phase-x10-comprehensive-ux-expansion.md) for the next active priority.
 
 ## Sub-Phases
 
-| Sub-phase | Focus |
-| --------- | ----- |
-| **9a** | Report-facing UX standards, formatting, and reporting semantics |
-| **9b** | Operational reports — consolidate and extend daily reconciliation and management reports |
-| **9c** | GL-shaped financial posting layer — balanced entries, mappings, export-ready journals |
+| Sub-phase | Focus | Status |
+| --------- | ----- | ------ |
+| **9a** | Report-facing UX standards, formatting, and reporting semantics | Complete |
+| **9b** | Operational reports — daily reconciliation and management reports | Complete |
+| **9c** | GL-shaped financial posting layer — balanced entries, mappings, export-ready journals | **Deferred** |
 
 See [roadmap/phase-9-reporting-and-accounting.md](roadmap/phase-9-reporting-and-accounting.md).
 
@@ -540,11 +541,11 @@ See [roadmap/phase-9-reporting-and-accounting.md](roadmap/phase-9-reporting-and-
 * Sales, tax, discount, cash, buyback, inventory, purchasing, stored value, and customer-request reports (9b)
 * Operational margin and liability reports (9b)
 * Simple print and CSV export for operational reports (9b)
-* Balanced financial postings from operational events (9c)
-* Accounting mappings and export-ready journal summaries (9c)
-* GL/accounting export to external systems (9c)
+* Balanced financial postings from operational events (9c — **deferred**)
+* Accounting mappings and export-ready journal summaries (9c — **deferred**)
+* GL/accounting export to external systems (9c — **deferred**)
 
-Deferred to Phase 10 or later: comprehensive POS/items/modal/drawer UX; advanced dashboards; scheduled reports; full chart-of-accounts administration.
+Deferred to Phase 10 or later: comprehensive POS/items/modal/drawer UX; advanced dashboards; scheduled reports; full chart-of-accounts administration. Phase 9c financial layer also deferred.
 
 ## Expected Design Direction
 
@@ -552,7 +553,11 @@ Reports should prefer immutable transaction snapshots and ledger entries rather 
 
 Departments, subdepartments, tax rates, and product names should be snapshot where needed in transaction history.
 
-Operational reports (9b) may use POS and ledger sources before 9c is complete. Financial reports and GL export require 9c posted entries.
+Operational reports (9b) use POS and ledger sources. Financial reports and GL export require Phase 9c posted entries when that sub-phase is resumed.
+
+## Current priority
+
+Phase 9a and 9b are complete. Phase 9c is deferred. **Phase 10** is the next active roadmap phase.
 
 ## Detailed Documents
 
@@ -601,15 +606,16 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 # Current Priority
 
-Phases 1–6.5, 7A, 7B, 7C, and Phase 8 are complete. See implementation records under `docs/implementation/`.
+Phases 1–8, 7A, 7B, 7C, Phase 9a, and Phase 9b are complete. See implementation records under `docs/implementation/`.
 
 ```text
-Phase 8 ✓ → Phase 8.5-1 in review / complete after merge → Phase 8.5-2 POS tax exceptions → Phase 8.5-3 tender/customer cleanup → Phase 9 reporting/accounting
+Phase 9a ✓ → Phase 9b ✓ → Phase 9c deferred → Phase 10 UX expansion (next)
 ```
 
-**Active work:** Phase 8.5-1 branch review and merge; then Phase 8.5 operational cleanup epics (tax exceptions, tender/customer cleanup) and Phase 9 reporting/accounting.
+**Active work:** Phase 10 — comprehensive UI/UX expansion. Phase 9c GL-shaped financial layer remains documented but deferred.
 
 Implementation records:
 
 - [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through [phase-7a-completion.md](implementation/phase-7a-completion.md)
 - [docs/implementation/phase-7b-2-completion.md](implementation/phase-7b-2-completion.md), [phase-7b-3-completion.md](implementation/phase-7b-3-completion.md)
+- [docs/implementation/phase-9a-completion.md](implementation/phase-9a-completion.md), [phase-9b-completion.md](implementation/phase-9b-completion.md)

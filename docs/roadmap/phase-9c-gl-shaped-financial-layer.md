@@ -2,6 +2,12 @@
 
 Part of [Phase 9 — Reporting and Accounting](phase-9-reporting-and-accounting.md).
 
+## Status
+
+**Deferred.** Phase 9a and 9b are complete. Implementation of this sub-phase is not scheduled for the current roadmap cycle. The next active priority is [Phase 10 — Comprehensive UI/UX Expansion](Phase-x10-comprehensive-ux-expansion.md).
+
+This document remains the design reference for financial postings, mappings, GL export, and operational-to-financial tie-out when Phase 9c is resumed.
+
 ## Purpose
 
 Phase 9c introduces a GL-shaped financial posting layer for ShelfStack.

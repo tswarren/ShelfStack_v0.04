@@ -1,0 +1,29 @@
+<section class="ss-report-section">
+  <h2 class="ss-report-section__title">Tax collected by rate/category</h2>
+  <table class="ss-table ss-table--report">
+    <thead>
+      <tr>
+        <th>Tax rate / category</th>
+        <th class="ss-num ss-money">Sales</th>
+        <th class="ss-num ss-money">Returns</th>
+        <th class="ss-num ss-money">Net taxable sales</th>
+        <th class="ss-num ss-money">Tax collected</th>
+        <th class="ss-num ss-money">Tax refunded</th>
+        <th class="ss-num ss-money">Net tax</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.each do |row| %>
+        <tr class="<%= row.row_type == :total ? 'ss-table-row--total' : nil %>">
+          <th scope="row"><%= row.label %></th>
+          <td class="ss-num ss-money"><%= format_report_money(row.sales_cents) %></td>
+          <td class="ss-num ss-money"><%= row.returns_cents.zero? ? "—" : format_report_money(row.returns_cents) %></td>
+          <td class="ss-num ss-money"><%= format_report_money(row.net_taxable_sales_cents) %></td>
+          <td class="ss-num ss-money"><%= format_report_money(row.tax_collected_cents) %></td>
+          <td class="ss-num ss-money"><%= row.tax_refunded_cents.zero? ? "—" : format_report_money(row.tax_refunded_cents) %></td>
+          <td class="ss-num ss-money"><%= format_report_money(row.net_tax_cents) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

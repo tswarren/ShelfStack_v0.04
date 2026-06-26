@@ -10,7 +10,11 @@ Reports should help store staff and managers answer operational questions about 
 
 The first reporting phase should prioritize correctness, reconciliation, filtering, printability, and consistency over advanced analytics.
 
-Phase 9b does **not** implement GL-shaped financial postings or accounting export. Those belong to [Phase 9c](phase-9c-gl-shaped-financial-layer.md). After 9c, selected 9b reports may gain financial tie-out sections.
+Phase 9b does **not** implement GL-shaped financial postings or accounting export. Those belong to [Phase 9c](phase-9c-gl-shaped-financial-layer.md), which is **deferred**. When 9c is resumed, selected 9b reports may gain financial tie-out sections.
+
+## Status
+
+**Complete.** See [phase-9b-completion.md](../implementation/phase-9b-completion.md). Next roadmap phase: [Phase 10](Phase-x10-comprehensive-ux-expansion.md).
 
 ## Reports vs Dashboards
 

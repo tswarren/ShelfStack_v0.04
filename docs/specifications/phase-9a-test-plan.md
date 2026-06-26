@@ -2,6 +2,8 @@
 
 Spec: [phase-9a-ux-foundation-for-reporting-spec.md](phase-9a-ux-foundation-for-reporting-spec.md)
 
+**Note:** Section 4 (shell integration tests) described Phase 9a proof shells removed in Phase 9b. Use [phase-9b-test-plan.md](phase-9b-test-plan.md) for live report integration coverage.
+
 ---
 
 ## 1. ReportsHelper
@@ -26,11 +28,13 @@ Spec: [phase-9a-ux-foundation-for-reporting-spec.md](phase-9a-ux-foundation-for-
 * `buyback_reportable_sessions` includes completed, excludes draft
 * `inventory_ledger_entries` returns posted ledger rows
 
-## 4. Report shells (integration)
+## 4. Report shells (historical — superseded by 9b)
 
-* Unauthorized without `reports.foundation.view`
-* Reconciliation shell renders contract regions: `ss-filter-bar`, `ss-metric-strip`, `ss-table--report`, print hook
-* Queue shell renders status badges, item links, empty state when `empty=1`
+Phase 9a integration tests for shells were removed when live reports shipped. Equivalent coverage lives in:
+
+* `test/integration/reports/tax_collected_controller_test.rb`
+* `test/integration/reports/customer_requests_controller_test.rb`
+* `test/integration/reports/redirects_controller_test.rb` (shell route redirects)
 
 ## 5. Performance
 
