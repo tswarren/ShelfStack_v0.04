@@ -42,6 +42,27 @@ class Purchasing::LineLookupPresenterTest < ActiveSupport::TestCase
     assert_equal 1200, row[:unit_cost_cents]
   end
 
+  test "open tbo quantity uses remaining quantity after partial order" do
+    create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      lines: [
+        create_purchase_order_line_attrs(
+          variant: @variant,
+          vendor: @vendor,
+          quantity_ordered: 1,
+          purchase_request_line: @request.purchase_request_lines.first
+        )
+      ]
+    )
+
+    match = Purchasing::LineLookup::Match.new(variant: @variant, purchase_order_line: nil)
+    result = Purchasing::LineLookup::Result.new(status: :found, matches: [ match ], message: nil)
+    json = Purchasing::LineLookupPresenter.as_json(result, store: @store, vendor: @vendor)
+
+    assert_equal 3, json[:matches].first[:open_tbo_quantity]
+  end
+
   test "includes purchase order line fields in receive context" do
     order = create_purchase_order!(
       store: @store,

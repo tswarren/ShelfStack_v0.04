@@ -8,10 +8,12 @@
     :hint,
     "Scan or type a SKU or barcode, then press Enter. Type at least 2 characters to search by name or SKU prefix."
   )
+  allow_add_line = local_assigns.fetch(:allow_add_line, true)
 %>
 <h2>Lines</h2>
 <p class="ss-hint"><%= hint %></p>
 
+<% if allow_add_line %>
 <div data-controller="nested-form-lines">
   <div data-nested-form-lines-target="container">
     <% f.object.public_send(association).reject(&:marked_for_destruction?).each do |line| %>
@@ -31,3 +33,14 @@
 
   <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#addLine">Add line</button>
 </div>
+<% else %>
+<div>
+  <% f.object.public_send(association).reject(&:marked_for_destruction?).each do |line| %>
+    <% variant = line.product_variant %>
+    <% balance = variant && store ? InventoryBalance.find_by(store: store, product_variant: variant) : nil %>
+    <%= f.fields_for association, line do |line_form| %>
+      <%= render line_partial, line_form: line_form, variant: variant, balance: balance, store: store, **line_locals %>
+    <% end %>
+  <% end %>
+</div>
+<% end %>

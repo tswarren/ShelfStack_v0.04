@@ -37,6 +37,7 @@ module Items
 
     def create
       @product_variant = ProductVariant.new(product_variant_params.except(:inventory_tracking, :inventory_behavior))
+      apply_explicit_orderable_from_params!
       if params.dig(:product_variant, :inventory_tracking).present?
         apply_tracking_sync!
       else
@@ -151,6 +152,14 @@ module Items
         variant: @product_variant,
         tracking: params.dig(:product_variant, :inventory_tracking)
       )
+    end
+
+    def apply_explicit_orderable_from_params!
+      orderable_param = params.dig(:product_variant, :orderable)
+      return if orderable_param.nil?
+
+      @product_variant.skip_orderability_default = true
+      @product_variant.orderable = ActiveModel::Type::Boolean.new.cast(orderable_param)
     end
 
     def legacy_behavior_changed_in_params?

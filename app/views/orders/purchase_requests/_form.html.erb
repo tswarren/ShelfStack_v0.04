@@ -16,6 +16,7 @@
         line_object: PurchaseRequestLine.new,
         line_partial: "orders/purchase_requests/line_fields",
         store: orders_store,
+        allow_add_line: purchase_request.persisted?,
         line_locals: { line_status_options: @line_status_options } %>
 
   <%= f.submit class: "ss-btn" %>

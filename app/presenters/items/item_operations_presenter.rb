@@ -262,11 +262,7 @@ module Items
     end
 
     def open_tbo_quantities_for(variant_ids)
-      PurchaseRequestLine
-        .buildable_for_store(store)
-        .where(product_variant_id: variant_ids)
-        .group(:product_variant_id)
-        .sum(:requested_quantity)
+      PurchaseRequestLine.open_remaining_quantities_for(store: store, variant_ids: variant_ids)
     end
 
     def receivable_purchase_order_for(variant)

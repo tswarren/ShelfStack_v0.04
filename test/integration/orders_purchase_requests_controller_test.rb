@@ -22,6 +22,13 @@ class OrdersPurchaseRequestsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "new form hides add line control for single-line create" do
+    get new_orders_purchase_request_path
+
+    assert_response :success
+    assert_no_match "Add line", response.body
+  end
+
   test "create builds single-line purchase request" do
     assert_difference -> { PurchaseRequest.count }, 1 do
       post orders_purchase_requests_path, params: {

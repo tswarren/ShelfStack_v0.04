@@ -36,6 +36,27 @@ class Purchasing::TboQueueRowBuilderTest < ActiveSupport::TestCase
     assert row.sourcing.sourcing_record_present
   end
 
+  test "open tbo quantity reflects remaining quantity after partial order" do
+    create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      lines: [
+        create_purchase_order_line_attrs(
+          variant: @variant,
+          vendor: @vendor,
+          quantity_ordered: 4,
+          purchase_request_line: @line
+        )
+      ]
+    )
+
+    rows = Purchasing::TboQueueRowBuilder.call(store: @store, vendor: @vendor)
+
+    assert_equal 1, rows.size
+    assert_equal 6, rows.first.remaining_quantity
+    assert_equal 6, rows.first.open_tbo_quantity
+  end
+
   test "excludes lines with no remaining quantity" do
     order = Purchasing::BuildPurchaseOrder.call(
       store: @store,

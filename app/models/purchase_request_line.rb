@@ -36,6 +36,18 @@ class PurchaseRequestLine < ApplicationRecord
     requested_quantity - ordered_quantity
   end
 
+  def self.open_remaining_quantities_for(store:, variant_ids: nil)
+    lines = buildable_for_store(store)
+    lines = lines.where(product_variant_id: variant_ids) if variant_ids.present?
+    lines = lines.to_a
+    return {} if lines.empty?
+
+    ordered = ordered_quantities_for(lines.map(&:id))
+    lines.group_by(&:product_variant_id).transform_values do |variant_lines|
+      variant_lines.sum { |line| [ line.requested_quantity - ordered.fetch(line.id, 0), 0 ].max }
+    end
+  end
+
   def self.ordered_quantities_for(line_ids)
     return {} if line_ids.blank?
 

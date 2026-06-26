@@ -43,6 +43,8 @@ class ProductVariant < ApplicationRecord
   before_validation :apply_generated_fields, on: :create
   before_validation :apply_orderability_default, on: :create
 
+  attr_accessor :skip_orderability_default
+
   def inactivate!
     update!(active: false)
   end
@@ -89,6 +91,7 @@ class ProductVariant < ApplicationRecord
   end
 
   def apply_orderability_default
+    return if skip_orderability_default
     return if orderable_changed?
 
     ProductVariants::OrderabilityDefaults.apply!(self)
