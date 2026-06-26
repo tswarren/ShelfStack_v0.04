@@ -1,0 +1,9 @@
+<% if catalog_item.primary_thumbnail.attached? %>
+  <div class="ss-item-cover-preview">
+    <%= product_cover_image_tag(catalog_item.primary_thumbnail, size: :hero, alt: "Catalog thumbnail for #{catalog_item.title}") %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: catalog_item, field: :remove_primary_thumbnail, label: "Remove catalog thumbnail" %>
+<% end %>
+<%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :primary_thumbnail, label: catalog_item.primary_thumbnail.attached? ? "Replace catalog thumbnail" : "Catalog thumbnail" } do %>
+  <%= f.file_field :primary_thumbnail, accept: CatalogItem::ALLOWED_THUMBNAIL_TYPES.join(",") %>
+<% end %>

@@ -18,5 +18,6 @@
   <h2>Display and vendor sourcing</h2>
   <%= render "items/items/display",
         item: item,
-        highlight_variant: local_assigns[:highlight_variant] %>
+        highlight_variant: local_assigns[:highlight_variant],
+        vendor_sourcing_gaps: @vendor_sourcing_gaps %>
 </section>

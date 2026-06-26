@@ -153,6 +153,20 @@ module Items
       recent_rtv_lines.select { |line| line.product_variant_id == highlight_variant.id }
     end
 
+    def sales_visible?
+      return false unless store.present? && user.present?
+
+      Authorization.allowed?(user: user, permission_key: "pos.transactions.view", store: store)
+    end
+
+    def sales_history_rows
+      @sales_history_rows ||= if sales_visible? && variant_ids.any?
+        SalesHistoryLookup.for_variants(store: store, variant_ids: variant_ids, limit: 20)
+      else
+        []
+      end
+    end
+
     private
 
     attr_reader :item, :store, :user

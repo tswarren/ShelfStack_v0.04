@@ -74,4 +74,50 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
     assert result.blocking?
     assert_includes result.blocking_reasons.map(&:code), :gift_card_or_non_merchandise
   end
+
+  test "missing cost uses variant selling price when product list price is zero" do
+    @variant.product.update!(list_price_cents: 0, preferred_vendor: @vendor)
+    @variant.update!(selling_price_cents: 1500)
+
+    result = Purchasing::OrderEligibilityResolver.call(
+      product_variant: @variant,
+      vendor: @vendor,
+      context: :item_page
+    )
+
+    refute_includes result.warnings.map(&:code), :missing_cost
+  end
+
+  test "missing cost when list and selling price are zero" do
+    @variant.product.update!(list_price_cents: 0, preferred_vendor: @vendor)
+    @variant.update!(selling_price_cents: 0)
+
+    result = Purchasing::OrderEligibilityResolver.call(
+      product_variant: @variant,
+      vendor: @vendor,
+      context: :item_page
+    )
+
+    assert_includes result.warnings.map(&:code), :missing_cost
+  end
+
+  test "item page context omits missing identifier from ordering infos" do
+    format = Format.first || Format.create!(format_key: "book", name: "Book", active: true)
+    catalog_item = CatalogItem.create!(
+      title: "No ID Book",
+      format: format,
+      catalog_item_type: "book",
+      publication_status: "active",
+      active: true
+    )
+    @variant.product.update!(catalog_item: catalog_item)
+
+    result = Purchasing::OrderEligibilityResolver.call(
+      product_variant: @variant.reload,
+      vendor: @vendor,
+      context: :item_page
+    )
+
+    refute_includes (result.infos + result.warnings).map(&:code), :missing_identifier
+  end
 end

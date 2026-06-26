@@ -63,6 +63,7 @@
   <%= render "items/index/results_table",
         results: @results,
         operational_summaries: @operational_summaries,
+        warning_summaries: @warning_summaries,
         match_context: @request_match_context %>
   <%= render "items/index/pagination" %>
 <% else %>

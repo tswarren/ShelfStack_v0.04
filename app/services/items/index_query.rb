@@ -72,7 +72,7 @@ module Items
 
     def catalog_browse_entries
       catalog_item_scope
-        .includes(:format, :catalog_item_identifiers, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
+        .includes(:format, :catalog_item_identifiers, :primary_thumbnail_attachment, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
         .map { |item| hit("catalog_item", item) }
     end
 
@@ -175,14 +175,14 @@ module Items
         .merge(catalog_item_scope)
         .where("catalog_item_identifiers.normalized_identifier ILIKE ? OR catalog_item_identifiers.identifier_value ILIKE ?",
                text_query, text_query)
-        .includes(catalog_item: [ :format, { products: { cover_image_attachment: :blob } }, :catalog_item_identifiers ])
+        .includes(catalog_item: [ :format, { primary_thumbnail_attachment: :blob }, { products: { cover_image_attachment: :blob } }, :catalog_item_identifiers ])
         .limit(SEARCH_HIT_LIMIT)
         .map { |identifier| hit("catalog_item_identifier", identifier.catalog_item) }
     end
 
     def catalog_item_hits
       catalog_item_scope
-        .includes(:format, :catalog_item_identifiers, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
+        .includes(:format, :catalog_item_identifiers, :primary_thumbnail_attachment, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
         .where(catalog_item_text_conditions, *Array.new(10, text_query))
         .limit(SEARCH_HIT_LIMIT)
         .map { |item| hit("catalog_item", item) }
@@ -206,7 +206,7 @@ module Items
     def categorization_hits
       CatalogItem.joins(categorizations: :category_node)
         .merge(catalog_item_scope)
-        .includes(:format, :catalog_item_identifiers, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
+        .includes(:format, :catalog_item_identifiers, :primary_thumbnail_attachment, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
         .where("category_nodes.name ILIKE ?", text_query)
         .distinct
         .limit(SEARCH_HIT_LIMIT)
@@ -226,7 +226,7 @@ module Items
     def variant_hits
       variant_scope = classified_variant_scope
         .where("sku ILIKE ? OR name ILIKE ?", text_query, text_query)
-        .includes(product: [ :catalog_item, { cover_image_attachment: :blob } ], condition: nil, sub_department: nil)
+        .includes(product: { cover_image_attachment: :blob, catalog_item: { primary_thumbnail_attachment: :blob } }, condition: nil, sub_department: nil)
         .limit(SEARCH_HIT_LIMIT)
         .map { |variant| hit("product_variant", variant) }
     end

@@ -2,6 +2,11 @@
   <p>This is a non-catalog product with no catalog metadata.</p>
 <% else %>
   <% item_flow = { return_to: "item" } %>
+  <% if item.catalog_item.primary_thumbnail.attached? %>
+    <div class="ss-item-cover-preview">
+      <%= product_cover_image_tag(item.catalog_item.primary_thumbnail, size: :hero, alt: "Catalog thumbnail") %>
+    </div>
+  <% end %>
   <dl class="ss-summary">
     <dt>Type</dt><dd><%= humanize_controlled_value(item.catalog_item.catalog_item_type) %></dd>
     <dt>Format</dt><dd><%= item.catalog_item.format.name %></dd>

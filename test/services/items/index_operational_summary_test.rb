@@ -10,58 +10,53 @@ class Items::IndexOperationalSummaryTest < ActiveSupport::TestCase
     @product = create_product!
     @variant = create_product_variant!(product: @product)
     @item = Items::ItemPresenter.from_product(@product)
+    @result = ItemSearch::Result.new(presenter: @item, match_type: "product")
     grant_all_phase5_permissions!(@user, store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
-    InventoryBalance.create!(
-      store: @store,
-      product_variant: @variant,
-      quantity_on_hand: 4,
-      quantity_available: 4
-    )
-    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 3,
-      status: "open"
-    )
-    @result = ItemSearch::Result.new(presenter: @item, match_type: "product")
   end
 
-  test "summarizes stock and order signals per item presenter" do
-    summaries = Items::IndexOperationalSummary.for(
-      store: @store,
-      user: @user,
-      results: [ @result ]
-    )
-
-    summary = summaries[@item]
-    assert_equal 4, summary.available
-    assert_equal 3, summary.open_tbo
-    assert summaries[@item].actions.any? { |action| action.label == "View" }
-  end
-
-  test "open tbo summary uses remaining quantity after partial order" do
-    line = PurchaseRequestLine.find_by!(product_variant: @variant)
-    vendor = create_vendor!
-    create_purchase_order!(
-      store: @store,
-      vendor: vendor,
-      lines: [
-        create_purchase_order_line_attrs(
-          variant: @variant,
-          vendor: vendor,
-          quantity_ordered: 1,
-          purchase_request_line: line
-        )
-      ]
-    )
+  test "returns batched operational summary for index row" do
+    InventoryBalance.create!(store: @store, product_variant: @variant, quantity_on_hand: 3, quantity_available: 3, quantity_reserved: 0)
 
     summaries = Items::IndexOperationalSummary.for(
       store: @store,
       user: @user,
-      results: [ @result ]
+      results: [ @result ],
+      warning_summaries: {}
     )
 
-    assert_equal 2, summaries[@item].open_tbo
+    summary = summaries.fetch(@item)
+    assert_equal 3, summary.available
+    assert summary.actions.any? { |action| action.label == "View" }
+  end
+
+  test "uses shared variant snapshot for multiple index rows" do
+    sub_department = @variant.sub_department
+    results = 2.times.map do
+      product = create_product!(sku: "IDX-OPS-#{SecureRandom.hex(3)}")
+      create_product_variant!(product: product, sub_department: sub_department, sku: "#{product.sku}-NEW")
+      ItemSearch::Result.new(presenter: Items::ItemPresenter.from_product(product), match_type: "product")
+    end
+
+    snapshot_calls = 0
+    original = Items::VariantOperationalSnapshot.method(:for_variants)
+    Items::VariantOperationalSnapshot.singleton_class.define_method(:for_variants) do |**args|
+      snapshot_calls += 1
+      original.call(**args)
+    end
+
+    begin
+      Items::IndexOperationalSummary.for(
+        store: @store,
+        user: @user,
+        results: results,
+        warning_summaries: {}
+      )
+    ensure
+      Items::VariantOperationalSnapshot.singleton_class.define_method(:for_variants, original)
+    end
+
+    assert_equal 1, snapshot_calls
   end
 end

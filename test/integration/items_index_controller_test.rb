@@ -61,6 +61,20 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Sell New", response.body
   end
 
+  test "index renders resolved catalog thumbnail in search results" do
+    @item.primary_thumbnail.attach(
+      io: File.open(Rails.root.join("test/fixtures/files/cover.png")),
+      filename: "catalog-thumb.png",
+      content_type: "image/png"
+    )
+    create_product!(catalog_item: @item)
+
+    get items_root_path, params: { q: @item.title }
+
+    assert_response :success
+    assert_match "ss-item-cover-image--search", response.body
+  end
+
   test "index shows stock and orders column when inventory permissions granted" do
     seed_phase5_reference_data!
     grant_all_phase5_permissions!(@user, store: @store)
@@ -77,7 +91,7 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
 
     get items_root_path, params: { q: @item.title }
     assert_response :success
-    assert_match "Stock / Orders", response.body
+    assert_match "Signals", response.body
     assert_match "Avail. 5", response.body
     assert_match "TBO", response.body
     assert_match ">View<", response.body

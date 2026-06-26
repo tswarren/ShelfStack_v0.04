@@ -197,6 +197,17 @@ docs/implementation/phase-8.5-3a-completion.md
 docs/implementation/phase-8.5-3c-completion.md
 ```
 
+## Phase 8.5-4 Documents
+
+```text
+docs/roadmap/phase-8.5-4-item-data-quality.md
+docs/specifications/phase-8.5-4-item-data-quality-spec.md
+docs/specifications/phase-8.5-4-data-model.md
+docs/specifications/phase-8.5-4-test-plan.md
+docs/implementation/phase-8.5-4-completion.md
+docs/handoff/phase-9-item-drill-down-contract.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -301,6 +312,17 @@ Branch `phase-8.5-3-order-readiness` extends Phase 5/7A ordering paths. See [doc
 - **8.5-3c:** receipt allocation visibility (projected vs actual, PO allocation context); no FIFO behavior change — see [phase-8.5-3c-completion.md](docs/implementation/phase-8.5-3c-completion.md)
 - Do **not** introduce `PurchaseDemand` or merge TBO-backed PO lines with customer allocations
 
+## Phase 8.5-4: Item Data Quality and Operational Item Pages — **Complete**
+
+See [docs/implementation/phase-8.5-4-completion.md](docs/implementation/phase-8.5-4-completion.md).
+
+- Catalog `primary_thumbnail`; `Items::ThumbnailResolver`
+- Extended `Items::OperationalWarningBuilder` (batch APIs; retires `ItemAttentionPresenter`)
+- `Items::ItemOverviewPresenter`, `Items::VariantOperationalSnapshot`, `Items::IndexWarningSummary`
+- `Items::SalesHistoryLookup`, `Items::ReceivingHistoryLookup`
+- Overview reorganization (summary cards, variant readiness matrix, compact history)
+- Phase 9 drill-down contract: [docs/handoff/phase-9-item-drill-down-contract.md](docs/handoff/phase-9-item-drill-down-contract.md)
+
 ---
 
 # Architectural Principles
@@ -386,6 +408,11 @@ Purchasing::OrderEligibilityResolver
 Purchasing::LineEconomicsCalculator
 ProductVariants::OrderabilityDefaults
 Items::OperationalWarningBuilder
+Items::ThumbnailResolver
+Items::VariantOperationalSnapshot
+Items::IndexWarningSummary
+Items::SalesHistoryLookup
+Items::ReceivingHistoryLookup
 PurchaseRequests::CreateSingleLine
 Purchasing::SubmitPurchaseOrder
 Purchasing::PostReceipt

@@ -1,0 +1,43 @@
+# Phase 9 — Item Drill-Down Contract
+
+Phase 8.5-4 establishes what Phase 9 reporting may rely on when linking into `/items`.
+
+Spec: [phase-8.5-4-item-data-quality-spec.md](../specifications/phase-8.5-4-item-data-quality-spec.md)
+
+---
+
+## Link conventions
+
+```text
+/items/item?catalog_item_id=:id&tab=overview
+/items/item?product_id=:id&tab=overview
+/items/item?product_variant_id=:id&tab=overview
+```
+
+Anchors:
+
+```text
+#warnings
+#variant-matrix
+#sales-history
+#receiving-history
+```
+
+## Contract surfaces (overview tab)
+
+| Surface | DOM / aria |
+| ------- | ---------- |
+| Stable identity | `.ss-item-hero` |
+| Warning summary | `#warnings` |
+| Sell / order / stock cards | `.ss-item-summary-cards` |
+| Variant readiness | `#variant-matrix` |
+| Recent sales | `#sales-history` |
+| Recent receiving | `#receiving-history` |
+
+## Index contract
+
+Index rows may expose batched worst warning severity and operational quantities via the Signals column. Full warning text is only on item detail.
+
+## Out of scope
+
+Phase 9 must not assume analytics export, variant image overrides, or write actions from report links.

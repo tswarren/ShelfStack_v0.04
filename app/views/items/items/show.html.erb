@@ -16,13 +16,15 @@
           statuses: @statuses,
           variant: @highlight_variant,
           operations: @operations,
-          attention_items: @attention_items %>
+          overview: @overview,
+          operational_warnings: @operational_warnings %>
   <% when "operations" %>
     <%= render "items/items/operations",
           item: @item,
           operations: @operations,
           operations_tab: @operations_tab,
-          attention_items: @attention_items %>
+          operational_warnings: @operational_warnings,
+          overview: @overview %>
   <% when "item_setup" %>
     <%= render "items/items/item_setup",
           item: @item,

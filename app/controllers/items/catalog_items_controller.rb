@@ -90,6 +90,7 @@ module Items
 
     def update
       @formats = Format.active_records.order(:name)
+      purge_primary_thumbnail_if_requested
       if @catalog_item.update(catalog_item_params)
         bisac_result = sync_catalog_item_bisac!(@catalog_item)
         store_category_result = sync_catalog_store_category!(@catalog_item)
@@ -185,7 +186,13 @@ module Items
     private
 
     def set_catalog_item
-      @catalog_item = CatalogItem.find(params[:id])
+      @catalog_item = CatalogItem.with_attached_primary_thumbnail.find(params[:id])
+    end
+
+    def purge_primary_thumbnail_if_requested
+      return unless params.dig(:catalog_item, :remove_primary_thumbnail) == "1"
+
+      @catalog_item.primary_thumbnail.purge
     end
 
     def catalog_item_params
@@ -195,7 +202,7 @@ module Items
         :height, :width, :depth, :dimension_units, :weight, :weight_units, :page_count,
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
         :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
-        :store_category_id
+        :store_category_id, :primary_thumbnail
       )
     end
 

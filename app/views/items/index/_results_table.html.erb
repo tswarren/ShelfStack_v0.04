@@ -6,8 +6,8 @@
       <th>Product SKU</th>
       <th>Variants</th>
       <th>Price</th>
-      <% if operational_summaries.present? %>
-        <th>Stock / Orders</th>
+      <% if local_assigns[:warning_summaries].present? || operational_summaries.present? %>
+        <th>Signals</th>
       <% end %>
       <th>Actions</th>
     </tr>
@@ -16,6 +16,7 @@
     <% results.each do |result| %>
       <% item = result.presenter %>
       <% summary = operational_summaries[item] %>
+      <% warning_summary = summary&.warning_summary || warning_summaries[item] %>
       <% active_variants = item.variants.select(&:active?) %>
       <tr>
         <td>
@@ -35,15 +36,18 @@
         <td><%= item.product_sku || "—" %></td>
         <td><%= item.variant_summary_label %></td>
         <td><%= item.price_range_label %></td>
-        <% if operational_summaries.present? %>
+        <% if local_assigns[:warning_summaries].present? || operational_summaries.present? %>
           <td class="ss-num">
+            <% if warning_summary&.worst_severity.present? %>
+              <div><%= item_warning_severity_badge(warning_summary.worst_severity) %></div>
+            <% end %>
             <% if summary.present? %>
               <div>Avail. <%= summary.available %></div>
               <div>TBO <%= summary.open_tbo %> · Order <%= summary.on_order %></div>
               <% if summary.last_received_at.present? %>
                 <div class="ss-muted">Rcvd <%= l(summary.last_received_at.to_date) %></div>
               <% end %>
-            <% else %>
+            <% elsif warning_summary.blank? %>
               —
             <% end %>
           </td>

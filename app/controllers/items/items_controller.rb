@@ -14,18 +14,22 @@ module Items
       load_tab_data
       load_operations_presenter if @tab.in?(%w[overview operations])
       load_operations_tab_presenter if @tab == "operations"
-      load_attention_items if @tab.in?(%w[overview operations])
+      load_overview_presenter if @tab.in?(%w[overview operations])
+      load_operational_warnings if @tab.in?(%w[overview operations])
     end
 
     private
 
     def set_item_presenter
       if params[:catalog_item_id].present?
-        catalog_item = CatalogItem.includes(products: product_includes).find(params[:catalog_item_id])
+        catalog_item = CatalogItem.with_attached_primary_thumbnail.includes(products: product_includes).find(params[:catalog_item_id])
         @item = ItemPresenter.from_catalog_item(catalog_item)
       elsif params[:product_id].present?
         product = Product.with_attached_cover_image.includes(:catalog_item, product_includes).find(params[:product_id])
         @item = ItemPresenter.from_product(product)
+      elsif params[:product_variant_id].present?
+        variant = ProductVariant.includes(product: product_includes).find(params[:product_variant_id])
+        @item = ItemPresenter.from_product_variant(variant)
       else
         redirect_to items_root_path, alert: "Item not found."
       end
@@ -34,6 +38,7 @@ module Items
     def product_includes
       {
         cover_image_attachment: :blob,
+        catalog_item: { primary_thumbnail_attachment: :blob },
         default_display_location: :parent,
         product_variants: [ :display_location, :condition, :sub_department ]
       }
@@ -71,9 +76,12 @@ module Items
     end
 
     def load_highlight_variant
-      return if params[:variant_id].blank? || @item.product.blank?
+      return if @item.product.blank?
 
-      @item.variants.find_by(id: params[:variant_id])
+      variant_id = params[:variant_id].presence || params[:product_variant_id].presence
+      return if variant_id.blank?
+
+      @item.variants.find_by(id: variant_id)
     end
 
     def load_order_quantities
@@ -106,15 +114,28 @@ module Items
       )
     end
 
-    def load_attention_items
+    def load_overview_presenter
       return unless current_store.present?
 
-      @attention_items = ItemAttentionPresenter.for(
+      @overview = ItemOverviewPresenter.for(
         item: @item,
         store: current_store,
-        user: current_user,
-        operations: @operations
+        user: current_user
       )
+    end
+
+    def load_operational_warnings
+      return unless current_store.present?
+
+      @operational_warnings = if @overview.present?
+        @overview.warnings
+      else
+        Items::OperationalWarningBuilder.for_item(
+          item: @item,
+          store: current_store,
+          user: current_user
+        ).fetch(@item, [])
+      end
     end
 
     def load_ledger_entries
@@ -141,6 +162,18 @@ module Items
         .joins(:product_variant, :vendor)
         .where(product_variant_id: variant_ids)
         .order("product_variants.sku", "vendors.name")
+
+      return unless current_store.present?
+
+      snapshot = VariantOperationalSnapshot.for_variants(store: current_store, variants: @item.variants.to_a)
+      variants_by_id = @item.variants.index_by(&:id)
+      @vendor_sourcing_gaps = snapshot.rows.filter_map do |variant_id, row|
+        vendor = row.suggested_vendor&.vendor
+        next if vendor.blank?
+        next if row.sourcing_record_present
+
+        { variant: variants_by_id[variant_id], vendor: vendor }
+      end
     end
   end
 end

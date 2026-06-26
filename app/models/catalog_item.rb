@@ -26,6 +26,10 @@ class CatalogItem < ApplicationRecord
   has_many :products, dependent: :restrict_with_error
   has_many :external_catalog_imports, dependent: :restrict_with_error
   has_many :categorizations, as: :categorizable, dependent: :destroy
+  has_one_attached :primary_thumbnail
+
+  ALLOWED_THUMBNAIL_TYPES = Product::ALLOWED_COVER_IMAGE_TYPES
+  MAX_THUMBNAIL_SIZE = Product::MAX_COVER_IMAGE_SIZE
 
   accepts_nested_attributes_for :catalog_item_identifiers, allow_destroy: true, reject_if: :all_blank
 
@@ -40,6 +44,7 @@ class CatalogItem < ApplicationRecord
   validate :store_category_must_be_valid
   validate :store_category_required_for_active_catalog, on: :update
   validate :must_have_active_primary_identifier, on: :update
+  validate :primary_thumbnail_must_be_valid, if: -> { primary_thumbnail.attached? }
 
   scope :active_records, -> { where(active: true) }
 
@@ -144,5 +149,14 @@ class CatalogItem < ApplicationRecord
     return if catalog_item_identifiers.active_records.exists?(primary_identifier: true)
 
     errors.add(:base, "must have exactly one active primary identifier")
+  end
+
+  def primary_thumbnail_must_be_valid
+    unless ALLOWED_THUMBNAIL_TYPES.include?(primary_thumbnail.blob.content_type)
+      errors.add(:primary_thumbnail, "must be a JPEG, PNG, WebP, or GIF")
+    end
+    return if primary_thumbnail.blob.byte_size <= MAX_THUMBNAIL_SIZE
+
+    errors.add(:primary_thumbnail, "must be smaller than 5 MB")
   end
 end
