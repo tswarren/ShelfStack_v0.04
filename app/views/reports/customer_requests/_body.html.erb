@@ -18,6 +18,10 @@
 
   <%= render "reports/shared/metric_strip", metrics: report.metrics %>
 
+  <% if report.truncated %>
+    <%= render "reports/shared/section_notice", message: "Showing the #{Reports::CustomerRequests::Query::ROW_LIMIT} most recent matching requests." %>
+  <% end %>
+
   <div class="ss-report-body">
     <% if report.empty? %>
       <%= render "reports/shared/empty_state",

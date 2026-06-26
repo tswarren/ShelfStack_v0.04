@@ -15,11 +15,26 @@ class Reports::RedirectsControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "pos.access", store: @store)
     grant_permission!(@user, "pos.reports.view", store: @store)
     grant_permission!(@user, "pos.reports.register_summary", store: @store)
+    @session = open_register_session!(store: @store, workstation: @workstation, user: @user)
   end
 
   test "pos register summary redirects to canonical report" do
     get register_summary_pos_reports_path
     assert_redirected_to reports_register_summary_path
+  end
+
+  test "pos register summary normalizes legacy session_id param" do
+    get register_summary_pos_reports_path(session_id: @session.id)
+
+    assert_redirected_to reports_register_summary_path(register_session_id: @session.id)
+  end
+
+  test "pos sales summary normalizes legacy session_id param" do
+    grant_permission!(@user, "pos.reports.summary", store: @store)
+
+    get summary_pos_reports_path(session_id: @session.id, filter_type: "register_session")
+
+    assert_redirected_to reports_sales_summary_path(filter_type: "register_session", register_session_id: @session.id)
   end
 
   test "shell reconciliation redirects to tax collected" do

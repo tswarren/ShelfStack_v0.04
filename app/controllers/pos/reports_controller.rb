@@ -37,7 +37,17 @@ module Pos
     private
 
     def report_redirect_params
-      params.permit(:filter_type, :register_session_id, :business_date, :start_date, :end_date, :session_id, :format)
+      permitted = params.permit(
+        :filter_type,
+        :register_session_id,
+        :business_date,
+        :start_date,
+        :end_date,
+        :session_id,
+        :format
+      ).to_h
+      permitted["register_session_id"] ||= permitted.delete("session_id")
+      permitted.compact
     end
   end
 end

@@ -3,9 +3,11 @@
 module Reports
   module CustomerRequests
     Row = Data.define(:label, :status, :aging_days, :item_label, :variant_id, :request_path)
-    Result = Data.define(:scope_label, :rows, :metrics, :empty?)
+    Result = Data.define(:scope_label, :rows, :metrics, :empty?, :truncated)
 
     class Query
+      ROW_LIMIT = 100
+
       def self.call(store:, queue: nil, status: nil)
         new(store: store, queue: queue, status: status).call
       end
@@ -24,7 +26,8 @@ module Reports
         relation = ::CustomerRequests::QueueScope.apply(relation, @queue, store: store) if @queue.present?
         relation = relation.where(status: @status) if @status.present?
 
-        index_rows = ::CustomerRequests::IndexRowPresenter.build_collection(relation.limit(100), store: store)
+        matching_count = relation.count
+        index_rows = ::CustomerRequests::IndexRowPresenter.build_collection(relation.limit(ROW_LIMIT), store: store)
 
         rows = index_rows.map do |row|
           variant = row.request.customer_request_lines.first&.product_variant
@@ -42,11 +45,12 @@ module Reports
           scope_label: @queue.present? ? @queue.tr("_", " ").titleize : "All requests",
           rows: rows,
           metrics: [
-            { label: "Requests", value: rows.size },
+            { label: "Requests", value: matching_count },
             { label: "Ready for pickup", value: ::CustomerRequests::QueueScope.count(store: store, queue_key: "ready_for_pickup") },
             { label: "Awaiting response", value: ::CustomerRequests::QueueScope.count(store: store, queue_key: "awaiting_response") }
           ],
-          empty?: rows.empty?
+          empty?: rows.empty?,
+          truncated: matching_count > ROW_LIMIT
         )
       end
 

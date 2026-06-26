@@ -11,7 +11,16 @@ module Reports
     private
 
     def summary_filter_params
-      params.permit(:filter_type, :register_session_id, :business_date, :start_date, :end_date)
+      permitted = params.permit(
+        :filter_type,
+        :register_session_id,
+        :business_date,
+        :start_date,
+        :end_date,
+        :session_id
+      ).to_h
+      permitted["register_session_id"] ||= permitted.delete("session_id")
+      permitted.symbolize_keys
     end
 
     def load_pos_scope_report!

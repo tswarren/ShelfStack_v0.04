@@ -6,7 +6,7 @@ module Reports
 
     def show
       @sessions = PosRegisterSession.where(store: report_store).order(opened_at: :desc).limit(50)
-      session_id = params[:register_session_id].presence || current_register_session&.id
+      session_id = params[:register_session_id].presence || params[:session_id].presence || current_register_session&.id
       @scope = Pos::ReportScope.from_params(
         store: report_store,
         params: { register_session_id: session_id }
