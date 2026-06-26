@@ -62,11 +62,32 @@ module ItemsHelper
   end
 
   def item_cover_thumbnail(item, size: :hero)
+    resolved = Items::ThumbnailResolver.resolve(item:)
     product_cover_image_tag(
-      item.product&.cover_image,
+      resolved.attachment,
       size: size,
       alt: "Cover image for #{item.title}"
     )
+  end
+
+  def item_warning_severity_badge(severity)
+    return if severity.blank?
+
+    css_class = case severity.to_sym
+    when :blocking then "status-warning"
+    when :warning then "status-warning"
+    else "status-inactive"
+    end
+
+    tag.span(severity.to_s.humanize, class: "ss-status-badge #{css_class}")
+  end
+
+  def item_vendor_source_status_label(status)
+    case status.to_sym
+    when :present then tag.span("Yes", class: "ss-status-badge status-active")
+    when :warning then tag.span("Missing source", class: "ss-status-badge status-warning")
+    else tag.span("No", class: "ss-status-badge status-inactive")
+    end
   end
 
   def item_cover_placeholder(size: :hero)

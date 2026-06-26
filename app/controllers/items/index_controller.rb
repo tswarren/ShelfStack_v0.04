@@ -27,7 +27,8 @@ module Items
       @page = result.page
       @per_page = result.per_page
       @total_pages = [ (@total_count.to_f / @per_page).ceil, 1 ].max
-      @operational_summaries = load_operational_summaries
+      @warning_summaries = load_warning_summaries
+      @operational_summaries = inventory_signals_visible? ? load_operational_summaries(@warning_summaries) : {}
       @request_match_context = request_match_context
     end
 
@@ -37,7 +38,7 @@ module Items
       params.permit(*INDEX_PARAMS, :return_to, :customer_request_id, :line_id)
     end
 
-    def load_operational_summaries
+    def load_operational_summaries(warning_summaries)
       return {} unless current_store.present?
       return {} unless inventory_signals_visible?
 
@@ -45,7 +46,18 @@ module Items
         store: current_store,
         user: current_user,
         results: @results,
-        match_context: request_match_context
+        match_context: request_match_context,
+        warning_summaries: warning_summaries
+      )
+    end
+
+    def load_warning_summaries
+      return {} unless current_store.present?
+
+      Items::IndexWarningSummary.for(
+        store: current_store,
+        user: current_user,
+        results: @results
       )
     end
 

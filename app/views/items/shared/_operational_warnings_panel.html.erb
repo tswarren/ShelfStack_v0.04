@@ -1,0 +1,49 @@
+<%# locals: warnings, grouped: false %>
+<% if warnings.present? %>
+  <section id="warnings" class="ss-attention-panel ss-operational-warnings" aria-label="Operational warnings">
+    <h2>Needs Attention</h2>
+    <% counts = Items::OperationalWarningBuilder.counts_by_severity(warnings) %>
+    <p class="ss-operational-warnings__counts">
+      <% if counts[:blocking].to_i.positive? %>
+        <span class="ss-status-badge status-warning"><%= counts[:blocking] %> blocking</span>
+      <% end %>
+      <% if counts[:warning].to_i.positive? %>
+        <span class="ss-status-badge status-warning"><%= counts[:warning] %> warnings</span>
+      <% end %>
+      <% if counts[:info].to_i.positive? %>
+        <span class="ss-status-badge status-inactive"><%= counts[:info] %> info</span>
+      <% end %>
+    </p>
+    <% grouped = local_assigns.fetch(:grouped, false) %>
+    <% if grouped %>
+      <% warnings.group_by(&:category).each do |category, category_warnings| %>
+        <details class="ss-operational-warnings__group" open>
+          <summary><%= category.to_s.humanize %> (<%= category_warnings.size %>)</summary>
+          <ul>
+            <% category_warnings.each do |warning| %>
+              <li>
+                <span class="ss-operational-warnings__severity"><%= warning.severity.to_s.humanize %></span>
+                <%= warning.message %>
+                <% if warning.corrective_path.present? && warning.corrective_label.present? %>
+                  <%= link_to warning.corrective_label, warning.corrective_path %>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </details>
+      <% end %>
+    <% else %>
+      <ul>
+        <% warnings.each do |warning| %>
+          <li>
+            <span class="ss-operational-warnings__severity"><%= warning.severity.to_s.humanize %></span>
+            <%= warning.message %>
+            <% if warning.corrective_path.present? && warning.corrective_label.present? %>
+              <%= link_to warning.corrective_label, warning.corrective_path %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+<% end %>

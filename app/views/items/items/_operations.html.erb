@@ -1,17 +1,10 @@
 <% operations_tab = local_assigns[:operations_tab] %>
 <% operations = local_assigns[:operations] %>
+<% overview = local_assigns[:overview] %>
 
 <div data-controller="item-customer-demand-drawer">
 <% if request_match_context.valid? %>
   <%= render "shared/request_match_banner", context: request_match_context %>
-<% end %>
-
-<% if local_assigns[:attention_items].present? %>
-  <%= render "orders/shared/attention_panel", items: attention_items %>
-<% end %>
-
-<% if operations_tab&.metrics&.any? %>
-  <%= render "orders/shared/metric_strip", metrics: operations_tab.metrics %>
 <% end %>
 
 <% if operations_tab&.highlight_variant.present? %>
@@ -384,6 +377,41 @@
       ))
     ) %>
   <p class="ss-muted">No operational documents yet for this item.</p>
+<% end %>
+
+<% if local_assigns[:operational_warnings].present? %>
+  <%= render "items/shared/operational_warnings_panel", warnings: operational_warnings, grouped: true %>
+<% end %>
+
+<% if overview&.sales_visible? %>
+  <% full_sales = Items::SalesHistoryLookup.for_variants(store: current_store, variant_ids: item.variants.map(&:id), limit: 20) %>
+  <% if full_sales.any? %>
+    <section id="sales-history" class="ss-item-section" aria-label="Sales history">
+      <h2>Sales history</h2>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>SKU</th>
+            <th class="ss-num">Qty</th>
+            <th class="ss-num">Net sales</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% full_sales.each do |row| %>
+            <tr>
+              <td><%= l(row.sold_at, format: :short) %></td>
+              <td><%= row.variant_sku %></td>
+              <td class="ss-num"><%= row.quantity %></td>
+              <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
+              <td><%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+  <% end %>
 <% end %>
 
 <%= render "items/items/customer_demand_drawer", operations: operations %>

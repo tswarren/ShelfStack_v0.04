@@ -27,7 +27,8 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Sellable SKUs", response.body
     assert_match "ss-item-subject-list", response.body
     assert_match ">Subjects<", response.body
-    assert_match "ss-item-variant-defaults", response.body
+    assert_match 'id="variant-matrix"', response.body
+    assert_match "ss-item-table", response.body
     assert_no_match "ss-item-subject-chip", response.body
     assert_no_match "ss-item-edit-link", response.body
     assert_no_match "Edit Catalog Item", response.body

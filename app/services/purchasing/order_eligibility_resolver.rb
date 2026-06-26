@@ -21,6 +21,23 @@ module Purchasing
       new(product_variant:, vendor:, context:, store:).call
     end
 
+    def self.for_variants(store:, variants:, context: :item_page, vendors_by_variant_id: nil)
+      variants = Array(variants).compact
+      return {} if variants.empty?
+
+      vendors_by_variant_id ||= SuggestedVendorResolver.for_variants(variants.map(&:id))
+        .transform_values { |result| result.vendor }
+
+      variants.index_with do |variant|
+        call(
+          product_variant: variant,
+          vendor: vendors_by_variant_id[variant.id],
+          context: context,
+          store: store
+        )
+      end
+    end
+
     def initialize(product_variant:, vendor: nil, context: :purchase_order, store: nil)
       @product_variant = product_variant
       @vendor = vendor
@@ -64,6 +81,11 @@ module Purchasing
         return
       end
 
+      if item_page_context?
+        evaluate_item_page_rules(blocking:, warnings:, infos:)
+        return
+      end
+
       blocking << reason(:gift_card_or_non_merchandise, :blocking) if non_merchandise_product_type?
       blocking << reason(:used_variant, :blocking) if used_variant?
       blocking << reason(:not_orderable, :blocking) unless product_variant.orderable?
@@ -74,6 +96,23 @@ module Purchasing
         blocking << reason(:discontinued_catalog_item_submit_block, :blocking) if context == :purchase_order_submit
       end
 
+      evaluate_vendor_sourcing(warnings:, infos:)
+    end
+
+    def evaluate_item_page_rules(blocking:, warnings:, infos:)
+      blocking << reason(:gift_card_or_non_merchandise, :blocking) if non_merchandise_product_type?
+      warnings << reason(:used_variant, :warning) if used_variant?
+      warnings << reason(:not_orderable, :warning) unless product_variant.orderable?
+      warnings << reason(:non_inventory_not_orderable, :warning) if non_inventory_blocked?
+
+      if discontinued_catalog_item?
+        warnings << reason(:discontinued_catalog_item, :warning)
+      end
+
+      evaluate_vendor_sourcing(warnings:, infos:)
+    end
+
+    def evaluate_vendor_sourcing(warnings:, infos:)
       if vendor.present?
         sourcing = SourcingLookup.for(variant: product_variant, vendor: vendor)
         warnings << reason(:missing_vendor_source, :warning) unless sourcing.sourcing_record_present
@@ -86,6 +125,10 @@ module Purchasing
 
     def evaluate_context_rules(blocking:, warnings:, infos:)
       # reserved for future TBO-specific differences beyond common rules
+    end
+
+    def item_page_context?
+      context == :item_page
     end
 
     def used_variant?

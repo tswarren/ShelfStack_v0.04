@@ -1,0 +1,110 @@
+# frozen_string_literal: true
+
+module Items
+  class VariantOperationalSnapshot
+    Row = Data.define(
+      :variant_id,
+      :on_hand,
+      :available,
+      :reserved,
+      :on_order_available,
+      :ready_for_pickup_qty,
+      :open_tbo,
+      :pending_po,
+      :on_order,
+      :last_received,
+      :suggested_vendor,
+      :vendor_item_number,
+      :returnability_status,
+      :orderable,
+      :inventory_tracking
+    )
+
+    def self.for_variants(store:, variants:, user: nil, item: nil)
+      new(store:, variants:, user:, item:).build
+    end
+
+    def initialize(store:, variants:, user: nil, item: nil)
+      @store = store
+      @variants = Array(variants).compact.uniq
+      @user = user
+      @item = item
+    end
+
+    def build
+      self
+    end
+
+    def rows
+      @rows ||= build_rows
+    end
+
+    def suggested_vendors
+      @suggested_vendors ||= Purchasing::SuggestedVendorResolver.for_variants(variant_ids)
+    end
+
+    def last_received
+      @last_received ||= Purchasing::LastReceivedLookup.for_variants(store: store, variant_ids: variant_ids)
+    end
+
+    private
+
+    attr_reader :store, :variants, :user, :item
+
+    def variant_ids
+      @variant_ids ||= variants.map(&:id)
+    end
+
+    def build_rows
+      return {} if store.blank? || variant_ids.empty?
+
+      balances = InventoryBalance.where(store: store, product_variant_id: variant_ids).index_by(&:product_variant_id)
+      order_quantities = Purchasing::OrderQuantityLookup.for_variants(store: store, variant_ids: variant_ids)
+      open_tbo = PurchaseRequestLine.open_remaining_quantities_for(store: store, variant_ids: variant_ids)
+      ready_for_pickup = ready_for_pickup_quantities_for
+      vendors = suggested_vendors
+      received = last_received
+
+      variants.index_with do |variant|
+        eligible = Inventory::Eligibility.eligible?(variant)
+        balance = balances[variant.id]
+        order_qty = order_quantities.fetch(variant.id) { Purchasing::OrderQuantityLookup.zero_result }
+        suggested = vendors.fetch(variant.id) { Purchasing::SuggestedVendorResolver.for_variant(variant) }
+        vendor = suggested.vendor
+        sourcing = vendor.present? ? Purchasing::SourcingLookup.for(variant: variant, vendor: vendor) : nil
+        reserved_incoming = reserved_incoming_for(variant.id)
+
+        Row.new(
+          variant_id: variant.id,
+          on_hand: eligible ? (balance&.quantity_on_hand || 0) : nil,
+          available: eligible ? (balance&.quantity_available || 0) : nil,
+          reserved: eligible ? (balance&.quantity_reserved || 0) : nil,
+          on_order_available: eligible ? [ order_qty.on_order - reserved_incoming, 0 ].max : nil,
+          ready_for_pickup_qty: ready_for_pickup.fetch(variant.id, 0),
+          open_tbo: open_tbo.fetch(variant.id, 0),
+          pending_po: eligible ? order_qty.pending : nil,
+          on_order: eligible ? order_qty.on_order : nil,
+          last_received: received[variant.id],
+          suggested_vendor: suggested,
+          vendor_item_number: sourcing&.vendor_item_number,
+          returnability_status: vendor.present? ? Purchasing::ReturnabilityResolver.resolve(variant: variant, vendor: vendor) : nil,
+          orderable: variant.orderable?,
+          inventory_tracking: Inventory::TrackingResolver.resolve(variant)
+        )
+      end.transform_keys(&:id)
+    end
+
+    def ready_for_pickup_quantities_for
+      InventoryReservation.active_on_hand
+                          .where(store: store, product_variant_id: variant_ids, status: "ready")
+                          .group(:product_variant_id)
+                          .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+    end
+
+    def reserved_incoming_for(variant_id)
+      InventoryReservation.active_incoming
+                          .where(store: store, product_variant_id: variant_id)
+                          .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+    end
+  end
+end
