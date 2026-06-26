@@ -2058,6 +2058,128 @@ h2 {
   color: #5c5347;
 }
 
+.ss-empty-state__title {
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+
+.ss-empty-state__message {
+  margin: 0;
+}
+
+/* Report foundation (Phase 9a) */
+.ss-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ss-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.25rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  background: #f7f4ef;
+  border: 1px solid #e2dcd1;
+  border-radius: 6px;
+}
+
+.ss-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+}
+
+.ss-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ss-date-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+}
+
+.ss-table--report th.ss-num,
+.ss-table--report td.ss-num,
+.ss-table--report th.ss-money,
+.ss-table--report td.ss-money,
+.ss-table--report th.ss-percent,
+.ss-table--report td.ss-percent {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-table--compact th,
+.ss-table--compact td {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.ss-table tbody tr.ss-table-row--subtotal th,
+.ss-table tbody tr.ss-table-row--subtotal td {
+  font-weight: 600;
+  border-top: 1px solid #d8d0c4;
+}
+
+.ss-table tbody tr.ss-table-row--total th,
+.ss-table tbody tr.ss-table-row--total td {
+  font-weight: 700;
+  border-top: 2px solid #c8c0b4;
+}
+
+.ss-table tbody tr.ss-empty-row td {
+  color: #5c5347;
+  font-style: italic;
+  text-align: center;
+}
+
+.ss-money,
+.ss-percent {
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-section-notice {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  background: #f0ebe3;
+  border-left: 3px solid #8a7a62;
+  color: #3d3830;
+  font-size: 0.925rem;
+}
+
+.ss-inline-note {
+  color: #5c5347;
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.ss-report {
+  max-width: 1200px;
+}
+
+.ss-report-scope {
+  color: #5c5347;
+  font-size: 0.925rem;
+  margin: 0.25rem 0 0;
+}
+
+.ss-report-body {
+  margin-top: 1rem;
+}
+
+.ss-report-no-print {
+  /* hidden in print via @media print below */
+}
+
 /* POS register workspace */
 .ss-pos-body .ss-main {
   max-width: none;
@@ -3901,11 +4023,24 @@ body.ss-pos-modal-open {
 
   .ss-pos-report,
   .ss-pos-report *,
+  .ss-report,
+  .ss-report *,
   .report-print,
   .report-print *,
   .buyback-proposal-print,
   .buyback-proposal-print * {
     visibility: visible;
+  }
+
+  .ss-report.report-print {
+    page: report;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
   }
 
   .ss-pos-report {
@@ -4122,6 +4257,8 @@ body.ss-pos-modal-open {
   .ss-pos-banner,
   .ss-footer,
   .ss-pos-no-print,
+  .ss-report-no-print,
+  .ss-filter-bar,
   .flash {
     display: none !important;
   }

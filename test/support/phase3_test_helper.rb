@@ -1,6 +1,16 @@
 # frozen_string_literal: true
 
 module Phase3TestHelper
+  def create_store_for_phase3!
+    @phase3_store ||= Store.find_by(store_number: "001") || Store.create!(
+      store_number: "001",
+      name: "Test Store",
+      country_code: "US",
+      time_zone: "America/New_York",
+      active: true
+    )
+  end
+
   def create_format!(**attrs)
     Format.create!({
       format_key: "format_#{SecureRandom.hex(4)}",

@@ -17,6 +17,11 @@ Rails.application.routes.draw do
 
   root "dashboard#show"
 
+  namespace :reports do
+    get "shells/reconciliation", to: "shells#reconciliation"
+    get "shells/queue", to: "shells#queue"
+  end
+
   namespace :items do
     root to: "index#index"
     get "locked_out", to: "home#locked_out"

@@ -1,0 +1,64 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: @presenter.title,
+             scope: @presenter.scope_label,
+             actions: report_print_button %>
+
+  <%= render layout: "reports/shared/filter_bar", locals: { url: reports_shells_queue_path } do %>
+    <%= render "reports/shared/date_range",
+               start_value: params[:start_date],
+               end_value: params[:end_date] %>
+    <div class="ss-field">
+      <%= label_tag :status, "Status" %>
+      <%= select_tag :status,
+                     options_for_select(
+                       [
+                         [ "All open", "" ],
+                         [ "Ready for pickup", "ready_for_pickup" ],
+                         [ "Awaiting receiving", "awaiting_receiving" ],
+                         [ "Open", "open" ]
+                       ],
+                       params[:status]
+                     ),
+                     include_blank: false %>
+    </div>
+  <% end %>
+
+  <%= render "reports/shared/section_notice",
+             message: "Sample queue shell with placeholder rows. Links demonstrate Phase 8.5-4 drill-down URLs." %>
+
+  <%= render "reports/shared/metric_strip", metrics: @presenter.metrics %>
+
+  <div class="ss-report-body">
+    <% if @presenter.empty? %>
+      <%= render "reports/shared/empty_state",
+                 title: "No requests match these filters",
+                 message: "Try widening the date range or clearing the status filter." %>
+    <% else %>
+      <table class="ss-table ss-table--report">
+        <thead>
+          <tr>
+            <th>Request</th>
+            <th>Status</th>
+            <th class="ss-num">Aging (days)</th>
+            <th>Item</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @presenter.rows.each do |row| %>
+            <tr>
+              <td><%= row.label %></td>
+              <td><span class="ss-status-badge <%= row.status_class %>"><%= row.status %></span></td>
+              <td class="ss-num"><%= format_report_quantity(row.aging_days) %></td>
+              <td>
+                <%= link_to row.item_label,
+                            items_item_path(product_variant_id: row.variant_id, tab: "overview"),
+                            class: "ss-link" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>

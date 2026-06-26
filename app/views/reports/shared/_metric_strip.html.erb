@@ -1,0 +1,14 @@
+<%# locals: metrics: [] %>
+<% if metrics.present? %>
+  <div class="ss-metric-strip">
+    <% metrics.each do |metric| %>
+      <div class="ss-metric-card">
+        <span class="ss-metric-card__label"><%= metric[:label] %></span>
+        <span class="ss-metric-card__value ss-num<%= " #{metric[:class]}" if metric[:class].present? %>"><%= metric[:value] %></span>
+        <% if metric[:detail].present? %>
+          <span class="ss-metric-card__detail"><%= metric[:detail] %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
