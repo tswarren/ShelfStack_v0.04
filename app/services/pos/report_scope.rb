@@ -7,39 +7,68 @@ module Pos
     attr_reader :type, :store, :register_session, :business_date, :start_date, :end_date, :label
 
     def self.from_params(store:, params:)
-      if params[:register_session_id].present?
-        session = PosRegisterSession.where(store: store).find_by(id: params[:register_session_id])
-        return nil if session.blank?
+      filter_type = params[:filter_type].presence
 
-        new(
-          type: :register_session,
-          store: store,
-          register_session: session,
-          label: "Register session #{session.workstation.name} · #{session.business_date} · opened #{I18n.l(session.opened_at.in_time_zone(store.time_zone), format: :short)}"
-        )
-      elsif params[:business_date].present?
-        date = Date.parse(params[:business_date])
-        new(
-          type: :business_date,
-          store: store,
-          business_date: date,
-          label: "Business date #{I18n.l(date, format: :long)}"
-        )
-      elsif params[:start_date].present? && params[:end_date].present?
-        start_date = Date.parse(params[:start_date])
-        end_date = Date.parse(params[:end_date])
-        return nil if end_date < start_date
-
-        new(
-          type: :date_range,
-          store: store,
-          start_date: start_date,
-          end_date: end_date,
-          label: "#{I18n.l(start_date, format: :long)} – #{I18n.l(end_date, format: :long)}"
-        )
+      if filter_type.present?
+        case filter_type.to_s
+        when "register_session"
+          return register_session_scope(store: store, register_session_id: params[:register_session_id])
+        when "business_date"
+          return business_date_scope(store: store, business_date: params[:business_date])
+        when "date_range"
+          return date_range_scope(store: store, start_date: params[:start_date], end_date: params[:end_date])
+        else
+          return nil
+        end
       end
+
+      register_session_scope(store: store, register_session_id: params[:register_session_id]) ||
+        business_date_scope(store: store, business_date: params[:business_date]) ||
+        date_range_scope(store: store, start_date: params[:start_date], end_date: params[:end_date])
     rescue ArgumentError
       nil
+    end
+
+    def self.register_session_scope(store:, register_session_id:)
+      return nil if register_session_id.blank?
+
+      session = PosRegisterSession.where(store: store).find_by(id: register_session_id)
+      return nil if session.blank?
+
+      new(
+        type: :register_session,
+        store: store,
+        register_session: session,
+        label: "Register session #{session.workstation.name} · #{session.business_date} · opened #{I18n.l(session.opened_at.in_time_zone(store.time_zone), format: :short)}"
+      )
+    end
+
+    def self.business_date_scope(store:, business_date:)
+      return nil if business_date.blank?
+
+      date = Date.parse(business_date)
+      new(
+        type: :business_date,
+        store: store,
+        business_date: date,
+        label: "Business date #{I18n.l(date, format: :long)}"
+      )
+    end
+
+    def self.date_range_scope(store:, start_date:, end_date:)
+      return nil if start_date.blank? || end_date.blank?
+
+      start_date = Date.parse(start_date)
+      end_date = Date.parse(end_date)
+      return nil if end_date < start_date
+
+      new(
+        type: :date_range,
+        store: store,
+        start_date: start_date,
+        end_date: end_date,
+        label: "#{I18n.l(start_date, format: :long)} – #{I18n.l(end_date, format: :long)}"
+      )
     end
 
     def initialize(type:, store:, label:, register_session: nil, business_date: nil, start_date: nil, end_date: nil)

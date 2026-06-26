@@ -1,0 +1,53 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Cash Drawer Activity",
+             scope: @session ? "Session #{@session.workstation.name} · #{@session.business_date}" : nil,
+             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+
+  <%= render layout: "reports/shared/filter_bar", locals: { url: reports_cash_drawer_path } do %>
+    <div class="ss-field">
+      <%= label_tag :session_id, "Register session" %>
+      <%= select_tag :session_id,
+                     options_for_select(report_session_options(@sessions), params[:session_id] || params[:register_session_id] || @session&.id),
+                     include_blank: "Current session" %>
+    </div>
+  <% end %>
+
+  <% if @summary %>
+    <%= render "reports/shared/metric_strip", metrics: [
+      { label: "Opening cash", value: format_report_money(@summary.opening_cash_cents) },
+      { label: "Paid in", value: format_report_money(@summary.paid_in_cents) },
+      { label: "Paid out", value: format_report_money(@summary.paid_out_cents) },
+      { label: "Expected closing", value: format_report_money(@summary.expected_closing_cash_cents) }
+    ] %>
+
+    <div class="ss-report-body">
+      <% if @session %>
+        <p>
+          <%= link_to "Register summary", reports_register_summary_path(register_session_id: @session.id), class: "ss-link" %>
+          ·
+          <%= link_to "Sales summary", reports_sales_summary_path(filter_type: "register_session", register_session_id: @session.id), class: "ss-link" %>
+        </p>
+      <% end %>
+
+      <table class="ss-table ss-table--report">
+        <thead>
+          <tr><th>Opened</th><th>Business date</th><th>Status</th><th>Workstation</th><th class="ss-num ss-money">Expected close</th></tr>
+        </thead>
+        <tbody>
+          <% @sessions.each do |session| %>
+            <tr>
+              <td><%= link_to format_report_date(session.opened_at), reports_cash_drawer_path(session_id: session.id) %></td>
+              <td><%= session.business_date %></td>
+              <td><span class="ss-status-badge"><%= session.status %></span></td>
+              <td><%= session.workstation.name %></td>
+              <td class="ss-num ss-money"><%= format_report_money(session.expected_closing_cash_cents) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <%= render "reports/shared/empty_state", title: "No session selected", message: "Choose a register session to view cash drawer activity." %>
+  <% end %>
+</div>

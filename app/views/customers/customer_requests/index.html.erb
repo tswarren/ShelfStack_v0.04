@@ -8,6 +8,8 @@
 
 <%= render "customers/shared/queue_nav" %>
 
+<%= render "reports/shared/metric_strip", metrics: @report.metrics if @report.present? %>
+
 <%= form_with url: customers_customer_requests_path, method: :get, class: "ss-form" do %>
   <%= hidden_field_tag :queue, params[:queue] if params[:queue].present? %>
   <%= text_field_tag :q, params[:q], placeholder: "Search request, customer, phone, ISBN, title, SKU…" %>

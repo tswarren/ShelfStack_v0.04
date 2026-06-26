@@ -1,0 +1,35 @@
+<%# locals: url:, filter_type: nil, sessions: [] %>
+<% filter_type = local_assigns.fetch(:filter_type, params[:filter_type].presence || "register_session") %>
+<%= render layout: "reports/shared/filter_bar", locals: { url: url } do %>
+  <fieldset class="ss-filter-group">
+    <legend class="ss-visually-hidden">Filter type</legend>
+    <label>
+      <%= radio_button_tag :filter_type, "register_session", filter_type == "register_session" %>
+      Register session
+    </label>
+    <label>
+      <%= radio_button_tag :filter_type, "business_date", filter_type == "business_date" %>
+      Business date
+    </label>
+    <label>
+      <%= radio_button_tag :filter_type, "date_range", filter_type == "date_range" %>
+      Date range
+    </label>
+  </fieldset>
+
+  <div class="ss-field">
+    <%= label_tag :register_session_id, "Register session" %>
+    <%= select_tag :register_session_id,
+                   options_for_select(report_session_options(sessions), params[:register_session_id]),
+                   include_blank: "Select a session" %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :business_date, "Business date" %>
+    <%= date_field_tag :business_date, params[:business_date] || Date.current %>
+  </div>
+
+  <%= render "reports/shared/date_range",
+             start_value: params[:start_date],
+             end_value: params[:end_date] %>
+<% end %>

@@ -1,0 +1,39 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Returns List",
+             scope: "Recent return and exchange transactions",
+             actions: safe_join([
+               report_print_button,
+               render("reports/shared/export_action", url: reports_returns_path(format: :csv)),
+               link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")
+             ], " ") %>
+
+  <div class="ss-report-body">
+    <% if @transactions.any? %>
+      <table class="ss-table ss-table--report">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Completed</th>
+            <th>Type</th>
+            <th class="ss-num ss-money">Total</th>
+            <th>Cashier</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @transactions.each do |transaction| %>
+            <tr>
+              <td><%= transaction.transaction_number %></td>
+              <td><%= format_report_date(transaction.completed_at, basis: "completed_at") %></td>
+              <td><%= transaction.transaction_type %></td>
+              <td class="ss-num ss-money"><%= format_report_money(transaction.total_cents, signed: true) %></td>
+              <td><%= transaction.cashier_user.username %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <%= render "reports/shared/empty_state", title: "No returns found", message: "Completed return transactions will appear here." %>
+    <% end %>
+  </div>
+</div>

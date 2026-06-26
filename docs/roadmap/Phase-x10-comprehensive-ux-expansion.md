@@ -4,7 +4,7 @@
 
 This phase implements the broader ShelfStack UI/UX vision that was intentionally deferred from Phase 9a.
 
-Phase 9a establishes the report-facing UX and semantic foundation. Phase 9b implements operational reports. Phase 9c adds GL-shaped financial postings. This phase returns to the larger application experience: POS workflow modernization, item cockpit redesign, app-wide modal and drawer patterns, keyboard-first interaction standards, command shortcuts, progressive disclosure, and consistency across operational pages.
+Phase 9a establishes the report-facing UX and semantic foundation. Phase 9b implements operational reports (**complete**). Phase 9c (GL-shaped financial postings) is **deferred**; this phase is the next active roadmap priority after Phase 9b. It returns to the larger application experience: POS workflow modernization, item cockpit redesign, app-wide modal and drawer patterns, keyboard-first interaction standards, command shortcuts, progressive disclosure, and consistency across operational pages.
 
 The goal is to make ShelfStack feel like a cohesive, fast, operational bookstore system rather than a collection of Rails CRUD screens.
 
@@ -30,11 +30,11 @@ Phase 9b uses those standards to build and consolidate operational reports.
 
 ### Phase 9c — GL-Shaped Financial Posting Layer
 
-Phase 9c generates balanced financial postings from operational events and produces export-ready journal summaries for external accounting systems. Export and financial admin screens should use Phase 9a report patterns. See [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md).
+**Deferred.** Phase 9c would generate balanced financial postings from operational events and produce export-ready journal summaries for external accounting systems. Export and financial admin screens would use Phase 9a report patterns. See [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md).
 
 ### Phase 10 — Comprehensive UI/UX Expansion
 
-This phase completes the larger interaction vision:
+**Next** after Phase 9b. This phase completes the larger interaction vision:
 
 * POS transaction-first workspace
 * Full POS command and shortcut behavior

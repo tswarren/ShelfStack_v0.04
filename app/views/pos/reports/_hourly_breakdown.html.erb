@@ -16,7 +16,7 @@
       </thead>
       <tbody>
         <% rows.each do |row| %>
-          <%= render "metrics_row", label: row.label, metrics: row.metrics, emphasis: row.label == "Total" %>
+          <%= render "pos/reports/metrics_row", label: row.label, metrics: row.metrics, emphasis: row.label == "Total" %>
         <% end %>
       </tbody>
     </table>

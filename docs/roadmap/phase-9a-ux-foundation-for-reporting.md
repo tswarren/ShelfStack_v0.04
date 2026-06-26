@@ -2,6 +2,8 @@
 
 Part of [Phase 9 — Reporting and Accounting](phase-9-reporting-and-accounting.md).
 
+**Status:** Complete — see [phase-9a-completion.md](../implementation/phase-9a-completion.md). Superseded proof shells were replaced by live Phase 9b reports.
+
 ## Purpose
 
 Phase 9a prepares ShelfStack for operational and financial reporting by standardizing the report-facing user-interface patterns, formatting rules, and reporting semantics needed to build trustworthy reports.

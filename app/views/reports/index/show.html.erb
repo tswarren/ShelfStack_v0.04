@@ -1,0 +1,18 @@
+<h1>Reports</h1>
+<p class="ss-report-scope">Operational reports for <%= current_store.name %>.</p>
+
+<% @grouped_reports.each do |group, reports| %>
+  <section class="ss-section">
+    <h2><%= group %></h2>
+    <ul class="ss-link-list">
+      <% reports.each do |report| %>
+        <li>
+          <%= link_to report.name, public_send(report.path) %>
+          <% if report.description.present? %>
+            <span class="ss-inline-note"> — <%= report.description %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

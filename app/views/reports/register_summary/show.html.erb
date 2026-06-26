@@ -1,0 +1,51 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Register Summary",
+             scope: @report&.scope&.label,
+             actions: safe_join([report_print_button, (link_to "Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+
+  <%= render layout: "reports/shared/filter_bar", locals: { url: reports_register_summary_path } do %>
+    <div class="ss-field">
+      <%= label_tag :register_session_id, "Register session" %>
+      <%= select_tag :register_session_id,
+                     options_for_select(report_session_options(@sessions), params[:register_session_id] || current_register_session&.id),
+                     include_blank: "Select a session" %>
+    </div>
+  <% end %>
+
+  <% if @scope.blank? && params[:register_session_id].present? %>
+    <%= render "reports/shared/section_notice", message: "Choose a valid register session." %>
+  <% elsif @report %>
+    <% if @report %>
+      <p class="ss-inline-note"><%= report_register_summary_subtitle(@report) %></p>
+    <% end %>
+
+    <div class="report-grid">
+      <%= render "pos/reports/register_summary/revenue", revenue: @report.revenue %>
+      <%= render "pos/reports/register_summary/transaction_mix", rows: @report.transaction_mix %>
+      <%= render "pos/reports/register_summary/payments", rows: @report.payments %>
+    </div>
+
+    <div class="report-grid">
+      <%= render "pos/reports/register_summary/taxes", rows: @report.taxes %>
+      <%= render "pos/reports/register_summary/drawer", drawer: @report.drawer %>
+    </div>
+
+    <div class="ss-report-body">
+      <%= render "pos/reports/register_summary/breakdown",
+                 title: "By clerk",
+                 rows: @report.by_clerk,
+                 total_row: @report.breakdown_total %>
+
+      <%= render "pos/reports/register_summary/breakdown",
+                 title: "By hour",
+                 rows: @report.by_hour.reject { |row| row.label == "Total" },
+                 total_row: @report.breakdown_total,
+                 compact: true %>
+    </div>
+
+    <footer class="ss-section-notice">
+      <strong>Exceptions:</strong> <%= pos_report_exceptions_summary(@report.exceptions) %>
+    </footer>
+  <% end %>
+</div>

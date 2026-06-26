@@ -323,6 +323,10 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
   test "sales report exports csv" do
     create_and_complete_sale!
     get sales_pos_reports_path(format: :csv)
+    assert_response :redirect
+    assert_match %r{/reports/sales}, response.location
+    assert_match(/format=csv/, response.location)
+    follow_redirect!
     assert_response :success
     assert_match "transaction_number", response.body
   end

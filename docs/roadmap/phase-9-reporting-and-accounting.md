@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Phase 9 gives ShelfStack reliable operational visibility and accounting-grade financial data without turning ShelfStack into a full accounting system.
+Phase 9 gives ShelfStack reliable **operational** reporting for daily store work. Phases **9a** and **9b** are **complete**. Phase **9c** (accounting-grade financial postings and GL export) is **deferred**; see [Phase 10](Phase-x10-comprehensive-ux-expansion.md) for the next active priority.
 
-ShelfStack remains the operational system of record. External accounting software may remain the official general ledger. Phase 9 creates trustworthy reports for daily store work and a GL-shaped financial posting layer that produces export-ready journal summaries.
+ShelfStack remains the operational system of record. External accounting software may remain the official general ledger. When Phase 9c resumes, it would add a GL-shaped posting layer that produces export-ready journal summaries without replacing 9b operational reports on day one.
 
 ## Sub-Phases
 
@@ -12,7 +12,16 @@ ShelfStack remains the operational system of record. External accounting softwar
 | --------- | -------- | --- |
 | **9a** | [phase-9a-ux-foundation-for-reporting.md](phase-9a-ux-foundation-for-reporting.md) | Report-facing UI standards, formatting conventions, date/status semantics, and operational-vs-financial reporting rules |
 | **9b** | [phase-9b-reports.md](phase-9b-reports.md) | Consolidate and extend operational reports for daily management, reconciliation, inventory visibility, buybacks, stored value, and customer demand |
-| **9c** | [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md) | Generate balanced financial postings from operational events and produce export-ready financial summaries for external accounting systems |
+| **9c** | [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md) | Generate balanced financial postings from operational events and produce export-ready financial summaries for external accounting systems — **deferred** |
+
+## Status
+
+| Sub-phase | Status |
+| --------- | ------ |
+| **9a** | Complete — see [phase-9a-completion.md](../implementation/phase-9a-completion.md) |
+| **9b** | Complete — see [phase-9b-completion.md](../implementation/phase-9b-completion.md) |
+| **9c** | **Deferred** — design reference retained; not scheduled for immediate implementation |
+| **Next** | [Phase 10 — Comprehensive UI/UX Expansion](Phase-x10-comprehensive-ux-expansion.md) |
 
 ## Boundary with Phase 10
 
@@ -25,12 +34,13 @@ Report screens should remain compatible with Phase 10 component upgrades but are
 ## Recommended Sequence
 
 ```text
-9a  Foundations     UX contract, formatting, reporting semantics
-9b  Visibility      Operational reports (may ship before 9c is complete)
-9c  Financial layer Balanced postings, mappings, GL export readiness
+9a  Foundations     UX contract, formatting, reporting semantics          ✓ complete
+9b  Visibility      Operational reports                                   ✓ complete
+9c  Financial layer Balanced postings, mappings, GL export readiness      deferred
+10  UX expansion    POS workspace, modals/drawers, item cockpit           next
 ```
 
-9b reports may initially use operational tables, snapshots, and ledgers. Phase 9c adds accounting-grade postings; selected 9b reports may later gain financial tie-out sections. See [9c — Relationship to Phase 9b](phase-9c-gl-shaped-financial-layer.md#relationship-to-phase-9b).
+9b reports use operational tables, snapshots, and ledgers. Phase 9c would add accounting-grade postings and optional financial tie-out sections on selected 9b reports. That work is **deferred**; the [9c design document](phase-9c-gl-shaped-financial-layer.md) remains the reference when resumed. See [9c — Relationship to Phase 9b](phase-9c-gl-shaped-financial-layer.md#relationship-to-phase-9b).
 
 ## Operational vs Financial Reporting
 
@@ -40,7 +50,7 @@ Report screens should remain compatible with Phase 10 component upgrades but are
 | **Financial** | 9c | `financial_events`, `financial_entries`, `financial_entry_lines` | GL export, tax payable tie-out, liability postings |
 | **Hybrid** | 9b + 9c | Operational context + financial totals | Register summary, stored value activity with tie-out |
 
-Semantics for both layers are defined in Phase 9a. Phase 9c posting rules must follow those semantics.
+Semantics for both layers are defined in Phase 9a. Phase 9c posting rules must follow those semantics when that sub-phase is resumed.
 
 ## Reporting Dimensions
 
@@ -72,16 +82,22 @@ docs/roadmap.md
 
 ## Key Outcomes
 
-At the end of Phase 9:
+### Complete (9a and 9b)
 
 1. Reports use a shared view contract and consistent formatting.
 2. Operational reports reconcile against POS, inventory, buyback, and stored-value data.
-3. Financial postings are balanced, idempotent, traceable, and reversible.
-4. Export-ready journal summaries can be generated for external accounting software.
-5. The broader POS/items/modal/drawer UX vision remains deferred to Phase 10.
+3. Thirteen operational reports are available under `/reports` with permission-union navigation and legacy URL redirects.
+4. The broader POS/items/modal/drawer UX vision remains deferred to Phase 10.
+
+### Deferred (9c)
+
+1. Financial postings are balanced, idempotent, traceable, and reversible.
+2. Export-ready journal summaries can be generated for external accounting software.
+
+See [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md) for the retained design reference.
 
 ## Current Priority
 
-Phase 9 follows completion of Phase 8.5 operational cleanup (discounts, tax exceptions, order handling, item data quality). Implement in order: **9a → 9b → 9c**, with selective 9b delivery before 9c where operational value does not depend on financial postings.
+Phases 9a and 9b are **complete**. Phase 9c (GL-shaped financial layer) is **deferred**. The next planned roadmap phase is **Phase 10 — Comprehensive UI/UX Expansion**.
 
-Phase 9c design work may begin after 9a semantics are stable, but 9c posting implementation should not override or reinterpret 9b operational totals. Financial postings should tie out to operational reports rather than replace them on day one.
+Phase 9c design work may resume later without overriding 9b operational totals. Financial postings should tie out to operational reports rather than replace them on day one.

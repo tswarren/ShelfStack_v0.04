@@ -1,0 +1,3 @@
+<%# locals: url:, label: "Export CSV" %>
+<% label = local_assigns.fetch(:label, "Export CSV") %>
+<%= link_to label, url, class: "ss-btn ss-btn-secondary ss-report-no-print", data: { turbo: false } %>

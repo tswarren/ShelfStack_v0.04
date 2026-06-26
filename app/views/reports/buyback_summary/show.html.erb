@@ -1,0 +1,40 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Buyback Summary",
+             scope: report_store.name,
+             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+
+  <%= render layout: "reports/shared/filter_bar", locals: { url: reports_buyback_summary_path } do %>
+    <%= render "reports/shared/date_range", start_value: params[:start_date], end_value: params[:end_date] %>
+  <% end %>
+
+  <%= render "reports/shared/metric_strip", metrics: [
+    { label: "Sessions", value: @summary.session_count },
+    { label: "Completed", value: @summary.completed_count },
+    { label: "Cash paid", value: format_report_money(@summary.cash_paid_cents) },
+    { label: "Trade credit", value: format_report_money(@summary.trade_credit_issued_cents) }
+  ] %>
+
+  <div class="ss-report-body">
+    <table class="ss-table ss-table--report">
+      <thead>
+        <tr><th>Number</th><th>Status</th><th>Payout</th><th class="ss-num ss-money">Total</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        <% if @activity.any? %>
+          <% @activity.each do |session| %>
+            <tr>
+              <td><%= link_to session.buyback_number.presence || session.id, buybacks_session_path(session), class: "ss-link" %></td>
+              <td><span class="ss-status-badge"><%= session.status %></span></td>
+              <td><%= session.payout_mode %></td>
+              <td class="ss-num ss-money"><%= format_report_money(session.accepted_payout_cents) %></td>
+              <td><%= format_report_date(session.created_at, basis: "created_at") %></td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr class="ss-empty-row"><td colspan="5">No buyback activity for this date range.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
