@@ -35,4 +35,31 @@ class Purchasing::LineEconomicsCalculatorTest < ActiveSupport::TestCase
     assert_equal "manual", @line.price_source
     assert @line.manual_price_override
   end
+
+  test "syncs unit cost from list price and discount on apply" do
+    @line.assign_attributes(
+      unit_list_price_cents: 2000,
+      supplier_discount_bps: 4000,
+      unit_cost_cents: 2000,
+      manual_cost_override: false
+    )
+
+    Purchasing::LineEconomicsCalculator.apply!(@line)
+
+    assert_equal 1200, @line.unit_cost_cents
+    assert_equal "vendor_source", @line.cost_source
+  end
+
+  test "preserves manual unit cost override on apply" do
+    @line.assign_attributes(
+      unit_list_price_cents: 2000,
+      supplier_discount_bps: 4000,
+      unit_cost_cents: 1500,
+      manual_cost_override: true
+    )
+
+    Purchasing::LineEconomicsCalculator.apply!(@line)
+
+    assert_equal 1500, @line.unit_cost_cents
+  end
 end

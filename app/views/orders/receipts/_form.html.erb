@@ -1,3 +1,7 @@
+<% if local_assigns[:allocation_preview].present? && allocation_preview.pre_post_allocation_message.present? %>
+  <p class="ss-hint"><%= allocation_preview.pre_post_allocation_message %></p>
+<% end %>
+
 <h1><%= receipt.persisted? ? "Edit" : "New" %> Receipt</h1>
 
 <%= form_with model: receipt, url: (receipt.persisted? ? orders_receipt_path(receipt) : orders_receipts_path) do |f| %>

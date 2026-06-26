@@ -201,8 +201,10 @@ module Orders
     end
 
     def single_line_attrs
-      lines = params.dig(:purchase_request, :purchase_request_lines_attributes)&.values || []
-      lines.first&.symbolize_keys || {}
+      lines = purchase_request_params[:purchase_request_lines_attributes]
+      return {} if lines.blank?
+
+      lines.values.first.to_h.symbolize_keys
     end
 
     def purchase_request_notes

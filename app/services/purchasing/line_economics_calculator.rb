@@ -44,7 +44,8 @@ module Purchasing
     def call
       attrs = base_attributes
       apply_vendor_recalc!(attrs) if recalculate_from_vendor
-      apply_field_change!(attrs)
+      apply_field_change!(attrs) if changed_field.present?
+      sync_cost_from_pricing!(attrs) unless attrs[:manual_cost_override] || changed_field == "unit_cost_cents"
       apply_totals!(attrs)
       Result.new(**attrs)
     end
@@ -120,6 +121,16 @@ module Purchasing
         unit_list_price_cents: attrs[:unit_list_price_cents],
         unit_cost_cents: attrs[:unit_cost_cents]
       )
+    end
+
+    def sync_cost_from_pricing!(attrs)
+      return if attrs[:unit_list_price_cents].blank?
+
+      attrs[:unit_cost_cents] = VendorCostCalculator.unit_cost_cents(
+        unit_list_price_cents: attrs[:unit_list_price_cents],
+        supplier_discount_bps: attrs[:supplier_discount_bps]
+      )
+      attrs[:cost_source] = "vendor_source" unless attrs[:manual_cost_override]
     end
 
     def apply_totals!(attrs)

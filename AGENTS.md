@@ -194,6 +194,7 @@ docs/specifications/phase-8.5-3a-test-plan.md
 docs/specifications/phase-8.5-3b-tbo-simplification-spec.md
 docs/specifications/phase-8.5-3c-receiving-visibility-spec.md
 docs/implementation/phase-8.5-3a-completion.md
+docs/implementation/phase-8.5-3c-completion.md
 ```
 
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
@@ -297,7 +298,7 @@ Branch `phase-8.5-3-order-readiness` extends Phase 5/7A ordering paths. See [doc
 
 - **8.5-3a:** preferred vendor, `orderable`, extended `SuggestedVendorResolver`, `OrderEligibilityResolver`, `LineEconomicsCalculator`, submit gate, operational warnings
 - **8.5-3b:** single-line TBO via `PurchaseRequests::CreateSingleLine`; PO eligibility on `from_tbo`
-- **8.5-3c:** receipt allocation visibility (projected vs actual); no FIFO behavior change
+- **8.5-3c:** receipt allocation visibility (projected vs actual, PO allocation context); no FIFO behavior change — see [phase-8.5-3c-completion.md](docs/implementation/phase-8.5-3c-completion.md)
 - Do **not** introduce `PurchaseDemand` or merge TBO-backed PO lines with customer allocations
 
 ---

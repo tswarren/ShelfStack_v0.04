@@ -64,6 +64,8 @@ export default class extends Controller {
     this.reconcileAcceptedDisplay()
     this.updateInventoryWarnings()
     this.renderCustomerReservedWarning()
+    this.recalculatePricingFromListAndDiscount()
+    this.updateExpectedMargin()
   }
 
   disconnect() {
@@ -216,24 +218,24 @@ export default class extends Controller {
   }
 
   applyPricingDefaults(match) {
-    if (this.hasListPriceTarget && !this.listPriceTarget.value && match.unit_list_price_cents != null) {
-      this.listPriceTarget.value = match.unit_list_price_cents
+    if (match.unit_list_price_cents != null) {
+      this.setFieldValue("listPrice", match.unit_list_price_cents)
     }
-    if (this.hasDiscountBpsTarget && !this.discountBpsTarget.value && match.supplier_discount_bps != null) {
-      this.discountBpsTarget.value = match.supplier_discount_bps
+    if (match.supplier_discount_bps != null) {
+      this.setFieldValue("discountBps", match.supplier_discount_bps)
     }
-    if (this.hasUnitCostTarget && !this.unitCostTarget.value) {
-      const cost = this.contextValue === "rtv"
-        ? (match.moving_average_unit_cost_cents ?? match.unit_cost_cents)
-        : match.unit_cost_cents
-      if (cost != null) this.unitCostTarget.value = cost
+    if (this.contextValue === "rtv" && !this.fieldValue("unitCost")) {
+      const cost = match.moving_average_unit_cost_cents ?? match.unit_cost_cents
+      if (cost != null) this.setFieldValue("unitCost", cost)
     }
+    this.setManualCostOverride(false)
     if (this.hasCreditAmountTarget && !this.creditAmountTarget.value && match.unit_cost_cents != null) {
       const qty = parseInt(this.quantityInput()?.value, 10) || 1
       this.creditAmountTarget.value = match.unit_cost_cents * qty
     }
 
     this.recalculatePricingFromListAndDiscount()
+    this.updateExpectedMargin()
     this.syncCreditFromCostAndQuantity()
   }
 
@@ -321,6 +323,7 @@ export default class extends Controller {
     this.reconcileAcceptedDisplay()
     this.syncCreditFromCostAndQuantity()
     this.updateInventoryWarnings()
+    this.updateExpectedMargin()
     this.dispatchRecalculate()
   }
 
@@ -403,19 +406,28 @@ export default class extends Controller {
     if (this.pricingRecalcLock) return
 
     const field = event.target
-    const list = parseIntField(this.listPriceTarget?.value)
-    const discount = parseIntField(this.discountBpsTarget?.value)
-    const cost = parseIntField(this.unitCostTarget?.value)
+    const listField = this.field("listPrice")
+    const discountField = this.field("discountBps")
+    const costField = this.field("unitCost")
+    const list = parseIntField(listField?.value)
+    const discount = parseIntField(discountField?.value)
+    const cost = parseIntField(costField?.value)
 
     this.pricingRecalcLock = true
-    if (field === this.listPriceTarget || field === this.discountBpsTarget) {
-      if (list != null && this.hasUnitCostTarget) {
+    if (field === listField || field === discountField) {
+      this.setManualCostOverride(false)
+      if (list != null && costField) {
         const calculated = unitCostCents(list, discount ?? 0)
-        this.unitCostTarget.value = calculated ?? ""
+        costField.value = calculated ?? ""
       }
-    } else if (field === this.unitCostTarget && list > 0 && cost != null && this.hasDiscountBpsTarget) {
+      this.updateExpectedMargin()
+    } else if (field === costField && list > 0 && cost != null && discountField) {
+      this.setManualCostOverride(true)
       const calculated = discountBpsFromCost(list, cost)
-      if (calculated != null) this.discountBpsTarget.value = calculated
+      if (calculated != null) discountField.value = calculated
+      this.updateExpectedMargin()
+    } else if (field === this.field("expectedRetail")) {
+      this.updateExpectedMargin()
     }
     this.pricingRecalcLock = false
 
@@ -432,22 +444,74 @@ export default class extends Controller {
   }
 
   recalculatePricingFromListAndDiscount() {
-    if (!this.hasListPriceTarget || !this.hasUnitCostTarget) return
+    const listField = this.field("listPrice")
+    const costField = this.field("unitCost")
+    if (!listField || !costField || this.manualCostOverride()) return
 
-    const list = parseIntField(this.listPriceTarget.value)
+    const list = parseIntField(listField.value)
     if (list == null) return
 
-    const discount = parseIntField(this.discountBpsTarget?.value) ?? 0
+    const discount = parseIntField(this.field("discountBps")?.value) ?? 0
     this.pricingRecalcLock = true
     const calculated = unitCostCents(list, discount)
-    if (calculated != null) this.unitCostTarget.value = calculated
+    if (calculated != null) costField.value = calculated
     this.pricingRecalcLock = false
   }
 
-  syncCreditFromCostAndQuantity() {
-    if (!this.hasCreditAmountTarget || !this.hasUnitCostTarget) return
+  updateExpectedMargin() {
+    const marginField = this.field("expectedMargin")
+    if (!marginField) return
 
-    const cost = parseIntField(this.unitCostTarget.value)
+    const retail = parseIntField(this.field("expectedRetail")?.value)
+    const cost = parseIntField(this.field("unitCost")?.value)
+    const qty = parseIntField(this.quantityInput()?.value) ?? 1
+
+    if (retail == null || cost == null) {
+      marginField.textContent = "—"
+      return
+    }
+
+    const lineRetail = retail * qty
+    const lineCost = cost * qty
+    const margin = lineRetail - lineCost
+    const marginBps = lineRetail > 0 ? Math.round((margin / lineRetail) * 10_000) : 0
+    marginField.textContent = `${margin} (${(marginBps / 100).toFixed(2)}%)`
+  }
+
+  detailRow() {
+    const row = this.element.nextElementSibling
+    return row?.hasAttribute("data-purchasing-line-row-details") ? row : null
+  }
+
+  field(name) {
+    return (
+      this.element.querySelector(`[data-purchasing-line-row-target="${name}"]`) ||
+      this.detailRow()?.querySelector(`[data-purchasing-line-row-target="${name}"]`)
+    )
+  }
+
+  fieldValue(name) {
+    return this.field(name)?.value
+  }
+
+  setFieldValue(name, value) {
+    const element = this.field(name)
+    if (element) element.value = value ?? ""
+  }
+
+  manualCostOverride() {
+    return this.field("manualCostOverride")?.value === "true"
+  }
+
+  setManualCostOverride(value) {
+    const element = this.field("manualCostOverride")
+    if (element) element.value = value ? "true" : "false"
+  }
+
+  syncCreditFromCostAndQuantity() {
+    if (!this.hasCreditAmountTarget) return
+
+    const cost = parseIntField(this.field("unitCost")?.value)
     const qty = parseIntField(this.quantityInput()?.value) ?? 1
     if (cost == null) return
 

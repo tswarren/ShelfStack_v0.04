@@ -118,6 +118,24 @@ module Orders
       end
     end
 
+    def show_po_allocations?
+      po_allocation_rows.any?
+    end
+
+    def po_allocation_rows
+      receipt.receipt_lines.flat_map do |line|
+        next [] if line.purchase_order_line.blank?
+
+        po_allocation_details(line.purchase_order_line).map do |detail|
+          detail.merge(
+            receipt_line_number: line.line_number,
+            po_line_number: line.purchase_order_line.line_number,
+            variant: line.product_variant
+          )
+        end
+      end
+    end
+
     def show_allocation_summary?
       allocation_summary_rows.any? { |row| row[:customer_quantity].positive? || row[:po_allocations].any? }
     end
@@ -127,6 +145,10 @@ module Orders
     attr_reader :receipt, :document_hub
 
     def posted_customer_allocation_rows
+      @posted_customer_allocation_rows ||= compute_posted_customer_allocation_rows
+    end
+
+    def compute_posted_customer_allocation_rows
       receipt.receipt_lines.flat_map do |line|
         line.receipt_line_allocations.map do |allocation|
           request = allocation.customer_request_line&.customer_request
@@ -145,6 +167,10 @@ module Orders
     end
 
     def projected_allocation_rows
+      @projected_allocation_rows ||= compute_projected_allocation_rows
+    end
+
+    def compute_projected_allocation_rows
       receipt.receipt_lines.flat_map do |line|
         po_line = line.purchase_order_line
         next [] if po_line.blank?

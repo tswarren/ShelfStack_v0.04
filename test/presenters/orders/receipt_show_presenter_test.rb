@@ -8,6 +8,7 @@ class Orders::ReceiptShowPresenterTest < ActiveSupport::TestCase
   setup do
     Seeds::Phase7aPermissions.seed!
     seed_phase3_reference_data!
+    seed_phase4_reference_data!
     @store = create_store!
     @user = create_user!
     @vendor = create_vendor!
@@ -82,5 +83,29 @@ class Orders::ReceiptShowPresenterTest < ActiveSupport::TestCase
     presenter = Orders::ReceiptShowPresenter.new(receipt: @receipt.reload, document_hub: @document_hub)
 
     assert_equal "Actual stock quantity", presenter.stock_quantity_label
+  end
+
+  test "posted receipt shows actual customer allocations after post" do
+    Current.store = @store
+    Purchasing::PostReceipt.call(receipt: @receipt, posted_by_user: @user)
+    document_hub = Purchasing::ReceiptDocumentHub.call(@receipt.reload)
+    presenter = Orders::ReceiptShowPresenter.new(receipt: @receipt, document_hub: document_hub)
+
+    assert_equal "Actual stock quantity", presenter.stock_quantity_label
+    assert presenter.customer_allocation_rows.any?
+    assert_equal "actual", presenter.customer_allocation_rows.first[:state]
+    assert_equal 1, presenter.allocation_summary_rows.first[:customer_quantity]
+    assert_equal 1, presenter.allocation_summary_rows.first[:stock_quantity]
+    assert_nil presenter.pre_post_allocation_message
+  end
+
+  test "po allocation rows expose allocated received and remaining" do
+    presenter = Orders::ReceiptShowPresenter.new(receipt: @receipt, document_hub: @document_hub)
+
+    row = presenter.po_allocation_rows.first
+    assert_equal 1, row[:quantity_allocated]
+    assert_equal 0, row[:quantity_received]
+    assert_equal 1, row[:quantity_remaining]
+    assert_equal @customer.display_name, row[:customer_name]
   end
 end

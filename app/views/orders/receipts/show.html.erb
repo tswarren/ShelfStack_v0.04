@@ -148,6 +148,37 @@
   <% end %>
 <% end %>
 
+<% if presenter.show_po_allocations? %>
+  <%= render "orders/shared/collapsible_panel", title: "PO special order allocations" do %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Receipt line</th>
+          <th>PO line</th>
+          <th>Item</th>
+          <th>Customer</th>
+          <th class="ss-num">Allocated</th>
+          <th class="ss-num">Received</th>
+          <th class="ss-num">Remaining</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% presenter.po_allocation_rows.each do |row| %>
+          <tr>
+            <td><%= row[:receipt_line_number] %></td>
+            <td>#<%= row[:po_line_number] %></td>
+            <td><%= render "orders/shared/variant_identity", variant: row[:variant] %></td>
+            <td><%= row[:customer_name] || "—" %></td>
+            <td class="ss-num"><%= row[:quantity_allocated] %></td>
+            <td class="ss-num"><%= row[:quantity_received] %></td>
+            <td class="ss-num"><%= row[:quantity_remaining] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+<% end %>
+
 <% if presenter.show_allocation_summary? %>
   <%= render "orders/shared/collapsible_panel", title: "Allocation summary" do %>
     <table class="ss-table">

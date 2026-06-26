@@ -6,12 +6,15 @@
     data-purchasing-line-row-vendor-field-id-value="<%= vendor_field_id %>"
     data-purchasing-line-row-quantity-field-value="<%= quantity_field %>"
     data-purchasing-line-row-require-eligible-value="false"
+    data-purchasing-line-row-refresh-on-vendor-change-value="true"
     data-blank-row="<%= blank_row ? "true" : "false" %>"
     <% if variant %>
     data-purchasing-line-row-initial-sku-value="<%= variant.sku %>"
     data-purchasing-line-row-initial-variant-id-value="<%= variant.id %>"
     <% end %>>
   <%= line_form.hidden_field :id if line_form.object.persisted? %>
+  <%= line_form.hidden_field :manual_cost_override, value: line_form.object.manual_cost_override?,
+        data: { purchasing_line_row_target: "manualCostOverride" } %>
   <%= line_form.hidden_field :_destroy, value: false, data: { purchasing_line_table_target: "destroy" } %>
 
   <%= render "orders/shared/scan_lookup_cell", line_form: line_form, variant: variant %>
