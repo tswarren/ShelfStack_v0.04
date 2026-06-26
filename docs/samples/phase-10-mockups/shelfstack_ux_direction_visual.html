@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ShelfStack UX Direction & View Contracts</title>
+  <style>
+    :root {
+      --base-100: #f5f3ef;
+      --base-150: #ebe6dd;
+      --base-200: #d8d0c0;
+      --base-300: #c4b8a1;
+      --ink: #111827;
+      --muted: #5c5347;
+      --primary: #0e4a4a;
+      --primary-soft: rgba(14, 74, 74, 0.10);
+      --secondary: #5a1e4a;
+      --secondary-soft: rgba(90, 30, 74, 0.10);
+      --gold: #d08a00;
+      --gold-soft: rgba(208, 138, 0, 0.14);
+      --white: #ffffff;
+      --radius-sm: .45rem;
+      --radius-md: .75rem;
+      --radius-lg: 1.15rem;
+      --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.08);
+      --shadow-md: 0 8px 24px rgba(17, 24, 39, 0.10);
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(14, 74, 74, .10), transparent 34rem),
+        radial-gradient(circle at top right, rgba(90, 30, 74, .12), transparent 30rem),
+        var(--base-100);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .site-header {
+      background: rgba(245, 243, 239, 0.88);
+      border-bottom: 1px solid var(--base-300);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .header-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: .8rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: .55rem;
+      background: var(--primary);
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow-sm);
+      flex: 0 0 auto;
+    }
+
+    .brand-bars {
+      width: 1.2rem;
+      display: grid;
+      gap: .16rem;
+      transform: skewY(-12deg);
+    }
+
+    .brand-bars span {
+      display: block;
+      height: .24rem;
+      border-radius: 99px;
+    }
+
+    .brand-bars span:nth-child(1) { background: #1b9a8a; }
+    .brand-bars span:nth-child(2) { background: #7d2f68; }
+    .brand-bars span:nth-child(3) { background: #d08a00; }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: .1rem 0 0;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--base-300);
+      border-radius: 999px;
+      padding: .3rem .65rem;
+      background: var(--white);
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    main {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 1.25rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(18rem, .65fr);
+      gap: 1rem;
+      align-items: stretch;
+      margin: 1rem 0 1.5rem;
+    }
+
+    .hero-card,
+    .panel,
+    .contract-card,
+    .principle-card {
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-card {
+      padding: 1.5rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      right: -3rem;
+      bottom: -4rem;
+      width: 15rem;
+      height: 15rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-soft), var(--secondary-soft), var(--gold-soft));
+      opacity: .75;
+    }
+
+    .eyebrow {
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: .76rem;
+      font-weight: 800;
+      margin: 0 0 .4rem;
+    }
+
+    h2, h3 { color: var(--ink); }
+    h2 { font-size: 1.25rem; margin: 0 0 .8rem; }
+    h3 { font-size: 1rem; margin: 0 0 .55rem; }
+
+    .hero h2 {
+      font-size: clamp(1.8rem, 3.5vw, 3.1rem);
+      line-height: 1.05;
+      margin: 0;
+      max-width: 14ch;
+    }
+
+    .hero-summary {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 60ch;
+      margin: 1rem 0 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .north-star {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .7rem;
+    }
+
+    .north-star-row {
+      border: 1px solid var(--base-200);
+      background: var(--base-100);
+      border-radius: var(--radius-md);
+      padding: .75rem;
+    }
+
+    .north-star-row strong {
+      display: block;
+      color: var(--primary);
+      margin-bottom: .15rem;
+    }
+
+    .north-star-row span {
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .section { margin: 1.6rem 0; }
+
+    .section-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .8rem;
+    }
+
+    .section-header p {
+      margin: .15rem 0 0;
+      color: var(--muted);
+      max-width: 70ch;
+      font-size: .92rem;
+    }
+
+    .grid { display: grid; gap: .85rem; }
+    .grid.principles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .principle-card {
+      padding: 1rem;
+      min-height: 9rem;
+    }
+
+    .icon {
+      width: 2.2rem;
+      height: 2.2rem;
+      display: grid;
+      place-items: center;
+      border-radius: .7rem;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 900;
+      margin-bottom: .7rem;
+    }
+
+    .principle-card p,
+    .contract-card p,
+    .panel p {
+      color: var(--muted);
+      margin: .3rem 0 0;
+      font-size: .9rem;
+    }
+
+    .contract-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .85rem;
+    }
+
+    .contract-card {
+      padding: .95rem;
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+      min-height: 12rem;
+    }
+
+    .contract-card .type {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+    }
+
+    .mini-mark {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: .55rem;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-size: .9rem;
+      font-weight: 800;
+      background: var(--primary);
+      flex: 0 0 auto;
+    }
+
+    .mini-mark.secondary { background: var(--secondary); }
+    .mini-mark.gold { background: var(--gold); color: #2a1d00; }
+
+    .contract-card h3 { margin: 0; }
+
+    .contract-meta {
+      margin-top: auto;
+      padding-top: .65rem;
+      border-top: 1px solid var(--base-200);
+      display: grid;
+      gap: .3rem;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .contract-meta b { color: var(--ink); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: .5rem;
+      align-items: stretch;
+    }
+
+    .flow-step {
+      background: var(--white);
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius-md);
+      padding: .8rem;
+      position: relative;
+      min-height: 7rem;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -.48rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--white);
+      display: grid;
+      place-items: center;
+      font-size: .68rem;
+      z-index: 2;
+    }
+
+    .flow-step span {
+      color: var(--primary);
+      font-weight: 800;
+      font-size: .75rem;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: .9rem;
+    }
+
+    .panel { padding: 1rem; }
+
+    .message-grid,
+    .focus-grid {
+      display: grid;
+      gap: .5rem;
+    }
+
+    .message-row,
+    .focus-row {
+      display: grid;
+      grid-template-columns: 10rem minmax(0, 1fr);
+      gap: .75rem;
+      padding: .55rem .65rem;
+      border: 1px solid var(--base-200);
+      border-radius: var(--radius-sm);
+      background: var(--base-100);
+      font-size: .88rem;
+    }
+
+    .message-row b,
+    .focus-row b { color: var(--primary); }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .8rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: .25rem .55rem;
+      border-radius: 999px;
+      border: 1px solid var(--base-300);
+      background: var(--base-100);
+      font-size: .78rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .badge.primary {
+      background: var(--primary-soft);
+      border-color: rgba(14, 74, 74, .25);
+      color: var(--primary);
+    }
+
+    .badge.secondary {
+      background: var(--secondary-soft);
+      border-color: rgba(90, 30, 74, .22);
+      color: var(--secondary);
+    }
+
+    .badge.gold {
+      background: var(--gold-soft);
+      border-color: rgba(208, 138, 0, .28);
+      color: #7a5200;
+    }
+
+    .item-wireframe {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 17rem;
+      gap: .9rem;
+    }
+
+    .mock-page {
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      padding: .9rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .mock-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 7rem;
+      gap: .8rem;
+      margin-bottom: .8rem;
+    }
+
+    .mock-title {
+      height: 1.45rem;
+      width: 72%;
+      background: var(--ink);
+      border-radius: .25rem;
+      margin-bottom: .45rem;
+    }
+
+    .mock-subtitle {
+      height: .7rem;
+      width: 46%;
+      background: var(--base-300);
+      border-radius: .25rem;
+      margin-bottom: .75rem;
+    }
+
+    .mock-line {
+      height: .55rem;
+      width: 100%;
+      background: var(--base-200);
+      border-radius: .25rem;
+      margin: .35rem 0;
+    }
+
+    .mock-line.short { width: 62%; }
+
+    .mock-cover {
+      height: 10rem;
+      border-radius: .65rem;
+      background:
+        linear-gradient(145deg, rgba(14,74,74,.95), rgba(90,30,74,.85)),
+        var(--primary);
+      border: 1px solid var(--base-300);
+      display: grid;
+      place-items: center;
+    }
+
+    .mock-cover .brand-bars { width: 2.2rem; gap: .25rem; }
+    .mock-cover .brand-bars span { height: .4rem; }
+
+    .attention {
+      border: 1px solid rgba(255, 170, 0, .45);
+      background: rgba(255, 170, 0, .08);
+      border-radius: .7rem;
+      padding: .65rem;
+      margin-bottom: .8rem;
+      color: #7a5200;
+      font-size: .86rem;
+      font-weight: 650;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .5rem;
+      margin-bottom: .8rem;
+    }
+
+    .metric {
+      border: 1px solid var(--base-200);
+      background: var(--base-100);
+      border-radius: .65rem;
+      padding: .65rem;
+    }
+
+    .metric small {
+      color: var(--muted);
+      display: block;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-weight: 800;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: .2rem;
+      color: var(--ink);
+      font-size: .95rem;
+    }
+
+    .mock-table {
+      border: 1px solid var(--base-200);
+      border-radius: .7rem;
+      overflow: hidden;
+    }
+
+    .mock-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: .55rem;
+      padding: .55rem;
+      border-bottom: 1px solid var(--base-200);
+      font-size: .78rem;
+    }
+
+    .mock-row:first-child {
+      background: var(--base-150);
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .mock-row:last-child { border-bottom: 0; }
+
+    .sidebar-stack {
+      display: grid;
+      gap: .65rem;
+    }
+
+    .side-card {
+      border: 1px solid var(--base-200);
+      border-radius: .75rem;
+      padding: .7rem;
+      background: var(--base-100);
+      min-height: 5rem;
+    }
+
+    .checklist {
+      columns: 2;
+      column-gap: 1.5rem;
+      padding-left: 1.2rem;
+      margin: .4rem 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .checklist li { break-inside: avoid; margin-bottom: .35rem; }
+
+    .framework {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: .9rem;
+    }
+
+    .decision-card {
+      padding: 1rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--base-300);
+      background: linear-gradient(135deg, var(--primary-soft), rgba(255,255,255,.82));
+    }
+
+    footer {
+      max-width: var(--max);
+      margin: 2rem auto 0;
+      padding: 1.25rem;
+      color: var(--muted);
+      font-size: .82rem;
+      border-top: 1px solid var(--base-300);
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .two-col,
+      .framework,
+      .item-wireframe {
+        grid-template-columns: 1fr;
+      }
+
+      .contract-grid,
+      .grid.principles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-step:not(:last-child)::after {
+        content: "↓";
+        right: 50%;
+        top: auto;
+        bottom: -.48rem;
+        transform: translateX(50%);
+      }
+    }
+
+    @media (max-width: 640px) {
+      main, .header-inner, footer { padding-left: .8rem; padding-right: .8rem; }
+      .contract-grid,
+      .grid.principles,
+      .metrics,
+      .mock-top {
+        grid-template-columns: 1fr;
+      }
+
+      .message-row,
+      .focus-row {
+        grid-template-columns: 1fr;
+      }
+
+      .checklist { columns: 1; }
+    }
+
+    @media print {
+      .site-header { position: static; }
+      body { background: white; }
+      .hero-card, .panel, .contract-card, .principle-card, .mock-page { box-shadow: none; }
+      .section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <div class="brand-bars"><span></span><span></span><span></span></div>
+        </div>
+        <div>
+          <h1>ShelfStack UX Direction</h1>
+          <p>View contracts and interaction standards</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="pill">Operational</span>
+        <span class="pill">Keyboard-first</span>
+        <span class="pill">Progressive disclosure</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <article class="hero-card">
+        <p class="eyebrow">Target experience</p>
+        <h2>Fast, calm, predictable bookstore operations.</h2>
+        <p class="hero-summary">
+          ShelfStack should organize complex catalog, product, inventory, order, and POS records into task-centered screens that answer what staff need to know now and what they should do next.
+        </p>
+        <div class="badge-row">
+          <span class="badge primary">Summary first</span>
+          <span class="badge secondary">Details on demand</span>
+          <span class="badge gold">Brand-aware, not noisy</span>
+          <span class="badge">Dense, not cramped</span>
+        </div>
+      </article>
+
+      <aside class="north-star">
+        <div class="north-star-row">
+          <strong>Primary rule</strong>
+          <span>One most likely next action should be visually obvious.</span>
+        </div>
+        <div class="north-star-row">
+          <strong>Context rule</strong>
+          <span>Keep users in the current workflow; use modals, drawers, and Turbo updates for bounded edits.</span>
+        </div>
+        <div class="north-star-row">
+          <strong>Information rule</strong>
+          <span>Summarize related records before exposing full detail.</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Design principles</p>
+          <h2>How screens should behave</h2>
+          <p>These principles keep the interface operational rather than decorative and prevent every control from looking equally important.</p>
+        </div>
+      </div>
+
+      <div class="grid principles">
+        <article class="principle-card">
+          <div class="icon">1</div>
+          <h3>One primary action</h3>
+          <p>Each screen or section should make the next likely action clear. Secondary actions remain visible but quieter.</p>
+        </article>
+        <article class="principle-card">
+          <div class="icon">≠</div>
+          <h3>Not everything is a button</h3>
+          <p>Filters, tabs, status badges, row actions, and destructive controls need distinct treatments.</p>
+        </article>
+        <article class="principle-card">
+          <div class="icon">⌘</div>
+          <h3>Keyboard-friendly</h3>
+          <p>Focus, Enter, Escape, scan fields, and post-save behavior are intentional, not browser-default accidents.</p>
+        </article>
+        <article class="principle-card">
+          <div class="icon">↺</div>
+          <h3>Preserve context</h3>
+          <p>Use focused editors and partial updates so staff do not lose their place in a workflow.</p>
+        </article>
+        <article class="principle-card">
+          <div class="icon">▤</div>
+          <h3>Summarize first</h3>
+          <p>Availability, setup completeness, demand, and related records should be summarized before detail tables dominate.</p>
+        </article>
+        <article class="principle-card">
+          <div class="icon">◎</div>
+          <h3>Calm hierarchy</h3>
+          <p>Spacing, cards, typography, and restrained brand color should reduce overwhelm.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Core view contracts</p>
+          <h2>Each page type has a defined job</h2>
+          <p>A screen should be easy to classify. Once the view type is known, structure, focus, primary action, and feedback behavior should be predictable.</p>
+        </div>
+      </div>
+
+      <div class="contract-grid">
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark">⌕</div><h3>Index / Search</h3></div>
+          <p>Find records, narrow a queue, or start a new task.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Search field</span><span><b>Primary:</b> Search / Add</span></div>
+        </article>
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark secondary">i</div><h3>Detail / Overview</h3></div>
+          <p>Explain the record and what can be done now.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Usually none</span><span><b>Primary:</b> Continue / Edit</span></div>
+        </article>
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark gold">I</div><h3>Item Overview</h3></div>
+          <p>Unify catalog, product, SKU, inventory, orders, and demand as one item.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Item search/action</span><span><b>Primary:</b> Sell / Receive / Order</span></div>
+        </article>
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark">✎</div><h3>Form / Edit</h3></div>
+          <p>Change one record or coherent setup area.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Invalid field</span><span><b>Primary:</b> Save</span></div>
+        </article>
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark secondary">→</div><h3>Workflow</h3></div>
+          <p>Guide staff through a multi-step operational task.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Current step input</span><span><b>Primary:</b> Continue / Complete</span></div>
+        </article>
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark gold">$</div><h3>POS / Register</h3></div>
+          <p>Prioritize scan focus, cashier speed, tender clarity, and safe completion.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Scan field</span><span><b>Primary:</b> Settle / Complete</span></div>
+        </article>
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark">▥</div><h3>Report</h3></div>
+          <p>Review, filter, print, export, and understand operational results.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Filter if needed</span><span><b>Primary:</b> Run / Print / Export</span></div>
+        </article>
+        <article class="contract-card">
+          <div class="type"><div class="mini-mark secondary">⚙</div><h3>Setup List</h3></div>
+          <p>Maintain configuration records with denser but consistent controls.</p>
+          <div class="contract-meta"><span><b>First focus:</b> Search or Add</span><span><b>Primary:</b> Add</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Item overview cockpit</p>
+          <h2>Make the layered model feel like one item</h2>
+          <p>The item overview should answer: what is this, is it usable, what stock exists, and what staff can do next?</p>
+        </div>
+      </div>
+
+      <div class="item-wireframe">
+        <div class="mock-page" aria-label="Item overview wireframe">
+          <div class="mock-top">
+            <div>
+              <div class="mock-title"></div>
+              <div class="mock-subtitle"></div>
+              <div class="mock-line"></div>
+              <div class="mock-line short"></div>
+            </div>
+            <div class="mock-cover">
+              <div class="brand-bars"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+
+          <div class="attention">Attention panel: only actionable or persistent issues.</div>
+
+          <div class="metrics">
+            <div class="metric"><small>Sellable</small><strong>Ready</strong></div>
+            <div class="metric"><small>Available</small><strong>12</strong></div>
+            <div class="metric"><small>On order</small><strong>4</strong></div>
+            <div class="metric"><small>Demand</small><strong>2 TBO</strong></div>
+          </div>
+
+          <div class="mock-table">
+            <div class="mock-row"><span>Variant</span><span>Price</span><span>Stock</span><span>Status</span></div>
+            <div class="mock-row"><span>Trade paperback</span><span>$18.99</span><span>8</span><span>Ready</span></div>
+            <div class="mock-row"><span>Used copy</span><span>$8.50</span><span>4</span><span>Ready</span></div>
+            <div class="mock-row"><span>Hardcover</span><span>$29.99</span><span>0</span><span>Orderable</span></div>
+          </div>
+        </div>
+
+        <aside class="sidebar-stack">
+          <div class="side-card">
+            <h3>Recommended tabs</h3>
+            <div class="badge-row">
+              <span class="badge primary">Overview</span>
+              <span class="badge">Availability</span>
+              <span class="badge">Selling & SKUs</span>
+              <span class="badge">Orders & Demand</span>
+              <span class="badge">Catalog Details</span>
+              <span class="badge">Activity</span>
+            </div>
+          </div>
+          <div class="side-card">
+            <h3>UX rules</h3>
+            <p>Use drawers or expanded rows for variant detail. Summarize sales, receiving, and audit history so they do not dominate the page.</p>
+          </div>
+          <div class="side-card">
+            <h3>Important distinction</h3>
+            <p>Vendor-source warnings should apply only to vendor-orderable variants. Used and buyback variants should not be treated as incomplete because they lack vendor sources.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Workflow behavior</p>
+          <h2>Operational tasks should have a stable rhythm</h2>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-step">
+          <span>01</span>
+          <h3>Context</h3>
+          <p>Show task, record, status, and exit path.</p>
+        </div>
+        <div class="flow-step">
+          <span>02</span>
+          <h3>Current step</h3>
+          <p>Make the active input and next decision obvious.</p>
+        </div>
+        <div class="flow-step">
+          <span>03</span>
+          <h3>Line entry</h3>
+          <p>Scan/search/add rows quickly without losing focus.</p>
+        </div>
+        <div class="flow-step">
+          <span>04</span>
+          <h3>Summary</h3>
+          <p>Keep totals, readiness, and context visible.</p>
+        </div>
+        <div class="flow-step">
+          <span>05</span>
+          <h3>Complete</h3>
+          <p>Show blockers in the workflow panel before completion.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section two-col">
+      <div class="panel">
+        <p class="eyebrow">Feedback contract</p>
+        <h2>Messages belong where users can act on them</h2>
+        <div class="message-grid">
+          <div class="message-row"><b>Global flash</b><span>Page-level redirect results.</span></div>
+          <div class="message-row"><b>Toast</b><span>Minor, non-blocking confirmations.</span></div>
+          <div class="message-row"><b>Attention panel</b><span>Persistent record or workflow issues.</span></div>
+          <div class="message-row"><b>Workflow alert</b><span>Blocking task state inside the workflow.</span></div>
+          <div class="message-row"><b>Field error</b><span>Validation problem directly under the field.</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="eyebrow">Keyboard and focus contract</p>
+        <h2>Focus should be deliberate</h2>
+        <div class="focus-grid">
+          <div class="focus-row"><b>Index</b><span>Focus search when useful.</span></div>
+          <div class="focus-row"><b>POS</b><span>Focus scan field by default.</span></div>
+          <div class="focus-row"><b>Form error</b><span>Focus the first invalid field.</span></div>
+          <div class="focus-row"><b>Turbo add</b><span>Return focus to add or scan field.</span></div>
+          <div class="focus-row"><b>Modal close</b><span>Restore focus to the opener.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section framework">
+      <div class="decision-card">
+        <p class="eyebrow">Framework decision rule</p>
+        <h2>Choose tools only after the UX contract is agreed</h2>
+        <p>
+          RubyUI, DaisyUI, or custom ss-* components should be evaluated against the desired ShelfStack feel, Rails/Turbo/Stimulus fit, keyboard support, brand consistency, and incremental adoption.
+        </p>
+        <div class="badge-row">
+          <span class="badge primary">Rails-friendly</span>
+          <span class="badge secondary">Brand-compatible</span>
+          <span class="badge gold">Keyboard-ready</span>
+          <span class="badge">Incremental</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Standardized screen checklist</h2>
+        <ul class="checklist">
+          <li>Defined view type</li>
+          <li>Clear primary action</li>
+          <li>Distinct secondary/destructive actions</li>
+          <li>Standard field styling</li>
+          <li>Predictable button placement</li>
+          <li>Status badges not styled as buttons</li>
+          <li>Human-readable money/percent inputs</li>
+          <li>Validation near fields</li>
+          <li>Intentional keyboard focus</li>
+          <li>Turbo preserves focus</li>
+          <li>Summaries before details</li>
+          <li>Advanced details disclosed progressively</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Standalone visualization of the ShelfStack UX Direction and View Contracts. This page uses embedded CSS and no external dependencies.
+  </footer>
+</body>
+</html>

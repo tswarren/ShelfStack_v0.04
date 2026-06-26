@@ -365,12 +365,26 @@ See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-g
 
 ## Phase 10: Comprehensive UI/UX Expansion — **Next**
 
-See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). POS workspace modernization, modal/drawer patterns, item cockpit, and keyboard-first interaction standards.
+**Current priority:** Phase 10-A (interaction infrastructure).
+
+See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). Delivery order: 10-A → 10-B (items) → 10-C (POS) → 10-D → 10-E. Phase 10 is complete when all sub-phases are done.
 
 ## Phase 10 Documents
 
 ```text
 docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
+docs/roadmap/phase-10a-interaction-infrastructure.md
+docs/roadmap/phase-10b-item-cockpit-completion.md
+docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/specifications/phase-10a-interaction-infrastructure-spec.md
+docs/specifications/phase-10b-item-cockpit-spec.md
+docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
+docs/specifications/ui-components.md
+docs/specifications/view-contracts.md
+docs/specifications/keyboard-and-focus.md
+docs/specifications/modal-and-drawer-patterns.md
+docs/specifications/pos-keyboard-workspace.md
+docs/samples/phase-10-mockups/
 ```
 
 ---

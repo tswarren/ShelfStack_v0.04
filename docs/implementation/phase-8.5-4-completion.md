@@ -49,6 +49,7 @@
 
 ## Known gaps (deferred)
 
-- Full `/items` UX revamp and Add Item wizard redesign (future phase)
+- Item cockpit completion (setup modals, operations drawer): [Phase 10-B](../roadmap/phase-10b-item-cockpit-completion.md)
+- Add Item wizard redesign (future phase)
 - Variant-level image overrides
-- Phase 9 reporting/analytics consumers of drill-down contract
+- Item command language (future phase)

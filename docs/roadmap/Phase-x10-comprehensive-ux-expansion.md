@@ -51,6 +51,34 @@ This phase should not block reports.
 
 ---
 
+## Sub-Phases
+
+Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are all done** (separate PRs; not one merge).
+
+| Sub-phase | Document | Job | Depends on | Status |
+| --------- | -------- | --- | ---------- | ------ |
+| **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | Planned |
+| **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | Planned |
+| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A | Planned |
+| **10-D** | This document (Workstreams 4–6) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | Planned |
+| **10-E** | This document (below) | Consistency sweep, accessibility, report regression | All | Planned |
+
+**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. First implementation slice: **10-A**, then **10-B**.
+
+**Note:** Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match delivery order (10-B = items, 10-C = POS).
+
+### Visual Mockups
+
+Static HTML mockups in [docs/samples/phase-10-mockups/](../samples/phase-10-mockups/) are **draft inspiration only** — map patterns to `ss-*` in `shelfstack.css`, do not copy mockup CSS. See [README](../samples/phase-10-mockups/README.md).
+
+| Mockup | Sub-phase |
+| ------ | --------- |
+| [shelfstack_ux_direction_visual.html](../samples/phase-10-mockups/shelfstack_ux_direction_visual.html) | Parent, 10-A (view contracts) |
+| [shelfstack_items_mockups.html](../samples/phase-10-mockups/shelfstack_items_mockups.html) | 10-B |
+| [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html) | 10-C |
+
+---
+
 # Problem Statement
 
 ShelfStack has strong domain coverage, but the interface currently feels uneven because related workflows use different layout, action, field, message, and interaction patterns.
@@ -109,7 +137,7 @@ This phase should:
 
 1. Implement the broader ShelfStack UI/UX vision beyond reporting.
 2. Make POS a keyboard-first transaction workspace.
-3. Redesign `/items` around an item cockpit, operations drawers, and setup modals.
+3. Complete `/items` cockpit gaps (operations drawer, setup modals) on Phase 8.5-4 foundation.
 4. Standardize modals, drawers, expanded rows, and inline editors.
 5. Extend keyboard/focus rules across operational workflows.
 6. Reduce button-heavy screens by distinguishing actions, filters, tabs, badges, and utilities.
@@ -141,194 +169,40 @@ This phase does not include:
 
 # Major Workstreams
 
-## Workstream 1 — Interaction System and Component Completion
+## Workstream 1 — Interaction System (Phase 10-A)
 
-### Purpose
+Extend Phase 9a into shared modal, drawer, toast, expanded-row, focus, and Turbo conventions.
 
-Extend the Phase 9a UI foundation into a full application interaction system.
+**Full spec:** [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md)
 
-### Scope
+Summary taxonomy:
 
-Standardize and implement:
+* **Modal** — bounded tasks (`ss-modal*`)
+* **Drawer** — detail without losing page context (`ss-drawer*`)
+* **Toast** — minor confirmations only (`ss-toast*`)
+* **Expanded row** — inline line edits (`ss-expand-row*`, `ss-row-detail*`)
 
-```text
-Modal system
-Drawer system
-Toast system
-Expanded row pattern
-Inline edit pattern
-Lookup/search component
-Command field pattern
-Shortcut strip
-Focus restoration helper
-Keyboard event scoping
-Turbo Frame/Stream target conventions
-```
-
-### Required Components
-
-#### Modal
-
-Classes/patterns:
-
-```text
-ss-modal
-ss-modal-overlay
-ss-modal-dialog
-ss-modal-dialog--sm
-ss-modal-dialog--md
-ss-modal-dialog--lg
-ss-modal-dialog--pos
-ss-modal-header
-ss-modal-title
-ss-modal-body
-ss-modal-footer
-ss-modal-toolbar
-ss-modal-close
-```
-
-Behavior:
-
-* Trap focus while open.
-* Focus first meaningful control.
-* Escape closes only when safe.
-* Validation errors remain inside modal.
-* Successful save updates affected panels via Turbo.
-* Closing restores focus to opener.
-* Background scroll is prevented.
-* Modals are used only for bounded tasks.
-
-Good uses:
-
-* Add identifier
-* Edit price
-* Customer lookup
-* Supervisor authorization
-* Gift card activation
-* Stored value balance inquiry
-* Tax exemption
-* Cash drawer action
-* Confirm void/remove/delete
-
-Avoid using modals for:
-
-* Full receiving workflow
-* Full purchase order creation
-* Full buyback intake
-* Full catalog editing
-* Complex multi-section setup
-
-#### Drawer
-
-Classes/patterns:
-
-```text
-ss-drawer
-ss-drawer-overlay
-ss-drawer-panel
-ss-drawer-panel--right
-ss-drawer-header
-ss-drawer-title
-ss-drawer-body
-ss-drawer-footer
-```
-
-Behavior:
-
-* Preserve the current page state.
-* Restore focus to opener on close.
-* Support read-only detail and light editing.
-* Include link to full record when deeper work is needed.
-* Do not replace full workflows.
-
-Good uses:
-
-* Item/variant detail
-* Customer detail
-* Session summary
-* Transaction history
-* Receipt/source detail
-* Purchase order line detail
-* Inventory movements
-* Stored value account detail
-* Customer demand detail
-
-#### Toast
-
-Classes/patterns:
-
-```text
-ss-toast-region
-ss-toast
-ss-toast--success
-ss-toast--info
-ss-toast--warning
-ss-toast--error
-```
-
-Behavior:
-
-* Use for minor, non-blocking confirmations.
-* Do not use for blockers.
-* Do not use for field validation.
-* Do not use for transaction safety warnings.
-
-Good uses:
-
-* Price updated
-* Note added
-* Line saved
-* Copied SKU
-* Filter saved
-
-Bad uses:
-
-* Cannot complete sale
-* Tax validation failed
-* Tender insufficient
-* Supervisor approval required
-* Inventory posting failed
-
-#### Expanded Row
-
-Classes/patterns:
-
-```text
-ss-expand-row
-ss-expand-row--active
-ss-row-detail
-ss-row-detail__header
-ss-row-detail__body
-ss-row-detail__footer
-```
-
-Uses:
-
-* POS line editing
-* Receipt line detail
-* Purchase order line detail
-* Inventory adjustment line detail
-* Customer request line detail
-* Buyback line detail
-
-Behavior:
-
-* Expanded detail remains visually attached to the parent row.
-* Save/cancel are local.
-* Destructive actions are separated.
-* After save, collapse and restore focus predictably.
+Pilot migration: item customer demand drawer → shared drawer shell.
 
 ---
 
-## Workstream 2 — POS Keyboard-First Transaction Workspace
+## Workstream 2 — Item Cockpit Completion (Phase 10-B)
 
-### Purpose
+Complete `/items` on Phase 8.5-4 foundation — not a greenfield redesign.
 
-Make POS feel like a fast register workspace rather than a dashboard or form-heavy admin area.
+**Full spec:** [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md)
 
-### Direction
+Core gaps: setup modals (identifier, price, vendor source, tax), operations summary table + demand drawer, behavior-aware warnings. Preserve [drill-down contract](../handoff/phase-9-item-drill-down-contract.md). Item commands deferred.
 
-The guiding model:
+---
+
+## Workstream 3 — POS Keyboard-First Workspace (Phase 10-C)
+
+Refine existing POS into a transaction-first register workspace.
+
+**Full spec:** [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md)
+
+Guiding model:
 
 ```text
 Command field is home base.
@@ -340,421 +214,13 @@ Readiness appears where completion happens.
 Function keys and commands make common actions fast.
 ```
 
-## Scope
-
-### 2.1 POS Landing Behavior
-
-Implement transaction-first routing when a register session is open.
-
-Recommended behavior:
-
-| Condition                                         | Behavior                                                |
-| ------------------------------------------------- | ------------------------------------------------------- |
-| Register session open and one active draft exists | Redirect to active draft transaction                    |
-| Register session open and no draft exists         | Create new sale transaction and redirect to edit screen |
-| Register session open and multiple drafts exist   | Show compact draft/held sale selector                   |
-| No register session open                          | Show focused open-register workflow                     |
-| No POS permission                                 | Show permission-aware POS screen                        |
-
-The goal:
-
-```text
-When the register is open, POS should open directly to the active selling workspace.
-```
-
-### 2.2 POS Transaction Layout
-
-Standard structure:
-
-```text
-Top context bar
-  Store
-  Register/workstation
-  Cashier
-  Session status
-  Utility menu
-
-Command field
-  Scan/search/command input
-  Main focus target
-
-Mode controls
-  Sale
-  Return
-  Pickup
-  Open ring
-
-Cart/work area
-  Transaction lines
-  Quantity controls
-  More/Edit action
-  Inline modification rows
-
-Sidebar
-  Totals
-  Discounts/tax adjustments
-  Readiness
-  Settlement action
-
-Modal layer
-  Settlement
-  Customer lookup
-  Gift card activation
-  Stored value inquiry
-  Supervisor authorization
-  Tax exemption
-  Cash drawer action
-
-Shortcut strip
-  Function keys
-  Command help
-```
-
-### 2.3 Command Field
-
-The command field should support:
-
-* SKU
-* ISBN
-* Barcode
-* Receipt number
-* Gift card/store credit identifier
-* `/command`
-* Amount-like input where context allows
-
-Initial command ideas:
-
-```text
-/customer
-/openring
-/discount
-/taxexempt
-/giftcard
-/balance
-/return
-/pickup
-/cash 20
-/card
-/check
-/storecredit
-/hold
-/session
-/cashdrop
-/cashin
-/cashout
-/close
-/reports
-/help
-```
-
-### 2.4 Command Registry
-
-Create a centralized command registry.
-
-Each command defines:
-
-```text
-Name
-Aliases
-Description
-Permission requirement
-Valid session states
-Valid transaction states
-Target behavior
-  - route
-  - modal
-  - drawer
-  - inline panel
-  - transaction mutation
-Focus target after completion
-Unavailable/error message
-```
-
-Commands should not be scattered through conditional JavaScript.
-
-### 2.5 Function Keys
-
-Initial shortcut set:
-
-| Key | Action                      |
-| --- | --------------------------- |
-| F2  | Customer lookup             |
-| F3  | Open ring                   |
-| F4  | Discount                    |
-| F7  | Cash drawer / cash movement |
-| F8  | Settlement                  |
-| F9  | Print last receipt          |
-| F10 | Lock register               |
-
-Avoid relying on function keys that frequently conflict with browsers or operating systems unless testing confirms reliability.
-
-### 2.6 POS Focus Rules
-
-Required behavior:
-
-| Situation                  | Expected behavior                                    |
-| -------------------------- | ---------------------------------------------------- |
-| Transaction page loads     | Focus command field                                  |
-| Item added successfully    | Return focus to command field                        |
-| Lookup selected            | Add/select result, then return focus                 |
-| Modal closes               | Restore focus to opener or command field             |
-| Drawer closes              | Restore focus to opener or command field             |
-| Invalid command            | Keep focus in command field and show inline guidance |
-| Transaction completes      | New transaction opens with command field focused     |
-| Esc with modal/drawer open | Close modal/drawer if safe                           |
-| Esc with command text      | Clear command field                                  |
-| Enter in command field     | Route command/add item/lookup                        |
-
-### 2.7 Cart and Line Editing
-
-Use inline expanded rows for bounded line edits.
-
-Line edit should support:
-
-* Quantity
-* Unit price where editable
-* Line discount
-* Existing discount removal
-* Tax override
-* Return disposition
-* Line note
-* Remove line
-
-Rules:
-
-* The edited line remains visible.
-* Edit panel is visually scoped to the line.
-* Save and Cancel are local.
-* Destructive actions are separated.
-* After save, collapse and return focus to command field or row.
-* Routine success does not show a large alert.
-
-### 2.8 Settlement Modal
-
-Settlement remains a modal.
-
-It should show:
-
-```text
-Settlement title
-Transaction/customer/register context
-Remaining balance
-Change due
-Tender rows
-Add tender buttons
-Secondary actions
-Final complete action
-Readiness blockers
-```
-
-Rules:
-
-* F8 opens settlement.
-* First focus goes to likely tender field.
-* `/cash 20` opens settlement and preloads cash tender.
-* Change due updates live.
-* Completion disabled until readiness passes.
-* Blocking issues appear inside/near settlement.
-* After completion, a new transaction opens with command field focused.
-
-### 2.9 POS Session and Utility Access
-
-Move secondary POS tasks out of the main landing path.
-
-Access through:
-
-* Utility menu
-* Session drawer
-* Commands
-* Dedicated full-page workflows where appropriate
-
-Session status should open session summary drawer.
-
-Commands:
-
-```text
-/session
-/close
-/cashdrop
-/cashin
-/cashout
-/reports
-```
+Key decisions: landing routes to transaction when session open; no auto-resume for held sales; `/reports` confirms before navigate when draft exists; function keys F2–F4, F7–F10 (avoid F1/F5/F6/F11/F12).
 
 ---
 
-## Workstream 3 — Item Cockpit and Operations UX
+## Workstream 4 — Customer Request UX Rework (Phase 10-D)
 
-### Purpose
-
-Make `/items` feel like a unified item workspace rather than a database relationship viewer.
-
-The item page should answer:
-
-```text
-What is this?
-Can we sell it?
-Do we have it?
-Can we order it?
-Who is waiting for it?
-What needs attention?
-What should staff do next?
-```
-
-### Scope
-
-### 3.1 Item Overview Cockpit
-
-Recommended overview structure:
-
-```text
-Item hero
-  Title
-  Subtitle
-  Contributors
-  Primary identifier
-  Format/type
-  Cover/image
-  Lifecycle/sellable status
-
-Attention panel
-  Only actionable or persistent issues
-
-Summary cards
-  Sellable status
-  Availability
-  Orders & demand
-  Catalog/setup completeness
-
-Sellable SKU summary
-  Compact variant table
-  Price
-  Tracking
-  On hand
-  Available
-  On order
-  Last received
-  Warnings
-
-Open activity summary
-  TBO
-  PO lines
-  Holds
-  Customer requests
-  Recent receiving
-
-Sidebar
-  Quick actions
-  Subjects/categories
-  Description
-  Related command hints
-```
-
-The overview should be a cockpit, not a full data dump.
-
-### 3.2 Recommended Tabs
-
-Use or migrate toward:
-
-```text
-Overview
-Availability
-Selling & SKUs
-Orders & Demand
-Catalog Details
-Activity
-```
-
-If existing tab names remain temporarily, they should still follow these jobs.
-
-### 3.3 Item Operations Tab
-
-Use a summary table plus drawer pattern.
-
-Operations tab should summarize:
-
-* Variant availability
-* Reserved quantity
-* On hand
-* On order
-* Ready for pickup
-* Open TBO
-* Pending PO
-* Preferred vendor
-* Vendor source status
-* Customer demand
-* Recent receiving
-* RTV activity
-
-Drawer detail candidates:
-
-* Variant demand
-* Customer requests
-* Open POs
-* Receiving history
-* Inventory movements
-* Vendor source details
-* Buyback/source history
-
-### 3.4 Item Setup Modals
-
-Use modals for bounded setup edits.
-
-Good modal candidates:
-
-* Add identifier
-* Edit identifier
-* Add variant
-* Edit price
-* Edit tax category
-* Add vendor source
-* Edit display location
-* Edit status
-* Add note
-
-Use full pages for:
-
-* Full catalog metadata editing
-* Complex product setup
-* Complex vendor/pricing setup
-* Bulk variant creation
-
-### 3.5 Used/Bulk/Behavior-Aware UX
-
-Item screens should adapt to behavior profiles.
-
-Rules:
-
-* Vendor-source warnings apply only to vendor-orderable variants.
-* Used/buyback variants should not be marked incomplete because they lack vendor source records.
-* Non-inventory items should not show inventory-specific warnings.
-* Gift card/stored-value items should not look like ordinary merchandise SKUs.
-* Café/service items should expose relevant POS/reporting setup, not bibliographic detail.
-
-### 3.6 Item Commands
-
-Possible future item command examples:
-
-```text
-/tbo
-/vendor
-/hold
-/receive
-/po
-/price
-/tag
-/history
-```
-
-Commands should follow the same registry/scoping rules as POS if implemented.
-
----
-
-## Workstream 4 — Customer Request UX Rework
-
-### Purpose
-
-Make customer request screens easier to navigate and less button-heavy.
+**Priority within 10-D:** Customer requests first.
 
 ### Problems to Solve
 
@@ -841,11 +307,9 @@ Rules:
 
 ---
 
-## Workstream 5 — Purchasing, Receiving, and Build PO UX
+## Workstream 5 — Purchasing, Receiving, and Build PO UX (Phase 10-D)
 
-### Purpose
-
-Make purchasing workflows feel like operational tasks rather than raw form/table screens.
+**Scope limit:** Line-entry UX patterns reusing 10-A expanded row. No full TBO wizard redesign in initial 10-D.
 
 ### Scope
 
@@ -913,11 +377,9 @@ Rules:
 
 ---
 
-## Workstream 6 — Buyback UX Expansion
+## Workstream 6 — Buyback UX Expansion (Phase 10-D)
 
-### Purpose
-
-Align buyback pages with the same workflow, metric, and message standards.
+**Scope limit:** Header, metric, and table layout alignment only. Buyback session workflow was refined in Phase 7C-1 — do not re-refine.
 
 ### Scope
 
@@ -958,144 +420,26 @@ Rules:
 
 ---
 
-## Workstream 7 — Global Keyboard, Focus, and Command Standards
+## Workstream 7 — Global Keyboard, Focus, and Turbo Standards (Phase 10-A)
 
-### Purpose
-
-Make keyboard behavior deliberate across ShelfStack.
-
-### Scope
-
-Define global rules:
-
-| Situation             | Behavior                                                    |
-| --------------------- | ----------------------------------------------------------- |
-| Index/search page     | Focus search field when useful                              |
-| POS transaction       | Focus command/scan field                                    |
-| Form validation error | Focus first invalid field                                   |
-| Workflow line add     | Return focus to add/scan field                              |
-| Lookup selection      | Focus next required field                                   |
-| Modal opens           | Focus first meaningful control                              |
-| Modal closes          | Restore focus to opener                                     |
-| Drawer closes         | Restore focus to opener                                     |
-| Escape                | Close modal/drawer where safe; otherwise clear scoped field |
-| Enter in scan/search  | Submit lookup/add line                                      |
-| Enter in textarea     | Insert newline                                              |
-
-Implement shared Stimulus helpers where appropriate:
-
-```text
-focus_controller
-modal_controller
-drawer_controller
-keyboard_scope_controller
-command_controller
-lookup_controller
-line_entry_controller
-toast_controller
-```
-
-Shortcuts must be scoped. Keyboard speed should not reduce transaction safety.
+Keyboard/focus rules and Turbo target conventions are specified in [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) and [keyboard-and-focus.md](../specifications/keyboard-and-focus.md).
 
 ---
 
-## Workstream 8 — Turbo and Stimulus Interaction Standards
+## Workstream 8 — (merged into 10-A)
 
-### Purpose
-
-Move from one-off Turbo/Stimulus behavior to shared interaction contracts.
-
-### Scope
-
-Standard Turbo targets:
-
-```text
-flash
-toast_region
-modal
-drawer
-workflow_status
-workflow_lines
-workflow_summary
-lookup_results
-item_attention
-variant_table
-pos_cart
-pos_totals
-pos_readiness
-```
-
-Standard Turbo update patterns:
-
-* Replace changed row
-* Replace summary/totals panel
-* Replace readiness/attention panel
-* Append toast
-* Close modal
-* Close drawer
-* Restore focus
-* Re-render validation errors in place
-
-Rules:
-
-* Server remains source of truth.
-* Stimulus handles focus, formatting, keyboard, previews, and UI state.
-* Stimulus should not own tax, pricing, inventory, or permission logic.
-* Turbo validation errors stay in the frame/modal/workflow where the user is working.
+Turbo/Stimulus interaction standards are part of Phase 10-A. Server remains source of truth; Stimulus handles focus, keyboard, and UI state only.
 
 ---
 
-# Suggested Implementation Order
-
-## Phase 10-A — Interaction Infrastructure
+# Delivery Order
 
 ```text
-1. Modal shell and controller
-2. Drawer shell and controller
-3. Toast region and component
-4. Focus restoration helper
-5. Keyboard scope helper
-6. Expanded row pattern
-7. Turbo target conventions
-```
-
-## Phase 10-B — POS Workspace
-
-```text
-1. POS transaction-first landing behavior
-2. POS context bar
-3. Command field focus and behavior
-4. Shortcut strip
-5. Cart line edit redesign
-6. Settlement modal standardization
-7. POS readiness/message placement
-8. Session drawer
-9. Function keys
-10. Command registry
-```
-
-## Phase 10-C — Items Cockpit
-
-```text
-1. Overview cockpit cleanup
-2. Summary cards and attention panel refinement
-3. Sellable SKU table simplification
-4. Operations tab summary table
-5. Variant/demand drawer
-6. Setup modals for bounded edits
-7. Behavior-aware warnings
-8. Item command ideas if approved
-```
-
-## Phase 10-D — Workflow Pages
-
-```text
-1. Customer requests index/detail
-2. Build PO from TBO
-3. Purchase order line UX
-4. Receiving line UX
-5. Buyback index and session workflow
-6. Inventory adjustment line UX
+10-A  Interaction infrastructure     → phase-10a-interaction-infrastructure.md
+10-B  Item cockpit completion       → phase-10b-item-cockpit-completion.md
+10-C  POS keyboard workspace        → phase-10c-pos-keyboard-workspace.md
+10-D  Workflow polish               → Workstreams 4–6 (customer requests first)
+10-E  Consistency sweep             → below
 ```
 
 ## Phase 10-E — Polish and Consistency Sweep
@@ -1108,35 +452,55 @@ Rules:
 5. Normalize row actions
 6. Verify keyboard/focus behavior
 7. Verify responsive behavior
-8. Verify print/report compatibility
+8. Verify print/report compatibility (Phase 9b regression)
+9. Accessibility: focus rings, contrast, screen-reader labels
+10. Touch targets ~44px on POS expanded row and settlement actions
 ```
 
 ---
 
 # Acceptance Criteria
 
-This phase is complete when:
+Phase 10 is complete when all sub-phases meet their criteria.
 
-* POS opens into the correct register workspace state when a session is open.
-* POS command field is the primary focus target.
-* POS line edits use a polished expanded-row pattern.
-* POS settlement uses the standardized modal system.
-* POS readiness blockers appear where the user can act on them.
-* POS supports documented keyboard/focus behavior.
-* POS command registry or approved subset is implemented.
-* `/items` overview behaves like a cockpit, not a data dump.
-* `/items` operations use summary tables plus drawer detail.
-* `/items` setup uses modals for bounded edits.
-* Used/buyback variants do not show inappropriate vendor-source warnings.
-* Customer request index is no longer button-heavy.
-* Customer request detail separates record summary, current action, line detail, customer contact, and audit/history.
-* Build PO from TBO feels like a guided workflow, not raw controls.
-* Purchase order and receiving fields use standard money/percent/quantity controls.
-* Buyback index uses consistent header, metric, and table layout.
-* App-wide modal, drawer, toast, expanded-row, and focus patterns are documented and reusable.
-* Keyboard/focus behavior is intentional for major workflows.
-* Routine confirmations no longer appear as disruptive full-page alerts.
-* No new page-specific UI pattern is introduced without being added to the shared UI/component standard.
+## Phase 10-A
+
+* Shared modal, drawer, toast, expanded-row components documented and reusable
+* Focus trap and focus restoration implemented
+* Turbo target conventions documented
+* Pilot: item demand drawer on shared shell
+* View contracts documented
+
+## Phase 10-B
+
+* Setup modals for bounded item edits
+* Operations summary table + demand drawer
+* Drill-down contract preserved
+* No inappropriate vendor warnings on used/buyback variants
+
+## Phase 10-C
+
+* POS landing routes to transaction workspace when session open
+* Command field primary focus; keyboard/focus acceptance criteria met
+* Expanded-row line edits; settlement on shared modal
+* Readiness blockers actionable near completion
+* Command registry (or approved subset) with permissions
+* `/reports` confirms before navigate when draft exists
+
+## Phase 10-D
+
+* Customer request index no longer button-heavy
+* Customer request detail separates summary, action, lines, contact, audit
+* PO/receiving line fields use standard money/percent/quantity controls
+* Buyback index uses consistent header, metric, and table layout
+
+## Phase 10-E
+
+* Keyboard/focus intentional across major workflows
+* Routine confirmations not disruptive full-page alerts
+* No new page-specific UI without shared component standard
+* Phase 9b report screens pass smoke/regression after shared CSS changes
+* Accessibility improvements where shared components touch reports
 
 ---
 
@@ -1189,6 +553,18 @@ Changing shared components can affect many screens. Migrate incrementally and ke
 
 A keyboard-first interface is faster but may require visible hints and gradual adoption. Mouse-friendly controls should remain available.
 
+## Sub-Phase Renumbering
+
+Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match delivery order.
+
+## POS Landing Regression
+
+Auto-create draft and auto-continue affect multi-cashier stores. Mitigate with draft picker, cashier-scoped drafts, and held-sale separation.
+
+## Items Before POS
+
+10-B proves 10-A modals/drawers on lower-risk surfaces before POS modal-heavy work in 10-C.
+
 ---
 
 # Developer Notes
@@ -1205,16 +581,19 @@ Recommended implementation approach:
 * Document each reusable component as it is introduced.
 * Preserve old class aliases temporarily where needed to reduce migration risk.
 
-## Suggested Documentation
-
-Create or update:
+## Documentation
 
 ```text
-docs/specifications/phase-tbd-comprehensive-ui-ux-expansion.md
+docs/roadmap/phase-10a-interaction-infrastructure.md
+docs/roadmap/phase-10b-item-cockpit-completion.md
+docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/specifications/phase-10a-interaction-infrastructure-spec.md
+docs/specifications/phase-10b-item-cockpit-spec.md
+docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
 docs/specifications/ui-components.md
 docs/specifications/view-contracts.md
 docs/specifications/keyboard-and-focus.md
 docs/specifications/modal-and-drawer-patterns.md
 docs/specifications/pos-keyboard-workspace.md
-docs/specifications/item-cockpit.md
+docs/samples/phase-10-mockups/README.md
 ```

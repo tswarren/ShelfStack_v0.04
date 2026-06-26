@@ -32,7 +32,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **In review** (branch merge pending). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
 | Phase 9 | Reporting and Accounting        | Report UX foundation (9a) and operational reports (9b) **complete**. GL-shaped financial postings and export (9c) **deferred**; see Phase 10. |
-| Phase 10 | Comprehensive UI/UX Expansion  | POS workspace, modals/drawers, item cockpit, keyboard-first interaction — **next** after Phase 9b. |
+| Phase 10 | Comprehensive UI/UX Expansion  | Interaction infra (10-A), item cockpit (10-B), POS workspace (10-C), workflow polish (10-D), consistency sweep (10-E) — **next** after Phase 9b. |
 
 Later phases may be split or reordered as implementation details become clearer.
 
@@ -559,13 +559,38 @@ Operational reports (9b) use POS and ledger sources. Financial reports and GL ex
 
 Phase 9a and 9b are complete. Phase 9c is deferred. **Phase 10** is the next active roadmap phase.
 
+### Phase 10 sub-phases
+
+Delivery order: **10-A → 10-B → 10-C → 10-D → 10-E**. Phase 10 is complete when all sub-phases are done.
+
+| Sub-phase | Document |
+| --------- | -------- |
+| 10-A Interaction infrastructure | [phase-10a-interaction-infrastructure.md](roadmap/phase-10a-interaction-infrastructure.md) |
+| 10-B Item cockpit completion | [phase-10b-item-cockpit-completion.md](roadmap/phase-10b-item-cockpit-completion.md) |
+| 10-C POS keyboard workspace | [phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) |
+| 10-D / 10-E | [Phase-x10-comprehensive-ux-expansion.md](roadmap/Phase-x10-comprehensive-ux-expansion.md) |
+
+Visual mockups: [docs/samples/phase-10-mockups/](samples/phase-10-mockups/)
+
 ## Detailed Documents
+
+Phase 9:
 
 ```text
 docs/roadmap/phase-9-reporting-and-accounting.md
 docs/roadmap/phase-9a-ux-foundation-for-reporting.md
 docs/roadmap/phase-9b-reports.md
 docs/roadmap/phase-9c-gl-shaped-financial-layer.md
+```
+
+Phase 10:
+
+```text
+docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
+docs/roadmap/phase-10a-interaction-infrastructure.md
+docs/roadmap/phase-10b-item-cockpit-completion.md
+docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/samples/phase-10-mockups/
 ```
 
 ## Major Risks
@@ -609,10 +634,10 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 Phases 1–8, 7A, 7B, 7C, Phase 9a, and Phase 9b are complete. See implementation records under `docs/implementation/`.
 
 ```text
-Phase 9a ✓ → Phase 9b ✓ → Phase 9c deferred → Phase 10 UX expansion (next)
+Phase 9a ✓ → Phase 9b ✓ → Phase 9c deferred → Phase 10-A → 10-B → 10-C → 10-D → 10-E (next)
 ```
 
-**Active work:** Phase 10 — comprehensive UI/UX expansion. Phase 9c GL-shaped financial layer remains documented but deferred.
+**Active work:** Phase 10-A — interaction infrastructure (first slice). Phase 9c GL-shaped financial layer remains documented but deferred.
 
 Implementation records:
 
