@@ -103,11 +103,14 @@
                 <th>Preferred vendor</th>
                 <th>Source</th>
                 <% if overview.inventory_visible? %>
+                  <th class="ss-num">On hand</th>
                   <th class="ss-num">Available</th>
                   <th class="ss-num">On order</th>
                   <th>Last received</th>
                 <% end %>
                 <th>Last sold</th>
+                <th>Returnability</th>
+                <th class="ss-num">Expected cost</th>
                 <th>Warnings</th>
               </tr>
             </thead>
@@ -124,6 +127,7 @@
                   <td><%= snapshot&.suggested_vendor&.vendor&.name || "—" %></td>
                   <td><%= item_vendor_source_status_label(row.vendor_source_status) %></td>
                   <% if overview.inventory_visible? %>
+                    <td class="ss-num"><%= snapshot&.on_hand.nil? ? "—" : snapshot.on_hand %></td>
                     <td class="ss-num"><%= snapshot&.available.nil? ? "—" : snapshot.available %></td>
                     <td class="ss-num"><%= snapshot&.on_order.nil? ? "—" : snapshot.on_order %></td>
                     <td>
@@ -141,6 +145,8 @@
                       —
                     <% end %>
                   </td>
+                  <td><%= snapshot&.returnability_status.present? ? snapshot.returnability_status.humanize : "—" %></td>
+                  <td class="ss-num"><%= snapshot&.expected_unit_cost_cents.present? ? format_cents(snapshot.expected_unit_cost_cents) : "—" %></td>
                   <td><%= item_warning_severity_badge(row.worst_severity) || "—" %></td>
                 </tr>
               <% end %>

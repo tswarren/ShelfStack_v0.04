@@ -217,7 +217,37 @@ module Items
         )
       end
 
+      if inventory_tracking_mismatch?(variant)
+        warnings << build_warning(
+          severity: :warning,
+          category: :inventory,
+          code: :inventory_tracking_mismatch,
+          message: "Inventory tracking override conflicts with product default or legacy behavior.",
+          variant_id: variant.id,
+          corrective_path: edit_items_product_variant_path(variant, return_to: "item"),
+          corrective_label: "Edit SKU",
+          source: :inventory_tracking
+        )
+      end
+
       warnings
+    end
+
+    def inventory_tracking_mismatch?(variant)
+      signals = {}
+      if variant.inventory_tracking_override.present?
+        signals[:override] = variant.inventory_tracking_override
+      end
+      if variant.inventory_behavior.present?
+        signals[:behavior] = Inventory::TrackingResolver.tracking_for_behavior(variant.inventory_behavior)
+      end
+      if variant.product&.default_inventory_tracking.present?
+        signals[:product_default] = variant.product.default_inventory_tracking
+      end
+
+      return false if signals.size < 2
+
+      signals.values.uniq.size > 1
     end
 
     def data_quality_warnings(variant)

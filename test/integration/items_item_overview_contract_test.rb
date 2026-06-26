@@ -27,4 +27,13 @@ class Items::ItemOverviewContractTest < ActionDispatch::IntegrationTest
     assert_select ".ss-item-summary-cards"
     assert_select ".ss-item-hero"
   end
+
+  test "overview renders warnings region when warnings present" do
+    @variant.update!(selling_price_cents: 0)
+
+    get items_item_path(product_id: @product.id, tab: "overview")
+
+    assert_response :success
+    assert_select "#warnings"
+  end
 end

@@ -30,4 +30,33 @@ class Items::IndexOperationalSummaryTest < ActiveSupport::TestCase
     assert_equal 3, summary.available
     assert summary.actions.any? { |action| action.label == "View" }
   end
+
+  test "uses shared variant snapshot for multiple index rows" do
+    sub_department = @variant.sub_department
+    results = 2.times.map do
+      product = create_product!(sku: "IDX-OPS-#{SecureRandom.hex(3)}")
+      create_product_variant!(product: product, sub_department: sub_department, sku: "#{product.sku}-NEW")
+      ItemSearch::Result.new(presenter: Items::ItemPresenter.from_product(product), match_type: "product")
+    end
+
+    snapshot_calls = 0
+    original = Items::VariantOperationalSnapshot.method(:for_variants)
+    Items::VariantOperationalSnapshot.singleton_class.define_method(:for_variants) do |**args|
+      snapshot_calls += 1
+      original.call(**args)
+    end
+
+    begin
+      Items::IndexOperationalSummary.for(
+        store: @store,
+        user: @user,
+        results: results,
+        warning_summaries: {}
+      )
+    ensure
+      Items::VariantOperationalSnapshot.singleton_class.define_method(:for_variants, original)
+    end
+
+    assert_equal 1, snapshot_calls
+  end
 end

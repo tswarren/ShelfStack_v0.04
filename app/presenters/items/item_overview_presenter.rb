@@ -67,7 +67,7 @@ module Items
           snapshot: row_snapshot,
           warnings: row_warnings,
           worst_severity: OperationalWarningBuilder.worst_severity(row_warnings),
-          vendor_source_status: vendor_source_status(variant, suggested),
+          vendor_source_status: vendor_source_status(variant, suggested, row_snapshot),
           last_sold_at: last_sold_at[variant.id],
           order_eligibility: order_eligibility[variant.id]
         )
@@ -186,6 +186,11 @@ module Items
       detail_parts = []
       detail_parts << "Last received #{I18n.l(last_received.received_at.to_date)}" if last_received.present?
       detail_parts << "Last sold #{I18n.l(last_sold.to_date)}" if last_sold.present?
+      if sales_visible? && variant_ids.any?
+        rollup = SalesHistoryLookup.rollup_for_variants(store:, variant_ids:, days: [ 30 ]).values
+        units_30d = rollup.sum { |by_day| by_day[30]&.units_sold.to_i }
+        detail_parts << "#{units_30d} sold (30d)" if units_30d.positive?
+      end
       SummaryCard.new(
         key: :activity,
         label: "Recent activity",
@@ -195,11 +200,11 @@ module Items
       )
     end
 
-    def vendor_source_status(variant, suggested)
+    def vendor_source_status(_variant, suggested, row_snapshot)
       return :missing if suggested.blank? || suggested.vendor.blank?
+      return :warning unless row_snapshot&.sourcing_record_present
 
-      sourcing = Purchasing::SourcingLookup.for(variant: variant, vendor: suggested.vendor)
-      sourcing.sourcing_record_present ? :present : :warning
+      :present
     end
 
     def open_po_line_count

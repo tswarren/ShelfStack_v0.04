@@ -1,4 +1,4 @@
-<%# locals: warnings, grouped: false %>
+<%# locals: warnings, grouped: false, group_by: nil %>
 <% if warnings.present? %>
   <section id="warnings" class="ss-attention-panel ss-operational-warnings" aria-label="Operational warnings">
     <h2>Needs Attention</h2>
@@ -15,12 +15,36 @@
       <% end %>
     </p>
     <% grouped = local_assigns.fetch(:grouped, false) %>
-    <% if grouped %>
+    <% group_by = local_assigns.fetch(:group_by, grouped ? :category : nil) %>
+    <% if group_by == :category %>
       <% warnings.group_by(&:category).each do |category, category_warnings| %>
         <details class="ss-operational-warnings__group" open>
           <summary><%= category.to_s.humanize %> (<%= category_warnings.size %>)</summary>
           <ul>
             <% category_warnings.each do |warning| %>
+              <li>
+                <span class="ss-operational-warnings__severity"><%= warning.severity.to_s.humanize %></span>
+                <%= warning.message %>
+                <% if warning.corrective_path.present? && warning.corrective_label.present? %>
+                  <%= link_to warning.corrective_label, warning.corrective_path %>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </details>
+      <% end %>
+    <% elsif group_by == :variant %>
+      <% warnings.group_by { |warning| warning.variant_id || :item }.each do |variant_key, variant_warnings| %>
+        <% group_label = if variant_key == :item
+          "Item-wide"
+        else
+          variant = local_assigns[:variants]&.find { |candidate| candidate.id == variant_key }
+          variant ? "#{variant.sku} — #{variant.list_label}" : "Variant ##{variant_key}"
+        end %>
+        <details class="ss-operational-warnings__group" open>
+          <summary><%= group_label %> (<%= variant_warnings.size %>)</summary>
+          <ul>
+            <% variant_warnings.each do |warning| %>
               <li>
                 <span class="ss-operational-warnings__severity"><%= warning.severity.to_s.humanize %></span>
                 <%= warning.message %>

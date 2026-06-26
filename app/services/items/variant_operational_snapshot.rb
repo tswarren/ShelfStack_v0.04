@@ -17,7 +17,9 @@ module Items
       :vendor_item_number,
       :returnability_status,
       :orderable,
-      :inventory_tracking
+      :inventory_tracking,
+      :sourcing_record_present,
+      :expected_unit_cost_cents
     )
 
     def self.for_variants(store:, variants:, user: nil, item: nil)
@@ -47,6 +49,13 @@ module Items
       @last_received ||= Purchasing::LastReceivedLookup.for_variants(store: store, variant_ids: variant_ids)
     end
 
+    def sourcing_by_variant_id
+      @sourcing_by_variant_id ||= begin
+        vendors_by_variant_id = suggested_vendors.transform_values { |result| result.vendor }
+        Purchasing::SourcingLookup.for_variants(variants:, vendors_by_variant_id:)
+      end
+    end
+
     private
 
     attr_reader :store, :variants, :user, :item
@@ -64,6 +73,8 @@ module Items
       ready_for_pickup = ready_for_pickup_quantities_for
       vendors = suggested_vendors
       received = last_received
+      sourcing_results = sourcing_by_variant_id
+      reserved_incoming = reserved_incoming_by_variant
 
       variants.index_with do |variant|
         eligible = Inventory::Eligibility.eligible?(variant)
@@ -71,15 +82,15 @@ module Items
         order_qty = order_quantities.fetch(variant.id) { Purchasing::OrderQuantityLookup.zero_result }
         suggested = vendors.fetch(variant.id) { Purchasing::SuggestedVendorResolver.for_variant(variant) }
         vendor = suggested.vendor
-        sourcing = vendor.present? ? Purchasing::SourcingLookup.for(variant: variant, vendor: vendor) : nil
-        reserved_incoming = reserved_incoming_for(variant.id)
+        sourcing = sourcing_results[variant.id]
+        reserved_incoming_qty = reserved_incoming.fetch(variant.id, 0)
 
         Row.new(
           variant_id: variant.id,
           on_hand: eligible ? (balance&.quantity_on_hand || 0) : nil,
           available: eligible ? (balance&.quantity_available || 0) : nil,
           reserved: eligible ? (balance&.quantity_reserved || 0) : nil,
-          on_order_available: eligible ? [ order_qty.on_order - reserved_incoming, 0 ].max : nil,
+          on_order_available: eligible ? [ order_qty.on_order - reserved_incoming_qty, 0 ].max : nil,
           ready_for_pickup_qty: ready_for_pickup.fetch(variant.id, 0),
           open_tbo: open_tbo.fetch(variant.id, 0),
           pending_po: eligible ? order_qty.pending : nil,
@@ -89,9 +100,21 @@ module Items
           vendor_item_number: sourcing&.vendor_item_number,
           returnability_status: vendor.present? ? Purchasing::ReturnabilityResolver.resolve(variant: variant, vendor: vendor) : nil,
           orderable: variant.orderable?,
-          inventory_tracking: Inventory::TrackingResolver.resolve(variant)
+          inventory_tracking: Inventory::TrackingResolver.resolve(variant),
+          sourcing_record_present: sourcing&.sourcing_record_present == true,
+          expected_unit_cost_cents: expected_unit_cost_cents(variant:, sourcing:)
         )
       end.transform_keys(&:id)
+    end
+
+    def expected_unit_cost_cents(variant:, sourcing:)
+      list_price = variant.product&.list_price_cents
+      return nil if list_price.nil? || sourcing.blank?
+
+      Purchasing::VendorCostCalculator.unit_cost_cents(
+        unit_list_price_cents: list_price,
+        supplier_discount_bps: sourcing.supplier_discount_bps
+      )
     end
 
     def ready_for_pickup_quantities_for
@@ -101,9 +124,10 @@ module Items
                           .sum("quantity_reserved - quantity_fulfilled - quantity_released")
     end
 
-    def reserved_incoming_for(variant_id)
+    def reserved_incoming_by_variant
       InventoryReservation.active_incoming
-                          .where(store: store, product_variant_id: variant_id)
+                          .where(store: store, product_variant_id: variant_ids)
+                          .group(:product_variant_id)
                           .sum("quantity_reserved - quantity_fulfilled - quantity_released")
     end
   end

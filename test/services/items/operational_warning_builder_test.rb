@@ -46,6 +46,21 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
     assert warnings_by_variant.key?(@variant.id)
   end
 
+  test "inventory tracking mismatch when override conflicts with behavior" do
+    @variant.update!(
+      inventory_tracking_override: "inventory",
+      inventory_behavior: "digital_asset"
+    )
+
+    warnings = Items::OperationalWarningBuilder.for_variants(
+      store: @store,
+      variants: [ @variant ],
+      contexts: [ :inventory ]
+    ).fetch(@variant.id, [])
+
+    assert warnings.any? { |warning| warning.code == :inventory_tracking_mismatch }
+  end
+
   test "worst_severity prefers blocking over warning" do
     warnings = [
       Items::OperationalWarningBuilder::Warning.new(

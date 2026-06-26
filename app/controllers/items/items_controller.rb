@@ -156,6 +156,18 @@ module Items
         .joins(:product_variant, :vendor)
         .where(product_variant_id: variant_ids)
         .order("product_variants.sku", "vendors.name")
+
+      return unless current_store.present?
+
+      snapshot = VariantOperationalSnapshot.for_variants(store: current_store, variants: @item.variants.to_a)
+      variants_by_id = @item.variants.index_by(&:id)
+      @vendor_sourcing_gaps = snapshot.rows.filter_map do |variant_id, row|
+        vendor = row.suggested_vendor&.vendor
+        next if vendor.blank?
+        next if row.sourcing_record_present
+
+        { variant: variants_by_id[variant_id], vendor: vendor }
+      end
     end
   end
 end

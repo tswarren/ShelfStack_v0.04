@@ -380,7 +380,10 @@
 <% end %>
 
 <% if local_assigns[:operational_warnings].present? %>
-  <%= render "items/shared/operational_warnings_panel", warnings: operational_warnings, grouped: true %>
+  <%= render "items/shared/operational_warnings_panel",
+        warnings: operational_warnings,
+        group_by: :variant,
+        variants: item.variants %>
 <% end %>
 
 <% if overview&.sales_visible? %>

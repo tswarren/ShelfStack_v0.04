@@ -1,6 +1,26 @@
 <% if item.product.blank? %>
   <p>Display and vendor links require a product.</p>
 <% else %>
+  <% if local_assigns[:vendor_sourcing_gaps].present? %>
+    <aside class="ss-attention-panel" aria-label="Vendor sourcing gaps">
+      <h3>Preferred vendor vs vendor source</h3>
+      <p class="ss-muted">
+        A <strong>preferred vendor</strong> is who ShelfStack suggests for ordering.
+        A <strong>vendor source</strong> is the product or variant record that supplies item number, discount, and returnability for that vendor.
+      </p>
+      <ul>
+        <% vendor_sourcing_gaps.each do |gap| %>
+          <li>
+            <strong><%= gap[:variant].sku %></strong>:
+            preferred vendor <%= gap[:vendor].name %> has no active vendor source row.
+            <%= link_to "Add product vendor", new_items_product_product_vendor_path(item.product, vendor_id: gap[:vendor].id), class: "ss-btn-link" if Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.create", store: current_store) %>
+            <%= link_to "Add variant vendor", new_items_product_variant_product_variant_vendor_path(gap[:variant], vendor_id: gap[:vendor].id), class: "ss-btn-link" if Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.create", store: current_store) %>
+          </li>
+        <% end %>
+      </ul>
+    </aside>
+  <% end %>
+
   <section class="ss-item-display-section">
     <h3>Product display defaults</h3>
     <dl class="ss-summary">

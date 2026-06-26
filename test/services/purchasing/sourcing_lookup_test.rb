@@ -34,6 +34,31 @@ class Purchasing::SourcingLookupTest < ActiveSupport::TestCase
     assert result.sourcing_record_present
   end
 
+  test "for_variants batches sourcing lookups" do
+    other_variant = create_product_variant!(
+      sub_department: @sub_department,
+      inventory_behavior: "standard_physical"
+    )
+    ProductVendor.create!(
+      product: other_variant.product,
+      vendor: @other_vendor,
+      vendor_item_number: "OTHER-1",
+      supplier_discount_bps: 2500,
+      active: true
+    )
+
+    results = Purchasing::SourcingLookup.for_variants(
+      variants: [ @variant, other_variant ],
+      vendors_by_variant_id: {
+        @variant.id => @vendor,
+        other_variant.id => @other_vendor
+      }
+    )
+
+    assert_equal "VAR-1", results[@variant.id].vendor_item_number
+    assert_equal "OTHER-1", results[other_variant.id].vendor_item_number
+  end
+
   test "falls back to product vendor then vendor default" do
     variant_only_product = create_product_variant!(
       sub_department: @sub_department,
