@@ -87,4 +87,42 @@ class IngramCatalogImport::RunnerTest < ActiveSupport::TestCase
     assert_equal first_variant_count, ProductVariant.count
     assert result.count(:variant_matched).positive?
   end
+
+  test "assigns preferred vendor on existing product when set_preferred_vendor enabled" do
+    ingram = Vendor.create!(name: "Ingram", active: true, default_supplier_discount_bps: 4000)
+    IngramCatalogImport::Runner.call(path: @fixture_path, actor: @actor, options: @options)
+
+    product = Product.joins(:catalog_item).find_by!(catalog_items: { title: "Communion: Finding My Way Back to Faith" })
+    assert_nil product.preferred_vendor_id
+
+    options = IngramCatalogImport::ImportOptions.new(
+      default_sub_department: @sub_department,
+      default_store_category: store_category_node_for_tests,
+      set_preferred_vendor: true,
+      create_or_update_vendor_sources: true
+    )
+    result = IngramCatalogImport::Runner.call(path: @fixture_path, actor: @actor, options: options)
+
+    assert_equal ingram.id, product.reload.preferred_vendor_id
+    assert result.preferred_vendor_assignments.positive?
+    assert ProductVendor.exists?(product: product, vendor: ingram)
+  end
+
+  test "creates vendor sources without setting preferred vendor when disabled" do
+    ingram = Vendor.create!(name: "Ingram", active: true, default_supplier_discount_bps: 4000)
+    options = IngramCatalogImport::ImportOptions.new(
+      default_sub_department: @sub_department,
+      default_store_category: store_category_node_for_tests,
+      set_preferred_vendor: false,
+      create_or_update_vendor_sources: true
+    )
+    IngramCatalogImport::Runner.call(path: @fixture_path, actor: @actor, options: options)
+
+    product = Product.joins(:catalog_item).find_by!(catalog_items: { title: "Communion: Finding My Way Back to Faith" })
+    variant = product.product_variants.active_records.first
+
+    assert_nil product.preferred_vendor_id
+    assert ProductVendor.exists?(product: product, vendor: ingram)
+    assert ProductVariantVendor.exists?(product_variant: variant, vendor: ingram)
+  end
 end

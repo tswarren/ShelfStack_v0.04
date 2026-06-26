@@ -47,6 +47,13 @@ module Purchasing
 
     def validate_submit_eligibility!
       purchase_order.purchase_order_lines.each do |line|
+        prepare_line_economics!(line)
+
+        if line.unit_cost_cents.blank?
+          raise SubmitError,
+            "Line #{line.line_number} cannot be submitted: Expected unit cost could not be determined."
+        end
+
         result = OrderEligibilityResolver.call(
           product_variant: line.product_variant,
           vendor: line.vendor,
@@ -59,9 +66,17 @@ module Purchasing
       end
     end
 
-    def snapshot_line!(line)
-      LineEconomicsCalculator.apply!(line, recalculate_from_vendor: false)
+    def prepare_line_economics!(line)
       LinePriceDefaults.apply!(line)
+      LineEconomicsCalculator.apply!(
+        line,
+        changed_field: LineEconomicsSync.changed_field_for(line),
+        recalculate_from_vendor: false
+      )
+    end
+
+    def snapshot_line!(line)
+      prepare_line_economics!(line)
       sourcing = SourcingLookup.for(variant: line.product_variant, vendor: line.vendor)
 
       line.update!(

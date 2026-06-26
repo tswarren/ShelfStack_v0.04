@@ -15,6 +15,8 @@
   <%= line_form.hidden_field :id if line_form.object.persisted? %>
   <%= line_form.hidden_field :manual_cost_override, value: line_form.object.manual_cost_override?,
         data: { purchasing_line_row_target: "manualCostOverride" } %>
+  <%= line_form.hidden_field :manual_price_override, value: line_form.object.manual_price_override?,
+        data: { purchasing_line_row_target: "manualPriceOverride" } %>
   <%= line_form.hidden_field :_destroy, value: false, data: { purchasing_line_table_target: "destroy" } %>
 
   <%= render "orders/shared/scan_lookup_cell", line_form: line_form, variant: variant %>

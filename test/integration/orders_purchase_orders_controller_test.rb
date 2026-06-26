@@ -101,6 +101,89 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal @line_to_remove.id, @purchase_order.purchase_order_lines.first.id
   end
 
+  test "update preserves manual unit cost override" do
+    ProductVendor.create!(
+      product: @variant.product,
+      vendor: @vendor,
+      vendor_item_number: "VEND-1",
+      supplier_discount_bps: 4000,
+      returnability_status: "returnable",
+      active: true
+    )
+    @variant.product.update!(list_price_cents: 2000)
+
+    patch orders_purchase_order_path(@purchase_order), params: {
+      purchase_order: {
+        vendor_id: @vendor.id,
+        purchase_order_lines_attributes: {
+          "0" => {
+            id: @line_to_keep.id,
+            product_variant_id: @variant.id,
+            quantity_ordered: 2,
+            unit_list_price_cents: 2000,
+            supplier_discount_bps: 4000,
+            unit_cost_cents: 1500,
+            manual_cost_override: true,
+            manual_price_override: false,
+            _destroy: "0"
+          },
+          "1" => {
+            id: @line_to_remove.id,
+            product_variant_id: @variant.id,
+            quantity_ordered: 1,
+            _destroy: "1"
+          }
+        }
+      }
+    }
+
+    assert_redirected_to orders_purchase_order_path(@purchase_order)
+    line = @line_to_keep.reload
+    assert_equal 1500, line.unit_cost_cents
+    assert line.manual_cost_override
+    assert_equal "manual", line.cost_source
+  end
+
+  test "update preserves manual expected retail override" do
+    ProductVendor.create!(
+      product: @variant.product,
+      vendor: @vendor,
+      vendor_item_number: "VEND-1",
+      supplier_discount_bps: 4000,
+      returnability_status: "returnable",
+      active: true
+    )
+
+    patch orders_purchase_order_path(@purchase_order), params: {
+      purchase_order: {
+        vendor_id: @vendor.id,
+        purchase_order_lines_attributes: {
+          "0" => {
+            id: @line_to_keep.id,
+            product_variant_id: @variant.id,
+            quantity_ordered: 2,
+            expected_retail_price_cents: 3200,
+            manual_cost_override: false,
+            manual_price_override: true,
+            _destroy: "0"
+          },
+          "1" => {
+            id: @line_to_remove.id,
+            product_variant_id: @variant.id,
+            quantity_ordered: 1,
+            _destroy: "1"
+          }
+        }
+      }
+    }
+
+    assert_redirected_to orders_purchase_order_path(@purchase_order)
+    line = @line_to_keep.reload
+    assert_equal 3200, line.expected_retail_price_cents
+    assert line.manual_price_override
+    assert_equal "manual", line.price_source
+  end
+
   test "update ignores blank added line rows" do
     patch orders_purchase_order_path(@purchase_order), params: {
       purchase_order: {

@@ -54,4 +54,26 @@ class Purchasing::SuggestedVendorResolverTest < ActiveSupport::TestCase
     assert_nil result.vendor
     assert_equal "none", result.source
   end
+
+  test "skips inactive vendor on active variant vendor source row" do
+    inactive_vendor = create_vendor!
+    ProductVariantVendor.create!(
+      product_variant: @variant,
+      vendor: inactive_vendor,
+      active: true,
+      preferred: true
+    )
+    inactive_vendor.update_columns(active: false)
+    ProductVariantVendor.create!(
+      product_variant: @variant,
+      vendor: @vendor_b,
+      active: true,
+      preferred: false
+    )
+
+    result = Purchasing::SuggestedVendorResolver.for_variant(@variant)
+
+    assert_equal @vendor_b, result.vendor
+    assert_equal "variant_vendor_fallback", result.source
+  end
 end

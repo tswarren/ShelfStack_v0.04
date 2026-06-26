@@ -176,7 +176,8 @@ module Orders
         next [] if po_line.blank?
 
         remaining_accept = line.quantity_accepted.to_i
-        po_line.purchase_order_line_allocations.open_allocations.order(:created_at).filter_map do |allocation|
+        rows = []
+        po_line.purchase_order_line_allocations.open_allocations.order(:created_at).each do |allocation|
           break if remaining_accept.zero?
 
           qty = [ allocation.quantity_allocated - allocation.quantity_received, remaining_accept ].min
@@ -184,7 +185,7 @@ module Orders
 
           remaining_accept -= qty
           request = allocation.customer_request_line&.customer_request
-          {
+          rows << {
             receipt_line_number: line.line_number,
             variant: line.product_variant,
             customer_name: allocation.special_order&.customer&.display_name || request&.customer&.display_name,
@@ -195,6 +196,7 @@ module Orders
             state: "projected"
           }
         end
+        rows
       end
     end
 

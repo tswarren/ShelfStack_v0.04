@@ -226,10 +226,7 @@ module Orders
         line.vendor = purchase_order.vendor if line.vendor.blank? && purchase_order.vendor.present?
         line.status ||= "open"
         line.quantity_received ||= 0
-        if line.product_variant.present?
-          Purchasing::LinePriceDefaults.apply!(line) if line.unit_list_price_cents.nil? || line.supplier_discount_bps.nil?
-          Purchasing::LineEconomicsCalculator.apply!(line)
-        end
+        Purchasing::LineEconomicsSync.apply!(line) if line.product_variant.present?
       end
     end
 

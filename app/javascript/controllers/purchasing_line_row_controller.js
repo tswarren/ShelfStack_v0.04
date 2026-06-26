@@ -427,6 +427,7 @@ export default class extends Controller {
       if (calculated != null) discountField.value = calculated
       this.updateExpectedMargin()
     } else if (field === this.field("expectedRetail")) {
+      this.setManualPriceOverride(true)
       this.updateExpectedMargin()
     }
     this.pricingRecalcLock = false
@@ -505,6 +506,15 @@ export default class extends Controller {
 
   setManualCostOverride(value) {
     const element = this.field("manualCostOverride")
+    if (element) element.value = value ? "true" : "false"
+  }
+
+  manualPriceOverride() {
+    return this.field("manualPriceOverride")?.value === "true"
+  }
+
+  setManualPriceOverride(value) {
+    const element = this.field("manualPriceOverride")
     if (element) element.value = value ? "true" : "false"
   }
 

@@ -28,6 +28,14 @@ module IngramCatalogImport
       @counts[outcome.status] += 1
     end
 
+    def increment_preferred_vendor_assignments!
+      @preferred_vendor_assignments += 1
+    end
+
+    def increment_preferred_vendor_skipped!
+      @preferred_vendor_skipped += 1
+    end
+
     def count(status)
       @counts[status]
     end

@@ -61,18 +61,19 @@ module Purchasing
         return result_from_preferred_vendor(product.preferred_vendor, :product_preferred)
       end
 
-      product_vendors = product.product_vendors.select(&:active?)
+      active_variant_rows = variant_vendor_rows.select { |row| row.active? && row.vendor&.active? }
+      active_product_vendors = product.product_vendors.select { |row| row.active? && row.vendor&.active? }
 
-      preferred_variant = variant_vendor_rows.find(&:preferred?)
+      preferred_variant = active_variant_rows.find(&:preferred?)
       return result_from_variant_vendor(preferred_variant, :variant_vendor_source) if preferred_variant
 
-      preferred_product = product_vendors.find(&:preferred?)
+      preferred_product = active_product_vendors.find(&:preferred?)
       return result_from_product_vendor(preferred_product, :product_vendor_source) if preferred_product
 
-      first_variant = variant_vendor_rows.first
+      first_variant = active_variant_rows.first
       return result_from_variant_vendor(first_variant, :variant_vendor_fallback) if first_variant
 
-      first_product = product_vendors.first
+      first_product = active_product_vendors.first
       return result_from_product_vendor(first_product, :product_vendor_fallback) if first_product
 
       empty_result

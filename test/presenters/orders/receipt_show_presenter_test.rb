@@ -108,4 +108,32 @@ class Orders::ReceiptShowPresenterTest < ActiveSupport::TestCase
     assert_equal 1, row[:quantity_remaining]
     assert_equal @customer.display_name, row[:customer_name]
   end
+
+  test "projected allocation rows omit nil entries when accepted qty is less than allocations" do
+    customer_two = create_customer!
+    customer_request_two = create_customer_request!(
+      store: @store,
+      created_by_user: @user,
+      customer: customer_two,
+      lines: [ { request_type: "special_order" } ]
+    )
+    cr_line_two = customer_request_two.customer_request_lines.first
+    match_request_line!(line: cr_line_two, variant: @variant, actor: @user)
+    special_order_two = SpecialOrders::CreateFromRequestLine.call!(line: cr_line_two, created_by_user: @user)
+    SpecialOrders::Approve.call!(special_order: special_order_two, approved_by_user: @user)
+    SpecialOrders::AttachToPurchaseOrderLine.call!(
+      special_order: special_order_two,
+      purchase_order_line: @po_line,
+      quantity: 1,
+      attached_by_user: @user
+    )
+    @receipt.receipt_lines.first.update!(quantity_accepted: 1)
+
+    presenter = Orders::ReceiptShowPresenter.new(receipt: @receipt.reload, document_hub: @document_hub)
+    rows = presenter.customer_allocation_rows
+
+    assert rows.all?
+    assert_equal 1, rows.size
+    assert_equal 1, rows.sum { |row| row[:quantity] }
+  end
 end
