@@ -8,7 +8,7 @@
     <div class="ss-field">
       <%= label_tag :session_id, "Register session" %>
       <%= select_tag :session_id,
-                     options_for_select(report_session_options(@sessions), params[:session_id] || @session&.id),
+                     options_for_select(report_session_options(@sessions), params[:session_id] || params[:register_session_id] || @session&.id),
                      include_blank: "Current session" %>
     </div>
   <% end %>

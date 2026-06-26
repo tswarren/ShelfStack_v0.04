@@ -37,6 +37,17 @@ class Reports::RedirectsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to reports_sales_summary_path(filter_type: "register_session", register_session_id: @session.id)
   end
 
+  test "pos cash drawer normalizes legacy session_id param" do
+    grant_permission!(@user, "pos.reports.drawer", store: @store)
+
+    get drawer_pos_reports_path(session_id: @session.id)
+
+    assert_redirected_to reports_cash_drawer_path(register_session_id: @session.id)
+    follow_redirect!
+    assert_response :success
+    assert_select ".ss-report-scope", text: /#{Regexp.escape(@session.workstation.name)}/
+  end
+
   test "shell reconciliation redirects to tax collected" do
     grant_permission!(@user, "pos.reports.summary", store: @store)
 
