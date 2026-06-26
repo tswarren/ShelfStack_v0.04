@@ -1,0 +1,12 @@
+<%# locals: url:, form_method: :get, html: {} %>
+<% form_method = local_assigns.fetch(:form_method, :get) %>
+<% html = local_assigns.fetch(:html, {}) %>
+<%= form_with url: url, method: form_method, class: "ss-filter-bar ss-report-no-print #{html[:class]}".strip, **html.except(:class) do %>
+  <div class="ss-filter-group">
+    <%= yield %>
+  </div>
+  <div class="ss-filter-actions">
+    <%= submit_tag "Run report", class: "ss-btn ss-btn-primary" %>
+    <%= yield :filter_actions if content_for?(:filter_actions) %>
+  </div>
+<% end %>

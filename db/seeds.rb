@@ -26,6 +26,7 @@ require_relative "seeds/phase4_inventory"
 require_relative "seeds/phase5_inventory"
 require_relative "seeds/phase85_discount_reasons"
 require_relative "seeds/phase852_permissions"
+require_relative "seeds/phase9a_permissions"
 require_relative "seeds/phase852_tax_exception_reasons"
 
 puts "Seeding Phase 1 foundation..."
@@ -43,6 +44,7 @@ Seeds::Phase7bPermissions.seed!
 Seeds::Phase7cPermissions.seed!
 Seeds::Phase85Permissions.seed!
 Seeds::Phase852Permissions.seed!
+Seeds::Phase9aPermissions.seed!
 Seeds::Phase6Roles.seed!
 
 system_user = User.find_or_initialize_by(username: "system")

@@ -1,0 +1,15 @@
+<%# locals: start_param: :start_date, end_param: :end_date, start_value: nil, end_value: nil %>
+<% start_param = local_assigns.fetch(:start_param, :start_date) %>
+<% end_param = local_assigns.fetch(:end_param, :end_date) %>
+<% start_value = local_assigns[:start_value] %>
+<% end_value = local_assigns[:end_value] %>
+<div class="ss-date-range">
+  <div class="ss-field">
+    <%= label_tag start_param, "Start date" %>
+    <%= date_field_tag start_param, start_value || params[start_param] %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag end_param, "End date" %>
+    <%= date_field_tag end_param, end_value || params[end_param] %>
+  </div>
+</div>

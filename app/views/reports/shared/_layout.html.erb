@@ -1,0 +1,22 @@
+<%# locals: title:, scope: nil, actions: nil, filter_url: nil, metrics: nil, notice: nil %>
+<div class="ss-report report-print">
+  <%= render "reports/shared/header", title: title, scope: scope, actions: actions %>
+
+  <% if filter_url.present? %>
+    <%= render layout: "reports/shared/filter_bar", locals: { url: filter_url } do %>
+      <%= yield :report_filters if content_for?(:report_filters) %>
+    <% end %>
+  <% end %>
+
+  <% if notice.present? %>
+    <%= render "reports/shared/section_notice", message: notice %>
+  <% end %>
+
+  <% if metrics.present? %>
+    <%= render "reports/shared/metric_strip", metrics: metrics %>
+  <% end %>
+
+  <div class="ss-report-body">
+    <%= yield %>
+  </div>
+</div>

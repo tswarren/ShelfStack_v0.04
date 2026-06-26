@@ -208,6 +208,21 @@ docs/implementation/phase-8.5-4-completion.md
 docs/handoff/phase-9-item-drill-down-contract.md
 ```
 
+## Phase 9 Documents
+
+```text
+docs/roadmap/phase-9-reporting-and-accounting.md
+docs/roadmap/phase-9a-ux-foundation-for-reporting.md
+docs/roadmap/phase-9b-reports.md
+docs/roadmap/phase-9c-gl-shaped-financial-layer.md
+docs/specifications/phase-9a-ux-foundation-for-reporting-spec.md
+docs/specifications/report-view-contract.md
+docs/specifications/reporting-semantics.md
+docs/specifications/phase-9a-test-plan.md
+docs/implementation/phase-9a-completion.md
+docs/handoff/phase-9-item-drill-down-contract.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -322,6 +337,16 @@ See [docs/implementation/phase-8.5-4-completion.md](docs/implementation/phase-8.
 - `Items::SalesHistoryLookup`, `Items::ReceivingHistoryLookup`
 - Overview reorganization (summary cards, variant readiness matrix, compact history)
 - Phase 9 drill-down contract: [docs/handoff/phase-9-item-drill-down-contract.md](docs/handoff/phase-9-item-drill-down-contract.md)
+
+## Phase 9a: UX Foundation for Reporting — **Complete**
+
+See [docs/implementation/phase-9a-completion.md](docs/implementation/phase-9a-completion.md).
+
+- Report view contract, reporting semantics docs, and CSS/helper/partial foundation
+- `ReportsHelper`, shared `reports/shared` partials, report CSS primitives in `shelfstack.css`
+- `Reports::ProcurementPathResolver`, `Reports::InclusionRules`
+- Sample shells at `/reports/shells/reconciliation` and `/reports/shells/queue` (`reports.foundation.view`)
+- **Next:** Phase 9b — migrate existing operational reports and add Reports hub
 
 ---
 
