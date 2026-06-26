@@ -5,7 +5,6 @@
              actions: safe_join([report_print_button, (back_path ? link_to("Back", back_path, class: "ss-btn ss-btn-secondary ss-report-no-print") : nil)].compact, " ") %>
 
   <%= render layout: "reports/shared/filter_bar", locals: { url: filter_url } do %>
-    <%= render "reports/shared/date_range", start_value: params[:start_date], end_value: params[:end_date] %>
     <div class="ss-field">
       <%= label_tag :queue, "Queue" %>
       <%= select_tag :queue,
@@ -23,7 +22,7 @@
     <% if report.empty? %>
       <%= render "reports/shared/empty_state",
                  title: "No requests match these filters",
-                 message: "Try widening the date range or clearing the queue filter." %>
+                 message: "Try clearing the queue filter or choose a different queue." %>
     <% else %>
       <table class="ss-table ss-table--report">
         <thead>
@@ -38,7 +37,7 @@
           <% report.rows.each do |row| %>
             <tr>
               <td><%= link_to row.label, row.request_path, class: "ss-link" %></td>
-              <td><span class="ss-status-badge <%= row.status_class %>"><%= row.status %></span></td>
+              <td><%= customers_status_badge(row.status) %></td>
               <td class="ss-num"><%= format_report_quantity(row.aging_days) %></td>
               <td>
                 <% if row.variant_id.present? %>

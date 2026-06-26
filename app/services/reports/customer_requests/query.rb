@@ -2,16 +2,8 @@
 
 module Reports
   module CustomerRequests
-    Row = Data.define(:label, :status, :status_class, :aging_days, :item_label, :variant_id, :request_path)
+    Row = Data.define(:label, :status, :aging_days, :item_label, :variant_id, :request_path)
     Result = Data.define(:scope_label, :rows, :metrics, :empty?)
-
-    STATUS_CLASSES = {
-      "new" => "ss-status-badge--info",
-      "awaiting_customer_response" => "ss-status-badge--warning",
-      "ready_for_pickup" => "ss-status-badge--success",
-      "completed" => "ss-status-badge--muted",
-      "cancelled" => "ss-status-badge--muted"
-    }.freeze
 
     class Query
       def self.call(store:, queue: nil, status: nil)
@@ -38,8 +30,7 @@ module Reports
           variant = row.request.customer_request_lines.first&.product_variant
           Row.new(
             label: row.request_number,
-            status: row.status.tr("_", " ").titleize,
-            status_class: STATUS_CLASSES.fetch(row.status, "ss-status-badge--info"),
+            status: row.status,
             aging_days: (Date.current - row.request.created_at.to_date).to_i,
             item_label: row.primary_item.presence || "Unresolved",
             variant_id: variant&.id,

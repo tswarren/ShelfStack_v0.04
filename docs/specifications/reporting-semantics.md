@@ -153,7 +153,7 @@ Confirmed data sources for Phase 9b:
 | ------ | ---------- | --------- |
 | Register Summary | Session open/close + `business_date` | Completed transactions in session |
 | Sales Summary | `business_date` / `completed_at` | `Reports::InclusionRules.pos_sales_transactions` |
-| Tax Collected | `business_date` | Completed lines; group by `applied_tax_source` |
+| Tax Collected | `business_date` | Completed lines; group by tax category/rate snapshots and `applied_tax_source` |
 | Discount Summary | `business_date` | Active `pos_discount_applications` on completed transactions |
 | Cash Drawer | Session boundaries | Register session + cash movements |
 | Operational Margin | Scope filter | Completed only; voided excluded |

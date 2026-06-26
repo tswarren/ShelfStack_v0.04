@@ -22,6 +22,63 @@ class Pos::ReportScopeTest < ActiveSupport::TestCase
     )
   end
 
+  test "from_params respects filter_type register_session" do
+    scope = Pos::ReportScope.from_params(
+      store: @store,
+      params: {
+        filter_type: "register_session",
+        register_session_id: @session.id,
+        business_date: Date.current.to_s,
+        start_date: 30.days.ago.to_date.to_s,
+        end_date: Date.current.to_s
+      }
+    )
+
+    assert_equal :register_session, scope.type
+    assert_equal @session.id, scope.register_session.id
+  end
+
+  test "from_params respects filter_type business_date" do
+    scope = Pos::ReportScope.from_params(
+      store: @store,
+      params: {
+        filter_type: "business_date",
+        business_date: @session.business_date.to_s,
+        start_date: 30.days.ago.to_date.to_s,
+        end_date: Date.current.to_s
+      }
+    )
+
+    assert_equal :business_date, scope.type
+    assert_equal @session.business_date, scope.business_date
+  end
+
+  test "from_params respects filter_type date_range over business_date" do
+    start_date = Date.new(2026, 6, 1)
+    end_date = Date.new(2026, 6, 5)
+
+    scope = Pos::ReportScope.from_params(
+      store: @store,
+      params: {
+        filter_type: "date_range",
+        start_date: start_date.to_s,
+        end_date: end_date.to_s,
+        business_date: Date.new(2026, 6, 15).to_s
+      }
+    )
+
+    assert_equal :date_range, scope.type
+    assert_equal start_date, scope.start_date
+    assert_equal end_date, scope.end_date
+  end
+
+  test "from_params returns nil when filter_type date_range lacks dates" do
+    assert_nil Pos::ReportScope.from_params(
+      store: @store,
+      params: { filter_type: "date_range", business_date: Date.current.to_s }
+    )
+  end
+
   test "from_params scopes register session to store" do
     other_workstation = create_workstation!(
       store: @other_store,

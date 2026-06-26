@@ -8,6 +8,7 @@ module Reports
 
     def show
       @transactions = Reports::InclusionRules.pos_sales_transactions(store: report_store)
+        .where(transaction_type: "sale")
         .order(completed_at: :desc)
         .limit(100)
 

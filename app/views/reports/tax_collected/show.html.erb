@@ -5,7 +5,7 @@
              actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
 
   <%= render "reports/shared/pos_scope_filter", url: reports_tax_collected_path, sessions: @sessions %>
-  <%= render "reports/shared/section_notice", message: "Date basis: business date on completed POS transactions. Totals from line tax snapshots." %>
+  <%= render "reports/shared/section_notice", message: "Date basis: business date on completed POS transactions. Grouped by applied tax category/rate and tax source snapshots." %>
 
   <% if @scope.blank? && params.except(:controller, :action).present? %>
     <%= render "reports/shared/section_notice", message: "Choose a valid filter and run the report." %>
@@ -16,9 +16,11 @@
       <table class="ss-table ss-table--report">
         <thead>
           <tr>
-            <th>Tax source / category</th>
+            <th>Rate / category</th>
             <th class="ss-num ss-money">Taxable sales</th>
+            <th class="ss-num ss-money">Normal tax</th>
             <th class="ss-num ss-money">Tax collected</th>
+            <th class="ss-num ss-money">Exempt / overridden</th>
           </tr>
         </thead>
         <tbody>
@@ -26,7 +28,9 @@
             <tr class="<%= row.row_type == :total ? 'ss-table-row--total' : nil %>">
               <th scope="row"><%= row.label %></th>
               <td class="ss-num ss-money"><%= format_report_money(row.taxable_sales_cents) %></td>
+              <td class="ss-num ss-money"><%= format_report_money(row.normal_tax_cents) %></td>
               <td class="ss-num ss-money"><%= format_report_money(row.tax_cents) %></td>
+              <td class="ss-num ss-money"><%= format_report_money(row.exempt_overridden_cents) %></td>
             </tr>
           <% end %>
         </tbody>
