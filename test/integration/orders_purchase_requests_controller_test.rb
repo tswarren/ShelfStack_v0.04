@@ -22,6 +22,36 @@ class OrdersPurchaseRequestsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "new form hides add line control for single-line create" do
+    get new_orders_purchase_request_path
+
+    assert_response :success
+    assert_no_match "Add line", response.body
+  end
+
+  test "create builds single-line purchase request" do
+    assert_difference -> { PurchaseRequest.count }, 1 do
+      post orders_purchase_requests_path, params: {
+        purchase_request: {
+          notes: "Restock",
+          purchase_request_lines_attributes: {
+            "0" => {
+              product_variant_id: @variant.id,
+              requested_quantity: 2,
+              request_reason: "tbo"
+            }
+          }
+        }
+      }
+    end
+
+    purchase_request = PurchaseRequest.order(:id).last
+    assert_redirected_to orders_purchase_request_path(purchase_request)
+    assert_equal 1, purchase_request.purchase_request_lines.size
+    assert_equal 2, purchase_request.purchase_request_lines.first.requested_quantity
+    assert_equal "Restock", purchase_request.notes
+  end
+
   test "show includes build purchase order link when buildable" do
     get orders_purchase_request_path(@purchase_request)
 

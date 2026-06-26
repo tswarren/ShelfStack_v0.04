@@ -12,6 +12,7 @@ class ProductVariant < ApplicationRecord
   belongs_to :condition, class_name: "ProductCondition", optional: true
   belongs_to :sub_department
   belongs_to :display_location, optional: true
+  belongs_to :preferred_vendor, class_name: "Vendor", optional: true
   belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
 
   has_many :categorizations, as: :categorizable, dependent: :destroy
@@ -26,6 +27,7 @@ class ProductVariant < ApplicationRecord
     inclusion: { in: Inventory::TrackingResolver::TRACKING_VALUES },
     allow_nil: true
   validates :returnability_status, presence: true, inclusion: { in: ReturnabilityStatus::RETURNABILITY_STATUSES }
+  validates :orderable, inclusion: { in: [ true, false ] }
   validates :pricing_model_override, inclusion: { in: PricingModels::PRICING_MODELS }, allow_blank: true
   validates :attribute1_sku_component, length: { maximum: 5 }, allow_blank: true
   validates :attribute2_sku_component, length: { maximum: 5 }, allow_blank: true
@@ -33,11 +35,15 @@ class ProductVariant < ApplicationRecord
   validate :sub_department_must_be_active
   validate :display_location_must_be_active
   validate :product_must_be_active
+  validate :preferred_vendor_must_be_active
 
   scope :active_records, -> { where(active: true) }
 
   before_validation :normalize_strings
   before_validation :apply_generated_fields, on: :create
+  before_validation :apply_orderability_default, on: :create
+
+  attr_accessor :skip_orderability_default
 
   def inactivate!
     update!(active: false)
@@ -84,6 +90,13 @@ class ProductVariant < ApplicationRecord
     self.name = ProductNameRenderer.variant_name(self) if name.blank?
   end
 
+  def apply_orderability_default
+    return if skip_orderability_default
+    return if orderable_changed?
+
+    ProductVariants::OrderabilityDefaults.apply!(self)
+  end
+
   def condition_must_be_active
     return if condition.blank? || condition.active?
 
@@ -106,5 +119,11 @@ class ProductVariant < ApplicationRecord
     return if product.blank? || product.active?
 
     errors.add(:product, "must be active")
+  end
+
+  def preferred_vendor_must_be_active
+    return if preferred_vendor.blank? || preferred_vendor.active?
+
+    errors.add(:preferred_vendor, "must be active")
   end
 end

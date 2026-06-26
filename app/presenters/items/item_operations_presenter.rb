@@ -20,6 +20,7 @@ module Items
       :on_order,
       :last_received,
       :preferred_vendor_name,
+      :preferred_vendor_source,
       :vendor_item_number,
       :returnability_status,
       :actions,
@@ -243,6 +244,7 @@ module Items
           on_order: eligible ? order_qty.on_order : nil,
           last_received: last_received[variant.id],
           preferred_vendor_name: vendor&.name,
+          preferred_vendor_source: suggested.source,
           vendor_item_number: sourcing&.vendor_item_number,
           returnability_status: vendor.present? ? Purchasing::ReturnabilityResolver.resolve(variant: variant, vendor: vendor) : nil,
           actions: variant_actions(variant),
@@ -260,11 +262,7 @@ module Items
     end
 
     def open_tbo_quantities_for(variant_ids)
-      PurchaseRequestLine
-        .buildable_for_store(store)
-        .where(product_variant_id: variant_ids)
-        .group(:product_variant_id)
-        .sum(:requested_quantity)
+      PurchaseRequestLine.open_remaining_quantities_for(store: store, variant_ids: variant_ids)
     end
 
     def receivable_purchase_order_for(variant)

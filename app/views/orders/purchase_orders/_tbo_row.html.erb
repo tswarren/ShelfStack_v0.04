@@ -24,8 +24,20 @@
   </td>
   <td><%= line.request_reason || "—" %></td>
   <% if show_suggested %>
-    <td><%= row.suggested_vendor.vendor&.name || "Unassigned" %></td>
+    <td>
+      <%= row.suggested_vendor.vendor&.name || "Unassigned" %>
+      <% if row.suggested_vendor.source.present? && row.suggested_vendor.source != "none" %>
+        <span class="ss-muted">(<%= row.suggested_vendor.source.humanize %>)</span>
+      <% end %>
+    </td>
   <% end %>
+  <td>
+    <% if row.po_eligibility&.blocking? %>
+      <span class="ss-badge ss-badge--warning" title="<%= row.po_eligibility.blocking_reasons.map(&:message).join('; ') %>">Blocked</span>
+    <% else %>
+      OK
+    <% end %>
+  </td>
   <td>
     <% if vendor.present? %>
       <%= sourcing&.sourcing_record_present ? "Yes" : "No" %>

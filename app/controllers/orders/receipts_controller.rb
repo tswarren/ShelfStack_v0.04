@@ -51,6 +51,7 @@ module Orders
     def edit
       redirect_to orders_receipt_path(@receipt), alert: "Posted receipts cannot be edited." unless @receipt.draft?
       load_form_collections
+      load_allocation_preview!
     end
 
     def update
@@ -64,6 +65,7 @@ module Orders
         redirect_to orders_receipt_path(@receipt), notice: "Draft receipt updated."
       else
         load_form_collections
+        load_allocation_preview!
         render :edit, status: :unprocessable_entity
       end
     end
@@ -137,6 +139,13 @@ module Orders
       end
 
       @receipt.receipt_lines.build
+    end
+
+    def load_allocation_preview!
+      return unless @receipt.draft? && @receipt.po_backed?
+
+      document_hub = Purchasing::ReceiptDocumentHub.call(@receipt)
+      @allocation_preview = Orders::ReceiptShowPresenter.new(receipt: @receipt, document_hub: document_hub)
     end
 
     def receipt_params

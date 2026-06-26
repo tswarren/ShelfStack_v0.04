@@ -18,7 +18,7 @@ module Items
     def items
       list = []
       list.concat(open_tbo_items)
-      list.concat(sourcing_items)
+      list.concat(ordering_warning_items)
       list.concat(setup_items)
       list.concat(returnability_items)
       list.concat(identifier_items)
@@ -42,16 +42,18 @@ module Items
       ]
     end
 
-    def sourcing_items
-      operations.variant_rows.filter_map do |row|
-        next if row.preferred_vendor_name.present?
+    def ordering_warning_items
+      operations.variant_rows.flat_map do |row|
+        Items::OperationalWarningBuilder.call(product_variant: row.variant, store: store).filter_map do |warning|
+          next if warning.severity == :info
 
-        AttentionItem.new(
-          message: "#{row.variant.sku} has no vendor assigned.",
-          link_path: Items::VendorSourcingPath.for(row.variant),
-          link_label: "Assign vendor"
-        )
-      end
+          AttentionItem.new(
+            message: "#{row.variant.sku}: #{warning.message}",
+            link_path: warning.action_path,
+            link_label: warning.action_label || "Review"
+          )
+        end
+      end.uniq { |item| item.message }
     end
 
     def setup_items

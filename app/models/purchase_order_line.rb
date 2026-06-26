@@ -4,6 +4,8 @@ class PurchaseOrderLine < ApplicationRecord
   include NestedLineNumberUniqueness
 
   STATUSES = %w[open partially_received received backordered cancelled closed_short closed].freeze
+  COST_SOURCES = %w[vendor_source manual import default unknown].freeze
+  PRICE_SOURCES = %w[variant vendor_source manual import unknown].freeze
 
   belongs_to :purchase_order
   belongs_to :product_variant
@@ -26,9 +28,12 @@ class PurchaseOrderLine < ApplicationRecord
   validates :returnability_status_snapshot,
             inclusion: { in: ReturnabilityStatus::RETURNABILITY_STATUSES },
             allow_nil: true
+  validates :cost_source, inclusion: { in: COST_SOURCES }
+  validates :price_source, inclusion: { in: PRICE_SOURCES }
   validate :purchase_order_must_be_draft, on: :update, unless: :operational_line_update?
   validate :product_variant_must_be_active
   validate :vendor_must_be_active
+  validate :order_eligibility_for_draft, on: %i[create update], if: :draft_purchase_order_line?
   validate :quantity_received_cannot_exceed_ordered
 
   before_validation :assign_line_number, on: :create
@@ -93,5 +98,18 @@ class PurchaseOrderLine < ApplicationRecord
     return if quantity_received <= quantity_ordered
 
     errors.add(:quantity_received, "cannot exceed quantity ordered")
+  end
+
+  def order_eligibility_for_draft
+    return if product_variant.blank?
+
+    result = Purchasing::OrderEligibilityResolver.call(
+      product_variant: product_variant,
+      vendor: vendor || purchase_order&.vendor,
+      context: :purchase_order
+    )
+    result.blocking_reasons.each do |reason|
+      errors.add(:base, reason.message)
+    end
   end
 end

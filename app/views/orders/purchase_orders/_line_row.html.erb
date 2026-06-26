@@ -6,12 +6,17 @@
     data-purchasing-line-row-vendor-field-id-value="<%= vendor_field_id %>"
     data-purchasing-line-row-quantity-field-value="<%= quantity_field %>"
     data-purchasing-line-row-require-eligible-value="false"
+    data-purchasing-line-row-refresh-on-vendor-change-value="true"
     data-blank-row="<%= blank_row ? "true" : "false" %>"
     <% if variant %>
     data-purchasing-line-row-initial-sku-value="<%= variant.sku %>"
     data-purchasing-line-row-initial-variant-id-value="<%= variant.id %>"
     <% end %>>
   <%= line_form.hidden_field :id if line_form.object.persisted? %>
+  <%= line_form.hidden_field :manual_cost_override, value: line_form.object.manual_cost_override?,
+        data: { purchasing_line_row_target: "manualCostOverride" } %>
+  <%= line_form.hidden_field :manual_price_override, value: line_form.object.manual_price_override?,
+        data: { purchasing_line_row_target: "manualPriceOverride" } %>
   <%= line_form.hidden_field :_destroy, value: false, data: { purchasing_line_table_target: "destroy" } %>
 
   <%= render "orders/shared/scan_lookup_cell", line_form: line_form, variant: variant %>
@@ -62,6 +67,21 @@
           <%= line_form.number_field :supplier_discount_bps, min: 0, max: 10_000, step: 1, class: "ss-input ss-purchasing-table__money",
                 data: { purchasing_line_row_target: "discountBps", action: "input->purchasing-line-row#pricingFieldChanged" } %>
         </dd>
+      </div>
+      <div>
+        <dt>Expected retail</dt>
+        <dd class="ss-num">
+          <%= line_form.number_field :expected_retail_price_cents, min: 0, step: 1, class: "ss-input ss-purchasing-table__money",
+                data: { purchasing_line_row_target: "expectedRetail", action: "input->purchasing-line-row#pricingFieldChanged" } %>
+        </dd>
+      </div>
+      <div>
+        <dt>Line note</dt>
+        <dd><%= line_form.text_field :line_note, class: "ss-input" %></dd>
+      </div>
+      <div>
+        <dt>Margin</dt>
+        <dd class="ss-num" data-purchasing-line-row-target="expectedMargin">—</dd>
       </div>
     </dl>
   </td>

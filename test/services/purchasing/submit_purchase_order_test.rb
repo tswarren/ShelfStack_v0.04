@@ -8,7 +8,7 @@ class Purchasing::SubmitPurchaseOrderTest < ActiveSupport::TestCase
     @store = create_store!
     @user = create_user!
     @vendor = create_vendor!(default_supplier_discount_bps: 4000)
-    @variant = create_product_variant!(inventory_behavior: "standard_physical")
+    @variant = create_product_variant!(inventory_behavior: "standard_physical", selling_price_cents: 2500)
     @variant.product.update!(list_price_cents: 2000)
     ProductVendor.create!(
       product: @variant.product,
@@ -36,8 +36,18 @@ class Purchasing::SubmitPurchaseOrderTest < ActiveSupport::TestCase
     assert_equal 2000, line.unit_list_price_cents
     assert_equal 4000, line.supplier_discount_bps
     assert_equal 1200, line.unit_cost_cents
+    assert_equal 2500, line.expected_retail_price_cents
+    assert_equal "vendor_source", line.cost_source
     assert_equal "returnable", line.returnability_status_snapshot
     assert AuditEvent.exists?(event_name: "purchase_order.submitted", auditable: @order)
+  end
+
+  test "blocks submit when line is not orderable" do
+    @variant.update!(orderable: false)
+
+    assert_raises(Purchasing::SubmitPurchaseOrder::SubmitError) do
+      Purchasing::SubmitPurchaseOrder.call(purchase_order: @order, submitted_by_user: @user)
+    end
   end
 
   test "rejects submit when not draft" do
@@ -46,5 +56,37 @@ class Purchasing::SubmitPurchaseOrderTest < ActiveSupport::TestCase
     assert_raises(Purchasing::SubmitPurchaseOrder::SubmitError) do
       Purchasing::SubmitPurchaseOrder.call(purchase_order: @order, submitted_by_user: @user)
     end
+  end
+
+  test "fills missing economics from defaults before submit snapshot" do
+    line = @order.purchase_order_lines.first
+    line.update_columns(
+      unit_list_price_cents: nil,
+      supplier_discount_bps: nil,
+      unit_cost_cents: nil,
+      expected_line_cost_cents: nil,
+      expected_margin_cents: nil
+    )
+
+    Purchasing::SubmitPurchaseOrder.call(purchase_order: @order, submitted_by_user: @user)
+
+    line.reload
+    assert_equal 2000, line.unit_list_price_cents
+    assert_equal 4000, line.supplier_discount_bps
+    assert_equal 1200, line.unit_cost_cents
+    assert_equal 6000, line.expected_line_cost_cents
+  end
+
+  test "blocks submit when unit cost cannot be determined" do
+    service = Purchasing::SubmitPurchaseOrder.new(purchase_order: @order, submitted_by_user: @user)
+    service.define_singleton_method(:prepare_line_economics!) do |line|
+      line.unit_cost_cents = nil
+    end
+
+    error = assert_raises(Purchasing::SubmitPurchaseOrder::SubmitError) do
+      service.call
+    end
+
+    assert_match(/Expected unit cost could not be determined/, error.message)
   end
 end

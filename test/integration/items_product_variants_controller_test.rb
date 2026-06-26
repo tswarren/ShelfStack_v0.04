@@ -217,6 +217,28 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "non_inventory", variant.inventory_behavior
   end
 
+  test "create preserves explicit orderable true for non-inventory variant" do
+    seed_phase3_reference_data!
+    @product.update!(product_type: "non_inventory")
+    new_condition = ProductCondition.find_by!(condition_key: "new")
+
+    assert_difference -> { ProductVariant.count }, 1 do
+      post items_product_variants_path, params: {
+        product_variant: {
+          product_id: @product.id,
+          condition_id: new_condition.id,
+          sub_department_id: @sub_department.id,
+          selling_price_cents: 500,
+          inventory_behavior: "non_inventory",
+          orderable: true,
+          active: true
+        }
+      }
+    end
+
+    assert ProductVariant.order(:id).last.orderable?
+  end
+
   test "variant show includes back to item link" do
     variant = create_product_variant!(product: @product, sub_department: @sub_department)
 

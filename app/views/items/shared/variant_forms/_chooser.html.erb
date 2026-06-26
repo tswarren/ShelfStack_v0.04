@@ -20,7 +20,8 @@
 <% end %>
 
 <% classification_locals = {
-  classification_defaults: local_assigns[:classification_defaults]
+  classification_defaults: local_assigns[:classification_defaults],
+  vendors: local_assigns[:vendors]
 } %>
 <% case product.variation_type %>
 <% when "conditional" %>

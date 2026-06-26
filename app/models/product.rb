@@ -8,6 +8,7 @@ class Product < ApplicationRecord
   belongs_to :default_display_location, class_name: "DisplayLocation", optional: true
   belongs_to :default_sub_department, class_name: "SubDepartment", optional: true
   belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
+  belongs_to :preferred_vendor, class_name: "Vendor", optional: true
   has_many :product_variants, dependent: :restrict_with_error
   has_many :product_vendors, dependent: :restrict_with_error
   has_one_attached :cover_image
@@ -27,6 +28,7 @@ class Product < ApplicationRecord
   validate :catalog_item_must_be_active
   validate :default_display_location_must_be_active
   validate :default_sub_department_must_be_active
+  validate :preferred_vendor_must_be_active
   validate :cover_image_must_be_valid, if: -> { cover_image.attached? }
 
   scope :active_records, -> { where(active: true) }
@@ -84,6 +86,12 @@ class Product < ApplicationRecord
     return if default_sub_department.blank? || default_sub_department.active?
 
     errors.add(:default_sub_department, "must be active")
+  end
+
+  def preferred_vendor_must_be_active
+    return if preferred_vendor.blank? || preferred_vendor.active?
+
+    errors.add(:preferred_vendor, "must be active")
   end
 
   def cover_image_must_be_valid

@@ -39,6 +39,11 @@
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_display_location_id, label: "Default display location" } do %>
         <%= tree_collection_select(f, :default_display_location_id, display_locations, include_blank: true) %>
       <% end %>
+      <% if local_assigns[:vendors].present? %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :preferred_vendor_id, label: "Preferred vendor" } do %>
+          <%= f.collection_select :preferred_vendor_id, vendors, :id, :name, include_blank: true %>
+        <% end %>
+      <% end %>
     </div>
 
     <%= render "items/shared/product_forms/variation_fields",

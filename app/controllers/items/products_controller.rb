@@ -109,6 +109,7 @@ module Items
       @catalog_items = CatalogItem.active_records.includes(:format).order(:title)
       @display_locations = DisplayLocation.active_for_tree_select
       @sub_departments = SubDepartment.active_records.order(:name)
+      @vendors = Vendor.active_records.order(:name)
     end
 
     def apply_store_category_product_defaults!(product, catalog_item = product.catalog_item)
@@ -129,6 +130,7 @@ module Items
       permitted = params.require(:product).permit(
         :catalog_item_id, :name, :name_override, :short_name, :sku, :product_type, :variation_type,
         :list_price_cents, :default_display_location_id, :default_sub_department_id,
+        :preferred_vendor_id,
         :variant1_label, :variant2_label, :discountable, :active, :cover_image
       )
 

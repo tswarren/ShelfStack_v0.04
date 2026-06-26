@@ -22,6 +22,13 @@
     <%= render "items/shared/variant_forms/inventory_tracking", f: f, variant: variant %>
     <%= render "shared/forms/checkbox", f: f, record: variant, field: :discountable,
                help: "When unchecked, this sellable SKU cannot receive POS discounts." %>
+    <% if local_assigns[:vendors].present? %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :preferred_vendor_id, label: "Preferred vendor" } do %>
+        <%= f.collection_select :preferred_vendor_id, vendors, :id, :name, include_blank: true %>
+      <% end %>
+    <% end %>
+    <%= render "shared/forms/checkbox", f: f, record: variant, field: :orderable,
+               help: "When unchecked, this SKU cannot be added to normal vendor purchase orders." %>
   </div>
 
   <% if classification_defaults.present? %>

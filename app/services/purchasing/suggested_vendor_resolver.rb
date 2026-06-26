@@ -2,7 +2,17 @@
 
 module Purchasing
   class SuggestedVendorResolver
-    Result = Data.define(:vendor, :product_variant_vendor, :product_vendor)
+    SOURCES = %w[
+      variant_preferred
+      product_preferred
+      variant_vendor_source
+      product_vendor_source
+      variant_vendor_fallback
+      product_vendor_fallback
+      none
+    ].freeze
+
+    Result = Data.define(:vendor, :product_variant_vendor, :product_vendor, :source)
 
     def self.for_variant(variant)
       for_variants([ variant.id ]).fetch(variant.id) { empty_result }
@@ -21,7 +31,7 @@ module Purchasing
 
       variants = ProductVariant
         .where(id: variant_ids)
-        .includes(product: :product_vendors)
+        .includes(product: :product_vendors, preferred_vendor: {})
         .index_by(&:id)
 
       variant_vendors = ProductVariantVendor
@@ -42,41 +52,57 @@ module Purchasing
     def resolve_variant(variant, variant_vendor_rows)
       return empty_result if variant.blank?
 
-      product_vendors = variant.product.product_vendors.select(&:active?)
+      if variant.preferred_vendor&.active?
+        return result_from_preferred_vendor(variant.preferred_vendor, :variant_preferred)
+      end
 
-      preferred_variant = variant_vendor_rows.find(&:preferred?)
-      return result_from_variant_vendor(preferred_variant) if preferred_variant
+      product = variant.product
+      if product.preferred_vendor&.active?
+        return result_from_preferred_vendor(product.preferred_vendor, :product_preferred)
+      end
 
-      preferred_product = product_vendors.find(&:preferred?)
-      return result_from_product_vendor(preferred_product) if preferred_product
+      active_variant_rows = variant_vendor_rows.select { |row| row.active? && row.vendor&.active? }
+      active_product_vendors = product.product_vendors.select { |row| row.active? && row.vendor&.active? }
 
-      first_variant = variant_vendor_rows.first
-      return result_from_variant_vendor(first_variant) if first_variant
+      preferred_variant = active_variant_rows.find(&:preferred?)
+      return result_from_variant_vendor(preferred_variant, :variant_vendor_source) if preferred_variant
 
-      first_product = product_vendors.first
-      return result_from_product_vendor(first_product) if first_product
+      preferred_product = active_product_vendors.find(&:preferred?)
+      return result_from_product_vendor(preferred_product, :product_vendor_source) if preferred_product
+
+      first_variant = active_variant_rows.first
+      return result_from_variant_vendor(first_variant, :variant_vendor_fallback) if first_variant
+
+      first_product = active_product_vendors.first
+      return result_from_product_vendor(first_product, :product_vendor_fallback) if first_product
 
       empty_result
     end
 
-    def result_from_variant_vendor(record)
+    def result_from_preferred_vendor(vendor, source)
+      Result.new(vendor: vendor, product_variant_vendor: nil, product_vendor: nil, source: source.to_s)
+    end
+
+    def result_from_variant_vendor(record, source)
       Result.new(
         vendor: record.vendor,
         product_variant_vendor: record,
-        product_vendor: nil
+        product_vendor: nil,
+        source: source.to_s
       )
     end
 
-    def result_from_product_vendor(record)
+    def result_from_product_vendor(record, source)
       Result.new(
         vendor: record.vendor,
         product_variant_vendor: nil,
-        product_vendor: record
+        product_vendor: record,
+        source: source.to_s
       )
     end
 
     def empty_result
-      Result.new(vendor: nil, product_variant_vendor: nil, product_vendor: nil)
+      Result.new(vendor: nil, product_variant_vendor: nil, product_vendor: nil, source: "none")
     end
   end
 end

@@ -120,6 +120,7 @@ module IngramCatalogImport
         previous_price = product.list_price_cents
         product.update!(list_price_cents: row.us_srp_cents)
         record_audit!("product.updated", product) if previous_price != row.us_srp_cents
+        finalize_product!(product)
         [ product, :product_updated, nil ]
       else
         product_attrs = {
@@ -134,6 +135,7 @@ module IngramCatalogImport
         product_attrs[:default_display_location] = defaults.default_display_location if defaults.default_display_location.present?
         product = Product.create!(product_attrs)
         record_audit!("product.created", product)
+        finalize_product!(product)
         [ product, :product_created, nil ]
       end
     end
@@ -143,6 +145,7 @@ module IngramCatalogImport
 
       existing = VariantMatcher.find_new_variant(product: product)
       if existing
+        finalize_variant!(product: product, variant: existing)
         return { status: :variant_matched, variant: existing }
       end
 
@@ -158,8 +161,66 @@ module IngramCatalogImport
         inventory_behavior: AddItem::InventoryBehaviorMapper.for_product_type("physical"),
         selling_price_cents: AddItem::DefaultSellingPrice.cents(product: product, condition: condition)
       )
+      finalize_variant!(product: product, variant: variant)
       record_audit!("product_variant.created", variant, details: { "sku" => variant.sku, "source" => "ingram_import" })
       { status: :variant_created, variant: variant }
+    end
+
+    def finalize_product!(product)
+      apply_product_preferred_vendor_if_requested!(product)
+      create_or_update_ingram_vendor_sources_if_requested!(product: product, variant: nil)
+    end
+
+    def finalize_variant!(product:, variant:)
+      apply_variant_preferred_vendor_if_requested!(variant)
+      create_or_update_ingram_vendor_sources_if_requested!(product: product, variant: variant)
+    end
+
+    def apply_product_preferred_vendor_if_requested!(product)
+      return unless @options.set_preferred_vendor?
+
+      ingram = ingram_vendor
+      return if ingram.blank?
+
+      if product.preferred_vendor_id.blank? || @options.overwrite_existing_preferred_vendor?
+        product.update!(preferred_vendor: ingram)
+        @result.increment_preferred_vendor_assignments!
+      else
+        @result.increment_preferred_vendor_skipped!
+      end
+    end
+
+    def apply_variant_preferred_vendor_if_requested!(variant)
+      return unless @options.set_preferred_vendor?
+
+      ingram = ingram_vendor
+      return if ingram.blank? || variant.blank?
+
+      return unless variant.preferred_vendor_id.blank? || @options.overwrite_existing_preferred_vendor?
+
+      variant.update!(preferred_vendor: ingram)
+    end
+
+    def create_or_update_ingram_vendor_sources_if_requested!(product:, variant:)
+      return unless @options.create_or_update_vendor_sources?
+
+      ingram = ingram_vendor
+      return if ingram.blank?
+
+      ProductVendor.find_or_initialize_by(product: product, vendor: ingram).tap do |pv|
+        pv.active = true
+        pv.save!
+      end
+      return if variant.blank?
+
+      ProductVariantVendor.find_or_initialize_by(product_variant: variant, vendor: ingram).tap do |pvv|
+        pvv.active = true
+        pvv.save!
+      end
+    end
+
+    def ingram_vendor
+      @ingram_vendor ||= Vendor.find_by(name: "Ingram")
     end
 
     def create_identifiers!(catalog_item, row)

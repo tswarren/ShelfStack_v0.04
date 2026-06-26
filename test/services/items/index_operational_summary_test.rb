@@ -39,4 +39,29 @@ class Items::IndexOperationalSummaryTest < ActiveSupport::TestCase
     assert_equal 3, summary.open_tbo
     assert summaries[@item].actions.any? { |action| action.label == "View" }
   end
+
+  test "open tbo summary uses remaining quantity after partial order" do
+    line = PurchaseRequestLine.find_by!(product_variant: @variant)
+    vendor = create_vendor!
+    create_purchase_order!(
+      store: @store,
+      vendor: vendor,
+      lines: [
+        create_purchase_order_line_attrs(
+          variant: @variant,
+          vendor: vendor,
+          quantity_ordered: 1,
+          purchase_request_line: line
+        )
+      ]
+    )
+
+    summaries = Items::IndexOperationalSummary.for(
+      store: @store,
+      user: @user,
+      results: [ @result ]
+    )
+
+    assert_equal 2, summaries[@item].open_tbo
+  end
 end

@@ -38,12 +38,12 @@ class Items::ItemAttentionPresenterTest < ActiveSupport::TestCase
 
     items = Items::ItemAttentionPresenter.for(item: @item, store: @store, user: @user)
 
-    assert items.none? { |item| item.message.include?("no vendor assigned") }
+    assert items.none? { |item| item.message.include?("No preferred vendor") }
   end
 
   test "flags missing vendor assignment" do
     items = Items::ItemAttentionPresenter.for(item: @item, store: @store, user: @user)
 
-    assert items.any? { |item| item.message.include?("no vendor assigned") }
+    assert items.any? { |item| item.message.include?("No preferred vendor") }
   end
 end

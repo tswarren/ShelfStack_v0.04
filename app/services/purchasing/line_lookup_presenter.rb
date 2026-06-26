@@ -69,10 +69,7 @@ module Purchasing
     end
 
     def open_tbo_quantity(variant)
-      PurchaseRequestLine
-        .buildable_for_store(store)
-        .where(product_variant: variant)
-        .sum(:requested_quantity)
+      PurchaseRequestLine.open_remaining_quantities_for(store: store, variant_ids: [ variant.id ]).fetch(variant.id, 0)
     end
 
     def last_received_cost_cents(variant)
