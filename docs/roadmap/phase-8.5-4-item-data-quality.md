@@ -1,6 +1,6 @@
 # Phase 8.5-4 — Item Data Quality and Operational Item Pages
 
-**Status:** Draft (revised)
+**Status:** Accepted
 
 **Prerequisite:** Phase 8.5-3 (Order Handling Readiness) merged and stable.
 
