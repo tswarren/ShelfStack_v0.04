@@ -56,6 +56,26 @@ class Items::ItemOverviewPresenterTest < ActiveSupport::TestCase
     refute_match(/0\/0/, order.detail)
   end
 
+  test "stock card reflects availability state" do
+    overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
+    stock = overview.summary_cards.find { |card| card.key == :stock }
+
+    assert_equal "No stock", stock.status
+
+    InventoryBalance.create!(
+      store: @store,
+      product_variant: @variant,
+      quantity_on_hand: 5,
+      quantity_available: 3,
+      quantity_reserved: 2
+    )
+
+    overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
+    stock = overview.summary_cards.find { |card| card.key == :stock }
+
+    assert_equal "Available", stock.status
+  end
+
   test "sales history hidden without pos transaction view permission" do
     overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
 

@@ -386,9 +386,7 @@
         variants: item.variants %>
 <% end %>
 
-<% if overview&.sales_visible? %>
-  <% full_sales = Items::SalesHistoryLookup.for_variants(store: current_store, variant_ids: item.variants.map(&:id), limit: 20) %>
-  <% if full_sales.any? %>
+<% if operations_tab.sales_visible? && operations_tab.sales_history_rows.any? %>
     <section id="sales-history" class="ss-item-section" aria-label="Sales history">
       <h2>Sales history</h2>
       <table class="ss-table">
@@ -402,7 +400,7 @@
           </tr>
         </thead>
         <tbody>
-          <% full_sales.each do |row| %>
+          <% operations_tab.sales_history_rows.each do |row| %>
             <tr>
               <td><%= l(row.sold_at, format: :short) %></td>
               <td><%= row.variant_sku %></td>
@@ -414,7 +412,6 @@
         </tbody>
       </table>
     </section>
-  <% end %>
 <% end %>
 
 <%= render "items/items/customer_demand_drawer", operations: operations %>

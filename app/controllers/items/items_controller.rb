@@ -27,6 +27,9 @@ module Items
       elsif params[:product_id].present?
         product = Product.with_attached_cover_image.includes(:catalog_item, product_includes).find(params[:product_id])
         @item = ItemPresenter.from_product(product)
+      elsif params[:product_variant_id].present?
+        variant = ProductVariant.includes(product: product_includes).find(params[:product_variant_id])
+        @item = ItemPresenter.from_product_variant(variant)
       else
         redirect_to items_root_path, alert: "Item not found."
       end
@@ -73,9 +76,12 @@ module Items
     end
 
     def load_highlight_variant
-      return if params[:variant_id].blank? || @item.product.blank?
+      return if @item.product.blank?
 
-      @item.variants.find_by(id: params[:variant_id])
+      variant_id = params[:variant_id].presence || params[:product_variant_id].presence
+      return if variant_id.blank?
+
+      @item.variants.find_by(id: variant_id)
     end
 
     def load_order_quantities

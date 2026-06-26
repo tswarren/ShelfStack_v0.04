@@ -199,11 +199,27 @@ module Items
 
     def stock_card
       rows = snapshot.rows.values
+      available_total = rows.sum { |row| row.available || 0 }
+      on_hand_total = rows.sum { |row| row.on_hand || 0 }
+      on_order_total = rows.sum { |row| row.on_order || 0 }
+      tbo_total = rows.sum(&:open_tbo)
+      status = if available_total.positive?
+        "Available"
+      elsif on_hand_total.positive?
+        "On hand"
+      elsif on_order_total.positive?
+        "On order"
+      elsif tbo_total.positive?
+        "TBO"
+      else
+        "No stock"
+      end
+
       SummaryCard.new(
         key: :stock,
         label: "Stock",
-        status: "On hand",
-        detail: "Avail. #{rows.sum { |row| row.available || 0 }} · TBO #{rows.sum(&:open_tbo)} · On order #{rows.sum { |row| row.on_order || 0 }}",
+        status: status,
+        detail: "Avail. #{available_total} · TBO #{tbo_total} · On order #{on_order_total}",
         severity: nil
       )
     end

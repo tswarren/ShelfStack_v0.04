@@ -28,6 +28,40 @@ class Items::ItemOverviewContractTest < ActionDispatch::IntegrationTest
     assert_select ".ss-item-hero"
   end
 
+  test "product_variant_id resolves item and highlights variant" do
+    get items_item_path(product_variant_id: @variant.id, tab: "overview")
+
+    assert_response :success
+    assert_select "#variant-matrix"
+    assert_match @variant.sku, response.body
+  end
+
+  test "overview receiving history includes purchase order link when present" do
+    po = create_purchase_order!(store: @store, vendor: create_vendor!)
+    receipt = create_receipt!(
+      store: @store,
+      vendor: po.vendor,
+      attrs: { purchase_order: po },
+      lines: [
+        {
+          product_variant: @variant,
+          quantity_expected: 0,
+          quantity_received: 2,
+          quantity_accepted: 2,
+          quantity_rejected: 0,
+          unit_cost_cents: 900
+        }
+      ]
+    )
+    Purchasing::PostReceipt.call(receipt: receipt, posted_by_user: @user)
+
+    get items_item_path(product_id: @product.id, tab: "overview")
+
+    assert_response :success
+    assert_match "PO ##{po.id}", response.body
+    assert_match "Receipt ##{receipt.id}", response.body
+  end
+
   test "overview renders warnings region when warnings present" do
     @variant.update!(selling_price_cents: 0)
 

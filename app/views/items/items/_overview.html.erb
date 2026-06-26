@@ -227,7 +227,10 @@
                   <td class="ss-num"><%= row.quantity_accepted %></td>
                   <td class="ss-num"><%= format_cents(row.unit_cost_cents) %></td>
                   <td>
-                    <%= link_to "Receipt", orders_receipt_path(row.receipt), class: "ss-btn-link" %>
+                    <% if row.purchase_order.present? %>
+                      <%= link_to "PO ##{row.purchase_order.id}", orders_purchase_order_path(row.purchase_order), class: "ss-btn-link" %>
+                    <% end %>
+                    <%= link_to "Receipt ##{row.receipt.id}", orders_receipt_path(row.receipt), class: "ss-btn-link" %>
                   </td>
                 </tr>
               <% end %>
