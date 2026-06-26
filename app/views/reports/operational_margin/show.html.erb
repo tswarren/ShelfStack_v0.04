@@ -1,0 +1,53 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Operational Margin",
+             scope: @scope&.label,
+             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+
+  <%= render "reports/shared/pos_scope_filter", url: reports_operational_margin_path, sessions: @sessions %>
+
+  <% if @scope.blank? && params.except(:controller, :action).present? %>
+    <%= render "reports/shared/section_notice", message: "Choose a valid filter and run the report." %>
+  <% elsif @report %>
+    <%= render "reports/shared/metric_strip", metrics: [
+      { label: "Net revenue", value: format_report_money(@report.net_revenue_cents) },
+      { label: "Total COGS", value: format_report_money(@report.total_cogs_cents) },
+      { label: "Actual margin", value: format_report_money(@report.actual_margin_cents) },
+      { label: "Estimated margin", value: format_report_money(@report.estimated_margin_cents) }
+    ] %>
+
+    <%= render "reports/shared/section_notice", message: "Voided transactions excluded. Non-inventory and liability lines omitted from merchandise totals." %>
+
+    <div class="ss-report-body">
+      <table class="ss-table ss-table--report">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Txn #</th>
+            <th>SKU</th>
+            <th>Item</th>
+            <th class="ss-num">Qty</th>
+            <th class="ss-num ss-money">Net revenue</th>
+            <th class="ss-num ss-money">COGS</th>
+            <th>Est.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report.rows.each do |row| %>
+            <% next unless row.revenue_treatment == "merchandise" %>
+            <tr>
+              <td><%= l(row.business_date) %></td>
+              <td><%= row.transaction_number %></td>
+              <td><%= row.sku %></td>
+              <td><%= row.variant_name %></td>
+              <td class="ss-num"><%= format_report_quantity(row.quantity) %></td>
+              <td class="ss-num ss-money"><%= format_report_money(row.net_revenue_cents) %></td>
+              <td class="ss-num ss-money"><%= row.total_cogs_cents.nil? ? "—" : format_report_money(row.total_cogs_cents) %></td>
+              <td><%= row.cogs_estimated ? "Yes" : "No" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

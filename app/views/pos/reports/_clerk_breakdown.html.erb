@@ -16,9 +16,9 @@
       </thead>
       <tbody>
         <% rows.each do |row| %>
-          <%= render "metrics_row", label: row.clerk_name, metrics: row.metrics %>
+          <%= render "pos/reports/metrics_row", label: row.clerk_name, metrics: row.metrics %>
         <% end %>
-        <%= render "metrics_row", label: "Total", metrics: totals, emphasis: true %>
+        <%= render "pos/reports/metrics_row", label: "Total", metrics: totals, emphasis: true %>
       </tbody>
     </table>
   </div>

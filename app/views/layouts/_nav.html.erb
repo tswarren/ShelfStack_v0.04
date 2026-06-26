@@ -26,6 +26,10 @@
   <% else %>
     <span class="disabled">Buybacks</span>
   <% end %>
-  <span class="disabled">Reports</span>
+  <% if reports_nav_visible? %>
+    <%= link_to "Reports", reports_root_path, class: (request.path.start_with?("/reports") ? "active" : nil) %>
+  <% else %>
+    <span class="disabled">Reports</span>
+  <% end %>
   <%= link_to "Setup", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>
 </nav>

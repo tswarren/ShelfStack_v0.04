@@ -1,0 +1,51 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Inventory Value Snapshot",
+             scope: "#{report_store.name} · current snapshot",
+             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+
+  <%= render "reports/shared/metric_strip", metrics: @report.metrics.map { |m| m[:value_cents] ? m.merge(value: format_report_money(m[:value_cents])) : m } %>
+
+  <div class="ss-report-body">
+    <h2>By department</h2>
+    <table class="ss-table ss-table--report">
+      <thead>
+        <tr>
+          <th>Department</th>
+          <th class="ss-num">On hand</th>
+          <th class="ss-num ss-money">Cost value</th>
+          <th class="ss-num ss-money">Retail value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @report.department_rows.each do |row| %>
+          <tr>
+            <td><%= row.department_name %></td>
+            <td class="ss-num"><%= format_report_quantity(row.quantity_on_hand) %></td>
+            <td class="ss-num ss-money"><%= format_report_money(row.cost_cents) %></td>
+            <td class="ss-num ss-money"><%= format_report_money(row.retail_cents) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @report.enterprise_rows.any? %>
+      <h2>Enterprise rollup</h2>
+      <table class="ss-table ss-table--report">
+        <thead>
+          <tr><th>Store</th><th class="ss-num">On hand</th><th class="ss-num ss-money">Cost</th><th class="ss-num ss-money">Retail</th></tr>
+        </thead>
+        <tbody>
+          <% @report.enterprise_rows.each do |name, totals| %>
+            <tr>
+              <td><%= name %></td>
+              <td class="ss-num"><%= format_report_quantity(totals[:quantity_on_hand]) %></td>
+              <td class="ss-num ss-money"><%= format_report_money(totals[:inventory_cost_value_cents]) %></td>
+              <td class="ss-num ss-money"><%= format_report_money(totals[:inventory_retail_value_cents]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>

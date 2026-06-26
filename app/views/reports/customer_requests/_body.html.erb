@@ -1,0 +1,56 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Customer Request Queue",
+             scope: report.scope_label,
+             actions: safe_join([report_print_button, (back_path ? link_to("Back", back_path, class: "ss-btn ss-btn-secondary ss-report-no-print") : nil)].compact, " ") %>
+
+  <%= render layout: "reports/shared/filter_bar", locals: { url: filter_url } do %>
+    <%= render "reports/shared/date_range", start_value: params[:start_date], end_value: params[:end_date] %>
+    <div class="ss-field">
+      <%= label_tag :queue, "Queue" %>
+      <%= select_tag :queue,
+                     options_for_select(
+                       ::CustomerRequests::QueueScope::QUEUE_KEYS.map { |k| [ k.tr("_", " ").titleize, k ] },
+                       params[:queue]
+                     ),
+                     include_blank: "All queues" %>
+    </div>
+  <% end %>
+
+  <%= render "reports/shared/metric_strip", metrics: report.metrics %>
+
+  <div class="ss-report-body">
+    <% if report.empty? %>
+      <%= render "reports/shared/empty_state",
+                 title: "No requests match these filters",
+                 message: "Try widening the date range or clearing the queue filter." %>
+    <% else %>
+      <table class="ss-table ss-table--report">
+        <thead>
+          <tr>
+            <th>Request</th>
+            <th>Status</th>
+            <th class="ss-num">Aging (days)</th>
+            <th>Item</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% report.rows.each do |row| %>
+            <tr>
+              <td><%= link_to row.label, row.request_path, class: "ss-link" %></td>
+              <td><span class="ss-status-badge <%= row.status_class %>"><%= row.status %></span></td>
+              <td class="ss-num"><%= format_report_quantity(row.aging_days) %></td>
+              <td>
+                <% if row.variant_id.present? %>
+                  <%= link_to row.item_label, items_item_path(product_variant_id: row.variant_id, tab: "overview"), class: "ss-link" %>
+                <% else %>
+                  <%= row.item_label %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>

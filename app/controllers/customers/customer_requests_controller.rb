@@ -28,6 +28,7 @@ module Customers
       @customer_requests = CustomerRequests::QueueScope.apply(@customer_requests, @queue, store: customers_store) if @queue.present?
       @customer_requests = CustomerRequests::SearchQuery.apply(@customer_requests, params[:q])
       @index_rows = CustomerRequests::IndexRowPresenter.build_collection(@customer_requests, store: customers_store)
+      @report = Reports::CustomerRequests::Query.call(store: customers_store, queue: @queue)
     end
 
     def show

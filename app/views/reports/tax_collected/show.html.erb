@@ -1,0 +1,36 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Tax Collected",
+             scope: @report&.scope&.label,
+             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+
+  <%= render "reports/shared/pos_scope_filter", url: reports_tax_collected_path, sessions: @sessions %>
+  <%= render "reports/shared/section_notice", message: "Date basis: business date on completed POS transactions. Totals from line tax snapshots." %>
+
+  <% if @scope.blank? && params.except(:controller, :action).present? %>
+    <%= render "reports/shared/section_notice", message: "Choose a valid filter and run the report." %>
+  <% elsif @report %>
+    <%= render "reports/shared/metric_strip", metrics: @report.metrics.map { |m| m[:value_cents] ? m.merge(value: format_report_money(m[:value_cents])) : m } %>
+
+    <div class="ss-report-body">
+      <table class="ss-table ss-table--report">
+        <thead>
+          <tr>
+            <th>Tax source / category</th>
+            <th class="ss-num ss-money">Taxable sales</th>
+            <th class="ss-num ss-money">Tax collected</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report.rows.each do |row| %>
+            <tr class="<%= row.row_type == :total ? 'ss-table-row--total' : nil %>">
+              <th scope="row"><%= row.label %></th>
+              <td class="ss-num ss-money"><%= format_report_money(row.taxable_sales_cents) %></td>
+              <td class="ss-num ss-money"><%= format_report_money(row.tax_cents) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

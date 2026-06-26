@@ -2176,6 +2176,16 @@ h2 {
   margin-top: 1rem;
 }
 
+.ss-link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.ss-link-list li {
+  margin-bottom: 0.5rem;
+}
+
 .ss-report-no-print {
   /* hidden in print via @media print below */
 }

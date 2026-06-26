@@ -52,4 +52,41 @@ module ReportsHelper
   def report_print_button(label: "Print")
     link_to label, "#", class: "ss-btn ss-btn-secondary ss-report-no-print", onclick: "window.print(); return false;"
   end
+
+  def report_csv_link(path, label: "Export CSV")
+    link_to label, path, class: "ss-btn ss-btn-secondary ss-report-no-print", data: { turbo: false }
+  end
+
+  def reports_nav_visible?
+    Reports::Registry.nav_visible?(user: current_user, store: current_store)
+  end
+
+  def report_session_options(sessions)
+    sessions.map do |session|
+      label = [
+        session.workstation.name,
+        session.business_date,
+        session.status,
+        l(session.opened_at.in_time_zone(session.store.time_zone), format: :short)
+      ].join(" · ")
+      [ label, session.id ]
+    end
+  end
+
+  def report_register_summary_subtitle(report)
+    session = report.session
+    store = report.scope.store
+    [
+      store.name,
+      "Register #{session.workstation.workstation_number}",
+      session.business_date,
+      "Opened #{format_report_date(session.opened_at, basis: nil)}"
+    ].join(" · ")
+  end
+
+  def report_signed_money(cents)
+    return format_report_money(0) if cents.to_i.zero?
+
+    format_report_money(cents, signed: cents.negative?)
+  end
 end

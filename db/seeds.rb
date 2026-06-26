@@ -44,7 +44,6 @@ Seeds::Phase7bPermissions.seed!
 Seeds::Phase7cPermissions.seed!
 Seeds::Phase85Permissions.seed!
 Seeds::Phase852Permissions.seed!
-Seeds::Phase9aPermissions.seed!
 Seeds::Phase6Roles.seed!
 
 system_user = User.find_or_initialize_by(username: "system")

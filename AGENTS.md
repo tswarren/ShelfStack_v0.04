@@ -219,7 +219,10 @@ docs/specifications/phase-9a-ux-foundation-for-reporting-spec.md
 docs/specifications/report-view-contract.md
 docs/specifications/reporting-semantics.md
 docs/specifications/phase-9a-test-plan.md
+docs/specifications/phase-9b-operational-reports-spec.md
+docs/specifications/phase-9b-test-plan.md
 docs/implementation/phase-9a-completion.md
+docs/implementation/phase-9b-completion.md
 docs/handoff/phase-9-item-drill-down-contract.md
 ```
 
@@ -345,8 +348,15 @@ See [docs/implementation/phase-9a-completion.md](docs/implementation/phase-9a-co
 - Report view contract, reporting semantics docs, and CSS/helper/partial foundation
 - `ReportsHelper`, shared `reports/shared` partials, report CSS primitives in `shelfstack.css`
 - `Reports::ProcurementPathResolver`, `Reports::InclusionRules`
-- Sample shells at `/reports/shells/reconciliation` and `/reports/shells/queue` (`reports.foundation.view`)
-- **Next:** Phase 9b — migrate existing operational reports and add Reports hub
+
+## Phase 9b: Operational Reports — **Complete**
+
+See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-completion.md).
+
+- Unified `/reports` hub with permission-union navigation
+- 13 operational reports on Phase 9a view contract; legacy URLs redirect (302)
+- Greenfield: tax collected, discount summary, inventory value, purchasing summary, customer request queue
+- **Next:** Phase 9c — GL-shaped financial layer
 
 ---
 

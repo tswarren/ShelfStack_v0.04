@@ -18,8 +18,22 @@ Rails.application.routes.draw do
   root "dashboard#show"
 
   namespace :reports do
-    get "shells/reconciliation", to: "shells#reconciliation"
-    get "shells/queue", to: "shells#queue"
+    root to: "index#show"
+    get "register_summary", to: "register_summary#show"
+    get "cash_drawer", to: "cash_drawer#show"
+    get "sales_summary", to: "sales_summary#show"
+    get "sales", to: "sales#show"
+    get "returns", to: "returns#show"
+    get "operational_margin", to: "operational_margin#show"
+    get "tax_collected", to: "tax_collected#show"
+    get "discount_summary", to: "discount_summary#show"
+    get "buyback_summary", to: "buyback_summary#show"
+    get "stored_value", to: "stored_value#show"
+    get "inventory_value", to: "inventory_value#show"
+    get "purchasing_summary", to: "purchasing_summary#show"
+    get "customer_requests", to: "customer_requests#show"
+    get "shells/reconciliation", to: redirect("/reports/tax_collected")
+    get "shells/queue", to: redirect("/reports/customer_requests")
   end
 
   namespace :items do

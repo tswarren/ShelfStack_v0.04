@@ -144,3 +144,21 @@ Confirmed data sources for Phase 9b:
 * Tax snapshots: line `normal_tax_cents`, `applied_tax_source`, exemption/override records
 * Discounts: `pos_discount_applications`, allocations
 * COGS (operational margin): `Pos::LineCogsCalculator` snapshots — not GL COGS
+
+---
+
+## Phase 9b per-report scopes
+
+| Report | Date basis | Inclusion |
+| ------ | ---------- | --------- |
+| Register Summary | Session open/close + `business_date` | Completed transactions in session |
+| Sales Summary | `business_date` / `completed_at` | `Reports::InclusionRules.pos_sales_transactions` |
+| Tax Collected | `business_date` | Completed lines; group by `applied_tax_source` |
+| Discount Summary | `business_date` | Active `pos_discount_applications` on completed transactions |
+| Cash Drawer | Session boundaries | Register session + cash movements |
+| Operational Margin | Scope filter | Completed only; voided excluded |
+| Buyback Summary | Session `created_at` / completion | `buyback_reportable_sessions` for activity |
+| Stored Value | `posted_at` on ledger | Active accounts for balances |
+| Inventory Value | Current snapshot | Inventory-eligible variants only |
+| Purchasing Summary | PO submit / receipt dates | Submitted POs; posted receipt acceptance |
+| Customer Requests | `created_at` / status timestamps | Open and terminal statuses per filter |

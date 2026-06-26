@@ -1,0 +1,32 @@
+<div class="ss-report report-print">
+  <%= render "reports/shared/header",
+             title: "Purchasing & Receiving Summary",
+             scope: @report.scope_label,
+             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+
+  <%= render layout: "reports/shared/filter_bar", locals: { url: reports_purchasing_summary_path } do %>
+    <%= render "reports/shared/date_range", start_value: params[:start_date], end_value: params[:end_date] %>
+  <% end %>
+
+  <%= render "reports/shared/metric_strip", metrics: @report.metrics %>
+
+  <div class="ss-report-body">
+    <h2>Purchase orders by status</h2>
+    <table class="ss-table ss-table--report">
+      <thead><tr><th>Status</th><th class="ss-num">Count</th></tr></thead>
+      <tbody>
+        <% @report.po_counts.each do |status, count| %>
+          <tr><td><%= status.humanize %></td><td class="ss-num"><%= format_report_quantity(count) %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <h2>Receipt totals</h2>
+    <table class="ss-table ss-table--report">
+      <tbody>
+        <tr><th scope="row">Quantity accepted</th><td class="ss-num"><%= format_report_quantity(@report.receipt_totals[:accepted_qty]) %></td></tr>
+        <tr><th scope="row">Quantity rejected</th><td class="ss-num"><%= format_report_quantity(@report.receipt_totals[:rejected_qty]) %></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
