@@ -6,6 +6,7 @@ module Purchasing
       :line,
       :sourcing,
       :suggested_vendor,
+      :po_eligibility,
       :quantity_on_hand,
       :quantity_on_order,
       :quantity_pending,
@@ -60,6 +61,11 @@ module Purchasing
           line: line,
           sourcing: sourcing,
           suggested_vendor: suggested_vendors.fetch(variant_id) { SuggestedVendorResolver.for_variant(line.product_variant) },
+          po_eligibility: OrderEligibilityResolver.call(
+            product_variant: line.product_variant,
+            vendor: vendor,
+            context: :purchase_order
+          ),
           quantity_on_hand: balances[variant_id]&.quantity_on_hand || 0,
           quantity_on_order: order_qty.on_order,
           quantity_pending: order_qty.pending,

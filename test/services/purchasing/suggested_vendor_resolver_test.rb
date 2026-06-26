@@ -10,7 +10,16 @@ class Purchasing::SuggestedVendorResolverTest < ActiveSupport::TestCase
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
   end
 
-  test "prefers active preferred variant vendor" do
+  test "prefers variant preferred vendor" do
+    @variant.update!(preferred_vendor: @vendor_b)
+
+    result = Purchasing::SuggestedVendorResolver.for_variant(@variant)
+
+    assert_equal @vendor_b, result.vendor
+    assert_equal "variant_preferred", result.source
+  end
+
+  test "prefers preferred variant vendor source when no preferred vendor" do
     ProductVariantVendor.create!(
       product_variant: @variant,
       vendor: @vendor_a,
@@ -27,24 +36,22 @@ class Purchasing::SuggestedVendorResolverTest < ActiveSupport::TestCase
     result = Purchasing::SuggestedVendorResolver.for_variant(@variant)
 
     assert_equal @vendor_b, result.vendor
+    assert_equal "variant_vendor_source", result.source
   end
 
   test "falls back to preferred product vendor" do
-    ProductVendor.create!(
-      product: @variant.product,
-      vendor: @vendor_a,
-      active: true,
-      preferred: true
-    )
+    @variant.product.update!(preferred_vendor: @vendor_a)
 
     result = Purchasing::SuggestedVendorResolver.for_variant(@variant)
 
     assert_equal @vendor_a, result.vendor
+    assert_equal "product_preferred", result.source
   end
 
   test "returns empty result when no sourcing exists" do
     result = Purchasing::SuggestedVendorResolver.for_variant(@variant)
 
     assert_nil result.vendor
+    assert_equal "none", result.source
   end
 end

@@ -40,6 +40,7 @@
         <th class="ss-num">Pending PO</th>
         <th class="ss-num">On order</th>
         <th>Preferred vendor</th>
+        <th>Vendor source</th>
         <th>Vendor #</th>
         <th>Returnability</th>
         <th>Last received</th>
@@ -59,6 +60,7 @@
           <td class="ss-num"><%= row.pending_po.nil? ? "—" : row.pending_po %></td>
           <td class="ss-num"><%= row.on_order.nil? ? "—" : row.on_order %></td>
           <td><%= row.preferred_vendor_name || "—" %></td>
+          <td><%= row.preferred_vendor_source.present? ? humanize_controlled_value(row.preferred_vendor_source) : "—" %></td>
           <td><%= row.vendor_item_number || "—" %></td>
           <td><%= row.returnability_status.present? ? row.returnability_status.humanize : "—" %></td>
           <td>

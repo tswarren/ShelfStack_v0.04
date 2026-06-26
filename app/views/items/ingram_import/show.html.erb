@@ -38,6 +38,27 @@
                 html_options: { class: "ss-input" } %>
         </div>
       </div>
+      <div class="ss-form-grid ss-form-grid--2">
+        <div class="ss-check-field">
+          <%= check_box_tag :set_preferred_vendor, "1", params[:set_preferred_vendor].nil? ? true : ActiveModel::Type::Boolean.new.cast(params[:set_preferred_vendor]) %>
+          <div>
+            <%= label_tag :set_preferred_vendor, "Set Ingram as preferred vendor" %>
+            <p class="ss-help">Applied to imported products and variants.</p>
+          </div>
+        </div>
+        <div class="ss-check-field">
+          <%= check_box_tag :overwrite_existing_preferred_vendor, "1", ActiveModel::Type::Boolean.new.cast(params[:overwrite_existing_preferred_vendor]) %>
+          <div>
+            <%= label_tag :overwrite_existing_preferred_vendor, "Overwrite existing preferred vendor" %>
+          </div>
+        </div>
+        <div class="ss-check-field">
+          <%= check_box_tag :create_or_update_vendor_sources, "1", params[:create_or_update_vendor_sources].nil? ? true : ActiveModel::Type::Boolean.new.cast(params[:create_or_update_vendor_sources]) %>
+          <div>
+            <%= label_tag :create_or_update_vendor_sources, "Create or update vendor sources" %>
+          </div>
+        </div>
+      </div>
     <% end %>
 
     <%= render "shared/forms/section", title: "Spreadsheet file" do %>
@@ -61,6 +82,9 @@
       <%= hidden_field_tag :sub_department_id, @selected_sub_department_id %>
       <%= hidden_field_tag :store_category_id, @selected_store_category_id %>
       <%= hidden_field_tag :display_location_id, @selected_display_location_id %>
+      <%= hidden_field_tag :set_preferred_vendor, params[:set_preferred_vendor] %>
+      <%= hidden_field_tag :overwrite_existing_preferred_vendor, params[:overwrite_existing_preferred_vendor] %>
+      <%= hidden_field_tag :create_or_update_vendor_sources, params[:create_or_update_vendor_sources] %>
       <div class="ss-form-actions">
         <%= submit_tag "Run import", class: "ss-button ss-button--primary", data: { turbo_confirm: "Run import for #{@row_count} rows?" } %>
       </div>

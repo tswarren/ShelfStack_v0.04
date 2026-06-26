@@ -30,6 +30,11 @@
       <%= f.collection_select :default_sub_department_id, local_assigns[:sub_departments], :id, :name, include_blank: false %>
       <p class="ss-help">Applied as the default for sellable SKUs you create for this product.</p>
     <% end %>
+    <% if local_assigns[:vendors].present? %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :preferred_vendor_id, label: "Preferred vendor" } do %>
+        <%= f.collection_select :preferred_vendor_id, vendors, :id, :name, include_blank: true %>
+      <% end %>
+    <% end %>
 
     <%= render "shared/forms/checkbox", f: f, record: product, field: :active %>
   <% end %>

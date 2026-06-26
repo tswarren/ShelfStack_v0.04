@@ -63,6 +63,21 @@
                 data: { purchasing_line_row_target: "discountBps", action: "input->purchasing-line-row#pricingFieldChanged" } %>
         </dd>
       </div>
+      <div>
+        <dt>Expected retail</dt>
+        <dd class="ss-num">
+          <%= line_form.number_field :expected_retail_price_cents, min: 0, step: 1, class: "ss-input ss-purchasing-table__money",
+                data: { purchasing_line_row_target: "expectedRetail", action: "input->purchasing-line-row#pricingFieldChanged" } %>
+        </dd>
+      </div>
+      <div>
+        <dt>Line note</dt>
+        <dd><%= line_form.text_field :line_note, class: "ss-input" %></dd>
+      </div>
+      <div>
+        <dt>Margin</dt>
+        <dd class="ss-num" data-purchasing-line-row-target="expectedMargin">—</dd>
+      </div>
     </dl>
   </td>
 </tr>

@@ -54,7 +54,10 @@ module Items
       options = IngramCatalogImport::ImportOptions.new(
         default_sub_department: sub_department,
         default_store_category: store_category,
-        default_display_location: display_location
+        default_display_location: display_location,
+        set_preferred_vendor: ActiveModel::Type::Boolean.new.cast(params[:set_preferred_vendor]),
+        overwrite_existing_preferred_vendor: ActiveModel::Type::Boolean.new.cast(params[:overwrite_existing_preferred_vendor]),
+        create_or_update_vendor_sources: params[:create_or_update_vendor_sources].nil? ? true : ActiveModel::Type::Boolean.new.cast(params[:create_or_update_vendor_sources])
       )
 
       result = IngramCatalogImport::Runner.call(path: path, actor: current_user, options: options)

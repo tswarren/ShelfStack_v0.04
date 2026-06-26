@@ -226,6 +226,7 @@ module Orders
         line.vendor = purchase_order.vendor if line.vendor.blank? && purchase_order.vendor.present?
         line.status ||= "open"
         line.quantity_received ||= 0
+        Purchasing::LineEconomicsCalculator.apply!(line) if line.product_variant.present?
       end
     end
 
@@ -250,7 +251,8 @@ module Orders
         :notes,
         purchase_order_lines_attributes: %i[
           id line_number product_variant_id product_variant_vendor_id quantity_ordered
-          unit_list_price_cents supplier_discount_bps unit_cost_cents _destroy
+          unit_list_price_cents supplier_discount_bps unit_cost_cents expected_retail_price_cents
+          line_note manual_cost_override manual_price_override _destroy
         ]
       )
     end

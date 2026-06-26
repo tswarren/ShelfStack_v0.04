@@ -92,17 +92,32 @@ module Orders
     end
 
     def create
-      @purchase_request = PurchaseRequest.new(purchase_request_params)
-      @purchase_request.store = orders_store
-      @purchase_request.status = "open"
-
-      if @purchase_request.save
-        record_audit!("purchase_request.created", @purchase_request)
-        redirect_to orders_purchase_request_path(@purchase_request), notice: "Purchase request created."
-      else
+      line_attrs = single_line_attrs
+      variant = ProductVariant.active_records.find_by(id: line_attrs[:product_variant_id])
+      if variant.blank?
+        @purchase_request = PurchaseRequest.new(store: orders_store, status: "open")
+        build_initial_line
+        @purchase_request.errors.add(:base, "Product variant is required")
         load_form_collections
         render :new, status: :unprocessable_entity
+        return
       end
+
+      purchase_request = PurchaseRequests::CreateSingleLine.call!(
+        store: orders_store,
+        product_variant: variant,
+        created_by_user: current_user,
+        requested_quantity: line_attrs[:requested_quantity].presence || 1,
+        request_reason: line_attrs[:request_reason],
+        notes: purchase_request_notes
+      )
+      redirect_to orders_purchase_request_path(purchase_request), notice: "Purchase request created."
+    rescue PurchaseRequests::CreateSingleLine::CreateError => e
+      @purchase_request = PurchaseRequest.new(store: orders_store, status: "open", notes: purchase_request_notes)
+      build_initial_line
+      @purchase_request.errors.add(:base, e.message)
+      load_form_collections
+      render :new, status: :unprocessable_entity
     end
 
     def edit
@@ -183,6 +198,15 @@ module Orders
           id line_number product_variant_id requested_quantity request_reason status _destroy
         ]
       )
+    end
+
+    def single_line_attrs
+      lines = params.dig(:purchase_request, :purchase_request_lines_attributes)&.values || []
+      lines.first&.symbolize_keys || {}
+    end
+
+    def purchase_request_notes
+      params.dig(:purchase_request, :notes)
     end
   end
 end

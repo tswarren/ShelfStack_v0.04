@@ -128,6 +128,7 @@ module Items
       @sub_departments = SubDepartment.active_records.order(:name)
       @conditions = ProductCondition.active_records.order(:sort_order, :name)
       @display_locations = DisplayLocation.active_for_tree_select
+      @vendors = Vendor.active_records.order(:name)
       @classification_defaults = @product_variant&.sub_department.present? ? ClassificationDefaultsResolver.for(variant: @product_variant) : nil
       @manage_inventory_behavior = manage_inventory_behavior?
     end
@@ -186,7 +187,7 @@ module Items
         :product_id, :name, :name_override, :short_name, :sku, :condition_id, :sub_department_id,
         :display_location_id, :attribute1_value, :attribute1_sku_component, :attribute2_value,
         :attribute2_sku_component, :selling_price_cents, :pricing_model_override,
-        :inventory_behavior, :inventory_tracking, :discountable, :active
+        :inventory_behavior, :inventory_tracking, :discountable, :preferred_vendor_id, :orderable, :active
       )
       permitted.delete(:inventory_behavior) unless manage_inventory_behavior?
       permitted

@@ -50,6 +50,9 @@ module Purchasing
         end
 
         manual_lines.each do |line_attrs|
+          variant = ProductVariant.find(line_attrs[:product_variant_id] || line_attrs["product_variant_id"])
+          validate_po_eligibility!(variant, label: variant.sku)
+
           purchase_order.purchase_order_lines.create!(
             {
               vendor: vendor,
@@ -85,12 +88,16 @@ module Purchasing
 
     def add_line_from_special_order!(purchase_order, special_order)
       variant = special_order.product_variant
+      validate_po_eligibility!(variant, label: variant.sku)
+
       qty = special_order.remaining_committed
       existing_line = purchase_order.purchase_order_lines.find_by(product_variant: variant, vendor: vendor)
 
-      po_line = if existing_line
+      po_line = if existing_line && existing_line.purchase_request_line_id.blank?
         existing_line.update!(quantity_ordered: existing_line.quantity_ordered + qty)
         existing_line
+      elsif existing_line
+        raise BuildError, "Cannot merge special order onto TBO-backed PO line for #{variant.sku}"
       else
         sourcing = SourcingLookup.for(variant: variant, vendor: vendor)
         purchase_order.purchase_order_lines.create!(
@@ -113,6 +120,8 @@ module Purchasing
 
     def add_line_from_request!(purchase_order, request_line)
       variant = request_line.product_variant
+      validate_po_eligibility!(variant, label: "TBO line ##{request_line.line_number}")
+
       sourcing = SourcingLookup.for(variant: variant, vendor: vendor)
       remaining = request_line.remaining_quantity
       quantity_ordered = resolved_quantity_for(request_line, remaining)
@@ -128,6 +137,14 @@ module Purchasing
       )
 
       request_line.update!(status: quantity_ordered >= remaining ? "added_to_po" : "partially_ordered")
+    end
+
+    def validate_po_eligibility!(variant, label:)
+      result = OrderEligibilityResolver.call(product_variant: variant, vendor: vendor, context: :purchase_order)
+      return unless result.blocking?
+
+      messages = result.blocking_reasons.map(&:message).join("; ")
+      raise BuildError, "#{label}: #{messages}"
     end
 
     def resolved_quantity_for(request_line, remaining)

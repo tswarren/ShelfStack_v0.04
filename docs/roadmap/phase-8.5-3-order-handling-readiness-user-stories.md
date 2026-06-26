@@ -3,8 +3,11 @@
 Recommended path:
 
 ```text
-docs/specifications/phase-8.5-3-user-stories.md
+docs/specifications/phase-8.5-3a-order-handling-readiness-spec.md
+docs/roadmap/phase-8.5-3-order-handling-readiness.md
 ```
+
+**Revised:** Epics 4–7 align with 8.5-3a/b/c split. No unified `PurchaseDemand` model.
 
 ## Phase goal
 
@@ -346,9 +349,11 @@ I want PO lines to preserve expected cost, expected retail, and expected margin,
 
 ---
 
-# Epic 4 — Purchase demand foundation
+# Epic 4 — TBO simplification (Phase 8.5-3b)
 
-## Story 4.1 — Create TBO demand from item page
+Uses existing `purchase_requests` / `purchase_request_lines`. No unified `PurchaseDemand` model.
+
+## Story 4.1 — Create single-line TBO from item page
 
 **As a bookseller,**
 I want to mark a single item as To Be Ordered from the item page,
@@ -356,368 +361,96 @@ I want to mark a single item as To Be Ordered from the item page,
 
 ### Acceptance criteria
 
-* User can create TBO for exactly one product variant.
-* Quantity defaults to `1`.
-* Quantity can be greater than `1`.
-* Vendor is optional.
-* Customer is optional.
-* Preferred vendor is prefilled when known.
-* TBO status starts as `open`.
-* TBO stores:
-
-  * variant,
-  * quantity requested,
-  * source,
-  * creator,
-  * note,
-  * needed-by date if provided.
+* New TBO create flow accepts exactly one product variant.
+* Quantity defaults to `1` and can be increased.
+* `:tbo` eligibility runs at create (allows used; blocks service/financial).
+* Suggested vendor is displayed from extended resolver but **not stored** on the request line.
+* Legacy multi-line purchase requests remain viewable.
 
 ---
 
-## Story 4.2 — Prevent multi-line TBOs
+## Story 4.2 — Single-line TBO enforcement (UI/service only)
 
 **As a buyer,**
-I want each TBO to represent one item only,
-**so that demand records stay simple and easy to convert into orders later.**
+I want each new TBO to represent one item only,
+**so that demand records stay simple.**
 
 ### Acceptance criteria
 
-* TBO creation form does not support multiple line items.
-* Each TBO creates one purchase demand record.
-* Existing multi-line TBOs, if any, are migrated into separate demand records.
-* TBO list displays each item as an independent demand row.
+* `PurchaseRequests::CreateSingleLine` enforces one line per new request.
+* No model validation breaks legacy multi-line requests or seeds.
+* TBO list shows suggested vendor from resolver at display time.
 
 ---
 
-## Story 4.3 — Create special order demand
+# Epic 5 — Build PO from TBO and special orders (existing paths)
+
+## Story 5.1 — Build PO from TBO lines
+
+**As a buyer,**
+I want to convert open TBO lines into a draft purchase order,
+**so that captured demand becomes an actual order.**
+
+### Acceptance criteria
+
+* `Purchasing::BuildPurchaseOrder` applies full PO eligibility per TBO line.
+* TBO-backed PO lines link via `purchase_request_line_id`.
+* Cannot merge special-order allocation onto a TBO-backed PO line for the same variant.
+
+---
+
+## Story 5.2 — Special orders via Phase 7A chain
 
 **As a frontline bookseller,**
-I want to create customer-linked special order demand,
-**so that items requested by customers can be ordered and fulfilled separately from normal stock.**
+I want customer special orders to follow the existing Phase 7A workflow,
+**so that customer-linked demand is not collapsed into a unified demand model.**
 
 ### Acceptance criteria
 
-* User can create special order demand for one variant.
-* Customer is required.
-* Quantity defaults to `1`.
-* Preferred vendor is prefilled when known.
-* Demand type is `special_order`.
-* Status starts as `open`.
-* Demand preserves customer link.
-* Special order is not considered fulfilled until receipt allocation occurs.
+* Special orders use `purchase_order_line_allocations` unchanged.
+* Customer linkage remains on `customer_requests` / `special_orders`.
+* Receipt FIFO allocation via `Receiving::AllocateCustomerDemandFromReceipt` is unchanged.
 
 ---
 
-## Story 4.4 — Require customer for special orders
+# Epic 6 — Receiving allocation visibility (Phase 8.5-3c)
 
-**As a manager,**
-I want special orders to require a customer,
-**so that staff can identify who the item is being ordered for when it arrives.**
+Read-only UX. No changes to allocation services.
 
-### Acceptance criteria
-
-* Special order demand cannot be saved without customer.
-* TBO demand can be saved without customer.
-* Error message clearly explains that special orders require customer linkage.
-* Customer link is visible in demand list, PO assignment, and receipt allocation.
-
----
-
-## Story 4.5 — Filter purchase demand
-
-**As a buyer,**
-I want to filter open demand by vendor, item, customer, status, and demand type,
-**so that I can build orders efficiently.**
-
-### Acceptance criteria
-
-* Demand list supports filters for:
-
-  * demand type,
-  * status,
-  * preferred/resolved vendor,
-  * customer,
-  * item/variant,
-  * needed-by date.
-* Demand list shows:
-
-  * item,
-  * quantity requested,
-  * quantity ordered,
-  * quantity allocated,
-  * customer,
-  * preferred vendor,
-  * status,
-  * warnings.
-* Filters can be combined.
-* Open demand is easy to distinguish from ordered, fulfilled, and cancelled demand.
-
----
-
-## Story 4.6 — Cancel purchase demand
-
-**As a buyer or manager,**
-I want to cancel demand that should no longer be ordered,
-**so that order-building screens remain accurate.**
-
-### Acceptance criteria
-
-* Open demand can be cancelled.
-* Partially ordered demand can be cancelled for remaining unfulfilled quantity if allowed.
-* Cancelled demand stores:
-
-  * cancelled timestamp,
-  * cancelling user,
-  * reason/note.
-* Cancelled demand is excluded from default order-building views.
-* Cancelled demand remains reportable.
-
----
-
-# Epic 5 — Demand-to-PO assignment
-
-## Story 5.1 — Build PO line from one demand record
-
-**As a buyer,**
-I want to create a purchase order line from an open demand record,
-**so that captured demand can become an actual order.**
-
-### Acceptance criteria
-
-* User can select open demand and add it to a purchase order.
-* System resolves vendor before creating the line.
-* System runs order eligibility before creating the line.
-* PO line quantity defaults to demand remaining quantity.
-* PO line links back to the demand record.
-* Demand status updates to `ordered` when fully assigned.
-
----
-
-## Story 5.2 — Combine multiple demand records into one PO line
-
-**As a buyer,**
-I want multiple demand records for the same variant/vendor to roll up into one PO line,
-**so that purchase orders are clean and vendor-friendly.**
-
-### Acceptance criteria
-
-* User can select multiple compatible demand records.
-* Compatible records can be grouped by:
-
-  * vendor,
-  * variant,
-  * order eligibility.
-* One PO line can link to multiple demand records.
-* Join records preserve assigned quantity by demand.
-* Demand statuses update individually.
-* Special order/customer details remain visible from the PO line.
-
----
-
-## Story 5.3 — Partially assign demand to a PO line
-
-**As a buyer,**
-I want to assign only part of a demand quantity to a purchase order,
-**so that partial ordering and staged ordering are possible.**
-
-### Acceptance criteria
-
-* User can assign less than the remaining demand quantity.
-* Demand status becomes `partially_ordered`.
-* Remaining quantity stays open.
-* Assigned quantity is visible on the demand record.
-* System prevents over-assignment unless future override policy allows it.
-
----
-
-## Story 5.4 — Keep demand unfulfilled until receipt allocation
-
-**As a manager,**
-I want demand assignment to a PO to be separate from fulfillment,
-**so that special orders are not treated as satisfied before stock actually arrives.**
-
-### Acceptance criteria
-
-* Assigning demand to a PO line does not mark demand fulfilled.
-* Demand fulfillment requires receipt allocation.
-* Demand list distinguishes:
-
-  * open,
-  * ordered,
-  * partially allocated,
-  * fulfilled.
-* Special order reports can show ordered-but-not-received demand.
-
----
-
-## Story 5.5 — Preserve demand history
-
-**As a manager,**
-I want demand-to-order relationships to be auditable,
-**so that we can explain why an item was ordered.**
-
-### Acceptance criteria
-
-* PO line shows linked demand records.
-* Demand record shows linked PO lines.
-* Link includes assigned quantity.
-* Link includes user and timestamp.
-* Historical links are preserved even after receiving or fulfillment.
-
----
-
-# Epic 6 — Receiving allocation
-
-## Story 6.1 — Allocate received quantity to special orders
+## Story 6.1 — Show projected vs actual stock split
 
 **As a receiving clerk,**
-I want to allocate received copies to linked special orders,
-**so that customer orders are fulfilled from actual received stock.**
+I want to see how accepted quantity will split between special orders and stock,
+**so that I understand fulfillment before and after posting.**
 
 ### Acceptance criteria
 
-* Receiving screen shows linked special order demand for receipt line.
-* User can allocate accepted quantity to special order demand.
-* Allocation creates receipt allocation record.
-* Allocation stores:
-
-  * receipt line,
-  * purchase demand,
-  * customer,
-  * quantity,
-  * user,
-  * timestamp.
-* Special order demand updates quantity allocated.
-* Demand becomes fulfilled only when fully allocated.
+* Draft receipts label stock quantity as **Projected stock quantity**.
+* Posted receipts label stock quantity as **Actual stock quantity**.
+* Pre-post message: will auto-allocate to N special orders on post.
+* Post-post shows actual `receipt_line_allocations` rows.
 
 ---
 
-## Story 6.2 — Prevent allocation beyond accepted quantity
-
-**As a receiving clerk,**
-I want ShelfStack to prevent over-allocation of received items,
-**so that the system never promises more copies than actually arrived.**
-
-### Acceptance criteria
-
-* Total allocations for a receipt line cannot exceed accepted quantity.
-* Damaged/rejected quantity cannot be allocated.
-* Error message shows accepted quantity and already allocated quantity.
-* Partial allocation is allowed.
-* Unallocated accepted quantity remains available for stock or later allocation.
-
----
-
-## Story 6.3 — Handle partial receipts for special orders
+## Story 6.2 — Show PO allocation context on receipt
 
 **As a buyer,**
-I want partial receipts to partially fulfill linked demand,
-**so that remaining demand stays visible and actionable.**
+I want receipt detail to show linked special orders and allocation quantities,
+**so that I can reconcile customer demand against what arrived.**
 
 ### Acceptance criteria
 
-* If fewer copies arrive than ordered, only received/accepted copies can be allocated.
-* Allocated demand updates to partially allocated or fulfilled.
-* Unallocated demand remains ordered/unfulfilled.
-* Remaining unfulfilled demand appears in demand list or backorder view.
-* System does not mark all linked demand fulfilled just because the PO line was partially received.
+* Receipt show displays customer names, PO allocation qty, received, and remaining.
+* FIFO allocation behavior is unchanged (regression tests required).
 
 ---
 
-## Story 6.4 — Allocate extra received quantity to stock
+# Epic 7 — Future work (out of scope for 8.5-3)
 
-**As a receiving clerk,**
-I want extra received copies to be allocated to stock,
-**so that non-customer copies become available for sale.**
-
-### Acceptance criteria
-
-* User can allocate accepted quantity to stock.
-* Stock allocation does not require customer or demand.
-* Stock allocation quantity can be posted to inventory.
-* Special order allocations and stock allocations can exist on the same receipt line.
-* Allocation totals must equal or be less than accepted quantity.
-
----
-
-## Story 6.5 — Preserve customer link through receipt
-
-**As a frontline bookseller,**
-I want customer-linked special orders to remain identifiable after receiving,
-**so that staff know which customer should receive the item.**
-
-### Acceptance criteria
-
-* Receipt allocation for special order stores customer link.
-* Receiving screen displays customer name for special order allocations.
-* Item/customer relationship remains visible after allocation.
-* Future pickup/notification workflow can use the receipt allocation record.
-
----
-
-# Epic 7 — Future-ready order building
-
-These stories are mostly **foundation only** for Phase 8.5-3.
-
-## Story 7.1 — Prepare demand model for sales-based reorder suggestions
-
-**As a future buyer,**
-I want sales-based reorder suggestions to create purchase demand records,
-**so that future replenishment logic uses the same order-building workflow as TBOs and special orders.**
-
-### Acceptance criteria
-
-* `PurchaseDemand` supports `demand_type = sales_reorder`.
-* Demand source fields can link to a future sales/reorder rule.
-* No automatic sales reorder engine is required in this phase.
-* Sales reorder demand can later be assigned to PO lines using the same demand-to-PO process.
-
----
-
-## Story 7.2 — Prepare demand model for frontlist buying
-
-**As a future buyer,**
-I want frontlist candidates to use purchase demand records,
-**so that new-release ordering can eventually use the same PO workflow.**
-
-### Acceptance criteria
-
-* `PurchaseDemand` supports `demand_type = frontlist`.
-* Demand source fields can link to a future import/review source.
-* Phase 8.5-3 requires existing product variant before frontlist demand can be created.
-* Provisional catalog items without variants are out of scope.
-
----
-
-## Story 7.3 — Preserve path for future cascading orders
-
-**As a buyer,**
-I want demand records to remain separate from PO lines,
-**so that future workflows can reassign unfilled demand between vendors without losing history.**
-
-### Acceptance criteria
-
-* Demand is not deleted when PO line is cancelled.
-* Cancelling or removing PO assignment can return demand to open/partially ordered status.
-* Demand-to-PO links are auditable.
-* True cascading order automation is out of scope.
-* Moving submitted PO lines between vendors is out of scope.
-
----
-
-## Story 7.4 — Preserve path for receiving across multiple purchase orders
-
-**As a receiving clerk,**
-I want the receiving model to support future multi-PO receiving,
-**so that one vendor shipment can later be reconciled against multiple orders.**
-
-### Acceptance criteria
-
-* Receipt line can reference a specific PO line.
-* Receipt model does not permanently assume one receipt equals one PO.
-* Phase 8.5-3 UI may still receive against one PO at a time.
-* Receive-across-PO user interface is out of scope.
-* Future shipment/packing-slip workflow remains possible.
+* Unified demand inbox / `PurchaseDemand` model
+* Sales-based reorder and frontlist demand types
+* Manual receipt allocation replacing auto FIFO
+* Cascading orders and multi-PO receiving UI
 
 ---
 
@@ -729,10 +462,6 @@ I want the receiving model to support future multi-PO receiving,
 |     2 | Operational warning builder             |
 |     3 | Order eligibility resolver              |
 |     4 | PO line economics and override behavior |
-|     5 | Purchase demand model                   |
-|     6 | TBO creation                            |
-|     7 | Special order demand creation           |
-|     8 | Demand list/filtering                   |
-|     9 | Demand-to-PO assignment                 |
-|    10 | Receipt allocation foundation           |
-
+|     5 | TBO single-line create (8.5-3b)         |
+|     6 | Build PO eligibility and merge guard    |
+|     7 | Receipt allocation visibility (8.5-3c)  |

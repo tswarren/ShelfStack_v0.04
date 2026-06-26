@@ -184,6 +184,18 @@ docs/implementation/phase-8.5-1-completion.md
 docs/implementation/phase-8.5-2-spec-fix-guide.md
 ```
 
+## Phase 8.5-3 Documents
+
+```text
+docs/roadmap/phase-8.5-3-order-handling-readiness.md
+docs/specifications/phase-8.5-3a-order-handling-readiness-spec.md
+docs/specifications/phase-8.5-3a-data-model.md
+docs/specifications/phase-8.5-3a-test-plan.md
+docs/specifications/phase-8.5-3b-tbo-simplification-spec.md
+docs/specifications/phase-8.5-3c-receiving-visibility-spec.md
+docs/implementation/phase-8.5-3a-completion.md
+```
+
 If documentation and implementation disagree, flag the discrepancy rather than silently changing the domain model.
 
 ---
@@ -279,6 +291,15 @@ Branch `phase-8.5-operational-cleanup` implements structured POS discounts. See 
 - Stacking, gift card exclusion, catalog `discountable` flags, legacy bridge, and historical backfill
 - POS discount UI with reason/note/auth; Setup discount reasons CRUD
 
+## Phase 8.5-3: Order Handling Readiness — **In review**
+
+Branch `phase-8.5-3-order-readiness` extends Phase 5/7A ordering paths. See [docs/implementation/phase-8.5-3a-completion.md](docs/implementation/phase-8.5-3a-completion.md).
+
+- **8.5-3a:** preferred vendor, `orderable`, extended `SuggestedVendorResolver`, `OrderEligibilityResolver`, `LineEconomicsCalculator`, submit gate, operational warnings
+- **8.5-3b:** single-line TBO via `PurchaseRequests::CreateSingleLine`; PO eligibility on `from_tbo`
+- **8.5-3c:** receipt allocation visibility (projected vs actual); no FIFO behavior change
+- Do **not** introduce `PurchaseDemand` or merge TBO-backed PO lines with customer allocations
+
 ---
 
 # Architectural Principles
@@ -301,7 +322,7 @@ Use services for:
 * Product/variant name rendering
 * Metadata parsing
 * Inventory posting, eligibility, cost estimation, and balance updates
-* Purchasing: returnability, vendor cost, sourcing lookup, receipt and RTV posting, moving average cost
+* Purchasing: returnability, vendor cost, sourcing lookup, receipt and RTV posting, moving average cost, order eligibility, line economics, suggested vendor resolution
 * POS: line lookup, transaction type derivation, return quantity validation, tax/discount/tender calculators, discount eligibility/application/recalculation, complete and void workflows, register session lifecycle, inventory posting via `pos_transaction` / `pos_void`
 * Stored value: issue, adjust, redeem, void, transfer, identifier codec, balance rebuild/integrity, liability reporting
 
@@ -360,6 +381,11 @@ Purchasing::ReturnabilityResolver
 Purchasing::VendorCostCalculator
 Purchasing::SourcingLookup
 Purchasing::BuildPurchaseOrder
+Purchasing::OrderEligibilityResolver
+Purchasing::LineEconomicsCalculator
+ProductVariants::OrderabilityDefaults
+Items::OperationalWarningBuilder
+PurchaseRequests::CreateSingleLine
 Purchasing::SubmitPurchaseOrder
 Purchasing::PostReceipt
 Purchasing::PostReturnToVendor

@@ -11,13 +11,15 @@
                product: @product,
                catalog_item: @product.catalog_item,
                sub_departments: @sub_departments,
-               display_locations: @display_locations %>
+               display_locations: @display_locations,
+               vendors: @vendors %>
   <% else %>
     <%= render "items/shared/product_forms/non_catalog",
                f: f,
                product: @product,
                sub_departments: @sub_departments,
-               display_locations: @display_locations %>
+               display_locations: @display_locations,
+               vendors: @vendors %>
   <% end %>
   <footer class="ss-form-actions">
     <%= f.submit "Update Product", class: "ss-btn" %>

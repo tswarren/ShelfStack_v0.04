@@ -1307,6 +1307,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "name", null: false
     t.string "name_override"
     t.boolean "needs_review", default: false, null: false
+    t.boolean "orderable", default: true, null: false
+    t.bigint "preferred_vendor_id"
     t.string "pricing_model_override"
     t.bigint "product_id", null: false
     t.string "returnability_status", default: "unknown", null: false
@@ -1321,6 +1323,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["created_from_buyback_session_id"], name: "index_product_variants_on_created_from_buyback_session_id"
     t.index ["display_location_id"], name: "index_product_variants_on_display_location_id"
     t.index ["inventory_behavior"], name: "index_product_variants_on_inventory_behavior"
+    t.index ["preferred_vendor_id"], name: "index_product_variants_on_preferred_vendor_id"
     t.index ["pricing_model_override"], name: "index_product_variants_on_pricing_model_override"
     t.index ["product_id"], name: "index_product_variants_on_product_id"
     t.index ["sku"], name: "index_product_variants_on_sku", unique: true
@@ -1361,6 +1364,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.string "name", null: false
     t.string "name_override"
     t.boolean "needs_review", default: false, null: false
+    t.bigint "preferred_vendor_id"
     t.string "product_type", default: "physical", null: false
     t.string "short_name", limit: 40
     t.string "sku", limit: 50, null: false
@@ -1375,6 +1379,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["default_display_location_id"], name: "index_products_on_default_display_location_id"
     t.index ["default_sub_department_id"], name: "index_products_on_default_sub_department_id"
     t.index ["name"], name: "index_products_on_name"
+    t.index ["preferred_vendor_id"], name: "index_products_on_preferred_vendor_id"
     t.index ["product_type"], name: "index_products_on_product_type"
     t.index ["sku"], name: "index_products_on_sku", unique: true
     t.index ["variation_type"], name: "index_products_on_variation_type"
@@ -1399,8 +1404,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   end
 
   create_table "purchase_order_lines", force: :cascade do |t|
+    t.string "cost_source", default: "unknown", null: false
     t.datetime "created_at", null: false
+    t.integer "expected_line_cost_cents"
+    t.integer "expected_line_retail_cents"
+    t.integer "expected_margin_bps"
+    t.integer "expected_margin_cents"
+    t.integer "expected_retail_price_cents"
+    t.text "line_note"
     t.integer "line_number", null: false
+    t.boolean "manual_cost_override", default: false, null: false
+    t.boolean "manual_price_override", default: false, null: false
+    t.string "price_source", default: "unknown", null: false
     t.bigint "product_variant_id", null: false
     t.bigint "product_variant_vendor_id"
     t.bigint "purchase_order_id", null: false
@@ -1408,6 +1423,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.integer "quantity_ordered", null: false
     t.integer "quantity_received", default: 0, null: false
     t.string "returnability_status_snapshot"
+    t.jsonb "source_snapshot", default: {}
     t.string "status", default: "open", null: false
     t.integer "supplier_discount_bps"
     t.integer "unit_cost_cents"
@@ -1423,6 +1439,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
     t.index ["purchase_request_line_id"], name: "index_purchase_order_lines_on_purchase_request_line_id"
     t.index ["vendor_id"], name: "index_purchase_order_lines_on_vendor_id"
+    t.check_constraint "cost_source::text = ANY (ARRAY['vendor_source'::character varying, 'manual'::character varying, 'import'::character varying, 'default'::character varying, 'unknown'::character varying]::text[])", name: "purchase_order_lines_cost_source_chk"
+    t.check_constraint "price_source::text = ANY (ARRAY['variant'::character varying, 'vendor_source'::character varying, 'manual'::character varying, 'import'::character varying, 'unknown'::character varying]::text[])", name: "purchase_order_lines_price_source_chk"
     t.check_constraint "quantity_ordered > 0", name: "chk_purchase_order_lines_quantity_ordered"
     t.check_constraint "quantity_received >= 0", name: "chk_purchase_order_lines_quantity_received"
     t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_purchase_order_lines_supplier_discount_bps"
@@ -2286,12 +2304,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "product_variants", "product_conditions", column: "condition_id"
   add_foreign_key "product_variants", "products"
   add_foreign_key "product_variants", "sub_departments"
+  add_foreign_key "product_variants", "vendors", column: "preferred_vendor_id"
   add_foreign_key "product_vendors", "products"
   add_foreign_key "product_vendors", "vendors"
   add_foreign_key "products", "buyback_sessions", column: "created_from_buyback_session_id"
   add_foreign_key "products", "catalog_items"
   add_foreign_key "products", "display_locations", column: "default_display_location_id"
   add_foreign_key "products", "sub_departments", column: "default_sub_department_id"
+  add_foreign_key "products", "vendors", column: "preferred_vendor_id"
   add_foreign_key "purchase_order_line_allocations", "customer_request_lines"
   add_foreign_key "purchase_order_line_allocations", "purchase_order_lines"
   add_foreign_key "purchase_order_line_allocations", "special_orders"

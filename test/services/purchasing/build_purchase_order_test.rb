@@ -3,7 +3,10 @@
 require "test_helper"
 
 class Purchasing::BuildPurchaseOrderTest < ActiveSupport::TestCase
+  include Phase7aTestHelper
+
   setup do
+    Seeds::Phase7aPermissions.seed!
     seed_phase3_reference_data!
     @store = create_store!
     @user = create_user!
@@ -82,6 +85,56 @@ class Purchasing::BuildPurchaseOrderTest < ActiveSupport::TestCase
         created_by_user: @user,
         purchase_request_lines: [ request_line ],
         line_quantities: { request_line.id => 5 }
+      )
+    end
+  end
+
+  test "cannot merge special order onto tbo-backed po line" do
+    request = PurchaseRequest.create!(store: @store, status: "open")
+    request_line = request.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+    customer = create_customer!
+    customer_request = create_customer_request!(
+      store: @store,
+      created_by_user: @user,
+      customer: customer,
+      lines: [ { request_type: "special_order" } ]
+    )
+    cr_line = customer_request.customer_request_lines.first
+    match_request_line!(line: cr_line, variant: @variant, actor: @user)
+    special_order = SpecialOrders::CreateFromRequestLine.call!(line: cr_line, created_by_user: @user)
+    SpecialOrders::Approve.call!(special_order: special_order, approved_by_user: @user)
+
+    assert_raises(Purchasing::BuildPurchaseOrder::BuildError, match: /TBO-backed/) do
+      Purchasing::BuildPurchaseOrder.call(
+        store: @store,
+        vendor: @vendor,
+        created_by_user: @user,
+        purchase_request_lines: [ request_line ],
+        special_orders: [ special_order ]
+      )
+    end
+  end
+
+  test "blocks ineligible variant at po build" do
+    @variant.update!(orderable: false)
+
+    request = PurchaseRequest.create!(store: @store, status: "open")
+    request_line = request.purchase_request_lines.create!(
+      product_variant: @variant,
+      requested_quantity: 1,
+      status: "open"
+    )
+
+    assert_raises(Purchasing::BuildPurchaseOrder::BuildError) do
+      Purchasing::BuildPurchaseOrder.call(
+        store: @store,
+        vendor: @vendor,
+        created_by_user: @user,
+        purchase_request_lines: [ request_line ]
       )
     end
   end

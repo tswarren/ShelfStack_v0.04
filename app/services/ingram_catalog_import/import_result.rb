@@ -14,11 +14,13 @@ module IngramCatalogImport
       keyword_init: true
     )
 
-    attr_reader :outcomes
+    attr_reader :outcomes, :preferred_vendor_assignments, :preferred_vendor_skipped
 
     def initialize
       @outcomes = []
       @counts = Hash.new(0)
+      @preferred_vendor_assignments = 0
+      @preferred_vendor_skipped = 0
     end
 
     def add_outcome(outcome)
@@ -44,7 +46,9 @@ module IngramCatalogImport
         "variant_created" => count(:variant_created),
         "variant_matched" => count(:variant_matched),
         "skipped" => count(:skipped),
-        "error" => count(:error)
+        "error" => count(:error),
+        "preferred_vendor_assignments" => preferred_vendor_assignments,
+        "preferred_vendor_skipped" => preferred_vendor_skipped
       }
     end
   end
