@@ -98,6 +98,8 @@
                 <th>Variant</th>
                 <th>SKU</th>
                 <th class="ss-num">Price</th>
+                <th>Subdepartment</th>
+                <th>Tax category</th>
                 <th>Tracking</th>
                 <th>Orderable</th>
                 <th>Preferred vendor</th>
@@ -105,6 +107,7 @@
                 <% if overview.inventory_visible? %>
                   <th class="ss-num">On hand</th>
                   <th class="ss-num">Available</th>
+                  <th class="ss-num">Reserved</th>
                   <th class="ss-num">On order</th>
                   <th>Last received</th>
                 <% end %>
@@ -122,6 +125,8 @@
                   <td><%= variant.list_label %></td>
                   <td><%= variant.sku %></td>
                   <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
+                  <td><%= row.sub_department_name || "—" %></td>
+                  <td><%= row.tax_category_name || "—" %></td>
                   <td><%= humanize_controlled_value(snapshot&.inventory_tracking || "—") %></td>
                   <td><%= snapshot&.orderable ? "Yes" : "No" %></td>
                   <td><%= snapshot&.suggested_vendor&.vendor&.name || "—" %></td>
@@ -129,6 +134,7 @@
                   <% if overview.inventory_visible? %>
                     <td class="ss-num"><%= snapshot&.on_hand.nil? ? "—" : snapshot.on_hand %></td>
                     <td class="ss-num"><%= snapshot&.available.nil? ? "—" : snapshot.available %></td>
+                    <td class="ss-num"><%= snapshot&.reserved.nil? ? "—" : snapshot.reserved %></td>
                     <td class="ss-num"><%= snapshot&.on_order.nil? ? "—" : snapshot.on_order %></td>
                     <td>
                       <% if snapshot&.last_received.present? %>

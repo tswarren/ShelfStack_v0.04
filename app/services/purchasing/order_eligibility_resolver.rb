@@ -172,7 +172,10 @@ module Purchasing
         vendor: vendor_for_lookup,
         sourcing: resolved_sourcing
       )
-      defaults.unit_cost_cents.nil?
+      return true if defaults.unit_cost_cents.nil?
+      return true if defaults.unit_cost_cents.zero? && defaults.unit_list_price_cents.to_i.zero?
+
+      false
     end
 
     def missing_identifier?

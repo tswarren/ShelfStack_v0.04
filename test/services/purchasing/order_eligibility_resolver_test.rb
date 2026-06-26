@@ -88,6 +88,19 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
     refute_includes result.warnings.map(&:code), :missing_cost
   end
 
+  test "missing cost when list and selling price are zero" do
+    @variant.product.update!(list_price_cents: 0, preferred_vendor: @vendor)
+    @variant.update!(selling_price_cents: 0)
+
+    result = Purchasing::OrderEligibilityResolver.call(
+      product_variant: @variant,
+      vendor: @vendor,
+      context: :item_page
+    )
+
+    assert_includes result.warnings.map(&:code), :missing_cost
+  end
+
   test "item page context omits missing identifier from ordering infos" do
     format = Format.first || Format.create!(format_key: "book", name: "Book", active: true)
     catalog_item = CatalogItem.create!(

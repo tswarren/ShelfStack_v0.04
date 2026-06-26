@@ -28,4 +28,15 @@ class CatalogItemPrimaryThumbnailTest < ActiveSupport::TestCase
 
     assert @catalog_item.valid?
   end
+
+  test "rejects thumbnail larger than maximum size" do
+    @catalog_item.primary_thumbnail.attach(
+      io: StringIO.new("x" * (CatalogItem::MAX_THUMBNAIL_SIZE + 1)),
+      filename: "large.png",
+      content_type: "image/png"
+    )
+
+    assert_not @catalog_item.valid?
+    assert_includes @catalog_item.errors[:primary_thumbnail], "must be smaller than 5 MB"
+  end
 end

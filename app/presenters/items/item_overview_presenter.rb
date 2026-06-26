@@ -12,7 +12,9 @@ module Items
       :worst_severity,
       :vendor_source_status,
       :last_sold_at,
-      :order_eligibility
+      :order_eligibility,
+      :sub_department_name,
+      :tax_category_name
     )
     ActivityCounts = Data.define(:open_tbo_lines, :open_po_lines, :recent_receipts, :open_requests)
 
@@ -63,6 +65,7 @@ module Items
         row_snapshot = snapshot.rows[variant.id]
         row_warnings = warnings_by_variant[variant.id] || []
         suggested = row_snapshot&.suggested_vendor
+        classification = classification_for(variant)
         MatrixRow.new(
           variant: variant,
           snapshot: row_snapshot,
@@ -70,7 +73,9 @@ module Items
           worst_severity: OperationalWarningBuilder.worst_severity(row_warnings),
           vendor_source_status: vendor_source_status(variant, suggested, row_snapshot),
           last_sold_at: last_sold_at[variant.id],
-          order_eligibility: order_eligibility[variant.id]
+          order_eligibility: order_eligibility[variant.id],
+          sub_department_name: variant.sub_department&.name,
+          tax_category_name: classification.tax_category&.name
         )
       end
     end
@@ -143,6 +148,16 @@ module Items
     end
 
     def sell_card
+      if variants.empty?
+        return SummaryCard.new(
+          key: :sell,
+          label: "Can sell?",
+          status: "Not set up",
+          detail: "No active sellable SKUs",
+          severity: :warning
+        )
+      end
+
       sell_warnings = warnings.select { |warning| warning.category == :selling }
       status = if sell_warnings.any? { |w| w.severity == :blocking }
         "Needs attention"
@@ -161,6 +176,16 @@ module Items
     end
 
     def order_card
+      if variants.empty?
+        return SummaryCard.new(
+          key: :order,
+          label: "Can order?",
+          status: "Not set up",
+          detail: "No active sellable SKUs",
+          severity: :warning
+        )
+      end
+
       order_warnings = warnings.select { |warning| warning.category == :ordering }
       eligible_count = order_eligibility.values.count(&:eligible)
       SummaryCard.new(
@@ -221,6 +246,11 @@ module Items
           status: Purchasing::OrderQuantityLookup::OPEN_LINE_STATUSES
         )
         .count
+    end
+
+    def classification_for(variant)
+      @classification_by_variant_id ||= {}
+      @classification_by_variant_id[variant.id] ||= ClassificationDefaultsResolver.for(variant:, store:)
     end
   end
 end

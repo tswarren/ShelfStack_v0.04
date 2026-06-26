@@ -226,4 +226,18 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Needs Attention", response.body
     assert_match "open TBO", response.body
   end
+
+  test "operations tab omits overview summary cards and metric strip" do
+    seed_phase5_reference_data!
+    grant_all_phase5_permissions!(@user, store: @store)
+    grant_permission!(@user, "inventory.access", store: @store)
+    grant_permission!(@user, "inventory.balances.view", store: @store)
+
+    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "operations")
+
+    assert_response :success
+    assert_match "Variant operations", response.body
+    assert_no_match "ss-item-summary-cards", response.body
+    assert_no_match "ss-metric-strip", response.body
+  end
 end

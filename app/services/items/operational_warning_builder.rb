@@ -114,10 +114,10 @@ module Items
 
     def variant_warnings(variant = product_variant, vendor: @vendor)
       warnings = []
+      warnings.concat(preferred_vendor_warnings(variant)) if contexts.include?(:ordering)
       warnings.concat(ordering_warnings(variant, vendor)) if contexts.include?(:ordering)
       warnings.concat(selling_warnings(variant)) if contexts.include?(:selling)
       warnings.concat(inventory_warnings(variant)) if contexts.include?(:inventory)
-      warnings.concat(data_quality_warnings(variant)) if contexts.include?(:data_quality)
       warnings
     end
 
@@ -125,6 +125,7 @@ module Items
       warnings = []
       warnings.concat(open_tbo_warnings) if contexts.include?(:ordering) && snapshot.present?
       warnings.concat(identifier_warnings) if contexts.include?(:data_quality) && item.present?
+      warnings.concat(missing_identifier_warnings) if contexts.include?(:data_quality) && item.present?
       warnings.concat(missing_catalog_thumbnail_warnings) if contexts.include?(:data_quality) && item.present?
       warnings
     end
@@ -183,6 +184,17 @@ module Items
           corrective_label: "Edit SKU",
           source: :variant_setup
         )
+      elsif missing_applicable_tax_rate?(variant)
+        warnings << build_warning(
+          severity: :warning,
+          category: :selling,
+          code: :missing_tax_category,
+          message: "No applicable store tax rate for this variant's tax category.",
+          variant_id: variant.id,
+          corrective_path: edit_items_product_variant_path(variant, return_to: "item"),
+          corrective_label: "Edit SKU",
+          source: :variant_setup
+        )
       end
 
       if variant.display_location_id.blank? && item&.product&.default_display_location_id.blank?
@@ -218,17 +230,30 @@ module Items
     def inventory_warnings(variant)
       warnings = []
       tracking = Inventory::TrackingResolver.resolve(variant)
-      if tracking == "non_inventory" && row&.on_hand.to_i.positive?
-        warnings << build_warning(
-          severity: :warning,
-          category: :inventory,
-          code: :non_inventory_with_stock,
-          message: "Non-inventory variant has on-hand stock.",
-          variant_id: variant.id,
-          corrective_path: edit_items_product_variant_path(variant, return_to: "item"),
-          corrective_label: "Edit SKU",
-          source: :inventory_tracking
-        )
+      if tracking == "non_inventory"
+        if row&.on_hand.to_i.positive?
+          warnings << build_warning(
+            severity: :warning,
+            category: :inventory,
+            code: :non_inventory_with_stock,
+            message: "Non-inventory variant has on-hand stock.",
+            variant_id: variant.id,
+            corrective_path: edit_items_product_variant_path(variant, return_to: "item"),
+            corrective_label: "Edit SKU",
+            source: :inventory_tracking
+          )
+        else
+          warnings << build_warning(
+            severity: :info,
+            category: :inventory,
+            code: :non_inventory,
+            message: "Variant is tracked as non-inventory.",
+            variant_id: variant.id,
+            corrective_path: edit_items_product_variant_path(variant, return_to: "item"),
+            corrective_label: "Edit SKU",
+            source: :inventory_tracking
+          )
+        end
       end
 
       if inventory_tracking_mismatch?(variant)
@@ -264,30 +289,52 @@ module Items
       signals.values.uniq.size > 1
     end
 
-    def data_quality_warnings(variant)
-      catalog_item = variant.product&.catalog_item
-      return [] if catalog_item.blank?
+    def preferred_vendor_warnings(variant)
+      inactive_vendor = inactive_preferred_vendor_for(variant)
+      return [] if inactive_vendor.blank?
 
-      if catalog_item.catalog_item_identifiers.active_records.none?
-        [
-          build_warning(
-            severity: :info,
-            category: :data_quality,
-            code: :missing_identifier,
-            message: "No active catalog identifier on file.",
-            variant_id: variant.id,
-            corrective_path: item&.tab_path("item_setup"),
-            corrective_label: "Review identifiers",
-            source: :catalog
-          )
-        ]
-      else
-        []
+      [
+        build_warning(
+          severity: :warning,
+          category: :ordering,
+          code: :inactive_preferred_vendor,
+          message: "Preferred vendor #{inactive_vendor.name} is inactive.",
+          variant_id: variant.id,
+          corrective_path: Items::VendorSourcingPath.for(variant),
+          corrective_label: "Review sourcing",
+          source: :preferred_vendor
+        )
+      ]
+    end
+
+    def inactive_preferred_vendor_for(variant)
+      candidates = [ variant.preferred_vendor, variant.product&.preferred_vendor ].compact
+      candidates.find { |vendor| !vendor.active? }
+    end
+
+    def missing_applicable_tax_rate?(variant)
+      defaults = ClassificationDefaultsResolver.for(variant:, store:)
+      return true if defaults.tax_category.blank?
+      return false if store.blank?
+
+      !tax_rate_resolvable?(defaults.tax_category)
+    end
+
+    def tax_rate_resolvable?(tax_category)
+      @tax_rate_resolvable_by_category_id ||= {}
+      return @tax_rate_resolvable_by_category_id[tax_category.id] if @tax_rate_resolvable_by_category_id.key?(tax_category.id)
+
+      @tax_rate_resolvable_by_category_id[tax_category.id] = begin
+        TaxRateLookup.call(store:, tax_category:, date: Date.current)
+        true
+      rescue TaxRateLookup::MissingRateError, TaxRateLookup::AmbiguousRateError
+        false
       end
     end
 
     def open_tbo_warnings
-      total_tbo = snapshot.rows.values.sum { |entry| entry.open_tbo.to_i }
+      rows = snapshot_rows_for_item
+      total_tbo = rows.sum { |entry| entry.open_tbo.to_i }
       return [] unless total_tbo.positive?
 
       [
@@ -300,6 +347,34 @@ module Items
           corrective_path: item.tab_path("operations"),
           corrective_label: "View operations",
           source: :tbo
+        )
+      ]
+    end
+
+    def snapshot_rows_for_item
+      return snapshot.rows.values if item.blank?
+
+      item_variant_ids = item.variants.map(&:id)
+      return [] if item_variant_ids.empty?
+
+      snapshot.rows.slice(*item_variant_ids).values
+    end
+
+    def missing_identifier_warnings
+      catalog_item = item.product&.catalog_item || item.catalog_item
+      return [] if catalog_item.blank?
+      return [] if catalog_item.catalog_item_identifiers.active_records.exists?
+
+      [
+        build_warning(
+          severity: :info,
+          category: :data_quality,
+          code: :missing_identifier,
+          message: "No active catalog identifier on file.",
+          variant_id: nil,
+          corrective_path: item.tab_path("item_setup"),
+          corrective_label: "Review identifiers",
+          source: :catalog
         )
       ]
     end
@@ -353,7 +428,7 @@ module Items
 
     def action_for(code, variant)
       case code
-      when :missing_vendor_source, :missing_preferred_vendor, :missing_cost
+      when :missing_vendor_source, :missing_preferred_vendor, :missing_cost, :inactive_preferred_vendor
         return nil if variant.blank?
 
         { label: "Assign vendor", path: Items::VendorSourcingPath.for(variant) }
