@@ -322,12 +322,50 @@ class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
   test "/cash from idle returns no active transaction message without creating draft" do
     route = Pos::RootCommandRouter.call(
       store: @store,
-      user: @user,
+      user: @cashier,
       register_session: @register_session,
       input: "/cash"
     )
 
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
+
+  test "/gc with amount adds gift card line and redirects to transaction edit" do
+    ensure_gift_card_sale_classification!(store: @store)
+    grant_permission!(@cashier, "pos.gift_cards.issue", store: @store)
+
+    result = Pos::RootCommandHandler.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: @register_session,
+      user_session: nil,
+      input: "/gc 50"
+    )
+
+    assert_equal :redirect, result.status
+    transaction = PosTransaction.drafts.order(:id).last
+    line = transaction.pos_transaction_lines.find_by(line_type: "gift_card_sale")
+    assert_equal 5000, line.unit_price_cents
+    assert_includes result.redirect_path, "/pos/transactions/#{transaction.id}/edit"
+    refute_includes result.redirect_path, "carry_forward"
+  end
+
+  test "/gc without amount redirects with carry forward only" do
+    grant_permission!(@cashier, "pos.gift_cards.issue", store: @store)
+
+    result = Pos::RootCommandHandler.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: @register_session,
+      user_session: nil,
+      input: "/gc"
+    )
+
+    assert_equal :redirect, result.status
+    assert_includes result.redirect_path, "carry_forward=gift_card"
+    refute_includes result.redirect_path, "amount_cents"
   end
 end

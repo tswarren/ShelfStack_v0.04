@@ -1,8 +1,31 @@
 import { Controller } from "@hotwired/stimulus"
 
+const BLOCKING_PANEL_TARGETS = [
+  "giftCardPanel",
+  "openRingPanel",
+  "cashMovementModal",
+  "helpModal",
+  "drawerActionModal",
+  "balancePanel",
+  "receiptPanel",
+  "pickupPanel"
+]
+
 export default class extends Controller {
   connect() {
     document.dispatchEvent(new CustomEvent("pos:workspace-updated"))
-    this.element.querySelector("[data-pos-command-bar-target='input']")?.focus()
+
+    requestAnimationFrame(() => {
+      if (this.constructor.shouldSkipCommandFocus()) return
+
+      document.querySelector("[data-pos-command-bar-target='input']")?.focus()
+    })
+  }
+
+  static shouldSkipCommandFocus() {
+    return BLOCKING_PANEL_TARGETS.some((target) => {
+      const element = document.querySelector(`[data-pos-command-bar-target="${target}"]`)
+      return element && !element.hidden
+    })
   }
 }

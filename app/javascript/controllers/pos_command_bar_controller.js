@@ -9,7 +9,7 @@ export default class extends Controller {
   }
 
   connect() {
-    this.boundHelpKeydown = this.helpKeydown.bind(this)
+    this.boundModalKeydown = this.modalKeydown.bind(this)
     this.focusInput()
     this.syncOpenRingReturnMode()
     this.applyLegacyModeDrawerFromUrl()
@@ -17,7 +17,7 @@ export default class extends Controller {
   }
 
   disconnect() {
-    document.removeEventListener("keydown", this.boundHelpKeydown)
+    document.removeEventListener("keydown", this.boundModalKeydown)
     document.body.classList.remove("ss-pos-modal-open")
   }
 
@@ -88,7 +88,12 @@ export default class extends Controller {
         this.showOpenRingPanel(data.payload)
         break
       case "gift_card_sale_offer":
-        this.showGiftCardPanel(data.payload)
+        this.inputTarget.value = ""
+        if (data.payload?.amount_cents) {
+          this.addGiftCardSale(data.payload)
+        } else {
+          this.showGiftCardPanel(data.payload)
+        }
         break
       case "return_drawer_offer":
         this.inputTarget.value = ""
@@ -236,7 +241,7 @@ export default class extends Controller {
     ;(descriptionField || priceField)?.focus()
   }
 
-  showGiftCardPanel(payload) {
+  showGiftCardPanel(payload = {}) {
     if (!this.hasGiftCardPanelTarget) {
       this.dispatchMessage("Gift card sales are not available.")
       return
@@ -244,8 +249,9 @@ export default class extends Controller {
 
     this.giftCardPanelTarget.hidden = false
     const priceField = this.giftCardPanelTarget.querySelector("[name='unit_price']")
-    if (priceField && payload.amount_cents) {
-      priceField.value = (payload.amount_cents / 100).toFixed(2)
+    if (priceField) {
+      priceField.value = payload.amount_cents ? (payload.amount_cents / 100).toFixed(2) : ""
+      priceField.focus()
     }
   }
 
@@ -305,17 +311,19 @@ export default class extends Controller {
 
     this.cashMovementModalTarget.hidden = false
     document.body.classList.add("ss-pos-modal-open")
+    document.addEventListener("keydown", this.boundModalKeydown)
     this.cashMovementAmountTarget?.focus()
   }
 
   closeCashMovementModal(arg) {
     const options = arg instanceof Event ? {} : (arg || {})
     const focusInput = options.focusInput ?? true
+    arg?.preventDefault?.()
 
-    if (!this.hasCashMovementModalTarget) return
+    if (!this.hasCashMovementModalTarget || this.cashMovementModalTarget.hidden) return
 
     this.cashMovementModalTarget.hidden = true
-    document.body.classList.remove("ss-pos-modal-open")
+    this.releaseModalKeydownUnlessOpen()
     if (focusInput) this.focusInput()
   }
 
@@ -411,23 +419,27 @@ export default class extends Controller {
       .then((html) => {
         Turbo.renderStreamMessage(html)
         this.inputTarget.value = ""
-        this.focusInput()
+        requestAnimationFrame(() => this.focusInput())
       })
       .catch(() => this.dispatchMessage("Unable to add gift card sale."))
   }
 
-  closeGiftCardPanel(event) {
-    event?.preventDefault()
+  closeGiftCardPanel(arg) {
+    const options = arg instanceof Event ? {} : (arg || {})
+    const focusInput = options.focusInput ?? true
+    arg?.preventDefault?.()
+
     if (!this.hasGiftCardPanelTarget) return
 
     this.giftCardPanelTarget.hidden = true
     this.giftCardPanelTarget.querySelector("form")?.reset()
-    this.focusInput()
+    if (focusInput) this.focusInput()
   }
 
   giftCardSubmitted(event) {
     if (event.detail.success) {
-      this.closeGiftCardPanel()
+      this.closeGiftCardPanel({ focusInput: false })
+      requestAnimationFrame(() => this.focusInput())
     }
   }
 
@@ -453,7 +465,7 @@ export default class extends Controller {
     this.helpBodyTarget.innerHTML = this.renderHelpCommands(commands, payload.category_labels)
     this.helpModalTarget.hidden = false
     document.body.classList.add("ss-pos-modal-open")
-    document.addEventListener("keydown", this.boundHelpKeydown)
+    document.addEventListener("keydown", this.boundModalKeydown)
     this.helpCloseButtonTarget?.focus()
   }
 
@@ -465,16 +477,33 @@ export default class extends Controller {
     if (!this.hasHelpModalTarget || this.helpModalTarget.hidden) return
 
     this.helpModalTarget.hidden = true
-    document.body.classList.remove("ss-pos-modal-open")
-    document.removeEventListener("keydown", this.boundHelpKeydown)
+    this.releaseModalKeydownUnlessOpen()
 
     if (focusInput) this.focusInput()
   }
 
-  helpKeydown(event) {
-    if (event.key === "Escape") {
+  modalKeydown(event) {
+    if (event.key !== "Escape") return
+
+    if (this.hasCashMovementModalTarget && !this.cashMovementModalTarget.hidden) {
+      this.closeCashMovementModal(event)
+      return
+    }
+
+    if (this.hasHelpModalTarget && !this.helpModalTarget.hidden) {
       this.closeHelpModal(event)
     }
+  }
+
+  releaseModalKeydownUnlessOpen() {
+    const modalOpen =
+      (this.hasHelpModalTarget && !this.helpModalTarget.hidden) ||
+      (this.hasCashMovementModalTarget && !this.cashMovementModalTarget.hidden)
+
+    if (modalOpen) return
+
+    document.body.classList.remove("ss-pos-modal-open")
+    document.removeEventListener("keydown", this.boundModalKeydown)
   }
 
   renderHelpCommands(commands, categoryLabels = {}) {
@@ -618,7 +647,11 @@ export default class extends Controller {
         this.showOpenRingPanel(payload)
         break
       case "gift_card":
-        this.showGiftCardPanel(payload)
+        if (payload.amount_cents) {
+          this.addGiftCardSale(payload)
+        } else {
+          this.showGiftCardPanel(payload)
+        }
         break
       case "return":
         this.showReturnDrawerPanel({

@@ -44,7 +44,11 @@ module Pos
       when :open_ring_offer
         drawer_offer_result(route)
       when :gift_card_sale_offer
-        carry_forward_and_redirect(route)
+        if route.payload[:amount_cents].present?
+          add_gift_card_and_redirect(route.payload[:amount_cents])
+        else
+          carry_forward_and_redirect(route)
+        end
       when :return_drawer_offer, :pickup_drawer_offer
         drawer_offer_result(route)
       when :session_drawer_offer, :cash_movement_offer, :drawer_action_offer, :reports_confirm_offer
@@ -108,6 +112,21 @@ module Pos
       return false unless resolution.status == :found
 
       return_blocked_for_transaction?(resolution.draft)
+    end
+
+    def add_gift_card_and_redirect(amount_cents)
+      with_draft_redirect do |transaction|
+        line_number = transaction.pos_transaction_lines.maximum(:line_number).to_i + 1
+        AddGiftCardSaleLine.call!(
+          transaction: transaction,
+          actor: cashier_user,
+          amount_cents: amount_cents,
+          line_number: line_number
+        )
+        Rails.application.routes.url_helpers.edit_pos_transaction_path(transaction, mode: "sale")
+      end
+    rescue AddGiftCardSaleLine::Error => e
+      add_line_failed_result(e.message)
     end
 
     def carry_forward_and_redirect(route)
