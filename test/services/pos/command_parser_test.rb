@@ -16,6 +16,19 @@ class Pos::CommandParserTest < ActiveSupport::TestCase
     assert_equal "/help", result.input
   end
 
+  test "bare question mark is command lane" do
+    result = Pos::CommandParser.parse("?")
+
+    assert_equal :command, result.lane
+    assert_equal "?", result.input
+  end
+
+  test "slash question mark is command lane" do
+    result = Pos::CommandParser.parse("/?")
+
+    assert_equal :command, result.lane
+  end
+
   test "non-slash input is lookup lane" do
     result = Pos::CommandParser.parse("9780143127741")
 

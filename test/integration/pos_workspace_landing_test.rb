@@ -91,6 +91,17 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, body["message"]
   end
 
+
+  test "root route_command unknown slash command returns message without creating draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/foo" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, body["message"]
+  end
+
   test "root route_command gc stub does not create draft or auto-post gift card" do
     assert_no_difference -> { PosTransaction.count } do
       post pos_route_command_path, params: { input: "/gc 50" }, as: :json

@@ -44,13 +44,9 @@ module Pos
     def requires_line_add_permission?
       return true if params[:product_variant_id].present?
 
-      input = params[:input].to_s.strip
-      return false if input.blank?
-      return false if input.match?(Pos::RootCommandRouter::HELP_COMMAND_PATTERN)
-      return false if input.match?(Pos::RootCommandRouter::BALANCE_COMMAND_PATTERN)
-      return false if input.match?(Pos::RootCommandRouter::GC_COMMAND_PATTERN)
-      return false if input.match?(Pos::RootCommandRouter::OP_COMMAND_PATTERN)
-      return false if input.start_with?("/")
+      parsed = Pos::CommandParser.parse(params[:input])
+      return false if parsed.lane == :empty
+      return false if parsed.lane == :command
 
       true
     end

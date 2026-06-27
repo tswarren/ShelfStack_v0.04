@@ -3,6 +3,7 @@
 module Pos
   class LookupLaneRouter
     Route = Data.define(:action, :payload, :message)
+    VALID_CONTEXTS = %i[root transaction].freeze
 
     def self.call(store:, query:, context:)
       new(store: store, query: query, context: context).call
@@ -12,6 +13,7 @@ module Pos
       @store = store
       @query = query.to_s.strip
       @context = context.to_sym
+      raise ArgumentError, "Invalid lookup context: #{context.inspect}" unless VALID_CONTEXTS.include?(@context)
     end
 
     def call

@@ -34,4 +34,10 @@ class Pos::LookupLaneRouterTest < ActiveSupport::TestCase
 
     assert_equal :message, route.action
   end
+
+  test "raises for invalid context" do
+    assert_raises(ArgumentError) do
+      Pos::LookupLaneRouter.call(store: @store, query: @variant.sku, context: :invalid)
+    end
+  end
 end

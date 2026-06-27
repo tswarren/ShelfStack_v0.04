@@ -35,6 +35,18 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_match(/later update/i, route.message)
   end
 
+  test "/? returns help action" do
+    route = Pos::RootCommandRouter.call(store: @store, input: "/?")
+
+    assert_equal :help, route.action
+  end
+
+  test "bare ? returns help action" do
+    route = Pos::RootCommandRouter.call(store: @store, input: "?")
+
+    assert_equal :help, route.action
+  end
+
   test "/help returns help action" do
     route = Pos::RootCommandRouter.call(store: @store, input: "/help")
 
