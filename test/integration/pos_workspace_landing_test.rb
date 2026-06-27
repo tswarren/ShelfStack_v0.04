@@ -162,6 +162,16 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal "help", body["action"]
   end
 
+  test "root route_command cash from idle does not create draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/cash" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, body["message"]
+  end
+
   test "idle landing renders return and pickup drawer panels" do
     get pos_root_path
 

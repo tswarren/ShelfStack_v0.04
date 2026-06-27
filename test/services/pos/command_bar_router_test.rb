@@ -386,4 +386,108 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal :message, route.action
     assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, route.message
   end
+
+  test "/tender opens settlement offer without tender prefill" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/tender"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_empty route.payload
+  end
+
+  test "/tender with amount returns rejected message" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/tender 20"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::TENDER_AMOUNT_REJECTED_MESSAGE, route.message
+  end
+
+  test "/cash opens settlement offer with cash tender and remaining prefill" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/cash"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_equal "cash", route.payload[:tender_type]
+    assert route.payload[:prefill_remaining]
+  end
+
+  test "/cash with amount prefills settlement offer" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/cash 20"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_equal "cash", route.payload[:tender_type]
+    assert_equal 2000, route.payload[:amount_cents]
+  end
+
+  test "/giftredeem opens settlement offer with gift card tender" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/gr 25"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_equal "gift_card", route.payload[:tender_type]
+    assert_equal 2500, route.payload[:amount_cents]
+  end
+
+  test "/cash without transaction returns no active transaction message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/cash"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
 end

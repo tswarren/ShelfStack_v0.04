@@ -7,6 +7,15 @@ module Pos
     NOT_YET_AVAILABLE_MESSAGE = "That command is not available yet."
     RETURN_BLOCKED_TENDERS_MESSAGE = "Complete, cancel, hold, or clear settlement before adding return lines."
     INVALID_AMOUNT_MESSAGE = "Amount must be a valid dollar amount."
+    TENDER_AMOUNT_REJECTED_MESSAGE = "/tender does not accept an amount. Use /cash 20, /card 20, /check 20, /giftredeem 20, or /storecredit 20."
+
+    TENDER_TYPE_BY_HANDLER = {
+      tender_cash: "cash",
+      tender_card: "card",
+      tender_check: "check",
+      tender_store_credit: "store_credit",
+      gift_redeem: "gift_card"
+    }.freeze
 
     def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
       new(
@@ -88,6 +97,10 @@ module Pos
         line_discount_route
       when :transaction_discount
         Route.new(action: :transaction_discount_offer, payload: {}, message: nil)
+      when :settlement_modal
+        settlement_modal_route
+      when :tender_cash, :tender_card, :tender_check, :tender_store_credit, :gift_redeem
+        settlement_tender_route(TENDER_TYPE_BY_HANDLER.fetch(command.handler))
       else
         raise ArgumentError, "No route handler wired for #{command.key.inspect}"
       end
@@ -134,6 +147,28 @@ module Pos
 
     def pickup_drawer_route
       Route.new(action: :pickup_drawer_offer, payload: {}, message: nil)
+    end
+
+    def settlement_modal_route
+      if match.args.present?
+        return Route.new(action: :message, payload: {}, message: TENDER_AMOUNT_REJECTED_MESSAGE)
+      end
+
+      Route.new(action: :settlement_offer, payload: {}, message: nil)
+    end
+
+    def settlement_tender_route(tender_type)
+      return invalid_amount_route if invalid_amount_args?
+
+      payload = { tender_type: tender_type }
+      amount_cents = parse_amount_cents(match.args)
+      if amount_cents.present?
+        payload[:amount_cents] = amount_cents
+      else
+        payload[:prefill_remaining] = true
+      end
+
+      Route.new(action: :settlement_offer, payload: payload, message: nil)
     end
 
     def amount_payload

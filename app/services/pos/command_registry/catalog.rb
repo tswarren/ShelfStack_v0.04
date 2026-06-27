@@ -157,7 +157,8 @@ module Pos
           permission_keys: [ "pos.tenders.gift_card" ],
           transaction_required: true,
           handler: :gift_redeem,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 
@@ -209,7 +210,8 @@ module Pos
           permission_keys: [ "pos.tenders.cash", "pos.tenders.card", "pos.tenders.check", "pos.tenders.gift_card", "pos.tenders.store_credit" ],
           transaction_required: true,
           handler: :settlement_modal,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 
@@ -222,7 +224,8 @@ module Pos
           permission_keys: [ "pos.tenders.cash" ],
           transaction_required: true,
           handler: :tender_cash,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 
@@ -235,7 +238,8 @@ module Pos
           permission_keys: [ "pos.tenders.card" ],
           transaction_required: true,
           handler: :tender_card,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 
@@ -248,7 +252,8 @@ module Pos
           permission_keys: [ "pos.tenders.check" ],
           transaction_required: true,
           handler: :tender_check,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 
@@ -261,7 +266,8 @@ module Pos
           permission_keys: [ "pos.tenders.store_credit" ],
           transaction_required: true,
           handler: :tender_store_credit,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 

@@ -90,20 +90,42 @@ export default class extends Controller {
   }
 
   fillCashFromReadiness() {
-    this.open()
-    this.ensureCashAndFillRemaining()
+    this.openWithOffer({ tenderType: "cash", prefillRemaining: true })
   }
 
-  ensureCashAndFillRemaining() {
-    let row = this.rowsTarget.querySelector("[data-settlement-type='cash']:not([data-destroyed='true'])")
+  openWithOffer({ tenderType = null, amountCents = null, prefillRemaining = false } = {}) {
+    this.open()
+
+    if (!tenderType) return
+
+    const templateFor = {
+      cash: this.cashTemplateTarget,
+      card: this.cardTemplateTarget,
+      check: this.checkTemplateTarget,
+      store_credit: this.storeCreditTemplateTarget,
+      gift_card: this.giftCardTemplateTarget
+    }
+    const template = templateFor[tenderType]
+    if (!template) return
+
+    let row = this.rowsTarget.querySelector(`[data-settlement-type='${tenderType}']:not([data-destroyed='true'])`)
     if (!row || row.hidden) {
-      this.appendRow(this.cashTemplateTarget)
-      row = this.visibleRows().find((visibleRow) => visibleRow.dataset.settlementType === "cash")
+      this.appendRow(template)
+      row = this.visibleRows().find((visibleRow) => visibleRow.dataset.settlementType === tenderType)
+    } else {
+      this.expandRowElement(row)
     }
 
-    if (row) {
-      this.fillRemainingForRow(row, "cash")
+    if (!row) return
+
+    if (amountCents != null) {
+      this.setRowAmountCents(row, amountCents)
+    } else if (prefillRemaining) {
+      this.fillRemainingForRow(row, tenderType)
     }
+
+    this.update()
+    this.focusRowEntry(row)
   }
 
   update() {
