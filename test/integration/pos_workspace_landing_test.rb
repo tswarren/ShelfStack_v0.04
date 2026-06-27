@@ -10,6 +10,7 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     @workstation = @ctx[:workstation]
     @register_session = @ctx[:register_session]
     @variant = @ctx[:variant]
+    grant_pos_stored_value_tender_permissions!(@cashier, store: @store)
   end
 
   test "idle landing renders command field and new sale secondary action" do
@@ -121,6 +122,26 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal "redirect", body["action"]
     assert_match(/carry_forward=open_ring/, body["payload"]["url"])
     assert_match(/amount_cents=1000/, body["payload"]["url"])
+  end
+
+  test "root route_command invalid open ring amount does not create draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/op abc" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, body["message"]
+  end
+
+  test "root route_command invalid gift card amount does not create draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/gc abc" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, body["message"]
   end
 
   test "explicit new sale creates draft and redirects to edit" do

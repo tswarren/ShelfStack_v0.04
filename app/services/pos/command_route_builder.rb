@@ -5,6 +5,7 @@ module Pos
     Route = LookupLaneRouter::Route
 
     NOT_YET_AVAILABLE_MESSAGE = "That command is not available yet."
+    INVALID_AMOUNT_MESSAGE = "Amount must be a valid dollar amount."
 
     def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
       new(
@@ -33,7 +34,8 @@ module Pos
         user: user,
         store: store,
         register_session: register_session,
-        transaction: transaction
+        transaction: transaction,
+        check_permissions: user.present? && store.present?
       )
       return unavailable_route(availability) unless availability.available
 
@@ -86,33 +88,38 @@ module Pos
     end
 
     def open_ring_route
+      return invalid_amount_route if invalid_amount_args?
+
       Route.new(
         action: :open_ring_offer,
-        payload: open_ring_payload,
+        payload: amount_payload,
         message: nil
       )
     end
 
     def gift_card_route
+      return invalid_amount_route if invalid_amount_args?
+
       Route.new(
         action: :gift_card_sale_offer,
-        payload: gift_card_payload,
+        payload: amount_payload,
         message: nil
       )
     end
 
-    def open_ring_payload
+    def amount_payload
       payload = {}
       amount_cents = parse_amount_cents(match.args)
       payload[:amount_cents] = amount_cents if amount_cents.present?
       payload
     end
 
-    def gift_card_payload
-      payload = {}
-      amount_cents = parse_amount_cents(match.args)
-      payload[:amount_cents] = amount_cents if amount_cents.present?
-      payload
+    def invalid_amount_args?
+      match.args.present? && parse_amount_cents(match.args).nil?
+    end
+
+    def invalid_amount_route
+      Route.new(action: :message, payload: {}, message: INVALID_AMOUNT_MESSAGE)
     end
 
     def line_discount_route

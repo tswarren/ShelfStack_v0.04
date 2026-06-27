@@ -9,6 +9,8 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     @user = create_user!
     @workstation = create_workstation!(store: @store)
     @register_session = open_register_session!(store: @store, workstation: @workstation, user: @user)
+    grant_all_phase6_permissions!(@user, store: @store)
+    grant_pos_stored_value_tender_permissions!(@user, store: @store)
   end
 
   test "single variant match returns add_variant action" do
@@ -35,6 +37,7 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     route = Pos::RootCommandRouter.call(
       store: @store,
       register_session: @register_session,
+      user: @user,
       input: "/gc 50"
     )
 
@@ -42,15 +45,40 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_equal 5000, route.payload[:amount_cents]
   end
 
+  test "/gc abc returns invalid amount message" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/gc abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, route.message
+  end
+
   test "/op returns open ring offer with prefilled amount" do
     route = Pos::RootCommandRouter.call(
       store: @store,
       register_session: @register_session,
+      user: @user,
       input: "/op 10"
     )
 
     assert_equal :open_ring_offer, route.action
     assert_equal 1000, route.payload[:amount_cents]
+  end
+
+  test "/op abc returns invalid amount message" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/op abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, route.message
   end
 
   test "/? returns help action" do

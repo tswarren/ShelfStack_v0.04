@@ -9,6 +9,8 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     @user = create_user!
     @workstation = create_workstation!(store: @store)
     @register_session = open_register_session!(store: @store, workstation: @workstation, user: @user)
+    grant_all_phase6_permissions!(@user, store: @store)
+    grant_pos_stored_value_tender_permissions!(@user, store: @store)
   end
 
   test "variant lookup wins over receipt-shaped input" do
@@ -77,6 +79,7 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     route = Pos::CommandBarRouter.call(
       store: @store,
       register_session: @register_session,
+      user: @user,
       transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
       input: "/giftcard 25"
     )
@@ -89,6 +92,7 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     route = Pos::CommandBarRouter.call(
       store: @store,
       register_session: @register_session,
+      user: @user,
       transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
       input: "/giftcard"
     )
@@ -216,12 +220,37 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     route = Pos::CommandBarRouter.call(
       store: @store,
       register_session: @register_session,
+      user: @user,
       transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
       input: "/op 15"
     )
 
     assert_equal :open_ring_offer, route.action
     assert_equal 1500, route.payload[:amount_cents]
+  end
+
+  test "invalid open ring amount returns message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/op abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, route.message
+  end
+
+  test "invalid gift card amount returns message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/gc abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, route.message
   end
 
   test "register-session-required command without open session returns message" do
