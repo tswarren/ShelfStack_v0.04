@@ -18,10 +18,10 @@ module Pos
     def self.call!(...)
       result = call(...)
       case result.status
-      when :conflict
-        raise Error, "Multiple active drafts exist for this register session."
-      when :missing_register_session
-        raise Error, "Register session must be open."
+      when :conflict, :legacy_found
+        raise Error, "Active draft conflict must be resolved before starting a sale."
+      when :missing_register_session, :invalid_register_session
+        raise Error, "Register session must be open and match the current workstation."
       else
         result
       end
@@ -37,6 +37,7 @@ module Pos
 
     def call
       return missing_register_session_result if register_session.blank? || !register_session.open?
+      return invalid_register_session_result unless valid_register_session_scope?
 
       register_session.with_lock do
         resolution = ActiveDraftResolver.call(
@@ -49,10 +50,14 @@ module Pos
         case resolution.status
         when :found
           Result.new(status: :resumed, transaction: resolution.draft, candidates: [])
+        when :legacy_found
+          Result.new(status: :legacy_found, transaction: nil, candidates: resolution.candidates)
         when :conflict
           Result.new(status: :conflict, transaction: nil, candidates: resolution.candidates)
         when :none
           Result.new(status: :created, transaction: create_stamped_draft!, candidates: [])
+        else
+          raise Error, "Unexpected active draft resolution: #{resolution.status.inspect}"
         end
       end
     end
@@ -60,6 +65,11 @@ module Pos
     private
 
     attr_reader :store, :workstation, :cashier_user, :register_session, :user_session
+
+    def valid_register_session_scope?
+      register_session.store_id == store.id &&
+        register_session.workstation_id == workstation.id
+    end
 
     def create_stamped_draft!
       PosTransaction.create!(
@@ -75,6 +85,10 @@ module Pos
 
     def missing_register_session_result
       Result.new(status: :missing_register_session, transaction: nil, candidates: [])
+    end
+
+    def invalid_register_session_result
+      Result.new(status: :invalid_register_session, transaction: nil, candidates: [])
     end
   end
 end

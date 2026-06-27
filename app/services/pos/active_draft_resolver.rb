@@ -51,7 +51,7 @@ module Pos
     def legacy_fallback
       candidates = legacy_drafts
       return none_result if candidates.empty?
-      return single_result(candidates.first, legacy: true) if candidates.one?
+      return legacy_found_result(candidates.first) if candidates.one?
 
       conflict_result(candidates, legacy: true)
     end
@@ -62,6 +62,10 @@ module Pos
 
     def single_result(draft, legacy: false)
       Result.new(status: :found, draft: draft, candidates: [], legacy: legacy)
+    end
+
+    def legacy_found_result(draft)
+      Result.new(status: :legacy_found, draft: draft, candidates: [ draft ], legacy: true)
     end
 
     def conflict_result(candidates, legacy:)

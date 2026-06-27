@@ -81,7 +81,7 @@ class Pos::ActiveDraftResolverTest < ActiveSupport::TestCase
     refute result.legacy
   end
 
-  test "legacy nil-session draft is found only when no session-scoped draft exists" do
+  test "legacy nil-session draft returns legacy_found when no session-scoped draft exists" do
     legacy = create_pos_transaction!(
       store: @store,
       workstation: @workstation,
@@ -95,8 +95,9 @@ class Pos::ActiveDraftResolverTest < ActiveSupport::TestCase
       register_session: @register_session
     )
 
-    assert_equal :found, result.status
+    assert_equal :legacy_found, result.status
     assert_equal legacy.id, result.draft.id
+    assert_equal [ legacy.id ], result.candidates.map(&:id)
     assert result.legacy
   end
 
@@ -123,6 +124,39 @@ class Pos::ActiveDraftResolverTest < ActiveSupport::TestCase
     assert_equal session_draft.id, result.draft.id
     refute result.legacy
     assert legacy.reload.draft?
+  end
+
+
+  test "stale session-scoped draft is ignored for current register session" do
+    stale_session = @register_session
+    stale_draft = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      attrs: {
+        pos_register_session: stale_session,
+        business_date: stale_session.business_date
+      }
+    )
+
+    Pos::RegisterSessionLifecycle.close!(
+      session: stale_session,
+      closed_by_user: @cashier,
+      expected_closing_cash_cents: 0,
+      counted_closing_cash_cents: 0
+    )
+
+    current_session = open_register_session!(store: @store, workstation: @workstation, user: @cashier)
+
+    result = Pos::ActiveDraftResolver.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: current_session
+    )
+
+    assert_equal :none, result.status
+    assert stale_draft.reload.draft?
   end
 
   test "scopes drafts to cashier and workstation" do

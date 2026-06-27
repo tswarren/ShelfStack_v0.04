@@ -37,6 +37,19 @@ class PosDraftLifecycleTest < ActionDispatch::IntegrationTest
     assert_redirected_to edit_pos_transaction_path(first, mode: "sale")
   end
 
+
+  test "create with legacy nil-session draft redirects to pos root without resuming" do
+    legacy = create_pos_transaction!(store: @store, workstation: @workstation, user: @cashier)
+
+    assert_no_difference -> { PosTransaction.drafts.count } do
+      post pos_transactions_path, params: { mode: "sale" }
+    end
+
+    assert_redirected_to pos_root_path
+    assert_match(/older draft needs review/, flash[:alert])
+    assert_nil legacy.reload.pos_register_session_id
+  end
+
   test "create without open register redirects to pos root" do
     Pos::RegisterSessionLifecycle.close!(
       session: @register_session,

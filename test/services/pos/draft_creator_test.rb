@@ -66,7 +66,7 @@ class Pos::DraftCreatorTest < ActiveSupport::TestCase
     ).count
   end
 
-  test "resumes legacy nil-session draft when no session-scoped draft exists" do
+  test "returns legacy_found for nil-session draft instead of silently resuming" do
     legacy = create_pos_transaction!(store: @store, workstation: @workstation, user: @cashier)
 
     result = Pos::DraftCreator.call(
@@ -77,8 +77,9 @@ class Pos::DraftCreatorTest < ActiveSupport::TestCase
       user_session: @user_session
     )
 
-    assert_equal :resumed, result.status
-    assert_equal legacy.id, result.transaction.id
+    assert_equal :legacy_found, result.status
+    assert_nil result.transaction
+    assert_equal [ legacy.id ], result.candidates.map(&:id)
   end
 
   test "returns conflict when multiple session-scoped drafts exist" do
@@ -112,6 +113,56 @@ class Pos::DraftCreatorTest < ActiveSupport::TestCase
     assert_equal :conflict, result.status
     assert_nil result.transaction
     assert_equal 2, result.candidates.size
+  end
+
+
+  test "returns invalid register session when register session workstation mismatches" do
+    other_workstation = create_workstation!(store: @store, attrs: { workstation_number: "002", workstation_code: "001-REG002", name: "Second Register" })
+    other_session = open_register_session!(store: @store, workstation: other_workstation, user: @cashier)
+
+    result = Pos::DraftCreator.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: other_session,
+      user_session: @user_session
+    )
+
+    assert_equal :invalid_register_session, result.status
+  end
+
+  test "creates new draft when only stale session-scoped draft exists" do
+    stale_session = @register_session
+    create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      attrs: {
+        pos_register_session: stale_session,
+        business_date: stale_session.business_date
+      }
+    )
+
+    Pos::RegisterSessionLifecycle.close!(
+      session: stale_session,
+      closed_by_user: @cashier,
+      expected_closing_cash_cents: 0,
+      counted_closing_cash_cents: 0
+    )
+
+    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @cashier)
+
+    result = Pos::DraftCreator.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: @register_session,
+      user_session: @user_session
+    )
+
+    assert_equal :created, result.status
+    assert_equal @register_session.id, result.transaction.pos_register_session_id
+    assert_equal 2, PosTransaction.drafts.where(store: @store, workstation: @workstation, cashier_user: @cashier).count
   end
 
   test "returns missing register session when register is closed" do
