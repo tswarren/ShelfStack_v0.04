@@ -39,6 +39,7 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "ss-drawer"
     assert_includes response.body, "data-drawer-target-id-param=\"item-variant-ops-drawer\""
     assert_not_includes response.body, 'id="item-demand-drawer"'
+    assert_includes response.body, 'id="demand_form_reset_triggers"'
   end
 
   test "variant operations drawer body includes demand actions" do

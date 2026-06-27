@@ -16,8 +16,15 @@ module Interaction
     end
 
     def modal_error_streams(body_target:, body_partial:, body_locals:, status: :unprocessable_entity)
-      render turbo_stream: turbo_stream.replace(body_target, partial: body_partial, locals: body_locals),
-             status: status
+      render turbo_stream: turbo_stream.replace(
+        body_target,
+        partial: "items/setup_modals/modal_body_frame",
+        locals: {
+          frame_id: body_target,
+          partial: body_partial,
+          partial_locals: body_locals
+        }
+      ), status: status
     end
 
     def close_modal_stream(modal_id:)

@@ -34,7 +34,7 @@ class ItemsSetupModalsIntegrationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'id="item-price-modal"'
     assert_includes response.body, "Quick add identifier"
     assert_includes response.body, "Quick edit price"
-    assert_includes response.body, 'data-modal-body-url'
+    assert_includes response.body, "data-modal-body-url"
   end
 
   test "identifier quick create refreshes catalog section and closes modal" do
@@ -211,5 +211,41 @@ class ItemsSetupModalsIntegrationTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, 'target="item-identifier-modal-body"'
+    assert_includes response.body, 'turbo-frame id="item-identifier-modal-body"'
+  end
+
+  test "product vendor validation error preserves modal body turbo frame" do
+    post items_setup_modals_product_vendors_path,
+         params: {
+           product_id: @product.id,
+           product_vendor: {
+             vendor_id: "",
+             vendor_item_number: "BAD",
+             supplier_discount_bps: 1000
+           }
+         },
+         as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, 'target="item-product-vendor-modal-body"'
+    assert_includes response.body, 'turbo-frame id="item-product-vendor-modal-body"'
+  end
+
+  test "vendor modal shells render for update-only permissions" do
+    delete logout_path
+    update_user = create_user!(username: "vendor_editor", pin: "5678")
+    grant_permission!(update_user, "items.access", store: @store)
+    grant_permission!(update_user, "items.catalog_items.view", store: @store)
+    grant_permission!(update_user, "setup.product_vendors.update", store: @store)
+    grant_permission!(update_user, "setup.product_variant_vendors.update", store: @store)
+    login_user!(update_user, workstation: @workstation)
+
+    get items_item_path(product_id: @product.id, tab: "item_setup")
+
+    assert_response :success
+    assert_includes response.body, 'id="item-product-vendor-modal"'
+    assert_includes response.body, 'id="item-variant-vendor-modal"'
+    assert_not_includes response.body, 'id="item-price-modal"'
+    assert_not_includes response.body, "Quick add product vendor"
   end
 end
