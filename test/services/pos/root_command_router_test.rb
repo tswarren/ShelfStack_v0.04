@@ -246,4 +246,16 @@ class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
     assert_equal Pos::CommandRouteBuilder::RETURN_BLOCKED_TENDERS_MESSAGE, result.json[:message]
     assert_nil result.redirect_path
   end
+
+  test "/cash from idle returns no active transaction message without creating draft" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      user: @user,
+      register_session: @register_session,
+      input: "/cash"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
 end

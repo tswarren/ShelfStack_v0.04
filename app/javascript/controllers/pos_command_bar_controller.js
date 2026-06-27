@@ -111,6 +111,10 @@ export default class extends Controller {
       case "transaction_discount_offer":
         this.openTransactionDiscountPanel(true)
         break
+      case "settlement_offer":
+        this.inputTarget.value = ""
+        this.showSettlementModal(data.payload || {})
+        break
       default:
         this.dispatchMessage(data.message)
     }
@@ -171,6 +175,26 @@ export default class extends Controller {
     this.pickupPanelTarget.scrollIntoView({ behavior: "smooth", block: "nearest" })
     const input = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='query']")
     input?.focus()
+  }
+
+  showSettlementModal(payload = {}) {
+    const workspace = document.getElementById("pos_transaction_workspace")
+    if (!workspace) {
+      this.dispatchMessage("Settlement is not available.")
+      return
+    }
+
+    const panel = this.application.getControllerForElementAndIdentifier(workspace, "pos-settlement-panel")
+    if (!panel) {
+      this.dispatchMessage("Settlement is not available.")
+      return
+    }
+
+    panel.openWithOffer({
+      tenderType: payload.tender_type || null,
+      amountCents: payload.amount_cents ?? null,
+      prefillRemaining: payload.prefill_remaining === true
+    })
   }
 
   showOpenRingPanel(payload = {}) {
