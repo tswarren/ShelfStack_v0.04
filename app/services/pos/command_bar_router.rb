@@ -3,13 +3,11 @@
 module Pos
   class CommandBarRouter
     BALANCE_COMMAND_PATTERN = /\A\/balance\z/i
-    GIFT_CARD_COMMAND_PATTERN = /\A\/giftcard(?:\s+(\d+(?:\.\d{1,2})?))?\z/i
+    GIFT_CARD_COMMAND_PATTERN = /\A\/(?:gc|giftcard)(?:\s+(\d+(?:\.\d{1,2})?))?\z/i
     LINE_DISCOUNT_COMMAND_PATTERN = /\A\/d\z/i
     TRANSACTION_DISCOUNT_COMMAND_PATTERN = /\A\/dt\z/i
 
-    Route = Data.define(:action, :payload, :message)
-
-    FAILED_LOOKUP_MESSAGE = RootCommandRouter::FAILED_LOOKUP_MESSAGE
+    Route = LookupLaneRouter::Route
 
     def self.call(store:, input:, return_mode: false, transaction: nil)
       new(store:, input:, return_mode:, transaction:).call
@@ -17,44 +15,38 @@ module Pos
 
     def initialize(store:, input:, return_mode: false, transaction: nil)
       @store = store
-      @input = input.to_s.strip
+      @parsed = CommandParser.parse(input)
       @return_mode = return_mode
       @transaction = transaction
     end
 
     def call
-      return Route.new(action: :empty, payload: {}, message: "Enter a SKU, ISBN, or command.") if input.blank?
-
-      if gift_card_command?
-        return gift_card_route
+      case parsed.lane
+      when :empty
+        Route.new(action: :empty, payload: {}, message: CommandParser::EMPTY_INPUT_MESSAGE)
+      when :command
+        slash_route
+      when :lookup
+        LookupLaneRouter.call(store: store, query: parsed.input, context: :transaction)
+      else
+        raise ArgumentError, "Unexpected parser lane: #{parsed.lane.inspect}"
       end
-
-      if line_discount_command?
-        return line_discount_route
-      end
-
-      if transaction_discount_command?
-        return Route.new(action: :transaction_discount_offer, payload: {}, message: nil)
-      end
-
-      if balance_command?
-        return Route.new(action: :balance_inquiry_offer, payload: {}, message: nil)
-      end
-
-      if lookup.variants.any?
-        return Route.new(
-          action: :variant_lookup,
-          payload: { status: lookup.status, variants: lookup.variants },
-          message: lookup.message
-        )
-      end
-
-      Route.new(action: :message, payload: {}, message: FAILED_LOOKUP_MESSAGE)
     end
 
     private
 
-    attr_reader :store, :input, :return_mode, :transaction
+    attr_reader :store, :parsed, :return_mode, :transaction
+
+    def slash_route
+      input = parsed.input
+
+      return gift_card_route if input.match?(GIFT_CARD_COMMAND_PATTERN)
+      return line_discount_route if input.match?(LINE_DISCOUNT_COMMAND_PATTERN)
+      return Route.new(action: :transaction_discount_offer, payload: {}, message: nil) if input.match?(TRANSACTION_DISCOUNT_COMMAND_PATTERN)
+      return Route.new(action: :balance_inquiry_offer, payload: {}, message: nil) if input.match?(BALANCE_COMMAND_PATTERN)
+
+      Route.new(action: :message, payload: {}, message: CommandParser::UNKNOWN_COMMAND_MESSAGE)
+    end
 
     def line_discount_route
       line = previous_discountable_line
@@ -88,24 +80,8 @@ module Pos
       end
     end
 
-    def gift_card_command?
-      input.match?(GIFT_CARD_COMMAND_PATTERN)
-    end
-
-    def balance_command?
-      input.match?(BALANCE_COMMAND_PATTERN)
-    end
-
-    def line_discount_command?
-      input.match?(LINE_DISCOUNT_COMMAND_PATTERN)
-    end
-
-    def transaction_discount_command?
-      input.match?(TRANSACTION_DISCOUNT_COMMAND_PATTERN)
-    end
-
     def gift_card_route
-      match = input.match(GIFT_CARD_COMMAND_PATTERN)
+      match = parsed.input.match(GIFT_CARD_COMMAND_PATTERN)
       amount = match[1]
       if amount.present?
         Route.new(
@@ -117,10 +93,5 @@ module Pos
         Route.new(action: :gift_card_sale_offer, payload: {}, message: nil)
       end
     end
-
-    def lookup
-      @lookup ||= LineLookup.call(store: store, query: input)
-    end
-
   end
 end
