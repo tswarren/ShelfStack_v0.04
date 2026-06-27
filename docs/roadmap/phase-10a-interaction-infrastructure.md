@@ -35,7 +35,7 @@ Keyboard event scoping
 Turbo Frame/Stream target conventions
 ```
 
-**10-A does not implement:** POS command parsing, `Pos::CommandRegistry`, command permission rules, or workspace-specific command routing. Those belong to **10-C**. The scope item “command field pattern” means reusable scan/input field styling and focus behavior for bounded contexts (e.g. item lookup), not a POS command language.
+**10-A does not implement:** POS command parsing, `Pos::CommandRegistry`, command permission rules, or workspace-specific command routing. Those belong to **10-C**. 10-A may define reusable scan/input styling and focus behavior for bounded lookup contexts, but it does not define a POS command language.
 
 ---
 
