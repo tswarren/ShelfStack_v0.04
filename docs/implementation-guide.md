@@ -41,15 +41,16 @@ Controllers should not contain complex business rules.
 
 Use services for:
 
-* Authorization
-* Session lifecycle
-* Workstation assignment
-* Audit events
-* Tax lookup
-* Identifier normalization
-* SKU generation
-* Product name rendering
-* Metadata parsing
+* Authorization, session lifecycle, workstation assignment, audit events
+* Tax lookup, identifier normalization, SKU/name generation, metadata parsing
+* Inventory posting, eligibility, tracking resolution, cost estimation
+* Purchasing (receipt, RTV, order eligibility, vendor cost)
+* POS (completion, void, tax/discount recalculation, tender validation, command registry)
+* Stored value (issue, redeem, void, ledger post)
+* Buyback (complete, void, pricing)
+* Report query objects
+
+See [architecture.md](architecture.md) and [AGENTS.md](../AGENTS.md) for the full service catalog.
 
 ---
 
@@ -698,24 +699,55 @@ A phase is complete only when:
 
 ---
 
-# 10. Deferred Complexity Policy
+# 10. Current Service Conventions
+
+Business rules live in `app/services/`. Prefer namespaced modules matching the domain (`Inventory::`, `Pos::`, `Purchasing::`, `StoredValue::`, `Buybacks::`).
+
+## 10.1 Inventory
+
+* Mutate inventory only through `Inventory::Post` and `Inventory::BalanceUpdater`.
+* Gate eligibility with `Inventory::Eligibility` / `Inventory::TrackingResolver` — not raw `inventory_behavior` checks in controllers.
+* Posted postings and ledger entries are immutable; void/adjustment workflows create reversing or offsetting entries.
+
+## 10.2 POS
+
+* Complete and void through `Pos::CompleteTransaction` / `Pos::VoidTransaction`.
+* Recalculate tax and discounts via `Pos::TaxRecalculator` and `Pos::DiscountRecalculator`.
+* Inventory posts only from completion/void services, not from controllers.
+* **Command routing:** evolve `Pos::CommandBarRouter` into `Pos::CommandRegistry` (Phase 10-C). Registry holds permission checks, valid states, alias normalization, and handler targets. Stimulus submits input; **Ruby resolves intent**.
+
+## 10.3 Stored value
+
+* Append-only `stored_value_ledger_entries`; account row locked on post.
+* Negative balances not allowed. POS redemption saves `min(amount, balance)`.
+
+## 10.4 Interaction (Phase 10)
+
+* Use shared modal/drawer partials and Turbo targets from [view-contracts.md](specifications/view-contracts.md).
+* Stimulus: focus trap, restore, dirty guard, overlay stack — not business rules.
+* Server-rendered modal/drawer bodies for authoritative form state.
+
+---
+
+# 11. Deferred Complexity Policy
 
 ShelfStack should avoid overbuilding too early.
 
-Acceptable deferrals include:
+Still deferred or out of scope:
 
-* Fully normalized contributors
-* Fully normalized subjects
-* Vendor-product sourcing
-* Product variant aliases
-* Product price history
-* Inventory ledger
-* POS snapshots
-* Business-date handling
-* External bibliographic integrations
+* Fully normalized contributors and subjects
+* Product variant aliases and product price history tables
+* Inventory location balances, transfers, cycle counts
+* Offline POS
+* GL export and financial postings (Phase 9c)
+* Full command language outside POS/items workspaces
 
-When deferring, document:
+**No longer deferred** (implemented — do not treat as future work in new code):
 
-1. What is deferred.
-2. Why it is deferred.
-3. What current design choice leaves room for it later.
+* Vendor-product sourcing and PO/receiving
+* Inventory ledger and balances
+* POS transactions, snapshots, and business dates
+* External bibliographic lookup (ISBNdb, Phase 6.5)
+* Structured POS discounts and tax exceptions (Phase 8.5)
+
+When deferring new work, document what is deferred, why, and which phase owns it.

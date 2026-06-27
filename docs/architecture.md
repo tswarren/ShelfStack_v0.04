@@ -2,97 +2,149 @@
 
 ## Purpose
 
-This document explains the intended technical architecture for ShelfStack at a high level.
+This document explains the technical architecture of ShelfStack at a high level: application layers, major service domains, context, and principles that guide implementation.
 
-It describes the major application layers, services, conventions, and architectural principles that should guide implementation.
+For a quick domain → tables → services map see [architecture-map.md](architecture-map.md).
 
 ---
 
 # 1. Architectural Goals
 
-ShelfStack should be built as a maintainable Rails application with clear separation between:
+ShelfStack is a maintainable Rails application with clear separation between:
 
-* Data models
-* Business rules
-* Authorization
-* Audit logging
+* Data models (validations, associations)
+* Business rules (service objects)
+* Authorization and audit
 * Request/session context
-* Setup workflows
-* Product/catalog logic
-* Future inventory/POS services
+* UI coordination (thin controllers, Turbo, Stimulus for focus/UI state only)
 
-The application should avoid placing complex business rules directly in controllers.
+**Complex business rules belong in services**, not controllers, Stimulus controllers, or views. POS command routing and workflow state are Ruby-side (for example `Pos::CommandRegistry` in Phase 10-C).
 
 ---
 
-# 2. Major Layers
+# 2. Current Architectural Layers
 
-## 2.1 Models
+ShelfStack is organized in phased domains. Each builds on the product variant as the sellable and inventory grain where applicable.
 
-Models define database-backed records and basic validation.
+```text
+Foundation (auth, stores, workstations, sessions, audit)
+  ↓
+Classification and tax
+  ↓
+Catalog → Product → Product Variant / SKU
+  ↓
+Inventory posting and tracking (eligibility gate)
+  ↓
+Purchasing and receiving
+  ↓
+POS (transactions, settlement, discounts, tax exceptions)
+  ↓
+Stored value and customer credit
+  ↓
+Customer demand and reservations
+  ↓
+Used buyback
+  ↓
+Operational reporting (/reports)
+  ↓
+Interaction system (modals, drawers, focus, command workspace — Phase 10)
+  ↓
+Deferred: GL-shaped financial export (Phase 9c)
+```
 
-Examples:
+| Layer | Primary namespaces / examples | Workspace |
+| ----- | ------------------------------ | --------- |
+| Foundation | `Authorization`, `SessionLifecycle`, `AuditEvents` | `/setup`, login |
+| Catalog / SKU | `CatalogIdentifierService`, `SkuGenerator`, `ProductNameRenderer` | `/items` |
+| Inventory | `Inventory::Post`, `Inventory::Eligibility`, `Inventory::TrackingResolver` | `/inventory` |
+| Purchasing | `Purchasing::PostReceipt`, `Purchasing::MovingAverageCost` | `/orders` |
+| POS | `Pos::CompleteTransaction`, `Pos::TaxRecalculator`, `Pos::DiscountRecalculator` | `/pos` |
+| Stored value | `StoredValue::Post`, `Pos::PostStoredValueLedger` | `/pos`, `/customers` |
+| Demand | `CustomerRequests::*`, `InventoryReservations::*` | `/customers` |
+| Buyback | `Buybacks::CompleteSession`, `Buybacks::VoidSession` | `/buybacks` |
+| Reports | `Reports::*` query objects | `/reports` |
+| Interaction | Shared modal/drawer shells, `Pos::CommandRegistry` (10-C) | All |
 
-* `User`
-* `Role`
-* `Store`
-* `Department`
-* `Category`
-* `CatalogItem`
-* `Product`
-* `ProductVariant`
-
-Models may include simple validations and associations, but complex workflows should be handled by services.
+Phase specs and [AGENTS.md](../AGENTS.md) list authoritative service names per domain.
 
 ---
 
-## 2.2 Services
+# 3. Models
 
-Services encapsulate business workflows.
+Models define database-backed records, associations, and basic validations.
 
-Recommended service areas:
+Examples: `User`, `Store`, `CatalogItem`, `Product`, `ProductVariant`, `InventoryPosting`, `PosTransaction`, `StoredValueAccount`, `BuybackSession`.
 
-| Service Area           | Responsibility                                                   |
-| ---------------------- | ---------------------------------------------------------------- |
-| Authorization          | Permission resolution and store scope checks.                    |
-| Audit Events           | Creating consistent audit events with actor/context.             |
-| Current Context        | Managing user/store/workstation/session context.                 |
-| Session Lifecycle      | Login, logout, lock, unlock, expiration, force-end.              |
-| Workstation Assignment | Browser-to-workstation token assignment and resolution.          |
-| Tax Lookup             | Resolving effective store tax rates.                             |
-| Catalog Identifiers    | Normalization, validation, local generation, ISBN-10 conversion. |
-| Metadata Parsing       | Creator and subject parsing into JSONB.                          |
-| Product Naming         | Product and variant name generation.                             |
-| SKU Generation         | Product and variant SKU generation.                              |
+Complex workflows (completion, posting, void, recalculation) belong in services.
 
-### Phase 1 implemented services (2025-06-10)
+---
 
-These services exist in `app/services/` and are used by the Phase 1 application:
+# 4. Services
 
-| Service | File | Responsibility |
-| ------- | ---- | -------------- |
-| Authorization | `authorization.rb` | Permission resolution and store scope |
-| AuditEvents | `audit_events.rb` | Audit event creation with context |
-| AuthenticationService | `authentication_service.rb` | Login validation and lockout |
-| SessionLifecycle | `session_lifecycle.rb` | Login, logout, lock, unlock, expiration |
-| WorkstationAssignmentService | `workstation_assignment_service.rb` | Browser workstation assignment |
-| UserRoleAssignmentService | `user_role_assignment_service.rb` | User role assign/remove |
-| SuperAdministratorProtection | `super_administrator_protection.rb` | Admin lockout prevention and recovery |
-| TokenDigest | `token_digest.rb` | Secure token digest helpers |
+Services encapsulate business workflows in `app/services/`. Namespaced by domain (`Inventory::`, `Pos::`, `Purchasing::`, `StoredValue::`, `Buybacks::`, etc.).
+
+### Cross-cutting services
+
+| Service | Responsibility |
+| ------- | -------------- |
+| `Authorization` | Permission resolution and store scope |
+| `AuditEvents` | Append-only audit with actor/context |
+| `AuthenticationService` | Login validation and lockout |
+| `SessionLifecycle` | Login, logout, lock, unlock, expiration |
+| `WorkstationAssignmentService` | Browser workstation token assignment |
+| `TaxRateLookup` | Effective-dated store tax rate resolution |
+
+### Catalog and product services
+
+| Service | Responsibility |
+| ------- | -------------- |
+| `CatalogIdentifierService` | Normalize, validate, ISBN-10→13, local IDs |
+| `MetadataParser` | Creator/subject parsing to JSONB |
+| `ProductNameRenderer` | Product and variant name generation |
+| `SkuGenerator` | Product and variant SKU generation |
+
+### Inventory services
+
+| Service | Responsibility |
+| ------- | -------------- |
+| `Inventory::Post` | Authoritative inventory mutations |
+| `Inventory::BalanceUpdater` | Cached balance projection |
+| `Inventory::TrackingResolver` | Effective inventory vs non-inventory tracking |
+| `Inventory::Eligibility` | Gate for posting and POS lines |
+| `Inventory::CostEstimator` | Line cost fallback for postings |
+
+Balances must not be mutated outside `Inventory::Post` / `Inventory::BalanceUpdater`.
+
+### POS services
+
+| Service | Responsibility |
+| ------- | -------------- |
+| `Pos::CompleteTransaction` | Completion, snapshots, inventory post, stored value |
+| `Pos::VoidTransaction` | Void with reversal postings |
+| `Pos::TaxRecalculator` | Normal tax, exemptions, line overrides |
+| `Pos::DiscountRecalculator` | Structured discount applications |
+| `Pos::CommandBarRouter` → `Pos::CommandRegistry` | Command parsing and routing (10-C) |
+| `Pos::LineLookup` | Scan/catalog lookup for cart lines |
+
+### Stored value services
+
+| Service | Responsibility |
+| ------- | -------------- |
+| `StoredValue::Post` | Append-only ledger with account lock |
+| `StoredValue::Issue`, `RedeemCredit`, `VoidEntry` | Account lifecycle |
+| `Pos::PostStoredValueLedger` | POS tender redemption at completion |
+
+### Purchasing, demand, buyback, reports
+
+See phase specs for `Purchasing::*`, `CustomerRequests::*`, `Buybacks::*`, and `Reports::*` service lists in [AGENTS.md](../AGENTS.md).
 
 Request context: `app/models/current.rb` (`CurrentAttributes`).
 
-Future phases will add Tax Lookup, Catalog Identifiers, Metadata Parsing, Product Naming, and SKU Generation services per the table above.
-
 ---
 
-# 3. Current Context
+# 5. Current Context
 
-ShelfStack should use a shared request context.
-
-In Rails, this can be implemented with `CurrentAttributes`.
-
-Expected context:
+ShelfStack uses shared request context via `CurrentAttributes`:
 
 ```ruby
 Current.user
@@ -103,22 +155,13 @@ Current.workstation_assignment
 Current.time_zone
 ```
 
-This context should be set once per request and used by:
+Set once per request; used by controllers, services, authorization, audit, and time zone display.
 
-* Controllers
-* Services
-* Audit event creation
-* Authorization checks
-* Time zone display
-* Setup workflows
+The browser must not be trusted for store, workstation, or permission data.
 
 ---
 
-# 4. Authorization Architecture
-
-Authorization should be resolved through a shared service.
-
-Conceptual interface:
+# 6. Authorization Architecture
 
 ```ruby
 Authorization.allowed?(
@@ -128,274 +171,143 @@ Authorization.allowed?(
 )
 ```
 
-Rules:
-
-1. User must be active.
-2. Permission must be active.
-3. Role assignment must be active.
-4. Role must be active.
-5. Global role assignments apply across all stores.
-6. Store role assignments apply only in matching store context.
-7. System user is not valid for interactive UI authorization.
-
-Controllers should ask the authorization service rather than inspecting roles directly.
+Rules: active user/permission/role/assignment; global vs store-scoped assignments; system user excluded from interactive UI authorization.
 
 ---
 
-# 5. Audit Event Architecture
+# 7. Audit Event Architecture
 
-Audit event creation should be centralized.
-
-A typical audit event should include:
-
-* Actor user
-* Event name
-* Auditable record
-* Optional source record
-* Store context
-* Workstation context
-* User session context
-* Timestamp
-* JSONB event details
-
-Conceptual interface:
-
-```ruby
-AuditEvents.record!(
-  actor: Current.user,
-  event_name: "product_variant.created",
-  auditable: product_variant,
-  details: {}
-)
-```
-
-Audit events should be append-only in normal application behavior.
+Centralized via `AuditEvents.record!`. Append-only in normal operation. Include actor, event name, auditable/source, store/workstation/session context, JSONB details, UTC timestamp.
 
 ---
 
-# 6. Session and Workstation Architecture
+# 8. Session and Workstation Architecture
 
-ShelfStack uses persisted user sessions and durable workstation assignments.
+**Workstation:** browser raw token → digest in DB → resolve workstation and store.
 
-## Workstation assignment
+**User session:** persisted record; statuses `active`, `locked`, `ended`, `expired`, `force_ended`. Inactivity locks session.
 
-Browser stores raw assignment token.
+---
 
-Database stores token digest.
+# 9. Tax Architecture
 
-Server resolves:
+Three concepts: **Tax Category** (item taxability), **Store Tax Rate**, **Store Tax Category Rate** (effective-dated mapping).
+
+`TaxRateLookup.call(store:, tax_category:, date:)` returns exactly one applicable rate or raises.
+
+POS stores tax snapshots on lines at completion; Phase 8.5-2 adds exemption and line override recalculation via `Pos::TaxRecalculator`.
+
+---
+
+# 10. Catalog Identifier Architecture
+
+Centralized in `CatalogIdentifierService`: normalization, check digits, ISBN-10→13, local generation, primary identifier rules, publisher number display vs index values.
+
+External lookup (Phase 6.5): ISBNdb local-first import path integrated with Add Item wizard.
+
+---
+
+# 11. Product and Variant Architecture
+
+Naming and SKU generation via `ProductNameRenderer` and `SkuGenerator`. Variants require `sub_department_id` for operational classification.
+
+Inventory tracking: Phase 8 `Inventory::TrackingResolver` chain (override → legacy behavior → product default → product type). Staff UI syncs via `Items::InventoryTrackingSync`.
+
+---
+
+# 12. Inventory Architecture
+
+Authoritative grain: `store_id + product_variant_id`.
 
 ```text
-browser token → workstation_assignment → workstation → store → time_zone
+Inventory::Post
+  → inventory_postings (immutable)
+  → inventory_ledger_entries
+  → inventory_balances (cached)
 ```
 
-The browser must not be trusted to supply store, workstation, or permission data.
+Only eligible variants post (via `Inventory::Eligibility`). POS posts via `posting_type: pos_transaction` / `pos_void`. Receiving posts `quantity_accepted` only.
 
-## User session
+---
 
-Login creates a persisted `user_sessions` record.
+# 13. POS Architecture
 
-Session statuses:
+Register sessions scope business date and cash movements. Transactions are source documents with snapshotted tax, discount, classification, and inventory tracking on lines at completion.
+
+Settlement: multi-row tenders (Phase 7B), stored value redemption, gift card sale lines. Completion assigns register session and business date; Phase 10-C adds draft stamping at create time and session-scoped active draft resolution.
+
+Command workspace (10-C): shared idle/active shell, two-lane parser, `Pos::CommandRegistry` with permission and state checks. Domain rules (tax, discount eligibility, inventory posting) unchanged.
+
+---
+
+# 14. Stored Value Architecture
+
+Canonical model: `stored_value_accounts`, `stored_value_ledger_entries`, `stored_value_identifiers`. Append-only ledger; negative balances not allowed. POS integrates at completion via tender and gift-card-sale line services.
+
+Supersedes earlier separate gift-card/account table designs in Phase 6 docs.
+
+---
+
+# 15. Time Zone and Business Dates
+
+Timestamps persisted in UTC; display uses store time zone.
+
+**Business dates** are used for register sessions, POS completion, tax/discount lookup, and reporting. Register session `business_date` is authoritative for POS activity in that session.
+
+---
+
+# 16. Phase 10 Interaction Architecture
+
+Phase 10-A delivers shared interaction infrastructure used across workspaces:
+
+| Component | Role |
+| --------- | ---- |
+| Modal shell | Bounded decisions, settlement, confirmations |
+| Drawer shell | Line-adjacent detail, return/pickup (10-C) |
+| Expanded row | Inline cart/line edits |
+| Toast region | Non-blocking confirmations |
+| Focus helpers | Trap, restore, keyboard scope |
+
+Conventions: [modal-and-drawer-patterns.md](specifications/modal-and-drawer-patterns.md), [keyboard-and-focus.md](specifications/keyboard-and-focus.md), [view-contracts.md](specifications/view-contracts.md).
+
+Turbo targets (`modal`, `drawer`, `pos_cart`, etc.) documented in view contracts. Stimulus handles focus and UI state; **server renders authoritative workflow state**.
+
+Phase 10-C adds POS command registry and idle workspace — see [phase-10c-pos-keyboard-workspace-spec.md](specifications/phase-10c-pos-keyboard-workspace-spec.md).
+
+---
+
+# 17. Deletion and Inactivation
+
+Prefer `active = false` over hard delete for referenced records. Audit events append-only. Hard delete only for unused setup records.
+
+---
+
+# 18. Testing Principles
+
+Security, permissions, posting idempotency, and service-layer rules are heavily tested. See [testing.md](testing.md) and phase test plans.
+
+---
+
+# 19. Deferred / Future Architecture
+
+| Area | Status |
+| ---- | ------ |
+| GL-shaped financial postings and export | Phase 9c — deferred |
+| Inventory location balances, transfers, cycle counts | Not implemented |
+| Offline POS | Out of scope |
+| Fully normalized contributors/subjects | Deferred normalization |
+
+Operational reporting (9b) uses snapshots and ledgers; 9c would add accounting-grade postings when resumed.
+
+---
+
+# Related Documents
 
 ```text
-active
-locked
-ended
-expired
-force_ended
+docs/architecture-map.md
+docs/domain-model.md
+docs/implementation-guide.md
+docs/security.md
+docs/testing.md
+AGENTS.md
 ```
-
-Session lock state should be checked on authenticated requests and through a lightweight polling endpoint.
-
----
-
-# 7. Tax Architecture
-
-Tax setup is separated into three concepts:
-
-| Concept                 | Meaning                                                            |
-| ----------------------- | ------------------------------------------------------------------ |
-| Tax Category            | What kind of item this is for tax purposes.                        |
-| Store Tax Rate          | A tax rate available at a store.                                   |
-| Store Tax Category Rate | Effective-dated mapping of store + tax category to store tax rate. |
-
-Tax lookup is implemented in `app/services/tax_rate_lookup.rb`.
-
-Conceptual interface:
-
-```ruby
-TaxRateLookup.call(
-  store: store,
-  tax_category: tax_category,
-  date: date
-)
-```
-
-Returns the applicable `StoreTaxRate`. Raises `TaxRateLookup::MissingRateError` or `TaxRateLookup::AmbiguousRateError` when setup is incomplete or ambiguous.
-
----
-
-# 8. Catalog Identifier Architecture
-
-Catalog identifier behavior should be centralized.
-
-Responsibilities:
-
-* Normalize standard identifiers.
-* Validate check digits.
-* Warn on invalid values.
-* Convert ISBN-10 to ISBN-13.
-* Generate local identifiers.
-* Enforce one active primary identifier.
-* Preserve publisher number display values.
-* Store normalized publisher number index values.
-
-Conceptual interface:
-
-```ruby
-CatalogIdentifierService.add_identifier!(
-  catalog_item: catalog_item,
-  identifier_type: "isbn10",
-  value: "0-123456-78-9"
-)
-```
-
----
-
-# 9. Product and Variant Architecture
-
-Products and variants should be generated and maintained through services rather than ad hoc controller logic.
-
-## Product naming
-
-Catalog-linked product names default from catalog item titles.
-
-Non-catalog product names are user-entered.
-
-Name overrides are supported.
-
-## Variant naming
-
-Variant names are generated from:
-
-* Product name
-* Condition short name
-* Attribute values
-
-Name overrides are supported.
-
-## SKU generation
-
-Product SKU is the base SKU.
-
-Variant SKU is derived from:
-
-* Product SKU
-* Condition SKU component
-* Attribute SKU components
-
-Conceptual services:
-
-```ruby
-ProductNameRenderer.product_name(product)
-ProductNameRenderer.variant_name(product_variant)
-
-SkuGenerator.product_sku(product)
-SkuGenerator.variant_sku(product_variant)
-```
-
----
-
-# 10. Metadata Parsing Architecture
-
-ShelfStack allows practical metadata entry through semicolon-separated strings.
-
-Creator example:
-
-```text
-Smith, John [author]; Doe, Jane [actor; director]
-```
-
-Subject example:
-
-```text
-HISTORY > General [BISAC/HIS000000]; Comedy [local]
-```
-
-The application should preserve the display string and parse structured JSONB.
-
-Parsing should be conservative. It should not over-infer complicated personal names or subject schemes.
-
----
-
-# 11. Time Zone Architecture
-
-All persisted timestamps should be stored in UTC.
-
-User-facing timestamps should display using the active store’s time zone.
-
-If no active store context exists, use the application default time zone.
-
-Future POS and inventory workflows may also require store-local business dates, but that is deferred.
-
----
-
-# 12. Deletion and Inactivation
-
-ShelfStack should generally prefer inactivation over deletion once records are referenced.
-
-Examples:
-
-| Record          | Preferred Lifecycle            |
-| --------------- | ------------------------------ |
-| User            | Inactivate                     |
-| Store           | Inactivate                     |
-| Department      | Inactivate                     |
-| Category        | Inactivate                     |
-| Catalog Item    | Inactivate                     |
-| Product         | Inactivate                     |
-| Product Variant | Inactivate                     |
-| Tax Rate        | Inactivate or end-date mapping |
-| Audit Event     | Append-only, no normal delete  |
-
-Hard deletion should be limited to unused setup records.
-
----
-
-# 13. Testing Principles
-
-Security and setup behavior should be tested heavily.
-
-Core test areas:
-
-* Authentication
-* Authorization
-* Store-scoped permissions
-* Session lifecycle
-* Workstation assignment
-* Audit event creation
-* Tax lookup
-* Catalog identifier normalization
-* SKU generation
-* Name rendering
-* Seed idempotency
-
----
-
-# 14. Future Architecture Considerations
-
-Future phases should add:
-
-* Inventory ledger
-* Stock balances
-* Vendor sourcing
-* Purchase orders
-* Receiving
-* POS transactions
-* Returns
-* Stock transfers
-* Inventory valuation
-* Reporting
-* GL/accounting export
-
-These future domains should build on the product variant as the sellable/stock-tracked unit.

@@ -1,5 +1,3 @@
-# `docs/glossary.md`
-
 # ShelfStack Glossary
 
 ## Purpose
@@ -14,11 +12,13 @@ It is intended to keep documentation, code, UI labels, and developer conversatio
 
 ## Active
 
-A record with `active = true`.
+A record with `active = true`. Active records may be used for new activity unless other rules prevent it. Inactive records remain visible for history but cannot be selected for new setup or business activity.
 
-Active records may be used for new activity unless other rules prevent it.
+---
 
-Inactive records usually remain visible for history but cannot be selected for new setup or business activity.
+## Active Draft
+
+The single in-progress POS transaction (`status: draft`) for the current register session, workstation, and cashier. Phase 10-C: `/pos` always returns to the active draft until complete, cancel, hold, or void. See [phase-10c-pos-keyboard-workspace-spec.md](specifications/phase-10c-pos-keyboard-workspace-spec.md).
 
 ---
 
@@ -26,15 +26,7 @@ Inactive records usually remain visible for history but cannot be selected for n
 
 An append-only record of significant application activity.
 
-Audit events may record:
-
-* Security events
-* Session events
-* Setup changes
-* SKU generation
-* Identifier changes
-* Product/variant changes
-* Future inventory/POS events
+Audit events may record security, session, setup, catalog, inventory, POS, stored-value, and buyback events.
 
 ---
 
@@ -47,6 +39,12 @@ Stored on audit events as `actor_user_id`.
 ---
 
 # B
+
+## Buyback Session
+
+Staged used-buyback workflow document (intake through completion) with workstation-scoped buyback number, single payout mode, and inventory posting at completion only.
+
+---
 
 ## Basis Points
 
@@ -81,6 +79,30 @@ workstation_assignments
 
 # C
 
+## Cash Drop
+
+Drawer-to-safe cash movement. **Planned/disabled** in Phase 10-C until `cash_drop` movement type exists on `PosCashMovement` (only `paid_in` / `paid_out` today).
+
+---
+
+## Cash Movement
+
+Register-session cash drawer event: `paid_in` or `paid_out` via `/cashin` and `/cashout` commands (Phase 10-C).
+
+---
+
+## Command Alias
+
+Short token that normalizes to a canonical slash command (for example `/ld` → line discount). Aliases must be unique across the full `Pos::CommandRegistry` (Phase 10-C).
+
+---
+
+## Command Registry
+
+Ruby-side registry (`Pos::CommandRegistry`) defining canonical POS commands, aliases, permissions, valid states, and handler targets. Authoritative for command routing — not Stimulus-only logic.
+
+---
+
 ## Catalog Item
 
 A descriptive metadata record.
@@ -106,6 +128,12 @@ A catalog item is not the sellable SKU. Products and product variants are used f
 ## Customer
 
 A lightweight store customer profile used for requests, holds, special orders, and pickup contact history.
+
+---
+
+## Customer Pickup
+
+POS fulfillment of customer demand; Phase 10-C uses a drawer workflow with draft created on line fulfillment.
 
 ---
 
@@ -243,22 +271,9 @@ Current.time_zone
 
 ## Department
 
-Top-level sales and reporting bucket.
+Top-level operational merchandise and reporting bucket (Phase 2). Departments carry GL account codes and, after Phase 8.5-1, a `discountable` flag.
 
-Departments are used for:
-
-* POS reporting
-* Department sales summaries
-* Future GL/accounting export
-* High-level product organization
-
-Department numbers are fixed-width, zero-padded strings such as `001`, `010`, and `100`.
-
----
-
-## Department
-
-Operational top-level merchandise grouping (Phase 2). Departments carry GL account codes and, after Phase 8.5-1, a `discountable` flag.
+Department numbers are fixed-width, zero-padded strings such as `001`, `010`, and `100`. Used for POS reporting, department summaries, and GL-shaped export (Phase 9c deferred).
 
 ## Discount Application
 
@@ -312,6 +327,18 @@ Examples:
 
 # G
 
+## Gift Card Issue / Reload
+
+POS `gift_card_sale` line (not a tender) that issues stored-value balance at completion via `/giftcard` or `/gc`. Phase 10-C: modal-first; amount prefills modal, does not auto-post line.
+
+---
+
+## Gift Card Redemption
+
+Applying stored-value gift card balance as a POS tender via `/giftredeem` or `/gr` (distinct from gift card sale line).
+
+---
+
 ## Global Role Assignment
 
 A role assignment that applies across all stores.
@@ -319,6 +346,12 @@ A role assignment that applies across all stores.
 ---
 
 # I
+
+## Idle POS Workspace
+
+POS landing state when register is open and no active draft exists. Command field is home base; no silent draft creation (Phase 10-C).
+
+---
 
 ## Inventory Reservation
 
@@ -341,21 +374,13 @@ Examples:
 
 ## Inventory Behavior
 
-A product variant field that describes how the variant should behave in future inventory/POS workflows.
+Legacy product variant field describing historical inventory/POS behavior (`standard_physical`, `non_inventory`, etc.). Phase 8 adds `Inventory::TrackingResolver` and `inventory_tracking_override`; **`Inventory::Eligibility` is the mutation gate**. Legacy `standard_physical` maps to inventory tracking. Do not use `inventory_behavior` alone for new posting decisions.
 
-Examples:
+---
 
-```text
-standard_physical
-digital_asset
-drop_ship
-composite_recipe
-capacitated_service
-pure_financial
-non_inventory
-```
+## Inventory Tracking
 
-In Phase 4, only `standard_physical` variants may receive inventory ledger entries.
+Resolved inventory vs non-inventory state via `Inventory::TrackingResolver` (override → legacy behavior → product default → product type). Authoritative for eligibility alongside `Inventory::Eligibility`.
 
 ---
 
@@ -412,6 +437,12 @@ L000000001
 ---
 
 # P
+
+## Operational Report
+
+Phase 9b report under `/reports` reading operational snapshots and ledgers (not GL postings). Canonical report hub; POS navigates here via `/reports`.
+
+---
 
 ## Permission
 
@@ -484,21 +515,43 @@ For non-catalog products, the SKU is manually entered or generated by ShelfStack
 
 ## Product Variant
 
-The actual sellable SKU.
+The actual sellable SKU. POS, receiving, purchasing, inventory, and buyback workflows operate at the product variant level.
 
-Future POS, receiving, purchasing, and inventory workflows should operate at the product variant level.
+Examples: new copy, signed copy, used condition, size/color variant.
 
-Examples:
+---
 
-* New copy
-* Signed copy
-* Used - Like New copy
-* Blue / Large T-shirt
-* 16 oz latte
+## Purchase Order (PO)
+
+A committed order to a vendor with line-level snapshots at submit time.
+
+---
+
+## Purchase Request (TBO)
+
+Store-level “to be ordered” demand signal. Does not affect inventory until received through a receipt.
 
 ---
 
 # R
+
+## Receipt
+
+A receiving document; only `quantity_accepted` posts to inventory via `Inventory::Post`.
+
+---
+
+## Return Drawer
+
+Phase 10-C POS drawer workflow for receipted and no-receipt returns; may add return lines to an active sale-only draft (exchange) but blocked when tender rows exist.
+
+---
+
+## Return to Vendor (RTV)
+
+Posted document removing inventory for vendor returns via `posting_type: vendor_return`.
+
+---
 
 ## Role
 
@@ -526,6 +579,18 @@ The assignment is scoped, not the role itself.
 ---
 
 # S
+
+## Stored Value Account
+
+Canonical liability account (`stored_value_accounts`) for gift card, store credit, trade credit, and related types. Balance from append-only ledger.
+
+---
+
+## Stored Value Identifier
+
+Redemption token linked to a stored value account; masked in UI; full reveal may require audited action.
+
+---
 
 ## Special Order
 
@@ -622,6 +687,12 @@ The system user cannot log in interactively.
 
 # T
 
+## Transaction Intent Boundary
+
+Phase 10-C rule: slash-prefixed input → command registry; non-slash → scan/catalog lookup only. Failed lookup never creates a draft or infers open-ring/return workflows.
+
+---
+
 ## Tax Category
 
 Global product taxability classification.
@@ -667,37 +738,13 @@ force_ended
 
 ---
 
-# P
-
-## Purchase Order (PO)
-
-A committed order to a vendor with line-level snapshots of SKU, name, vendor item number, list price, discount, unit cost, and returnability at submit time.
-
-## Purchase Request (TBO)
-
-A store-level “to be ordered” demand signal. Purchase requests do not affect inventory until received through a receipt.
-
----
-
-# R
-
-## Receipt
-
-A receiving document that records quantities received and accepted from a vendor. Only `quantity_accepted` posts to inventory via `Inventory::Post` with `posting_type: receiving`.
-
-## Return to Vendor (RTV)
-
-A posted document that removes inventory for items returned to a vendor. Posts via `Inventory::Post` with `posting_type: vendor_return`.
-
----
-
 # V
 
 ## Vendor
 
-Supplier or source organization.
+Supplier or source organization. Phase 5 adds product and variant vendor sourcing, purchase orders, receiving, and returns to vendor.
 
-Phase 3 includes the vendor directory. Phase 5 adds product and variant vendor sourcing, purchase orders, receiving, and returns to vendor.
+---
 
 ## Vendor Item Number
 
