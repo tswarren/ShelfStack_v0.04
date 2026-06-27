@@ -10,14 +10,47 @@ The full schema details are maintained in phase-specific data model documents.
 
 # Source Documents
 
-The schema reference is assembled from:
+The schema reference is assembled from phase data model documents. **Authoritative runtime schema:** `db/schema.rb`. Phase data models are design source of truth for migrations and constraints.
+
+## Phase index
+
+| Phase | Data model | Status |
+| ----- | ---------- | ------ |
+| 1 | [phase-1-data-model.md](specifications/phase-1-data-model.md) | Complete |
+| 2 | [phase-2-data-model.md](specifications/phase-2-data-model.md) | Complete |
+| 3 | [phase-3-data-model.md](specifications/phase-3-data-model.md) | Complete |
+| 4 | [phase-4-data-model.md](specifications/phase-4-data-model.md) | Complete |
+| 5 | [phase-5-data-model.md](specifications/phase-5-data-model.md) | Complete |
+| 6 | [phase-6-data-model.md](specifications/phase-6-data-model.md) | Complete |
+| 7A | [phase-7a-data-model.md](specifications/phase-7a-data-model.md) | Complete |
+| 7B | [phase-7b-data-model.md](specifications/phase-7b-data-model.md) | Complete |
+| 7C | [phase-7c-data-model.md](specifications/phase-7c-data-model.md) | Complete |
+| 8 | [phase-8-data-model.md](specifications/phase-8-data-model.md) | Complete |
+| 8.5-1 | [phase-8.5-1-data-model.md](specifications/phase-8.5-1-data-model.md) | Complete |
+| 8.5-2a/b | [phase-8.5-2a-data-model.md](specifications/phase-8.5-2a-data-model.md), [phase-8.5-2b-data-model.md](specifications/phase-8.5-2b-data-model.md) | Complete |
+| 8.5-3a | [phase-8.5-3a-data-model.md](specifications/phase-8.5-3a-data-model.md) | Complete |
+| 8.5-4 | [phase-8.5-4-data-model.md](specifications/phase-8.5-4-data-model.md) | Complete |
+| 9a / 9b | See phase 9 specs (minimal new tables; mostly reads operational data) | Complete |
+| 10 | UX phases — no new domain tables in 10-A/B/C unless explicitly scoped | In progress |
+
+Full document list:
 
 ```text
 docs/specifications/phase-1-data-model.md
 docs/specifications/phase-2-data-model.md
 docs/specifications/phase-3-data-model.md
 docs/specifications/phase-4-data-model.md
+docs/specifications/phase-5-data-model.md
+docs/specifications/phase-6-data-model.md
+docs/specifications/phase-7a-data-model.md
+docs/specifications/phase-7b-data-model.md
+docs/specifications/phase-7c-data-model.md
+docs/specifications/phase-8-data-model.md
 docs/specifications/phase-8.5-1-data-model.md
+docs/specifications/phase-8.5-2a-data-model.md
+docs/specifications/phase-8.5-2b-data-model.md
+docs/specifications/phase-8.5-3a-data-model.md
+docs/specifications/phase-8.5-4-data-model.md
 ```
 
 Each phase data model should include:
@@ -404,3 +437,5 @@ product_variants.returnability_status
 ```
 
 These should not be added until their workflows are defined.
+
+See phase data model documents in the index above for table-level detail. [architecture-map.md](architecture-map.md) maps domains to key tables.

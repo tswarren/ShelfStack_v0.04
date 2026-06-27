@@ -10,28 +10,32 @@ ShelfStack separates descriptive catalog metadata from store-facing products and
 
 ## Project Status
 
-ShelfStack is developed in phases. **Phases 1–8**, **6.5**, and **7A–7C** are **complete**. **Phase 8.5-1** (structured POS discounts) is **in review** on branch `phase-8.5-operational-cleanup` (target completion after merge).
+ShelfStack is developed in phases. **Phases 1–8**, **6.5**, **7A–7C**, **8.5 (mostly)**, **9a/9b**, and **Phase 10-A/10-B** are **complete**.
 
 | Phase | Focus | Status |
 | ----- | ----- | ------ |
-| 1 | Foundation: users, roles, permissions, stores, workstations, sessions, audit | **Complete** |
-| 2 | Classification and taxes | **Complete** |
-| 3 | Catalog, products, and variants | **Complete** |
-| 4 | Inventory foundation | **Complete** |
-| 5 | Purchasing and receiving | **Complete** |
-| 6 | POS foundation | **Complete** |
+| 1–6 | Foundation through POS | **Complete** |
 | 6.5 | External catalog lookup (ISBNdb) | **Complete** |
-| 7A | Customer demand (requests, holds, special orders) | **Complete** |
-| 7B | Customer credit (settlement, stored value, POS integration) | **Complete** |
+| 7A | Customer demand | **Complete** |
+| 7B | Customer credit (settlement, stored value) | **Complete** |
 | 7C | Used buyback | **Complete** |
-| 8 | Inventory eligibility and tracking refactor | **Complete** |
-| 8.5-1 | POS discount model and calculation | **In review** |
-| 8.5+ | Operational cleanup (tax exceptions, tender/customer) | Roadmap |
-| 9 | Reporting and accounting | Roadmap |
+| 8 | Inventory eligibility and tracking | **Complete** |
+| 8.5 | POS discounts, tax exceptions, order readiness, item data quality | **Mostly complete** — see completion records |
+| 9a / 9b | Report UX foundation and operational reports | **Complete** |
+| 9c | GL-shaped financial layer | **Deferred** |
+| 10-A / 10-B | Interaction infrastructure; item cockpit | **Complete** |
+| 10-C | POS keyboard workspace | **Current priority** |
+| 10-D / 10-E | Workflow polish; consistency sweep | Planned |
 
-See [docs/roadmap.md](docs/roadmap.md) for the full phase sequence and [docs/implementation/](docs/implementation/) for completion records.
+```text
+Implemented: Phases 1–8, 6.5, 7A–7C, 9a/9b, 10-A, 10-B
+Current:     Phase 10-C — POS Keyboard Workspace
+Deferred:    Phase 9c GL-shaped financial layer
+```
 
-Recent completion records: [Phase 6](docs/implementation/phase-6-completion.md) · [Phase 7A](docs/implementation/phase-7a-completion.md) · [Phase 7C](docs/implementation/phase-7c-completion.md) · [Phase 8](docs/implementation/phase-8-3-4-5-completion.md) · [Phase 8.5-1](docs/implementation/phase-8.5-1-completion.md) (in review).
+See [docs/roadmap.md](docs/roadmap.md), [AGENTS.md](AGENTS.md), and [docs/implementation/](docs/implementation/) for completion records.
+
+Recent: [Phase 10-B](docs/implementation/phase-10b-completion.md) · [Phase 9b](docs/implementation/phase-9b-completion.md) · [Phase 10-C spec](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
 ---
 
@@ -47,7 +51,7 @@ Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
 * **Product** — store-facing product grouping; may or may not link to a catalog item.
 * **Product variant** — the actual sellable SKU (new copy, used condition, size/color, and so on).
 
-Future POS, inventory, purchasing, receiving, buyback, and reporting workflows operate at the product variant level (with structured POS discounts under Phase 8.5-1).
+Inventory, purchasing, receiving, POS, buyback, stored value, and operational reporting workflows operate at the **product variant** level (with structured POS discounts, tax exceptions, and inventory tracking gates in later phases).
 
 See [docs/overview.md](docs/overview.md) and [docs/domain-model.md](docs/domain-model.md) for more detail.
 
@@ -66,7 +70,10 @@ Primary documentation lives in [docs/](docs/). Start with [docs/README.md](docs/
 | [docs/roadmap.md](docs/roadmap.md) | Phase-by-phase development roadmap.            |
 | [docs/implementation-guide.md](docs/implementation-guide.md) | Developer conventions and implementation guidance. |
 | [docs/glossary.md](docs/glossary.md) | Definitions of recurring domain terms.         |
-| [docs/schema-reference.md](docs/schema-reference.md) | Schema, index, and constraint reference.   |
+| [docs/schema-reference.md](docs/schema-reference.md) | Schema index and phase data model guide.   |
+| [docs/architecture-map.md](docs/architecture-map.md) | Domain → tables → services → workspace map. |
+| [docs/security.md](docs/security.md) | Auth, permissions, sessions, audit overview. |
+| [docs/testing.md](docs/testing.md) | Test strategy and phase test plan index.   |
 
 AI coding agents should also read [AGENTS.md](AGENTS.md).
 
@@ -149,11 +156,11 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 
 ## Current Scope
 
-**Implemented:** Phases 1–8, 6.5, and 7A–7C. See [docs/implementation/](docs/implementation/) for completion records and verification steps.
+**Implemented:** Phases 1–8, 6.5, 7A–7C, 8.5 (mostly), 9a/9b, 10-A, 10-B. See [docs/implementation/](docs/implementation/).
 
-**In review:** Phase 8.5-1 structured POS discounts (reasons, applications, allocations, eligibility, stacking). See [phase-8.5-1-completion.md](docs/implementation/phase-8.5-1-completion.md).
+**Current priority:** Phase 10-C — POS keyboard workspace (idle workspace, command registry, two-lane parser). See [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md).
 
-**Next (roadmap):** Phase 8.5 operational cleanup (tax exceptions, tender/customer), then Phase 9 reporting and accounting. See [docs/roadmap.md](docs/roadmap.md).
+**Deferred:** Phase 9c GL-shaped financial layer. Operational reports in 9b remain authoritative for store reconciliation.
 
 ### Workspaces
 
@@ -166,6 +173,7 @@ See [docs/implementation-guide.md](docs/implementation-guide.md) for naming conv
 | POS | `/pos` | Register, transactions, settlement, receipts |
 | Buybacks | `/buybacks` | Used buyback sessions |
 | Customers | `/customers` | Demand, stored value, customer records |
+| Reports | `/reports` | Operational reports (Phase 9b) |
 
 ---
 

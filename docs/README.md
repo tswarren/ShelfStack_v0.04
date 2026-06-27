@@ -74,6 +74,9 @@ Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/p
 | [overview.md](overview.md) | High-level explanation of ShelfStack |
 | [domain-model.md](domain-model.md) | Core business concepts and relationships |
 | [architecture.md](architecture.md) | Technical architecture and service structure |
+| [architecture-map.md](architecture-map.md) | Domain → tables → services → workspace quick map |
+| [security.md](security.md) | Auth, permissions, sessions, audit overview |
+| [testing.md](testing.md) | Test strategy and phase test plan index |
 | [roadmap.md](roadmap.md) | Full development roadmap including future phases |
 | [implementation-guide.md](implementation-guide.md) | Developer conventions, naming, seeds, testing |
 | [implementation/csv-seeds.md](implementation/csv-seeds.md) | CSV classification seed pipeline and validation |

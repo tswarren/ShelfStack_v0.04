@@ -404,14 +404,138 @@ docs/specifications/phase-7a-data-model.md
 
 ---
 
-# 9. Conceptual Flow
+# 10. Stored Value / Customer Credit (Phase 7B)
+
+Phase 7B introduces a canonical stored-value ledger replacing earlier separate gift-card/account designs.
+
+| Concept | Description |
+| --- | --- |
+| Stored Value Account | Liability account by type (`gift_card`, `store_credit`, `trade_credit`, etc.). |
+| Stored Value Identifier | Redemption token (masked display; full reveal audited where required). |
+| Ledger Entry | Append-only balance movement; voids reverse via `reverses_entry_id`. |
+| POS Settlement | Multi-row tenders; cash drawer math on `amount_cents`. |
+| Gift Card Sale Line | POS line type issuing balance at completion (not a tender). |
+
+POS redemption saves `min(amount entered, balance)` on tender rows. Manual issue/adjust/transfer/void require reason codes and audit events in admin UI.
+
+## Related Documents
+
+```text
+docs/roadmap/phase-7b-customer-credit-foundation.md
+docs/specifications/phase-7b-stored-value-spec.md
+docs/specifications/phase-7b-data-model.md
+```
+
+---
+
+# 11. Used Buyback (Phase 7C)
+
+Staged buyback workflow: intake → pricing/proposal → customer decision → payout → completion.
+
+| Concept | Description |
+| --- | --- |
+| Buyback Session | Workstation-scoped session with single payout mode (cash, trade_credit, or no_value_donation). |
+| Buyback Line | Resolved catalog item with proposed/accepted offer and outcome. |
+| Graded Used Variant | Created at pricing when needed; inventory posts at completion. |
+| Trade Credit | Issued to stored-value account with identifier for POS redemption. |
+
+Completion posts `used_buyback` inventory; void reverses via `buyback_void`. No cash/inventory posting before `CompleteSession`.
+
+## Related Documents
+
+```text
+docs/roadmap/phase-7c-used-buyback.md
+docs/specifications/phase-7c-used-buyback-spec.md
+docs/specifications/phase-7c-data-model.md
+```
+
+---
+
+# 12. Inventory Tracking (Phase 8)
+
+Phase 8 centralizes inventory vs non-inventory behavior.
+
+| Concept | Description |
+| --- | --- |
+| Inventory Tracking | Resolved value: inventory-eligible vs non-inventory (`Inventory::TrackingResolver`). |
+| Override | Variant `inventory_tracking_override` wins over product default and legacy `inventory_behavior`. |
+| Eligibility Gate | `Inventory::Eligibility` is the mutation gate for posting and POS lines. |
+| POS Snapshot | `inventory_tracking_snapshot` on lines at completion. |
+
+Legacy `inventory_behavior` column remains; `standard_physical` maps to inventory tracking.
+
+## Related Documents
+
+```text
+docs/roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md
+docs/specifications/phase-8-inventory-eligibility-and-tracking-spec.md
+```
+
+---
+
+# 13. External Catalog Lookup (Phase 6.5)
+
+ISBNdb local-first bibliographic lookup integrated with Add Item wizard: candidate preview, controlled import, no silent catalog mutation without staff confirmation.
+
+## Related Documents
+
+```text
+docs/implementation/phase-6.5-completion.md
+```
+
+---
+
+# 14. Operational Reporting (Phase 9a / 9b)
+
+Phase 9a defines report UX semantics, formatting, and view contracts. Phase 9b implements operational reports at `/reports` (canonical hub). POS `/reports` command navigates here with confirm when an active draft exists (10-C).
+
+Reports read operational snapshots and ledgers — not GL postings (Phase 9c deferred).
+
+## Related Documents
+
+```text
+docs/roadmap/phase-9-reporting-and-accounting.md
+docs/specifications/phase-9b-reports-spec.md
+docs/implementation/phase-9a-completion.md
+docs/implementation/phase-9b-completion.md
+```
+
+---
+
+# 15. Interaction / UX Domain (Phase 10)
+
+Phase 10 establishes app-wide interaction patterns without changing core domain rules.
+
+| Concept | Description |
+| --- | --- |
+| Modal Shell | Bounded decisions; focus trap; dirty guard; Turbo `modal` target. |
+| Drawer Shell | Contextual detail (demand, variant ops, return/pickup in 10-C). |
+| Expanded Row | Inline line edits (cart, PO lines). |
+| View Contract | Per-screen first focus and primary action ([view-contracts.md](specifications/view-contracts.md)). |
+| POS Command Workspace | Idle/active shell, two-lane parser, `Pos::CommandRegistry` (10-C). |
+
+Phase 10-A/10-B complete; 10-C in progress. Function keys out of scope for 10-C completion.
+
+## Related Documents
+
+```text
+docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
+docs/specifications/phase-10a-interaction-infrastructure-spec.md
+docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
+docs/specifications/view-contracts.md
+docs/specifications/keyboard-and-focus.md
+```
+
+---
+
+# 16. Conceptual Flow
 
 ShelfStack’s core data flow can be summarized as:
 
 ```text
 Foundation
   ↓
-Departments / Categories / Taxes
+Departments / Subdepartments / Taxes
   ↓
 Catalog Items
   ↓
@@ -419,9 +543,13 @@ Products
   ↓
 Product Variants
   ↓
-Inventory / Purchasing / POS
+Inventory / Purchasing / POS / Stored Value / Demand / Buyback
   ↓
-Reporting / Accounting
+Operational Reporting
+  ↓
+Interaction system (Phase 10)
+  ↓
+Deferred: GL / financial export (Phase 9c)
 ```
 
 Each layer builds on the prior layer.
