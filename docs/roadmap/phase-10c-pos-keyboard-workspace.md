@@ -625,8 +625,6 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 9 | Cart expanded-row polish, focus restoration | 10-A |
 | 10 | Session drawer, held-sale access, tests, docs sync | All above |
 
-**Doc sync (before slice 1 merge):** update `phase-10c-pos-keyboard-workspace-spec.md`, `pos-keyboard-workspace.md`, `keyboard-and-focus.md`, and Workstream 3 in `Phase-x10-comprehensive-ux-expansion.md` so they match this roadmap.
-
 ---
 
 ## Keyboard/Focus Acceptance Criteria

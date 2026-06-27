@@ -1,16 +1,12 @@
 # Phase 10-B — Item Cockpit Completion
 
-**Status:** Planned
+**Status:** Complete
+
+**Completion record:** [phase-10b-completion.md](../implementation/phase-10b-completion.md)
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
-**Depends on:** [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) — **hard dependencies only:**
-
-* Shared **drawer shell** (pilot complete)
-* Shared **modal shell**
-* **Focus restoration** on modal/drawer close
-
-10-B may start once those 10-A deliverables land; toasts and expanded rows may still be in progress.
+**Depends on:** [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) (complete)
 
 **Spec:** [phase-10b-item-cockpit-spec.md](../specifications/phase-10b-item-cockpit-spec.md)
 

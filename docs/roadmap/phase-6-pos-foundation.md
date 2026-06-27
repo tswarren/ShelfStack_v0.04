@@ -169,4 +169,5 @@ Phase 6 is complete when:
 docs/specifications/phase-6-pos-foundation-spec.md
 docs/specifications/phase-6-data-model.md
 docs/specifications/phase-6-test-plan.md
+docs/roadmap/phase-10c-pos-keyboard-workspace.md   ← POS command/landing UX (Phase 10-C)
 ```

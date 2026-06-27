@@ -33,7 +33,7 @@ ShelfStack is a bookstore-focused catalog, inventory, stock, and point-of-sale m
 
 Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to the task.
 
-**Phases 1–6 are implemented.** See completion records under [implementation/](implementation/). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data; **Inventory** (`/inventory`) and **Orders** (`/orders`) cover Phase 4–5 workflows.
+**Phases 1–9b and Phase 10-A/10-B are implemented.** See completion records under [implementation/](implementation/). **Current priority:** Phase 10-C (POS keyboard workspace). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data; **Inventory** (`/inventory`) and **Orders** (`/orders`) cover Phase 4–5 workflows.
 
 ---
 
@@ -47,8 +47,19 @@ Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to th
 | Phase 4 | Complete | [implementation/phase-4-completion.md](implementation/phase-4-completion.md) |
 | Phase 5 | Complete | [implementation/phase-5-completion.md](implementation/phase-5-completion.md) |
 | Phase 6 | Complete | [implementation/phase-6-completion.md](implementation/phase-6-completion.md) |
+| Phase 6.5 | Complete | [implementation/phase-6.5-completion.md](implementation/phase-6.5-completion.md) |
+| Phase 7A | Complete | [implementation/phase-7a-completion.md](implementation/phase-7a-completion.md) |
+| Phase 7B | Complete | [implementation/phase-7b-2-completion.md](implementation/phase-7b-2-completion.md), [phase-7b-3-completion.md](implementation/phase-7b-3-completion.md) |
+| Phase 7C | Complete | [implementation/phase-7c-completion.md](implementation/phase-7c-completion.md) |
+| Phase 8 | Complete | [implementation/phase-8-1-8-2-completion.md](implementation/phase-8-1-8-2-completion.md), [phase-8-3-4-5-completion.md](implementation/phase-8-3-4-5-completion.md) |
+| Phase 8.5 | Mostly complete | See [roadmap.md](roadmap.md) and `implementation/phase-8.5-*-completion.md` |
+| Phase 9a / 9b | Complete | [implementation/phase-9a-completion.md](implementation/phase-9a-completion.md), [phase-9b-completion.md](implementation/phase-9b-completion.md) |
+| Phase 9c | Deferred | [roadmap/phase-9c-gl-shaped-financial-layer.md](roadmap/phase-9c-gl-shaped-financial-layer.md) |
+| Phase 10-A | Complete | [implementation/phase-10a-completion.md](implementation/phase-10a-completion.md) |
+| Phase 10-B | Complete | [implementation/phase-10b-completion.md](implementation/phase-10b-completion.md) |
+| Phase 10-C | Planned (current) | [roadmap/phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) |
 
-Operational tasks (login, workstation assignment, PIN/password onboarding, sessions, admin recovery): [operations/foundation-runbook.md](operations/foundation-runbook.md).
+Operational tasks (login, workstation assignment, PIN/password onboarding, sessions, admin recovery, POS register basics): [operations/foundation-runbook.md](operations/foundation-runbook.md). POS landing and command UX evolve in Phase 10-C; the runbook describes current as-built behavior until 10-C ships.
 
 Classification CSV seeds: [implementation/csv-seeds.md](implementation/csv-seeds.md), [specifications/seed-data-spec.md](specifications/seed-data-spec.md).
 
@@ -86,6 +97,17 @@ Test coverage matrix: [implementation/phase-1-test-coverage.md](implementation/p
 | [roadmap/phase-4-inventory-foundation.md](roadmap/phase-4-inventory-foundation.md) | Inventory ledger, balances, adjustments, valuation |
 | [roadmap/phase-5-purchasing-and-receiving.md](roadmap/phase-5-purchasing-and-receiving.md) | Purchasing, receiving, RTV |
 | [roadmap/phase-6-pos-foundation.md](roadmap/phase-6-pos-foundation.md) | Register sessions, POS transactions, voids, receipts |
+| [roadmap/phase-7a-customer-demand.md](roadmap/phase-7a-customer-demand.md) | Customer requests, special orders, holds, pickup |
+| [roadmap/phase-7b-customer-credit-foundation.md](roadmap/phase-7b-customer-credit-foundation.md) | POS settlement, stored value, gift cards |
+| [roadmap/phase-7c-used-buyback.md](roadmap/phase-7c-used-buyback.md) | Buyback sessions, trade credit, used inventory |
+| [roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md](roadmap/phase-8-inventory-eligibility-and-tracking-refactor.md) | Inventory tracking resolver and eligibility |
+| [roadmap/phase-9-reporting-and-accounting.md](roadmap/phase-9-reporting-and-accounting.md) | Reporting UX (9a), operational reports (9b), GL layer (9c deferred) |
+| [roadmap/Phase-x10-comprehensive-ux-expansion.md](roadmap/Phase-x10-comprehensive-ux-expansion.md) | Phase 10 parent: interaction infra, items, POS, workflow polish |
+| [roadmap/phase-10a-interaction-infrastructure.md](roadmap/phase-10a-interaction-infrastructure.md) | Shared modals, drawers, focus, toasts |
+| [roadmap/phase-10b-item-cockpit-completion.md](roadmap/phase-10b-item-cockpit-completion.md) | Item cockpit modals and operations drawer |
+| [roadmap/phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) | **Current:** keyboard-first POS workspace |
+
+Visual mockups (inspiration only): [samples/phase-10-mockups/](samples/phase-10-mockups/)
 
 ---
 
@@ -140,6 +162,28 @@ Each phase has three companion documents: functional specification, data model, 
 | [specifications/phase-6-pos-foundation-spec.md](specifications/phase-6-pos-foundation-spec.md) | Register sessions, transactions, tax, tenders, voids, receipts |
 | [specifications/phase-6-data-model.md](specifications/phase-6-data-model.md) | Phase 6 `pos_*` tables and inventory posting types |
 | [specifications/phase-6-test-plan.md](specifications/phase-6-test-plan.md) | Required Phase 6 test coverage |
+
+Later phases (7–9) follow the same `{spec,data-model,test-plan}` pattern under [specifications/](specifications/). See [roadmap.md](roadmap.md) for the full phase index.
+
+### Phase 10: Comprehensive UI/UX Expansion
+
+Parent roadmap: [roadmap/Phase-x10-comprehensive-ux-expansion.md](roadmap/Phase-x10-comprehensive-ux-expansion.md). Delivery order: 10-A → 10-B → 10-C → 10-D → 10-E.
+
+| Sub-phase | Status | Roadmap | Spec | Test plan |
+| --------- | ------ | ------- | ---- | --------- |
+| 10-A Interaction infrastructure | Complete | [phase-10a-interaction-infrastructure.md](roadmap/phase-10a-interaction-infrastructure.md) | [phase-10a-interaction-infrastructure-spec.md](specifications/phase-10a-interaction-infrastructure-spec.md) | [phase-10a-test-plan.md](specifications/phase-10a-test-plan.md) |
+| 10-B Item cockpit | Complete | [phase-10b-item-cockpit-completion.md](roadmap/phase-10b-item-cockpit-completion.md) | [phase-10b-item-cockpit-spec.md](specifications/phase-10b-item-cockpit-spec.md) | [phase-10b-test-plan.md](specifications/phase-10b-test-plan.md) |
+| 10-C POS keyboard workspace | **Planned (current)** | [phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) | [phase-10c-pos-keyboard-workspace-spec.md](specifications/phase-10c-pos-keyboard-workspace-spec.md) | [phase-10c-test-plan.md](specifications/phase-10c-test-plan.md) |
+
+Cross-cutting Phase 10 UX documents:
+
+| Document | Purpose |
+| -------- | ------- |
+| [specifications/view-contracts.md](specifications/view-contracts.md) | Per-screen-type behavior contracts |
+| [specifications/keyboard-and-focus.md](specifications/keyboard-and-focus.md) | Global keyboard and focus standards |
+| [specifications/modal-and-drawer-patterns.md](specifications/modal-and-drawer-patterns.md) | Shared overlay patterns |
+| [specifications/ui-components.md](specifications/ui-components.md) | Reusable interaction components |
+| [specifications/pos-keyboard-workspace.md](specifications/pos-keyboard-workspace.md) | POS UX supplement for 10-C |
 
 ---
 

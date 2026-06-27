@@ -27,7 +27,7 @@ ShelfStack remains the operational system of record. External accounting softwar
 
 [Phase 10 — Comprehensive UI/UX Expansion](Phase-x10-comprehensive-ux-expansion.md) implements the broader interaction vision in sub-phases **10-A through 10-E**.
 
-**Delivery order:** 10-A (interaction infra) → 10-B (item cockpit) → 10-C (POS keyboard workspace) → 10-D (workflow polish) → 10-E (consistency sweep).
+**Delivery order:** 10-A ✓ (interaction infra) → 10-B ✓ (item cockpit) → **10-C** (POS keyboard workspace) → 10-D (workflow polish) → 10-E (consistency sweep).
 
 Phase 9 implements the **report-facing subset** of the ShelfStack UX direction. It does not complete the comprehensive interaction system.
 
@@ -41,7 +41,7 @@ POS `/reports` command and utility links navigate to the canonical **9b `/report
 9a  Foundations     UX contract, formatting, reporting semantics          ✓ complete
 9b  Visibility      Operational reports                                   ✓ complete
 9c  Financial layer Balanced postings, mappings, GL export readiness      deferred
-10  UX expansion    10-A→10-B→10-C→10-D→10-E (modals, items, POS, workflows)  next
+10  UX expansion    10-A ✓ → 10-B ✓ → 10-C (current) → 10-D → 10-E       in progress
 ```
 
 9b reports use operational tables, snapshots, and ledgers. Phase 9c would add accounting-grade postings and optional financial tie-out sections on selected 9b reports. That work is **deferred**; the [9c design document](phase-9c-gl-shaped-financial-layer.md) remains the reference when resumed. See [9c — Relationship to Phase 9b](phase-9c-gl-shaped-financial-layer.md#relationship-to-phase-9b).
