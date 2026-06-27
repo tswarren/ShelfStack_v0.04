@@ -1,0 +1,71 @@
+<%# locals: item:, variants:, vendors:, sub_departments: %>
+<% if item.catalog_item.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
+  <%= render "shared/interaction/modal",
+        id: "item-identifier-modal",
+        title: "Identifier",
+        size: :sm,
+        title_html_options: { data: { item_setup_modal_target: "title" } } do %>
+    <%= turbo_frame_tag "item-identifier-modal-body" do %>
+      <%= render "items/setup_modals/identifier_quick_form", catalog_item: item.catalog_item, identifier: nil %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if item.product.present? && Authorization.allowed?(user: current_user, permission_key: "items.product_variants.update", store: current_store) %>
+  <%= render "shared/interaction/modal",
+        id: "item-price-modal",
+        title: "Edit price",
+        size: :sm,
+        title_html_options: { data: { item_setup_modal_target: "title" } } do %>
+    <%= turbo_frame_tag "item-price-modal-body" do %>
+      <%= render "items/setup_modals/price_quick_form", variant: variants.first %>
+    <% end %>
+  <% end %>
+
+  <%= render "shared/interaction/modal",
+        id: "item-classification-modal",
+        title: "Classification",
+        size: :md,
+        title_html_options: { data: { item_setup_modal_target: "title" } } do %>
+    <%= turbo_frame_tag "item-classification-modal-body" do %>
+      <% sample_variant = variants.first %>
+      <% if sample_variant.present? %>
+        <%= render "items/setup_modals/classification_quick_form",
+              variant: sample_variant,
+              sub_departments: sub_departments,
+              defaults: ClassificationDefaultsResolver.for(variant: sample_variant, store: current_store) %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if item.product.present? && Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.create", store: current_store) %>
+  <%= render "shared/interaction/modal",
+        id: "item-product-vendor-modal",
+        title: "Product vendor",
+        size: :md,
+        title_html_options: { data: { item_setup_modal_target: "title" } } do %>
+    <%= turbo_frame_tag "item-product-vendor-modal-body" do %>
+      <%= render "items/setup_modals/product_vendor_quick_form",
+            product: item.product,
+            product_vendor: ProductVendor.new(product: item.product, active: true),
+            vendors: vendors %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if variants.any? && Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.create", store: current_store) %>
+  <%= render "shared/interaction/modal",
+        id: "item-variant-vendor-modal",
+        title: "Variant vendor override",
+        size: :md,
+        title_html_options: { data: { item_setup_modal_target: "title" } } do %>
+    <%= turbo_frame_tag "item-variant-vendor-modal-body" do %>
+      <%= render "items/setup_modals/variant_vendor_quick_form",
+            variant: variants.first,
+            variant_vendor: ProductVariantVendor.new(product_variant: variants.first, active: true),
+            vendors: vendors,
+            returnability_options: ReturnabilityStatus::RETURNABILITY_STATUSES %>
+    <% end %>
+  <% end %>
+<% end %>

@@ -4472,6 +4472,42 @@ body.ss-pos-modal-open {
   margin-bottom: 0.75rem;
 }
 
+.ss-drawer-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-base-200, #e5e7eb);
+}
+
+.ss-drawer-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.ss-drawer-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.ss-item-anchor-section {
+  margin: 1.5rem 0;
+}
+
+.ss-table--compact {
+  font-size: 0.9rem;
+}
+
+.ss-warning-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ss-warning-list-item {
+  margin-bottom: 0.35rem;
+}
+
 .ss-modal-footer,
 .ss-drawer-footer {
   display: flex;

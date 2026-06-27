@@ -31,15 +31,22 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     @customer = create_customer!(display_name: "Drawer Customer")
   end
 
-  test "operations tab shows demand action buttons" do
+  test "operations tab includes unified variant operations drawer shell" do
     get items_item_path(product_id: @product.id, tab: "operations")
+
+    assert_response :success
+    assert_includes response.body, 'id="item-variant-ops-drawer"'
+    assert_includes response.body, "ss-drawer"
+    assert_includes response.body, "data-drawer-target-id-param=\"item-variant-ops-drawer\""
+    assert_not_includes response.body, 'id="item-demand-drawer"'
+  end
+
+  test "variant operations drawer body includes demand actions" do
+    get items_variant_operations_drawer_path(product_variant_id: @variant.id)
 
     assert_response :success
     assert_includes response.body, "Hold for customer"
     assert_includes response.body, "Notify customer"
-    assert_includes response.body, 'id="item-demand-drawer"'
-    assert_includes response.body, "ss-drawer"
-    assert_includes response.body, "data-drawer-target-id-param=\"item-demand-drawer\""
   end
 
   test "create hold from item operations redirects to request show" do
@@ -65,7 +72,7 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     walk_in_block = response.body[/data-customer-lookup-target="walkInFields"[^>]*>[\s\S]*?<\/div>\s*<\/section>/m]
     assert_not_nil walk_in_block
     assert_not_includes walk_in_block, 'name="quantity"'
-    assert_match(/<h2>Demand<\/h2>[\s\S]*name="quantity"/, response.body)
+    assert_match(/Create customer demand[\s\S]*name="quantity"/, response.body)
   end
 
   test "create special order from item operations" do

@@ -232,7 +232,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development follows the phase roadmap. **Phase 10-B (item cockpit)** is active after Phase 10-A completion.
+Development follows the phase roadmap. **Phase 10-C (POS keyboard workspace)** is active after Phase 10-B completion.
 
 ## Phase 1: Foundation — **Complete**
 
@@ -365,7 +365,7 @@ See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-g
 
 ## Phase 10: Comprehensive UI/UX Expansion — **In progress**
 
-**Current priority:** Phase 10-B (item cockpit completion).
+**Current priority:** Phase 10-C (POS keyboard workspace).
 
 See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). Delivery order: 10-A → 10-B (items) → 10-C (POS) → 10-D → 10-E. Phase 10 is complete when all sub-phases are done.
 
@@ -378,6 +378,15 @@ Phase 10-A was completed on 2026-06-26. See [docs/implementation/phase-10a-compl
 - Pilot: item customer demand drawer migrated to shared `ss-drawer` shell
 - Test fixture: `/test/interaction_shell` (test env); integration + system tests per [phase-10a-test-plan.md](docs/specifications/phase-10a-test-plan.md)
 - POS settlement and buyback drawers deferred to 10-C / 10-D
+
+## Phase 10-B: Item Cockpit Completion — **Complete**
+
+Phase 10-B was completed on 2026-06-26. See [docs/implementation/phase-10b-completion.md](docs/implementation/phase-10b-completion.md).
+
+- Behavior-aware warnings aligned across eligibility resolver, overview presenter, and operational warning builder
+- Unified `item-variant-ops-drawer` with server-rendered variant body, demand create, and operations consolidation
+- Item setup quick modals (identifier, price, vendor source, classification/tax preview) via shared Turbo modal contract
+- Phase 9 drill-down contract preserved
 
 ## Phase 10 Documents
 
@@ -395,7 +404,9 @@ docs/specifications/view-contracts.md
 docs/specifications/keyboard-and-focus.md
 docs/specifications/modal-and-drawer-patterns.md
 docs/specifications/pos-keyboard-workspace.md
+docs/specifications/phase-10b-test-plan.md
 docs/implementation/phase-10a-completion.md
+docs/implementation/phase-10b-completion.md
 docs/samples/phase-10-mockups/
 ```
 

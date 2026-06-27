@@ -244,7 +244,11 @@ module Items
       )
     end
 
-    def vendor_source_status(_variant, suggested, row_snapshot)
+    def vendor_source_status(variant, suggested, row_snapshot)
+      unless Purchasing::OrderEligibilityResolver.vendor_sourcing_warnings_applicable?(product_variant: variant)
+        return :not_applicable
+      end
+
       return :missing if suggested.blank? || suggested.vendor.blank?
       return :warning unless row_snapshot&.sourcing_record_present
 

@@ -1,23 +1,38 @@
+<div data-controller="item-setup-modal modal">
 <section class="ss-item-setup-section">
   <h2>Catalog metadata</h2>
-  <%= render "items/items/catalog",
-        item: item,
-        identifiers: identifiers,
-        external_catalog_import: local_assigns[:external_catalog_import] %>
+  <%= turbo_frame_tag "catalog-setup-section" do %>
+    <%= render "items/items/catalog",
+          item: item,
+          identifiers: identifiers,
+          external_catalog_import: local_assigns[:external_catalog_import] %>
+  <% end %>
 </section>
 
 <section class="ss-item-setup-section">
   <h2>Product setup</h2>
-  <%= render "items/items/selling",
-        item: item,
-        variants: variants,
-        highlight_variant: local_assigns[:highlight_variant] %>
+  <%= turbo_frame_tag "selling-setup-section" do %>
+    <%= render "items/items/selling",
+          item: item,
+          variants: variants,
+          highlight_variant: local_assigns[:highlight_variant] %>
+  <% end %>
 </section>
 
-<section class="ss-item-setup-section" id="vendor-sourcing">
+<section class="ss-item-setup-section">
   <h2>Display and vendor sourcing</h2>
-  <%= render "items/items/display",
-        item: item,
-        highlight_variant: local_assigns[:highlight_variant],
-        vendor_sourcing_gaps: @vendor_sourcing_gaps %>
+  <%= turbo_frame_tag "vendor-sourcing" do %>
+    <%= render "items/items/display",
+          item: item,
+          highlight_variant: local_assigns[:highlight_variant],
+          vendor_sourcing_gaps: @vendor_sourcing_gaps,
+          variant_vendor_overrides: @variant_vendor_overrides %>
+  <% end %>
 </section>
+
+<%= render "items/items/setup_modals",
+      item: item,
+      variants: variants,
+      vendors: Vendor.active_records.order(:name),
+      sub_departments: SubDepartment.active_records.order(:name) %>
+</div>

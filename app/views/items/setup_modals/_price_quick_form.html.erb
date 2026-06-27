@@ -1,0 +1,27 @@
+<%# locals: variant: %>
+<% if variant.errors.any? %>
+  <div class="ss-errors"><%= variant.errors.full_messages.to_sentence %></div>
+<% end %>
+
+<%= form_with url: items_setup_modals_variant_price_path(variant),
+              method: :patch,
+              data: { turbo_stream: true },
+              class: "ss-form ss-form--standard" do %>
+  <%= hidden_field_tag :variant_id, variant.id, data: { item_setup_modal_target: "variantIdField" } %>
+  <div class="ss-field">
+    <%= label_tag :selling_price_cents, "Selling price (cents)", class: "ss-label" %>
+    <%= number_field_tag :selling_price_cents,
+          variant.selling_price_cents,
+          min: 0,
+          required: true,
+          class: "ss-input",
+          data: { item_setup_modal_target: "priceField" } %>
+  </div>
+  <footer class="ss-form-actions">
+    <%= submit_tag "Save price", class: "ss-btn" %>
+    <button type="button" class="ss-btn ss-btn-secondary"
+            data-action="modal#close"
+            data-modal-target-id-param="item-price-modal">Cancel</button>
+    <%= link_to "Full edit", edit_items_product_variant_path(variant, return_to: "item"), class: "ss-btn-link" %>
+  </footer>
+<% end %>

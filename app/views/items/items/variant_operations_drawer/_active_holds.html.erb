@@ -1,0 +1,24 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>Customer</th>
+      <th class="ss-num">Qty</th>
+      <th>Expires</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% holds.each do |reservation| %>
+      <tr>
+        <td><%= reservation.customer&.display_name || "—" %></td>
+        <td class="ss-num"><%= reservation.quantity_reserved %></td>
+        <td><%= reservation.expires_at ? l(reservation.expires_at.to_date) : "—" %></td>
+        <td>
+          <% if reservation.customer_request_line.present? %>
+            <%= link_to "View request", customers_customer_request_path(reservation.customer_request_line.customer_request), class: "ss-btn-link" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

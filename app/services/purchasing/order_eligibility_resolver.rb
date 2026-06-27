@@ -28,6 +28,18 @@ module Purchasing
       ).call
     end
 
+    def self.vendor_sourcing_warnings_applicable?(product_variant:)
+      return false if product_variant.blank?
+
+      condition = product_variant.condition
+      used = condition.present? && !condition.new_condition?
+      return false if used
+      return false if BLOCKING_PRODUCT_TYPES.include?(product_variant.product&.product_type)
+      return false unless product_variant.orderable?
+
+      true
+    end
+
     def self.for_variants(store:, variants:, context: :item_page, vendors_by_variant_id: nil, sourcing_by_variant_id: nil, suggested_vendors_by_variant_id: nil)
       variants = Array(variants).compact
       return {} if variants.empty?
@@ -124,6 +136,8 @@ module Purchasing
     end
 
     def evaluate_vendor_sourcing(warnings:, infos:)
+      return unless self.class.vendor_sourcing_warnings_applicable?(product_variant:)
+
       resolved_sourcing = sourcing
       if vendor.present?
         resolved_sourcing ||= SourcingLookup.for(variant: product_variant, vendor: vendor)

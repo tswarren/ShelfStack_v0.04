@@ -1,0 +1,25 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>TBO</th>
+      <th class="ss-num">Requested</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% lines.each do |line| %>
+      <tr>
+        <td><%= link_to "TBO ##{line.purchase_request.id}", orders_purchase_request_path(line.purchase_request) %></td>
+        <td class="ss-num"><%= line.requested_quantity %></td>
+        <td><%= line.status %></td>
+        <td>
+          <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) &&
+                Inventory::Eligibility.eligible?(line.product_variant) %>
+            <%= link_to "Add to PO", build_purchase_order_orders_purchase_request_path(line.purchase_request), class: "ss-btn-link" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

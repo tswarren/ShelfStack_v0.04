@@ -1,6 +1,6 @@
 # Phase 10-B — Item Cockpit Specification
 
-**Status:** Planned — **implementation source of truth**
+**Status:** Complete — see [phase-10b-completion.md](../implementation/phase-10b-completion.md)
 
 **Roadmap:** [phase-10b-item-cockpit-completion.md](../roadmap/phase-10b-item-cockpit-completion.md)
 

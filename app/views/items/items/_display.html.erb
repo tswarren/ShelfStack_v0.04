@@ -52,7 +52,20 @@
               <td><%= variant.sku %></td>
               <td><%= variant.sub_department&.name || "—" %></td>
               <td><%= variant.display_location&.name || "—" %></td>
-              <td><%= link_to "Edit", edit_items_product_variant_path(variant, return_to: "item") %></td>
+              <td>
+                <% if Authorization.allowed?(user: current_user, permission_key: "items.product_variants.update", store: current_store) %>
+                  <button type="button"
+                          class="ss-btn-link"
+                          data-action="item-setup-modal#prepareClassificationEdit modal#open"
+                          data-modal-target-id-param="item-classification-modal"
+                          data-variant-id="<%= variant.id %>"
+                          data-variant-sku="<%= variant.sku %>"
+                          data-sub-department-id="<%= variant.sub_department_id %>">
+                    Quick edit classification
+                  </button>
+                <% end %>
+                <%= link_to "Edit", edit_items_product_variant_path(variant, return_to: "item") %>
+              </td>
             </tr>
           <% end %>
         </tbody>
@@ -99,6 +112,18 @@
                 <td><%= product_vendor.preferred? ? "Yes" : "No" %></td>
                 <td>
                   <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.update", store: current_store) %>
+                    <button type="button"
+                            class="ss-btn-link"
+                            data-action="item-setup-modal#prepareProductVendorEdit modal#open"
+                            data-modal-target-id-param="item-product-vendor-modal"
+                            data-product-vendor-id="<%= product_vendor.id %>"
+                            data-modal-title="Edit <%= product_vendor.vendor.name %>"
+                            data-vendor-item-number="<%= product_vendor.vendor_item_number %>"
+                            data-supplier-discount-bps="<%= product_vendor.supplier_discount_bps %>"
+                            data-preferred="<%= product_vendor.preferred? %>"
+                            data-update-url="<%= items_setup_modals_product_vendor_path(product_vendor) %>">
+                      Quick edit
+                    </button>
                     <%= link_to "Edit", edit_items_product_product_vendor_path(item.product, product_vendor) %>
                   <% else %>
                     <%= link_to "View", setup_product_vendor_path(product_vendor) %>
@@ -114,6 +139,12 @@
 
       <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.create", store: current_store) %>
         <p class="ss-catalog-actions">
+          <button type="button"
+                  class="ss-btn ss-btn-secondary ss-btn-small"
+                  data-action="item-setup-modal#prepareProductVendorCreate modal#open"
+                  data-modal-target-id-param="item-product-vendor-modal">
+            Quick add product vendor
+          </button>
           <%= link_to "Add product vendor", new_items_product_product_vendor_path(item.product), class: "ss-btn ss-btn-secondary ss-btn-small" %>
         </p>
       <% end %>
@@ -123,7 +154,8 @@
   <section class="ss-item-display-section" id="variant-vendors">
     <h3>Variant vendor overrides</h3>
     <% if item.variants.any? %>
-      <% if defined?(@variant_vendor_overrides) && @variant_vendor_overrides.any? %>
+      <% variant_vendor_overrides = local_assigns[:variant_vendor_overrides] || @variant_vendor_overrides %>
+      <% if variant_vendor_overrides.present? && variant_vendor_overrides.any? %>
         <table class="ss-table">
           <thead>
             <tr>
@@ -137,7 +169,7 @@
             </tr>
           </thead>
           <tbody>
-            <% @variant_vendor_overrides.each do |variant_vendor| %>
+            <% variant_vendor_overrides.each do |variant_vendor| %>
               <tr class="<%= "ss-table-row--highlight" if local_assigns[:highlight_variant]&.id == variant_vendor.product_variant_id %>">
                 <td><%= variant_vendor.product_variant.sku %></td>
                 <td><%= variant_vendor.vendor.name %></td>
@@ -147,6 +179,19 @@
                 <td><%= variant_vendor.preferred? ? "Yes" : "No" %></td>
                 <td>
                   <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.update", store: current_store) %>
+                    <button type="button"
+                            class="ss-btn-link"
+                            data-action="item-setup-modal#prepareVariantVendorEdit modal#open"
+                            data-modal-target-id-param="item-variant-vendor-modal"
+                            data-variant-vendor-id="<%= variant_vendor.id %>"
+                            data-modal-title="Edit <%= variant_vendor.vendor.name %>"
+                            data-vendor-item-number="<%= variant_vendor.vendor_item_number %>"
+                            data-supplier-discount-bps="<%= variant_vendor.supplier_discount_bps %>"
+                            data-returnability-status="<%= variant_vendor.returnability_status %>"
+                            data-preferred="<%= variant_vendor.preferred? %>"
+                            data-update-url="<%= items_setup_modals_variant_vendor_path(variant_vendor) %>">
+                      Quick edit
+                    </button>
                     <%= link_to "Edit", edit_items_product_variant_product_variant_vendor_path(variant_vendor.product_variant, variant_vendor) %>
                   <% else %>
                     <%= link_to "View", setup_product_variant_vendor_path(variant_vendor) %>
@@ -163,6 +208,14 @@
       <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.create", store: current_store) %>
         <div class="ss-catalog-actions">
           <% item.variants.each do |variant| %>
+            <button type="button"
+                    class="ss-btn ss-btn-secondary ss-btn-small"
+                    data-action="item-setup-modal#prepareVariantVendorCreate modal#open"
+                    data-modal-target-id-param="item-variant-vendor-modal"
+                    data-variant-id="<%= variant.id %>"
+                    data-modal-title="Add vendor for <%= variant.sku %>">
+              Quick add for <%= variant.sku %>
+            </button>
             <%= link_to "Add vendor for #{variant.sku}",
                   new_items_product_variant_product_variant_vendor_path(variant),
                   class: "ss-btn ss-btn-secondary ss-btn-small" %>

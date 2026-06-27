@@ -3,6 +3,8 @@
 require "test_helper"
 
 class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
+  include Phase3TestHelper
+
   setup do
     seed_phase3_reference_data!
     @vendor = create_vendor!
@@ -28,7 +30,8 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
   end
 
   test "blocks used variant for purchase order but allows tbo" do
-    used = ProductCondition.find_by!(condition_key: "used_good")
+    used = ProductCondition.find_by(condition_key: "used_good") ||
+      create_product_condition!(condition_key: "used_good_po", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
     @variant.update!(condition: used, orderable: false)
 
     po_result = Purchasing::OrderEligibilityResolver.call(product_variant: @variant, context: :purchase_order)
@@ -119,5 +122,34 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
     )
 
     refute_includes (result.infos + result.warnings).map(&:code), :missing_identifier
+  end
+
+  test "item page skips vendor sourcing warnings for used variant" do
+    used = ProductCondition.find_by(condition_key: "used_good") ||
+      create_product_condition!(condition_key: "used_good_page", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
+    @variant.update!(condition: used, orderable: false)
+
+    result = Purchasing::OrderEligibilityResolver.call(
+      product_variant: @variant,
+      vendor: @vendor,
+      context: :item_page
+    )
+
+    refute_includes result.warnings.map(&:code), :missing_vendor_source
+    refute_includes result.warnings.map(&:code), :missing_preferred_vendor
+    refute_includes result.warnings.map(&:code), :missing_cost
+    assert_includes result.warnings.map(&:code), :used_variant
+  end
+
+  test "vendor_sourcing_warnings_applicable is false for financial product type" do
+    @variant.product.update!(product_type: "financial")
+
+    assert_not Purchasing::OrderEligibilityResolver.vendor_sourcing_warnings_applicable?(product_variant: @variant)
+  end
+
+  test "vendor_sourcing_warnings_applicable is false for non-orderable variant" do
+    @variant.update!(orderable: false)
+
+    assert_not Purchasing::OrderEligibilityResolver.vendor_sourcing_warnings_applicable?(product_variant: @variant)
   end
 end

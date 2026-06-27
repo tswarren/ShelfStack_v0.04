@@ -1,0 +1,27 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>PO</th>
+      <th>Vendor</th>
+      <th class="ss-num">Open</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% lines.each do |line| %>
+      <% po = line.purchase_order %>
+      <tr>
+        <td><%= link_to "PO ##{po.id}", orders_purchase_order_path(po) %></td>
+        <td><%= po.vendor.name %></td>
+        <td class="ss-num"><%= po.open_quantity_for_line(line) %></td>
+        <td><%= po.status %></td>
+        <td>
+          <% if po.receivable? && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.create", store: current_store) %>
+            <%= button_to "Receive", receive_orders_purchase_order_path(po), method: :post, class: "ss-btn-link" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
