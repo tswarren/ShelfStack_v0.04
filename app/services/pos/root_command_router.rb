@@ -2,23 +2,17 @@
 
 module Pos
   class RootCommandRouter
-    HELP_MESSAGE = "Commands: /help, /balance, /op, /gc. Full command list ships in a later update."
-    DISABLED_COMMAND_MESSAGE = "That command is not available from the idle workspace yet."
-    GC_STUB_MESSAGE = "Gift card sales from the command field ship in a later update. Start a new sale first."
-
     Route = LookupLaneRouter::Route
 
-    OP_COMMAND_PATTERN = /\A\/(?:op|openring)(?:\s+\d+(?:\.\d{1,2})?)?\z/i
-    GC_COMMAND_PATTERN = /\A\/(?:gc|giftcard)(?:\s+\d+(?:\.\d{1,2})?)?\z/i
-    BALANCE_COMMAND_PATTERN = /\A\/balance\z/i
-
-    def self.call(store:, input:)
-      new(store: store, input: input).call
+    def self.call(store:, input:, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
+      new(store: store, input: input, user: user, register_session: register_session).call
     end
 
-    def initialize(store:, input:)
+    def initialize(store:, input:, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
       @store = store
       @parsed = CommandParser.parse(input)
+      @user = user
+      @register_session = register_session
     end
 
     def call
@@ -36,16 +30,22 @@ module Pos
 
     private
 
-    attr_reader :store, :parsed
+    attr_reader :store, :parsed, :user, :register_session
 
     def slash_route
-      input = parsed.input
+      match = CommandRegistry.resolve(parsed.input)
+      return unknown_command_route unless match
 
-      return Route.new(action: :help, payload: {}, message: HELP_MESSAGE) if input.match?(CommandParser::HELP_COMMAND_PATTERN)
-      return Route.new(action: :balance_redirect, payload: {}, message: nil) if input.match?(BALANCE_COMMAND_PATTERN)
-      return Route.new(action: :disabled_command, payload: {}, message: GC_STUB_MESSAGE) if input.match?(GC_COMMAND_PATTERN)
-      return Route.new(action: :disabled_command, payload: {}, message: DISABLED_COMMAND_MESSAGE) if input.match?(OP_COMMAND_PATTERN)
+      CommandRouteBuilder.call(
+        match: match,
+        context: :root,
+        store: store,
+        user: user,
+        register_session: register_session
+      )
+    end
 
+    def unknown_command_route
       Route.new(action: :message, payload: {}, message: CommandParser::UNKNOWN_COMMAND_MESSAGE)
     end
   end

@@ -109,12 +109,45 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal previous_line.id, route.payload[:line_id]
   end
 
-  test "/d without transaction returns unavailable message" do
+  test "/d without transaction returns no active transaction message" do
     route = Pos::CommandBarRouter.call(store: @store, input: "/d")
 
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
+
+  test "/ld routes to line discount workflow" do
+    user = create_user!
+    workstation = create_workstation!(store: @store)
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: workstation,
+      user: user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+
+    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/ld")
+
     assert_equal :line_discount_offer, route.action
-    assert_nil route.payload[:line_id]
-    assert_match(/No line available/i, route.message)
+  end
+
+  test "/di routes to transaction discount workflow" do
+    user = create_user!
+    workstation = create_workstation!(store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: workstation, user: user)
+
+    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/di")
+
+    assert_equal :transaction_discount_offer, route.action
+  end
+
+  test "/cashdrop returns planned disabled message" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/cashdrop")
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::Catalog::CASH_DROP_UNAVAILABLE_MESSAGE, route.message
   end
 
   test "/d skips non-discountable previous line" do
@@ -146,7 +179,7 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     route = Pos::CommandBarRouter.call(store: @store, input: "/help")
 
     assert_equal :help, route.action
-    assert_equal Pos::RootCommandRouter::HELP_MESSAGE, route.message
+    assert_includes route.message, "POS commands:"
   end
 
   test "/? returns help action" do

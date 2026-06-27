@@ -31,7 +31,12 @@ module Pos
         return add_variant_and_redirect { ProductVariant.find(product_variant_id) }
       end
 
-      route = RootCommandRouter.call(store: store, input: input)
+      route = RootCommandRouter.call(
+        store: store,
+        input: input,
+        user: cashier_user,
+        register_session: register_session
+      )
 
       case route.action
       when :add_variant

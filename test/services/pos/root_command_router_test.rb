@@ -65,6 +65,13 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
 
     assert_equal :balance_redirect, route.action
   end
+
+  test "/cashdrop returns planned disabled message" do
+    route = Pos::RootCommandRouter.call(store: @store, input: "/drop")
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::Catalog::CASH_DROP_UNAVAILABLE_MESSAGE, route.message
+  end
 end
 
 class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
