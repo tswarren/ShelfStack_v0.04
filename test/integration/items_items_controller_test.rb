@@ -186,11 +186,15 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match edit_items_product_variant_path(@variant), response.body
   end
 
-  test "operations tab renders placeholder" do
+  test "operations tab renders variant summary and drawer entry point" do
     get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "operations")
     assert_response :success
     assert_match "Variant operations", response.body
-    assert_match "No operational documents yet", response.body
+    assert_match @variant.sku, response.body
+    assert_match "Details", response.body
+    assert_match "demand, purchasing, receiving", response.body
+    assert_includes response.body, 'id="item-variant-ops-drawer"'
+    assert_includes response.body, "Receiving history"
   end
 
   test "activity tab renders document trail and collapsed audit timeline" do
