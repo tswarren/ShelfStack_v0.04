@@ -33,6 +33,20 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
     assert_not_includes message, "/giftcard (/gc) — Gift card issue or reload (unavailable)"
   end
 
+  test "help entries return structured command metadata" do
+    entries = Pos::CommandRegistry.help_entries(context: :root)
+    open_ring = entries.find { |entry| entry[:key] == "openring" }
+
+    assert open_ring
+    assert_equal "/openring", open_ring[:canonical]
+    assert_includes open_ring[:aliases], "op"
+    assert_equal "available", open_ring[:status]
+    assert_equal "sale", open_ring[:category]
+
+    planned = entries.find { |entry| entry[:key] == "cashdrop" }
+    assert_equal "planned", planned[:status]
+  end
+
   test "cashdrop is planned and unavailable" do
     command = Pos::CommandRegistry[:cashdrop]
     store = create_store!

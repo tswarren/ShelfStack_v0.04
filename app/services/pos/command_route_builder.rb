@@ -56,7 +56,16 @@ module Pos
       when :help
         Route.new(
           action: :help,
-          payload: {},
+          payload: {
+            commands: CommandRegistry.help_entries(
+              user: user,
+              store: store,
+              register_session: register_session,
+              transaction: transaction,
+              context: context
+            ),
+            category_labels: CommandRegistry::HELP_CATEGORIES
+          },
           message: CommandRegistry.help_message(
             user: user,
             store: store,

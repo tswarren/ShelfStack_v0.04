@@ -364,6 +364,8 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
 
     assert_equal :help, route.action
     assert_includes route.message, "POS commands:"
+    assert route.payload[:commands].is_a?(Array)
+    assert route.payload[:commands].any? { |entry| entry[:key] == "openring" }
   end
 
   test "/? returns help action" do

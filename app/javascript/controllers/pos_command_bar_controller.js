@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "pickupPanel", "transactionDiscountPanel"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "pickupPanel", "transactionDiscountPanel", "helpModal", "helpBody", "helpCloseButton"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,
@@ -9,10 +9,16 @@ export default class extends Controller {
   }
 
   connect() {
+    this.boundHelpKeydown = this.helpKeydown.bind(this)
     this.focusInput()
     this.syncOpenRingReturnMode()
     this.applyLegacyModeDrawerFromUrl()
     this.applyCarryForwardFromUrl()
+  }
+
+  disconnect() {
+    document.removeEventListener("keydown", this.boundHelpKeydown)
+    document.body.classList.remove("ss-pos-modal-open")
   }
 
   toggleReturnMode() {
@@ -65,9 +71,12 @@ export default class extends Controller {
         }
         break
       case "message":
-      case "help":
       case "disabled_command":
         this.dispatchMessage(data.message)
+        break
+      case "help":
+        this.inputTarget.value = ""
+        this.showHelpModal(data.payload || {})
         break
       case "variant_lookup":
         this.dispatch("variantLookup", { detail: data.payload })
@@ -281,6 +290,100 @@ export default class extends Controller {
     if (this.hasGiftCardPanelTarget) this.giftCardPanelTarget.hidden = true
     if (this.hasBalancePanelTarget) this.balancePanelTarget.hidden = true
     if (this.hasPickupPanelTarget) this.pickupPanelTarget.hidden = true
+    this.closeHelpModal({ focusInput: false })
+  }
+
+  showHelpModal(payload) {
+    if (!this.hasHelpModalTarget || !this.hasHelpBodyTarget) {
+      this.dispatchMessage("Help is not available.")
+      return
+    }
+
+    const commands = payload.commands || []
+    this.helpBodyTarget.innerHTML = this.renderHelpCommands(commands, payload.category_labels)
+    this.helpModalTarget.hidden = false
+    document.body.classList.add("ss-pos-modal-open")
+    document.addEventListener("keydown", this.boundHelpKeydown)
+    this.helpCloseButtonTarget?.focus()
+  }
+
+  closeHelpModal(arg) {
+    const options = arg instanceof Event ? {} : (arg || {})
+    const focusInput = options.focusInput ?? true
+    arg?.preventDefault?.()
+
+    if (!this.hasHelpModalTarget || this.helpModalTarget.hidden) return
+
+    this.helpModalTarget.hidden = true
+    document.body.classList.remove("ss-pos-modal-open")
+    document.removeEventListener("keydown", this.boundHelpKeydown)
+
+    if (focusInput) this.focusInput()
+  }
+
+  helpKeydown(event) {
+    if (event.key === "Escape") {
+      this.closeHelpModal(event)
+    }
+  }
+
+  renderHelpCommands(commands, categoryLabels = {}) {
+    if (!commands.length) {
+      return '<p class="ss-hint">No commands are available.</p>'
+    }
+
+    const groups = this.groupHelpCommands(commands, categoryLabels)
+    const sections = groups.map((group) => {
+      const rows = group.commands.map((command) => this.renderHelpRow(command)).join("")
+      return `
+        <section class="ss-pos-help-modal__group">
+          <h3 class="ss-pos-help-modal__group-title">${this.escapeHtml(group.label)}</h3>
+          <ul class="ss-pos-help-modal__list">${rows}</ul>
+        </section>
+      `
+    }).join("")
+
+    return `<div class="ss-pos-help-modal__grid">${sections}</div>`
+  }
+
+  groupHelpCommands(commands, categoryLabels) {
+    const order = [ "sale", "adjustments", "payment", "register" ]
+    const grouped = Object.fromEntries(order.map((key) => [ key, [] ]))
+
+    commands.forEach((command) => {
+      const category = command.category || "register"
+      if (!grouped[category]) grouped[category] = []
+      grouped[category].push(command)
+    })
+
+    return order
+      .filter((key) => grouped[key]?.length)
+      .map((key) => ({
+        key,
+        label: categoryLabels[key] || key,
+        commands: grouped[key]
+      }))
+  }
+
+  renderHelpRow(command) {
+    const tokens = [ command.canonical, ...(command.aliases || []) ]
+      .map((token) => this.escapeHtml(token.startsWith("/") ? token : `/${token}`))
+    const statusClass = command.status === "available" ? "" : ` ss-pos-help-modal__item--${this.escapeHtml(command.status)}`
+
+    return `
+      <li class="ss-pos-help-modal__item${statusClass}">
+        <span class="ss-pos-help-modal__tokens">${tokens.map((token) => `<code>${token}</code>`).join(" ")}</span>
+        <span class="ss-pos-help-modal__description">${this.escapeHtml(command.description)}</span>
+      </li>
+    `
+  }
+
+  escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
   }
 
   closeOpenRingPanel(event) {

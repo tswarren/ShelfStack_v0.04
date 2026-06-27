@@ -56,6 +56,39 @@ module Pos
     NO_REGISTER_SESSION_MESSAGE = "Open the register before using this command."
     PERMISSION_DENIED_MESSAGE = "You are not authorized to use this command."
 
+    HELP_CATEGORIES = {
+      "sale" => "Sale & items",
+      "adjustments" => "Discounts & tax",
+      "payment" => "Payment",
+      "register" => "Register & cash"
+    }.freeze
+
+    HELP_CATEGORY_KEYS = {
+      openring: "sale",
+      giftcard: "sale",
+      return: "sale",
+      pickup: "sale",
+      customer: "sale",
+      linediscount: "adjustments",
+      discount: "adjustments",
+      taxexempt: "adjustments",
+      tender: "payment",
+      cash: "payment",
+      card: "payment",
+      check: "payment",
+      storecredit: "payment",
+      giftredeem: "payment",
+      balance: "payment",
+      hold: "register",
+      session: "register",
+      cashdrop: "register",
+      cashin: "register",
+      cashout: "register",
+      close: "register",
+      drawer: "register",
+      reports: "register"
+    }.freeze
+
     class << self
       def resolve(input)
         stripped = input.to_s.strip
@@ -152,10 +185,28 @@ module Pos
       end
 
       def help_message(user: nil, store: nil, register_session: NOT_PROVIDED, transaction: nil, context: :root)
-        ensure_loaded!
         lines = [ "POS commands:" ]
 
-        catalog.each do |command|
+        help_entries(
+          user: user,
+          store: store,
+          register_session: register_session,
+          transaction: transaction,
+          context: context
+        ).each do |entry|
+          suffix = help_status_suffix(entry[:status])
+          alias_text = help_alias_text(entry[:aliases])
+          lines << "  #{entry[:canonical]}#{alias_text} — #{entry[:description]}#{suffix}"
+        end
+
+        lines << "Use #{self[:help].canonical} for this list."
+        lines.join("\n")
+      end
+
+      def help_entries(user: nil, store: nil, register_session: NOT_PROVIDED, transaction: nil, context: :root)
+        ensure_loaded!
+
+        catalog.filter_map do |command|
           next if command.key == :help
 
           availability = availability(
@@ -168,18 +219,15 @@ module Pos
             check_permissions: user.present? && store.present?
           )
 
-          suffix = if command.planned
-            " (planned)"
-          elsif !command.implemented_for?(context) || !availability.available
-            " (unavailable)"
-          end
-
-          alias_text = display_alias_text(command)
-          lines << "  #{command.canonical}#{alias_text} — #{command.description}#{suffix}"
+          {
+            key: command.key.to_s,
+            canonical: command.canonical,
+            aliases: command.display_aliases,
+            description: command.description,
+            status: help_status_for(command, availability, context),
+            category: help_category_for(command.key)
+          }
         end
-
-        lines << "Use #{self[:help].canonical} for this list."
-        lines.join("\n")
       end
 
       def register!(command)
@@ -238,10 +286,32 @@ module Pos
       end
 
       def display_alias_text(command)
-        aliases = command.display_aliases
+        help_alias_text(command.display_aliases)
+      end
+
+      def help_alias_text(aliases)
         return "" if aliases.empty?
 
         " (#{aliases.map { |token| token.start_with?("/") ? token : "/#{token}" }.join(", ")})"
+      end
+
+      def help_status_for(command, availability, context)
+        return "planned" if command.planned
+        return "unavailable" if !command.implemented_for?(context) || !availability.available
+
+        "available"
+      end
+
+      def help_status_suffix(status)
+        case status
+        when "planned" then " (planned)"
+        when "unavailable" then " (unavailable)"
+        else ""
+        end
+      end
+
+      def help_category_for(key)
+        HELP_CATEGORY_KEYS.fetch(key.to_sym, "register")
       end
     end
   end
