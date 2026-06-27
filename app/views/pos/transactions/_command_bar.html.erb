@@ -20,7 +20,7 @@
       <%= label_tag :pos_command_input, "Scan or enter item", class: "ss-pos-command-bar__scan-label" %>
       <%= text_field_tag :pos_command_input, nil,
             autocomplete: "off",
-            placeholder: "Scan / enter SKU, ISBN, receipt number, /giftcard, /balance, or amount",
+            placeholder: "Scan SKU/ISBN or enter a command, such as /op, /giftcard, /balance, or /help",
             class: "ss-pos-scan-input ss-pos-scan-input--primary",
             data: {
               pos_command_bar_target: "input",

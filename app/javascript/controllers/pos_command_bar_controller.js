@@ -11,6 +11,7 @@ export default class extends Controller {
   connect() {
     this.focusInput()
     this.syncOpenRingReturnMode()
+    this.applyCarryForwardFromUrl()
   }
 
   toggleReturnMode() {
@@ -75,9 +76,6 @@ export default class extends Controller {
         break
       case "open_ring_offer":
         this.showOpenRingPanel(data.payload)
-        break
-      case "gift_card_sale":
-        this.addGiftCardSale(data.payload)
         break
       case "gift_card_sale_offer":
         this.showGiftCardPanel(data.payload)
@@ -248,6 +246,32 @@ export default class extends Controller {
     if (event.detail.success) {
       this.closeOpenRingPanel()
     }
+  }
+
+  applyCarryForwardFromUrl() {
+    const params = new URLSearchParams(window.location.search)
+    const carryForward = params.get("carry_forward")
+    if (!carryForward) return
+
+    const amountCents = params.get("amount_cents")
+    const payload = amountCents ? { amount_cents: parseInt(amountCents, 10) } : {}
+
+    switch (carryForward) {
+      case "open_ring":
+        this.showOpenRingPanel(payload)
+        break
+      case "gift_card":
+        this.showGiftCardPanel(payload)
+        break
+      default:
+        break
+    }
+
+    params.delete("carry_forward")
+    params.delete("amount_cents")
+    const query = params.toString()
+    const cleanUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname
+    window.history.replaceState({}, "", cleanUrl)
   }
 
   focusInput() {

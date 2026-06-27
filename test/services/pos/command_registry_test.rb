@@ -29,7 +29,8 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
     assert_includes message, "/linediscount (/ld, /d)"
     assert_includes message, "/cashdrop (/dp, /drop)"
     assert_includes message, "(planned)"
-    assert_includes message, "/giftcard (/gc) — Gift card issue or reload (unavailable)"
+    assert_includes message, "/giftcard (/gc) — Gift card issue or reload"
+    assert_not_includes message, "/giftcard (/gc) — Gift card issue or reload (unavailable)"
   end
 
   test "cashdrop is planned and unavailable" do

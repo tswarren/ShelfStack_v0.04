@@ -4,8 +4,8 @@ module Pos
   class CommandRouteBuilder
     Route = LookupLaneRouter::Route
 
-    GC_STUB_MESSAGE = "Gift card sales from the command field ship in a later update. Start a new sale first."
     NOT_YET_AVAILABLE_MESSAGE = "That command is not available yet."
+    INVALID_AMOUNT_MESSAGE = "Amount must be a valid dollar amount."
 
     def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
       new(
@@ -34,7 +34,8 @@ module Pos
         user: user,
         store: store,
         register_session: register_session,
-        transaction: transaction
+        transaction: transaction,
+        check_permissions: user.present? && store.present?
       )
       return unavailable_route(availability) unless availability.available
 
@@ -65,6 +66,8 @@ module Pos
         )
       when :balance_inquiry
         balance_route
+      when :open_ring
+        open_ring_route
       when :gift_card_modal
         gift_card_route
       when :line_discount
@@ -84,13 +87,39 @@ module Pos
       end
     end
 
+    def open_ring_route
+      return invalid_amount_route if invalid_amount_args?
+
+      Route.new(
+        action: :open_ring_offer,
+        payload: amount_payload,
+        message: nil
+      )
+    end
+
     def gift_card_route
+      return invalid_amount_route if invalid_amount_args?
+
+      Route.new(
+        action: :gift_card_sale_offer,
+        payload: amount_payload,
+        message: nil
+      )
+    end
+
+    def amount_payload
+      payload = {}
       amount_cents = parse_amount_cents(match.args)
-      if amount_cents.present?
-        Route.new(action: :gift_card_sale, payload: { amount_cents: amount_cents }, message: nil)
-      else
-        Route.new(action: :gift_card_sale_offer, payload: {}, message: nil)
-      end
+      payload[:amount_cents] = amount_cents if amount_cents.present?
+      payload
+    end
+
+    def invalid_amount_args?
+      match.args.present? && parse_amount_cents(match.args).nil?
+    end
+
+    def invalid_amount_route
+      Route.new(action: :message, payload: {}, message: INVALID_AMOUNT_MESSAGE)
     end
 
     def line_discount_route

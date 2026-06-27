@@ -87,9 +87,8 @@ module Pos
           description: "Open-ring sale",
           permission_keys: [ "pos.lines.add.open_ring" ],
           handler: :open_ring,
-          root_unavailable_message: CommandRegistry::ROOT_UNAVAILABLE_MESSAGE,
-          transaction_unavailable_message: CommandRouteBuilder::NOT_YET_AVAILABLE_MESSAGE,
-          unavailable_action: :disabled_command
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -144,8 +143,7 @@ module Pos
           description: "Gift card issue or reload",
           permission_keys: [ "pos.gift_cards.issue" ],
           handler: :gift_card_modal,
-          root_unavailable_message: CommandRouteBuilder::GC_STUB_MESSAGE,
-          unavailable_action: :disabled_command,
+          root_implemented: true,
           transaction_implemented: true
         )
       end

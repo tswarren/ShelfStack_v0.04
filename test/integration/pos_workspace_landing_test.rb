@@ -10,6 +10,7 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     @workstation = @ctx[:workstation]
     @register_session = @ctx[:register_session]
     @variant = @ctx[:variant]
+    grant_pos_stored_value_tender_permissions!(@cashier, store: @store)
   end
 
   test "idle landing renders command field and new sale secondary action" do
@@ -101,12 +102,53 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, body["message"]
   end
 
-  test "root route_command gc stub does not create draft or auto-post gift card" do
-    assert_no_difference -> { PosTransaction.count } do
+  test "root route_command gc creates draft and redirects with carry-forward" do
+    assert_difference -> { PosTransaction.count }, 1 do
       post pos_route_command_path, params: { input: "/gc 50" }, as: :json
     end
 
     body = JSON.parse(response.body)
-    assert_equal "disabled_command", body["action"]
+    assert_equal "redirect", body["action"]
+    assert_match(/carry_forward=gift_card/, body["payload"]["url"])
+    assert_match(/amount_cents=5000/, body["payload"]["url"])
+  end
+
+  test "root route_command open ring creates draft and redirects with carry-forward" do
+    assert_difference -> { PosTransaction.count }, 1 do
+      post pos_route_command_path, params: { input: "/op 10" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "redirect", body["action"]
+    assert_match(/carry_forward=open_ring/, body["payload"]["url"])
+    assert_match(/amount_cents=1000/, body["payload"]["url"])
+  end
+
+  test "root route_command invalid open ring amount does not create draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/op abc" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, body["message"]
+  end
+
+  test "root route_command invalid gift card amount does not create draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/gc abc" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, body["message"]
+  end
+
+  test "explicit new sale creates draft and redirects to edit" do
+    assert_difference -> { PosTransaction.count }, 1 do
+      post pos_transactions_path, params: { mode: "sale" }
+    end
+
+    assert_redirected_to %r{/pos/transactions/\d+/edit}
   end
 end
