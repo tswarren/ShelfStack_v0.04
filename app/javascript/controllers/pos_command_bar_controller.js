@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "transactionDiscountPanel"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "pickupPanel", "transactionDiscountPanel"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,
@@ -80,6 +80,12 @@ export default class extends Controller {
       case "gift_card_sale_offer":
         this.showGiftCardPanel(data.payload)
         break
+      case "return_drawer_offer":
+        this.showReturnDrawerPanel(data.payload)
+        break
+      case "pickup_drawer_offer":
+        this.showPickupDrawerPanel()
+        break
       case "balance_inquiry_offer":
         this.showBalancePanel()
         break
@@ -99,13 +105,35 @@ export default class extends Controller {
   }
 
   showReceiptPanel(transactionNumber) {
+    this.showReturnDrawerPanel({ receipt_number: transactionNumber })
+  }
+
+  showReturnDrawerPanel(payload = {}) {
+    if (!this.hasReceiptPanelTarget) {
+      this.dispatchMessage("Return workflow is not available.")
+      return
+    }
+
     this.receiptPanelTarget.hidden = false
     const receiptInput = this.receiptPanelTarget.querySelector("[data-pos-return-lookup-target='input']")
-    if (receiptInput) {
-      receiptInput.value = transactionNumber
+    if (receiptInput && payload.receipt_number) {
+      receiptInput.value = payload.receipt_number
       receiptInput.dispatchEvent(new Event("change", { bubbles: true }))
       this.receiptPanelTarget.querySelector("[data-action*='pos-return-lookup#lookup']")?.click()
+    } else if (receiptInput) {
+      receiptInput.focus()
     }
+  }
+
+  showPickupDrawerPanel() {
+    if (!this.hasPickupPanelTarget) {
+      this.dispatchMessage("Pickup workflow is not available.")
+      return
+    }
+
+    this.pickupPanelTarget.hidden = false
+    const input = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='query']")
+    input?.focus()
   }
 
   showOpenRingPanel(payload) {
@@ -214,6 +242,7 @@ export default class extends Controller {
     if (this.hasOpenRingPanelTarget) this.openRingPanelTarget.hidden = true
     if (this.hasGiftCardPanelTarget) this.giftCardPanelTarget.hidden = true
     if (this.hasBalancePanelTarget) this.balancePanelTarget.hidden = true
+    if (this.hasPickupPanelTarget) this.pickupPanelTarget.hidden = true
   }
 
   closeOpenRingPanel(event) {
@@ -242,6 +271,22 @@ export default class extends Controller {
     this.focusInput()
   }
 
+  closePickupPanel(event) {
+    event?.preventDefault()
+    if (!this.hasPickupPanelTarget) return
+
+    this.pickupPanelTarget.hidden = true
+    const query = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='query']")
+    if (query) query.value = ""
+    const requestNumber = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='requestNumber']")
+    if (requestNumber) requestNumber.value = ""
+    const results = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='results']")
+    if (results) results.innerHTML = ""
+    const message = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='message']")
+    if (message) message.textContent = ""
+    this.focusInput()
+  }
+
   openRingSubmitted(event) {
     if (event.detail.success) {
       this.closeOpenRingPanel()
@@ -263,12 +308,21 @@ export default class extends Controller {
       case "gift_card":
         this.showGiftCardPanel(payload)
         break
+      case "return":
+        this.showReturnDrawerPanel({
+          receipt_number: params.get("receipt_number") || undefined
+        })
+        break
+      case "pickup":
+        this.showPickupDrawerPanel()
+        break
       default:
         break
     }
 
     params.delete("carry_forward")
     params.delete("amount_cents")
+    params.delete("receipt_number")
     const query = params.toString()
     const cleanUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname
     window.history.replaceState({}, "", cleanUrl)

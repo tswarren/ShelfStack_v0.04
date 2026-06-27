@@ -5,6 +5,7 @@ module Pos
     Route = LookupLaneRouter::Route
 
     NOT_YET_AVAILABLE_MESSAGE = "That command is not available yet."
+    RETURN_BLOCKED_TENDERS_MESSAGE = "Complete, cancel, hold, or clear settlement before adding return lines."
     INVALID_AMOUNT_MESSAGE = "Amount must be a valid dollar amount."
 
     def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
@@ -70,6 +71,10 @@ module Pos
         open_ring_route
       when :gift_card_modal
         gift_card_route
+      when :return_drawer
+        return_drawer_route
+      when :pickup_drawer
+        pickup_drawer_route
       when :line_discount
         line_discount_route
       when :transaction_discount
@@ -105,6 +110,21 @@ module Pos
         payload: amount_payload,
         message: nil
       )
+    end
+
+    def return_drawer_route
+      if transaction.present? && transaction.pos_tenders.settlement_rows.exists?
+        return Route.new(action: :message, payload: {}, message: RETURN_BLOCKED_TENDERS_MESSAGE)
+      end
+
+      payload = {}
+      payload[:receipt_number] = match.args.strip if match.args.present?
+
+      Route.new(action: :return_drawer_offer, payload: payload, message: nil)
+    end
+
+    def pickup_drawer_route
+      Route.new(action: :pickup_drawer_offer, payload: {}, message: nil)
     end
 
     def amount_payload

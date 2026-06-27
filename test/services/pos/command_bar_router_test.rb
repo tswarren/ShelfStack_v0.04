@@ -253,6 +253,72 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, route.message
   end
 
+  test "return command opens return drawer offer" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/return"
+    )
+
+    assert_equal :return_drawer_offer, route.action
+  end
+
+  test "return alias with receipt prefills payload" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/rt 001-001-000042"
+    )
+
+    assert_equal :return_drawer_offer, route.action
+    assert_equal "001-001-000042", route.payload[:receipt_number]
+  end
+
+  test "return command blocked when settlement rows exist" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    create_pos_tender!(transaction, tender_type: "cash", amount_cents: 1000)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/return"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::RETURN_BLOCKED_TENDERS_MESSAGE, route.message
+  end
+
+  test "pickup command opens pickup drawer offer" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/pickup"
+    )
+
+    assert_equal :pickup_drawer_offer, route.action
+  end
+
   test "register-session-required command without open session returns message" do
     route = Pos::CommandBarRouter.call(store: @store, register_session: nil, input: "/balance")
 

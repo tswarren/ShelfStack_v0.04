@@ -24,5 +24,40 @@ class Pos::CommandCarryForwardTest < ActiveSupport::TestCase
   test "carry_forward_for maps route actions" do
     assert_equal "open_ring", Pos::CommandCarryForward.carry_forward_for(:open_ring_offer)
     assert_equal "gift_card", Pos::CommandCarryForward.carry_forward_for(:gift_card_sale_offer)
+    assert_equal "return", Pos::CommandCarryForward.carry_forward_for(:return_drawer_offer)
+    assert_equal "pickup", Pos::CommandCarryForward.carry_forward_for(:pickup_drawer_offer)
+  end
+
+  test "edit_path includes receipt number and pickup mode" do
+    store = create_store!
+    transaction = create_pos_transaction!(
+      store: store,
+      workstation: create_workstation!(store: store),
+      user: create_user!
+    )
+
+    path = Pos::CommandCarryForward.edit_path(
+      transaction: transaction,
+      carry_forward: "return",
+      receipt_number: "001-001-000042",
+      mode: "sale"
+    )
+
+    assert_includes path, "carry_forward=return"
+    assert_includes path, "receipt_number=001-001-000042"
+
+    pickup_path = Pos::CommandCarryForward.edit_path(
+      transaction: transaction,
+      carry_forward: "pickup",
+      mode: "pickup"
+    )
+
+    assert_includes pickup_path, "mode=pickup"
+    assert_includes pickup_path, "carry_forward=pickup"
+  end
+
+  test "mode_for maps pickup drawer to pickup mode" do
+    assert_equal "pickup", Pos::CommandCarryForward.mode_for(:pickup_drawer_offer)
+    assert_equal "sale", Pos::CommandCarryForward.mode_for(:return_drawer_offer)
   end
 end

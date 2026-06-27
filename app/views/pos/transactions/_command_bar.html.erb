@@ -51,4 +51,8 @@
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="balancePanel" hidden>
     <%= render "pos/shared/stored_value_balance_inquiry", show_close: true %>
   </div>
+
+  <div class="ss-pos-inline-panel" data-pos-command-bar-target="pickupPanel" hidden>
+    <%= render "pos/transactions/pickup_panel", transaction: transaction, inline: true %>
+  </div>
 </section>

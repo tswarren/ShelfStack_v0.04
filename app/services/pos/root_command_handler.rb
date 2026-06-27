@@ -41,7 +41,7 @@ module Pos
       case route.action
       when :add_variant
         add_variant_and_redirect { ProductVariant.find(route.payload[:variant_id]) }
-      when :open_ring_offer, :gift_card_sale_offer
+      when :open_ring_offer, :gift_card_sale_offer, :return_drawer_offer, :pickup_drawer_offer
         carry_forward_and_redirect(route)
       when :balance_redirect
         Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_stored_value_balance_path, json: nil, alert: nil)
@@ -75,7 +75,9 @@ module Pos
         CommandCarryForward.edit_path(
           transaction: transaction,
           carry_forward: CommandCarryForward.carry_forward_for(route.action),
-          amount_cents: route.payload[:amount_cents]
+          amount_cents: route.payload[:amount_cents],
+          receipt_number: route.payload[:receipt_number],
+          mode: CommandCarryForward.mode_for(route.action)
         )
       end
     end

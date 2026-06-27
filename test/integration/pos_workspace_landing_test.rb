@@ -124,6 +124,28 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_match(/amount_cents=1000/, body["payload"]["url"])
   end
 
+  test "root route_command return creates draft and redirects with carry-forward" do
+    assert_difference -> { PosTransaction.count }, 1 do
+      post pos_route_command_path, params: { input: "/rt 001-001-000042" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "redirect", body["action"]
+    assert_match(/carry_forward=return/, body["payload"]["url"])
+    assert_match(/receipt_number=001-001-000042/, body["payload"]["url"])
+  end
+
+  test "root route_command pickup creates draft and redirects with carry-forward" do
+    assert_difference -> { PosTransaction.count }, 1 do
+      post pos_route_command_path, params: { input: "/pickup" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "redirect", body["action"]
+    assert_match(/carry_forward=pickup/, body["payload"]["url"])
+    assert_match(/mode=pickup/, body["payload"]["url"])
+  end
+
   test "root route_command invalid open ring amount does not create draft" do
     assert_no_difference -> { PosTransaction.count } do
       post pos_route_command_path, params: { input: "/op abc" }, as: :json

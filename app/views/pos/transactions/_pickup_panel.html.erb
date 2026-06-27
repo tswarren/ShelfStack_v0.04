@@ -1,4 +1,5 @@
 <% promoted = local_assigns.fetch(:promoted, false) %>
+<% inline = local_assigns.fetch(:inline, false) %>
 <% panel_open = local_assigns.fetch(:open, params[:pickup].present? || pos_pickup_mode?) %>
 
 <% pickup_content = capture do %>
@@ -23,7 +24,15 @@
   </div>
 <% end %>
 
-<% if promoted %>
+<% if inline %>
+  <section class="ss-pos-panel ss-pos-drawer ss-pos-drawer--inline">
+    <div class="ss-pos-drawer__header">
+      <h2 class="ss-pos-panel__title">Customer pickup</h2>
+      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-command-bar#closePickupPanel">Cancel</button>
+    </div>
+    <%= pickup_content %>
+  </section>
+<% elsif promoted %>
   <section class="ss-pos-panel ss-pos-pickup-panel ss-pos-pickup-panel--promoted">
     <h2 class="ss-pos-panel__title">Find pickup</h2>
     <%= pickup_content %>

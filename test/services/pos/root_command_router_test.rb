@@ -126,6 +126,40 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::Catalog::CASH_DROP_UNAVAILABLE_MESSAGE, route.message
   end
+
+  test "/return returns return drawer offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/return"
+    )
+
+    assert_equal :return_drawer_offer, route.action
+  end
+
+  test "/rt with receipt prefills payload" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/rt 001-001-000042"
+    )
+
+    assert_equal :return_drawer_offer, route.action
+    assert_equal "001-001-000042", route.payload[:receipt_number]
+  end
+
+  test "/pickup returns pickup drawer offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/pu"
+    )
+
+    assert_equal :pickup_drawer_offer, route.action
+  end
 end
 
 class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
