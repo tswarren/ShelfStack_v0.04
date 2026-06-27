@@ -56,6 +56,17 @@ export default class extends Controller {
     this.hidePanels()
 
     switch (data.action) {
+      case "redirect":
+        if (data.payload?.url) {
+          if (data.message) this.dispatchMessage(data.message)
+          window.location.href = data.payload.url
+        }
+        break
+      case "message":
+      case "help":
+      case "disabled_command":
+        this.dispatchMessage(data.message)
+        break
       case "variant_lookup":
         this.dispatch("variantLookup", { detail: data.payload })
         break

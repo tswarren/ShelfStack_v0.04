@@ -428,6 +428,7 @@ Rails.application.routes.draw do
 
   namespace :pos do
     root to: "home#show"
+    post "route_command", to: "workspace_commands#route_command"
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]

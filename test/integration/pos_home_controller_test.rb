@@ -22,7 +22,7 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
     assert_match "Manage Session", response.body
     assert_match "Cash In/Out", response.body
     assert_match "Reports", response.body
-    assert_match(/New Transaction|Continue/, response.body)
+    assert_select "button", text: "New sale"
     assert_select ".ss-pos-panel__title", text: "Session Summary"
     assert_select "a[href=?]", register_summary_pos_reports_path(register_session_id: @register_session.id), text: "Register Summary"
     assert_select "a[href=?]", drawer_pos_reports_path, text: "Session history"
@@ -53,10 +53,10 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Suspended Transactions", response.body
   end
 
-  test "queue tables render draft and suspended rows" do
+  test "queue tables render draft and suspended rows when landing shows conflict picker" do
     @register_session = @ctx[:register_session]
 
-    draft = create_pos_transaction!(
+    legacy_draft = create_pos_transaction!(
       store: @store,
       workstation: @workstation,
       user: @cashier,
@@ -73,9 +73,9 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
 
     get pos_root_path
     assert_response :success
-    assert_match "##{draft.id}", response.body
+    assert_match "Older draft needs review", response.body
+    assert_match "##{legacy_draft.id}", response.body
     assert_match "##{suspended.id}", response.body
-    assert_select "a[href=?]", edit_pos_transaction_path(draft), text: "Continue"
     assert_select "a[href=?]", resume_pos_transaction_path(suspended), text: "Resume"
   end
 end
