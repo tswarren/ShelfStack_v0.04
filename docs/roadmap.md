@@ -590,6 +590,9 @@ docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
 docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
+docs/specifications/phase-10c-test-plan.md
+docs/specifications/pos-keyboard-workspace.md
 docs/samples/phase-10-mockups/
 ```
 

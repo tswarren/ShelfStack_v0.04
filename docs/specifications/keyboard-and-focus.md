@@ -39,14 +39,17 @@ See [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-
 
 ### Required
 
-* Command field focus on transaction edit
-* Enter/Esc behavior as specified in 10-C roadmap
-* Focus restoration after modal/drawer and line edit
-* Visible shortcut/help affordances; mouse-accessible fallbacks for all primary actions
+* Command field focus on POS workspace load (idle and active) and after line add
+* Enter/Esc behavior as specified in 10-C roadmap/spec
+* Modal/drawer focus trap and restore
+* Expanded line edit: first field focused; focus after Save/Cancel
+* Settlement and primary actions reachable via visible controls and commands — **not** function keys
+* Touch targets ~44px on expanded row and settlement actions
+* Transactionless commands remain available while an active draft exists (blocked only by modal/dirty state)
 
-### Enhancement (non-blocking for 10-C)
+### Out of scope for Phase 10-C completion
 
-Function keys F2–F4, F7–F10 where reliable. Avoid F1, F5, F6, F11, F12. Settlement and other primary actions must work without F-keys.
+Function-key bindings and F-key legend. Do not block 10-C on F-key reliability.
 
 ## Scoping
 

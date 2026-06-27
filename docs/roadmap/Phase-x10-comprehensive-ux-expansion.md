@@ -57,13 +57,13 @@ Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are 
 
 | Sub-phase | Document | Job | Depends on | Status |
 | --------- | -------- | --- | ---------- | ------ |
-| **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | Planned |
-| **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | Planned |
-| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A | Planned |
+| **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | **Complete** |
+| **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | **Complete** |
+| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A | **Planned** (current) |
 | **10-D** | This document (Workstreams 4–6) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | Planned |
 | **10-E** | This document (below) | Consistency sweep, accessibility, report regression | All | Planned |
 
-**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. First implementation slice: **10-A**, then **10-B**.
+**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. **Current implementation priority:** 10-C.
 
 **Note:** Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match delivery order (10-B = items, 10-C = POS).
 
@@ -206,15 +206,18 @@ Guiding model:
 
 ```text
 Command field is home base.
-Cart is the working surface.
+Idle workspace does not create a draft.
+Transaction-starting input creates or resumes the active draft.
+Transactionless commands do not create drafts.
+Cart is the working surface once a transaction exists.
 Line edits happen inline.
 Related detail opens in drawers.
 Bounded decisions happen in modals.
 Readiness appears where completion happens.
-Function keys and commands make common actions fast.
+Command aliases make common actions fast.
 ```
 
-Key decisions: landing routes to transaction when session open; no auto-resume for held sales; `/reports` confirms before navigate when draft exists; function keys F2–F4, F7–F10 (avoid F1/F5/F6/F11/F12).
+Key decisions: idle workspace when no active draft; active draft always wins on landing; two-lane parser (slash commands vs scan lookup only); no implicit workflow guessing; one active draft per register session + workstation + cashier; return/pickup drawer workflows; `/reports` confirms when active draft exists; **function keys out of scope for 10-C completion**.
 
 ---
 
@@ -424,13 +427,15 @@ Phase 10 is complete when all sub-phases meet their criteria.
 
 ## Phase 10-C
 
-* POS landing: explicit **New sale** when no draft (**no silent auto-create**); auto-continue only for single cashier+workstation draft
-* Command field primary focus on transaction edit; **required** keyboard/focus criteria met
-* Expanded-row line edits; settlement on shared modal
-* Readiness blockers actionable near completion
-* Command registry (or approved subset) with permissions
-* `/reports` confirms before navigate when draft exists
-* Function keys (F2–F10) are **enhancement-tier**, not blocking
+* POS landing: **idle workspace** when register open and no active draft (**no silent auto-create**); command field is home base
+* Active draft always wins on `/pos` (including empty); one active draft per register session + workstation + cashier; cross-cashier conflict UI when needed
+* Two-lane parser: slash → command registry; non-slash → scan/catalog lookup only (no implicit open-ring, receipt, or amount guessing)
+* Separate line vs transaction discount commands; `/gc` modal-first; `/cashdrop` planned/disabled; return/pickup drawer workflows
+* Command field primary focus (idle and active); **required** keyboard/focus criteria met
+* Expanded-row line edits; settlement on shared modal; readiness blockers actionable near completion
+* `Pos::CommandRegistry` with permissions and state checks; `/reports` confirms before navigate when draft exists
+* `/close` blocked while active draft exists; return blocked when tender rows present
+* Command aliases and visible controls required; function keys **out of scope** for 10-C completion
 
 ## Phase 10-D
 
@@ -476,7 +481,7 @@ This phase is intentionally broad. It should be broken into sub-phases or PRs. P
 
 ## Keyboard Shortcut Reliability
 
-Function keys may conflict with browsers or operating systems. Shortcuts should be tested in the expected deployment environment.
+Function keys may conflict with browsers or operating systems. Phase 10-C does not require F-key bindings; command aliases and visible controls are the completion path.
 
 ## Too Many Modals
 
@@ -504,7 +509,7 @@ Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match 
 
 ## POS Landing Policy
 
-ShelfStack POS **does not auto-create draft sales** when no draft exists. Landing shows an explicit **New sale** action. Auto-continue applies only for a single in-progress draft (cashier + workstation scoped). See [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md).
+ShelfStack POS **does not auto-create draft sales** when no draft exists. With an open register session and no active draft, landing shows an **idle workspace** with the command field focused as home base. **New sale** / **Start sale** remains a visible mouse path for explicit draft creation but is not the conceptual center. When an active draft exists (register session + workstation + cashier), `/pos` always returns to it — including empty drafts — until complete, cancel, hold, or void. Multiple draft candidates show a conflict picker; held/suspended sales never auto-resume. See [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md).
 
 ## Items Before POS
 
@@ -535,6 +540,7 @@ docs/roadmap/phase-10c-pos-keyboard-workspace.md
 docs/specifications/phase-10a-interaction-infrastructure-spec.md
 docs/specifications/phase-10b-item-cockpit-spec.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
+docs/specifications/phase-10c-test-plan.md
 docs/specifications/ui-components.md
 docs/specifications/view-contracts.md
 docs/specifications/keyboard-and-focus.md

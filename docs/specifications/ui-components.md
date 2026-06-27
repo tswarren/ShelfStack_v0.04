@@ -64,7 +64,7 @@ Inline line edits: POS cart, PO lines, inventory adjustments.
 
 ### Shortcut strip
 
-Visible F-key legend and command hints (POS, optional elsewhere).
+Visible command hints and alias legend (POS, optional elsewhere). Function-key bindings are **out of scope** for Phase 10-C completion; do not block POS delivery on F-key reliability.
 
 **Partial:** `shared/interaction/shortcut_strip`
 
@@ -91,4 +91,4 @@ Report-specific patterns remain in [phase-9a-ux-foundation-for-reporting-spec.md
 
 ## Test plan
 
-[phase-10a-test-plan.md](phase-10a-test-plan.md)
+[phase-10a-test-plan.md](phase-10a-test-plan.md) · POS keyboard workspace: [phase-10c-test-plan.md](phase-10c-test-plan.md)

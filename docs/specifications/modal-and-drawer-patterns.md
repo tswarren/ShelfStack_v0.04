@@ -104,6 +104,7 @@ ss-toast-region, ss-toast, ss-toast--success, ...
 * Items setup modal: [shelfstack_items_mockups.html](../samples/phase-10-mockups/shelfstack_items_mockups.html)
 * Items demand drawer: same file, operations screen
 * POS settlement modal: [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html)
+* POS return/pickup drawers and idle workspace: [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md)
 
 ## Roadmap
 

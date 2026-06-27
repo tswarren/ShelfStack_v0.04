@@ -2,7 +2,7 @@
 
 **Status:** Planned (Phase 10-C)
 
-Detailed POS UX specification. Supplements [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md).
+Detailed POS UX supplement. **Authoritative behavior:** [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md) and [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md).
 
 ## Mockup reference
 
@@ -10,35 +10,47 @@ Detailed POS UX specification. Supplements [phase-10c-pos-keyboard-workspace.md]
 
 | Screen | Content |
 | ------ | ------- |
-| Register workspace | Context bar, command field, cart, readiness, sidebar, shortcut strip |
+| Register workspace | Context bar, command field, cart, readiness, sidebar, help strip |
 | Item modification | Expanded-row line edit |
 | Settlement modal | Tenders, change due, complete action |
 
 ## View contract
 
-First focus: scan/command field. Primary action: settle/complete. See [view-contracts.md](view-contracts.md).
+First focus: command field. Primary action when transaction active: settle/complete. See [view-contracts.md](view-contracts.md).
 
 ## Landing
 
 When register session is open:
 
-* **One draft** (cashier + workstation): redirect to transaction edit
-* **Multiple drafts**: compact picker
-* **No drafts**: compact workspace with explicit **New sale** — **no silent auto-create**
+* **No active draft** (session + workstation + cashier): **idle workspace** — command field focused; no silent auto-create
+* **One active draft**: return to active draft (including empty)
+* **Multiple draft candidates**: conflict picker
+* **Held/suspended**: access only; no auto-resume
 
-After the user starts a sale, transaction edit opens with command field focused.
+**New sale** remains a mouse-accessible explicit start path; command field is home base.
 
-Authoritative detail: [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md).
+## Commands
 
-## Commands and function keys
+Two-lane parser: slash commands → registry; non-slash → scan/catalog lookup only. No implicit open-ring, receipt, or amount guessing.
 
-Command set and registry: [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md).
+| Area | Commands |
+| ---- | -------- |
+| Line discount | `/linediscount`, `/ld`, legacy `/d` |
+| Transaction discount | `/discount`, `/di`, legacy `/dt` |
+| Gift card sale | `/giftcard`, `/gc` — modal-first; amount prefills modal, does not auto-post |
+| Gift card redeem | `/giftredeem`, `/gr` |
+| Cash tender vs drawer | `/cash` (tender) vs `/cashin` / `/cashout` (drawer movement) |
+| Cash drop | `/cashdrop` — planned/disabled in 10-C |
+| Return / pickup | `/return`, `/pickup` — drawer workflows; draft on commit |
+| Close register | `/close`, `/cl` — blocked while active draft exists |
 
-Function keys F2–F10 are **enhancement-tier**; required keyboard behavior does not depend on F-key reliability.
+Transactionless commands (`/balance`, `/session`, `/help`, etc.) work while an active draft exists; blocked only by modal/dirty state.
+
+Function keys are **out of scope** for 10-C completion. Command aliases and visible controls are required.
 
 ## Reports
 
-`/reports` and utility menu: confirm when in-progress draft exists; navigate same tab to `/reports` on confirm.
+`/reports` and utility menu: confirm when active draft exists; navigate same tab to `/reports` on confirm.
 
 ## Depends on
 

@@ -388,6 +388,17 @@ Phase 10-B was completed on 2026-06-26. See [docs/implementation/phase-10b-compl
 - Item setup quick modals (identifier, price, vendor source, classification/tax preview) via shared Turbo modal contract
 - Phase 9 drill-down contract preserved
 
+## Phase 10-C: POS Keyboard Workspace — **Planned** (current priority)
+
+Authoritative direction: [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md), [docs/specifications/phase-10c-pos-keyboard-workspace-spec.md](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md).
+
+- Idle POS workspace when register open and no active draft; command field is home base (not silent auto-create)
+- Active draft always wins on `/pos` (one per register session + workstation + cashier)
+- Two-lane parser: slash → `Pos::CommandRegistry`; non-slash → scan/catalog lookup only
+- Remove implicit open-ring/receipt/amount guessing from `Pos::CommandBarRouter`
+- Separate line vs transaction discount commands; `/gc` modal-first; `/cashdrop` deferred
+- Return/pickup drawer workflows; `/close` blocked while active draft exists
+
 ## Phase 10 Documents
 
 ```text
@@ -399,6 +410,8 @@ docs/specifications/phase-10a-interaction-infrastructure-spec.md
 docs/specifications/phase-10a-test-plan.md
 docs/specifications/phase-10b-item-cockpit-spec.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
+docs/specifications/phase-10c-test-plan.md
+docs/specifications/pos-keyboard-workspace.md
 docs/specifications/ui-components.md
 docs/specifications/view-contracts.md
 docs/specifications/keyboard-and-focus.md

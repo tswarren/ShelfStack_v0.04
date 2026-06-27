@@ -57,7 +57,19 @@ Phase 9 drill-down surfaces: see [phase-9-item-drill-down-contract.md](../handof
 
 ## POS contract
 
-First focus: command field. Primary: settlement. See [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md).
+**Authoritative:** [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md), [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md).
+
+| State | First focus | Primary action | Notes |
+| ----- | ----------- | -------------- | ----- |
+| Idle (register open, no active draft) | Command field | Scan/add or slash command | No silent draft creation; **New sale** is secondary mouse path |
+| Active draft | Command field | Settle / Complete | Active draft always wins on `/pos` landing |
+| Modal/drawer open | First meaningful control in overlay | Save / Continue / Close | Restore focus to opener on close |
+
+**Parser:** slash-prefixed input → command registry; non-slash → scan/catalog lookup only. Failed lookup never creates a draft.
+
+**Workflow surfaces:** cart is the working surface; line edits via expanded row; return/pickup via drawers; settlement and cash movement via modals. Readiness blockers appear near completion controls and inside settlement modal.
+
+**Turbo targets:** `pos_cart`, `pos_totals`, `pos_readiness` (see table above).
 
 ## Report contract
 
