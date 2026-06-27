@@ -41,6 +41,8 @@ module Pos
       case route.action
       when :add_variant
         add_variant_and_redirect { ProductVariant.find(route.payload[:variant_id]) }
+      when :open_ring_offer, :gift_card_sale_offer
+        carry_forward_and_redirect(route)
       when :balance_redirect
         Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_stored_value_balance_path, json: nil, alert: nil)
       when :help, :message, :empty, :disabled_command, :variant_lookup
@@ -68,9 +70,30 @@ module Pos
 
     attr_reader :store, :workstation, :cashier_user, :register_session, :user_session, :input, :product_variant_id
 
+    def carry_forward_and_redirect(route)
+      with_draft_redirect do |transaction|
+        CommandCarryForward.edit_path(
+          transaction: transaction,
+          carry_forward: CommandCarryForward.carry_forward_for(route.action),
+          amount_cents: route.payload[:amount_cents]
+        )
+      end
+    end
+
     def add_variant_and_redirect
       variant = yield
 
+      with_draft_redirect do |transaction|
+        AddVariantLine.call!(transaction: transaction, variant: variant)
+        Rails.application.routes.url_helpers.edit_pos_transaction_path(transaction, mode: "sale")
+      end
+    rescue ActiveRecord::RecordNotFound
+      item_not_found_result
+    rescue AddVariantLine::Error, ActiveRecord::RecordInvalid => e
+      add_line_failed_result(e.message)
+    end
+
+    def with_draft_redirect
       draft_result = DraftCreator.call(
         store: store,
         workstation: workstation,
@@ -81,22 +104,17 @@ module Pos
 
       case draft_result.status
       when :legacy_found
-        return Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "An older draft needs review before adding items.")
+        Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "An older draft needs review before adding items.")
       when :conflict
-        return Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "Multiple active drafts exist. Resolve the conflict before adding items.")
+        Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "Multiple active drafts exist. Resolve the conflict before adding items.")
       when :missing_register_session, :invalid_register_session
-        return Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "Open the register before adding items.")
+        Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "Open the register before adding items.")
       when :created, :resumed
-        AddVariantLine.call!(transaction: draft_result.transaction, variant: variant)
-        path = Rails.application.routes.url_helpers.edit_pos_transaction_path(draft_result.transaction, mode: "sale")
+        path = yield(draft_result.transaction)
         Result.new(status: :redirect, redirect_path: path, json: nil, alert: nil)
       else
         Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "Unable to start transaction.")
       end
-    rescue ActiveRecord::RecordNotFound
-      item_not_found_result
-    rescue AddVariantLine::Error, ActiveRecord::RecordInvalid => e
-      add_line_failed_result(e.message)
     end
 
     def item_not_found_result

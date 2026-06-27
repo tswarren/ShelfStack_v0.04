@@ -31,15 +31,26 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_equal :message, route.action
   end
 
-  test "/gc returns disabled command stub" do
+  test "/gc returns gift card sale offer with prefilled amount" do
     route = Pos::RootCommandRouter.call(
       store: @store,
       register_session: @register_session,
       input: "/gc 50"
     )
 
-    assert_equal :disabled_command, route.action
-    assert_match(/later update/i, route.message)
+    assert_equal :gift_card_sale_offer, route.action
+    assert_equal 5000, route.payload[:amount_cents]
+  end
+
+  test "/op returns open ring offer with prefilled amount" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/op 10"
+    )
+
+    assert_equal :open_ring_offer, route.action
+    assert_equal 1000, route.payload[:amount_cents]
   end
 
   test "/? returns help action" do

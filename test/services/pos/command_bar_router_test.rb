@@ -73,7 +73,7 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_nil route.payload[:amount_cents]
   end
 
-  test "gift card command with amount routes to gift card sale" do
+  test "gift card command with amount opens gift card offer without auto-posting" do
     route = Pos::CommandBarRouter.call(
       store: @store,
       register_session: @register_session,
@@ -81,7 +81,7 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
       input: "/giftcard 25"
     )
 
-    assert_equal :gift_card_sale, route.action
+    assert_equal :gift_card_sale_offer, route.action
     assert_equal 2500, route.payload[:amount_cents]
   end
 
@@ -210,6 +210,18 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
 
     assert_equal discountable_line.id, route.payload[:line_id]
+  end
+
+  test "open ring command opens offer panel payload" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
+      input: "/op 15"
+    )
+
+    assert_equal :open_ring_offer, route.action
+    assert_equal 1500, route.payload[:amount_cents]
   end
 
   test "register-session-required command without open session returns message" do

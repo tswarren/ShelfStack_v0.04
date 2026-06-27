@@ -4,7 +4,6 @@ module Pos
   class CommandRouteBuilder
     Route = LookupLaneRouter::Route
 
-    GC_STUB_MESSAGE = "Gift card sales from the command field ship in a later update. Start a new sale first."
     NOT_YET_AVAILABLE_MESSAGE = "That command is not available yet."
 
     def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
@@ -65,6 +64,8 @@ module Pos
         )
       when :balance_inquiry
         balance_route
+      when :open_ring
+        open_ring_route
       when :gift_card_modal
         gift_card_route
       when :line_discount
@@ -84,13 +85,34 @@ module Pos
       end
     end
 
+    def open_ring_route
+      Route.new(
+        action: :open_ring_offer,
+        payload: open_ring_payload,
+        message: nil
+      )
+    end
+
     def gift_card_route
+      Route.new(
+        action: :gift_card_sale_offer,
+        payload: gift_card_payload,
+        message: nil
+      )
+    end
+
+    def open_ring_payload
+      payload = {}
       amount_cents = parse_amount_cents(match.args)
-      if amount_cents.present?
-        Route.new(action: :gift_card_sale, payload: { amount_cents: amount_cents }, message: nil)
-      else
-        Route.new(action: :gift_card_sale_offer, payload: {}, message: nil)
-      end
+      payload[:amount_cents] = amount_cents if amount_cents.present?
+      payload
+    end
+
+    def gift_card_payload
+      payload = {}
+      amount_cents = parse_amount_cents(match.args)
+      payload[:amount_cents] = amount_cents if amount_cents.present?
+      payload
     end
 
     def line_discount_route
