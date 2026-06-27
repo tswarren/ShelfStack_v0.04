@@ -11,6 +11,7 @@ export default class extends Controller {
   connect() {
     this.focusInput()
     this.syncOpenRingReturnMode()
+    this.applyLegacyModeDrawerFromUrl()
     this.applyCarryForwardFromUrl()
   }
 
@@ -291,6 +292,25 @@ export default class extends Controller {
     if (event.detail.success) {
       this.closeOpenRingPanel()
     }
+  }
+
+  applyLegacyModeDrawerFromUrl() {
+    const params = new URLSearchParams(window.location.search)
+    const mode = params.get("mode")
+    if (!mode || mode === "sale") return
+
+    if (mode === "return") {
+      this.showReturnDrawerPanel({})
+    } else if (mode === "pickup") {
+      this.showPickupDrawerPanel()
+    } else {
+      return
+    }
+
+    params.set("mode", "sale")
+    const query = params.toString()
+    const cleanUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname
+    window.history.replaceState({}, "", cleanUrl)
   }
 
   applyCarryForwardFromUrl() {

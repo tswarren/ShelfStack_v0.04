@@ -143,7 +143,8 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal "redirect", body["action"]
     assert_match(/carry_forward=pickup/, body["payload"]["url"])
-    assert_match(/mode=pickup/, body["payload"]["url"])
+    assert_match(/mode=sale/, body["payload"]["url"])
+    assert_no_match(/mode=pickup/, body["payload"]["url"])
   end
 
   test "root route_command return blocked when active draft has settlement rows" do

@@ -1,9 +1,4 @@
-<% pickup_mode = pos_pickup_mode? %>
-<% return_mode = pos_workspace_mode == "return" %>
-
-<% if pickup_mode %>
-  <%= render "pos/transactions/pickup_panel", transaction: transaction, promoted: true, open: true %>
-<% end %>
+<% return_mode = false %>
 
 <section class="ss-pos-panel ss-pos-command-bar"
          data-controller="pos-command-bar pos-line-entry"

@@ -27,8 +27,8 @@ module Pos
       end
     end
 
-    def mode_for(route_action)
-      route_action == :pickup_drawer_offer ? "pickup" : "sale"
+    def mode_for(_route_action)
+      "sale"
     end
   end
 end

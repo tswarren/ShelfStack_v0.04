@@ -49,15 +49,16 @@ class Pos::CommandCarryForwardTest < ActiveSupport::TestCase
     pickup_path = Pos::CommandCarryForward.edit_path(
       transaction: transaction,
       carry_forward: "pickup",
-      mode: "pickup"
+      mode: "sale"
     )
 
-    assert_includes pickup_path, "mode=pickup"
+    assert_includes pickup_path, "mode=sale"
     assert_includes pickup_path, "carry_forward=pickup"
+    assert_not_includes pickup_path, "mode=pickup"
   end
 
-  test "mode_for maps pickup drawer to pickup mode" do
-    assert_equal "pickup", Pos::CommandCarryForward.mode_for(:pickup_drawer_offer)
+  test "mode_for keeps command-driven carry-forward in sale mode" do
+    assert_equal "sale", Pos::CommandCarryForward.mode_for(:pickup_drawer_offer)
     assert_equal "sale", Pos::CommandCarryForward.mode_for(:return_drawer_offer)
   end
 end

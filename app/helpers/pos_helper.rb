@@ -25,6 +25,24 @@ module PosHelper
     POS_WORKSPACE_MODES.include?(mode) ? mode : "sale"
   end
 
+  def pos_mode_switch_active?(mode)
+    carry_forward = params[:carry_forward].presence
+    case mode.to_s
+    when "sale"
+      carry_forward.blank? && !legacy_return_or_pickup_mode?
+    when "return"
+      carry_forward == "return" || (carry_forward.blank? && params[:mode] == "return")
+    when "pickup"
+      carry_forward == "pickup" || (carry_forward.blank? && params[:mode] == "pickup")
+    else
+      false
+    end
+  end
+
+  def legacy_return_or_pickup_mode?
+    params[:mode].in?(%w[return pickup])
+  end
+
   def pos_initial_entry_action(mode)
     mode.to_s == "return" ? "return_receipt" : "sale"
   end

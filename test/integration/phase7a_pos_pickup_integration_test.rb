@@ -99,12 +99,13 @@ class Phase7aPosPickupIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal @customer.id, @transaction.customer_id
   end
 
-  test "pickup mode renders promoted pickup panel" do
+  test "legacy pickup mode URL renders inline pickup drawer without promoted panel" do
     get edit_pos_transaction_path(@transaction, mode: "pickup")
 
     assert_response :success
-    assert_includes response.body, "Find pickup"
-    assert_includes response.body, "ss-pos-mode-switch"
+    assert_includes response.body, 'data-pos-command-bar-target="pickupPanel"'
+    assert_includes response.body, "Customer pickup"
+    assert_not_includes response.body, "ss-pos-pickup-panel--promoted"
   end
 
   test "add_reservation_line accepts quantity parameter" do

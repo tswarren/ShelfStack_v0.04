@@ -123,7 +123,7 @@ module Pos
       )
 
       render json: {
-        action: route.action,
+        action: route.action.to_s,
         payload: serialize_route_payload(route.payload),
         message: route.message
       }
