@@ -164,17 +164,27 @@ export default class extends Controller {
     input?.focus()
   }
 
-  showOpenRingPanel(payload) {
+  showOpenRingPanel(payload = {}) {
+    if (!this.hasOpenRingPanelTarget) {
+      this.dispatchMessage("Open-ring is not available.")
+      return
+    }
+
     this.syncOpenRingReturnMode()
+    this.inputTarget.value = ""
     this.openRingPanelTarget.hidden = false
+    this.openRingPanelTarget.scrollIntoView({ behavior: "smooth", block: "nearest" })
+
+    const descriptionField = this.openRingPanelTarget.querySelector("[name='description']")
     const priceField = this.openRingPanelTarget.querySelector("[name='unit_price']")
     if (priceField && payload.amount_cents) {
       priceField.value = (payload.amount_cents / 100).toFixed(2)
     }
-    const descriptionField = this.openRingPanelTarget.querySelector("[name='description']")
     if (descriptionField && payload.query) {
       descriptionField.value = payload.query
     }
+
+    ;(descriptionField || priceField)?.focus()
   }
 
   showGiftCardPanel(payload) {
