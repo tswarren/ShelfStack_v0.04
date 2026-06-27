@@ -142,6 +142,25 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal discountable_line.id, route.payload[:line_id]
   end
 
+  test "/help returns help action" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/help")
+
+    assert_equal :help, route.action
+    assert_equal Pos::RootCommandRouter::HELP_MESSAGE, route.message
+  end
+
+  test "/? returns help action" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/?")
+
+    assert_equal :help, route.action
+  end
+
+  test "bare ? returns help action" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "?")
+
+    assert_equal :help, route.action
+  end
+
   test "unknown slash command returns unknown command message" do
     route = Pos::CommandBarRouter.call(store: @store, input: "/foo")
 

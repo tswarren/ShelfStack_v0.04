@@ -40,6 +40,7 @@ module Pos
     def slash_route
       input = parsed.input
 
+      return Route.new(action: :help, payload: {}, message: RootCommandRouter::HELP_MESSAGE) if input.match?(CommandParser::HELP_COMMAND_PATTERN)
       return gift_card_route if input.match?(GIFT_CARD_COMMAND_PATTERN)
       return line_discount_route if input.match?(LINE_DISCOUNT_COMMAND_PATTERN)
       return Route.new(action: :transaction_discount_offer, payload: {}, message: nil) if input.match?(TRANSACTION_DISCOUNT_COMMAND_PATTERN)

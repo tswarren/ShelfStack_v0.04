@@ -91,7 +91,6 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, body["message"]
   end
 
-
   test "root route_command unknown slash command returns message without creating draft" do
     assert_no_difference -> { PosTransaction.count } do
       post pos_route_command_path, params: { input: "/foo" }, as: :json
