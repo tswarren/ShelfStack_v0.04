@@ -1,9 +1,20 @@
 <nav class="ss-pos-mode-switch" aria-label="Register mode">
   <% PosHelper::POS_WORKSPACE_MODES.each do |mode| %>
-    <% active = pos_workspace_mode == mode %>
-    <%= link_to pos_mode_label(mode),
-          edit_pos_transaction_path(transaction, mode: mode),
-          class: "ss-pos-mode-switch__btn #{'ss-pos-mode-switch__btn--active' if active}",
-          aria: { current: active ? "page" : nil } %>
+    <% active = pos_mode_switch_active?(mode) %>
+    <% if mode == "sale" %>
+      <%= link_to pos_mode_label(mode),
+            edit_pos_transaction_path(transaction, mode: "sale"),
+            class: "ss-pos-mode-switch__btn #{'ss-pos-mode-switch__btn--active' if active}",
+            data: { mode: "sale" },
+            aria: { current: active ? "page" : nil } %>
+    <% else %>
+      <button type="button"
+              class="ss-pos-mode-switch__btn #{'ss-pos-mode-switch__btn--active' if active}"
+              data-mode="<%= mode %>"
+              data-action="pos-command-bar#openModeDrawer"
+              aria-current="<%= active ? 'page' : 'false' %>">
+        <%= pos_mode_label(mode) %>
+      </button>
+    <% end %>
   <% end %>
 </nav>

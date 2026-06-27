@@ -4,7 +4,8 @@ export default class extends Controller {
   static targets = ["query", "requestNumber", "results", "message"]
   static values = {
     url: String,
-    addReservationUrl: String
+    addReservationUrl: String,
+    redirectOnSuccess: { type: Boolean, default: false }
   }
 
   search(event) {
@@ -86,15 +87,21 @@ export default class extends Controller {
       method: "POST",
       headers: {
         "X-CSRF-Token": this.csrfToken,
-        Accept: "text/vnd.turbo-stream.html"
+        Accept: this.redirectOnSuccessValue ? "text/html" : "text/vnd.turbo-stream.html"
       },
       body
     })
       .then((response) => {
+        if (this.redirectOnSuccessValue && response.redirected) {
+          window.location.href = response.url
+          return null
+        }
         if (!response.ok) throw new Error(`Add pickup line failed (${response.status})`)
         return response.text()
       })
       .then((html) => {
+        if (!html) return
+
         window.Turbo.renderStreamMessage(html)
         if (this.hasQueryTarget) this.queryTarget.value = ""
         if (this.hasRequestNumberTarget) this.requestNumberTarget.value = ""

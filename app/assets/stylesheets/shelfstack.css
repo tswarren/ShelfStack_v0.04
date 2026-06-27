@@ -3366,6 +3366,159 @@ body.ss-pos-modal-open {
   padding: 1.5rem 1.75rem;
 }
 
+.ss-pos-modal__panel.ss-pos-modal__panel--help {
+  width: min(72rem, calc(100vw - 2rem));
+  max-width: none;
+  margin: 3vh auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.ss-pos-help-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem 0.65rem;
+  border-bottom: 1px solid var(--color-base-300, #e5e0d6);
+}
+
+.ss-pos-help-modal__header .ss-pos-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.ss-pos-help-modal__body {
+  padding: 0.65rem 1.25rem 0.5rem;
+}
+
+.ss-pos-help-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem 1.25rem;
+}
+
+.ss-pos-help-modal__group-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #5c5347;
+}
+
+.ss-pos-help-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ss-pos-help-modal__item {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, auto) 1fr;
+  gap: 0.35rem 0.5rem;
+  align-items: baseline;
+  padding: 0.12rem 0;
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.ss-pos-help-modal__tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.25rem;
+}
+
+.ss-pos-help-modal__tokens code {
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(216, 208, 192, 0.35);
+  padding: 0.02rem 0.25rem;
+  border-radius: 0.2rem;
+  white-space: nowrap;
+}
+
+.ss-pos-help-modal__description {
+  margin: 0;
+  color: #5c5347;
+}
+
+.ss-pos-help-modal__item--unavailable .ss-pos-help-modal__tokens code,
+.ss-pos-help-modal__item--unavailable .ss-pos-help-modal__description {
+  opacity: 0.55;
+}
+
+.ss-pos-help-modal__item--planned .ss-pos-help-modal__tokens code {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.ss-pos-help-modal__item--planned .ss-pos-help-modal__description {
+  opacity: 0.55;
+}
+
+.ss-pos-help-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.55rem 1.25rem 0.85rem;
+  border-top: 1px solid var(--color-base-300, #e5e0d6);
+}
+
+.ss-pos-help-modal__hint {
+  margin: 0;
+}
+
+.ss-pos-help-modal__legend {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 0.72rem;
+  color: #6b6560;
+}
+
+.ss-pos-help-modal__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.ss-pos-help-modal__legend-item::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.ss-pos-help-modal__legend-item--unavailable::before {
+  opacity: 0.55;
+}
+
+.ss-pos-help-modal__legend-item--planned::before {
+  opacity: 0.55;
+  border: 1px solid currentColor;
+  background: transparent;
+}
+
+.ss-pos-help-modal__footer kbd {
+  font-family: inherit;
+  font-size: 0.85em;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 0.2rem;
+  background: #fafafa;
+}
+
+@media (max-width: 960px) {
+  .ss-pos-help-modal__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .ss-pos-settlement-form .ss-btn {
   margin-top: 0;
 }
@@ -3710,6 +3863,15 @@ body.ss-pos-modal-open {
 }
 
 .ss-pos-hero .ss-pos-actions {
+  margin-top: 0.75rem;
+}
+
+.ss-pos-return-drawer__modes {
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-inline-panel:not([hidden]) {
+  display: block;
   margin-top: 0.75rem;
 }
 

@@ -1,4 +1,6 @@
 <% if Authorization.allowed?(user: current_user, permission_key: "pos.lines.add.open_ring", store: current_store) %>
+  <% add_open_ring_url = local_assigns.fetch(:add_open_ring_url) { add_open_ring_line_pos_transaction_path(transaction) } %>
+  <% redirect_on_success = local_assigns.fetch(:redirect_on_success, false) %>
   <section class="ss-pos-panel ss-pos-drawer <%= 'ss-pos-drawer--inline' if local_assigns[:inline] %>">
     <div class="ss-pos-drawer__header">
       <h2 class="ss-pos-panel__title">Open-ring item</h2>
@@ -6,15 +8,12 @@
         <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-command-bar#closeOpenRingPanel">Cancel</button>
       <% end %>
     </div>
-    <%= form_with url: add_open_ring_line_pos_transaction_path(transaction),
+    <%= form_with url: add_open_ring_url,
                   method: :post,
                   class: "ss-form ss-pos-open-ring-form",
-                  data: {
-                    turbo_stream: true,
-                    action: "turbo:submit-end->pos-command-bar#openRingSubmitted"
-                  } do %>
+                  data: redirect_on_success ? { turbo: false } : { turbo_stream: true, action: "turbo:submit-end->pos-command-bar#openRingSubmitted" } do %>
       <%= hidden_field_tag :return_mode, 0, data: { pos_command_bar_target: "openRingReturnMode" } %>
-      <%= text_field_tag :description, nil, placeholder: "Description", required: true %>
+      <%= text_field_tag :description, nil, placeholder: "Description", required: true, autocomplete: "off" %>
       <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment", required: true %>
       <%= pos_money_field :unit_price, nil, placeholder: "Unit price", required: true, min: 0 %>
       <%= number_field_tag :quantity, 1, min: 1 %>

@@ -113,15 +113,94 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_match(/amount_cents=5000/, body["payload"]["url"])
   end
 
-  test "root route_command open ring creates draft and redirects with carry-forward" do
-    assert_difference -> { PosTransaction.count }, 1 do
+  test "root route_command open ring opens drawer without creating draft" do
+    assert_no_difference -> { PosTransaction.count } do
       post pos_route_command_path, params: { input: "/op 10" }, as: :json
     end
 
     body = JSON.parse(response.body)
-    assert_equal "redirect", body["action"]
-    assert_match(/carry_forward=open_ring/, body["payload"]["url"])
-    assert_match(/amount_cents=1000/, body["payload"]["url"])
+    assert_equal "open_ring_offer", body["action"]
+    assert_equal 1000, body["payload"]["amount_cents"]
+  end
+
+  test "root route_command return opens drawer without creating draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/rt 001-001-000042" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "return_drawer_offer", body["action"]
+    assert_equal "001-001-000042", body["payload"]["receipt_number"]
+  end
+
+  test "root route_command pickup opens drawer without creating draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/pickup" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "pickup_drawer_offer", body["action"]
+  end
+
+  test "root route_command help returns structured command list without creating draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/help" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "help", body["action"]
+    assert body["payload"]["commands"].is_a?(Array)
+    assert body["payload"]["commands"].any? { |entry| entry["key"] == "openring" }
+  end
+
+  test "root route_command bare question mark returns help" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "?" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "help", body["action"]
+  end
+
+  test "idle landing renders return and pickup drawer panels" do
+    get pos_root_path
+
+    assert_response :success
+    assert_includes response.body, 'data-pos-command-bar-target="receiptPanel"'
+    assert_includes response.body, 'data-pos-command-bar-target="pickupPanel"'
+    assert_includes response.body, 'data-pos-command-bar-target="openRingPanel"'
+    assert_includes response.body, "No receipt"
+    assert_includes response.body, pos_workspace_add_return_line_path
+    assert_includes response.body, pos_workspace_add_no_receipt_line_path
+    assert_includes response.body, pos_workspace_add_reservation_line_path
+    assert_includes response.body, pos_workspace_add_open_ring_line_path
+    assert_includes response.body, 'data-pos-command-bar-target="helpModal"'
+    assert_includes response.body, "POS commands"
+  end
+
+  test "root route_command return blocked when active draft has settlement rows" do
+    draft = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      attrs: {
+        pos_register_session: @register_session,
+        business_date: @register_session.business_date
+      },
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    create_pos_tender!(draft, tender_type: "cash", amount_cents: 1000)
+
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/return" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRouteBuilder::RETURN_BLOCKED_TENDERS_MESSAGE, body["message"]
+    assert_nil body.dig("payload", "url")
   end
 
   test "root route_command invalid open ring amount does not create draft" do

@@ -123,7 +123,7 @@ module Pos
       )
 
       render json: {
-        action: route.action,
+        action: route.action.to_s,
         payload: serialize_route_payload(route.payload),
         message: route.message
       }
@@ -172,99 +172,25 @@ module Pos
     end
 
     def add_return_line
-      source_line = PosTransactionLine
-        .joins(:pos_transaction)
-        .where(pos_transactions: { store: pos_store, status: "completed" })
-        .find(params[:source_transaction_line_id])
-
-      quantity = -params[:quantity].to_i.abs
-      quantity = -1 if quantity.zero?
-
-      line_attrs = {
-        line_number: next_line_number,
-        quantity: quantity,
-        unit_price_cents: 0,
-        line_discount_cents: 0,
-        extended_price_cents: 0,
-        tax_cents: 0,
-        source_transaction: source_line.pos_transaction,
-        source_transaction_line: source_line,
-        source_sold_quantity_snapshot: source_line.quantity.abs,
-        return_disposition: params[:return_disposition].presence || "return_to_stock"
-      }
-
-      if source_line.open_ring_line?
-        line_attrs.merge!(
-          line_type: "open_ring",
-          open_ring_description: source_line.open_ring_description,
-          sub_department: source_line.sub_department,
-          sub_department_name_snapshot: source_line.sub_department_name_snapshot.presence || source_line.sub_department&.name,
-          tax_category: source_line.tax_category,
-          tax_rate_bps: source_line.tax_rate_bps,
-          store_tax_rate: source_line.store_tax_rate,
-          tax_identifier_snapshot: source_line.tax_identifier_snapshot,
-          store_tax_rate_short_name_snapshot: source_line.store_tax_rate_short_name_snapshot,
-          inventory_behavior_snapshot: source_line.inventory_behavior_snapshot
-        )
-      else
-        line_attrs.merge!(
-          line_type: "variant",
-          product_variant: source_line.product_variant,
-          product: source_line.product
-        )
-      end
-
-      line = @transaction.pos_transaction_lines.create!(line_attrs)
-
-      Pos::ReturnLinePricing.apply!(line)
-      Pos::RecalculateTransaction.call!(@transaction.reload)
+      Pos::AddReturnLine.call!(
+        transaction: @transaction,
+        store: pos_store,
+        params: params
+      )
       respond_to_workspace(notice: "Return line added.")
-    rescue ActiveRecord::RecordNotFound
-      respond_to_workspace(alert: "Source sale line not found.", status: :unprocessable_entity)
+    rescue Pos::AddReturnLine::Error => e
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
     def add_open_ring_line
-      sub_department = SubDepartment.active_records.find(params[:sub_department_id])
-      quantity = params[:quantity].to_i
-      quantity = 1 if quantity.zero?
-      quantity = -quantity.abs if negative_line_entry?(params[:entry_action])
-      unit_price_cents = parse_dollar_param(params[:unit_price]) || 0
-
-      tax = Pos::TaxCalculator.snapshot_for_subdepartment!(
-        sub_department: sub_department,
+      Pos::AddOpenRingLine.call!(
+        transaction: @transaction,
         store: pos_store,
-        business_date: current_register_session&.business_date || Date.current,
-        taxable_cents: unit_price_cents * quantity.abs
+        register_session: current_register_session,
+        params: params
       )
-
-      variant = params[:product_variant_id].presence && ProductVariant.find_by(id: params[:product_variant_id])
-      return_line = quantity.negative?
-
-      @transaction.pos_transaction_lines.create!(
-        line_number: next_line_number,
-        line_type: "open_ring",
-        product_variant: variant,
-        product: variant&.product,
-        quantity: quantity,
-        unit_price_cents: unit_price_cents,
-        line_discount_cents: 0,
-        extended_price_cents: unit_price_cents * quantity.abs,
-        tax_cents: tax.tax_cents,
-        open_ring_description: params[:description].presence || "Open ring item",
-        sub_department: sub_department,
-        sub_department_name_snapshot: sub_department.name,
-        tax_category: tax.tax_category,
-        tax_rate_bps: tax.tax_rate_bps,
-        store_tax_rate: tax.store_tax_rate,
-        tax_identifier_snapshot: tax.store_tax_rate&.tax_identifier,
-        store_tax_rate_short_name_snapshot: tax.store_tax_rate&.short_name,
-        inventory_behavior_snapshot: variant&.inventory_behavior,
-        return_disposition: (return_line ? "return_to_stock" : nil)
-      )
-
-      Pos::RecalculateTransaction.call!(@transaction.reload)
-      respond_to_workspace(notice: return_line ? "Open-ring return line added." : "Open-ring line added.")
-    rescue Pos::TaxCalculator::MissingTaxError => e
+      respond_to_workspace(notice: negative_line_entry?(params[:entry_action]) ? "Open-ring return line added." : "Open-ring line added.")
+    rescue Pos::AddOpenRingLine::Error => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 

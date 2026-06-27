@@ -4,7 +4,8 @@ export default class extends Controller {
   static targets = ["input", "results", "message"]
   static values = {
     url: String,
-    addUrl: String
+    addUrl: String,
+    redirectOnSuccess: { type: Boolean, default: false }
   }
 
   lookup(event) {
@@ -86,15 +87,21 @@ export default class extends Controller {
       method: "POST",
       headers: {
         "X-CSRF-Token": body.get("authenticity_token"),
-        Accept: "text/vnd.turbo-stream.html"
+        Accept: this.redirectOnSuccessValue ? "text/html" : "text/vnd.turbo-stream.html"
       },
       body
     })
       .then((response) => {
+        if (this.redirectOnSuccessValue && response.redirected) {
+          window.location.href = response.url
+          return null
+        }
         if (!response.ok) throw new Error(`Add return line failed (${response.status})`)
         return response.text()
       })
       .then((html) => {
+        if (!html) return
+
         window.Turbo.renderStreamMessage(html)
         document.querySelector(".ss-pos-scan-input")?.focus()
       })

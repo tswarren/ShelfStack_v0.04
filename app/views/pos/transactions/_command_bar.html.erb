@@ -1,9 +1,4 @@
-<% pickup_mode = pos_pickup_mode? %>
-<% return_mode = pos_workspace_mode == "return" %>
-
-<% if pickup_mode %>
-  <%= render "pos/transactions/pickup_panel", transaction: transaction, promoted: true, open: true %>
-<% end %>
+<% return_mode = false %>
 
 <section class="ss-pos-panel ss-pos-command-bar"
          data-controller="pos-command-bar pos-line-entry"
@@ -37,7 +32,7 @@
   <div class="ss-pos-choices" data-pos-line-entry-target="choices"></div>
 
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="receiptPanel" hidden>
-    <%= render "pos/transactions/return_receipt_drawer", transaction: transaction, inline: true %>
+    <%= render "pos/transactions/return_drawer", transaction: transaction, inline: true %>
   </div>
 
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="openRingPanel" hidden>
@@ -51,4 +46,10 @@
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="balancePanel" hidden>
     <%= render "pos/shared/stored_value_balance_inquiry", show_close: true %>
   </div>
+
+  <div class="ss-pos-inline-panel" data-pos-command-bar-target="pickupPanel" hidden>
+    <%= render "pos/transactions/pickup_panel", transaction: transaction, inline: true %>
+  </div>
+
+  <%= render "pos/shared/help_modal" %>
 </section>

@@ -181,7 +181,9 @@ module Pos
           aliases: %w[rt],
           description: "Return workflow",
           permission_keys: [ "pos.returns.receipted" ],
-          handler: :return_drawer
+          handler: :return_drawer,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -192,7 +194,9 @@ module Pos
           aliases: %w[pu],
           description: "Customer pickup workflow",
           permission_keys: [ "pos.access" ],
-          handler: :pickup_drawer
+          handler: :pickup_drawer,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
