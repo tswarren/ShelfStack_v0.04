@@ -60,4 +60,25 @@ class Pos::WorkspaceLinesControllerTest < ActionDispatch::IntegrationTest
     assert_equal(-1, line.quantity)
     assert_equal "return_to_stock", line.return_disposition
   end
+
+  test "workspace add open ring line creates draft and redirects to edit" do
+    sub_department = @variant.sub_department
+
+    assert_difference -> { PosTransaction.count }, 1 do
+      post pos_workspace_add_open_ring_line_path,
+           params: {
+             description: "Gift wrap",
+             sub_department_id: sub_department.id,
+             unit_price: "5.00",
+             quantity: 1
+           }
+    end
+
+    transaction = PosTransaction.drafts.order(:id).last
+    assert_redirected_to edit_pos_transaction_path(transaction, mode: "sale")
+    line = transaction.pos_transaction_lines.sole
+    assert line.open_ring_line?
+    assert_equal "Gift wrap", line.open_ring_description
+    assert_equal 500, line.unit_price_cents
+  end
 end

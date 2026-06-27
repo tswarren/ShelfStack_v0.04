@@ -41,7 +41,9 @@ module Pos
       case route.action
       when :add_variant
         add_variant_and_redirect { ProductVariant.find(route.payload[:variant_id]) }
-      when :open_ring_offer, :gift_card_sale_offer
+      when :open_ring_offer
+        drawer_offer_result(route)
+      when :gift_card_sale_offer
         carry_forward_and_redirect(route)
       when :return_drawer_offer, :pickup_drawer_offer
         drawer_offer_result(route)

@@ -183,47 +183,14 @@ module Pos
     end
 
     def add_open_ring_line
-      sub_department = SubDepartment.active_records.find(params[:sub_department_id])
-      quantity = params[:quantity].to_i
-      quantity = 1 if quantity.zero?
-      quantity = -quantity.abs if negative_line_entry?(params[:entry_action])
-      unit_price_cents = parse_dollar_param(params[:unit_price]) || 0
-
-      tax = Pos::TaxCalculator.snapshot_for_subdepartment!(
-        sub_department: sub_department,
+      Pos::AddOpenRingLine.call!(
+        transaction: @transaction,
         store: pos_store,
-        business_date: current_register_session&.business_date || Date.current,
-        taxable_cents: unit_price_cents * quantity.abs
+        register_session: current_register_session,
+        params: params
       )
-
-      variant = params[:product_variant_id].presence && ProductVariant.find_by(id: params[:product_variant_id])
-      return_line = quantity.negative?
-
-      @transaction.pos_transaction_lines.create!(
-        line_number: next_line_number,
-        line_type: "open_ring",
-        product_variant: variant,
-        product: variant&.product,
-        quantity: quantity,
-        unit_price_cents: unit_price_cents,
-        line_discount_cents: 0,
-        extended_price_cents: unit_price_cents * quantity.abs,
-        tax_cents: tax.tax_cents,
-        open_ring_description: params[:description].presence || "Open ring item",
-        sub_department: sub_department,
-        sub_department_name_snapshot: sub_department.name,
-        tax_category: tax.tax_category,
-        tax_rate_bps: tax.tax_rate_bps,
-        store_tax_rate: tax.store_tax_rate,
-        tax_identifier_snapshot: tax.store_tax_rate&.tax_identifier,
-        store_tax_rate_short_name_snapshot: tax.store_tax_rate&.short_name,
-        inventory_behavior_snapshot: variant&.inventory_behavior,
-        return_disposition: (return_line ? "return_to_stock" : nil)
-      )
-
-      Pos::RecalculateTransaction.call!(@transaction.reload)
-      respond_to_workspace(notice: return_line ? "Open-ring return line added." : "Open-ring line added.")
-    rescue Pos::TaxCalculator::MissingTaxError => e
+      respond_to_workspace(notice: negative_line_entry?(params[:entry_action]) ? "Open-ring return line added." : "Open-ring line added.")
+    rescue Pos::AddOpenRingLine::Error => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 

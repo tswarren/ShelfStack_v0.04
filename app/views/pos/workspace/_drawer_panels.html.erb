@@ -12,3 +12,11 @@
         add_reservation_url: pos_workspace_add_reservation_line_path,
         redirect_on_success: true %>
 </div>
+
+<div class="ss-pos-inline-panel" data-pos-command-bar-target="openRingPanel" hidden>
+  <%= render "pos/transactions/open_ring_drawer",
+        sub_departments: @sub_departments,
+        inline: true,
+        add_open_ring_url: pos_workspace_add_open_ring_line_path,
+        redirect_on_success: true %>
+</div>

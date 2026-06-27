@@ -19,6 +19,8 @@ module Pos
         return redirect_to edit_pos_transaction_path(@landing.draft, mode: "sale")
       end
 
+      @sub_departments = SubDepartment.active_records.order(:name) if @register_session&.open?
+
       return unless current_workstation
 
       @draft_transactions = PosTransaction.drafts
