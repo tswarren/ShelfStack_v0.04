@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "pickupPanel", "transactionDiscountPanel", "helpModal", "helpBody", "helpCloseButton"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "pickupPanel", "sessionPanel", "transactionDiscountPanel", "helpModal", "helpBody", "helpCloseButton", "cashMovementModal", "cashMovementForm", "cashMovementType", "cashMovementAmount", "cashMovementReason", "cashMovementSubmit", "cashMovementTitle", "drawerActionModal", "drawerActionReason"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,
@@ -114,6 +114,22 @@ export default class extends Controller {
       case "settlement_offer":
         this.inputTarget.value = ""
         this.showSettlementModal(data.payload || {})
+        break
+      case "session_drawer_offer":
+        this.inputTarget.value = ""
+        this.showSessionPanel()
+        break
+      case "cash_movement_offer":
+        this.inputTarget.value = ""
+        this.showCashMovementModal(data.payload || {})
+        break
+      case "drawer_action_offer":
+        this.inputTarget.value = ""
+        this.showDrawerActionModal(data.payload || {})
+        break
+      case "reports_confirm_offer":
+        this.inputTarget.value = ""
+        this.confirmReportsNavigation(data.payload || {}, data.message)
         break
       default:
         this.dispatchMessage(data.message)
@@ -244,6 +260,113 @@ export default class extends Controller {
     input?.focus()
   }
 
+  showSessionPanel() {
+    if (!this.hasSessionPanelTarget) {
+      this.dispatchMessage("Session summary is not available.")
+      return
+    }
+
+    this.sessionPanelTarget.hidden = false
+    this.sessionPanelTarget.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }
+
+  closeSessionPanel(event) {
+    event?.preventDefault()
+    if (!this.hasSessionPanelTarget) return
+
+    this.sessionPanelTarget.hidden = true
+    this.focusInput()
+  }
+
+  showCashMovementModal(payload = {}) {
+    if (!this.hasCashMovementModalTarget) {
+      this.dispatchMessage("Cash movements are not available.")
+      return
+    }
+
+    const movementType = payload.movement_type || "paid_in"
+    const title = movementType === "paid_out" ? "Cash out" : "Cash in"
+
+    if (this.hasCashMovementTitleTarget) {
+      this.cashMovementTitleTarget.textContent = title
+    }
+    if (this.hasCashMovementTypeTarget) {
+      this.cashMovementTypeTarget.value = movementType
+    }
+    if (this.hasCashMovementSubmitTarget) {
+      this.cashMovementSubmitTarget.value = movementType === "paid_out" ? "Record cash out" : "Record cash in"
+    }
+    if (this.hasCashMovementAmountTarget) {
+      this.cashMovementAmountTarget.value = payload.amount_cents ? (payload.amount_cents / 100).toFixed(2) : ""
+    }
+    if (this.hasCashMovementReasonTarget) {
+      this.cashMovementReasonTarget.value = ""
+    }
+
+    this.cashMovementModalTarget.hidden = false
+    document.body.classList.add("ss-pos-modal-open")
+    this.cashMovementAmountTarget?.focus()
+  }
+
+  closeCashMovementModal(arg) {
+    const options = arg instanceof Event ? {} : (arg || {})
+    const focusInput = options.focusInput ?? true
+
+    if (!this.hasCashMovementModalTarget) return
+
+    this.cashMovementModalTarget.hidden = true
+    document.body.classList.remove("ss-pos-modal-open")
+    if (focusInput) this.focusInput()
+  }
+
+  cashMovementSubmitted(event) {
+    if (event.detail?.success === false) return
+
+    this.closeCashMovementModal()
+  }
+
+  showDrawerActionModal(payload = {}) {
+    if (!this.hasDrawerActionModalTarget) {
+      this.dispatchMessage("Cash drawer action is not available.")
+      return
+    }
+
+    if (this.hasDrawerActionReasonTarget) {
+      if (payload.reason) {
+        this.drawerActionReasonTarget.textContent = `Note: ${payload.reason}`
+        this.drawerActionReasonTarget.hidden = false
+      } else {
+        this.drawerActionReasonTarget.textContent = ""
+        this.drawerActionReasonTarget.hidden = true
+      }
+    }
+
+    this.drawerActionModalTarget.hidden = false
+    document.body.classList.add("ss-pos-modal-open")
+  }
+
+  closeDrawerActionModal(arg) {
+    const options = arg instanceof Event ? {} : (arg || {})
+    const focusInput = options.focusInput ?? true
+
+    if (!this.hasDrawerActionModalTarget) return
+
+    this.drawerActionModalTarget.hidden = true
+    document.body.classList.remove("ss-pos-modal-open")
+    if (focusInput) this.focusInput()
+  }
+
+  confirmReportsNavigation(payload, message) {
+    const url = payload.url
+    if (!url) return
+
+    if (window.confirm(message || "Leave the current transaction and open Reports?")) {
+      window.location.href = url
+    } else {
+      this.focusInput()
+    }
+  }
+
   closeBalancePanel(event) {
     event?.preventDefault()
     if (!this.hasBalancePanelTarget) return
@@ -314,6 +437,9 @@ export default class extends Controller {
     if (this.hasGiftCardPanelTarget) this.giftCardPanelTarget.hidden = true
     if (this.hasBalancePanelTarget) this.balancePanelTarget.hidden = true
     if (this.hasPickupPanelTarget) this.pickupPanelTarget.hidden = true
+    if (this.hasSessionPanelTarget) this.sessionPanelTarget.hidden = true
+    this.closeCashMovementModal({ focusInput: false })
+    this.closeDrawerActionModal({ focusInput: false })
     this.closeHelpModal({ focusInput: false })
   }
 

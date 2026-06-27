@@ -1,0 +1,32 @@
+<% register_session = local_assigns[:register_session] || @register_session || @transaction&.pos_register_session %>
+<% summary = register_session && Pos::RegisterSessionSummary.for(register_session) %>
+
+<section class="ss-pos-panel ss-pos-session-summary">
+  <div class="ss-pos-session-summary__header">
+    <h2 class="ss-panel__title">Register session</h2>
+    <% if local_assigns.fetch(:show_close, false) %>
+      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small"
+              data-action="pos-command-bar#closeSessionPanel">Close</button>
+    <% end %>
+  </div>
+
+  <% if register_session.blank? %>
+    <p class="ss-hint">No register session is open.</p>
+  <% else %>
+    <dl class="ss-pos-stats">
+      <div><dt>Business date</dt><dd><%= register_session.business_date %></dd></div>
+      <div><dt>Status</dt><dd><%= register_session.status %></dd></div>
+      <div><dt>Session opened</dt><dd><%= pos_store_local_time(register_session.opened_at) %></dd></div>
+      <div><dt>Opened by</dt><dd><%= register_session.opened_by_user.username %></dd></div>
+      <% if summary %>
+        <div><dt>Completed transactions</dt><dd><%= summary.completed_transaction_count %></dd></div>
+        <div><dt>Suspended on workstation</dt><dd><%= summary.suspended_transaction_count %></dd></div>
+        <div><dt>Expected drawer</dt><dd><%= pos_money(summary.expected_closing_cash_cents) %></dd></div>
+      <% end %>
+    </dl>
+    <div class="ss-pos-session-summary__links">
+      <%= link_to "Full session details", pos_register_session_path(register_session), class: "ss-link" %>
+      <%= link_to "Register summary report", register_summary_pos_reports_path(register_session_id: register_session.id), class: "ss-link" %>
+    </div>
+  <% end %>
+</section>

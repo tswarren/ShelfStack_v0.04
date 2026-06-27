@@ -47,8 +47,17 @@ module Pos
         carry_forward_and_redirect(route)
       when :return_drawer_offer, :pickup_drawer_offer
         drawer_offer_result(route)
+      when :session_drawer_offer, :cash_movement_offer, :drawer_action_offer, :reports_confirm_offer
+        Result.new(
+          status: :json,
+          redirect_path: nil,
+          json: json_route(route),
+          alert: nil
+        )
       when :balance_redirect
         Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_stored_value_balance_path, json: nil, alert: nil)
+      when :redirect
+        Result.new(status: :redirect, redirect_path: route.payload[:url], json: nil, alert: nil)
       when :help, :message, :empty, :disabled_command, :variant_lookup
         Result.new(
           status: :json,

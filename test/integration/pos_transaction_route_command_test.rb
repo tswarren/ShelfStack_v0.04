@@ -61,4 +61,51 @@ class PosTransactionRouteCommandTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to pos_root_path
   end
+
+  test "route_command close blocked with active draft" do
+    grant_permission!(@cashier, "pos.register_sessions.close", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/close" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRouteBuilder::CLOSE_BLOCKED_MESSAGE, body["message"]
+  end
+
+  test "route_command reports confirms when active draft exists" do
+    grant_permission!(@cashier, "pos.reports.view", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/rp" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "reports_confirm_offer", body["action"]
+    assert_equal Rails.application.routes.url_helpers.reports_root_path, body.dig("payload", "url")
+    assert_equal Pos::CommandRouteBuilder::REPORTS_CONFIRM_MESSAGE, body["message"]
+  end
+
+  test "route_command session returns drawer offer without changing transaction" do
+    grant_permission!(@cashier, "pos.register_sessions.view", store: @store)
+    line_count_before = @transaction.pos_transaction_lines.count
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/session" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "session_drawer_offer", body["action"]
+    assert_equal line_count_before, @transaction.reload.pos_transaction_lines.count
+  end
+
+  test "route_command cashin returns cash movement offer" do
+    grant_permission!(@cashier, "pos.cash_movements.create", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/cashin 10" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "cash_movement_offer", body["action"]
+    assert_equal "paid_in", body.dig("payload", "movement_type")
+    assert_equal 1000, body.dig("payload", "amount_cents")
+  end
 end

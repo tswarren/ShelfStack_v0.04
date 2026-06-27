@@ -51,5 +51,11 @@
     <%= render "pos/transactions/pickup_panel", transaction: transaction, inline: true %>
   </div>
 
+  <div class="ss-pos-inline-panel" data-pos-command-bar-target="sessionPanel" hidden>
+    <%= render "pos/shared/session_summary_panel", register_session: transaction.pos_register_session || current_register_session, show_close: true %>
+  </div>
+
   <%= render "pos/shared/help_modal" %>
+  <%= render "pos/shared/drawer_action_modal" %>
+  <%= render "pos/shared/cash_movement_modal", register_session: transaction.pos_register_session || current_register_session, transaction: transaction %>
 </section>

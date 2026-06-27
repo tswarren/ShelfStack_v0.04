@@ -189,6 +189,78 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
   end
+
+  test "/session returns session drawer offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/se"
+    )
+
+    assert_equal :session_drawer_offer, route.action
+  end
+
+  test "/reports redirects to reports hub when no active draft" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/reports"
+    )
+
+    assert_equal :redirect, route.action
+    assert_equal Rails.application.routes.url_helpers.reports_root_path, route.payload[:url]
+  end
+
+  test "/close redirects to close register workflow when no active draft" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/close"
+    )
+
+    assert_equal :redirect, route.action
+    assert_equal "#{Rails.application.routes.url_helpers.pos_register_session_path(@register_session)}#close-register", route.payload[:url]
+  end
+
+  test "/cashin returns cash movement offer with prefilled amount" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/ci 25"
+    )
+
+    assert_equal :cash_movement_offer, route.action
+    assert_equal "paid_in", route.payload[:movement_type]
+    assert_equal 2500, route.payload[:amount_cents]
+  end
+
+  test "/cashout returns cash movement offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/cashout"
+    )
+
+    assert_equal :cash_movement_offer, route.action
+    assert_equal "paid_out", route.payload[:movement_type]
+  end
+
+  test "/drawer returns drawer action offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/dr petty cash"
+    )
+
+    assert_equal :drawer_action_offer, route.action
+    assert_equal "petty cash", route.payload[:reason]
+  end
 end
 
 class Pos::RootCommandHandlerTest < ActiveSupport::TestCase

@@ -8,6 +8,8 @@ module Pos
     RETURN_BLOCKED_TENDERS_MESSAGE = "Complete, cancel, hold, or clear settlement before adding return lines."
     INVALID_AMOUNT_MESSAGE = "Amount must be a valid dollar amount."
     TENDER_AMOUNT_REJECTED_MESSAGE = "/tender does not accept an amount. Use /cash 20, /card 20, /check 20, /giftredeem 20, or /storecredit 20."
+    CLOSE_BLOCKED_MESSAGE = "Cannot close register while a transaction is active. Complete, cancel, or hold the current transaction first."
+    REPORTS_CONFIRM_MESSAGE = "Leave the current transaction and open Reports? The draft will remain on the server."
 
     TENDER_TYPE_BY_HANDLER = {
       tender_cash: "cash",
@@ -101,6 +103,16 @@ module Pos
         settlement_modal_route
       when :tender_cash, :tender_card, :tender_check, :tender_store_credit, :gift_redeem
         settlement_tender_route(TENDER_TYPE_BY_HANDLER.fetch(command.handler))
+      when :session_drawer
+        Route.new(action: :session_drawer_offer, payload: {}, message: nil)
+      when :reports
+        reports_route
+      when :close_register
+        close_register_route
+      when :cash_in, :cash_out
+        cash_movement_route(command.handler)
+      when :drawer_action
+        drawer_action_route
       else
         raise ArgumentError, "No route handler wired for #{command.key.inspect}"
       end
@@ -225,6 +237,73 @@ module Pos
       return unless normalized.match?(/\A\d+(?:\.\d{1,2})?\z/)
 
       (BigDecimal(normalized) * 100).round.to_i
+    end
+
+    def reports_route
+      if active_draft_present?
+        Route.new(
+          action: :reports_confirm_offer,
+          payload: { url: reports_root_url },
+          message: REPORTS_CONFIRM_MESSAGE
+        )
+      else
+        Route.new(action: :redirect, payload: { url: reports_root_url }, message: nil)
+      end
+    end
+
+    def close_register_route
+      if active_draft_present?
+        return Route.new(action: :message, payload: {}, message: CLOSE_BLOCKED_MESSAGE)
+      end
+
+      if register_session.blank?
+        return Route.new(action: :message, payload: {}, message: CommandRegistry::NO_REGISTER_SESSION_MESSAGE)
+      end
+
+      Route.new(
+        action: :redirect,
+        payload: { url: close_register_url },
+        message: nil
+      )
+    end
+
+    def cash_movement_route(handler)
+      return invalid_amount_route if invalid_amount_args?
+
+      movement_type = handler == :cash_in ? "paid_in" : "paid_out"
+      payload = { movement_type: movement_type }
+      amount_cents = parse_amount_cents(match.args)
+      payload[:amount_cents] = amount_cents if amount_cents.present?
+
+      Route.new(action: :cash_movement_offer, payload: payload, message: nil)
+    end
+
+    def drawer_action_route
+      Route.new(
+        action: :drawer_action_offer,
+        payload: { reason: match.args.strip.presence },
+        message: nil
+      )
+    end
+
+    def active_draft_present?
+      return true if transaction.present? && transaction.status == "draft"
+
+      return false unless context == :root && register_session.present?
+
+      PosTransaction.drafts.where(
+        store: store,
+        workstation: register_session.workstation,
+        pos_register_session: register_session
+      ).exists?
+    end
+
+    def reports_root_url
+      Rails.application.routes.url_helpers.reports_root_path
+    end
+
+    def close_register_url
+      "#{Rails.application.routes.url_helpers.pos_register_session_path(register_session)}#close-register"
     end
 
     def unavailable_route(availability)
