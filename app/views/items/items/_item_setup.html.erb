@@ -1,23 +1,38 @@
+<div data-controller="item-setup-modal modal">
 <section class="ss-item-setup-section">
   <h2>Catalog metadata</h2>
-  <%= render "items/items/catalog",
-        item: item,
-        identifiers: identifiers,
-        external_catalog_import: local_assigns[:external_catalog_import] %>
+  <div id="catalog-setup-section">
+    <%= render "items/items/catalog",
+          item: item,
+          identifiers: identifiers,
+          external_catalog_import: local_assigns[:external_catalog_import] %>
+  </div>
 </section>
 
 <section class="ss-item-setup-section">
   <h2>Product setup</h2>
-  <%= render "items/items/selling",
-        item: item,
-        variants: variants,
-        highlight_variant: local_assigns[:highlight_variant] %>
+  <div id="selling-setup-section">
+    <%= render "items/items/selling",
+          item: item,
+          variants: variants,
+          highlight_variant: local_assigns[:highlight_variant] %>
+  </div>
 </section>
 
-<section class="ss-item-setup-section" id="vendor-sourcing">
+<section class="ss-item-setup-section">
   <h2>Display and vendor sourcing</h2>
-  <%= render "items/items/display",
-        item: item,
-        highlight_variant: local_assigns[:highlight_variant],
-        vendor_sourcing_gaps: @vendor_sourcing_gaps %>
+  <div id="vendor-sourcing">
+    <%= render "items/items/display",
+          item: item,
+          highlight_variant: local_assigns[:highlight_variant],
+          vendor_sourcing_gaps: @vendor_sourcing_gaps,
+          variant_vendor_overrides: @variant_vendor_overrides %>
+  </div>
 </section>
+
+<%= render "items/items/setup_modals",
+      item: item,
+      variants: variants,
+      vendors: Vendor.active_records.order(:name),
+      sub_departments: SubDepartment.active_records.order(:name) %>
+</div>

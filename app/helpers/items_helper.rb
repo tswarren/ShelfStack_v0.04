@@ -104,6 +104,7 @@ module ItemsHelper
     case status.to_sym
     when :present then tag.span("Yes", class: "ss-status-badge status-active")
     when :warning then tag.span("Missing source", class: "ss-status-badge status-warning")
+    when :not_applicable then tag.span("—", class: "ss-muted")
     else tag.span("No", class: "ss-status-badge status-inactive")
     end
   end

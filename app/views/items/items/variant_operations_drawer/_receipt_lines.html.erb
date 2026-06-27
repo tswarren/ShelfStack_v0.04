@@ -1,0 +1,23 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>Receipt</th>
+      <th>Vendor</th>
+      <th class="ss-num">Accepted</th>
+      <th>Posted</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% lines.each do |line| %>
+      <% receipt = line.receipt %>
+      <tr>
+        <td><%= link_to "Receipt ##{receipt.id}", orders_receipt_path(receipt) %></td>
+        <td><%= receipt.vendor.name %></td>
+        <td class="ss-num"><%= line.quantity_accepted %></td>
+        <td><%= receipt.posted_at ? l(receipt.posted_at.to_date) : "—" %></td>
+        <td><%= link_to "View", orders_receipt_path(receipt), class: "ss-btn-link" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

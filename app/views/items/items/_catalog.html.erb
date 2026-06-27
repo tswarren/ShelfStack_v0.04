@@ -40,6 +40,18 @@
             </span>
           </td>
           <td class="ss-row-actions">
+            <% if Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
+              <button type="button"
+                      class="ss-btn-link"
+                      data-action="item-setup-modal#prepareIdentifierEdit modal#open"
+                      data-modal-target-id-param="item-identifier-modal"
+                      data-identifier-value="<%= identifier.identifier_value %>"
+                      data-identifier-type="<%= identifier.identifier_type %>"
+                      data-primary="<%= identifier.primary_identifier? %>"
+                      data-update-url="<%= items_setup_modals_identifier_path(identifier, catalog_item_id: item.catalog_item.id) %>">
+                Quick edit
+              </button>
+            <% end %>
             <%= link_to "Edit", edit_identifier_items_catalog_item_path(item.catalog_item, identifier_id: identifier.id, return_to: "item") %>
             <%= button_to "Delete",
                   destroy_identifier_items_catalog_item_path(item.catalog_item, identifier_id: identifier.id, return_to: "item"),
@@ -61,6 +73,14 @@
                   class: "ss-btn ss-btn-secondary" %>
     <% end %>
     <%= link_to "Add identifier", new_identifier_items_catalog_item_path(item.catalog_item, return_to: "item"), class: "ss-btn ss-btn-secondary" %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
+      <button type="button"
+              class="ss-btn ss-btn-secondary"
+              data-action="item-setup-modal#prepareIdentifierCreate modal#open"
+              data-modal-target-id-param="item-identifier-modal">
+        Quick add identifier
+      </button>
+    <% end %>
     <% if item.catalog_item.active? %>
       <%= button_to "Inactivate catalog item", inactivate_items_catalog_item_path(item.catalog_item, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
     <% else %>

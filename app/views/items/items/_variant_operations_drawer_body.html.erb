@@ -1,0 +1,128 @@
+<%# locals: drawer: VariantOperationsDrawerPresenter %>
+<%= turbo_frame_tag "variant-ops-drawer-frame" do %>
+<% variant = drawer.variant %>
+<% row = drawer.variant_row %>
+<% availability = drawer.availability_context %>
+
+<section class="ss-drawer-section">
+  <h3 class="ss-drawer-section-title">Variant summary</h3>
+  <dl class="ss-summary">
+    <dt>SKU</dt><dd><%= variant.sku %></dd>
+    <dt>Name</dt><dd><%= variant.name %></dd>
+    <% if row.present? %>
+      <dt>Available</dt><dd class="ss-num"><%= row.available.nil? ? "—" : row.available %></dd>
+      <dt>On hand</dt><dd class="ss-num"><%= row.on_hand.nil? ? "—" : row.on_hand %></dd>
+      <dt>Reserved</dt><dd class="ss-num"><%= row.reserved.nil? ? "—" : row.reserved %></dd>
+      <dt>Open TBO</dt><dd class="ss-num"><%= row.open_tbo %></dd>
+      <dt>Pending PO</dt><dd class="ss-num"><%= row.pending_po.nil? ? "—" : row.pending_po %></dd>
+      <dt>Preferred vendor</dt><dd><%= row.preferred_vendor_name || "—" %></dd>
+    <% end %>
+  </dl>
+</section>
+
+<% if drawer.warnings.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Warnings</h3>
+    <ul class="ss-warning-list">
+      <% drawer.warnings.each do |warning| %>
+        <li class="ss-warning-list-item ss-warning-list-item--<%= warning.severity %>">
+          <%= warning.message %>
+          <% if warning.corrective_path.present? %>
+            <%= link_to warning.corrective_label || "Review", warning.corrective_path, class: "ss-btn-link" %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+
+<% if drawer.recommended_actions.any? || drawer.demand_actions.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Recommended actions</h3>
+    <div class="ss-form-actions">
+      <% drawer.recommended_actions.each do |action| %>
+        <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+      <% end %>
+      <% drawer.demand_actions.each do |action| %>
+        <button type="button"
+                class="ss-btn ss-btn-secondary ss-btn-small"
+                data-action="item-variant-ops-drawer#prepareDemandAction"
+                data-drawer-key="<%= action.drawer_key %>"
+                data-variant-id="<%= variant.id %>"
+                data-available="<%= availability&.available || 0 %>"
+                data-on-hand="<%= availability&.on_hand || 0 %>">
+          <%= action.label %>
+        </button>
+      <% end %>
+    </div>
+  </section>
+<% end %>
+
+<% tab = drawer.operations_tab %>
+
+<% if drawer.customer_demand_visible? && tab.variant_scoped_customer_request_lines.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Open customer requests</h3>
+    <%= render "items/items/variant_operations_drawer/customer_request_lines", lines: tab.variant_scoped_customer_request_lines %>
+  </section>
+<% end %>
+
+<% if drawer.customer_demand_visible? && tab.variant_scoped_active_holds.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Active holds</h3>
+    <%= render "items/items/variant_operations_drawer/active_holds", holds: tab.variant_scoped_active_holds %>
+  </section>
+<% end %>
+
+<% if drawer.customer_demand_visible? && tab.variant_scoped_incoming_reserves.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Incoming reserves</h3>
+    <%= render "items/items/variant_operations_drawer/incoming_reserves", reserves: tab.variant_scoped_incoming_reserves %>
+  </section>
+<% end %>
+
+<% if drawer.customer_demand_visible? && tab.variant_scoped_special_orders.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Special orders</h3>
+    <%= render "items/items/variant_operations_drawer/special_orders", orders: tab.variant_scoped_special_orders %>
+  </section>
+<% end %>
+
+<% if tab.variant_scoped_purchase_request_lines.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Open purchase requests</h3>
+    <%= render "items/items/variant_operations_drawer/purchase_request_lines", lines: tab.variant_scoped_purchase_request_lines %>
+  </section>
+<% end %>
+
+<% if tab.variant_scoped_purchase_order_lines.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Open purchase orders</h3>
+    <%= render "items/items/variant_operations_drawer/purchase_order_lines", lines: tab.variant_scoped_purchase_order_lines %>
+  </section>
+<% end %>
+
+<% if tab.variant_scoped_receipt_lines.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Recent receipts</h3>
+    <%= render "items/items/variant_operations_drawer/receipt_lines", lines: tab.variant_scoped_receipt_lines %>
+  </section>
+<% end %>
+
+<% if tab.variant_scoped_rtv_lines.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Returns to vendor</h3>
+    <%= render "items/items/variant_operations_drawer/rtv_lines", lines: tab.variant_scoped_rtv_lines %>
+  </section>
+<% end %>
+
+<% if tab.sales_visible? %>
+  <% sales_rows = tab.sales_history_rows.select { |entry| entry.variant_sku == variant.sku } %>
+  <% if sales_rows.any? %>
+    <section class="ss-drawer-section">
+      <h3 class="ss-drawer-section-title">Recent sales</h3>
+      <%= render "items/items/variant_operations_drawer/sales_rows", rows: sales_rows.first(10) %>
+    </section>
+  <% end %>
+<% end %>
+<% end %>

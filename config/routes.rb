@@ -46,6 +46,23 @@ Rails.application.routes.draw do
     get "item", to: "items#show", as: :item
     get "item/external_metadata", to: "external_metadata#show", as: :item_external_metadata
     post "customer_demand", to: "customer_demand_actions#create", as: :customer_demand
+    get "variant_operations_drawer", to: "variant_operations_drawer#show", as: :variant_operations_drawer
+
+    post "setup_modals/identifiers", to: "setup_modals#create_identifier", as: :setup_modals_identifiers
+    patch "setup_modals/identifiers/:id", to: "setup_modals#update_identifier", as: :setup_modals_identifier
+    get "setup_modals/product_vendors/new", to: "setup_modals#new_product_vendor", as: :new_setup_modals_product_vendor
+    get "setup_modals/product_vendors/:id/edit", to: "setup_modals#edit_product_vendor", as: :edit_setup_modals_product_vendor
+    post "setup_modals/product_vendors", to: "setup_modals#create_product_vendor", as: :setup_modals_product_vendors
+    patch "setup_modals/product_vendors/:id", to: "setup_modals#update_product_vendor", as: :setup_modals_product_vendor
+    get "setup_modals/variant_vendors/new", to: "setup_modals#new_variant_vendor", as: :new_setup_modals_variant_vendor
+    get "setup_modals/variant_vendors/:id/edit", to: "setup_modals#edit_variant_vendor", as: :edit_setup_modals_variant_vendor
+    post "setup_modals/variant_vendors", to: "setup_modals#create_variant_vendor", as: :setup_modals_variant_vendors
+    patch "setup_modals/variant_vendors/:id", to: "setup_modals#update_variant_vendor", as: :setup_modals_variant_vendor
+    get "setup_modals/variants/:variant_id/price/edit", to: "setup_modals#edit_price", as: :edit_setup_modals_variant_price
+    patch "setup_modals/variants/:variant_id/price", to: "setup_modals#update_price", as: :setup_modals_variant_price
+    get "setup_modals/variants/:variant_id/classification/edit", to: "setup_modals#edit_classification", as: :edit_setup_modals_variant_classification
+    patch "setup_modals/variants/:variant_id/classification", to: "setup_modals#update_classification", as: :setup_modals_variant_classification
+    get "setup_modals/classification_tax_preview", to: "setup_modals#classification_tax_preview", as: :setup_modals_classification_tax_preview
 
     get "add_item", to: "add_item#show", as: :add_item
     post "add_item", to: "add_item#create"

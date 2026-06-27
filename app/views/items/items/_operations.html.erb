@@ -2,8 +2,9 @@
 <% operations = local_assigns[:operations] %>
 <% overview = local_assigns[:overview] %>
 
-<div data-controller="drawer item-customer-demand-drawer"
-     data-action="drawer:closed->item-customer-demand-drawer#resetOnClose">
+<div data-controller="drawer item-variant-ops-drawer"
+     data-item-variant-ops-drawer-url-value="<%= items_variant_operations_drawer_path %>"
+     data-action="drawer:closed->item-variant-ops-drawer#resetOnClose">
 <% if request_match_context.valid? %>
   <%= render "shared/request_match_banner", context: request_match_context %>
 <% end %>
@@ -66,21 +67,15 @@
           </td>
           <td>
             <%= link_to "Focus", items_item_path_with_match(item, tab: "operations", variant_id: row.variant.id), class: "ss-btn-link" %>
-            <% row.demand_actions.each do |action| %>
-              <button type="button"
-                      class="ss-btn ss-btn-small ss-btn-secondary"
-                      data-action="item-customer-demand-drawer#prepareOpen drawer#open"
-                      data-drawer-target-id-param="item-demand-drawer"
-                      data-drawer-key="<%= action.drawer_key %>"
-                      data-action-label="<%= action.label %>"
-                      data-variant-id="<%= row.variant.id %>"
-                      data-variant-sku="<%= row.variant.sku %>"
-                      data-variant-name="<%= row.variant.name %>"
-                      data-available="<%= row.availability_context&.available || 0 %>"
-                      data-on-hand="<%= row.availability_context&.on_hand || 0 %>">
-                <%= action.label %>
-              </button>
-            <% end %>
+            <button type="button"
+                    class="ss-btn ss-btn-small ss-btn-secondary"
+                    data-action="item-variant-ops-drawer#prepareOpen drawer#open"
+                    data-drawer-target-id-param="item-variant-ops-drawer"
+                    data-variant-id="<%= row.variant.id %>"
+                    data-variant-sku="<%= row.variant.sku %>"
+                    data-variant-name="<%= row.variant.name %>">
+              Details
+            </button>
             <% if request_match_context.valid? &&
                   Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
               <%= button_to "Match",
@@ -97,289 +92,13 @@
       <% end %>
     </tbody>
   </table>
+  <p class="ss-hint">Select <strong>Details</strong> on a variant row to view demand, purchasing, receiving, and recent sales.</p>
 <% end %>
 
-<% if operations_tab&.open_purchase_request_lines&.any? %>
-  <%= render "orders/shared/collapsible_panel", title: "Open purchase requests", open: true do %>
-    <table class="ss-table">
-      <thead>
-        <tr>
-          <th>TBO</th>
-          <th>Variant</th>
-          <th class="ss-num">Requested</th>
-          <th>Reason</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% operations_tab.variant_scoped_purchase_request_lines.each do |line| %>
-          <tr>
-            <td><%= link_to "TBO ##{line.purchase_request.id}", orders_purchase_request_path(line.purchase_request) %></td>
-            <td><%= line.product_variant.sku %></td>
-            <td class="ss-num"><%= line.requested_quantity %></td>
-            <td><%= line.request_reason || "—" %></td>
-            <td><%= line.status %></td>
-            <td><%= l(line.purchase_request.created_at.to_date) %></td>
-            <td>
-              <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) &&
-                    Inventory::Eligibility.eligible?(line.product_variant) %>
-                <%= link_to "Add to PO", build_purchase_order_orders_purchase_request_path(line.purchase_request) %>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% end %>
-<% end %>
-
-<% if operations_tab&.open_purchase_order_lines&.any? %>
-  <%= render "orders/shared/collapsible_panel", title: "Open purchase orders" do %>
-    <table class="ss-table">
-      <thead>
-        <tr>
-          <th>PO</th>
-          <th>Vendor</th>
-          <th>Variant</th>
-          <th class="ss-num">Ordered</th>
-          <th class="ss-num">Received</th>
-          <th class="ss-num">Open</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% operations_tab.variant_scoped_purchase_order_lines.each do |line| %>
-          <% po = line.purchase_order %>
-          <tr>
-            <td><%= link_to "PO ##{po.id}", orders_purchase_order_path(po) %></td>
-            <td><%= po.vendor.name %></td>
-            <td><%= line.product_variant.sku %></td>
-            <td class="ss-num"><%= line.quantity_ordered %></td>
-            <td class="ss-num"><%= line.quantity_received %></td>
-            <td class="ss-num"><%= po.open_quantity_for_line(line) %></td>
-            <td><%= po.status %></td>
-            <td>
-              <% if po.receivable? && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.create", store: current_store) %>
-                <%= button_to "Receive", receive_orders_purchase_order_path(po), method: :post, class: "ss-btn-link" %>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% end %>
-<% end %>
-
-<% if operations_tab&.recent_receipt_lines&.any? %>
-  <%= render "orders/shared/collapsible_panel", title: "Recent receipts" do %>
-    <table class="ss-table">
-      <thead>
-        <tr>
-          <th>Receipt</th>
-          <th>Vendor</th>
-          <th>Variant</th>
-          <th class="ss-num">Expected</th>
-          <th class="ss-num">Received</th>
-          <th class="ss-num">Accepted</th>
-          <th class="ss-num">Rejected</th>
-          <th class="ss-num">Unit cost</th>
-          <th>Posted</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% operations_tab.variant_scoped_receipt_lines.each do |line| %>
-          <% receipt = line.receipt %>
-          <tr>
-            <td><%= link_to "Receipt ##{receipt.id}", orders_receipt_path(receipt) %></td>
-            <td><%= receipt.vendor.name %></td>
-            <td><%= line.product_variant.sku %></td>
-            <td class="ss-num"><%= line.quantity_expected %></td>
-            <td class="ss-num"><%= line.quantity_received %></td>
-            <td class="ss-num"><%= line.quantity_accepted %></td>
-            <td class="ss-num"><%= line.quantity_rejected %></td>
-            <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
-            <td><%= receipt.posted_at ? l(receipt.posted_at.to_date) : "—" %></td>
-            <td><%= link_to "View", orders_receipt_path(receipt) %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% end %>
-<% end %>
-
-<% if operations_tab&.recent_rtv_lines&.any? %>
-  <%= render "orders/shared/collapsible_panel", title: "Returns to vendor" do %>
-    <table class="ss-table">
-      <thead>
-        <tr>
-          <th>RTV</th>
-          <th>Vendor</th>
-          <th>Variant</th>
-          <th class="ss-num">Qty</th>
-          <th class="ss-num">Credit</th>
-          <th>Status</th>
-          <th>Posted</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% operations_tab.variant_scoped_rtv_lines.each do |line| %>
-          <% rtv = line.return_to_vendor %>
-          <tr>
-            <td><%= link_to "RTV ##{rtv.id}", orders_returns_to_vendor_path(rtv) %></td>
-            <td><%= rtv.vendor.name %></td>
-            <td><%= line.product_variant.sku %></td>
-            <td class="ss-num"><%= line.quantity %></td>
-            <td class="ss-num"><%= line.credit_amount_cents ? format_cents(line.credit_amount_cents) : "—" %></td>
-            <td><%= rtv.status %></td>
-            <td><%= rtv.posted_at ? l(rtv.posted_at.to_date) : "—" %></td>
-            <td><%= link_to "View", orders_returns_to_vendor_path(rtv) %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% end %>
-<% end %>
-
-<% if operations_tab&.customer_demand_visible? %>
-  <% if operations_tab.variant_scoped_customer_request_lines.any? %>
-    <%= render "orders/shared/collapsible_panel", title: "Open customer requests", open: true do %>
-      <table class="ss-table">
-        <thead>
-          <tr>
-            <th>Request</th>
-            <th>Line</th>
-            <th>Type</th>
-            <th class="ss-num">Qty</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% operations_tab.variant_scoped_customer_request_lines.each do |line| %>
-            <tr>
-              <td><%= link_to line.customer_request.request_number, customers_customer_request_path(line.customer_request) %></td>
-              <td><%= line.line_number %></td>
-              <td><%= line.request_type.tr("_", " ").titleize %></td>
-              <td class="ss-num"><%= line.requested_quantity %></td>
-              <td><%= line.status.tr("_", " ").titleize %></td>
-              <td><%= link_to "View request", customers_customer_request_path(line.customer_request, anchor: "line-#{line.id}") %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% end %>
-  <% end %>
-
-  <% if operations_tab.variant_scoped_active_holds.any? %>
-    <%= render "orders/shared/collapsible_panel", title: "Active holds" do %>
-      <table class="ss-table">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Variant</th>
-            <th class="ss-num">Qty</th>
-            <th>Expires</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% operations_tab.variant_scoped_active_holds.each do |reservation| %>
-            <tr>
-              <td><%= reservation.customer&.display_name || "—" %></td>
-              <td><%= reservation.product_variant.sku %></td>
-              <td class="ss-num"><%= reservation.quantity_reserved %></td>
-              <td><%= reservation.expires_at ? l(reservation.expires_at.to_date) : "—" %></td>
-              <td>
-                <% if reservation.customer_request_line.present? %>
-                  <%= link_to "View request", customers_customer_request_path(reservation.customer_request_line.customer_request) %>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% end %>
-  <% end %>
-
-  <% if operations_tab.variant_scoped_incoming_reserves.any? %>
-    <%= render "orders/shared/collapsible_panel", title: "Incoming reserves" do %>
-      <table class="ss-table">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Variant</th>
-            <th class="ss-num">Qty</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% operations_tab.variant_scoped_incoming_reserves.each do |reservation| %>
-            <tr>
-              <td><%= reservation.customer&.display_name || "—" %></td>
-              <td><%= reservation.product_variant.sku %></td>
-              <td class="ss-num"><%= reservation.quantity_reserved %></td>
-              <td>
-                <% if reservation.customer_request_line.present? %>
-                  <%= link_to "View request", customers_customer_request_path(reservation.customer_request_line.customer_request) %>
-                <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% end %>
-  <% end %>
-
-  <% if operations_tab.variant_scoped_special_orders.any? %>
-    <%= render "orders/shared/collapsible_panel", title: "Special orders" do %>
-      <table class="ss-table">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Variant</th>
-            <th>Status</th>
-            <th class="ss-num">Committed</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% operations_tab.variant_scoped_special_orders.each do |order| %>
-            <tr>
-              <td><%= order.customer.display_name %></td>
-              <td><%= order.product_variant&.sku || "—" %></td>
-              <td><%= order.status.tr("_", " ").titleize %></td>
-              <td class="ss-num"><%= order.quantity_committed %></td>
-              <td>
-                <%= link_to "View request",
-                      customers_customer_request_path(order.customer_request_line.customer_request, anchor: "line-#{order.customer_request_line_id}") %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% end %>
-  <% end %>
-<% end %>
-
-<% if operations_tab.blank? || (
-      operations_tab.open_purchase_request_lines.empty? &&
-      operations_tab.open_purchase_order_lines.empty? &&
-      operations_tab.recent_receipt_lines.empty? &&
-      operations_tab.recent_rtv_lines.empty? &&
-      (!operations_tab.customer_demand_visible? || (
-        operations_tab.open_customer_request_lines.empty? &&
-        operations_tab.active_holds.empty? &&
-        operations_tab.incoming_reserves.empty? &&
-        operations_tab.open_special_orders.empty?
-      ))
-    ) %>
-  <p class="ss-muted">No operational documents yet for this item.</p>
-<% end %>
+<section id="receiving-history" class="ss-item-anchor-section" aria-label="Receiving history">
+  <h2>Receiving history</h2>
+  <p class="ss-hint">Receiving, purchase order, and return details are shown by variant in the Operations drawer.</p>
+</section>
 
 <% if local_assigns[:operational_warnings].present? %>
   <%= render "items/shared/operational_warnings_panel",
@@ -388,7 +107,7 @@
         variants: item.variants %>
 <% end %>
 
-<% if operations_tab.sales_visible? && operations_tab.sales_history_rows.any? %>
+<% if operations_tab&.sales_visible? && operations_tab.sales_history_rows.any? %>
     <section id="sales-history" class="ss-item-section" aria-label="Sales history">
       <h2>Sales history</h2>
       <table class="ss-table">
@@ -416,5 +135,5 @@
     </section>
 <% end %>
 
-<%= render "items/items/customer_demand_drawer", operations: operations %>
+<%= render "items/items/variant_operations_drawer", operations: operations %>
 </div>

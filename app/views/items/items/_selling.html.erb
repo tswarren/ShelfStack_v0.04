@@ -32,6 +32,16 @@
             <td><%= variant.list_label %></td>
             <td><%= format_cents(variant.selling_price_cents) %></td>
             <td>
+              <% if Authorization.allowed?(user: current_user, permission_key: "items.product_variants.update", store: current_store) %>
+                <button type="button"
+                        class="ss-btn-link"
+                        data-action="item-setup-modal#openModalBody modal#open"
+                        data-modal-target-id-param="item-price-modal"
+                        data-modal-body-url="<%= items_edit_setup_modals_variant_price_path(variant) %>"
+                        data-modal-title="Edit price — <%= variant.sku %>">
+                  Quick edit price
+                </button>
+              <% end %>
               <%= link_to "Edit", edit_items_product_variant_path(variant, item_flow) %>
               <% if Inventory::Eligibility.eligible?(variant) && Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
                 | <%= link_to "Mark TBO", new_orders_purchase_request_path(product_variant_id: variant.id) %>

@@ -49,5 +49,7 @@ class InteractionInfrastructureIntegrationTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'id="toast_region"'
     assert_includes response.body, "ss-toast-region"
+    assert_includes response.body, 'id="modal_close_triggers"'
+    assert_includes response.body, 'id="demand_form_reset_triggers"'
   end
 end

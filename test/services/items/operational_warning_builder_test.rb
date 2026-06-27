@@ -3,6 +3,8 @@
 require "test_helper"
 
 class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
+  include Phase3TestHelper
+
   setup do
     seed_phase3_reference_data!
     seed_phase5_reference_data!
@@ -158,7 +160,7 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
     assert warnings.any? { |warning| warning.code == :inventory_tracking_mismatch }
   end
 
-  test "non inventory variant emits info warning when no stock" do
+  test "non inventory variant without stock omits non_inventory info warning" do
     @variant.update!(inventory_behavior: "digital_asset")
 
     warnings = Items::OperationalWarningBuilder.for_variants(
@@ -167,7 +169,26 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
       contexts: [ :inventory ]
     ).fetch(@variant.id, [])
 
-    assert warnings.any? { |warning| warning.code == :non_inventory && warning.severity == :info }
+    refute warnings.any? { |warning| warning.code == :non_inventory }
+  end
+
+  test "non inventory variant with stock still warns" do
+    @variant.update!(inventory_tracking_override: "non_inventory", inventory_behavior: "standard_physical")
+    InventoryBalance.create!(
+      store: @store,
+      product_variant: @variant,
+      quantity_on_hand: 2,
+      quantity_available: 2,
+      quantity_reserved: 0
+    )
+
+    warnings = Items::OperationalWarningBuilder.for_variants(
+      store: @store,
+      variants: [ @variant ],
+      contexts: [ :inventory ]
+    ).fetch(@variant.id, [])
+
+    assert warnings.any? { |warning| warning.code == :non_inventory_with_stock }
   end
 
   test "inactive preferred vendor emits ordering warning" do
@@ -223,5 +244,34 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
     ]
 
     assert_equal :blocking, Items::OperationalWarningBuilder.worst_severity(warnings)
+  end
+
+  test "used variant does not emit vendor sourcing ordering warnings" do
+    used = ProductCondition.find_by(condition_key: "used_good") ||
+      create_product_condition!(condition_key: "used_good_warn", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
+    @variant.update!(condition: used, orderable: false)
+
+    warnings = Items::OperationalWarningBuilder.for_variants(
+      store: @store,
+      variants: [ @variant ],
+      contexts: [ :ordering ]
+    ).fetch(@variant.id, [])
+
+    refute warnings.any? { |warning| warning.code == :missing_preferred_vendor }
+    refute warnings.any? { |warning| warning.code == :missing_vendor_source }
+    assert warnings.any? { |warning| warning.code == :used_variant }
+  end
+
+  test "financial product type skips selling warnings" do
+    @variant.product.update!(product_type: "financial")
+    @variant.update!(selling_price_cents: 0)
+
+    warnings = Items::OperationalWarningBuilder.for_variants(
+      store: @store,
+      variants: [ @variant ],
+      contexts: [ :selling ]
+    ).fetch(@variant.id, [])
+
+    refute warnings.any? { |warning| warning.code == :missing_price }
   end
 end

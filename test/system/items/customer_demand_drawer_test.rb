@@ -37,70 +37,62 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
     assert_text "Variant operations", wait: 10
   end
 
-  test "shared demand drawer opens from operations and restores focus on close" do
-    visit_item_operations!
-
-    assert_selector "#item-demand-drawer", visible: :hidden
-    assert_includes page.body, "ss-drawer"
-
-    hold_button = find("button", text: "Hold for customer", match: :first)
-    hold_button.click
-
-    assert_no_selector "#item-demand-drawer[hidden]"
-    assert_text @variant.sku
-
-    find("#item-demand-drawer .ss-drawer-close").click
-    assert_selector "#item-demand-drawer[hidden]", visible: :all
-    assert_equal hold_button, page.active_element
+  def open_variant_ops_drawer!
+    find("button", text: "Details", match: :first).click
+    assert_no_selector "#item-variant-ops-drawer[hidden]", wait: 10
   end
 
-  test "shared demand drawer closes on escape when form is clean" do
+  test "demand actions open from variant operations drawer and restore focus on close" do
     visit_item_operations!
 
-    hold_button = find("button", text: "Hold for customer", match: :first)
+    assert_selector "#item-variant-ops-drawer", visible: :hidden
+    details_button = find("button", text: "Details", match: :first)
+    details_button.click
+    assert_no_selector "#item-variant-ops-drawer[hidden]"
+
+    hold_button = find("#item-variant-ops-drawer button", text: "Hold for customer")
     hold_button.click
-    assert_no_selector "#item-demand-drawer[hidden]"
+    assert_selector "#item-variant-ops-drawer [data-item-variant-ops-drawer-target='demandSection']:not([hidden])"
+
+    find("#item-variant-ops-drawer .ss-drawer-close").click
+    assert_selector "#item-variant-ops-drawer[hidden]", visible: :all
+    assert_equal details_button, page.active_element
+  end
+
+  test "variant operations drawer closes on escape when form is clean" do
+    visit_item_operations!
+
+    details_button = find("button", text: "Details", match: :first)
+    open_variant_ops_drawer!
+    hold_button = find("#item-variant-ops-drawer button", text: "Hold for customer")
+    hold_button.click
 
     send_escape
-    assert_selector "#item-demand-drawer[hidden]", visible: :all
-    assert_equal hold_button, page.active_element
+    assert_selector "#item-variant-ops-drawer[hidden]", visible: :all
+    assert_equal details_button, page.active_element
   end
 
-  test "shared demand drawer stays open on escape when form is dirty" do
+  test "demand form stays open on escape when dirty" do
     visit_item_operations!
-
-    find("button", text: "Hold for customer", match: :first).click
-    find("#item-demand-drawer input[name='quantity']").fill_in with: "2"
+    open_variant_ops_drawer!
+    find("#item-variant-ops-drawer button", text: "Hold for customer").click
+    find("#item-variant-ops-drawer input[name='quantity']").fill_in with: "2"
 
     send_escape
-    assert_no_selector "#item-demand-drawer[hidden]"
+    assert_no_selector "#item-variant-ops-drawer[hidden]"
   end
 
-  test "shared demand drawer closes via cancel when form is dirty" do
+  test "demand form resets after cancel" do
     visit_item_operations!
+    open_variant_ops_drawer!
+    find("#item-variant-ops-drawer button", text: "Hold for customer").click
+    find("#item-variant-ops-drawer input[name='quantity']").fill_in with: "2"
+    find("#item-variant-ops-drawer button", text: "Cancel").click
+    assert_selector "#item-variant-ops-drawer[hidden]", visible: :all
 
-    hold_button = find("button", text: "Hold for customer", match: :first)
-    hold_button.click
-    find("#item-demand-drawer input[name='quantity']").fill_in with: "2"
-
-    send_escape
-    assert_no_selector "#item-demand-drawer[hidden]"
-
-    find("#item-demand-drawer button", text: "Cancel").click
-    assert_selector "#item-demand-drawer[hidden]", visible: :all
-    assert_equal hold_button, page.active_element
-  end
-
-  test "shared demand drawer resets form after cancel" do
-    visit_item_operations!
-
-    hold_button = find("button", text: "Hold for customer", match: :first)
-    hold_button.click
-    find("#item-demand-drawer input[name='quantity']").fill_in with: "2"
-    find("#item-demand-drawer button", text: "Cancel").click
-    assert_selector "#item-demand-drawer[hidden]", visible: :all
-
-    hold_button.click
-    assert_equal "1", find("#item-demand-drawer input[name='quantity']").value
+    find("button", text: "Details", match: :first).click
+    assert_no_selector "#item-variant-ops-drawer[hidden]"
+    find("#item-variant-ops-drawer button", text: "Hold for customer").click
+    assert_equal "1", find("#item-variant-ops-drawer input[name='quantity']").value
   end
 end

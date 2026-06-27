@@ -1,0 +1,23 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>RTV</th>
+      <th>Vendor</th>
+      <th class="ss-num">Qty</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% lines.each do |line| %>
+      <% rtv = line.return_to_vendor %>
+      <tr>
+        <td><%= link_to "RTV ##{rtv.id}", orders_returns_to_vendor_path(rtv) %></td>
+        <td><%= rtv.vendor.name %></td>
+        <td class="ss-num"><%= line.quantity %></td>
+        <td><%= rtv.status %></td>
+        <td><%= link_to "View", orders_returns_to_vendor_path(rtv), class: "ss-btn-link" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

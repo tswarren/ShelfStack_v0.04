@@ -1,0 +1,25 @@
+<%# locals: operations: (optional) ItemOperationsPresenter %>
+<%= render "shared/interaction/drawer",
+      id: "item-variant-ops-drawer",
+      title: "Variant operations",
+      title_html_options: { data: { item_variant_ops_drawer_target: "title" } },
+      close_on_escape: true,
+      close_on_backdrop: true,
+      dirty_guard: true do %>
+  <p class="ss-hint" data-item-variant-ops-drawer-target="placeholder">
+    Select a variant row and choose Details to load variant operations.
+  </p>
+  <%= turbo_frame_tag "variant-ops-drawer-frame",
+        data: { item_variant_ops_drawer_target: "frame" } do %>
+    <p class="ss-muted">Loading…</p>
+  <% end %>
+
+  <% if operations&.customer_demand_visible? %>
+    <section class="ss-drawer-section"
+             data-item-variant-ops-drawer-target="demandSection"
+             hidden>
+      <h3 class="ss-drawer-section-title">Create customer demand</h3>
+      <%= render "items/items/customer_demand_form" %>
+    </section>
+  <% end %>
+<% end %>

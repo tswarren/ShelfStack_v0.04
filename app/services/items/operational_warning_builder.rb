@@ -159,6 +159,8 @@ module Items
     end
 
     def selling_warnings(variant)
+      return [] if non_merchandise_variant?(variant)
+
       warnings = []
       if variant.selling_price_cents.to_i.zero?
         warnings << build_warning(
@@ -231,23 +233,12 @@ module Items
       warnings = []
       tracking = Inventory::TrackingResolver.resolve(variant)
       if tracking == "non_inventory"
-        if row&.on_hand.to_i.positive?
+        if physical_on_hand_for(variant).positive?
           warnings << build_warning(
             severity: :warning,
             category: :inventory,
             code: :non_inventory_with_stock,
             message: "Non-inventory variant has on-hand stock.",
-            variant_id: variant.id,
-            corrective_path: edit_items_product_variant_path(variant, return_to: "item"),
-            corrective_label: "Edit SKU",
-            source: :inventory_tracking
-          )
-        else
-          warnings << build_warning(
-            severity: :info,
-            category: :inventory,
-            code: :non_inventory,
-            message: "Variant is tracked as non-inventory.",
             variant_id: variant.id,
             corrective_path: edit_items_product_variant_path(variant, return_to: "item"),
             corrective_label: "Edit SKU",
@@ -290,6 +281,8 @@ module Items
     end
 
     def preferred_vendor_warnings(variant)
+      return [] unless Purchasing::OrderEligibilityResolver.vendor_sourcing_warnings_applicable?(product_variant: variant)
+
       inactive_vendor = inactive_preferred_vendor_for(variant)
       return [] if inactive_vendor.blank?
 
@@ -424,6 +417,17 @@ module Items
         corrective_label: corrective_label,
         source: source
       )
+    end
+
+    def non_merchandise_variant?(variant)
+      Purchasing::OrderEligibilityResolver::BLOCKING_PRODUCT_TYPES.include?(variant.product&.product_type)
+    end
+
+    def physical_on_hand_for(variant)
+      return row.on_hand.to_i if row&.on_hand.to_i.positive?
+      return 0 unless store
+
+      InventoryBalance.find_by(store: store, product_variant: variant)&.quantity_on_hand.to_i
     end
 
     def action_for(code, variant)

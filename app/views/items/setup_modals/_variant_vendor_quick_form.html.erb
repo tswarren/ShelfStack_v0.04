@@ -1,0 +1,58 @@
+<%# locals: variant:, variant_vendor:, vendors:, returnability_options: %>
+<% editing = variant_vendor.persisted? %>
+<% form_url = editing ? items_setup_modals_variant_vendor_path(variant_vendor) : items_setup_modals_variant_vendors_path %>
+<% form_method = editing ? :patch : :post %>
+
+<% if variant_vendor.errors.any? %>
+  <div class="ss-errors"><%= variant_vendor.errors.full_messages.to_sentence %></div>
+<% end %>
+
+<%= form_with model: variant_vendor,
+              url: form_url,
+              method: form_method,
+              data: { turbo_stream: true },
+              class: "ss-form ss-form--standard" do |f| %>
+  <%= hidden_field_tag :product_variant_id, variant.id %>
+  <% unless editing %>
+    <p class="ss-hint">Variant: <strong><%= variant.sku %></strong></p>
+    <div class="ss-field">
+      <%= f.label :vendor_id, "Vendor", class: "ss-label" %>
+      <%= f.collection_select :vendor_id, vendors, :id, :name,
+            { include_blank: true, selected: params[:vendor_id] },
+            class: "ss-input", required: true %>
+    </div>
+  <% else %>
+    <p class="ss-hint"><strong><%= variant_vendor.vendor.name %></strong> · <%= variant.sku %></p>
+  <% end %>
+  <div class="ss-field">
+    <%= f.label :vendor_item_number, "Vendor item #", class: "ss-label" %>
+    <%= f.text_field :vendor_item_number, class: "ss-input" %>
+  </div>
+  <div class="ss-field">
+    <%= f.label :supplier_discount_bps, "Supplier discount (bps)", class: "ss-label" %>
+    <%= f.number_field :supplier_discount_bps, min: 0, max: 10_000, class: "ss-input" %>
+  </div>
+  <div class="ss-field">
+    <%= f.label :returnability_status, "Returnability", class: "ss-label" %>
+    <%= f.select :returnability_status,
+          returnability_options.map { |s| [humanize_controlled_value(s), s] },
+          { include_blank: true },
+          class: "ss-input" %>
+  </div>
+  <div class="ss-field">
+    <%= f.label :preferred, class: "ss-label" %>
+    <%= f.check_box :preferred %>
+  </div>
+  <footer class="ss-form-actions">
+    <%= f.submit(editing ? "Save override" : "Add override", class: "ss-btn") %>
+    <button type="button" class="ss-btn ss-btn-secondary"
+            data-action="modal#close"
+            data-modal-target-id-param="item-variant-vendor-modal">Cancel</button>
+    <% if editing %>
+      <%= link_to "Full edit",
+            edit_items_product_variant_product_variant_vendor_path(variant, variant_vendor),
+            class: "ss-btn-link",
+            data: { turbo_frame: "_top" } %>
+    <% end %>
+  </footer>
+<% end %>

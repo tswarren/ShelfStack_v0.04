@@ -1,0 +1,20 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th class="ss-num">Qty</th>
+      <th class="ss-num">Net sales</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% rows.each do |row| %>
+      <tr>
+        <td><%= l(row.sold_at, format: :short) %></td>
+        <td class="ss-num"><%= row.quantity %></td>
+        <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
+        <td><%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -42,8 +42,15 @@ module Items
       else "Customer request created."
       end
 
-      redirect_to customers_customer_request_path(result.request, anchor: "line-#{result.line.id}"),
-                  notice: notice
+      respond_to do |format|
+        format.html do
+          redirect_to customers_customer_request_path(result.request, anchor: "line-#{result.line.id}"),
+                      notice: notice
+        end
+        format.turbo_stream do
+          render turbo_stream: demand_create_success_streams(variant:, notice:)
+        end
+      end
     rescue CustomerRequests::StartFromItem::StartError,
            InventoryReservations::ReserveOnHand::ReserveError,
            SpecialOrders::CreateFromRequestLine::CreateError,
@@ -86,6 +93,29 @@ module Items
       return nil if params[:expires_at].blank?
 
       Time.zone.parse(params[:expires_at])
+    end
+
+    def demand_create_success_streams(variant:, notice:)
+      item = ItemPresenter.from_product_variant(variant)
+      drawer = VariantOperationsDrawerPresenter.for(
+        item: item,
+        store: current_store,
+        user: current_user,
+        variant: variant
+      )
+
+      [
+        turbo_stream.replace(
+          "variant-ops-drawer-frame",
+          partial: "items/items/variant_operations_drawer_body",
+          locals: { drawer: drawer }
+        ),
+        append_toast_stream(message: notice, variant: :success),
+        turbo_stream.append(
+          "demand_form_reset_triggers",
+          partial: "shared/interaction/demand_form_reset_trigger"
+        )
+      ]
     end
   end
 end

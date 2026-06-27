@@ -1,0 +1,49 @@
+<%# locals: catalog_item:, identifier: nil, error_message: nil %>
+<% editing = identifier.present? %>
+<% form_url = editing ? items_setup_modals_identifier_path(identifier, catalog_item_id: catalog_item.id) : items_setup_modals_identifiers_path(catalog_item_id: catalog_item.id) %>
+<% form_method = editing ? :patch : :post %>
+
+<% error_message = local_assigns[:error_message] %>
+<% if error_message.present? %>
+  <div class="ss-errors"><%= error_message %></div>
+<% end %>
+
+<%= form_with url: form_url,
+              method: form_method,
+              data: {
+                turbo_stream: true,
+                create_url: items_setup_modals_identifiers_path(catalog_item_id: catalog_item.id)
+              },
+              class: "ss-form ss-form--standard" do |f| %>
+  <div class="ss-field">
+    <%= label_tag :identifier_type, "Type", class: "ss-label" %>
+    <%= select_tag :identifier_type,
+          options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, identifier&.identifier_type || "isbn13"),
+          class: "ss-input",
+          disabled: editing,
+          data: { item_setup_modal_target: "identifierTypeField" } %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :identifier_value, "Value", class: "ss-label" %>
+    <%= text_field_tag :identifier_value,
+          identifier&.identifier_value,
+          required: true,
+          class: "ss-input",
+          data: { item_setup_modal_target: "identifierValueField" } %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :primary, "Set as primary", class: "ss-label" %>
+    <%= check_box_tag :primary, "1", identifier&.primary_identifier?,
+          data: { item_setup_modal_target: "primaryField" } %>
+  </div>
+  <footer class="ss-form-actions">
+    <%= submit_tag(editing ? "Save identifier" : "Add identifier", class: "ss-btn") %>
+    <button type="button" class="ss-btn ss-btn-secondary"
+            data-action="modal#close"
+            data-modal-target-id-param="item-identifier-modal">Cancel</button>
+    <%= link_to "Full edit",
+          editing ? edit_identifier_items_catalog_item_path(catalog_item, identifier_id: identifier.id, return_to: "item") : new_identifier_items_catalog_item_path(catalog_item, return_to: "item"),
+          class: "ss-btn-link",
+          data: { turbo_frame: "_top" } %>
+  </footer>
+<% end %>

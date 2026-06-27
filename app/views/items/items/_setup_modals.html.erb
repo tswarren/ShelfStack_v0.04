@@ -1,0 +1,59 @@
+<%# locals: item:, variants:, vendors:, sub_departments: %>
+<% if item.catalog_item.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
+  <%= render "shared/interaction/modal",
+        id: "item-identifier-modal",
+        title: "Identifier",
+        size: :sm do %>
+    <%= turbo_frame_tag "item-identifier-modal-body" do %>
+      <%= render "items/setup_modals/identifier_quick_form", catalog_item: item.catalog_item, identifier: nil %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if item.product.present? && Authorization.allowed?(user: current_user, permission_key: "items.product_variants.update", store: current_store) %>
+  <%= render "shared/interaction/modal",
+        id: "item-price-modal",
+        title: "Edit price",
+        size: :sm do %>
+    <%= turbo_frame_tag "item-price-modal-body" do %>
+      <p class="ss-muted">Loading…</p>
+    <% end %>
+  <% end %>
+
+  <%= render "shared/interaction/modal",
+        id: "item-classification-modal",
+        title: "Classification",
+        size: :md do %>
+    <%= turbo_frame_tag "item-classification-modal-body" do %>
+      <p class="ss-muted">Loading…</p>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% can_manage_product_vendors =
+     Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.create", store: current_store) ||
+     Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.update", store: current_store) %>
+<% if item.product.present? && can_manage_product_vendors %>
+  <%= render "shared/interaction/modal",
+        id: "item-product-vendor-modal",
+        title: "Product vendor",
+        size: :md do %>
+    <%= turbo_frame_tag "item-product-vendor-modal-body" do %>
+      <p class="ss-muted">Loading…</p>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% can_manage_variant_vendors =
+     Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.create", store: current_store) ||
+     Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.update", store: current_store) %>
+<% if variants.any? && can_manage_variant_vendors %>
+  <%= render "shared/interaction/modal",
+        id: "item-variant-vendor-modal",
+        title: "Variant vendor override",
+        size: :md do %>
+    <%= turbo_frame_tag "item-variant-vendor-modal-body" do %>
+      <p class="ss-muted">Loading…</p>
+    <% end %>
+  <% end %>
+<% end %>

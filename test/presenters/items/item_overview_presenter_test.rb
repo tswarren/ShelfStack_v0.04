@@ -3,6 +3,8 @@
 require "test_helper"
 
 class Items::ItemOverviewPresenterTest < ActiveSupport::TestCase
+  include Phase3TestHelper
+
   setup do
     seed_phase5_reference_data!
     @store = create_store!
@@ -34,7 +36,7 @@ class Items::ItemOverviewPresenterTest < ActiveSupport::TestCase
     matrix_row = overview.matrix_rows.first
     assert_equal @variant, matrix_row.variant
     assert_equal 5, matrix_row.snapshot.on_hand
-    assert_includes %i[present warning missing], matrix_row.vendor_source_status
+    assert_includes %i[present warning missing not_applicable], matrix_row.vendor_source_status
     assert_equal @variant.sub_department.name, matrix_row.sub_department_name
     assert_equal @variant.sub_department.default_tax_category.name, matrix_row.tax_category_name
   end
@@ -89,5 +91,16 @@ class Items::ItemOverviewPresenterTest < ActiveSupport::TestCase
     overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
 
     assert overview.sales_visible?
+  end
+
+  test "used variant vendor source status is not applicable" do
+    used = ProductCondition.find_by(condition_key: "used_good") ||
+      create_product_condition!(condition_key: "used_good_used", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
+    @variant.update!(condition: used, orderable: false)
+
+    overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
+    matrix_row = overview.matrix_rows.find { |row| row.variant.id == @variant.id }
+
+    assert_equal :not_applicable, matrix_row.vendor_source_status
   end
 end

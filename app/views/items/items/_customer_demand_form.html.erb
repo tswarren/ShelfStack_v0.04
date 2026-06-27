@@ -9,8 +9,8 @@
                 customer_request_hold_form_on_hand_value: 0,
                 customer_request_hold_form_can_override_value: can_override
               } do %>
-  <%= hidden_field_tag :request_type, nil, data: { item_customer_demand_drawer_target: "requestTypeField" } %>
-  <%= hidden_field_tag :product_variant_id, nil, data: { item_customer_demand_drawer_target: "productVariantField" } %>
+  <%= hidden_field_tag :request_type, nil, data: { item_variant_ops_drawer_target: "requestTypeField" } %>
+  <%= hidden_field_tag :product_variant_id, nil, data: { item_variant_ops_drawer_target: "productVariantField" } %>
 
   <div data-controller="customer-lookup"
        data-customer-lookup-url-value="<%= customers_customer_lookup_path %>">
@@ -79,7 +79,7 @@
       </div>
     </div>
 
-  <div data-item-customer-demand-drawer-target="holdFields" hidden>
+  <div data-item-variant-ops-drawer-target="holdFields" hidden>
     <div class="ss-form-grid ss-form-grid--2">
       <div class="ss-field">
         <%= label_tag :hold_expires_at, "Hold expires on", class: "ss-label" %>
@@ -95,11 +95,11 @@
     </div>
   </div>
 
-  <p class="ss-hint" data-item-customer-demand-drawer-target="specialOrderNote" hidden>
+  <p class="ss-hint" data-item-variant-ops-drawer-target="specialOrderNote" hidden>
     A linked customer record is required for special orders. Search for an existing customer or create one first.
   </p>
 
-  <p class="ss-hint" data-item-customer-demand-drawer-target="notifyNote" hidden>
+  <p class="ss-hint" data-item-variant-ops-drawer-target="notifyNote" hidden>
   This creates a notify request. Staff will contact the customer when stock is available. No inventory is reserved.
   </p>
 
@@ -113,11 +113,11 @@
     <%= submit_tag "Submit",
           class: "ss-btn",
           data: {
-            item_customer_demand_drawer_target: "submitButton",
+            item_variant_ops_drawer_target: "submitButton",
             customer_request_hold_form_target: "submit"
           } %>
     <button type="button" class="ss-btn ss-btn-secondary"
             data-action="drawer#close"
-            data-drawer-target-id-param="item-demand-drawer">Cancel</button>
+            data-drawer-target-id-param="item-variant-ops-drawer">Cancel</button>
   </footer>
 <% end %>

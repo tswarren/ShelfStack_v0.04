@@ -1,0 +1,38 @@
+<%# locals: variant:, sub_departments:, defaults: %>
+<% if variant.errors.any? %>
+  <div class="ss-errors"><%= variant.errors.full_messages.to_sentence %></div>
+<% end %>
+
+<%= form_with url: items_setup_modals_variant_classification_path(variant),
+              method: :patch,
+              data: {
+                turbo_stream: true,
+                controller: "classification-tax-preview",
+                classification_tax_preview_url_value: items_setup_modals_classification_tax_preview_path(variant_id: variant.id)
+              },
+              class: "ss-form ss-form--standard" do %>
+  <div class="ss-field">
+    <%= label_tag :sub_department_id, "Subdepartment", class: "ss-label" %>
+    <%= select_tag :sub_department_id,
+          options_from_collection_for_select(sub_departments, :id, :name, variant.sub_department_id),
+          class: "ss-input",
+          required: true,
+          data: {
+            classification_tax_preview_target: "subDepartment",
+            action: "change->classification-tax-preview#refresh"
+          } %>
+  </div>
+  <div class="ss-field">
+    <span class="ss-label">Derived tax category preview</span>
+    <%= turbo_frame_tag "classification-tax-preview-frame" do %>
+      <%= render "items/setup_modals/classification_tax_preview", defaults: defaults %>
+    <% end %>
+  </div>
+  <footer class="ss-form-actions">
+    <%= submit_tag "Save classification", class: "ss-btn" %>
+    <button type="button" class="ss-btn ss-btn-secondary"
+            data-action="modal#close"
+            data-modal-target-id-param="item-classification-modal">Cancel</button>
+    <%= link_to "Full edit", edit_items_product_variant_path(variant, return_to: "item"), class: "ss-btn-link", data: { turbo_frame: "_top" } %>
+  </footer>
+<% end %>
