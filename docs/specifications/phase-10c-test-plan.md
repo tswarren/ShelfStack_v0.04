@@ -19,6 +19,8 @@
 | Cross-cashier conflict UI | Integration/system POS landing tests |
 | Multiple draft candidates → picker | Integration/system POS landing tests |
 | Suspended not auto-resumed | Integration/system POS landing tests |
+| Draft stamping at create | New draft from idle/command sets `pos_register_session_id`, `business_date`, `user_session_id`, workstation, cashier |
+| Legacy nil-session draft | Pre-10-C draft without register session → conflict/fallback path; not silent session adoption |
 
 ---
 

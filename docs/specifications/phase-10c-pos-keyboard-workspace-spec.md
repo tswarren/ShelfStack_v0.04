@@ -6,7 +6,7 @@
 
 **Mockup reference:** [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html)
 
-**Depends on:** Phase 10-A (modal, drawer, expanded row, focus helpers), Phase 10-B (interaction patterns)
+**Depends on:** Phase 10-A (**hard** — modal, drawer, expanded row, focus helpers); Phase 10-B **complete per delivery order** (proves shared interaction patterns on Items before POS)
 
 ---
 
@@ -33,6 +33,8 @@ Shared POS workspace shell (idle + active), landing router, active draft resolve
 | ----- | -------- |
 | **Landing** | Idle POS workspace when register open and no active draft; command field is home base |
 | **Active draft scope** | One active draft per **register session + workstation + cashier** |
+| **Draft stamping** | New drafts stamped with register session, business date, workstation, cashier, user session (Slice 1) |
+| **Legacy nil-session drafts** | Pre-10-C drafts missing `pos_register_session_id` use conflict/fallback path — not silent session adoption |
 | **Active draft wins** | `/pos` always returns to active draft (including empty) until complete/cancel/void/hold |
 | **Cross-cashier conflict** | Different cashier on same workstation → conflict/resume/manager UI; no silent takeover |
 | **Parser** | Slash → command registry; non-slash → scan/catalog lookup only |
@@ -48,6 +50,7 @@ Shared POS workspace shell (idle + active), landing router, active draft resolve
 | **Held sales** | No auto-resume; explicit resume only |
 | **Reports from POS** | Confirm when active draft exists; same-tab navigate on confirm |
 | **Function keys** | Out of scope for 10-C completion |
+| **Command aliases** | Unique across full registry; no alias may collide with another canonical command or alias |
 
 Future auto-create on session open is out of scope unless explicitly approved.
 
@@ -89,6 +92,19 @@ active draft =
 Service layer **prevents** creating a second active draft for the same scope.
 
 Empty drafts remain active until cancel, hold, complete, or void.
+
+---
+
+## Draft Creation Stamping (Slice 1)
+
+Today `Pos::TransactionsController#create` sets store, workstation, cashier, and status only. `pos_register_session_id`, `business_date`, and `user_session_id` are stamped at completion. Slice 1 must change draft creation so every new draft is stamped at create time with:
+
+* `pos_register_session_id` — current open register session
+* `business_date` — from that register session
+* `workstation_id`, `cashier_user_id` — already set today; preserve
+* `user_session_id` — `Current.user_session` where available
+
+The active draft resolver is **register-session-scoped** for new drafts. Pre-10-C drafts with `nil` `pos_register_session_id` must not be silently adopted into session scope. Handle them via explicit **legacy fallback / conflict** logic (for example: match only when no session-scoped candidate exists, and surface in conflict picker rather than auto-resume).
 
 ---
 
@@ -162,6 +178,8 @@ Cash drop is not available yet.
 * Scan/add creates/resumes draft with carry-forward from idle
 * Tender commands from idle show no-active-transaction message; no empty draft
 * One active draft enforced at creation time
+* New drafts stamped with register session, business date, workstation, cashier, user session
+* Legacy nil-session drafts handled via conflict/fallback — not silent session adoption
 
 ### Commands
 

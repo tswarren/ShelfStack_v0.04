@@ -4,7 +4,7 @@
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
-**Depends on:** [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md), [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md)
+**Depends on:** [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) (**hard** — modal, drawer, expanded row, focus); [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) **complete per delivery order** (proves shared interaction patterns on Items before POS-heavy modal/drawer work)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md) — aligned with this roadmap
 
@@ -151,7 +151,7 @@ No matching item. Use /op for open ring, /return for receipt lookup, or /help.
 
 * Commands are matched case-insensitively.
 * Aliases normalize to a canonical command before permission checks, routing, audit, and help display.
-* Aliases must be unique per canonical command.
+* Aliases and legacy aliases must be **unique across the full registry** and must not collide with another canonical command or alias.
 * Slash-prefixed tokens are required for commands, except `?` may open help without a slash.
 * Unrecognized slash commands show a helpful error and suggest `/help`.
 * Commands never bypass permissions, approvals, confirmations, or register-state rules.

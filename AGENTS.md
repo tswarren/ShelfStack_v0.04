@@ -416,7 +416,6 @@ docs/specifications/ui-components.md
 docs/specifications/view-contracts.md
 docs/specifications/keyboard-and-focus.md
 docs/specifications/modal-and-drawer-patterns.md
-docs/specifications/pos-keyboard-workspace.md
 docs/specifications/phase-10b-test-plan.md
 docs/implementation/phase-10a-completion.md
 docs/implementation/phase-10b-completion.md
