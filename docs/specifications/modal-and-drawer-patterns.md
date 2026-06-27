@@ -70,7 +70,25 @@ Render shell with stable id; openers target by id:
 
 Close policy values: `data-drawer-close-on-escape-value`, `data-drawer-close-on-backdrop-value`, `data-drawer-dirty-guard-value` (same pattern for modal).
 
-Implicit close (Escape, backdrop) respects dirty guard and applies only to the topmost overlay in the stack. Explicit close buttons call `drawer#close` / `modal#close`, which force-close. Drawers that populate fields on open should reset the dirty baseline after programmatic setup (see item customer demand pilot); reset form state on `drawer:closed` when cancel should discard edits.
+Implicit close (Escape, backdrop) respects dirty guard. Explicit close buttons call `drawer#close` / `modal#close`, which force-close. Drawers that populate fields on open should reset the dirty baseline after programmatic setup (see item customer demand pilot); reset form state on `drawer:closed` when cancel should discard edits.
+
+## Nested overlay stack
+
+`overlay_shell.js` tracks open overlays in a module-level stack (last opened = topmost).
+
+When overlays are nested (for example modal over drawer):
+
+* Only the **topmost** overlay handles Escape, backdrop close, and focus trap.
+* Closing the top overlay returns keyboard handling to the overlay beneath.
+* Body lock classes remain stack-aware via `overlay_lock.js` (`ss-modal-open` and `ss-drawer-open` counts).
+
+Example: drawer open → nested modal open → Escape closes the modal only; drawer stays open and retains `body.ss-drawer-open`.
+
+Test helpers (for future JS unit tests): `resetOverlayStackForTests()`, `overlayStackDepthForTests()` in `overlay_shell.js`; `resetOverlayLocksForTests()` in `overlay_lock.js`. System tests rely on full page loads to reset module state.
+
+## Dirty baseline (pilot pattern)
+
+Dirty guard compares field values to `defaultValue` / `defaultChecked`. Drawers that set fields programmatically on open should rebaseline after setup (see `item_customer_demand_drawer_controller#resetFormDirtyBaseline`). A shared `resetDirtyBaseline(form)` helper may be worth extracting when 10-B adds form-heavy setup modals; not required for 10-A.
 
 ## CSS classes
 

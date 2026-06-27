@@ -75,6 +75,14 @@ function isTopmostOverlay(controller) {
   return overlayStack.length > 0 && overlayStack[overlayStack.length - 1] === controller
 }
 
+export function overlayStackDepthForTests() {
+  return overlayStack.length
+}
+
+export function resetOverlayStackForTests() {
+  overlayStack.length = 0
+}
+
 export function showOverlay(controller) {
   const shell = controller._overlayShell
   if (!shell || controller.element.hidden === false) return

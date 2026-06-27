@@ -77,6 +77,10 @@ app/javascript/shelfstack/overlay_lock.js
 app/javascript/shelfstack/overlay_shell.js
 ```
 
+**Overlay stack:** When modals and drawers nest, `overlay_shell.js` routes Escape, backdrop close, and focus trap to the topmost open overlay only. Body scroll lock remains reference-counted in `overlay_lock.js`. See [modal-and-drawer-patterns.md](modal-and-drawer-patterns.md#nested-overlay-stack).
+
+**Test helpers:** `resetOverlayStackForTests()` / `overlayStackDepthForTests()` (`overlay_shell.js`); `resetOverlayLocksForTests()` (`overlay_lock.js`).
+
 ## Report components (Phase 9a)
 
 Report-specific patterns remain in [phase-9a-ux-foundation-for-reporting-spec.md](phase-9a-ux-foundation-for-reporting-spec.md). Shared 10-A components may upgrade report shells in 10-E only where compatible.
