@@ -29,17 +29,23 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
     assert_includes message, "/linediscount (/ld, /d)"
     assert_includes message, "/cashdrop (/dp, /drop)"
     assert_includes message, "(planned)"
+    assert_includes message, "/giftcard (/gc) — Gift card issue or reload (unavailable)"
   end
 
   test "cashdrop is planned and unavailable" do
     command = Pos::CommandRegistry[:cashdrop]
+    store = create_store!
+    workstation = create_workstation!(store: store)
+    user = create_user!
+    register_session = open_register_session!(store: store, workstation: workstation, user: user)
 
     assert command.planned
     availability = Pos::CommandRegistry.availability(
       command: command,
       context: :root,
       user: nil,
-      store: create_store!
+      store: store,
+      register_session: register_session
     )
 
     assert_not availability.available
@@ -53,6 +59,7 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
       context: :transaction,
       user: nil,
       store: create_store!,
+      register_session: Pos::CommandRegistry::NOT_PROVIDED,
       transaction: nil
     )
 
@@ -60,9 +67,24 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
     assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, availability.message
   end
 
-  test "help pattern matches help aliases" do
+  test "unimplemented commands are unavailable for routing" do
+    command = Pos::CommandRegistry[:customer]
+    availability = Pos::CommandRegistry.availability(
+      command: command,
+      context: :root,
+      user: nil,
+      store: create_store!,
+      register_session: Pos::CommandRegistry::NOT_PROVIDED
+    )
+
+    assert_not availability.available
+    assert_equal Pos::CommandRouteBuilder::NOT_YET_AVAILABLE_MESSAGE, availability.message
+  end
+
+  test "help pattern matches parser command-lane help tokens" do
     assert_match Pos::CommandParser::HELP_COMMAND_PATTERN, "/help"
     assert_match Pos::CommandParser::HELP_COMMAND_PATTERN, "/?"
     assert_match Pos::CommandParser::HELP_COMMAND_PATTERN, "?"
+    assert_no_match Pos::CommandParser::HELP_COMMAND_PATTERN, "help"
   end
 end

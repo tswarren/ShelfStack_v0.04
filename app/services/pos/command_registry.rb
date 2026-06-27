@@ -14,7 +14,12 @@ module Pos
       :handler,
       :planned,
       :unavailable_message,
-      :root_available
+      :unavailable_action,
+      :root_implemented,
+      :transaction_implemented,
+      :root_available,
+      :root_unavailable_message,
+      :transaction_unavailable_message
     ) do
       def tokens
         [ canonical, *aliases, *legacy_aliases ].map { |token| CommandRegistry.normalize_token(token) }.uniq
@@ -23,11 +28,26 @@ module Pos
       def display_aliases
         (aliases + legacy_aliases).uniq
       end
+
+      def implemented_for?(context)
+        context == :root ? root_implemented : transaction_implemented
+      end
+
+      def routing_unavailable_message(context)
+        case context
+        when :root
+          root_unavailable_message || unavailable_message
+        when :transaction
+          transaction_unavailable_message || unavailable_message
+        else
+          unavailable_message
+        end
+      end
     end
 
     Match = Data.define(:command, :args, :raw_input)
 
-    Availability = Data.define(:available, :message)
+    Availability = Data.define(:available, :message, :action)
 
     NOT_PROVIDED = Object.new
 
@@ -65,13 +85,9 @@ module Pos
         self[:help].tokens
       end
 
+      # Matches parser command-lane help tokens only (/help, /?, ?) — not bare "help".
       def help_pattern
-        ensure_loaded!
-        tokens = help_tokens.flat_map do |token|
-          normalized = token.sub(/\A\//, "")
-          [ Regexp.escape("/#{normalized}"), Regexp.escape(normalized) ]
-        end.uniq
-        /\A(?:#{tokens.join("|")})\z/i
+        /\A(?:\/help|\/\?|\?)\z/i
       end
 
       def normalize_token(token)
@@ -79,31 +95,63 @@ module Pos
       end
 
       def availability(command:, context:, user: nil, store: nil, register_session: NOT_PROVIDED, transaction: nil, check_permissions: false)
-        return Availability.new(available: false, message: command.unavailable_message) if command.planned
+        if command.planned
+          return Availability.new(
+            available: false,
+            message: command.unavailable_message,
+            action: command.unavailable_action
+          )
+        end
 
         if command.register_session_required && register_session != NOT_PROVIDED && register_session.blank?
-          return Availability.new(available: false, message: NO_REGISTER_SESSION_MESSAGE)
+          return Availability.new(
+            available: false,
+            message: NO_REGISTER_SESSION_MESSAGE,
+            action: :message
+          )
         end
 
         if command.transaction_required && transaction.blank?
-          return Availability.new(available: false, message: NO_ACTIVE_TRANSACTION_MESSAGE)
+          return Availability.new(
+            available: false,
+            message: NO_ACTIVE_TRANSACTION_MESSAGE,
+            action: :message
+          )
         end
 
         if context == :root && !command.root_available
-          return Availability.new(available: false, message: ROOT_UNAVAILABLE_MESSAGE)
+          return Availability.new(
+            available: false,
+            message: ROOT_UNAVAILABLE_MESSAGE,
+            action: :message
+          )
+        end
+
+        unless command.implemented_for?(context)
+          return Availability.new(
+            available: false,
+            message: command.routing_unavailable_message(context),
+            action: command.unavailable_action
+          )
         end
 
         if check_permissions && user.present? && store.present? && command.permission_keys.any?
           allowed = command.permission_keys.any? do |permission_key|
             Authorization.allowed?(user: user, permission_key: permission_key, store: store)
           end
-          return Availability.new(available: false, message: PERMISSION_DENIED_MESSAGE) unless allowed
+          unless allowed
+            return Availability.new(
+              available: false,
+              message: PERMISSION_DENIED_MESSAGE,
+              action: :message
+            )
+          end
         end
 
-        Availability.new(available: true, message: nil)
+        Availability.new(available: true, message: nil, action: nil)
       end
 
-      def help_message(user: nil, store: nil, register_session: nil, transaction: nil, context: :root)
+      def help_message(user: nil, store: nil, register_session: NOT_PROVIDED, transaction: nil, context: :root)
         ensure_loaded!
         lines = [ "POS commands:" ]
 
@@ -122,7 +170,7 @@ module Pos
 
           suffix = if command.planned
             " (planned)"
-          elsif !availability.available
+          elsif !command.implemented_for?(context) || !availability.available
             " (unavailable)"
           end
 

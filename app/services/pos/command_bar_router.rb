@@ -4,11 +4,11 @@ module Pos
   class CommandBarRouter
     Route = LookupLaneRouter::Route
 
-    def self.call(store:, input:, return_mode: false, transaction: nil, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
+    def self.call(store:, input:, return_mode: false, transaction: nil, user: nil, register_session: nil)
       new(store:, input:, return_mode:, transaction:, user:, register_session:).call
     end
 
-    def initialize(store:, input:, return_mode: false, transaction: nil, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
+    def initialize(store:, input:, return_mode: false, transaction: nil, user: nil, register_session: nil)
       @store = store
       @parsed = CommandParser.parse(input)
       @return_mode = return_mode

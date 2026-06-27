@@ -36,59 +36,65 @@ module Pos
         ].each { |command| registry.register!(command) }
       end
 
+      def build(**attrs)
+        defaults = {
+          legacy_aliases: [],
+          permission_keys: [],
+          transaction_required: false,
+          register_session_required: true,
+          planned: false,
+          unavailable_message: CommandRouteBuilder::NOT_YET_AVAILABLE_MESSAGE,
+          unavailable_action: :message,
+          root_implemented: false,
+          transaction_implemented: false,
+          root_available: true,
+          root_unavailable_message: nil,
+          transaction_unavailable_message: nil
+        }
+        Command.new(**defaults.merge(attrs))
+      end
+
       def help_command
-        Command.new(
+        build(
           key: :help,
           canonical: "/help",
           aliases: %w[/? ?],
-          legacy_aliases: [],
           description: "Show command help",
-          permission_keys: [],
-          transaction_required: false,
           register_session_required: false,
           handler: :help,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
       def customer_command
-        Command.new(
+        build(
           key: :customer,
           canonical: "/customer",
           aliases: %w[cu],
-          legacy_aliases: [],
           description: "Customer lookup",
           permission_keys: [ "pos.access" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :customer_lookup,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :customer_lookup
         )
       end
 
       def openring_command
-        Command.new(
+        build(
           key: :openring,
           canonical: "/openring",
           aliases: %w[op],
           legacy_aliases: %w[open],
           description: "Open-ring sale",
           permission_keys: [ "pos.lines.add.open_ring" ],
-          transaction_required: false,
-          register_session_required: true,
           handler: :open_ring,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          root_unavailable_message: CommandRegistry::ROOT_UNAVAILABLE_MESSAGE,
+          transaction_unavailable_message: CommandRouteBuilder::NOT_YET_AVAILABLE_MESSAGE,
+          unavailable_action: :disabled_command
         )
       end
 
       def linediscount_command
-        Command.new(
+        build(
           key: :linediscount,
           canonical: "/linediscount",
           aliases: %w[ld],
@@ -96,16 +102,14 @@ module Pos
           description: "Line discount",
           permission_keys: [ "pos.discounts.line.apply" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :line_discount,
-          planned: false,
-          unavailable_message: nil,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 
       def discount_command
-        Command.new(
+        build(
           key: :discount,
           canonical: "/discount",
           aliases: %w[di],
@@ -113,334 +117,241 @@ module Pos
           description: "Transaction discount",
           permission_keys: [ "pos.discounts.transaction.apply" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :transaction_discount,
-          planned: false,
-          unavailable_message: nil,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 
       def taxexempt_command
-        Command.new(
+        build(
           key: :taxexempt,
           canonical: "/taxexempt",
           aliases: %w[tx],
-          legacy_aliases: [],
           description: "Tax exemption",
           permission_keys: [ "pos.tax_exemptions.apply" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :tax_exempt,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def giftcard_command
-        Command.new(
+        build(
           key: :giftcard,
           canonical: "/giftcard",
           aliases: %w[gc],
-          legacy_aliases: [],
           description: "Gift card issue or reload",
           permission_keys: [ "pos.gift_cards.issue" ],
-          transaction_required: false,
-          register_session_required: true,
           handler: :gift_card_modal,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          root_unavailable_message: CommandRouteBuilder::GC_STUB_MESSAGE,
+          unavailable_action: :disabled_command,
+          transaction_implemented: true
         )
       end
 
       def giftredeem_command
-        Command.new(
+        build(
           key: :giftredeem,
           canonical: "/giftredeem",
           aliases: %w[gr],
-          legacy_aliases: [],
           description: "Gift card redemption tender",
           permission_keys: [ "pos.tenders.gift_card" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :gift_redeem,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def balance_command
-        Command.new(
+        build(
           key: :balance,
           canonical: "/balance",
           aliases: %w[bl],
-          legacy_aliases: [],
           description: "Stored value balance inquiry",
           permission_keys: [ "pos.tenders.gift_card", "pos.tenders.store_credit" ],
-          transaction_required: false,
-          register_session_required: true,
           handler: :balance_inquiry,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
       def return_command
-        Command.new(
+        build(
           key: :return,
           canonical: "/return",
           aliases: %w[rt],
-          legacy_aliases: [],
           description: "Return workflow",
           permission_keys: [ "pos.returns.receipted" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :return_drawer,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :return_drawer
         )
       end
 
       def pickup_command
-        Command.new(
+        build(
           key: :pickup,
           canonical: "/pickup",
           aliases: %w[pu],
-          legacy_aliases: [],
           description: "Customer pickup workflow",
           permission_keys: [ "pos.access" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :pickup_drawer,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :pickup_drawer
         )
       end
 
       def tender_command
-        Command.new(
+        build(
           key: :tender,
           canonical: "/tender",
           aliases: %w[tn],
-          legacy_aliases: [],
           description: "Settlement modal",
           permission_keys: [ "pos.tenders.cash", "pos.tenders.card", "pos.tenders.check", "pos.tenders.gift_card", "pos.tenders.store_credit" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :settlement_modal,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def cash_command
-        Command.new(
+        build(
           key: :cash,
           canonical: "/cash",
           aliases: %w[cs],
-          legacy_aliases: [],
           description: "Cash tender on a sale",
           permission_keys: [ "pos.tenders.cash" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :tender_cash,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def card_command
-        Command.new(
+        build(
           key: :card,
           canonical: "/card",
           aliases: %w[cd],
-          legacy_aliases: [],
           description: "Card tender on a sale",
           permission_keys: [ "pos.tenders.card" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :tender_card,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def check_command
-        Command.new(
+        build(
           key: :check,
           canonical: "/check",
           aliases: %w[ck],
-          legacy_aliases: [],
           description: "Check tender on a sale",
           permission_keys: [ "pos.tenders.check" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :tender_check,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def storecredit_command
-        Command.new(
+        build(
           key: :storecredit,
           canonical: "/storecredit",
           aliases: %w[sc],
-          legacy_aliases: [],
           description: "Store credit tender on a sale",
           permission_keys: [ "pos.tenders.store_credit" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :tender_store_credit,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def hold_command
-        Command.new(
+        build(
           key: :hold,
           canonical: "/hold",
           aliases: %w[ho],
-          legacy_aliases: [],
           description: "Suspend current transaction",
           permission_keys: [ "pos.transactions.suspend" ],
           transaction_required: true,
-          register_session_required: true,
           handler: :hold,
-          planned: false,
-          unavailable_message: nil,
           root_available: false
         )
       end
 
       def session_command
-        Command.new(
+        build(
           key: :session,
           canonical: "/session",
           aliases: %w[se],
-          legacy_aliases: [],
           description: "Register session summary",
           permission_keys: [ "pos.register_sessions.view" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :session_drawer,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :session_drawer
         )
       end
 
       def cashdrop_command
-        Command.new(
+        build(
           key: :cashdrop,
           canonical: "/cashdrop",
           aliases: %w[dp drop],
-          legacy_aliases: [],
           description: "Cash drop to safe",
           permission_keys: [ "pos.cash_movements.create" ],
-          transaction_required: false,
-          register_session_required: true,
           handler: :cash_drop,
           planned: true,
-          unavailable_message: CASH_DROP_UNAVAILABLE_MESSAGE,
-          root_available: true
+          unavailable_message: CASH_DROP_UNAVAILABLE_MESSAGE
         )
       end
 
       def cashin_command
-        Command.new(
+        build(
           key: :cashin,
           canonical: "/cashin",
           aliases: %w[ci],
-          legacy_aliases: [],
           description: "Miscellaneous cash in",
           permission_keys: [ "pos.cash_movements.create" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :cash_in,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :cash_in
         )
       end
 
       def cashout_command
-        Command.new(
+        build(
           key: :cashout,
           canonical: "/cashout",
           aliases: %w[co],
-          legacy_aliases: [],
           description: "Miscellaneous cash out",
           permission_keys: [ "pos.cash_movements.create" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :cash_out,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :cash_out
         )
       end
 
       def close_command
-        Command.new(
+        build(
           key: :close,
           canonical: "/close",
           aliases: %w[cl],
-          legacy_aliases: [],
           description: "Close register workflow",
           permission_keys: [ "pos.register_sessions.close" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :close_register,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :close_register
         )
       end
 
       def reports_command
-        Command.new(
+        build(
           key: :reports,
           canonical: "/reports",
           aliases: %w[rp],
-          legacy_aliases: [],
           description: "Navigate to reports",
           permission_keys: [ "pos.reports.view" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :reports,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :reports
         )
       end
 
       def drawer_command
-        Command.new(
+        build(
           key: :drawer,
           canonical: "/drawer",
           aliases: %w[dr],
-          legacy_aliases: [],
           description: "Cash drawer action",
           permission_keys: [ "pos.cash_movements.create" ],
-          transaction_required: false,
-          register_session_required: true,
-          handler: :drawer_action,
-          planned: false,
-          unavailable_message: nil,
-          root_available: true
+          handler: :drawer_action
         )
       end
     end

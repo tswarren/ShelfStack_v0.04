@@ -4,11 +4,11 @@ module Pos
   class RootCommandRouter
     Route = LookupLaneRouter::Route
 
-    def self.call(store:, input:, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
+    def self.call(store:, input:, user: nil, register_session: nil)
       new(store: store, input: input, user: user, register_session: register_session).call
     end
 
-    def initialize(store:, input:, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
+    def initialize(store:, input:, user: nil, register_session: nil)
       @store = store
       @parsed = CommandParser.parse(input)
       @user = user

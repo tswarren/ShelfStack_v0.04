@@ -7,7 +7,7 @@ module Pos
     GC_STUB_MESSAGE = "Gift card sales from the command field ship in a later update. Start a new sale first."
     NOT_YET_AVAILABLE_MESSAGE = "That command is not available yet."
 
-    def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
+    def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
       new(
         match: match,
         context: context,
@@ -18,7 +18,7 @@ module Pos
       ).call
     end
 
-    def initialize(match:, context:, store:, transaction: nil, user: nil, register_session: CommandRegistry::NOT_PROVIDED)
+    def initialize(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
       @match = match
       @context = context
       @store = store
@@ -36,7 +36,7 @@ module Pos
         register_session: register_session,
         transaction: transaction
       )
-      return unavailable_route(availability.message) unless availability.available
+      return unavailable_route(availability) unless availability.available
 
       handler_route
     end
@@ -71,16 +71,8 @@ module Pos
         line_discount_route
       when :transaction_discount
         Route.new(action: :transaction_discount_offer, payload: {}, message: nil)
-      when :open_ring
-        Route.new(
-          action: :disabled_command,
-          payload: {},
-          message: context == :root ? CommandRegistry::ROOT_UNAVAILABLE_MESSAGE : NOT_YET_AVAILABLE_MESSAGE
-        )
-      when :cash_drop
-        Route.new(action: :message, payload: {}, message: command.unavailable_message)
       else
-        Route.new(action: :disabled_command, payload: {}, message: NOT_YET_AVAILABLE_MESSAGE)
+        raise ArgumentError, "No route handler wired for #{command.key.inspect}"
       end
     end
 
@@ -93,10 +85,6 @@ module Pos
     end
 
     def gift_card_route
-      if context == :root
-        return Route.new(action: :disabled_command, payload: {}, message: GC_STUB_MESSAGE)
-      end
-
       amount_cents = parse_amount_cents(match.args)
       if amount_cents.present?
         Route.new(action: :gift_card_sale, payload: { amount_cents: amount_cents }, message: nil)
@@ -146,8 +134,8 @@ module Pos
       (BigDecimal(normalized) * 100).round.to_i
     end
 
-    def unavailable_route(message)
-      Route.new(action: :message, payload: {}, message: message)
+    def unavailable_route(availability)
+      Route.new(action: availability.action, payload: {}, message: availability.message)
     end
   end
 end

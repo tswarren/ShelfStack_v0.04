@@ -6,6 +6,9 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
   setup do
     @store = create_store!
     @variant = create_product_variant!(selling_price_cents: 1000)
+    @user = create_user!
+    @workstation = create_workstation!(store: @store)
+    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @user)
   end
 
   test "variant lookup wins over receipt-shaped input" do
@@ -71,31 +74,43 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
   end
 
   test "gift card command with amount routes to gift card sale" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/giftcard 25")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
+      input: "/giftcard 25"
+    )
 
     assert_equal :gift_card_sale, route.action
     assert_equal 2500, route.payload[:amount_cents]
   end
 
   test "gift card command without amount opens drawer offer" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/giftcard")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
+      input: "/giftcard"
+    )
 
     assert_equal :gift_card_sale_offer, route.action
   end
 
   test "balance command opens balance inquiry offer" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/balance")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/balance"
+    )
 
     assert_equal :balance_inquiry_offer, route.action
   end
 
   test "/d routes to previous discountable line when transaction provided" do
-    user = create_user!
-    workstation = create_workstation!(store: @store)
     transaction = create_pos_transaction!(
       store: @store,
-      workstation: workstation,
-      user: user,
+      workstation: @workstation,
+      user: @user,
       lines: [
         { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 },
         { product_variant: @variant, quantity: 1, unit_price_cents: 2000, extended_price_cents: 2000 }
@@ -103,56 +118,73 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
     previous_line = transaction.pos_transaction_lines.order(:line_number).last
 
-    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/d")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/d"
+    )
 
     assert_equal :line_discount_offer, route.action
     assert_equal previous_line.id, route.payload[:line_id]
   end
 
   test "/d without transaction returns no active transaction message" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/d")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/d"
+    )
 
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
   end
 
   test "/ld routes to line discount workflow" do
-    user = create_user!
-    workstation = create_workstation!(store: @store)
     transaction = create_pos_transaction!(
       store: @store,
-      workstation: workstation,
-      user: user,
+      workstation: @workstation,
+      user: @user,
       lines: [
         { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
       ]
     )
 
-    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/ld")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/ld"
+    )
 
     assert_equal :line_discount_offer, route.action
   end
 
   test "/di routes to transaction discount workflow" do
-    user = create_user!
-    workstation = create_workstation!(store: @store)
-    transaction = create_pos_transaction!(store: @store, workstation: workstation, user: user)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
 
-    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/di")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/di"
+    )
 
     assert_equal :transaction_discount_offer, route.action
   end
 
   test "/cashdrop returns planned disabled message" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/cashdrop")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/cashdrop"
+    )
 
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::Catalog::CASH_DROP_UNAVAILABLE_MESSAGE, route.message
   end
 
   test "/d skips non-discountable previous line" do
-    user = create_user!
-    workstation = create_workstation!(store: @store)
     non_discountable_variant = create_product_variant!(
       sub_department: @variant.sub_department,
       sku: "DISC-NO-#{SecureRandom.hex(3)}",
@@ -161,8 +193,8 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
     transaction = create_pos_transaction!(
       store: @store,
-      workstation: workstation,
-      user: user,
+      workstation: @workstation,
+      user: @user,
       lines: [
         { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 },
         { product_variant: non_discountable_variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
@@ -170,9 +202,21 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
     discountable_line = transaction.pos_transaction_lines.order(:line_number).first
 
-    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/d")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/d"
+    )
 
     assert_equal discountable_line.id, route.payload[:line_id]
+  end
+
+  test "register-session-required command without open session returns message" do
+    route = Pos::CommandBarRouter.call(store: @store, register_session: nil, input: "/balance")
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_REGISTER_SESSION_MESSAGE, route.message
   end
 
   test "/help returns help action" do
