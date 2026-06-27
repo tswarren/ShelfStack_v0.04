@@ -47,4 +47,17 @@ class Pos::WorkspaceLinesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to edit_pos_transaction_path(transaction, mode: "sale")
     assert_equal 1, transaction.pos_transaction_lines.count
   end
+
+  test "workspace add no receipt line creates draft with negative quantity" do
+    assert_difference -> { PosTransaction.count }, 1 do
+      post pos_workspace_add_no_receipt_line_path,
+           params: { product_variant_id: @variant.id, quantity: -1 }
+    end
+
+    transaction = PosTransaction.drafts.order(:id).last
+    assert_redirected_to edit_pos_transaction_path(transaction, mode: "sale")
+    line = transaction.pos_transaction_lines.sole
+    assert_equal(-1, line.quantity)
+    assert_equal "return_to_stock", line.return_disposition
+  end
 end

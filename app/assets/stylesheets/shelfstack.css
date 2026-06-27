@@ -3713,6 +3713,10 @@ body.ss-pos-modal-open {
   margin-top: 0.75rem;
 }
 
+.ss-pos-return-drawer__modes {
+  margin-bottom: 0.75rem;
+}
+
 .ss-pos-inline-panel:not([hidden]) {
   display: block;
   margin-top: 0.75rem;

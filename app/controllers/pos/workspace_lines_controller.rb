@@ -3,6 +3,7 @@
 module Pos
   class WorkspaceLinesController < BaseController
     before_action -> { authorize_pos!("pos.returns.receipted") }, only: :add_return_line
+    before_action -> { authorize_pos!("pos.lines.add") }, only: :add_no_receipt_line
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
 
     def add_return_line
@@ -17,6 +18,25 @@ module Pos
       redirect_to edit_pos_transaction_path(transaction, mode: "sale"), notice: "Return line added."
     rescue Pos::AddReturnLine::Error => e
       redirect_to pos_root_path, alert: e.message
+    end
+
+    def add_no_receipt_line
+      transaction = ensure_workspace_draft!
+      return if performed?
+
+      variant = ProductVariant.find(params[:product_variant_id])
+      Pos::AddVariantLine.call!(
+        transaction: transaction,
+        variant: variant,
+        quantity: params[:quantity].presence || -1,
+        unit_price_cents: parse_dollar_param(params[:unit_price]),
+        entry_action: "return_no_receipt"
+      )
+      redirect_to edit_pos_transaction_path(transaction, mode: "sale"), notice: "Return line added."
+    rescue ActiveRecord::RecordNotFound
+      redirect_to pos_root_path, alert: "Item could not be found."
+    rescue AddVariantLine::Error, ActiveRecord::RecordInvalid => e
+      redirect_to pos_root_path, alert: e.message.presence || "Unable to add return line."
     end
 
     def add_reservation_line

@@ -149,7 +149,9 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, 'data-pos-command-bar-target="receiptPanel"'
     assert_includes response.body, 'data-pos-command-bar-target="pickupPanel"'
+    assert_includes response.body, "No receipt"
     assert_includes response.body, pos_workspace_add_return_line_path
+    assert_includes response.body, pos_workspace_add_no_receipt_line_path
     assert_includes response.body, pos_workspace_add_reservation_line_path
   end
 

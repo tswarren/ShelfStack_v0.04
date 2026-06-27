@@ -20,7 +20,8 @@ export default class extends Controller {
     addReservationUrl: String,
     returnMode: { type: Boolean, default: false },
     mode: { type: String, default: "sale" },
-    autoAdd: { type: Boolean, default: true }
+    autoAdd: { type: Boolean, default: true },
+    redirectOnSuccess: { type: Boolean, default: false }
   }
 
   connect() {
@@ -247,15 +248,21 @@ export default class extends Controller {
       method: "POST",
       headers: {
         "X-CSRF-Token": this.csrfToken,
-        Accept: "text/vnd.turbo-stream.html"
+        Accept: this.redirectOnSuccessValue ? "text/html" : "text/vnd.turbo-stream.html"
       },
       body
     })
       .then((response) => {
+        if (this.redirectOnSuccessValue && response.redirected) {
+          window.location.href = response.url
+          return null
+        }
         if (!response.ok) throw new Error(`Add line failed (${response.status})`)
         return response.text()
       })
       .then((html) => {
+        if (!html) return
+
         window.Turbo.renderStreamMessage(html)
         this.inputElement.value = ""
         this.clearChoices()

@@ -56,7 +56,7 @@ module Pos
     end
 
     def negative_line_entry?
-      entry_action == "return"
+      entry_action.in?(%w[return return_no_receipt])
     end
   end
 end
