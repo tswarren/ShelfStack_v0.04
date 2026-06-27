@@ -42,7 +42,7 @@ Run full suite: `./dev/rails-docker bin/rails test`
 | 7C | [phase-7c-test-plan.md](specifications/phase-7c-test-plan.md) |
 | 8 | [phase-8-test-plan.md](specifications/phase-8-test-plan.md) |
 | 8.5-* | See `specifications/phase-8.5-*-test-plan.md` |
-| 9a / 9b | [phase-9a-test-plan.md](specifications/phase-9a-test-plan.md), [phase-9b-test-plan.md](specifications/phase-9b-test-plan.md) |
+| 9a / 9b | [phase-9a-test-plan.md](specifications/phase-9a-test-plan.md), [phase-9b-test-plan.md](specifications/phase-9b-test-plan.md) — specs: [phase-9a-ux-foundation-for-reporting-spec.md](specifications/phase-9a-ux-foundation-for-reporting-spec.md), [phase-9b-operational-reports-spec.md](specifications/phase-9b-operational-reports-spec.md) |
 | 10-A / 10-B / 10-C | [phase-10a-test-plan.md](specifications/phase-10a-test-plan.md), [phase-10b-test-plan.md](specifications/phase-10b-test-plan.md), [phase-10c-test-plan.md](specifications/phase-10c-test-plan.md) |
 
 Completion records under [implementation/](implementation/) list verification steps per phase.

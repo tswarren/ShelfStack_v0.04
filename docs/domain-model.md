@@ -495,7 +495,7 @@ Reports read operational snapshots and ledgers — not GL postings (Phase 9c def
 
 ```text
 docs/roadmap/phase-9-reporting-and-accounting.md
-docs/specifications/phase-9b-reports-spec.md
+docs/specifications/phase-9b-operational-reports-spec.md
 docs/implementation/phase-9a-completion.md
 docs/implementation/phase-9b-completion.md
 ```

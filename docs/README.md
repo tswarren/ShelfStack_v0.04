@@ -33,7 +33,15 @@ ShelfStack is a bookstore-focused catalog, inventory, stock, and point-of-sale m
 
 Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to the task.
 
-**Phases 1–9b and Phase 10-A/10-B are implemented.** See completion records under [implementation/](implementation/). **Current priority:** Phase 10-C (POS keyboard workspace). **Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data; **Inventory** (`/inventory`) and **Orders** (`/orders`) cover Phase 4–5 workflows.
+**Phases 1–9b and Phase 10-A/10-B are implemented.** See completion records under [implementation/](implementation/). **Current priority:** Phase 10-C (POS keyboard workspace).
+
+```text
+Implemented: Phases 1–8, 6.5, 7A–7C, 8.5 slices, 9a/9b, 10-A, 10-B
+Current:     Phase 10-C
+Deferred:    Phase 9c
+```
+
+**Items** (`/items`) is the operational workspace for catalog/product/variant workflows; **Setup** (`/setup`) holds admin reference data; **Inventory** (`/inventory`) and **Orders** (`/orders`) cover Phase 4–5 workflows.
 
 ---
 
@@ -52,7 +60,7 @@ Read [../AGENTS.md](../AGENTS.md) first, then the phase documents relevant to th
 | Phase 7B | Complete | [implementation/phase-7b-2-completion.md](implementation/phase-7b-2-completion.md), [phase-7b-3-completion.md](implementation/phase-7b-3-completion.md) |
 | Phase 7C | Complete | [implementation/phase-7c-completion.md](implementation/phase-7c-completion.md) |
 | Phase 8 | Complete | [implementation/phase-8-1-8-2-completion.md](implementation/phase-8-1-8-2-completion.md), [phase-8-3-4-5-completion.md](implementation/phase-8-3-4-5-completion.md) |
-| Phase 8.5 | Mostly complete | See [roadmap.md](roadmap.md) and `implementation/phase-8.5-*-completion.md` |
+| Phase 8.5 | Complete (see slice records) | `implementation/phase-8.5-*-completion.md` |
 | Phase 9a / 9b | Complete | [implementation/phase-9a-completion.md](implementation/phase-9a-completion.md), [phase-9b-completion.md](implementation/phase-9b-completion.md) |
 | Phase 9c | Deferred | [roadmap/phase-9c-gl-shaped-financial-layer.md](roadmap/phase-9c-gl-shaped-financial-layer.md) |
 | Phase 10-A | Complete | [implementation/phase-10a-completion.md](implementation/phase-10a-completion.md) |
@@ -166,7 +174,22 @@ Each phase has three companion documents: functional specification, data model, 
 | [specifications/phase-6-data-model.md](specifications/phase-6-data-model.md) | Phase 6 `pos_*` tables and inventory posting types |
 | [specifications/phase-6-test-plan.md](specifications/phase-6-test-plan.md) | Required Phase 6 test coverage |
 
-Later phases (7–9) follow the same `{spec,data-model,test-plan}` pattern under [specifications/](specifications/). See [roadmap.md](roadmap.md) for the full phase index.
+### Phases 7–9 (index)
+
+Later phases follow the `{spec, data-model, test-plan}` pattern. Primary entry points:
+
+| Phase | Spec | Data model | Test plan |
+| ----- | ---- | ---------- | --------- |
+| 7A Customer demand | [phase-7a-customer-demand-spec.md](specifications/phase-7a-customer-demand-spec.md) | [phase-7a-data-model.md](specifications/phase-7a-data-model.md) | [phase-7a-test-plan.md](specifications/phase-7a-test-plan.md) |
+| 7B Stored value / settlement | [phase-7b-stored-value-spec.md](specifications/phase-7b-stored-value-spec.md), [phase-7b-pos-settlement-spec.md](specifications/phase-7b-pos-settlement-spec.md) | [phase-7b-data-model.md](specifications/phase-7b-data-model.md) | [phase-7b-test-plan.md](specifications/phase-7b-test-plan.md) |
+| 7C Buyback | [phase-7c-used-buyback-spec.md](specifications/phase-7c-used-buyback-spec.md) | [phase-7c-data-model.md](specifications/phase-7c-data-model.md) | [phase-7c-test-plan.md](specifications/phase-7c-test-plan.md) |
+| 8 Inventory tracking | [phase-8-inventory-eligibility-and-tracking-spec.md](specifications/phase-8-inventory-eligibility-and-tracking-spec.md) | [phase-8-data-model.md](specifications/phase-8-data-model.md) | [phase-8-test-plan.md](specifications/phase-8-test-plan.md) |
+| 8.5-* | See `specifications/phase-8.5-*-spec.md` | See `specifications/phase-8.5-*-data-model.md` | See `specifications/phase-8.5-*-test-plan.md` |
+| 9a Report UX | [phase-9a-ux-foundation-for-reporting-spec.md](specifications/phase-9a-ux-foundation-for-reporting-spec.md) | (minimal new tables) | [phase-9a-test-plan.md](specifications/phase-9a-test-plan.md) |
+| 9b Operational reports | [phase-9b-operational-reports-spec.md](specifications/phase-9b-operational-reports-spec.md) | (reads operational data) | [phase-9b-test-plan.md](specifications/phase-9b-test-plan.md) |
+| 9c GL layer | [phase-9c-gl-shaped-financial-layer.md](roadmap/phase-9c-gl-shaped-financial-layer.md) | Deferred | — |
+
+See [roadmap.md](roadmap.md) for the full phase index and completion records under [implementation/](implementation/).
 
 ### Phase 10: Comprehensive UI/UX Expansion
 

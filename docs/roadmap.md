@@ -644,6 +644,6 @@ Phase 9a ✓ → Phase 9b ✓ → Phase 9c deferred → Phase 10-A ✓ → 10-B 
 
 Implementation records:
 
-- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through [phase-7a-completion.md](implementation/phase-7a-completion.md)
-- [docs/implementation/phase-7b-2-completion.md](implementation/phase-7b-2-completion.md), [phase-7b-3-completion.md](implementation/phase-7b-3-completion.md)
+- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through [phase-9b-completion.md](implementation/phase-9b-completion.md)
 - [docs/implementation/phase-10a-completion.md](implementation/phase-10a-completion.md), [phase-10b-completion.md](implementation/phase-10b-completion.md)
+- Phase 8.5 slice records: `docs/implementation/phase-8.5-*-completion.md`

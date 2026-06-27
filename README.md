@@ -20,7 +20,7 @@ ShelfStack is developed in phases. **Phases 1–8**, **6.5**, **7A–7C**, **8.5
 | 7B | Customer credit (settlement, stored value) | **Complete** |
 | 7C | Used buyback | **Complete** |
 | 8 | Inventory eligibility and tracking | **Complete** |
-| 8.5 | POS discounts, tax exceptions, order readiness, item data quality | **Mostly complete** — see completion records |
+| 8.5 | POS discounts, tax exceptions, order readiness, item data quality | **Complete** (8.5-4); 8.5-1/2/3 completion records — some branches may still be in review |
 | 9a / 9b | Report UX foundation and operational reports | **Complete** |
 | 9c | GL-shaped financial layer | **Deferred** |
 | 10-A / 10-B | Interaction infrastructure; item cockpit | **Complete** |
@@ -28,7 +28,7 @@ ShelfStack is developed in phases. **Phases 1–8**, **6.5**, **7A–7C**, **8.5
 | 10-D / 10-E | Workflow polish; consistency sweep | Planned |
 
 ```text
-Implemented: Phases 1–8, 6.5, 7A–7C, 9a/9b, 10-A, 10-B
+Implemented: Phases 1–8, 6.5, 7A–7C, 8.5 slices (see completion records), 9a/9b, 10-A, 10-B
 Current:     Phase 10-C — POS Keyboard Workspace
 Deferred:    Phase 9c GL-shaped financial layer
 ```

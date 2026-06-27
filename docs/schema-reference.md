@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document is an index and maintenance guide for the ShelfStack schema reference.
+This document is a **schema index and maintenance guide**, not a complete table-by-table schema reference.
 
-The full schema details are maintained in phase-specific data model documents.
+The full schema details live in phase-specific data model documents. **Authoritative runtime schema:** `db/schema.rb`.
 
 ---
 
