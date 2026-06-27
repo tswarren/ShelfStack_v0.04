@@ -51,14 +51,32 @@ module Pos
     end
 
     def create
-      @transaction = PosTransaction.create!(
+      result = Pos::DraftCreator.call(
         store: pos_store,
         workstation: current_workstation,
         cashier_user: current_user,
-        status: "draft"
+        register_session: current_register_session,
+        user_session: Current.user_session
       )
-      record_audit!("pos.transaction.created", @transaction)
-      redirect_to edit_pos_transaction_path(@transaction, mode: params[:mode].presence || "sale")
+
+      case result.status
+      when :missing_register_session
+        redirect_to pos_root_path, alert: "Open the register before starting a sale."
+      when :invalid_register_session
+        redirect_to pos_root_path, alert: "Register session does not match the current workstation."
+      when :conflict
+        redirect_to pos_root_path, alert: "Multiple active drafts exist. Resolve the conflict before starting a new sale."
+      when :legacy_found
+        redirect_to pos_root_path, alert: "An older draft needs review before starting a new sale."
+      when :created
+        @transaction = result.transaction
+        record_audit!("pos.transaction.created", @transaction)
+        redirect_to edit_pos_transaction_path(@transaction, mode: params[:mode].presence || "sale")
+      when :resumed
+        redirect_to edit_pos_transaction_path(result.transaction, mode: params[:mode].presence || "sale")
+      else
+        redirect_to pos_root_path, alert: "Unable to start transaction."
+      end
     end
 
     def edit
