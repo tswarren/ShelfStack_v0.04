@@ -217,6 +217,28 @@ export default class extends Controller {
   addVariant(variant) {
     const body = new FormData()
     body.append("product_variant_id", variant.id)
+
+    if (this.rootCommandAddUrl()) {
+      fetch(this.addUrlValue, {
+        method: "POST",
+        headers: {
+          "X-CSRF-Token": this.csrfToken,
+          Accept: "application/json"
+        },
+        body
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.action === "redirect" && data.payload?.url) {
+            window.location.href = data.payload.url
+            return
+          }
+          this.showMessage(data.message || "Unable to add item.")
+        })
+        .catch(() => this.showMessage("Unable to add item."))
+      return
+    }
+
     body.append("quantity", this.returnModeValue ? "-1" : "1")
     body.append("return_mode", this.returnModeValue ? "1" : "0")
     body.append("entry_action", this.returnModeValue ? "return_no_receipt" : "sale")
@@ -294,6 +316,10 @@ export default class extends Controller {
     if (this.hasQueryTarget) return this.queryTarget
     if (this.hasLookupInputTarget) return this.lookupInputTarget
     return null
+  }
+
+  rootCommandAddUrl() {
+    return this.addUrlValue.includes("/pos/route_command")
   }
 
   get csrfToken() {

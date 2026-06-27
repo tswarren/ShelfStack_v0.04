@@ -1,0 +1,19 @@
+<section class="ss-pos-panel ss-pos-workspace-conflict">
+  <h2 class="ss-pos-panel__title"><%= @landing.status == :legacy_found ? "Older draft needs review" : "Multiple active drafts" %></h2>
+  <p class="ss-hint">
+    <% if @landing.status == :legacy_found %>
+      An older draft without register session stamping must be reviewed before starting a new sale.
+    <% else %>
+      Resolve the active draft conflict before starting a new sale.
+    <% end %>
+  </p>
+  <ul class="ss-pos-workspace-conflict__list">
+    <% @landing.candidates.each do |draft| %>
+      <li>
+        <%= link_to "Continue draft ##{draft.id} (#{draft.pos_transaction_lines.size} items, #{pos_money(draft.total_cents)})",
+              edit_pos_transaction_path(draft, mode: "sale"),
+              class: "ss-btn ss-btn-secondary" %>
+      </li>
+    <% end %>
+  </ul>
+</section>

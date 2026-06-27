@@ -128,6 +128,7 @@ Rails.application.routes.draw do
 
   namespace :setup do
     root to: "home#show"
+    post "route_command", to: "workspace_commands#route_command"
     get "locked_out", to: "home#locked_out"
     resources :users do
       member do
@@ -302,6 +303,7 @@ Rails.application.routes.draw do
 
   namespace :customers do
     root to: "home#show"
+    post "route_command", to: "workspace_commands#route_command"
     get "locked_out", to: "home#locked_out"
     resource :customer_lookup, only: %i[show]
     resource :variant_lookup, only: %i[show]
@@ -355,6 +357,7 @@ Rails.application.routes.draw do
 
   namespace :buybacks do
     root to: "home#show"
+    post "route_command", to: "workspace_commands#route_command"
     get "locked_out", to: "home#locked_out"
     resources :reports, only: %i[index]
     resources :sessions, only: %i[new create show update] do
@@ -390,6 +393,7 @@ Rails.application.routes.draw do
 
   namespace :orders do
     root to: "home#show"
+    post "route_command", to: "workspace_commands#route_command"
     get "locked_out", to: "home#locked_out"
     resource :variant_lookup, only: %i[show]
     resource :line_lookup, only: %i[show]
@@ -428,6 +432,7 @@ Rails.application.routes.draw do
 
   namespace :pos do
     root to: "home#show"
+    post "route_command", to: "workspace_commands#route_command"
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]

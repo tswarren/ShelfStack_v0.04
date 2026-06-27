@@ -16,17 +16,25 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert route.payload[:variants].any?
   end
 
-  test "receipt lookup when no variant match and receipt format" do
+  test "receipt-shaped input returns failed lookup message when no variant match" do
     route = Pos::CommandBarRouter.call(store: @store, input: "001-001-000042")
 
-    assert_equal :receipt_lookup, route.action
-    assert_equal "001-001-000042", route.payload[:transaction_number]
+    assert_equal :message, route.action
+    assert_equal Pos::RootCommandRouter::FAILED_LOOKUP_MESSAGE, route.message
   end
 
-  test "open ring offer for unmatched non-receipt input" do
+  test "unmatched non-receipt input returns failed lookup message" do
     route = Pos::CommandBarRouter.call(store: @store, input: "Custom gift wrap")
 
-    assert_equal :open_ring_offer, route.action
+    assert_equal :message, route.action
+    assert_equal Pos::RootCommandRouter::FAILED_LOOKUP_MESSAGE, route.message
+  end
+
+  test "bare amount returns failed lookup message" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "20")
+
+    assert_equal :message, route.action
+    assert_equal Pos::RootCommandRouter::FAILED_LOOKUP_MESSAGE, route.message
   end
 
   test "isbn lookup routes to variant lookup with multiple matches" do

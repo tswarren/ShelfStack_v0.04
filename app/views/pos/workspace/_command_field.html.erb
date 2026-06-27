@@ -1,0 +1,18 @@
+<%
+  route_url = local_assigns.fetch(:route_url)
+  lookup_url = local_assigns.fetch(:lookup_url)
+  add_url = local_assigns.fetch(:add_url)
+  autofocus = local_assigns.fetch(:autofocus, false)
+%>
+<div class="ss-pos-command-bar__scan-column">
+  <%= label_tag :pos_command_input, "Command", class: "ss-pos-command-bar__scan-label" %>
+  <%= text_field_tag :pos_command_input, nil,
+        autocomplete: "off",
+        placeholder: "Scan SKU/ISBN or enter /help",
+        class: "ss-pos-scan-input ss-pos-scan-input--primary",
+        data: {
+          pos_command_bar_target: "input",
+          pos_line_entry_target: "query",
+          action: "keydown.enter->pos-command-bar#submit input->pos-line-entry#search"
+        } %>
+</div>

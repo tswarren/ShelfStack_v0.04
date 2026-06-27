@@ -1,0 +1,17 @@
+<section class="ss-pos-panel ss-pos-workspace ss-pos-command-bar"
+         data-controller="pos-command-bar pos-line-entry pos-workspace-focus"
+         data-pos-command-bar-route-url-value="<%= pos_route_command_path %>"
+         data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
+         data-pos-line-entry-add-url-value="<%= pos_route_command_path %>"
+         data-pos-line-entry-mode-value="sale">
+  <%= render "pos/workspace/context_bar" %>
+  <div class="ss-pos-command-bar__entry-row ss-pos-workspace__entry-row">
+    <%= render "pos/workspace/command_field",
+          route_url: pos_route_command_path,
+          lookup_url: pos_line_lookup_path,
+          add_url: pos_route_command_path,
+          autofocus: true %>
+  </div>
+  <%= render "pos/workspace/command_feedback" %>
+  <%= render "pos/workspace/idle_actions" %>
+</section>

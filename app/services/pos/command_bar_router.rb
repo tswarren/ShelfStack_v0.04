@@ -2,13 +2,14 @@
 
 module Pos
   class CommandBarRouter
-    RECEIPT_NUMBER_PATTERN = /\A\d+-\d+-\d{6}\z/
     BALANCE_COMMAND_PATTERN = /\A\/balance\z/i
     GIFT_CARD_COMMAND_PATTERN = /\A\/giftcard(?:\s+(\d+(?:\.\d{1,2})?))?\z/i
     LINE_DISCOUNT_COMMAND_PATTERN = /\A\/d\z/i
     TRANSACTION_DISCOUNT_COMMAND_PATTERN = /\A\/dt\z/i
 
     Route = Data.define(:action, :payload, :message)
+
+    FAILED_LOOKUP_MESSAGE = RootCommandRouter::FAILED_LOOKUP_MESSAGE
 
     def self.call(store:, input:, return_mode: false, transaction: nil)
       new(store:, input:, return_mode:, transaction:).call
@@ -22,23 +23,23 @@ module Pos
     end
 
     def call
-      return Route.new(action: :empty, payload: {}, message: "Enter a SKU, ISBN, receipt number, or amount.") if input.blank?
+      return Route.new(action: :empty, payload: {}, message: "Enter a SKU, ISBN, receipt number, or command.") if input.blank?
 
-    if gift_card_command?
-      return gift_card_route
-    end
+      if gift_card_command?
+        return gift_card_route
+      end
 
-    if line_discount_command?
-      return line_discount_route
-    end
+      if line_discount_command?
+        return line_discount_route
+      end
 
-    if transaction_discount_command?
-      return Route.new(action: :transaction_discount_offer, payload: {}, message: nil)
-    end
+      if transaction_discount_command?
+        return Route.new(action: :transaction_discount_offer, payload: {}, message: nil)
+      end
 
-    if balance_command?
+      if balance_command?
         return Route.new(action: :balance_inquiry_offer, payload: {}, message: nil)
-    end
+      end
 
       if lookup.variants.any?
         return Route.new(
@@ -48,27 +49,7 @@ module Pos
         )
       end
 
-      if receipt_number?
-        return Route.new(
-          action: :receipt_lookup,
-          payload: { transaction_number: input },
-          message: nil
-        )
-      end
-
-      if numeric_amount?
-        return Route.new(
-          action: :open_ring_offer,
-          payload: { amount_cents: (BigDecimal(input) * 100).round.to_i },
-          message: nil
-        )
-      end
-
-      Route.new(
-        action: :open_ring_offer,
-        payload: { query: input },
-        message: "No match found. Open-ring this item?"
-      )
+      Route.new(action: :message, payload: {}, message: FAILED_LOOKUP_MESSAGE)
     end
 
     private
@@ -137,22 +118,9 @@ module Pos
       end
     end
 
-    def receipt_number?
-      input.match?(RECEIPT_NUMBER_PATTERN)
-    end
-
     def lookup
       @lookup ||= LineLookup.call(store: store, query: input)
     end
 
-    def numeric_amount?
-      return false if barcode_like_input?
-
-      input.match?(/\A\d+(\.\d{1,2})?\z/)
-    end
-
-    def barcode_like_input?
-      CatalogIdentifierService.lookup_digit_prefix(input).length >= 10
-    end
   end
 end
