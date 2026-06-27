@@ -61,6 +61,26 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal @variant.id, transaction.pos_transaction_lines.first.product_variant_id
   end
 
+
+  test "root route_command receipt-shaped input does not create draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "001-001-000042" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, body["message"]
+  end
+
+  test "root route_command bare amount does not create draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "20" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+  end
+
   test "root route_command failed lookup does not create draft" do
     assert_no_difference -> { PosTransaction.count } do
       post pos_route_command_path, params: { input: "definitely-not-found" }, as: :json
@@ -68,7 +88,17 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
 
     body = JSON.parse(response.body)
     assert_equal "message", body["action"]
-    assert_equal Pos::RootCommandRouter::FAILED_LOOKUP_MESSAGE, body["message"]
+    assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, body["message"]
+  end
+
+  test "root route_command unknown slash command returns message without creating draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/foo" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, body["message"]
   end
 
   test "root route_command gc stub does not create draft or auto-post gift card" do

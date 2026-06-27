@@ -19,7 +19,7 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     route = Pos::RootCommandRouter.call(store: @store, input: "not-a-real-item")
 
     assert_equal :message, route.action
-    assert_equal Pos::RootCommandRouter::FAILED_LOOKUP_MESSAGE, route.message
+    assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, route.message
   end
 
   test "bare amount returns failed lookup message" do
@@ -35,6 +35,18 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_match(/later update/i, route.message)
   end
 
+  test "/? returns help action" do
+    route = Pos::RootCommandRouter.call(store: @store, input: "/?")
+
+    assert_equal :help, route.action
+  end
+
+  test "bare ? returns help action" do
+    route = Pos::RootCommandRouter.call(store: @store, input: "?")
+
+    assert_equal :help, route.action
+  end
+
   test "/help returns help action" do
     route = Pos::RootCommandRouter.call(store: @store, input: "/help")
 
@@ -45,7 +57,7 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     route = Pos::RootCommandRouter.call(store: @store, input: "/foo")
 
     assert_equal :message, route.action
-    assert_equal Pos::RootCommandRouter::UNKNOWN_COMMAND_MESSAGE, route.message
+    assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, route.message
   end
 
   test "/balance returns balance redirect action" do

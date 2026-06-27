@@ -52,7 +52,7 @@ module Pos
           json: {
             action: "message",
             payload: {},
-            message: RootCommandRouter::FAILED_LOOKUP_MESSAGE
+            message: CommandParser::FAILED_LOOKUP_MESSAGE
           },
           alert: nil
         )
