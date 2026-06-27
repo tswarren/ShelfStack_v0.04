@@ -4,8 +4,8 @@ module Pos
   class TransactionsController < BaseController
     before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show]
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
-    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview]
-    before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line route_command]
+    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview route_command]
+    before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line]
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
