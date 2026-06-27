@@ -94,7 +94,7 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips chromium-browser chromium-chromedriver
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -109,8 +109,8 @@ jobs:
           RAILS_ENV: test
           DATABASE_HOST: localhost
           TEST_DATABASE_NAME: shelfstack_test
+          CHROME_BIN: /usr/bin/chromium-browser
+          CHROMEDRIVER_PATH: /usr/bin/chromedriver
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
-
-  # System tests: deferred for Phase 1. See config/ci.rb and test/application_system_test_case.rb.

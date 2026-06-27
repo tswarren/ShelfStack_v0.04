@@ -18,6 +18,8 @@ services:
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: shelfstack_development
       TEST_DATABASE_NAME: shelfstack_test
+      CHROME_BIN: /usr/bin/chromium
+      CHROMEDRIVER_PATH: /usr/bin/chromedriver
     depends_on:
       - db
     stdin_open: true

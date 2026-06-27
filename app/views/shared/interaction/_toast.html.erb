@@ -1,0 +1,25 @@
+<%#
+  locals:
+    message: (required)
+    variant: :success | :info | :warning | :error (default :info)
+    dismissible: true
+    auto_dismiss_ms: 5000 (nil to disable)
+%>
+<%
+  variant = local_assigns.fetch(:variant, :info)
+  toast_id = local_assigns[:id] || "toast-#{SecureRandom.hex(4)}"
+%>
+<div id="<%= toast_id %>"
+     class="ss-toast ss-toast--<%= variant %>"
+     role="status"
+     data-controller="toast"
+     data-toast-auto-dismiss-ms-value="<%= local_assigns.fetch(:auto_dismiss_ms, 5000) %>"
+     data-toast-dismissible-value="<%= local_assigns.fetch(:dismissible, true) %>">
+  <p class="ss-toast__message"><%= local_assigns.fetch(:message) %></p>
+  <% if local_assigns.fetch(:dismissible, true) %>
+    <button type="button"
+            class="ss-toast__dismiss ss-btn ss-btn-secondary ss-btn-small"
+            data-action="toast#dismiss"
+            aria-label="Dismiss notification">Dismiss</button>
+  <% end %>
+</div>

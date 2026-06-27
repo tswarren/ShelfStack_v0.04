@@ -2,8 +2,6 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
-    "backdrop",
-    "panel",
     "title",
     "variantSummary",
     "requestTypeField",
@@ -14,21 +12,7 @@ export default class extends Controller {
     "submitButton"
   ]
 
-  connect() {
-    this.element.addEventListener("keydown", this.handleKeydown)
-  }
-
-  disconnect() {
-    this.element.removeEventListener("keydown", this.handleKeydown)
-  }
-
-  handleKeydown = (event) => {
-    if (event.key === "Escape" && !this.panelTarget.hidden) {
-      this.close()
-    }
-  }
-
-  open(event) {
+  prepareOpen(event) {
     const button = event.currentTarget
     const drawerKey = button.dataset.drawerKey
     const sku = button.dataset.variantSku
@@ -71,15 +55,5 @@ export default class extends Controller {
       }
       this.submitButtonTarget.value = labels[drawerKey] || "Submit"
     }
-
-    this.backdropTarget.hidden = false
-    this.panelTarget.hidden = false
-    document.body.classList.add("ss-drawer-open")
-  }
-
-  close() {
-    this.backdropTarget.hidden = true
-    this.panelTarget.hidden = true
-    document.body.classList.remove("ss-drawer-open")
   }
 }

@@ -1,0 +1,47 @@
+<%#
+  locals:
+    id: (required) stable element id
+    title: (required)
+    size: :md (default, reserved for future width tokens)
+    close_on_escape: true
+    close_on_backdrop: true
+    dirty_guard: true
+%>
+<%
+  id = local_assigns.fetch(:id)
+  title = local_assigns.fetch(:title)
+  title_id = "#{id}-title"
+%>
+<div id="<%= id %>"
+     class="ss-drawer"
+     data-controller="drawer"
+     data-drawer-close-on-escape-value="<%= local_assigns.fetch(:close_on_escape, true) %>"
+     data-drawer-close-on-backdrop-value="<%= local_assigns.fetch(:close_on_backdrop, true) %>"
+     data-drawer-dirty-guard-value="<%= local_assigns.fetch(:dirty_guard, true) %>"
+     hidden>
+  <div class="ss-drawer-overlay"
+       data-drawer-target="backdrop"
+       aria-hidden="true"></div>
+  <aside class="ss-drawer-panel ss-drawer-panel--right"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="<%= title_id %>">
+    <header class="ss-drawer-header">
+      <h2 id="<%= title_id %>"
+          class="ss-drawer-title"
+          <%= tag.attributes(local_assigns.fetch(:title_html_options, {})) %>><%= title %></h2>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn-small ss-drawer-close"
+              data-action="drawer#close"
+              aria-label="Close"><%= local_assigns.fetch(:close_label, "Close") %></button>
+    </header>
+    <div class="ss-drawer-body">
+      <%= yield %>
+    </div>
+    <% if local_assigns[:footer] %>
+      <footer class="ss-drawer-footer">
+        <%= local_assigns[:footer] %>
+      </footer>
+    <% end %>
+  </aside>
+</div>

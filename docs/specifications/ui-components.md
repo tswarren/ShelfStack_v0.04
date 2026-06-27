@@ -1,8 +1,8 @@
 # ShelfStack UI Components
 
-**Status:** Planned (Phase 10-A)
+**Status:** Phase 10-A implemented
 
-Shared interaction components for operational UI. Expand as Phase 10-A lands.
+Shared interaction components for operational UI.
 
 ## Mockup reference
 
@@ -12,13 +12,31 @@ Drawer, modal, expanded row, and shortcut strip patterns in:
 * [shelfstack_items_mockups.html](../samples/phase-10-mockups/shelfstack_items_mockups.html)
 * [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html)
 
-Implementation uses `ss-*` classes in `app/assets/stylesheets/shelfstack.css`.
+Implementation uses `ss-*` classes in `app/assets/stylesheets/shelfstack.css` and shared partials under `app/views/shared/interaction/`.
 
-## Components (10-A)
+## Components
 
 ### Modal (`ss-modal*`)
 
 Bounded tasks: setup edits, customer lookup, supervisor auth, settlement, confirmations.
+
+**Partial:** `shared/interaction/modal`
+
+**Controller:** `modal_controller.js`
+
+**Open by id:**
+
+```erb
+<button type="button"
+        data-action="modal#open"
+        data-modal-target-id-param="my-modal">
+  Open
+</button>
+
+<%= render "shared/interaction/modal", id: "my-modal", title: "Title", size: :md do %>
+  ...
+<% end %>
+```
 
 See [modal-and-drawer-patterns.md](modal-and-drawer-patterns.md).
 
@@ -26,17 +44,38 @@ See [modal-and-drawer-patterns.md](modal-and-drawer-patterns.md).
 
 Detail without losing page context: variant demand, session summary, item detail.
 
+**Partial:** `shared/interaction/drawer`
+
+**Controller:** `drawer_controller.js`
+
+**Pilot:** item customer demand drawer (`id="item-demand-drawer"`) on Items operations tab.
+
 ### Toast (`ss-toast*`)
 
-Minor non-blocking confirmations only.
+Minor non-blocking confirmations only. Server/Turbo append `_toast.html.erb` to `#toast_region`; `toast_controller.js` handles dismiss and auto-dismiss lifecycle only.
+
+**Region:** `shared/interaction/toast_region` in application and POS layouts.
 
 ### Expanded row (`ss-expand-row*`, `ss-row-detail*`)
 
 Inline line edits: POS cart, PO lines, inventory adjustments.
 
+**Partial:** `shared/interaction/expanded_row` (optional helper; POS cart migration in 10-C).
+
 ### Shortcut strip
 
 Visible F-key legend and command hints (POS, optional elsewhere).
+
+**Partial:** `shared/interaction/shortcut_strip`
+
+## Shared JavaScript utilities
+
+```text
+app/javascript/shelfstack/focus_trap.js
+app/javascript/shelfstack/focus_restore.js
+app/javascript/shelfstack/overlay_lock.js
+app/javascript/shelfstack/overlay_shell.js
+```
 
 ## Report components (Phase 9a)
 
@@ -45,3 +84,7 @@ Report-specific patterns remain in [phase-9a-ux-foundation-for-reporting-spec.md
 ## Roadmap
 
 [phase-10a-interaction-infrastructure.md](../roadmap/phase-10a-interaction-infrastructure.md)
+
+## Test plan
+
+[phase-10a-test-plan.md](phase-10a-test-plan.md)

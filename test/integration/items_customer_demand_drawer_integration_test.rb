@@ -37,6 +37,9 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Hold for customer"
     assert_includes response.body, "Notify customer"
+    assert_includes response.body, 'id="item-demand-drawer"'
+    assert_includes response.body, "ss-drawer"
+    assert_includes response.body, "data-drawer-target-id-param=\"item-demand-drawer\""
   end
 
   test "create hold from item operations redirects to request show" do
@@ -93,5 +96,21 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     request = CustomerRequest.order(:id).last
     assert_equal "notify", request.customer_request_lines.first.request_type
     assert_redirected_to customers_customer_request_path(request, anchor: "line-#{request.customer_request_lines.first.id}")
+  end
+
+  test "special order validation error appends error toast via turbo stream" do
+    post items_customer_demand_path,
+         params: {
+           request_type: "special_order",
+           product_variant_id: @variant.id,
+           quantity: 1,
+           customer_name_snapshot: "Walk-in Guest"
+         },
+         as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, 'target="toast_region"'
+    assert_includes response.body, "ss-toast--error"
+    assert_includes response.body, "Customer record is required for special orders"
   end
 end

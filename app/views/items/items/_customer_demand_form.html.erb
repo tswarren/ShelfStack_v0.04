@@ -3,6 +3,7 @@
               method: :post,
               class: "ss-form ss-form--standard",
               data: {
+                turbo_stream: true,
                 controller: "customer-request-hold-form",
                 customer_request_hold_form_available_value: 0,
                 customer_request_hold_form_on_hand_value: 0,
@@ -116,6 +117,7 @@
             customer_request_hold_form_target: "submit"
           } %>
     <button type="button" class="ss-btn ss-btn-secondary"
-            data-action="item-customer-demand-drawer#close">Cancel</button>
+            data-action="drawer#close"
+            data-drawer-target-id-param="item-demand-drawer">Cancel</button>
   </footer>
 <% end %>

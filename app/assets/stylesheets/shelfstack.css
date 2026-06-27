@@ -4397,6 +4397,116 @@ body.ss-pos-modal-open {
   font-weight: 600;
 }
 
+/* Phase 10-A shared interaction shells */
+.ss-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+}
+
+.ss-modal[hidden],
+.ss-drawer[hidden] {
+  display: none;
+}
+
+.ss-modal-overlay,
+.ss-drawer-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.ss-modal-dialog {
+  position: relative;
+  margin: 10vh auto;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+  padding: 1.25rem;
+}
+
+.ss-modal-dialog--sm {
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+.ss-modal-dialog--md {
+  width: min(32rem, calc(100vw - 2rem));
+}
+
+.ss-modal-dialog--lg {
+  width: min(48rem, calc(100vw - 2rem));
+}
+
+.ss-modal-dialog--pos {
+  width: min(56rem, calc(100vw - 2rem));
+  max-width: none;
+  padding: 1.5rem 1.75rem;
+}
+
+.ss-modal-header,
+.ss-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ss-modal-title,
+.ss-drawer-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.ss-modal-close:focus-visible,
+.ss-drawer-close:focus-visible,
+.ss-toast__dismiss:focus-visible {
+  outline: 2px solid var(--color-primary, #4f46e5);
+  outline-offset: 2px;
+}
+
+.ss-modal-body,
+.ss-drawer-body {
+  margin-bottom: 0.75rem;
+}
+
+.ss-modal-footer,
+.ss-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.ss-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+}
+
+.ss-drawer-panel {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: #fff;
+  border-left: var(--border) solid var(--color-base-300);
+  padding: 1rem 1.25rem 2rem;
+  z-index: 1041;
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.12);
+}
+
+.ss-drawer-panel--right {
+  right: 0;
+  width: min(32rem, 100vw);
+}
+
+body.ss-modal-open {
+  overflow: hidden;
+}
+
 .ss-item-demand-drawer__backdrop {
   position: fixed;
   inset: 0;
@@ -4431,6 +4541,11 @@ body.ss-pos-modal-open {
   font-size: 1.15rem;
 }
 
+.ss-drawer-variant-summary {
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
 .ss-item-demand-drawer__variant {
   margin: 0 0 1rem;
   font-weight: 600;
@@ -4438,6 +4553,98 @@ body.ss-pos-modal-open {
 
 body.ss-drawer-open {
   overflow: hidden;
+}
+
+.ss-toast-region {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(24rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.ss-toast-region .ss-toast {
+  pointer-events: auto;
+}
+
+.ss-toast {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-base-300);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.ss-toast__message {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.ss-toast--success {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.ss-toast--info {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.ss-toast--warning {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.ss-toast--error {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.ss-expand-row--active {
+  background: var(--color-base-100);
+}
+
+.ss-row-detail__header,
+.ss-row-detail__body,
+.ss-row-detail__footer {
+  padding: 0.5rem 0;
+}
+
+.ss-row-detail__footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.ss-shortcut-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.85rem;
+}
+
+.ss-shortcut-strip__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ss-shortcut-strip__key {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--color-base-300);
+  background: var(--color-base-100);
+  font-size: 0.8rem;
 }
 
 .ss-pos-mode-switch {

@@ -1,0 +1,9 @@
+<%# locals: items: [{ key:, label: }] %>
+<div class="ss-shortcut-strip" aria-label="Keyboard shortcuts">
+  <% local_assigns.fetch(:items, []).each do |item| %>
+    <span class="ss-shortcut-strip__item">
+      <kbd class="ss-shortcut-strip__key"><%= item[:key] %></kbd>
+      <span class="ss-shortcut-strip__label"><%= item[:label] %></span>
+    </span>
+  <% end %>
+</div>

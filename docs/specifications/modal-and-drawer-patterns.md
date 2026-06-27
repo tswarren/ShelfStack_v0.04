@@ -1,6 +1,6 @@
 # Modal and Drawer Patterns
 
-**Status:** Planned (Phase 10-A)
+**Status:** Phase 10-A implemented
 
 When to use modals vs drawers vs full pages vs expanded rows.
 
@@ -14,11 +14,11 @@ Examples: add identifier, edit price, customer lookup, supervisor authorization,
 
 * Trap focus while open
 * Focus first meaningful control
-* Esc closes only when safe
+* Esc closes only when safe (dirty/submitting/validation guard)
 * Validation errors stay inside modal
 * Turbo updates affected panels on save
 * Restore focus to opener on close
-* Prevent background scroll
+* Prevent background scroll (stack-aware body lock)
 
 **Avoid for:** full receiving, full PO creation, full buyback intake, full catalog editing.
 
@@ -34,6 +34,7 @@ Examples: variant demand, customer context, session summary, transaction history
 * Restore focus to opener on close
 * Read-only or light editing
 * Link to full record for deeper work
+* Stack-aware body lock (`body.ss-drawer-open`)
 
 **Avoid for:** replacing full workflows.
 
@@ -45,12 +46,37 @@ Examples: variant demand, customer context, session summary, transaction history
 
 **Use for:** complex multi-section setup, full catalog metadata, workflow pages (buyback session, receiving).
 
+## Shared partial API
+
+Render shell with stable id; openers target by id:
+
+```erb
+<%= render "shared/interaction/drawer",
+      id: "item-demand-drawer",
+      title: "Customer demand",
+      close_on_escape: true,
+      close_on_backdrop: true do %>
+  ...
+<% end %>
+
+<button type="button"
+        data-action="item-customer-demand-drawer#prepareOpen drawer#open"
+        data-drawer-target-id-param="item-demand-drawer"
+        data-drawer-key="hold"
+        ...>
+  Hold for customer
+</button>
+```
+
+Close policy values: `data-drawer-close-on-escape-value`, `data-drawer-close-on-backdrop-value`, `data-drawer-dirty-guard-value` (same pattern for modal).
+
 ## CSS classes
 
 ```text
 ss-modal, ss-modal-overlay, ss-modal-dialog, ss-modal-dialog--pos, ...
 ss-drawer, ss-drawer-overlay, ss-drawer-panel, ...
 ss-expand-row, ss-row-detail, ...
+ss-toast-region, ss-toast, ss-toast--success, ...
 ```
 
 ## Mockup references
@@ -62,3 +88,7 @@ ss-expand-row, ss-row-detail, ...
 ## Roadmap
 
 [phase-10a-interaction-infrastructure.md](../roadmap/phase-10a-interaction-infrastructure.md)
+
+## Test plan
+
+[phase-10a-test-plan.md](phase-10a-test-plan.md)

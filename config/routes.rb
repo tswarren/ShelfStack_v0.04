@@ -473,4 +473,12 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  if Rails.env.test?
+    namespace :test do
+      get "interaction_shell", to: "interaction_shell#show"
+      post "interaction_shell/turbo_update", to: "interaction_shell#turbo_update", as: :interaction_shell_turbo_update
+      post "interaction_shell/append_toast", to: "interaction_shell#append_toast", as: :interaction_shell_append_toast
+    end
+  end
 end
