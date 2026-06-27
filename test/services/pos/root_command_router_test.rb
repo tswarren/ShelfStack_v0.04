@@ -6,6 +6,9 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
   setup do
     @store = create_store!
     @variant = create_product_variant!(selling_price_cents: 1000)
+    @user = create_user!
+    @workstation = create_workstation!(store: @store)
+    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @user)
   end
 
   test "single variant match returns add_variant action" do
@@ -29,7 +32,11 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
   end
 
   test "/gc returns disabled command stub" do
-    route = Pos::RootCommandRouter.call(store: @store, input: "/gc 50")
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/gc 50"
+    )
 
     assert_equal :disabled_command, route.action
     assert_match(/later update/i, route.message)
@@ -61,9 +68,24 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
   end
 
   test "/balance returns balance redirect action" do
-    route = Pos::RootCommandRouter.call(store: @store, input: "/balance")
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/balance"
+    )
 
     assert_equal :balance_redirect, route.action
+  end
+
+  test "/cashdrop returns planned disabled message" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/drop"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::Catalog::CASH_DROP_UNAVAILABLE_MESSAGE, route.message
   end
 end
 

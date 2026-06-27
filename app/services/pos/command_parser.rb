@@ -4,8 +4,7 @@ module Pos
   class CommandParser
     Result = Data.define(:lane, :input)
 
-    HELP_ALIASES = %w[/help /? ?].freeze
-    HELP_COMMAND_PATTERN = /\A(?:\/help|\/\?|\?)\z/i
+    HELP_COMMAND_PATTERN = CommandRegistry.help_pattern
 
     FAILED_LOOKUP_MESSAGE = "No matching item. Use /op for open ring, /return for receipt lookup, or /help."
     UNKNOWN_COMMAND_MESSAGE = "Unknown command. Use /help to see available commands."

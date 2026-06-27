@@ -116,7 +116,9 @@ module Pos
         store: pos_store,
         transaction: @transaction,
         input: params[:input],
-        return_mode: ActiveModel::Type::Boolean.new.cast(params[:return_mode])
+        return_mode: ActiveModel::Type::Boolean.new.cast(params[:return_mode]),
+        user: current_user,
+        register_session: current_register_session
       )
 
       render json: {
