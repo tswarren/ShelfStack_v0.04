@@ -1,0 +1,12 @@
+<%#
+  locals:
+    title: optional summary title
+    open: false
+%>
+<tr class="ss-expand-row<%= " ss-expand-row--active" if local_assigns[:open] %>"
+    data-controller="keyboard-scope"
+    data-keyboard-scope-active-value="<%= local_assigns.fetch(:open, false) %>">
+  <td colspan="<%= local_assigns.fetch(:colspan, 1) %>">
+    <%= yield %>
+  </td>
+</tr>

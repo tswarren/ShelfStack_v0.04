@@ -1,6 +1,6 @@
 # Keyboard and Focus Standards
 
-**Status:** Planned (Phase 10-A)
+**Status:** Phase 10-A implemented
 
 Global keyboard and focus behavior for ShelfStack operational UI.
 
@@ -20,6 +20,19 @@ Global keyboard and focus behavior for ShelfStack operational UI.
 | Enter in scan/search | Submit lookup/add |
 | Enter in textarea | Insert newline |
 
+## Modal and drawer safe close
+
+Shared `modal_controller` / `drawer_controller` honor:
+
+* `closeOnEscape` — default true; respects dirty guard when form is not clean
+* `closeOnBackdrop` — drawer default true; modal configurable; respects dirty guard
+* `dirtyGuard` — block **implicit** close (Escape, backdrop) when form is dirty, submitting, or showing validation errors
+* **Explicit close** — Close button and Cancel call `drawer#close` / `modal#close` with force, bypassing dirty guard
+* **Disconnect cleanup** — Turbo removal calls `cleanupOverlay`, force-releasing body lock and listeners without dirty guard
+* **Overlay stack** — Escape and focus trap apply only to the topmost open overlay; nested modal-over-drawer closes the modal first
+
+Body scroll lock is reference-counted via `overlay_lock.js` so nested modal-over-drawer does not unlock early.
+
 ## POS-specific
 
 See [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md).
@@ -37,13 +50,14 @@ Function keys F2–F4, F7–F10 where reliable. Avoid F1, F5, F6, F11, F12. Sett
 
 ## Scoping
 
-Shortcuts must be scoped to context. Disable in inappropriate form fields unless explicitly intended.
+Shortcuts must be scoped to context. `keyboard_scope_controller` ignores keydown originating from focused inputs/textareas unless explicitly intended.
 
 ## Accessibility
 
 * Visible focus indicators
-* Modal focus trap
-* Screen-reader labels on modal/drawer chrome
+* Modal/drawer focus trap (`focus_trap.js`)
+* `role="dialog"`, `aria-modal="true"`, `aria-labelledby` on shells
+* Screen-reader labels on close buttons
 * Touch targets ~44px minimum on POS line edit and settlement (keyboard-first ≠ mouse-hostile)
 
 ## Mockup reference
@@ -52,6 +66,10 @@ Shortcuts must be scoped to context. Disable in inappropriate form fields unless
 
 ## Implementation
 
-Stimulus: `keyboard_scope_controller`, `focus_controller`, `modal_controller`, `drawer_controller`.
+Stimulus: `keyboard_scope_controller`, `focus_controller`, `modal_controller`, `drawer_controller`, `toast_controller`.
+
+Utilities: `app/javascript/shelfstack/focus_trap.js`, `focus_restore.js`, `overlay_lock.js`.
 
 Roadmap: [phase-10a-interaction-infrastructure.md](../roadmap/phase-10a-interaction-infrastructure.md)
+
+Test plan: [phase-10a-test-plan.md](phase-10a-test-plan.md)

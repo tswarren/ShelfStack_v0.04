@@ -2,7 +2,8 @@
 <% operations = local_assigns[:operations] %>
 <% overview = local_assigns[:overview] %>
 
-<div data-controller="item-customer-demand-drawer">
+<div data-controller="drawer item-customer-demand-drawer"
+     data-action="drawer:closed->item-customer-demand-drawer#resetOnClose">
 <% if request_match_context.valid? %>
   <%= render "shared/request_match_banner", context: request_match_context %>
 <% end %>
@@ -68,7 +69,8 @@
             <% row.demand_actions.each do |action| %>
               <button type="button"
                       class="ss-btn ss-btn-small ss-btn-secondary"
-                      data-action="item-customer-demand-drawer#open"
+                      data-action="item-customer-demand-drawer#prepareOpen drawer#open"
+                      data-drawer-target-id-param="item-demand-drawer"
                       data-drawer-key="<%= action.drawer_key %>"
                       data-action-label="<%= action.label %>"
                       data-variant-id="<%= row.variant.id %>"

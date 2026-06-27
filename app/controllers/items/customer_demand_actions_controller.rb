@@ -2,6 +2,8 @@
 
 module Items
   class CustomerDemandActionsController < BaseController
+    include Interaction::ToastStreamable
+
     before_action -> { authorize_demand!("customer_requests.create") }
     before_action -> { authorize_demand!("inventory_reservations.create") }, if: -> { hold_action? }
     before_action -> { authorize_demand!("special_orders.create") }, if: -> { special_order_action? }
@@ -46,8 +48,16 @@ module Items
            InventoryReservations::ReserveOnHand::ReserveError,
            SpecialOrders::CreateFromRequestLine::CreateError,
            SpecialOrders::Approve::ApproveError => e
-      redirect_back fallback_location: items_item_path(tab: "operations", variant_id: params[:product_variant_id]),
-                    alert: e.message
+      respond_to do |format|
+        format.html do
+          redirect_back fallback_location: items_item_path(tab: "operations", variant_id: params[:product_variant_id]),
+                        alert: e.message
+        end
+        format.turbo_stream do
+          render turbo_stream: append_toast_stream(message: e.message, variant: :error),
+                 status: :unprocessable_entity
+        end
+      end
     end
 
     private

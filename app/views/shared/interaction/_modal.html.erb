@@ -1,0 +1,47 @@
+<%#
+  locals:
+    id: (required) stable element id
+    title: (required)
+    size: :sm | :md | :lg | :pos (default :md)
+    close_on_escape: true
+    close_on_backdrop: false
+    dirty_guard: true
+%>
+<%
+  id = local_assigns.fetch(:id)
+  title = local_assigns.fetch(:title)
+  size = local_assigns.fetch(:size, :md)
+  title_id = "#{id}-title"
+  dialog_class = "ss-modal-dialog ss-modal-dialog--#{size}"
+%>
+<div id="<%= id %>"
+     class="ss-modal"
+     data-controller="modal"
+     data-modal-close-on-escape-value="<%= local_assigns.fetch(:close_on_escape, true) %>"
+     data-modal-close-on-backdrop-value="<%= local_assigns.fetch(:close_on_backdrop, false) %>"
+     data-modal-dirty-guard-value="<%= local_assigns.fetch(:dirty_guard, true) %>"
+     hidden>
+  <div class="ss-modal-overlay"
+       data-modal-target="backdrop"
+       aria-hidden="true"></div>
+  <div class="<%= dialog_class %>"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="<%= title_id %>">
+    <header class="ss-modal-header">
+      <h2 id="<%= title_id %>" class="ss-modal-title"><%= title %></h2>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn-small ss-modal-close"
+              data-action="modal#close"
+              aria-label="Close"><%= local_assigns.fetch(:close_label, "Close") %></button>
+    </header>
+    <div class="ss-modal-body">
+      <%= yield %>
+    </div>
+    <% if local_assigns[:footer] %>
+      <footer class="ss-modal-footer">
+        <%= local_assigns[:footer] %>
+      </footer>
+    <% end %>
+  </div>
+</div>

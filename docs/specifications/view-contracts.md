@@ -1,6 +1,6 @@
 # View Contracts
 
-**Status:** Planned (Phase 10-A)
+**Status:** Phase 10-A (Turbo targets added)
 
 Per-screen-type behavior contracts. Canonical visual source: [shelfstack_ux_direction_visual.html](../samples/phase-10-mockups/shelfstack_ux_direction_visual.html).
 
@@ -26,6 +26,30 @@ Per-screen-type behavior contracts. Canonical visual source: [shelfstack_ux_dire
 ## Message placement
 
 Workflow blockers and readiness checks appear **where the user can act** — not as global flash unless truly page-level.
+
+Minor non-blocking confirmations may append to `#toast_region` via Turbo Streams; page-level notices continue to use flash.
+
+## Turbo target conventions (10-A)
+
+Standard DOM targets for Turbo updates:
+
+```text
+flash
+toast_region
+modal
+drawer
+workflow_status
+workflow_lines
+workflow_summary
+lookup_results
+item_attention
+variant_table
+pos_cart
+pos_totals
+pos_readiness
+```
+
+Pilot drawer id: `item-demand-drawer`.
 
 ## Item overview contract
 

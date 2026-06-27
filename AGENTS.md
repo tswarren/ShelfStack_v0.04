@@ -232,7 +232,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development follows the phase roadmap.
+Development follows the phase roadmap. **Phase 10-B (item cockpit)** is active after Phase 10-A completion.
 
 ## Phase 1: Foundation — **Complete**
 
@@ -363,11 +363,21 @@ See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-co
 
 See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-gl-shaped-financial-layer.md). Not scheduled for the current roadmap cycle. Operational reports in 9b remain authoritative for store reconciliation until 9c is resumed.
 
-## Phase 10: Comprehensive UI/UX Expansion — **Next**
+## Phase 10: Comprehensive UI/UX Expansion — **In progress**
 
-**Current priority:** Phase 10-A (interaction infrastructure).
+**Current priority:** Phase 10-B (item cockpit completion).
 
 See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). Delivery order: 10-A → 10-B (items) → 10-C (POS) → 10-D → 10-E. Phase 10 is complete when all sub-phases are done.
+
+## Phase 10-A: Interaction Infrastructure — **Complete**
+
+Phase 10-A was completed on 2026-06-26. See [docs/implementation/phase-10a-completion.md](docs/implementation/phase-10a-completion.md).
+
+- Shared modal/drawer shells with focus trap, safe-close, stack-aware body lock, ARIA
+- Toast region (server-rendered append; Stimulus lifecycle), keyboard scope, expanded-row chrome
+- Pilot: item customer demand drawer migrated to shared `ss-drawer` shell
+- Test fixture: `/test/interaction_shell` (test env); integration + system tests per [phase-10a-test-plan.md](docs/specifications/phase-10a-test-plan.md)
+- POS settlement and buyback drawers deferred to 10-C / 10-D
 
 ## Phase 10 Documents
 
@@ -377,6 +387,7 @@ docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
 docs/specifications/phase-10a-interaction-infrastructure-spec.md
+docs/specifications/phase-10a-test-plan.md
 docs/specifications/phase-10b-item-cockpit-spec.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
 docs/specifications/ui-components.md
@@ -384,6 +395,7 @@ docs/specifications/view-contracts.md
 docs/specifications/keyboard-and-focus.md
 docs/specifications/modal-and-drawer-patterns.md
 docs/specifications/pos-keyboard-workspace.md
+docs/implementation/phase-10a-completion.md
 docs/samples/phase-10-mockups/
 ```
 

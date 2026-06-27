@@ -2,8 +2,6 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
-    "backdrop",
-    "panel",
     "title",
     "variantSummary",
     "requestTypeField",
@@ -14,21 +12,7 @@ export default class extends Controller {
     "submitButton"
   ]
 
-  connect() {
-    this.element.addEventListener("keydown", this.handleKeydown)
-  }
-
-  disconnect() {
-    this.element.removeEventListener("keydown", this.handleKeydown)
-  }
-
-  handleKeydown = (event) => {
-    if (event.key === "Escape" && !this.panelTarget.hidden) {
-      this.close()
-    }
-  }
-
-  open(event) {
+  prepareOpen(event) {
     const button = event.currentTarget
     const drawerKey = button.dataset.drawerKey
     const sku = button.dataset.variantSku
@@ -72,14 +56,41 @@ export default class extends Controller {
       this.submitButtonTarget.value = labels[drawerKey] || "Submit"
     }
 
-    this.backdropTarget.hidden = false
-    this.panelTarget.hidden = false
-    document.body.classList.add("ss-drawer-open")
+    this.resetFormDirtyBaseline()
   }
 
-  close() {
-    this.backdropTarget.hidden = true
-    this.panelTarget.hidden = true
-    document.body.classList.remove("ss-drawer-open")
+  resetOnClose(event) {
+    if (event.target.id !== "item-demand-drawer") return
+
+    const form = this.element.querySelector("form")
+    if (form) {
+      form.reset()
+      const holdController = this.application.getControllerForElementAndIdentifier(
+        form, "customer-request-hold-form"
+      )
+      holdController?.quantityChanged()
+    }
+
+    if (this.hasHoldFieldsTarget) this.holdFieldsTarget.hidden = true
+    if (this.hasSpecialOrderNoteTarget) this.specialOrderNoteTarget.hidden = true
+    if (this.hasNotifyNoteTarget) this.notifyNoteTarget.hidden = true
+    if (this.hasVariantSummaryTarget) this.variantSummaryTarget.textContent = ""
+    if (this.hasTitleTarget) this.titleTarget.textContent = "Customer demand"
+    if (this.hasSubmitButtonTarget) this.submitButtonTarget.value = "Submit"
+
+    this.resetFormDirtyBaseline()
+  }
+
+  resetFormDirtyBaseline() {
+    const form = this.element.querySelector("form")
+    if (!form) return
+
+    form.querySelectorAll("input, textarea, select").forEach((field) => {
+      if (field.type === "checkbox" || field.type === "radio") {
+        field.defaultChecked = field.checked
+      } else if (field.type !== "submit" && field.type !== "button") {
+        field.defaultValue = field.value
+      }
+    })
   }
 }

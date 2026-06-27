@@ -1,0 +1,101 @@
+<div data-controller="drawer modal interaction-shell-fixture"
+     data-action="keyboard-scope:keydown@document->interaction-shell-fixture#recordKeydown"
+     class="ss-section">
+  <h1>Interaction shell fixture</h1>
+  <p>Phase 10-A test page. Not linked from production navigation.</p>
+
+  <%= turbo_frame_tag "fixture-background-panel" do %>
+    <%= render "test/interaction_shell/background_panel", version: @background_version %>
+  <% end %>
+
+  <div class="ss-form-actions">
+    <%= button_to "Update background",
+          test_interaction_shell_turbo_update_path,
+          method: :post,
+          form: { data: { turbo_stream: true } },
+          id: "fixture-turbo-update-btn",
+          class: "ss-btn ss-btn-secondary" %>
+    <%= button_to "Append toast",
+          test_interaction_shell_append_toast_path,
+          method: :post,
+          params: { message: "Fixture toast appended.", variant: "success" },
+          form: { data: { turbo_stream: true } },
+          id: "fixture-append-toast-btn",
+          class: "ss-btn ss-btn-secondary" %>
+    <button type="button"
+            id="open-drawer-button"
+            class="ss-btn ss-btn-primary"
+            data-action="drawer#open"
+            data-drawer-target-id-param="fixture-drawer">
+      Open drawer
+    </button>
+    <button type="button"
+            id="open-modal-button"
+            class="ss-btn ss-btn-secondary"
+            data-action="modal#open"
+            data-modal-target-id-param="fixture-modal">
+      Open modal
+    </button>
+  </div>
+
+  <div id="keyboard-scope-host"
+       data-controller="keyboard-scope"
+       data-keyboard-scope-active-value="true"
+       tabindex="0"
+       class="ss-section">
+    <h2>Keyboard scope fixture</h2>
+    <p>Scoped key count: <span id="keyboard-scope-key-count" data-interaction-shell-fixture-target="keyCount">0</span></p>
+    <label for="keyboard-scope-input">Input (keys ignored)</label>
+    <input id="keyboard-scope-input" type="text" class="ss-input" value="">
+  </div>
+
+  <%= render "shared/interaction/drawer",
+        id: "fixture-drawer",
+        title: "Fixture drawer",
+        close_on_backdrop: true do %>
+    <p>Drawer body for system tests.</p>
+    <label for="fixture-drawer-field">Sample field</label>
+    <input id="fixture-drawer-field" type="text" class="ss-input" value="">
+    <form id="fixture-drawer-form">
+      <label for="fixture-drawer-dirty-field">Dirty guard field</label>
+      <input id="fixture-drawer-dirty-field" type="text" class="ss-input" value="initial">
+    </form>
+    <%= button_to "Update background",
+          test_interaction_shell_turbo_update_path,
+          method: :post,
+          form: { data: { turbo_stream: true } },
+          id: "fixture-turbo-update-in-drawer-btn",
+          class: "ss-btn ss-btn-secondary" %>
+    <%= button_to "Replace drawer",
+          test_interaction_shell_replace_drawer_path,
+          method: :post,
+          form: { data: { turbo_stream: true } },
+          id: "fixture-replace-drawer-btn",
+          class: "ss-btn ss-btn-secondary" %>
+    <button type="button"
+            id="open-nested-modal-button"
+            class="ss-btn ss-btn-secondary"
+            data-action="modal#open"
+            data-modal-target-id-param="fixture-nested-modal">
+      Open nested modal
+    </button>
+  <% end %>
+
+  <%= render "shared/interaction/modal",
+        id: "fixture-modal",
+        title: "Fixture modal",
+        size: :md,
+        close_on_backdrop: true do %>
+    <p>Modal body for system tests.</p>
+    <label for="fixture-modal-field">First field</label>
+    <input id="fixture-modal-field" type="text" class="ss-input" autofocus>
+  <% end %>
+
+  <%= render "shared/interaction/modal",
+        id: "fixture-nested-modal",
+        title: "Nested modal",
+        size: :sm,
+        close_on_backdrop: true do %>
+    <p>Opened while drawer is visible.</p>
+  <% end %>
+</div>
