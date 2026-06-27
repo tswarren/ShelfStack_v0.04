@@ -90,4 +90,17 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
     assert_selector "#item-demand-drawer[hidden]", visible: :all
     assert_equal hold_button, page.active_element
   end
+
+  test "shared demand drawer resets form after cancel" do
+    visit_item_operations!
+
+    hold_button = find("button", text: "Hold for customer", match: :first)
+    hold_button.click
+    find("#item-demand-drawer input[name='quantity']").fill_in with: "2"
+    find("#item-demand-drawer button", text: "Cancel").click
+    assert_selector "#item-demand-drawer[hidden]", visible: :all
+
+    hold_button.click
+    assert_equal "1", find("#item-demand-drawer input[name='quantity']").value
+  end
 end

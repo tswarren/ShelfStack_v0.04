@@ -29,6 +29,7 @@ Shared `modal_controller` / `drawer_controller` honor:
 * `dirtyGuard` — block **implicit** close (Escape, backdrop) when form is dirty, submitting, or showing validation errors
 * **Explicit close** — Close button and Cancel call `drawer#close` / `modal#close` with force, bypassing dirty guard
 * **Disconnect cleanup** — Turbo removal calls `cleanupOverlay`, force-releasing body lock and listeners without dirty guard
+* **Overlay stack** — Escape and focus trap apply only to the topmost open overlay; nested modal-over-drawer closes the modal first
 
 Body scroll lock is reference-counted via `overlay_lock.js` so nested modal-over-drawer does not unlock early.
 

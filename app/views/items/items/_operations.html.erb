@@ -2,7 +2,8 @@
 <% operations = local_assigns[:operations] %>
 <% overview = local_assigns[:overview] %>
 
-<div data-controller="drawer item-customer-demand-drawer">
+<div data-controller="drawer item-customer-demand-drawer"
+     data-action="drawer:closed->item-customer-demand-drawer#resetOnClose">
 <% if request_match_context.valid? %>
   <%= render "shared/request_match_banner", context: request_match_context %>
 <% end %>

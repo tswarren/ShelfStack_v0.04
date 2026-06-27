@@ -89,4 +89,22 @@ class InteractionModalDrawerShellSystemTest < ApplicationSystemTestCase
     assert_selector "#fixture-drawer[hidden]", visible: :hidden
     assert page.evaluate_script("!document.body.classList.contains('ss-drawer-open')")
   end
+
+  test "escape closes nested modal only and leaves drawer open" do
+    find("#open-drawer-button").click
+    assert_no_selector "#fixture-drawer[hidden]"
+    assert page.evaluate_script("document.body.classList.contains('ss-drawer-open')")
+
+    within "#fixture-drawer" do
+      find("#open-nested-modal-button").click
+    end
+    assert_no_selector "#fixture-nested-modal[hidden]"
+    assert page.evaluate_script("document.body.classList.contains('ss-modal-open')")
+
+    send_escape
+    assert_selector "#fixture-nested-modal[hidden]", visible: :hidden
+    assert_no_selector "#fixture-drawer[hidden]"
+    assert page.evaluate_script("!document.body.classList.contains('ss-modal-open')")
+    assert page.evaluate_script("document.body.classList.contains('ss-drawer-open')")
+  end
 end

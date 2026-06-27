@@ -59,6 +59,28 @@ export default class extends Controller {
     this.resetFormDirtyBaseline()
   }
 
+  resetOnClose(event) {
+    if (event.target.id !== "item-demand-drawer") return
+
+    const form = this.element.querySelector("form")
+    if (form) {
+      form.reset()
+      const holdController = this.application.getControllerForElementAndIdentifier(
+        form, "customer-request-hold-form"
+      )
+      holdController?.quantityChanged()
+    }
+
+    if (this.hasHoldFieldsTarget) this.holdFieldsTarget.hidden = true
+    if (this.hasSpecialOrderNoteTarget) this.specialOrderNoteTarget.hidden = true
+    if (this.hasNotifyNoteTarget) this.notifyNoteTarget.hidden = true
+    if (this.hasVariantSummaryTarget) this.variantSummaryTarget.textContent = ""
+    if (this.hasTitleTarget) this.titleTarget.textContent = "Customer demand"
+    if (this.hasSubmitButtonTarget) this.submitButtonTarget.value = "Submit"
+
+    this.resetFormDirtyBaseline()
+  }
+
   resetFormDirtyBaseline() {
     const form = this.element.querySelector("form")
     if (!form) return

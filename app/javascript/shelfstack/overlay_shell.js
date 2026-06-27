@@ -2,6 +2,8 @@ import { focusFirstMeaningful, handleFocusTrap } from "shelfstack/focus_trap"
 import { restoreFocus } from "shelfstack/focus_restore"
 import { acquireOverlayLock, releaseOverlayLock } from "shelfstack/overlay_lock"
 
+const overlayStack = []
+
 export function isFormDirty(form) {
   if (!form) return false
   if (form.dataset.ssDirty === "true") return true
@@ -58,15 +60,33 @@ export function isOverlayShell(controller) {
   return Boolean(controller._overlayShell)
 }
 
+function pushOverlayStack(controller) {
+  removeFromOverlayStack(controller)
+  overlayStack.push(controller)
+}
+
+function removeFromOverlayStack(controller) {
+  const index = overlayStack.indexOf(controller)
+  if (index === -1) return
+  overlayStack.splice(index, 1)
+}
+
+function isTopmostOverlay(controller) {
+  return overlayStack.length > 0 && overlayStack[overlayStack.length - 1] === controller
+}
+
 export function showOverlay(controller) {
   const shell = controller._overlayShell
   if (!shell || controller.element.hidden === false) return
 
   controller.element.hidden = false
   acquireOverlayLock(shell.lockKind)
+  pushOverlayStack(controller)
 
   const panel = controller.element.querySelector(shell.panelSelector)
   shell.keydownHandler = (event) => {
+    if (!isTopmostOverlay(controller)) return
+
     if (event.key === "Escape") {
       if (controller.closeOnEscapeValue) {
         event.preventDefault()
@@ -90,11 +110,13 @@ function finalizeOverlayClose(controller, { shouldRestoreFocus = true } = {}) {
   const opener = shell.opener
   shell.opener = null
 
-  if (shouldRestoreFocus && opener) restoreFocus(opener)
+  removeFromOverlayStack(controller)
 
   controller.element.hidden = true
   releaseOverlayLock(shell.lockKind)
   teardownOverlayListeners(shell)
+
+  if (shouldRestoreFocus && opener) restoreFocus(opener)
 
   controller.element.dispatchEvent(new CustomEvent(shell.closedEvent, { bubbles: true }))
   return true
@@ -119,6 +141,8 @@ export function cleanupOverlay(controller, { shouldRestoreFocus = false } = {}) 
   const shell = controller._overlayShell
   if (!shell) return
 
+  removeFromOverlayStack(controller)
+
   if (controller.element.hidden !== true) {
     controller.element.hidden = true
     releaseOverlayLock(shell.lockKind)
@@ -126,8 +150,9 @@ export function cleanupOverlay(controller, { shouldRestoreFocus = false } = {}) 
 
   teardownOverlayListeners(shell)
 
-  if (shouldRestoreFocus) restoreFocus(shell.opener)
+  const opener = shell.opener
   shell.opener = null
+  if (shouldRestoreFocus && opener) restoreFocus(opener)
 }
 
 export function openOverlayById(application, identifier, id, opener) {
@@ -148,6 +173,7 @@ export function bindBackdropClose(controller, backdropTarget) {
 
   shell.backdropHandler = (event) => {
     if (!controller.closeOnBackdropValue) return
+    if (!isTopmostOverlay(controller)) return
     event.preventDefault()
     closeOverlay(controller)
   }

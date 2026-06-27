@@ -70,7 +70,7 @@ Render shell with stable id; openers target by id:
 
 Close policy values: `data-drawer-close-on-escape-value`, `data-drawer-close-on-backdrop-value`, `data-drawer-dirty-guard-value` (same pattern for modal).
 
-Implicit close (Escape, backdrop) respects dirty guard. Explicit close buttons call `drawer#close` / `modal#close`, which force-close. Drawers that populate fields on open should reset the dirty baseline after programmatic setup (see item customer demand pilot).
+Implicit close (Escape, backdrop) respects dirty guard and applies only to the topmost overlay in the stack. Explicit close buttons call `drawer#close` / `modal#close`, which force-close. Drawers that populate fields on open should reset the dirty baseline after programmatic setup (see item customer demand pilot); reset form state on `drawer:closed` when cancel should discard edits.
 
 ## CSS classes
 
