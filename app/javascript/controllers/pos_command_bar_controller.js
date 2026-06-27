@@ -82,9 +82,11 @@ export default class extends Controller {
         this.showGiftCardPanel(data.payload)
         break
       case "return_drawer_offer":
+        this.inputTarget.value = ""
         this.showReturnDrawerPanel(data.payload)
         break
       case "pickup_drawer_offer":
+        this.inputTarget.value = ""
         this.showPickupDrawerPanel()
         break
       case "balance_inquiry_offer":
@@ -109,13 +111,36 @@ export default class extends Controller {
     this.showReturnDrawerPanel({ receipt_number: transactionNumber })
   }
 
+  openModeDrawer(event) {
+    event.preventDefault()
+    this.setModeSwitchActive(event.currentTarget.dataset.mode)
+    this.inputTarget.value = ""
+    this.hidePanels()
+
+    if (event.currentTarget.dataset.mode === "return") {
+      this.showReturnDrawerPanel({})
+    } else if (event.currentTarget.dataset.mode === "pickup") {
+      this.showPickupDrawerPanel()
+    }
+  }
+
+  setModeSwitchActive(mode) {
+    this.element.querySelectorAll("[data-mode]").forEach((element) => {
+      const active = element.dataset.mode === mode
+      element.classList.toggle("ss-pos-mode-switch__btn--active", active)
+      element.setAttribute("aria-current", active ? "page" : "false")
+    })
+  }
+
   showReturnDrawerPanel(payload = {}) {
     if (!this.hasReceiptPanelTarget) {
       this.dispatchMessage("Return workflow is not available.")
       return
     }
 
+    this.setModeSwitchActive("return")
     this.receiptPanelTarget.hidden = false
+    this.receiptPanelTarget.scrollIntoView({ behavior: "smooth", block: "nearest" })
     const receiptInput = this.receiptPanelTarget.querySelector("[data-pos-return-lookup-target='input']")
     if (receiptInput && payload.receipt_number) {
       receiptInput.value = payload.receipt_number
@@ -132,7 +157,9 @@ export default class extends Controller {
       return
     }
 
+    this.setModeSwitchActive("pickup")
     this.pickupPanelTarget.hidden = false
+    this.pickupPanelTarget.scrollIntoView({ behavior: "smooth", block: "nearest" })
     const input = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='query']")
     input?.focus()
   }
@@ -259,6 +286,7 @@ export default class extends Controller {
     event?.preventDefault()
     if (!this.hasReceiptPanelTarget) return
 
+    this.setModeSwitchActive("sale")
     this.receiptPanelTarget.hidden = true
     const input = this.receiptPanelTarget.querySelector("[data-pos-return-lookup-target='input']")
     if (input) input.value = ""
@@ -276,6 +304,7 @@ export default class extends Controller {
     event?.preventDefault()
     if (!this.hasPickupPanelTarget) return
 
+    this.setModeSwitchActive("sale")
     this.pickupPanelTarget.hidden = true
     const query = this.pickupPanelTarget.querySelector("[data-pos-pickup-panel-target='query']")
     if (query) query.value = ""

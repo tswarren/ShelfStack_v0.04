@@ -215,7 +215,7 @@ class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
     assert_equal "Item could not be found.", result.json[:message]
   end
 
-  test "return carry-forward blocked when resumed draft has settlement rows" do
+  test "return drawer blocked when active draft has settlement rows" do
     variant = create_product_variant!(selling_price_cents: 1000)
     draft = create_pos_transaction!(
       store: @store,

@@ -2,10 +2,14 @@
 <% inline = local_assigns.fetch(:inline, false) %>
 <% panel_open = local_assigns.fetch(:open, params[:pickup].present? || pos_pickup_mode?) %>
 
+<% add_reservation_url = local_assigns.fetch(:add_reservation_url) { add_reservation_line_pos_transaction_path(transaction) } %>
+<% redirect_on_success = local_assigns.fetch(:redirect_on_success, false) %>
+
 <% pickup_content = capture do %>
   <div data-controller="pos-pickup-panel"
        data-pos-pickup-panel-url-value="<%= pos_pickup_lookup_path %>"
-       data-pos-pickup-panel-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>">
+       data-pos-pickup-panel-add-reservation-url-value="<%= add_reservation_url %>"
+       data-pos-pickup-panel-redirect-on-success-value="<%= redirect_on_success %>">
     <div class="ss-field">
       <%= label_tag :pos_pickup_customer_query, "Find customer" %>
       <%= text_field_tag :pos_pickup_customer_query, nil,

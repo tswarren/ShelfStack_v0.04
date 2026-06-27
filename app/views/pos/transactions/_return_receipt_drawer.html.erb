@@ -1,7 +1,9 @@
+<% add_return_line_url = local_assigns.fetch(:add_return_line_url) { add_return_line_pos_transaction_path(transaction) } %>
 <section class="ss-pos-panel ss-pos-drawer <%= 'ss-pos-drawer--inline' if local_assigns[:inline] %>"
          data-controller="pos-return-lookup"
          data-pos-return-lookup-url-value="<%= pos_return_lookup_path %>"
-         data-pos-return-lookup-add-url-value="<%= add_return_line_pos_transaction_path(transaction) %>">
+         data-pos-return-lookup-add-url-value="<%= add_return_line_url %>"
+         data-pos-return-lookup-redirect-on-success-value="<%= local_assigns.fetch(:redirect_on_success, false) %>">
   <div class="ss-pos-drawer__header">
     <h2 class="ss-pos-panel__title">Return from receipt</h2>
     <% if local_assigns[:inline] %>
