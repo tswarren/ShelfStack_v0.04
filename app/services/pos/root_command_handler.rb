@@ -72,6 +72,10 @@ module Pos
 
     def carry_forward_and_redirect(route)
       with_draft_redirect do |transaction|
+        if route.action == :return_drawer_offer && return_blocked_for_transaction?(transaction)
+          return json_message_result(CommandRouteBuilder::RETURN_BLOCKED_TENDERS_MESSAGE)
+        end
+
         CommandCarryForward.edit_path(
           transaction: transaction,
           carry_forward: CommandCarryForward.carry_forward_for(route.action),
@@ -80,6 +84,19 @@ module Pos
           mode: CommandCarryForward.mode_for(route.action)
         )
       end
+    end
+
+    def return_blocked_for_transaction?(transaction)
+      transaction.pos_tenders.settlement_rows.exists?
+    end
+
+    def json_message_result(message)
+      Result.new(
+        status: :json,
+        redirect_path: nil,
+        json: { action: "message", payload: {}, message: message },
+        alert: nil
+      )
     end
 
     def add_variant_and_redirect

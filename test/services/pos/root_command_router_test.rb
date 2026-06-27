@@ -160,6 +160,35 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
 
     assert_equal :pickup_drawer_offer, route.action
   end
+
+  test "/return denied without pos.returns.receipted permission" do
+    restricted = create_user!(username: "root_return_denied")
+    grant_permission!(restricted, "pos.access", store: @store)
+
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: restricted,
+      input: "/return"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
+  end
+
+  test "/pickup denied without pos.access permission" do
+    restricted = create_user!(username: "root_pickup_denied")
+
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: restricted,
+      input: "/pickup"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
+  end
 end
 
 class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
@@ -184,5 +213,37 @@ class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
     assert_equal :json, result.status
     assert_equal "message", result.json[:action]
     assert_equal "Item could not be found.", result.json[:message]
+  end
+
+  test "return carry-forward blocked when resumed draft has settlement rows" do
+    variant = create_product_variant!(selling_price_cents: 1000)
+    draft = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      attrs: {
+        pos_register_session: @register_session,
+        business_date: @register_session.business_date
+      },
+      lines: [
+        { product_variant: variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    create_pos_tender!(draft, tender_type: "cash", amount_cents: 1000)
+    grant_all_phase6_permissions!(@cashier, store: @store)
+
+    result = Pos::RootCommandHandler.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: @register_session,
+      user_session: nil,
+      input: "/return"
+    )
+
+    assert_equal :json, result.status
+    assert_equal "message", result.json[:action]
+    assert_equal Pos::CommandRouteBuilder::RETURN_BLOCKED_TENDERS_MESSAGE, result.json[:message]
+    assert_nil result.redirect_path
   end
 end

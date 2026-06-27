@@ -146,6 +146,31 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_match(/mode=pickup/, body["payload"]["url"])
   end
 
+  test "root route_command return blocked when active draft has settlement rows" do
+    draft = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      attrs: {
+        pos_register_session: @register_session,
+        business_date: @register_session.business_date
+      },
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    create_pos_tender!(draft, tender_type: "cash", amount_cents: 1000)
+
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/return" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRouteBuilder::RETURN_BLOCKED_TENDERS_MESSAGE, body["message"]
+    assert_nil body.dig("payload", "url")
+  end
+
   test "root route_command invalid open ring amount does not create draft" do
     assert_no_difference -> { PosTransaction.count } do
       post pos_route_command_path, params: { input: "/op abc" }, as: :json

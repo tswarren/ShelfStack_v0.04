@@ -319,6 +319,39 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal :pickup_drawer_offer, route.action
   end
 
+  test "return command denied without pos.returns.receipted permission" do
+    restricted = create_user!(username: "return_denied_cashier")
+    grant_permission!(restricted, "pos.access", store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: restricted)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: restricted,
+      transaction: transaction,
+      input: "/return"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
+  end
+
+  test "pickup command denied without pos.access permission" do
+    restricted = create_user!(username: "pickup_denied_cashier")
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: restricted)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: restricted,
+      transaction: transaction,
+      input: "/pickup"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
+  end
+
   test "register-session-required command without open session returns message" do
     route = Pos::CommandBarRouter.call(store: @store, register_session: nil, input: "/balance")
 

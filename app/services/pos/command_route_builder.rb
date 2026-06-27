@@ -36,7 +36,7 @@ module Pos
         store: store,
         register_session: register_session,
         transaction: transaction,
-        check_permissions: user.present? && store.present?
+        check_permissions: true
       )
       return unavailable_route(availability) unless availability.available
 
