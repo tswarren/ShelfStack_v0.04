@@ -66,6 +66,12 @@
           form: { data: { turbo_stream: true } },
           id: "fixture-turbo-update-in-drawer-btn",
           class: "ss-btn ss-btn-secondary" %>
+    <%= button_to "Replace drawer",
+          test_interaction_shell_replace_drawer_path,
+          method: :post,
+          form: { data: { turbo_stream: true } },
+          id: "fixture-replace-drawer-btn",
+          class: "ss-btn ss-btn-secondary" %>
     <button type="button"
             id="open-nested-modal-button"
             class="ss-btn ss-btn-secondary"

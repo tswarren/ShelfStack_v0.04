@@ -55,5 +55,20 @@ export default class extends Controller {
       }
       this.submitButtonTarget.value = labels[drawerKey] || "Submit"
     }
+
+    this.resetFormDirtyBaseline()
+  }
+
+  resetFormDirtyBaseline() {
+    const form = this.element.querySelector("form")
+    if (!form) return
+
+    form.querySelectorAll("input, textarea, select").forEach((field) => {
+      if (field.type === "checkbox" || field.type === "radio") {
+        field.defaultChecked = field.checked
+      } else if (field.type !== "submit" && field.type !== "button") {
+        field.defaultValue = field.value
+      }
+    })
   }
 }

@@ -50,7 +50,7 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
     assert_text @variant.sku
 
     find("#item-demand-drawer .ss-drawer-close").click
-    assert_selector "#item-demand-drawer", visible: :hidden
+    assert_selector "#item-demand-drawer[hidden]", visible: :all
     assert_equal hold_button, page.active_element
   end
 
@@ -62,7 +62,7 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
     assert_no_selector "#item-demand-drawer[hidden]"
 
     send_escape
-    assert_selector "#item-demand-drawer", visible: :hidden
+    assert_selector "#item-demand-drawer[hidden]", visible: :all
     assert_equal hold_button, page.active_element
   end
 
@@ -73,6 +73,21 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
     find("#item-demand-drawer input[name='quantity']").fill_in with: "2"
 
     send_escape
-    assert_no_selector "#item-demand-drawer", visible: :visible
+    assert_no_selector "#item-demand-drawer[hidden]"
+  end
+
+  test "shared demand drawer closes via cancel when form is dirty" do
+    visit_item_operations!
+
+    hold_button = find("button", text: "Hold for customer", match: :first)
+    hold_button.click
+    find("#item-demand-drawer input[name='quantity']").fill_in with: "2"
+
+    send_escape
+    assert_no_selector "#item-demand-drawer[hidden]"
+
+    find("#item-demand-drawer button", text: "Cancel").click
+    assert_selector "#item-demand-drawer[hidden]", visible: :all
+    assert_equal hold_button, page.active_element
   end
 end

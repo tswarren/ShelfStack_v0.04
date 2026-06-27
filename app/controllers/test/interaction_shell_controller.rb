@@ -35,5 +35,16 @@ module Test
         end
       end
     end
+
+    def replace_drawer
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            "fixture-drawer",
+            "<div id=\"fixture-drawer-replaced\" hidden aria-hidden=\"true\"></div>"
+          )
+        end
+      end
+    end
   end
 end

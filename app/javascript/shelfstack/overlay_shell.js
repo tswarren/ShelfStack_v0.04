@@ -9,6 +9,7 @@ export function isFormDirty(form) {
   const fields = form.querySelectorAll("input, textarea, select")
   return Array.from(fields).some((field) => {
     if (field.type === "hidden" || field.disabled) return false
+    if (field.type === "submit" || field.type === "button") return false
     if (field.type === "checkbox" || field.type === "radio") {
       return field.checked !== field.defaultChecked
     }
@@ -26,7 +27,8 @@ export function isFormSubmitting(form) {
   return form.dataset.ssSubmitting === "true"
 }
 
-export function canCloseSafely(root, { dirtyGuard }) {
+export function canCloseSafely(root, controller) {
+  const dirtyGuard = controller.dirtyGuardValue
   const form = root.querySelector("form")
   if (!dirtyGuard || !form) return true
   if (isFormSubmitting(form)) return false
@@ -66,7 +68,7 @@ export function showOverlay(controller) {
   const panel = controller.element.querySelector(shell.panelSelector)
   shell.keydownHandler = (event) => {
     if (event.key === "Escape") {
-      if (controller.closeOnEscapeValue && canCloseSafely(controller.element, controller)) {
+      if (controller.closeOnEscapeValue) {
         event.preventDefault()
         closeOverlay(controller)
       }
@@ -81,24 +83,51 @@ export function showOverlay(controller) {
   controller.element.dispatchEvent(new CustomEvent(shell.openedEvent, { bubbles: true }))
 }
 
-export function closeOverlay(controller) {
+function finalizeOverlayClose(controller, { shouldRestoreFocus = true } = {}) {
   const shell = controller._overlayShell
-  if (!shell || controller.element.hidden === true) return false
-  if (!canCloseSafely(controller.element, controller)) return false
+  if (!shell) return false
+
+  const opener = shell.opener
+  shell.opener = null
+
+  if (shouldRestoreFocus && opener) restoreFocus(opener)
 
   controller.element.hidden = true
   releaseOverlayLock(shell.lockKind)
-
-  if (shell.keydownHandler) {
-    document.removeEventListener("keydown", shell.keydownHandler)
-    shell.keydownHandler = null
-  }
-
-  restoreFocus(shell.opener)
-  shell.opener = null
+  teardownOverlayListeners(shell)
 
   controller.element.dispatchEvent(new CustomEvent(shell.closedEvent, { bubbles: true }))
   return true
+}
+
+function teardownOverlayListeners(shell) {
+  if (!shell.keydownHandler) return
+
+  document.removeEventListener("keydown", shell.keydownHandler)
+  shell.keydownHandler = null
+}
+
+export function closeOverlay(controller, { force = false, shouldRestoreFocus = true } = {}) {
+  const shell = controller._overlayShell
+  if (!shell || controller.element.hidden === true) return false
+  if (!force && !canCloseSafely(controller.element, controller)) return false
+
+  return finalizeOverlayClose(controller, { shouldRestoreFocus })
+}
+
+export function cleanupOverlay(controller, { shouldRestoreFocus = false } = {}) {
+  const shell = controller._overlayShell
+  if (!shell) return
+
+  if (controller.element.hidden !== true) {
+    controller.element.hidden = true
+    releaseOverlayLock(shell.lockKind)
+  }
+
+  teardownOverlayListeners(shell)
+
+  if (shouldRestoreFocus) restoreFocus(shell.opener)
+  shell.opener = null
 }
 
 export function openOverlayById(application, identifier, id, opener) {
@@ -119,7 +148,6 @@ export function bindBackdropClose(controller, backdropTarget) {
 
   shell.backdropHandler = (event) => {
     if (!controller.closeOnBackdropValue) return
-    if (!canCloseSafely(controller.element, controller)) return
     event.preventDefault()
     closeOverlay(controller)
   }

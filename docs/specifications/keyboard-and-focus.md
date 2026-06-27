@@ -24,9 +24,11 @@ Global keyboard and focus behavior for ShelfStack operational UI.
 
 Shared `modal_controller` / `drawer_controller` honor:
 
-* `closeOnEscape` — default true when form is clean
-* `closeOnBackdrop` — drawer default true; modal configurable
-* `dirtyGuard` — block close when form is dirty, submitting, or showing validation errors
+* `closeOnEscape` — default true; respects dirty guard when form is not clean
+* `closeOnBackdrop` — drawer default true; modal configurable; respects dirty guard
+* `dirtyGuard` — block **implicit** close (Escape, backdrop) when form is dirty, submitting, or showing validation errors
+* **Explicit close** — Close button and Cancel call `drawer#close` / `modal#close` with force, bypassing dirty guard
+* **Disconnect cleanup** — Turbo removal calls `cleanupOverlay`, force-releasing body lock and listeners without dirty guard
 
 Body scroll lock is reference-counted via `overlay_lock.js` so nested modal-over-drawer does not unlock early.
 

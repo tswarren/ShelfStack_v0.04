@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import {
   bindBackdropClose,
   bindOverlayShell,
+  cleanupOverlay,
   closeOverlay,
   isOverlayShell,
   openOverlayById,
@@ -32,7 +33,7 @@ export default class extends Controller {
 
   disconnect() {
     if (isOverlayShell(this)) {
-      closeOverlay(this)
+      cleanupOverlay(this)
       if (this.hasBackdropTarget) unbindBackdropClose(this, this.backdropTarget)
     }
   }
@@ -61,12 +62,12 @@ export default class extends Controller {
       if (!element) return false
 
       const controller = this.application.getControllerForElementAndIdentifier(element, "modal")
-      if (controller && isOverlayShell(controller)) return closeOverlay(controller)
+      if (controller && isOverlayShell(controller)) return closeOverlay(controller, { force: true })
       return false
     }
 
     if (!isOverlayShell(this)) return false
 
-    return closeOverlay(this)
+    return closeOverlay(this, { force: true })
   }
 }

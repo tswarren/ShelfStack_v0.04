@@ -37,6 +37,28 @@ class InteractionModalDrawerShellSystemTest < ApplicationSystemTestCase
     assert_no_selector "#fixture-drawer[hidden]"
   end
 
+  test "dirty drawer closes via explicit close button" do
+    find("#open-drawer-button").click
+    find("#fixture-drawer-dirty-field").fill_in with: "changed"
+
+    send_escape
+    assert_no_selector "#fixture-drawer[hidden]"
+
+    find(".ss-drawer-close").click
+    assert_selector "#fixture-drawer[hidden]", visible: :hidden
+    assert_equal find("#open-drawer-button"), page.active_element
+  end
+
+  test "dirty drawer releases body lock when turbo removes drawer element" do
+    find("#open-drawer-button").click
+    find("#fixture-drawer-dirty-field").fill_in with: "changed"
+    assert page.evaluate_script("document.body.classList.contains('ss-drawer-open')")
+
+    find("#fixture-replace-drawer-btn").click
+    assert_selector "#fixture-drawer-replaced", visible: :all, wait: 5
+    assert page.evaluate_script("!document.body.classList.contains('ss-drawer-open')")
+  end
+
   test "modal opens, focuses first field, and closes on backdrop when allowed" do
     find("#open-modal-button").click
     assert_no_selector "#fixture-modal[hidden]"
