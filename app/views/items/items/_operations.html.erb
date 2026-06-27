@@ -92,6 +92,7 @@
       <% end %>
     </tbody>
   </table>
+  <p class="ss-hint">Select <strong>Details</strong> on a variant row to view demand, purchasing, receiving, and recent sales.</p>
 <% end %>
 
 <section id="receiving-history" class="ss-item-anchor-section" aria-label="Receiving history">
@@ -135,4 +136,5 @@
 <% end %>
 
 <%= render "items/items/variant_operations_drawer", operations: operations %>
+<div id="demand_form_reset_triggers" aria-hidden="true"></div>
 </div>

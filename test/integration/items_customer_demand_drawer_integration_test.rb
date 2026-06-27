@@ -105,6 +105,24 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
     assert_redirected_to customers_customer_request_path(request, anchor: "line-#{request.customer_request_lines.first.id}")
   end
 
+  test "create hold via turbo stream refreshes drawer and resets demand form trigger" do
+    post items_customer_demand_path,
+         params: {
+           request_type: "hold",
+           product_variant_id: @variant.id,
+           customer_id: @customer.id,
+           quantity: 1,
+           expires_at: 14.days.from_now.to_date
+         },
+         as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, 'target="variant-ops-drawer-frame"'
+    assert_includes response.body, 'target="toast_region"'
+    assert_includes response.body, 'target="demand_form_reset_triggers"'
+    assert_includes response.body, "one-shot-demand-form-reset"
+  end
+
   test "special order validation error appends error toast via turbo stream" do
     post items_customer_demand_path,
          params: {

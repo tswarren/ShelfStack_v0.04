@@ -35,11 +35,10 @@
               <% if Authorization.allowed?(user: current_user, permission_key: "items.product_variants.update", store: current_store) %>
                 <button type="button"
                         class="ss-btn-link"
-                        data-action="item-setup-modal#preparePriceEdit modal#open"
+                        data-action="item-setup-modal#openModalBody modal#open"
                         data-modal-target-id-param="item-price-modal"
-                        data-variant-id="<%= variant.id %>"
-                        data-variant-sku="<%= variant.sku %>"
-                        data-price-cents="<%= variant.selling_price_cents %>">
+                        data-modal-body-url="<%= items_edit_setup_modals_variant_price_path(variant) %>"
+                        data-modal-title="Edit price — <%= variant.sku %>">
                   Quick edit price
                 </button>
               <% end %>

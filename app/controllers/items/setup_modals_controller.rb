@@ -6,11 +6,11 @@ module Items
     include Items::SetupModalLocals
 
     before_action -> { authorize!("items.catalog_items.update") }, only: %i[create_identifier update_identifier]
-    before_action -> { authorize!("items.product_variants.update") }, only: %i[update_price update_classification classification_tax_preview]
-    before_action -> { authorize!("setup.product_vendors.create") }, only: :create_product_vendor
-    before_action -> { authorize!("setup.product_vendors.update") }, only: :update_product_vendor
-    before_action -> { authorize!("setup.product_variant_vendors.create") }, only: :create_variant_vendor
-    before_action -> { authorize!("setup.product_variant_vendors.update") }, only: :update_variant_vendor
+    before_action -> { authorize!("items.product_variants.update") }, only: %i[edit_price update_price edit_classification update_classification classification_tax_preview]
+    before_action -> { authorize!("setup.product_vendors.create") }, only: %i[new_product_vendor create_product_vendor]
+    before_action -> { authorize!("setup.product_vendors.update") }, only: %i[edit_product_vendor update_product_vendor]
+    before_action -> { authorize!("setup.product_variant_vendors.create") }, only: %i[new_variant_vendor create_variant_vendor]
+    before_action -> { authorize!("setup.product_variant_vendors.update") }, only: %i[edit_variant_vendor update_variant_vendor]
 
     def create_identifier
       catalog_item = CatalogItem.find(params.require(:catalog_item_id))
@@ -57,6 +57,15 @@ module Items
       render_identifier_error(catalog_item: catalog_item, identifier: identifier, message: e.message)
     end
 
+    def edit_price
+      variant = ProductVariant.find(params.require(:variant_id))
+      render_modal_body(
+        frame_id: "item-price-modal-body",
+        partial: "items/setup_modals/price_quick_form",
+        locals: { variant: variant }
+      )
+    end
+
     def update_price
       variant = ProductVariant.find(params.require(:variant_id))
       variant.assign_attributes(selling_price_cents: params.require(:selling_price_cents))
@@ -75,9 +84,35 @@ module Items
       end
     end
 
+    def new_product_vendor
+      product = Product.find(params.require(:product_id))
+      render_modal_body(
+        frame_id: "item-product-vendor-modal-body",
+        partial: "items/setup_modals/product_vendor_quick_form",
+        locals: {
+          product: product,
+          product_vendor: ProductVendor.new(product: product, active: true),
+          vendors: Vendor.active_records.order(:name)
+        }
+      )
+    end
+
+    def edit_product_vendor
+      product_vendor = ProductVendor.includes(:vendor, :product).find(params.require(:id))
+      render_modal_body(
+        frame_id: "item-product-vendor-modal-body",
+        partial: "items/setup_modals/product_vendor_quick_form",
+        locals: {
+          product: product_vendor.product,
+          product_vendor: product_vendor,
+          vendors: Vendor.active_records.order(:name)
+        }
+      )
+    end
+
     def create_product_vendor
       product = Product.find(params.require(:product_id))
-      product_vendor = ProductVendor.new(product_vendor_params)
+      product_vendor = ProductVendor.new(product_vendor_create_params)
       product_vendor.product = product
       if product_vendor.save
         record_audit!("product_vendor.created", product_vendor)
@@ -96,7 +131,7 @@ module Items
 
     def update_product_vendor
       product_vendor = ProductVendor.find(params.require(:id))
-      if product_vendor.update(product_vendor_params)
+      if product_vendor.update(product_vendor_update_params)
         record_audit!("product_vendor.updated", product_vendor)
         item = ItemPresenter.from_product(product_vendor.product)
         render_modal_success(
@@ -111,9 +146,42 @@ module Items
       end
     end
 
+    def new_variant_vendor
+      variant = ProductVariant.find(params.require(:product_variant_id))
+      variant_vendor = ProductVariantVendor.new(
+        product_variant: variant,
+        vendor_id: params[:vendor_id],
+        active: true
+      )
+      render_modal_body(
+        frame_id: "item-variant-vendor-modal-body",
+        partial: "items/setup_modals/variant_vendor_quick_form",
+        locals: {
+          variant: variant,
+          variant_vendor: variant_vendor,
+          vendors: Vendor.active_records.order(:name),
+          returnability_options: ReturnabilityStatus::RETURNABILITY_STATUSES
+        }
+      )
+    end
+
+    def edit_variant_vendor
+      variant_vendor = ProductVariantVendor.includes(:vendor, :product_variant).find(params.require(:id))
+      render_modal_body(
+        frame_id: "item-variant-vendor-modal-body",
+        partial: "items/setup_modals/variant_vendor_quick_form",
+        locals: {
+          variant: variant_vendor.product_variant,
+          variant_vendor: variant_vendor,
+          vendors: Vendor.active_records.order(:name),
+          returnability_options: ReturnabilityStatus::RETURNABILITY_STATUSES
+        }
+      )
+    end
+
     def create_variant_vendor
       variant = ProductVariant.find(params.require(:product_variant_id))
-      variant_vendor = ProductVariantVendor.new(variant_vendor_params)
+      variant_vendor = ProductVariantVendor.new(variant_vendor_create_params)
       variant_vendor.product_variant = variant
       if variant_vendor.save
         record_audit!("product_variant_vendor.created", variant_vendor)
@@ -132,7 +200,7 @@ module Items
 
     def update_variant_vendor
       variant_vendor = ProductVariantVendor.find(params.require(:id))
-      if variant_vendor.update(variant_vendor_params)
+      if variant_vendor.update(variant_vendor_update_params)
         record_audit!("product_variant_vendor.updated", variant_vendor)
         item = item_from_variant(variant_vendor.product_variant)
         render_modal_success(
@@ -145,6 +213,19 @@ module Items
       else
         render_variant_vendor_error(variant: variant_vendor.product_variant, variant_vendor: variant_vendor)
       end
+    end
+
+    def edit_classification
+      variant = ProductVariant.find(params.require(:variant_id))
+      render_modal_body(
+        frame_id: "item-classification-modal-body",
+        partial: "items/setup_modals/classification_quick_form",
+        locals: {
+          variant: variant,
+          sub_departments: SubDepartment.active_records.order(:name),
+          defaults: ClassificationDefaultsResolver.for(variant: variant, store: current_store)
+        }
+      )
     end
 
     def update_classification
@@ -176,13 +257,29 @@ module Items
 
     private
 
-    def product_vendor_params
+    def render_modal_body(frame_id:, partial:, locals:)
+      render partial: "items/setup_modals/modal_body_frame",
+             locals: { frame_id: frame_id, partial: partial, partial_locals: locals },
+             layout: false
+    end
+
+    def product_vendor_create_params
       params.require(:product_vendor).permit(:vendor_id, :vendor_item_number, :supplier_discount_bps, :preferred)
     end
 
-    def variant_vendor_params
+    def product_vendor_update_params
+      params.require(:product_vendor).permit(:vendor_item_number, :supplier_discount_bps, :preferred)
+    end
+
+    def variant_vendor_create_params
       params.require(:product_variant_vendor).permit(
         :vendor_id, :vendor_item_number, :supplier_discount_bps, :returnability_status, :preferred
+      )
+    end
+
+    def variant_vendor_update_params
+      params.require(:product_variant_vendor).permit(
+        :vendor_item_number, :supplier_discount_bps, :returnability_status, :preferred
       )
     end
 

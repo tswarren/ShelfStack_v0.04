@@ -1,0 +1,24 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>Customer</th>
+      <th>Status</th>
+      <th class="ss-num">Committed</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% orders.each do |order| %>
+      <tr>
+        <td><%= order.customer.display_name %></td>
+        <td><%= order.status.tr("_", " ").titleize %></td>
+        <td class="ss-num"><%= order.quantity_committed %></td>
+        <td>
+          <%= link_to "View request",
+                customers_customer_request_path(order.customer_request_line.customer_request, anchor: "line-#{order.customer_request_line_id}"),
+                class: "ss-btn-link" %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

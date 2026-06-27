@@ -97,6 +97,22 @@ export default class extends Controller {
   resetOnClose(event) {
     if (event.target.id !== "item-variant-ops-drawer") return
 
+    this.resetDemandForm()
+    this.variantIdValue = ""
+    this.frameTarget.removeAttribute("src")
+    this.frameTarget.innerHTML = '<p class="ss-muted">Loading…</p>'
+
+    if (this.hasPlaceholderTarget) {
+      this.placeholderTarget.hidden = false
+    }
+    if (this.hasTitleTarget) {
+      this.titleTarget.textContent = "Variant operations"
+    }
+
+    this.resetFormDirtyBaseline()
+  }
+
+  resetDemandForm() {
     const form = this.demandForm
     if (form) {
       form.reset()
@@ -112,17 +128,6 @@ export default class extends Controller {
     if (this.hasSubmitButtonTarget) this.submitButtonTarget.value = "Submit"
 
     this.hideDemandSection()
-    this.variantIdValue = ""
-    this.frameTarget.removeAttribute("src")
-    this.frameTarget.innerHTML = '<p class="ss-muted">Loading…</p>'
-
-    if (this.hasPlaceholderTarget) {
-      this.placeholderTarget.hidden = false
-    }
-    if (this.hasTitleTarget) {
-      this.titleTarget.textContent = "Variant operations"
-    }
-
     this.resetFormDirtyBaseline()
   }
 

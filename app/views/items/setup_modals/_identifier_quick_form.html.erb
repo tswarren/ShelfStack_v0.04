@@ -43,6 +43,7 @@
             data-modal-target-id-param="item-identifier-modal">Cancel</button>
     <%= link_to "Full edit",
           editing ? edit_identifier_items_catalog_item_path(catalog_item, identifier_id: identifier.id, return_to: "item") : new_identifier_items_catalog_item_path(catalog_item, return_to: "item"),
-          class: "ss-btn-link" %>
+          class: "ss-btn-link",
+          data: { turbo_frame: "_top" } %>
   </footer>
 <% end %>

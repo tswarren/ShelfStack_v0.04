@@ -5,9 +5,12 @@
 
 <%= form_with url: items_setup_modals_variant_classification_path(variant),
               method: :patch,
-              data: { turbo_stream: true, controller: "classification-tax-preview" },
+              data: {
+                turbo_stream: true,
+                controller: "classification-tax-preview",
+                classification_tax_preview_url_value: items_setup_modals_classification_tax_preview_path(variant_id: variant.id)
+              },
               class: "ss-form ss-form--standard" do %>
-  <%= hidden_field_tag :variant_id, variant.id, data: { item_setup_modal_target: "variantIdField" } %>
   <div class="ss-field">
     <%= label_tag :sub_department_id, "Subdepartment", class: "ss-label" %>
     <%= select_tag :sub_department_id,
@@ -16,9 +19,7 @@
           required: true,
           data: {
             classification_tax_preview_target: "subDepartment",
-            item_setup_modal_target: "subDepartmentField",
-            action: "change->classification-tax-preview#refresh",
-            classification_tax_preview_url_value: items_setup_modals_classification_tax_preview_path(variant_id: variant.id)
+            action: "change->classification-tax-preview#refresh"
           } %>
   </div>
   <div class="ss-field">
@@ -32,6 +33,6 @@
     <button type="button" class="ss-btn ss-btn-secondary"
             data-action="modal#close"
             data-modal-target-id-param="item-classification-modal">Cancel</button>
-    <%= link_to "Full edit", edit_items_product_variant_path(variant, return_to: "item"), class: "ss-btn-link" %>
+    <%= link_to "Full edit", edit_items_product_variant_path(variant, return_to: "item"), class: "ss-btn-link", data: { turbo_frame: "_top" } %>
   </footer>
 <% end %>

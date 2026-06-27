@@ -74,6 +74,20 @@
   </section>
 <% end %>
 
+<% if drawer.customer_demand_visible? && tab.variant_scoped_incoming_reserves.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Incoming reserves</h3>
+    <%= render "items/items/variant_operations_drawer/incoming_reserves", reserves: tab.variant_scoped_incoming_reserves %>
+  </section>
+<% end %>
+
+<% if drawer.customer_demand_visible? && tab.variant_scoped_special_orders.any? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Special orders</h3>
+    <%= render "items/items/variant_operations_drawer/special_orders", orders: tab.variant_scoped_special_orders %>
+  </section>
+<% end %>
+
 <% if tab.variant_scoped_purchase_request_lines.any? %>
   <section class="ss-drawer-section">
     <h3 class="ss-drawer-section-title">Open purchase requests</h3>

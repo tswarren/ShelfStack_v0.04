@@ -23,15 +23,15 @@
   <% end %>
   <div class="ss-field">
     <%= f.label :vendor_item_number, "Vendor item #", class: "ss-label" %>
-    <%= f.text_field :vendor_item_number, class: "ss-input", data: { item_setup_modal_target: "vendorItemNumberField" } %>
+    <%= f.text_field :vendor_item_number, class: "ss-input" %>
   </div>
   <div class="ss-field">
     <%= f.label :supplier_discount_bps, "Supplier discount (bps)", class: "ss-label" %>
-    <%= f.number_field :supplier_discount_bps, min: 0, max: 10_000, class: "ss-input", data: { item_setup_modal_target: "supplierDiscountField" } %>
+    <%= f.number_field :supplier_discount_bps, min: 0, max: 10_000, class: "ss-input" %>
   </div>
   <div class="ss-field">
     <%= f.label :preferred, class: "ss-label" %>
-    <%= f.check_box :preferred, data: { item_setup_modal_target: "preferredField" } %>
+    <%= f.check_box :preferred %>
   </div>
   <footer class="ss-form-actions">
     <%= f.submit(editing ? "Save vendor source" : "Add vendor source", class: "ss-btn") %>
@@ -39,9 +39,9 @@
             data-action="modal#close"
             data-modal-target-id-param="item-product-vendor-modal">Cancel</button>
     <% if editing %>
-      <%= link_to "Full edit", edit_items_product_product_vendor_path(product, product_vendor), class: "ss-btn-link" %>
+      <%= link_to "Full edit", edit_items_product_product_vendor_path(product, product_vendor), class: "ss-btn-link", data: { turbo_frame: "_top" } %>
     <% else %>
-      <%= link_to "Full form", new_items_product_product_vendor_path(product), class: "ss-btn-link" %>
+      <%= link_to "Full form", new_items_product_product_vendor_path(product), class: "ss-btn-link", data: { turbo_frame: "_top" } %>
     <% end %>
   </footer>
 <% end %>

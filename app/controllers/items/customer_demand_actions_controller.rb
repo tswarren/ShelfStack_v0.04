@@ -110,7 +110,11 @@ module Items
           partial: "items/items/variant_operations_drawer_body",
           locals: { drawer: drawer }
         ),
-        append_toast_stream(message: notice, variant: :success)
+        append_toast_stream(message: notice, variant: :success),
+        turbo_stream.append(
+          "demand_form_reset_triggers",
+          partial: "shared/interaction/demand_form_reset_trigger"
+        )
       ]
     end
   end
