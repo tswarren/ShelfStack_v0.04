@@ -23,7 +23,7 @@ module Pos
     end
 
     def call
-      return Route.new(action: :empty, payload: {}, message: "Enter a SKU, ISBN, receipt number, or command.") if input.blank?
+      return Route.new(action: :empty, payload: {}, message: "Enter a SKU, ISBN, or command.") if input.blank?
 
       if gift_card_command?
         return gift_card_route

@@ -6,6 +6,7 @@ module Pos
     HELP_MESSAGE = "Commands: /help, /balance, /op, /gc. Full command list ships in a later update."
     DISABLED_COMMAND_MESSAGE = "That command is not available from the idle workspace yet."
     GC_STUB_MESSAGE = "Gift card sales from the command field ship in a later update. Start a new sale first."
+    UNKNOWN_COMMAND_MESSAGE = "Unknown command. Use /help to see available commands."
 
     Route = Data.define(:action, :payload, :message)
 
@@ -40,7 +41,7 @@ module Pos
       return Route.new(action: :disabled_command, payload: {}, message: GC_STUB_MESSAGE) if input.match?(GC_COMMAND_PATTERN)
       return Route.new(action: :disabled_command, payload: {}, message: DISABLED_COMMAND_MESSAGE) if input.match?(OP_COMMAND_PATTERN)
 
-      Route.new(action: :message, payload: {}, message: FAILED_LOOKUP_MESSAGE)
+      Route.new(action: :message, payload: {}, message: UNKNOWN_COMMAND_MESSAGE)
     end
 
     def lookup_route

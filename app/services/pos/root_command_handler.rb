@@ -28,14 +28,14 @@ module Pos
 
     def call
       if product_variant_id.present?
-        return add_variant_and_redirect(ProductVariant.find(product_variant_id))
+        return add_variant_and_redirect { ProductVariant.find(product_variant_id) }
       end
 
       route = RootCommandRouter.call(store: store, input: input)
 
       case route.action
       when :add_variant
-        add_variant_and_redirect(ProductVariant.find(route.payload[:variant_id]))
+        add_variant_and_redirect { ProductVariant.find(route.payload[:variant_id]) }
       when :balance_redirect
         Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_stored_value_balance_path, json: nil, alert: nil)
       when :help, :message, :empty, :disabled_command, :variant_lookup
@@ -63,7 +63,9 @@ module Pos
 
     attr_reader :store, :workstation, :cashier_user, :register_session, :user_session, :input, :product_variant_id
 
-    def add_variant_and_redirect(variant)
+    def add_variant_and_redirect
+      variant = yield
+
       draft_result = DraftCreator.call(
         store: store,
         workstation: workstation,
@@ -86,6 +88,28 @@ module Pos
       else
         Result.new(status: :redirect, redirect_path: Rails.application.routes.url_helpers.pos_root_path, json: nil, alert: "Unable to start transaction.")
       end
+    rescue ActiveRecord::RecordNotFound
+      item_not_found_result
+    rescue AddVariantLine::Error, ActiveRecord::RecordInvalid => e
+      add_line_failed_result(e.message)
+    end
+
+    def item_not_found_result
+      Result.new(
+        status: :json,
+        redirect_path: nil,
+        json: { action: "message", payload: {}, message: "Item could not be found." },
+        alert: nil
+      )
+    end
+
+    def add_line_failed_result(message)
+      Result.new(
+        status: :json,
+        redirect_path: nil,
+        json: { action: "message", payload: {}, message: message.presence || "Unable to add item." },
+        alert: nil
+      )
     end
 
     def json_route(route)

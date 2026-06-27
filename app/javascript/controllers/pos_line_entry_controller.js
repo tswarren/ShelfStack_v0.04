@@ -54,7 +54,7 @@ export default class extends Controller {
   search() {
     this.exactLookup = false
     const query = this.inputElement?.value.trim()
-    if (!query || query.length < 2) {
+    if (!query || query.length < 2 || query.startsWith("/")) {
       this.clearChoices()
       return
     }
