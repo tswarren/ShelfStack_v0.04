@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace Test Plan
 
-**Status:** Planned
+**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md)
 
@@ -52,10 +52,13 @@ Suggested: extend or replace `Pos::CommandBarRouter` tests → `Pos::CommandRegi
 
 | Case | Expected |
 | ---- | -------- |
-| `/gc 50` from idle | Draft + modal with $50 prefilled; line **not** auto-posted |
+| `/gc 50` from idle | Draft + gift card sale line for $50; command focus returns |
+| `/gc` from idle | Draft + amount panel; focus amount field |
+| `/gc 50` on active transaction | Gift card sale line added; command focus returns |
 | `/cash 20` from idle | No draft; no-active-transaction message |
 | `/cashdrop` | Planned/disabled message; no `PosCashMovement` created |
-| `/cashin`, `/cashout` | Modal workflow when permitted |
+| `/cashin`, `/cashout` | Modal workflow when permitted; Escape dismisses modal |
+| `/session`, `/reports`, `/close`, `/drawer` | Per slice 7 utility command tests |
 
 ---
 
@@ -95,8 +98,8 @@ Suggested: extend or replace `Pos::CommandBarRouter` tests → `Pos::CommandRegi
 
 Per [keyboard-and-focus.md](keyboard-and-focus.md) and spec acceptance criteria:
 
-* Command field focus on idle and active workspace load
-* Focus after line add
+* Command field focus after workspace Turbo updates when no blocking panel/modal is open
+* Open gift card amount panel, cash movement modal, and help modal skip command focus until closed
 * Modal/drawer trap and restore
 * Settlement reachable without function keys
 * Touch targets ~44px on expanded row and settlement actions

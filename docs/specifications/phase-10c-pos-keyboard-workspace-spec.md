@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace Specification
 
-**Status:** Planned — **implementation source of truth**
+**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
 
@@ -42,7 +42,7 @@ Shared POS workspace shell (idle + active), landing router, active draft resolve
 | **Failed lookup** | Never creates a draft, even when input looks like amount/receipt/description |
 | **Transactionless commands** | Available while active draft exists; blocked only by modal/dirty state |
 | **Line vs transaction discount** | `/linediscount` (`/ld`, legacy `/d`) vs `/discount` (`/di`, legacy `/dt`) — separate commands |
-| **Gift card sale vs redeem** | `/giftcard` (`/gc`) vs `/giftredeem` (`/gr`); `/gc` modal-first, no auto-post with amount |
+| **Gift card sale vs redeem** | `/giftcard` (`/gc`) vs `/giftredeem` (`/gr`); `/gc` with amount adds line; without amount opens amount panel |
 | **Return / pickup** | Drawer workflows; draft on line commit/fulfillment |
 | **Return on active draft** | Allowed for empty/sale drafts (exchange); blocked when tender rows exist |
 | **`/close`** | Blocked while active draft exists |
@@ -58,11 +58,9 @@ Future auto-create on session open is out of scope unless explicitly approved.
 
 ## Architecture
 
-Phase 10-C introduces a **shared POS workspace shell** with one command field and registry for idle and active states. Root-level command endpoint required (today `route_command` is transaction-scoped only).
+Phase 10-C introduces a **shared POS workspace shell** with one command field and registry for idle and active states. Root-level command endpoint: `POST /pos/route_command` (`Pos::WorkspaceCommandsController`); transaction-scoped: `POST /pos/transactions/:id/route_command`.
 
-Evolve `Pos::CommandBarRouter` → `Pos::CommandRegistry` (Ruby-side, permission/state gated, consumed by JS).
-
-**PR 1:** workspace shell + landing router + active draft resolver + intent boundary + carry-forward.
+`Pos::CommandBarRouter` and `Pos::CommandRegistry` (Ruby-side, permission/state gated, consumed by JS) route slash commands in transaction and root contexts.
 
 ---
 
@@ -187,7 +185,7 @@ Cash drop is not available yet.
 * `/help` and mouse equivalents for discoverability
 * `/reports` confirms before navigate when active draft exists
 * Transactionless commands work with active draft (blocked only by modal/dirty state)
-* `/gc` opens modal; does not auto-post line when amount provided
+* `/gc` with amount adds gift card sale line; without amount opens amount panel (focus amount field; submit returns to command)
 * `/cashdrop` shows planned/disabled message
 
 ### Discount split
@@ -280,7 +278,8 @@ See [phase-10c-test-plan.md](phase-10c-test-plan.md) for the full checklist. Sum
 
 ### Gift card
 
-* `/gc 50` from idle → draft + modal with $50 prefilled; line not auto-posted
+* `/gc 50` from idle → draft + gift card sale line for $50; command focus returns
+* `/gc` from idle → draft + amount panel; focus amount field
 
 ### Tender from idle
 

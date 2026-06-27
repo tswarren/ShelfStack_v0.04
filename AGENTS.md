@@ -388,16 +388,16 @@ Phase 10-B was completed on 2026-06-26. See [docs/implementation/phase-10b-compl
 - Item setup quick modals (identifier, price, vendor source, classification/tax preview) via shared Turbo modal contract
 - Phase 9 drill-down contract preserved
 
-## Phase 10-C: POS Keyboard Workspace — **Planned** (current priority)
+## Phase 10-C: POS Keyboard Workspace — **In progress** (slices 1–7)
 
-Authoritative direction: [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md), [docs/specifications/phase-10c-pos-keyboard-workspace-spec.md](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md).
+See [docs/implementation/phase-10c-completion.md](docs/implementation/phase-10c-completion.md). Authoritative direction: [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md), [docs/specifications/phase-10c-pos-keyboard-workspace-spec.md](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md).
 
 - Idle POS workspace when register open and no active draft; command field is home base (not silent auto-create)
 - Active draft always wins on `/pos` (one per register session + workstation + cashier)
 - Two-lane parser: slash → `Pos::CommandRegistry`; non-slash → scan/catalog lookup only
 - Remove implicit open-ring/receipt/amount guessing from `Pos::CommandBarRouter`
-- Separate line vs transaction discount commands; `/gc` modal-first; `/cashdrop` deferred
-- Return/pickup drawer workflows; `/close` blocked while active draft exists
+- Separate line vs transaction discount commands; `/gc` with amount adds line, without amount opens amount panel; `/cashdrop` deferred
+- Return/pickup drawer workflows; tender → settlement; utility commands (session, reports, close, cash in/out); `/close` blocked while active draft exists
 
 ## Phase 10 Documents
 
@@ -419,6 +419,7 @@ docs/specifications/modal-and-drawer-patterns.md
 docs/specifications/phase-10b-test-plan.md
 docs/implementation/phase-10a-completion.md
 docs/implementation/phase-10b-completion.md
+docs/implementation/phase-10c-completion.md
 docs/samples/phase-10-mockups/
 ```
 
