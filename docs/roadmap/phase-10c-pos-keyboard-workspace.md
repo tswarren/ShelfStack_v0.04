@@ -652,6 +652,8 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 
 Interim record: [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
+Manual QA checklist: [phase-10c-manual-qa.md](../implementation/phase-10c-manual-qa.md)
+
 ---
 
 ## Keyboard/Focus Acceptance Criteria

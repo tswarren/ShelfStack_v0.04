@@ -14,6 +14,8 @@
 
 Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after full manual QA and merge to `main`.
 
+**Manual QA:** [phase-10c-manual-qa.md](phase-10c-manual-qa.md)
+
 ---
 
 ## Delivered (slices 1–8)
