@@ -2,10 +2,12 @@
 
 module Pos
   class TransactionsController < BaseController
-    before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show]
+    before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show completed]
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
-    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview]
-    before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line route_command]
+    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview route_command attach_customer detach_customer]
+    before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line]
+    before_action :authorize_no_receipt_return_line!, only: %i[add_line add_open_ring_line]
+    before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
     before_action -> { authorize_pos!("pos.gift_cards.issue") }, only: %i[add_gift_card_sale_line update_gift_card_sale_line]
@@ -26,13 +28,13 @@ module Pos
     before_action :set_transaction, only: %i[
       show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount void_discount_application
-      apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override
-      sync_tenders complete suspend resume void cancel readiness_preview route_command
+      apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override attach_customer detach_customer
+      sync_tenders complete completed suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
       edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount
-      void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command
+      void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command attach_customer detach_customer
     ]
     before_action :load_edit_context, only: %i[
       edit add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
@@ -46,19 +48,46 @@ module Pos
     def show
     end
 
+    def completed
+      unless @transaction.completed?
+        redirect_to edit_pos_transaction_path(@transaction), alert: "Complete the transaction before viewing the completion workspace."
+        return
+      end
+
+      @issuance_slips = Pos::StoredValueIssuanceSlips.for_transaction(@transaction)
+    end
+
     def new
       @transaction = PosTransaction.new(store: pos_store, workstation: current_workstation, cashier_user: current_user, status: "draft")
     end
 
     def create
-      @transaction = PosTransaction.create!(
+      result = Pos::DraftCreator.call(
         store: pos_store,
         workstation: current_workstation,
         cashier_user: current_user,
-        status: "draft"
+        register_session: current_register_session,
+        user_session: Current.user_session
       )
-      record_audit!("pos.transaction.created", @transaction)
-      redirect_to edit_pos_transaction_path(@transaction, mode: params[:mode].presence || "sale")
+
+      case result.status
+      when :missing_register_session
+        redirect_to pos_root_path, alert: "Open the register before starting a sale."
+      when :invalid_register_session
+        redirect_to pos_root_path, alert: "Register session does not match the current workstation."
+      when :conflict
+        redirect_to pos_root_path, alert: "Multiple active drafts exist. Resolve the conflict before starting a new sale."
+      when :legacy_found
+        redirect_to pos_root_path, alert: "An older draft needs review before starting a new sale."
+      when :created
+        @transaction = result.transaction
+        record_audit!("pos.transaction.created", @transaction)
+        redirect_to edit_pos_transaction_path(@transaction, mode: params[:mode].presence || "sale")
+      when :resumed
+        redirect_to edit_pos_transaction_path(result.transaction, mode: params[:mode].presence || "sale")
+      else
+        redirect_to pos_root_path, alert: "Unable to start transaction."
+      end
     end
 
     def edit
@@ -85,10 +114,11 @@ module Pos
         tender_inputs: inputs
       )
       payload[:panel_html] = render_to_string(
-        partial: "pos/transactions/readiness_panel",
+        partial: "pos/transactions/readiness_alerts",
         formats: [ :html ],
         locals: { transaction: @transaction, readiness: readiness }
       )
+      payload[:readiness_visible] = readiness.alert_blockers.any?
 
       render json: payload
     end
@@ -98,11 +128,13 @@ module Pos
         store: pos_store,
         transaction: @transaction,
         input: params[:input],
-        return_mode: ActiveModel::Type::Boolean.new.cast(params[:return_mode])
+        return_mode: ActiveModel::Type::Boolean.new.cast(params[:return_mode]),
+        user: current_user,
+        register_session: current_register_session
       )
 
       render json: {
-        action: route.action,
+        action: route.action.to_s,
         payload: serialize_route_payload(route.payload),
         message: route.message
       }
@@ -151,99 +183,25 @@ module Pos
     end
 
     def add_return_line
-      source_line = PosTransactionLine
-        .joins(:pos_transaction)
-        .where(pos_transactions: { store: pos_store, status: "completed" })
-        .find(params[:source_transaction_line_id])
-
-      quantity = -params[:quantity].to_i.abs
-      quantity = -1 if quantity.zero?
-
-      line_attrs = {
-        line_number: next_line_number,
-        quantity: quantity,
-        unit_price_cents: 0,
-        line_discount_cents: 0,
-        extended_price_cents: 0,
-        tax_cents: 0,
-        source_transaction: source_line.pos_transaction,
-        source_transaction_line: source_line,
-        source_sold_quantity_snapshot: source_line.quantity.abs,
-        return_disposition: params[:return_disposition].presence || "return_to_stock"
-      }
-
-      if source_line.open_ring_line?
-        line_attrs.merge!(
-          line_type: "open_ring",
-          open_ring_description: source_line.open_ring_description,
-          sub_department: source_line.sub_department,
-          sub_department_name_snapshot: source_line.sub_department_name_snapshot.presence || source_line.sub_department&.name,
-          tax_category: source_line.tax_category,
-          tax_rate_bps: source_line.tax_rate_bps,
-          store_tax_rate: source_line.store_tax_rate,
-          tax_identifier_snapshot: source_line.tax_identifier_snapshot,
-          store_tax_rate_short_name_snapshot: source_line.store_tax_rate_short_name_snapshot,
-          inventory_behavior_snapshot: source_line.inventory_behavior_snapshot
-        )
-      else
-        line_attrs.merge!(
-          line_type: "variant",
-          product_variant: source_line.product_variant,
-          product: source_line.product
-        )
-      end
-
-      line = @transaction.pos_transaction_lines.create!(line_attrs)
-
-      Pos::ReturnLinePricing.apply!(line)
-      Pos::RecalculateTransaction.call!(@transaction.reload)
+      Pos::AddReturnLine.call!(
+        transaction: @transaction,
+        store: pos_store,
+        params: params
+      )
       respond_to_workspace(notice: "Return line added.")
-    rescue ActiveRecord::RecordNotFound
-      respond_to_workspace(alert: "Source sale line not found.", status: :unprocessable_entity)
+    rescue Pos::AddReturnLine::Error => e
+      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
     def add_open_ring_line
-      sub_department = SubDepartment.active_records.find(params[:sub_department_id])
-      quantity = params[:quantity].to_i
-      quantity = 1 if quantity.zero?
-      quantity = -quantity.abs if negative_line_entry?(params[:entry_action])
-      unit_price_cents = parse_dollar_param(params[:unit_price]) || 0
-
-      tax = Pos::TaxCalculator.snapshot_for_subdepartment!(
-        sub_department: sub_department,
+      Pos::AddOpenRingLine.call!(
+        transaction: @transaction,
         store: pos_store,
-        business_date: current_register_session&.business_date || Date.current,
-        taxable_cents: unit_price_cents * quantity.abs
+        register_session: current_register_session,
+        params: params
       )
-
-      variant = params[:product_variant_id].presence && ProductVariant.find_by(id: params[:product_variant_id])
-      return_line = quantity.negative?
-
-      @transaction.pos_transaction_lines.create!(
-        line_number: next_line_number,
-        line_type: "open_ring",
-        product_variant: variant,
-        product: variant&.product,
-        quantity: quantity,
-        unit_price_cents: unit_price_cents,
-        line_discount_cents: 0,
-        extended_price_cents: unit_price_cents * quantity.abs,
-        tax_cents: tax.tax_cents,
-        open_ring_description: params[:description].presence || "Open ring item",
-        sub_department: sub_department,
-        sub_department_name_snapshot: sub_department.name,
-        tax_category: tax.tax_category,
-        tax_rate_bps: tax.tax_rate_bps,
-        store_tax_rate: tax.store_tax_rate,
-        tax_identifier_snapshot: tax.store_tax_rate&.tax_identifier,
-        store_tax_rate_short_name_snapshot: tax.store_tax_rate&.short_name,
-        inventory_behavior_snapshot: variant&.inventory_behavior,
-        return_disposition: (return_line ? "return_to_stock" : nil)
-      )
-
-      Pos::RecalculateTransaction.call!(@transaction.reload)
-      respond_to_workspace(notice: return_line ? "Open-ring return line added." : "Open-ring line added.")
-    rescue Pos::TaxCalculator::MissingTaxError => e
+      respond_to_workspace(notice: negative_line_entry?(params[:entry_action]) ? "Open-ring return line added." : "Open-ring line added.")
+    rescue Pos::AddOpenRingLine::Error => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
@@ -326,6 +284,7 @@ module Pos
       respond_to_workspace(notice: "Line discount applied.")
     rescue Pos::DiscountApplicationService::Error, Pos::DiscountInput::Error, ActiveRecord::RecordNotFound => e
       flash.now[:alert] = e.message
+      assign_line_panel_error!(panel: "discount", error: e)
       load_edit_context
       respond_to do |format|
         format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
@@ -352,6 +311,7 @@ module Pos
       respond_to_workspace(notice: "Transaction discount applied.")
     rescue Pos::DiscountApplicationService::Error, Pos::DiscountInput::Error, ActiveRecord::RecordNotFound => e
       flash.now[:alert] = e.message
+      assign_transaction_discount_error!(error: e)
       load_edit_context
       respond_to do |format|
         format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
@@ -372,6 +332,20 @@ module Pos
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
     end
 
+    def attach_customer
+      customer = Customer.active_records.find(params[:customer_id])
+      @transaction.update!(customer: customer)
+      respond_to_workspace(notice: "Customer attached to transaction.")
+    rescue ActiveRecord::RecordNotFound
+      respond_to_workspace(alert: "Customer could not be found.", status: :unprocessable_entity)
+    end
+
+    def detach_customer
+      @transaction.update!(customer: nil)
+      record_audit!("pos.transaction.customer_detached", @transaction)
+      respond_to_workspace(notice: "Customer removed from transaction.")
+    end
+
     def apply_tax_exemption
       reason = TaxExceptionReason.active_records.for_exemption.find(params[:tax_exception_reason_id])
 
@@ -386,7 +360,7 @@ module Pos
       refresh_transaction_after_discount_change!
       respond_to_workspace(notice: "Tax exemption applied.")
     rescue Pos::TaxExceptionApplicationService::Error, ActiveRecord::RecordNotFound => e
-      flash.now[:alert] = e.message
+      assign_tax_exemption_error!(error: e)
       load_edit_context
       respond_to do |format|
         format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
@@ -463,7 +437,11 @@ module Pos
       notice = [ "Settlement updated.", result.message ].compact.join(" ")
       respond_to_workspace(notice: notice)
     rescue Pos::SettlementSync::Error => e
-      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+      if params[:reopen_settlement_modal].present?
+        respond_to_incremental_sync_error(e.message)
+      else
+        respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+      end
     end
 
     def complete
@@ -493,7 +471,7 @@ module Pos
       )
       generated_identifiers.concat(completed_transaction.pos_generated_stored_value_identifiers || [])
       store_pos_generated_identifier_flash!(generated_identifiers)
-      redirect_to pos_transaction_path(completed_transaction), notice: completion_notice(generated_identifiers)
+      redirect_to completed_pos_transaction_path(completed_transaction), notice: completion_notice(generated_identifiers)
     rescue Pos::SettlementSync::Error => e
       flash[:complete_error] = e.message
       redirect_to edit_pos_transaction_path(@transaction, confirm_inactive: params[:confirm_inactive])
@@ -511,6 +489,7 @@ module Pos
     def resume
       if @transaction.cashier_user_id != current_user.id
         authorize_pos!("pos.transactions.resume.other_cashier")
+        return if performed?
       end
 
       @transaction.update!(status: "draft", suspended_at: nil)
@@ -571,6 +550,10 @@ module Pos
       @complete_error = flash[:complete_error]
       @sub_departments = SubDepartment.active_records.order(:name)
       @readiness = build_readiness
+      @suspended_transactions = current_workstation && Pos::SuspendedTransactionsLookup.for_workstation(
+        store: pos_store,
+        workstation: current_workstation
+      )
     end
 
     def build_readiness(tender_inputs: nil)
@@ -608,6 +591,20 @@ module Pos
           else
             redirect_to edit_pos_transaction_path(@transaction), notice: notice
           end
+        end
+      end
+    end
+
+    def respond_to_incremental_sync_error(message)
+      flash.now[:alert] = message
+
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.update("pos_flash", partial: "pos/transactions/flash"),
+                 status: :unprocessable_entity
+        end
+        format.html do
+          redirect_to edit_pos_transaction_path(@transaction), alert: message
         end
       end
     end
@@ -695,6 +692,69 @@ module Pos
       @pos_discount_authorization = if params[:pos_authorization_id].present?
         PosAuthorization.find_by(id: params[:pos_authorization_id])
       end
+    end
+
+    def assign_transaction_discount_error!(error:)
+      @transaction_discount_error = {
+        invalid_fields: line_discount_invalid_fields(error),
+        submitted: {
+          discount_type: params[:discount_type],
+          discount_value: params[:discount_value],
+          discount_reason_id: params[:discount_reason_id],
+          discount_note: params[:discount_note],
+          pos_authorization_id: params[:pos_authorization_id]
+        }
+      }
+    end
+
+    def assign_tax_exemption_error!(error:)
+      @tax_exemption_error = {
+        message: error.message,
+        invalid_fields: tax_exemption_invalid_fields(error),
+        submitted: {
+          tax_exception_reason_id: params[:tax_exception_reason_id],
+          certificate_number: params[:certificate_number],
+          tax_exemption_note: params[:tax_exemption_note]
+        }
+      }
+    end
+
+    def assign_line_panel_error!(panel:, error:)
+      @line_panel_error = {
+        line_id: params[:line_id].to_i,
+        panel: panel.to_s,
+        invalid_fields: line_discount_invalid_fields(error),
+        submitted: {
+          discount_type: params[:discount_type],
+          discount_value: params[:discount_value],
+          discount_reason_id: params[:discount_reason_id],
+          discount_note: params[:discount_note],
+          pos_authorization_id: params[:pos_authorization_id]
+        }
+      }
+    end
+
+    def line_discount_invalid_fields(error)
+      fields = []
+      fields << "discount_reason_id" if params[:discount_reason_id].blank?
+      fields << "discount_value" if params[:discount_value].blank?
+
+      message = error.message.to_s
+      fields << "discount_note" if message.match?(/note is required/i)
+      fields << "discount_authorization" if message.match?(/authorization is required/i)
+
+      fields.uniq
+    end
+
+    def tax_exemption_invalid_fields(error)
+      fields = []
+      fields << "tax_exception_reason_id" if params[:tax_exception_reason_id].blank?
+
+      message = error.message.to_s
+      fields << "tax_exemption_note" if message.match?(/note is required/i)
+      fields << "certificate_number" if message.match?(/certificate|reference is required/i)
+
+      fields.uniq
     end
 
     def transaction_params

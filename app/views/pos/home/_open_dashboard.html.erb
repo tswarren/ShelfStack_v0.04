@@ -1,4 +1,8 @@
-<%= render "action_buttons", variant: :open %>
+<% if @landing.status.in?(%i[conflict legacy_found]) %>
+  <%= render "pos/workspace/conflict_picker" %>
+<% else %>
+  <%= render "pos/workspace/idle_shell" %>
+<% end %>
 
 <div class="ss-pos-home__footer">
   <div class="ss-pos-home__footer-column">

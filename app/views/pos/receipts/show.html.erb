@@ -13,5 +13,5 @@
   <%= render "pos/receipts/tax_exemption", transaction: @transaction %>
   <%= render "pos/receipts/footer" %>
 
-  <%= render "pos/receipts/actions", receipt: @receipt, transaction: @transaction %>
+  <%= render "pos/receipts/actions", receipt: @receipt, transaction: @transaction, return_path: @return_path %>
 </div>

@@ -1,10 +1,15 @@
 <% promoted = local_assigns.fetch(:promoted, false) %>
+<% inline = local_assigns.fetch(:inline, false) %>
 <% panel_open = local_assigns.fetch(:open, params[:pickup].present? || pos_pickup_mode?) %>
+
+<% add_reservation_url = local_assigns.fetch(:add_reservation_url) { add_reservation_line_pos_transaction_path(transaction) } %>
+<% redirect_on_success = local_assigns.fetch(:redirect_on_success, false) %>
 
 <% pickup_content = capture do %>
   <div data-controller="pos-pickup-panel"
        data-pos-pickup-panel-url-value="<%= pos_pickup_lookup_path %>"
-       data-pos-pickup-panel-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>">
+       data-pos-pickup-panel-add-reservation-url-value="<%= add_reservation_url %>"
+       data-pos-pickup-panel-redirect-on-success-value="<%= redirect_on_success %>">
     <div class="ss-field">
       <%= label_tag :pos_pickup_customer_query, "Find customer" %>
       <%= text_field_tag :pos_pickup_customer_query, nil,
@@ -23,7 +28,15 @@
   </div>
 <% end %>
 
-<% if promoted %>
+<% if inline %>
+  <section class="ss-pos-panel ss-pos-drawer ss-pos-drawer--inline">
+    <div class="ss-pos-drawer__header">
+      <h2 class="ss-pos-panel__title">Customer pickup</h2>
+      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-command-bar#closePickupPanel">Cancel</button>
+    </div>
+    <%= pickup_content %>
+  </section>
+<% elsif promoted %>
   <section class="ss-pos-panel ss-pos-pickup-panel ss-pos-pickup-panel--promoted">
     <h2 class="ss-pos-panel__title">Find pickup</h2>
     <%= pickup_content %>

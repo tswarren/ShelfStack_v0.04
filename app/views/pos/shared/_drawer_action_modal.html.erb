@@ -1,0 +1,9 @@
+<%= render "shared/interaction/modal",
+      id: "pos-drawer-action-modal",
+      title: "Cash drawer",
+      size: :pos,
+      close_on_backdrop: true,
+      dirty_guard: false do %>
+  <p>Use the physical drawer key. Record paid-in or paid-out activity with <kbd>/cashin</kbd> or <kbd>/cashout</kbd>.</p>
+  <p class="ss-hint" data-pos-command-bar-target="drawerActionReason" hidden></p>
+<% end %>

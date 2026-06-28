@@ -24,6 +24,7 @@ module Pos
       return if Authorization.allowed?(user: current_user, permission_key: permission_key, store: current_store)
 
       redirect_to pos_root_path, alert: "You are not authorized to perform that action."
+      false
     end
 
     def current_register_session
@@ -70,6 +71,20 @@ module Pos
         auditable: auditable,
         details: AuditEvents.build_details(auditable: auditable, event_name: event_name, extra: details)
       )
+    end
+
+    def no_receipt_return_line_request?
+      entry_action = params[:entry_action].presence
+      return true if entry_action == "return_no_receipt"
+      return true if ActiveModel::Type::Boolean.new.cast(params[:return_mode])
+
+      false
+    end
+
+    def authorize_no_receipt_return_line!
+      return unless no_receipt_return_line_request?
+
+      authorize_pos!("pos.returns.no_receipt")
     end
   end
 end

@@ -123,6 +123,10 @@ export default class extends Controller {
     this.messageTarget.textContent = ""
     this.messageTarget.className = "ss-hint"
     this.toggleWalkInFields(false)
+    this.element.dispatchEvent(new CustomEvent("customer-lookup:selected", {
+      bubbles: true,
+      detail: { customer }
+    }))
   }
 
   clearCustomer(event) {
@@ -130,6 +134,7 @@ export default class extends Controller {
     this.clearSelection("")
     this.lookupInputTarget.value = ""
     this.lookupInputTarget.focus()
+    this.element.dispatchEvent(new CustomEvent("customer-lookup:cleared", { bubbles: true }))
   }
 
   renderSelected(customer) {

@@ -10,6 +10,7 @@ module Pos
       @transaction = PosTransaction
         .includes(:store, :workstation, :cashier_user, pos_transaction_lines: :source_transaction_line, pos_tenders: [])
         .find(@receipt.pos_transaction_id)
+      @return_path = completed_pos_transaction_path(@transaction) if params[:return_to] == "completed"
     end
 
     def print

@@ -1,12 +1,11 @@
 <div class="ss-pos-transaction-show__heading">
-  <h1 class="ss-pos-transaction-show__title">
-    Transaction <%= transaction.transaction_number %>
-  </h1>
+  <p class="ss-pos-transaction-show__eyebrow"><%= pos_transaction_summary_eyebrow(transaction).upcase %></p>
+  <h1 class="ss-pos-transaction-show__title">Transaction <%= transaction.transaction_number %></h1>
   <p class="ss-pos-transaction-show__meta">
-    Status: <%= transaction.status.humanize %>
-    <% if transaction.transaction_type.present? %>
-      · <%= transaction.transaction_type.humanize %>
+    <% if transaction.completed_at.present? %>
+      <%= l(transaction.completed_at.in_time_zone(current_store.time_zone), format: :short) %>
+      ·
     <% end %>
-    · <%= transaction.cashier_user.username %>
+    <%= transaction.cashier_user.display_name.presence || transaction.cashier_user.username %>
   </p>
 </div>

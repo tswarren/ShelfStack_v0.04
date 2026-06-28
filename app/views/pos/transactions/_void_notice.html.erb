@@ -1,0 +1,21 @@
+<%# locals: (transaction:) %>
+<% void_record = transaction.pos_void %>
+<% if void_record.present? %>
+  <div class="ss-pos-alert ss-pos-transaction-show__void-notice" role="status">
+    <p class="ss-pos-transaction-show__void-notice-title">This transaction was voided</p>
+    <% if void_record.reason_code.present? %>
+      <p class="ss-pos-transaction-show__void-notice-detail">
+        Reason: <%= void_record.reason_code.humanize %>
+      </p>
+    <% end %>
+    <% if void_record.notes.present? %>
+      <p class="ss-pos-transaction-show__void-notice-detail"><%= void_record.notes %></p>
+    <% end %>
+    <% if void_record.voided_at.present? %>
+      <p class="ss-pos-transaction-show__void-notice-detail">
+        Voided <%= l(void_record.voided_at.in_time_zone(current_store.time_zone), format: :short) %>
+        by <%= void_record.voided_by_user.display_name.presence || void_record.voided_by_user.username %>
+      </p>
+    <% end %>
+  </div>
+<% end %>

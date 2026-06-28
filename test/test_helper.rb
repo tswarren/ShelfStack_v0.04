@@ -14,6 +14,7 @@ require_relative "../db/seeds/phase7b_permissions"
 require_relative "../db/seeds/phase7b_stored_value"
 require_relative "../db/seeds/phase7c_permissions"
 require_relative "../db/seeds/phase7c_buyback"
+require_relative "../db/seeds/phase852_permissions"
 require_relative "../db/seeds/phase4_inventory"
 require_relative "../db/seeds/phase5_inventory"
 require_relative "support/phase1_test_helper"
@@ -27,6 +28,7 @@ require_relative "support/phase65_test_helper"
 require_relative "support/phase7a_test_helper"
 require_relative "support/phase7b_test_helper"
 require_relative "support/phase7c_test_helper"
+require_relative "support/pos_system_test_helper"
 
 module ActiveSupport
   class TestCase

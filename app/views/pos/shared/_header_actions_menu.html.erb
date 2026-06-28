@@ -1,0 +1,45 @@
+<%# locals: (actions:, show_new_sale: false) %>
+<details class="ss-dropdown ss-pos-workspace-header__actions"
+         data-controller="pos-header-actions">
+  <summary class="ss-dropdown-trigger ss-pos-workspace-header__actions-trigger">Actions</summary>
+  <div class="ss-dropdown-menu ss-pos-workspace-header__actions-menu" role="menu">
+    <% if show_new_sale %>
+      <% if current_register_session && Authorization.allowed?(user: current_user, permission_key: "pos.transactions.create", store: current_store) %>
+        <%= button_to "New Sale",
+              pos_transactions_path,
+              method: :post,
+              params: { mode: "sale" },
+              class: "ss-dropdown-menu__item",
+              role: "menuitem",
+              form: { data: { turbo: false }, class: "ss-pos-header-actions__form" },
+              data: { action: "pos-header-actions#close" } %>
+      <% else %>
+        <button type="button"
+                class="ss-dropdown-menu__item ss-dropdown-menu__item--disabled"
+                role="menuitem"
+                disabled
+                title="<%= Pos::CommandRegistry::NO_REGISTER_SESSION_MESSAGE %>">
+          New Sale
+        </button>
+      <% end %>
+    <% end %>
+    <% actions.each do |action| %>
+      <% if action.available %>
+        <button type="button"
+                class="ss-dropdown-menu__item"
+                role="menuitem"
+                data-action="pos-header-actions#close pos-command-bar#<%= action.stimulus_action %>">
+          <%= action.label %>
+        </button>
+      <% else %>
+        <button type="button"
+                class="ss-dropdown-menu__item ss-dropdown-menu__item--disabled"
+                role="menuitem"
+                disabled
+                title="<%= action.message %>">
+          <%= action.label %>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+</details>

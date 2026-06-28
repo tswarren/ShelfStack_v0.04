@@ -23,6 +23,24 @@ class PosReadinessPreviewTest < ActionDispatch::IntegrationTest
     @total = @transaction.total_cents
   end
 
+  test "edit page readiness shows blockers only not passing checks" do
+    get edit_pos_transaction_path(@transaction)
+
+    assert_response :success
+    refute_includes response.body, "Enter tender amounts"
+    refute_includes response.body, "Register open"
+    refute_includes response.body, "All items active"
+    refute_includes response.body, "ss-pos-readiness-list"
+    assert_match(/id="pos_completion_readiness" class="js-pos-readiness-host" hidden/, response.body)
+  end
+
+  test "settlement modal readiness host hidden before tender entry" do
+    get edit_pos_transaction_path(@transaction)
+
+    assert_response :success
+    assert_match(/id="pos_settlement_readiness" class="js-pos-readiness-host" hidden/, response.body)
+  end
+
   test "readiness preview marks matching cash tender as complete ready" do
     post readiness_preview_pos_transaction_path(@transaction), params: {
       tenders: [
@@ -40,7 +58,9 @@ class PosReadinessPreviewTest < ActionDispatch::IntegrationTest
     tender_check = body["checks"].find { |check| check["key"] == "tenders" }
     assert_equal "ok", tender_check["status"]
     assert_equal "Tendered in full", tender_check["message"]
-    assert_includes body["panel_html"], "Ready to complete"
+    assert_equal false, body["readiness_visible"]
+    refute_includes body["panel_html"], "Register open"
+    refute_includes body["panel_html"], "Ready to complete"
   end
 
   test "readiness preview accepts form-style tender array ordering" do
@@ -59,9 +79,11 @@ class PosReadinessPreviewTest < ActionDispatch::IntegrationTest
   end
 
   test "readiness preview marks under-tendered sale as not complete ready" do
+    partial = format("%.2f", @total / 200.0)
+
     post readiness_preview_pos_transaction_path(@transaction), params: {
       tenders: [
-        { amount_dollars: "1.00", tender_type: "cash" },
+        { amount_dollars: partial, tender_type: "cash" },
         { amount_dollars: "0", tender_type: "card" },
         { amount_dollars: "0", tender_type: "check" }
       ]
@@ -73,6 +95,10 @@ class PosReadinessPreviewTest < ActionDispatch::IntegrationTest
     refute body["complete_ready"], body.inspect
     refute body["tender_ready"]
     refute body["structural_blocked"]
+    assert_equal true, body["readiness_visible"]
+    tender_check = body["checks"].find { |check| check["key"] == "tenders" }
+    assert_equal "block", tender_check["status"]
+    assert_includes body["panel_html"], tender_check["message"]
   end
 
   test "readiness preview does not require cash refund auth on sale over threshold" do

@@ -1,0 +1,40 @@
+<%# locals: (register_session: nil, transaction: nil, context: :root) %>
+<% register_session = local_assigns.fetch(:register_session, current_register_session) %>
+<% context = local_assigns.fetch(:context, transaction.present? ? :transaction : :root) %>
+<% header_actions = Pos::HeaderActionsPresenter.build(
+     user: current_user,
+     store: current_store,
+     register_session: register_session,
+     transaction: transaction,
+     context: context
+   ) %>
+
+<header class="ss-pos-workspace-header">
+  <div class="ss-pos-workspace-header__meta">
+    <span class="ss-pos-workspace-header__brand">Point of Sale</span>
+    <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
+    <span class="ss-pos-workspace-header__store">Store <%= current_store.store_number %></span>
+    <% if current_workstation %>
+      <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
+      <span class="ss-pos-workspace-header__workstation"><%= current_workstation.name %></span>
+    <% end %>
+    <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
+    <span class="ss-pos-workspace-header__register-status">
+      <%= register_session ? "Open" : "Closed" %>
+    </span>
+    <% if register_session %>
+      <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
+      <span class="ss-pos-workspace-header__business-date">
+        Business Date: <%= l(register_session.business_date, format: :long) %>
+      </span>
+    <% end %>
+    <% if transaction.present? %>
+      <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
+      <span class="ss-pos-workspace-header__transaction"><%= pos_draft_type_label(transaction) %> #<%= transaction.id %></span>
+    <% end %>
+  </div>
+
+  <%= render "pos/shared/header_actions_menu",
+        actions: header_actions,
+        show_new_sale: transaction.blank? %>
+</header>

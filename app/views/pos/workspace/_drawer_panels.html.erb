@@ -1,0 +1,24 @@
+<div class="ss-pos-inline-panel" data-pos-command-bar-target="receiptPanel" hidden>
+  <%= render "pos/transactions/return_drawer",
+        inline: true,
+        sub_departments: @sub_departments,
+        add_return_line_url: pos_workspace_add_return_line_path,
+        add_no_receipt_line_url: pos_workspace_add_no_receipt_line_path,
+        add_open_ring_url: pos_workspace_add_open_ring_line_path,
+        redirect_on_success: true %>
+</div>
+
+<div class="ss-pos-inline-panel" data-pos-command-bar-target="pickupPanel" hidden>
+  <%= render "pos/transactions/pickup_panel",
+        inline: true,
+        add_reservation_url: pos_workspace_add_reservation_line_path,
+        redirect_on_success: true %>
+</div>
+
+<div class="ss-pos-inline-panel" data-pos-command-bar-target="openRingPanel" hidden>
+  <%= render "pos/transactions/open_ring_drawer",
+        sub_departments: @sub_departments,
+        inline: true,
+        add_open_ring_url: pos_workspace_add_open_ring_line_path,
+        redirect_on_success: true %>
+</div>

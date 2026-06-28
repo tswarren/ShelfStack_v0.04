@@ -1,0 +1,43 @@
+<section class="ss-pos-panel ss-pos-workspace ss-pos-command-bar"
+         data-controller="pos-command-bar pos-line-entry pos-workspace-focus"
+         data-pos-command-bar-route-url-value="<%= pos_route_command_path %>"
+         data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
+         data-pos-line-entry-add-url-value="<%= pos_route_command_path %>"
+         data-pos-line-entry-mode-value="sale"
+         data-action="modal:closed@document->pos-command-bar#modalClosed">
+  <%= render "pos/shared/workspace_header", register_session: @register_session, context: :root %>
+
+  <div id="pos_flash">
+    <%= render "pos/transactions/flash" %>
+  </div>
+
+  <div class="ss-pos-command-bar__entry-row ss-pos-workspace__entry-row">
+    <%= render "pos/workspace/command_field",
+          route_url: pos_route_command_path,
+          lookup_url: pos_line_lookup_path,
+          add_url: pos_route_command_path,
+          autofocus: true %>
+  </div>
+
+  <div class="ss-pos-command-bar__quick-row">
+    <div class="ss-pos-command-bar__quick-actions">
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn--small"
+              data-action="pos-command-bar#openRingQuickAction">
+        Open Ring
+      </button>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn--small"
+              data-action="pos-command-bar#openGiftCardQuickAction">
+        Gift Card
+      </button>
+    </div>
+  </div>
+
+  <%= render "pos/workspace/command_feedback" %>
+  <%= render "pos/workspace/drawer_panels" %>
+  <%= render "pos/shared/workspace_modals",
+        register_session: @register_session,
+        suspended_transactions: @suspended_transactions %>
+  <%= render "pos/workspace/idle_actions" %>
+</section>

@@ -65,4 +65,21 @@ class Pos::StoredValueTenderSupportTest < ActiveSupport::TestCase
 
     assert_equal(-1500, amount)
   end
+
+  test "resolve_tender_type_for_account maps gift card and store credit accounts" do
+    gift_card_account = create_stored_value_account!(
+      issuing_store: @store,
+      account_type: "gift_card",
+      current_balance_cents: 1000
+    )
+
+    assert_equal "gift_card", Pos::StoredValueTenderSupport.resolve_tender_type_for_account(gift_card_account)
+    assert_equal "store_credit", Pos::StoredValueTenderSupport.resolve_tender_type_for_account(@account)
+  end
+
+  test "stored_value placeholder is distinct from persisted stored value tender types" do
+    assert Pos::StoredValueTenderSupport.stored_value_placeholder?("stored_value")
+    refute Pos::StoredValueTenderSupport.stored_value_tender?("stored_value")
+    assert Pos::StoredValueTenderSupport.stored_value_tender?("gift_card")
+  end
 end

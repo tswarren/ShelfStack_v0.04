@@ -1,9 +1,17 @@
 <div class="ss-pos-home">
-  <h1 class="ss-pos-home__title">Point of Sale</h1>
-
   <% if @register_session %>
     <%= render "open_dashboard" %>
   <% else %>
-    <%= render "closed_dashboard" %>
+    <div class="ss-pos-home__closed-shell"
+         data-controller="pos-command-bar"
+         data-pos-command-bar-route-url-value="<%= pos_route_command_path %>"
+         data-action="modal:closed@document->pos-command-bar#modalClosed">
+      <%= render "pos/shared/workspace_header", register_session: nil, context: :root %>
+      <div id="pos_flash">
+        <%= render "pos/transactions/flash" %>
+      </div>
+      <%= render "pos/shared/workspace_modals", register_session: nil, suspended_transactions: @suspended_transactions || [] %>
+      <%= render "closed_dashboard" %>
+    </div>
   <% end %>
 </div>

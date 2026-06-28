@@ -1,6 +1,5 @@
 <section class="ss-pos-panel ss-pos-totals" data-pos-transaction-edit-target="total" data-total-cents="<%= transaction.total_cents %>">
-  <h2 class="ss-pos-panel__title">Totals</h2>
-  <p class="ss-pos-amount-due"><%= pos_money(transaction.total_cents) %></p>
+  <h2 class="ss-pos-panel__title ss-pos-totals__heading">Total: <%= pos_money(transaction.total_cents) %></h2>
   <dl class="ss-pos-totals-list">
     <div><dt>Subtotal</dt><dd><%= pos_money(transaction.subtotal_cents) %></dd></div>
     <% item_discounts = pos_transaction_item_discount_cents(transaction) %>
@@ -8,10 +7,17 @@
       <div><dt>Item discounts</dt><dd>−<%= pos_money(item_discounts) %></dd></div>
     <% end %>
     <% if transaction.discount_cents.to_i.positive? %>
-      <div><dt>Order discount</dt><dd>−<%= pos_money(transaction.discount_cents) %></dd></div>
+      <div><dt>Discounts</dt><dd>−<%= pos_money(transaction.discount_cents) %></dd></div>
     <% end %>
     <%= render "pos/transactions/tax_totals", transaction: transaction %>
-    <div><dt>Rounding</dt><dd><%= pos_money(transaction.rounding_cents) %></dd></div>
-    <div class="ss-pos-totals-list__total"><dt>Amount due</dt><dd><%= pos_money(transaction.total_cents) %></dd></div>
+    <% if transaction.rounding_cents.to_i.nonzero? %>
+      <div><dt>Rounding</dt><dd><%= pos_money(transaction.rounding_cents) %></dd></div>
+    <% end %>
+  </dl>
+
+  <% counts = pos_transaction_item_counts(transaction) %>
+  <dl class="ss-pos-totals-list ss-pos-totals-list--counts">
+    <div><dt>Items sold</dt><dd><%= counts[:sold].positive? ? counts[:sold] : "—" %></dd></div>
+    <div><dt>Items returned</dt><dd><%= counts[:returned].positive? ? counts[:returned] : "—" %></dd></div>
   </dl>
 </section>

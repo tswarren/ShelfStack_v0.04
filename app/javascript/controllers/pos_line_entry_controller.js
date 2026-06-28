@@ -20,7 +20,8 @@ export default class extends Controller {
     addReservationUrl: String,
     returnMode: { type: Boolean, default: false },
     mode: { type: String, default: "sale" },
-    autoAdd: { type: Boolean, default: true }
+    autoAdd: { type: Boolean, default: true },
+    redirectOnSuccess: { type: Boolean, default: false }
   }
 
   connect() {
@@ -54,7 +55,7 @@ export default class extends Controller {
   search() {
     this.exactLookup = false
     const query = this.inputElement?.value.trim()
-    if (!query || query.length < 2) {
+    if (!query || query.length < 2 || query.startsWith("/")) {
       this.clearChoices()
       return
     }
@@ -217,6 +218,28 @@ export default class extends Controller {
   addVariant(variant) {
     const body = new FormData()
     body.append("product_variant_id", variant.id)
+
+    if (this.rootCommandAddUrl()) {
+      fetch(this.addUrlValue, {
+        method: "POST",
+        headers: {
+          "X-CSRF-Token": this.csrfToken,
+          Accept: "application/json"
+        },
+        body
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.action === "redirect" && data.payload?.url) {
+            window.location.href = data.payload.url
+            return
+          }
+          this.showMessage(data.message || "Unable to add item.")
+        })
+        .catch(() => this.showMessage("Unable to add item."))
+      return
+    }
+
     body.append("quantity", this.returnModeValue ? "-1" : "1")
     body.append("return_mode", this.returnModeValue ? "1" : "0")
     body.append("entry_action", this.returnModeValue ? "return_no_receipt" : "sale")
@@ -225,15 +248,21 @@ export default class extends Controller {
       method: "POST",
       headers: {
         "X-CSRF-Token": this.csrfToken,
-        Accept: "text/vnd.turbo-stream.html"
+        Accept: this.redirectOnSuccessValue ? "text/html" : "text/vnd.turbo-stream.html"
       },
       body
     })
       .then((response) => {
+        if (this.redirectOnSuccessValue && response.redirected) {
+          window.location.href = response.url
+          return null
+        }
         if (!response.ok) throw new Error(`Add line failed (${response.status})`)
         return response.text()
       })
       .then((html) => {
+        if (!html) return
+
         window.Turbo.renderStreamMessage(html)
         this.inputElement.value = ""
         this.clearChoices()
@@ -294,6 +323,10 @@ export default class extends Controller {
     if (this.hasQueryTarget) return this.queryTarget
     if (this.hasLookupInputTarget) return this.lookupInputTarget
     return null
+  }
+
+  rootCommandAddUrl() {
+    return this.addUrlValue.includes("/pos/route_command")
   }
 
   get csrfToken() {

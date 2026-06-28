@@ -17,7 +17,16 @@ module Pos
       )
 
       record_audit!("pos.cash_movement.recorded", movement)
-      redirect_to pos_register_session_path(session), notice: "Cash movement recorded."
+      redirect_to safe_return_path(session), notice: "Cash movement recorded."
+    end
+
+    private
+
+    def safe_return_path(session)
+      path = params[:return_path].to_s
+      return pos_register_session_path(session) unless path.start_with?("/pos")
+
+      path
     end
   end
 end

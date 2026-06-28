@@ -75,6 +75,10 @@ function isTopmostOverlay(controller) {
   return overlayStack.length > 0 && overlayStack[overlayStack.length - 1] === controller
 }
 
+export function isAnyOverlayOpen() {
+  return overlayStack.length > 0
+}
+
 export function overlayStackDepthForTests() {
   return overlayStack.length
 }
@@ -98,7 +102,7 @@ export function showOverlay(controller) {
     if (event.key === "Escape") {
       if (controller.closeOnEscapeValue) {
         event.preventDefault()
-        closeOverlay(controller)
+        closeOverlay(controller, { force: !controller.dirtyGuardValue })
       }
       return
     }

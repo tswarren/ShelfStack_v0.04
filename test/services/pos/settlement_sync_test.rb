@@ -86,15 +86,37 @@ class Pos::SettlementSyncTest < ActiveSupport::TestCase
     Pos::TenderValidator.validate!(@transaction)
   end
 
-  test "rejects insufficient cash tender" do
-    error = assert_raises(Pos::SettlementSync::Error) do
-      Pos::SettlementSync.call!(
-        transaction: @transaction,
-        tender_inputs: [ { tender_type: "cash", amount_dollars: "5.00" } ]
-      )
-    end
+  test "persists partial card tender and reports remaining due" do
+    partial = @transaction.total_cents / 2
 
-    assert_match(/insufficient cash/i, error.message)
+    result = Pos::SettlementSync.call!(
+      transaction: @transaction,
+      tender_inputs: [
+        { tender_type: "card", amount_cents: partial, card_brand: "visa" }
+      ]
+    )
+
+    card = @transaction.pos_tenders.find_by!(tender_type: "card")
+    assert_equal partial, card.amount_cents
+    assert_equal @transaction.total_cents - partial, result.remaining_cents
+    assert_match(/remaining due/i, result.message)
+  end
+
+  test "persists partial cash tender and reports remaining due" do
+    partial = @transaction.total_cents / 2
+
+    result = Pos::SettlementSync.call!(
+      transaction: @transaction,
+      tender_inputs: [
+        { tender_type: "cash", amount_dollars: format("%.2f", partial / 100.0) }
+      ]
+    )
+
+    cash = @transaction.pos_tenders.find_by!(tender_type: "cash")
+    assert_equal partial, cash.amount_cents
+    assert_equal partial, cash.tendered_cents
+    assert_equal @transaction.total_cents - partial, result.remaining_cents
+    assert_match(/remaining due/i, result.message)
   end
 
   test "rejects check refunds from user input" do
@@ -233,6 +255,8 @@ class Pos::SettlementSyncTest < ActiveSupport::TestCase
   end
 
   test "records settlement sync audit event when actor present" do
+    grant_permission!(@user, "pos.tenders.cash", store: @store)
+
     assert_difference -> { AuditEvent.where(event_name: "pos.settlement.synced").count }, 1 do
       Pos::SettlementSync.call!(
         transaction: @transaction,
@@ -240,6 +264,71 @@ class Pos::SettlementSyncTest < ActiveSupport::TestCase
         actor: @user
       )
     end
+  end
+
+  test "rejects cash tender when actor only has gift card permission" do
+    gift_only = create_user!(username: "gift_only_#{SecureRandom.hex(4)}")
+
+    grant_permission!(gift_only, "pos.tenders.gift_card", store: @store)
+
+    error = assert_raises(Pos::SettlementSync::Error) do
+      Pos::SettlementSync.call!(
+        transaction: @transaction,
+        tender_inputs: [ { tender_type: "cash", amount_cents: @transaction.total_cents } ],
+        actor: gift_only
+      )
+    end
+
+    assert_match(/not enabled/i, error.message)
+    assert_empty @transaction.pos_tenders.settlement_rows
+  end
+
+  test "rejects card tender when actor only has store credit permission" do
+    credit_only = create_user!(username: "credit_only_#{SecureRandom.hex(4)}")
+
+    grant_permission!(credit_only, "pos.tenders.store_credit", store: @store)
+
+    error = assert_raises(Pos::SettlementSync::Error) do
+      Pos::SettlementSync.call!(
+        transaction: @transaction,
+        tender_inputs: [ { tender_type: "card", amount_cents: @transaction.total_cents, card_brand: "visa" } ],
+        actor: credit_only
+      )
+    end
+
+    assert_match(/not enabled/i, error.message)
+  end
+
+  test "normalizes stored_value placeholder to store_credit on refund sync with generate identifier" do
+    refund_txn = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        {
+          product_variant: @variant,
+          quantity: -1,
+          unit_price_cents: 1500,
+          extended_price_cents: -1500,
+          return_disposition: "return_to_stock"
+        }
+      ]
+    )
+    Pos::RecalculateTransaction.call!(refund_txn)
+    grant_permission!(@user, "pos.refunds.store_credit", store: @store)
+    grant_permission!(@user, "stored_value.accounts.create", store: @store)
+
+    Pos::SettlementSync.call!(
+      transaction: refund_txn,
+      tender_inputs: [
+        { tender_type: "stored_value", amount_cents: refund_txn.total_cents, generate_identifier: true }
+      ],
+      actor: @user
+    )
+
+    tender = refund_txn.pos_tenders.find_by!(tender_type: "store_credit")
+    assert tender.generate_stored_value_identifier?
+    assert tender.amount_cents.negative?
   end
 
   test "migration backfills cash tendered from reference_number" do

@@ -6,6 +6,11 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
   setup do
     @store = create_store!
     @variant = create_product_variant!(selling_price_cents: 1000)
+    @user = create_user!
+    @workstation = create_workstation!(store: @store)
+    @register_session = open_register_session!(store: @store, workstation: @workstation, user: @user)
+    grant_all_phase6_permissions!(@user, store: @store)
+    grant_pos_stored_value_tender_permissions!(@user, store: @store)
   end
 
   test "variant lookup wins over receipt-shaped input" do
@@ -16,17 +21,25 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert route.payload[:variants].any?
   end
 
-  test "receipt lookup when no variant match and receipt format" do
+  test "receipt-shaped input returns failed lookup message when no variant match" do
     route = Pos::CommandBarRouter.call(store: @store, input: "001-001-000042")
 
-    assert_equal :receipt_lookup, route.action
-    assert_equal "001-001-000042", route.payload[:transaction_number]
+    assert_equal :message, route.action
+    assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, route.message
   end
 
-  test "open ring offer for unmatched non-receipt input" do
+  test "unmatched non-receipt input returns failed lookup message" do
     route = Pos::CommandBarRouter.call(store: @store, input: "Custom gift wrap")
 
-    assert_equal :open_ring_offer, route.action
+    assert_equal :message, route.action
+    assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, route.message
+  end
+
+  test "bare amount returns failed lookup message" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "20")
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandParser::FAILED_LOOKUP_MESSAGE, route.message
   end
 
   test "isbn lookup routes to variant lookup with multiple matches" do
@@ -62,32 +75,46 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_nil route.payload[:amount_cents]
   end
 
-  test "gift card command with amount routes to gift card sale" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/giftcard 25")
+  test "gift card command with amount opens gift card offer without auto-posting" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
+      input: "/giftcard 25"
+    )
 
-    assert_equal :gift_card_sale, route.action
+    assert_equal :gift_card_sale_offer, route.action
     assert_equal 2500, route.payload[:amount_cents]
   end
 
   test "gift card command without amount opens drawer offer" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/giftcard")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
+      input: "/giftcard"
+    )
 
     assert_equal :gift_card_sale_offer, route.action
   end
 
   test "balance command opens balance inquiry offer" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/balance")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/balance"
+    )
 
     assert_equal :balance_inquiry_offer, route.action
   end
 
   test "/d routes to previous discountable line when transaction provided" do
-    user = create_user!
-    workstation = create_workstation!(store: @store)
     transaction = create_pos_transaction!(
       store: @store,
-      workstation: workstation,
-      user: user,
+      workstation: @workstation,
+      user: @user,
       lines: [
         { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 },
         { product_variant: @variant, quantity: 1, unit_price_cents: 2000, extended_price_cents: 2000 }
@@ -95,23 +122,142 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
     previous_line = transaction.pos_transaction_lines.order(:line_number).last
 
-    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/d")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/d"
+    )
 
     assert_equal :line_discount_offer, route.action
     assert_equal previous_line.id, route.payload[:line_id]
   end
 
-  test "/d without transaction returns unavailable message" do
-    route = Pos::CommandBarRouter.call(store: @store, input: "/d")
+  test "/d without transaction returns no active transaction message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/d"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
+
+  test "/ld routes to line discount workflow" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/ld"
+    )
 
     assert_equal :line_discount_offer, route.action
-    assert_nil route.payload[:line_id]
-    assert_match(/No line available/i, route.message)
+  end
+
+  test "/di routes to transaction discount workflow" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/di"
+    )
+
+    assert_equal :transaction_discount_offer, route.action
+  end
+
+  test "/discount with whole number includes percent prefill payload" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/discount 10"
+    )
+
+    assert_equal :transaction_discount_offer, route.action
+    assert_equal "percent", route.payload[:discount_type]
+    assert_equal "10", route.payload[:discount_value]
+    assert_equal "amount", route.payload[:focus]
+  end
+
+  test "/discount with decimal includes amount prefill payload" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/dt 5.50"
+    )
+
+    assert_equal :transaction_discount_offer, route.action
+    assert_equal "amount", route.payload[:discount_type]
+    assert_equal "5.50", route.payload[:discount_value]
+  end
+
+  test "/linediscount with whole number includes percent prefill on line" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    line = transaction.pos_transaction_lines.first
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/linediscount 15"
+    )
+
+    assert_equal :line_discount_offer, route.action
+    assert_equal line.id, route.payload[:line_id]
+    assert_equal "percent", route.payload[:discount_type]
+    assert_equal "15", route.payload[:discount_value]
+  end
+
+  test "/discount with invalid args returns message" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/discount abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_DISCOUNT_MESSAGE, route.message
+  end
+
+  test "/cashdrop returns planned disabled message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      input: "/cashdrop"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::Catalog::CASH_DROP_UNAVAILABLE_MESSAGE, route.message
   end
 
   test "/d skips non-discountable previous line" do
-    user = create_user!
-    workstation = create_workstation!(store: @store)
     non_discountable_variant = create_product_variant!(
       sub_department: @variant.sub_department,
       sku: "DISC-NO-#{SecureRandom.hex(3)}",
@@ -120,8 +266,8 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
     transaction = create_pos_transaction!(
       store: @store,
-      workstation: workstation,
-      user: user,
+      workstation: @workstation,
+      user: @user,
       lines: [
         { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 },
         { product_variant: non_discountable_variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
@@ -129,8 +275,342 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
     discountable_line = transaction.pos_transaction_lines.order(:line_number).first
 
-    route = Pos::CommandBarRouter.call(store: @store, transaction: transaction, input: "/d")
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/d"
+    )
 
     assert_equal discountable_line.id, route.payload[:line_id]
+  end
+
+  test "open ring command opens offer panel payload" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: create_pos_transaction!(store: @store, workstation: @workstation, user: @user),
+      input: "/op 15"
+    )
+
+    assert_equal :open_ring_offer, route.action
+    assert_equal 1500, route.payload[:amount_cents]
+  end
+
+  test "invalid open ring amount returns message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/op abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, route.message
+  end
+
+  test "invalid gift card amount returns message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/gc abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_AMOUNT_MESSAGE, route.message
+  end
+
+  test "return command opens return drawer offer" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/return"
+    )
+
+    assert_equal :return_drawer_offer, route.action
+  end
+
+  test "return alias with receipt prefills payload" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/rt 001-001-000042"
+    )
+
+    assert_equal :return_drawer_offer, route.action
+    assert_equal "001-001-000042", route.payload[:receipt_number]
+  end
+
+  test "return command blocked when settlement rows exist" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    create_pos_tender!(transaction, tender_type: "cash", amount_cents: 1000)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/return"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::RETURN_BLOCKED_TENDERS_MESSAGE, route.message
+  end
+
+  test "pickup command opens pickup drawer offer" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/pickup"
+    )
+
+    assert_equal :pickup_drawer_offer, route.action
+  end
+
+  test "return command denied without pos.returns.receipted permission" do
+    restricted = create_user!(username: "return_denied_cashier")
+    grant_permission!(restricted, "pos.access", store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: restricted)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: restricted,
+      transaction: transaction,
+      input: "/return"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
+  end
+
+  test "pickup command denied without pos.access permission" do
+    restricted = create_user!(username: "pickup_denied_cashier")
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: restricted)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: restricted,
+      transaction: transaction,
+      input: "/pickup"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
+  end
+
+  test "register-session-required command without open session returns message" do
+    route = Pos::CommandBarRouter.call(store: @store, register_session: nil, input: "/balance")
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_REGISTER_SESSION_MESSAGE, route.message
+  end
+
+  test "/help returns help action" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/help")
+
+    assert_equal :help, route.action
+    assert_includes route.message, "POS commands:"
+    assert route.payload[:commands].is_a?(Array)
+    assert route.payload[:commands].any? { |entry| entry[:key] == "openring" }
+  end
+
+  test "/? returns help action" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/?")
+
+    assert_equal :help, route.action
+  end
+
+  test "bare ? returns help action" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "?")
+
+    assert_equal :help, route.action
+  end
+
+  test "unknown slash command returns unknown command message" do
+    route = Pos::CommandBarRouter.call(store: @store, input: "/foo")
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, route.message
+  end
+
+  test "/tender opens settlement offer without tender prefill" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/tender"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_empty route.payload
+  end
+
+  test "/tender with amount returns rejected message" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/tender 20"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::TENDER_AMOUNT_REJECTED_MESSAGE, route.message
+  end
+
+  test "/cash opens settlement offer with cash tender and remaining prefill" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/cash"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_equal "cash", route.payload[:tender_type]
+    assert route.payload[:prefill_remaining]
+  end
+
+  test "/cash with amount prefills settlement offer" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/cash 20"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_equal "cash", route.payload[:tender_type]
+    assert_equal 2000, route.payload[:amount_cents]
+  end
+
+  test "/giftredeem opens settlement offer with consolidated stored value tender" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/gr 25"
+    )
+
+    assert_equal :settlement_offer, route.action
+    assert_equal "stored_value", route.payload[:tender_type]
+    assert_equal 2500, route.payload[:amount_cents]
+  end
+
+  test "/hold returns suspend transaction route" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/hold"
+    )
+
+    assert_equal :suspend_transaction, route.action
+    assert_equal Rails.application.routes.url_helpers.suspend_pos_transaction_path(transaction), route.payload[:url]
+    assert_equal Rails.application.routes.url_helpers.pos_root_path, route.payload[:redirect_url]
+  end
+
+  test "/cash without transaction returns no active transaction message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/cash"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
+
+  test "/customer returns customer lookup offer with optional query" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/customer Smith"
+    )
+
+    assert_equal :customer_lookup_offer, route.action
+    assert_equal "Smith", route.payload[:query]
+  end
+
+  test "/taxexempt returns tax exemption offer when transaction is active" do
+    grant_permission!(@user, "pos.tax_exemptions.apply", store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/taxexempt"
+    )
+
+    assert_equal :tax_exemption_offer, route.action
+  end
+
+  test "/taxexempt without transaction returns no active transaction message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/taxexempt"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
   end
 end

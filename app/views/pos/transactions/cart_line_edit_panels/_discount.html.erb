@@ -1,0 +1,54 @@
+<%# locals: (transaction:, line:, panel_error:, active:) %>
+<% discount_error = panel_error if panel_error.present? && panel_error[:panel] == "discount" %>
+<% eligibility = Pos::DiscountEligibilityResolver.call(line) %>
+<div class="ss-pos-line-panel<%= " ss-pos-line-panel--active" if active %>"
+     data-pos-cart-line-panel="discount"
+     data-pos-cart-line-target="panel"
+     <%= "hidden" unless active %>>
+  <header class="ss-row-detail__header ss-pos-line-edit__header">
+    <h4 class="ss-pos-line-edit__title">Discount line · <%= pos_line_display_title(line) %></h4>
+  </header>
+
+  <div class="ss-row-detail__body ss-pos-line-edit__body">
+    <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) %>
+      <% if eligibility.discountable %>
+        <%= form_with url: apply_line_discount_pos_transaction_path(transaction),
+              method: :post,
+              id: "line_discount_form_#{line.id}",
+              class: "ss-pos-line-discount-form",
+              html: { novalidate: true },
+              data: {
+                turbo_stream: true,
+                action: "submit->pos-discount-input#validateSubmit"
+              } do %>
+          <%= hidden_field_tag :line_id, line.id %>
+          <%= render "pos/transactions/discount_fields",
+                transaction: transaction,
+                label: "Discount",
+                id_prefix: "line_discount_#{line.id}",
+                type_name: :discount_type,
+                value_name: :discount_value,
+                default_type: "percent",
+                submitted: discount_error&.dig(:submitted),
+                invalid_fields: discount_error&.dig(:invalid_fields) %>
+          <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
+            <%= submit_tag "Apply discount", class: "ss-btn ss-pos-line-edit__action" %>
+            <button type="button"
+                    class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
+                    data-action="pos-cart-line#cancel"
+                    data-line-id="<%= line.id %>">Cancel</button>
+          </footer>
+        <% end %>
+        <%= render "pos/transactions/line_discount_list", transaction: transaction, line: line %>
+      <% else %>
+        <p class="ss-hint"><%= eligibility.message %></p>
+        <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
+          <button type="button"
+                  class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
+                  data-action="pos-cart-line#cancel"
+                  data-line-id="<%= line.id %>">Cancel</button>
+        </footer>
+      <% end %>
+    <% end %>
+  </div>
+</div>

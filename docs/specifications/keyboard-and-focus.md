@@ -39,7 +39,8 @@ See [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-
 
 ### Required
 
-* Command field focus on POS workspace load (idle and active) and after line add
+* Command field focus on POS workspace load (idle and active) and after line add when no blocking panel/modal is open
+* Turbo workspace updates restore command focus unless a gift card amount panel, cash movement modal, or other inline panel is open
 * Enter/Esc behavior as specified in 10-C roadmap/spec
 * Modal/drawer focus trap and restore
 * Expanded line edit: first field focused; focus after Save/Cancel

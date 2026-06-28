@@ -59,11 +59,11 @@ Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are 
 | --------- | -------- | --- | ---------- | ------ |
 | **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | **Complete** |
 | **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | **Complete** |
-| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **Planned** (current) |
+| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **Complete** (2026-06-26; [completion](../implementation/phase-10c-completion.md)) |
 | **10-D** | This document (Workstreams 4–6) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | Planned |
 | **10-E** | This document (below) | Consistency sweep, accessibility, report regression | All | Planned |
 
-**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. **Current implementation priority:** 10-C.
+**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. **Current implementation priority:** 10-D.
 
 **Note:** Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match delivery order (10-B = items, 10-C = POS).
 
@@ -218,6 +218,8 @@ Command aliases make common actions fast.
 ```
 
 Key decisions: idle workspace when no active draft; active draft always wins on landing; two-lane parser (slash commands vs scan lookup only); no implicit workflow guessing; one active draft per register session + workstation + cashier; return/pickup drawer workflows; `/reports` confirms when active draft exists; **function keys out of scope for 10-C completion**.
+
+**Delivered (2026-06-26):** Slices 1–11 including layout cleanup, status panel, readiness alerts, and completed/summary/receipt flows. Merge integration branch to `main` when ready. Optional follow-ons: gift receipt printing, tax panel error reopen, `/cashdrop` when domain approved.
 
 ---
 
@@ -430,9 +432,11 @@ Phase 10 is complete when all sub-phases meet their criteria.
 * POS landing: **idle workspace** when register open and no active draft (**no silent auto-create**); command field is home base
 * Active draft always wins on `/pos` (including empty); one active draft per register session + workstation + cashier; cross-cashier conflict UI when needed
 * Two-lane parser: slash → command registry; non-slash → scan/catalog lookup only (no implicit open-ring, receipt, or amount guessing)
-* Separate line vs transaction discount commands; `/gc` modal-first; `/cashdrop` planned/disabled; return/pickup drawer workflows
+* Separate line vs transaction discount commands; line discount inline panel (9), transaction discount modal (9A); `/gc` amount adds line / no amount opens panel; `/cashdrop` planned/disabled; return/pickup drawer workflows
 * Command field primary focus (idle and active); **required** keyboard/focus criteria met
 * Expanded-row line edits; settlement on shared modal; readiness blockers actionable near completion
+* Transaction discount modal (slice 9A): `/discount` opens focused modal with preview total; adjustments panel becomes launcher
+* Tender workspace (slice 9B): hotkey tender type selection, one active detail form, explicit completion, post-completion workspace with New Sale primary action
 * `Pos::CommandRegistry` with permissions and state checks; `/reports` confirms before navigate when draft exists
 * `/close` blocked while active draft exists; return blocked when tender rows present
 * Command aliases and visible controls required; function keys **out of scope** for 10-C completion
@@ -537,6 +541,8 @@ Recommended implementation approach:
 docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/roadmap/phase-10c-9a-transaction-discount-modal.md
+docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md
 docs/specifications/phase-10a-interaction-infrastructure-spec.md
 docs/specifications/phase-10b-item-cockpit-spec.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md

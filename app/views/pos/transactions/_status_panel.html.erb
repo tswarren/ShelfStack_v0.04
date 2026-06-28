@@ -1,0 +1,117 @@
+<section class="ss-pos-panel ss-pos-status-panel">
+  <div id="pos_customer_status" class="ss-pos-status-panel__section">
+    <%= render "pos/transactions/status_panel_customer_section", transaction: transaction %>
+  </div>
+
+  <div class="ss-pos-status-panel__section">
+    <div class="ss-pos-status-panel__header">
+      <h2 class="ss-pos-status-panel__title">Transaction Discount</h2>
+      <% if transaction.editable? &&
+            Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) %>
+        <button type="button"
+                class="ss-btn ss-btn-secondary ss-btn--small ss-pos-status-panel__header-action"
+                data-controller="pos-transaction-discount-modal-open"
+                data-action="click->pos-transaction-discount-modal-open#open">
+          Add discount
+        </button>
+      <% end %>
+    </div>
+
+    <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) %>
+      <% active_discounts = transaction.pos_discount_applications.active_records.where(scope: "transaction").order(:stack_order) %>
+      <% if active_discounts.any? %>
+        <table class="ss-pos-status-panel__table">
+          <tbody>
+            <% active_discounts.each do |application| %>
+              <tr>
+                <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--label"><%= application.discount_reason.name %></td>
+                <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--amount">−<%= pos_money(application.applied_discount_cents) %></td>
+                <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--action">
+                  <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.discounts.void", store: current_store) %>
+                    <%= button_to "Remove",
+                          void_discount_application_pos_transaction_path(transaction, application_id: application.id),
+                          method: :delete,
+                          class: "ss-btn-link",
+                          form: { data: { turbo_stream: true }, class: "ss-pos-status-panel__action-form" } %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <table class="ss-pos-status-panel__table">
+          <tbody>
+            <tr>
+              <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--label ss-pos-status-panel__empty" colspan="3">None</td>
+            </tr>
+          </tbody>
+        </table>
+      <% end %>
+    <% else %>
+      <table class="ss-pos-status-panel__table">
+        <tbody>
+          <tr>
+            <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--label ss-pos-status-panel__empty" colspan="3">Not available for your role.</td>
+          </tr>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+
+  <div class="ss-pos-status-panel__section">
+    <% exemption = transaction.active_tax_exemption %>
+    <div class="ss-pos-status-panel__header">
+      <h2 class="ss-pos-status-panel__title">Tax Exempt</h2>
+      <% if exemption.blank? &&
+            transaction.editable? &&
+            Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.apply", store: current_store) %>
+        <button type="button"
+                class="ss-btn ss-btn-secondary ss-btn--small ss-pos-status-panel__header-action"
+                data-action="pos-command-bar#showTaxExemptionModal">
+          Apply exemption
+        </button>
+      <% end %>
+    </div>
+
+    <% if exemption.present? %>
+      <% summary = pos_transaction_tax_exemption_summary(transaction) %>
+      <table class="ss-pos-status-panel__table">
+        <tbody>
+          <tr>
+            <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--label"><%= exemption.tax_exception_reason.name %></td>
+            <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--amount">
+              <% if summary[:expected_tax_cents].positive? %>
+                −<%= pos_money(summary[:tax_removed_cents]) %>
+              <% end %>
+            </td>
+            <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--action">
+              <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.void", store: current_store) %>
+                <%= button_to "Remove",
+                      void_tax_exemption_pos_transaction_path(transaction, exemption_id: exemption.id),
+                      method: :delete,
+                      class: "ss-btn-link",
+                      form: { data: { turbo_stream: true }, class: "ss-pos-status-panel__action-form" } %>
+              <% end %>
+            </td>
+          </tr>
+          <% if exemption.certificate_number.present? %>
+            <tr class="ss-pos-status-panel__row--detail">
+              <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--detail" colspan="3">
+                Certificate: <%= exemption.certificate_number %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <table class="ss-pos-status-panel__table">
+        <tbody>
+          <tr>
+            <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--label ss-pos-status-panel__empty" colspan="3">Not applied</td>
+          </tr>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</section>

@@ -1,0 +1,9 @@
+<%# locals: (transaction:, readiness:, inactive_warnings:) %>
+<div id="pos_completion_readiness" class="js-pos-readiness-host"<%= " hidden" if readiness.alert_blockers.empty? %>>
+  <%= render "pos/transactions/readiness_alerts", transaction: transaction, readiness: readiness %>
+</div>
+
+<%= render "pos/transactions/settlement_actions",
+      transaction: transaction,
+      readiness: readiness,
+      inactive_warnings: inactive_warnings %>

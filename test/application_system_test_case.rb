@@ -21,6 +21,11 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     seed_minimal_permissions!
   end
 
+  teardown do
+    Capybara.reset_sessions!
+    ActiveRecord::Base.connection_handler.clear_all_connections!
+  end
+
   def send_escape
     page.driver.browser.action.send_keys(:escape).perform
   end

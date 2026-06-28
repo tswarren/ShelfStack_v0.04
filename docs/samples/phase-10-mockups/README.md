@@ -40,6 +40,6 @@ Mockups show ideas that remain **out of scope or deferred** unless explicitly ap
 | POS mock topbar grid | Visual target; evolve existing POS partials |
 | POS landing centered on **New sale** | 10-C uses **idle workspace**; command field is home base; New sale is secondary mouse path |
 | Implicit open-ring from bare amounts or receipt patterns | Removed in 10-C; use `/op` and `/return` explicitly |
-| `/gc` auto-posting a line when amount provided | 10-C opens modal with prefilled amount; line not auto-posted |
+| `/gc` with amount vs without | With amount: adds sale line immediately. Without amount: amount panel with focus there (supersedes early mockup “prefill modal only”) |
 | F-key legend as completion requirement | Out of scope for 10-C; command aliases and visible controls required |
 | Mockup-local CSS/colors | Map to ShelfStack design tokens |

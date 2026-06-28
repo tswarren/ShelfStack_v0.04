@@ -1,0 +1,91 @@
+<% inline = local_assigns.fetch(:inline, false) %>
+<% add_return_line_url = local_assigns.fetch(:add_return_line_url) { add_return_line_pos_transaction_path(transaction) } %>
+<% add_no_receipt_line_url = local_assigns.fetch(:add_no_receipt_line_url) { add_line_pos_transaction_path(transaction) } %>
+<% redirect_on_success = local_assigns.fetch(:redirect_on_success, false) %>
+
+<section class="ss-pos-panel ss-pos-drawer <%= 'ss-pos-drawer--inline' if inline %>"
+         data-controller="pos-return-drawer">
+  <div class="ss-pos-drawer__header">
+    <h2 class="ss-pos-panel__title">Return</h2>
+    <% if inline %>
+      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-command-bar#closeReceiptPanel">Cancel</button>
+    <% end %>
+  </div>
+
+  <div class="ss-pos-entry-switch ss-pos-return-drawer__modes" role="tablist" aria-label="Return type">
+    <button type="button"
+            class="ss-pos-entry-switch__btn ss-pos-entry-switch__btn--active"
+            role="tab"
+            aria-selected="true"
+            data-pos-return-drawer-target="receiptTab"
+            data-action="pos-return-drawer#showReceipt">
+      From receipt
+    </button>
+    <button type="button"
+            class="ss-pos-entry-switch__btn"
+            role="tab"
+            aria-selected="false"
+            data-pos-return-drawer-target="noReceiptTab"
+            data-action="pos-return-drawer#showNoReceipt"
+            <%= "hidden" unless pos_can_add_no_receipt_return? %>>
+      No receipt
+    </button>
+  </div>
+
+  <div data-pos-return-drawer-target="receiptSection"
+       data-controller="pos-return-lookup"
+       data-pos-return-lookup-url-value="<%= pos_return_lookup_path %>"
+       data-pos-return-lookup-add-url-value="<%= add_return_line_url %>"
+       data-pos-return-lookup-redirect-on-success-value="<%= redirect_on_success %>">
+    <div class="ss-pos-scan-row">
+      <%= text_field_tag :receipt_number, nil,
+            placeholder: "Receipt / transaction number",
+            class: "ss-pos-scan-input",
+            data: { pos_return_lookup_target: "input", action: "keydown->pos-return-lookup#lookup" } %>
+      <%= button_tag "Find receipt", type: "button", class: "ss-btn ss-btn-secondary", data: { action: "pos-return-lookup#lookup" } %>
+    </div>
+    <p class="ss-hint ss-hint--warning" data-pos-return-lookup-target="message" hidden></p>
+    <div data-pos-return-lookup-target="results"></div>
+  </div>
+
+  <div data-pos-return-drawer-target="noReceiptSection" hidden>
+    <% if pos_can_add_no_receipt_return? %>
+      <p class="ss-hint">Scan SKU or ISBN to add a catalog return line. Supervisor approval is required at complete.</p>
+    <div data-controller="pos-line-entry"
+         data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
+         data-pos-line-entry-add-url-value="<%= add_no_receipt_line_url %>"
+         data-pos-line-entry-return-mode-value="true"
+         data-pos-line-entry-redirect-on-success-value="<%= redirect_on_success %>">
+      <%= text_field_tag :no_receipt_return_query, nil,
+            autocomplete: "off",
+            placeholder: "Scan SKU / ISBN / UPC",
+            class: "ss-pos-scan-input ss-pos-scan-input--primary",
+            data: {
+              pos_line_entry_target: "query",
+              action: "keydown.enter->pos-line-entry#lookupExact input->pos-line-entry#search"
+            } %>
+      <p class="ss-hint ss-hint--warning" data-pos-line-entry-target="message" hidden></p>
+      <div class="ss-pos-choices" data-pos-line-entry-target="choices"></div>
+    </div>
+
+    <% sub_departments = local_assigns[:sub_departments] || @sub_departments %>
+    <% if sub_departments.present? %>
+      <div class="ss-pos-return-drawer__open-ring">
+        <p class="ss-hint">Or enter an open-ring item without a receipt.</p>
+        <%= render "pos/transactions/open_ring_drawer",
+              sub_departments: sub_departments,
+              inline: false,
+              return_mode: true,
+              add_open_ring_url: local_assigns.fetch(:add_open_ring_url) {
+                transaction.present? ?
+                  add_open_ring_line_pos_transaction_path(transaction) :
+                  pos_workspace_add_open_ring_line_path
+              },
+              redirect_on_success: redirect_on_success %>
+      </div>
+    <% end %>
+    <% else %>
+      <p class="ss-hint">No-receipt returns require additional permission. Use a receipted return or ask a manager.</p>
+    <% end %>
+  </div>
+</section>

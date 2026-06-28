@@ -1,10 +1,14 @@
 # Phase 10-C — POS Keyboard Workspace Specification
 
-**Status:** Planned — **implementation source of truth**
+**Status:** Complete (2026-06-26) — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
 
-**Mockup reference:** [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html)
+**Tender/completion detail (slice 9B):** [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md)
+
+**Transaction discount modal (slice 9A):** [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md)
+
+**Mockup reference:** [phase-10c-11-pos-mockup.png](../samples/phase-10-mockups/phase-10c-11-pos-mockup.png) (slice 11 layout); [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html) (earlier slices)
 
 **Depends on:** Phase 10-A (**hard** — modal, drawer, expanded row, focus helpers); Phase 10-B **complete per delivery order** (proves shared interaction patterns on Items before POS)
 
@@ -42,7 +46,7 @@ Shared POS workspace shell (idle + active), landing router, active draft resolve
 | **Failed lookup** | Never creates a draft, even when input looks like amount/receipt/description |
 | **Transactionless commands** | Available while active draft exists; blocked only by modal/dirty state |
 | **Line vs transaction discount** | `/linediscount` (`/ld`, legacy `/d`) vs `/discount` (`/di`, legacy `/dt`) — separate commands |
-| **Gift card sale vs redeem** | `/giftcard` (`/gc`) vs `/giftredeem` (`/gr`); `/gc` modal-first, no auto-post with amount |
+| **Gift card sale vs redeem** | `/giftcard` (`/gc`) vs `/giftredeem` (`/gr`); `/gc` with amount adds line; without amount opens amount panel |
 | **Return / pickup** | Drawer workflows; draft on line commit/fulfillment |
 | **Return on active draft** | Allowed for empty/sale drafts (exchange); blocked when tender rows exist |
 | **`/close`** | Blocked while active draft exists |
@@ -58,11 +62,9 @@ Future auto-create on session open is out of scope unless explicitly approved.
 
 ## Architecture
 
-Phase 10-C introduces a **shared POS workspace shell** with one command field and registry for idle and active states. Root-level command endpoint required (today `route_command` is transaction-scoped only).
+Phase 10-C introduces a **shared POS workspace shell** with one command field and registry for idle and active states. Root-level command endpoint: `POST /pos/route_command` (`Pos::WorkspaceCommandsController`); transaction-scoped: `POST /pos/transactions/:id/route_command`.
 
-Evolve `Pos::CommandBarRouter` → `Pos::CommandRegistry` (Ruby-side, permission/state gated, consumed by JS).
-
-**PR 1:** workspace shell + landing router + active draft resolver + intent boundary + carry-forward.
+`Pos::CommandBarRouter` and `Pos::CommandRegistry` (Ruby-side, permission/state gated, consumed by JS) route slash commands in transaction and root contexts.
 
 ---
 
@@ -187,7 +189,7 @@ Cash drop is not available yet.
 * `/help` and mouse equivalents for discoverability
 * `/reports` confirms before navigate when active draft exists
 * Transactionless commands work with active draft (blocked only by modal/dirty state)
-* `/gc` opens modal; does not auto-post line when amount provided
+* `/gc` with amount adds gift card sale line; without amount opens amount panel (focus amount field; submit returns to command)
 * `/cashdrop` shows planned/disabled message
 
 ### Discount split
@@ -204,8 +206,10 @@ Cash drop is not available yet.
 
 ### Line edit and settlement
 
-* Cart line edits use 10-A expanded-row pattern
-* Settlement uses 10-A modal shell
+* Cart line edits use 10-A expanded-row / More menu task panels (slice 9)
+* Transaction discount uses focused modal, not adjustments `<details>` panel (slice 9A)
+* Settlement uses 10-A modal shell (slice 8)
+* Tender workspace UX, explicit completion, and post-completion workspace — slice **9B** ([phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md))
 * Readiness blockers near settlement and inside modal
 
 ### Keyboard/focus — required
@@ -226,6 +230,8 @@ Cash drop is not available yet.
 | Document | Role |
 | -------- | ---- |
 | [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md) | Command → surface mapping, draft gating, PR slices, policy tables |
+| [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md) | Transaction discount modal UX, preview total, adjustments launcher (slice 9A) |
+| [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md) | Tender modal UX, completion flow, post-completion workspace (slice 9B) |
 | This spec | Resolved decisions, acceptance criteria |
 | [phase-10c-test-plan.md](phase-10c-test-plan.md) | Test cases by area |
 | [phase-10a-interaction-infrastructure-spec.md](phase-10a-interaction-infrastructure-spec.md), [modal-and-drawer-patterns.md](modal-and-drawer-patterns.md) | Shell mechanics only |
@@ -280,7 +286,8 @@ See [phase-10c-test-plan.md](phase-10c-test-plan.md) for the full checklist. Sum
 
 ### Gift card
 
-* `/gc 50` from idle → draft + modal with $50 prefilled; line not auto-posted
+* `/gc 50` from idle → draft + gift card sale line for $50; command focus returns
+* `/gc` from idle → draft + amount panel; focus amount field
 
 ### Tender from idle
 
@@ -290,9 +297,33 @@ See [phase-10c-test-plan.md](phase-10c-test-plan.md) for the full checklist. Sum
 
 * Blockers visible; completion disabled until ready
 
-### Keyboard/focus integration
+### Slice 11 — Workspace layout cleanup
 
-* Required criteria (system/integration tests where practical)
+Four-zone layout on idle and active transaction workspaces:
+
+```text
+Header (POS | store | workstation | register | business date | Actions)
+Command row (scan field, mode switcher, Open Ring / Gift Card, customer strip)
+Cart (Qty | Item | Discount | Total | Tax | More)
+Right rail (totals, transaction discount + tax exempt status, Complete / Suspend / Cancel)
+```
+
+| Topic | Decision |
+| ----- | -------- |
+| **Header Actions** | `Pos::HeaderActionsPresenter` + shared `_workspace_header`; menu dispatches existing `pos-command-bar` handlers (balance, session, cash in/out, close, reports, drawer) |
+| **Closed register balance** | `/balance` and header balance action available without open register (`register_session_required: false` on balance command) |
+| **Customer** | Command-row strip (`None` + Link / name + Remove); `PATCH detach_customer` clears FK with audit |
+| **Status panel** | Replaces adjustments `<details>`; transaction discount list + Add discount modal; tax exempt summary + Apply modal; no inline rounding/recalculate forms |
+| **Cart columns** | Qty \| Item \| Discount (line/trans split) \| Total (unit hint when qty > 1) \| Tax (label primary, amount subtle) \| More |
+| **Totals tax display** | Primary tax amount; subtle rate + taxable base per tax group |
+| **Item counts** | Items sold / items returned on totals panel |
+| **Readiness** | Persistent checklist removed from main column; contextual `#pos_completion_alert` above Complete when structurally blocked; `readiness_preview` JSON retained for settlement |
+| **Flash** | `pos-flash` Stimulus: dismiss on all; auto-clear notices ~5s; errors persist; must not steal command-field focus |
+| **Idle actions** | Held sales chip only (plus Open Ring / Gift Card in command row); New sale / Reports / Session primary buttons removed from idle shell |
+| **Receipt return path** | Completed workspace receipt links pass `return_to=completed`; receipt actions show **Back to completed sale** |
+| **Complete CTA** | Right-rail **Complete Transaction** opens settlement modal (9B behavior); Suspend / Cancel on right rail |
+
+Resolved: adjustments panel retired; cash rounding field removed from workspace UI (model field unchanged).
 
 ---
 

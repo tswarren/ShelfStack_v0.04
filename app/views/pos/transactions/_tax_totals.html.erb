@@ -1,8 +1,19 @@
 <% subtotals = pos_transaction_tax_subtotals(transaction) %>
 <% if subtotals.any? %>
   <% subtotals.each do |subtotal| %>
-    <div><dt>Tax <%= subtotal.short_name %></dt><dd><%= pos_money(subtotal.tax_cents) %></dd></div>
+    <div class="ss-pos-totals-list__tax-row">
+      <dt>
+        <%= subtotal.short_name %>
+        <% if subtotal.tax_rate_bps.to_i.positive? %>
+          <span class="ss-pos-totals-list__tax-meta"><%= pos_format_tax_rate_bps(subtotal.tax_rate_bps) %></span>
+        <% end %>
+        <% if subtotal.taxable_base_cents.to_i.nonzero? %>
+          <span class="ss-pos-totals-list__tax-meta">(<%= pos_money(subtotal.taxable_base_cents) %>)</span>
+        <% end %>
+      </dt>
+      <dd><%= pos_money(subtotal.tax_cents) %></dd>
+    </div>
   <% end %>
-<% else %>
+<% elsif transaction.tax_cents.to_i.nonzero? %>
   <div><dt>Tax</dt><dd><%= pos_money(transaction.tax_cents) %></dd></div>
 <% end %>

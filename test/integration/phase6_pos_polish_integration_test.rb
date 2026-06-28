@@ -39,7 +39,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
       confirm_inactive: 1,
       tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
-    assert_redirected_to pos_transaction_path(transaction)
+    assert_redirected_to completed_pos_transaction_path(transaction)
 
     transaction.reload
     assert transaction.completed?
@@ -47,9 +47,9 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_response :success
-    assert_match(/Receipt/i, response.body)
-    assert_match(/New sale/i, response.body)
-    assert_match(/Void transaction/i, response.body)
+    assert_match(/Print receipt/i, response.body)
+    assert_match(/New Sale/i, response.body)
+    assert_match(/View summary/i, response.body)
     refute_match(/Change due/i, response.body)
   end
 
@@ -71,14 +71,14 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
       confirm_inactive: 1,
       tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", (total + 500) / 100.0) } ]
     }
-    assert_redirected_to pos_transaction_path(transaction)
+    assert_redirected_to completed_pos_transaction_path(transaction)
 
     follow_redirect!
     assert_response :success
     assert_match(/Change due/i, response.body)
     assert_match(/\$5\.00/, response.body)
-    assert_match(/Receipt/i, response.body)
-    assert_match(/New sale/i, response.body)
+    assert_match(/Print receipt/i, response.body)
+    assert_match(/New Sale/i, response.body)
   end
 
   test "update line unit price on scanned cart line" do
@@ -158,7 +158,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
       confirm_inactive: 1,
       tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
-    assert_redirected_to pos_transaction_path(return_txn)
+    assert_redirected_to completed_pos_transaction_path(return_txn)
     assert_equal "return", return_txn.reload.transaction_type
 
     get pos_return_lookup_path, params: { transaction_number: sale.transaction_number }, as: :json
@@ -213,7 +213,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
       pos_authorization_id: authorization_id,
       tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", return_txn.total_cents / 100.0) } ]
     }
-    assert_redirected_to pos_transaction_path(return_txn)
+    assert_redirected_to completed_pos_transaction_path(return_txn)
     assert return_txn.reload.completed?
   end
 
@@ -306,7 +306,7 @@ class Phase6PosPolishIntegrationTest < ActionDispatch::IntegrationTest
       confirm_inactive: 1,
       tenders: [ { tender_type: "cash", amount_dollars: format("%.2f", total / 100.0) } ]
     }
-    assert_redirected_to pos_transaction_path(transaction)
+    assert_redirected_to completed_pos_transaction_path(transaction)
     assert transaction.reload.completed?
   end
 

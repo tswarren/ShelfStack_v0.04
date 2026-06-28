@@ -14,16 +14,21 @@ module Phase1TestHelper
     Seeds::Phase65Permissions.seed!
     Seeds::Phase7aPermissions.seed!
     Seeds::Phase7bPermissions.seed!
+    Seeds::Phase852Permissions.seed!
   end
 
   def create_store!(attrs = {})
     Store.create!({
-      store_number: "001",
+      store_number: unique_store_number,
       name: "Test Store",
       country_code: "US",
       time_zone: "America/New_York",
       active: true
     }.merge(attrs))
+  end
+
+  def unique_store_number
+    format("%03d", rand(100..999))
   end
 
   def create_workstation!(store: nil, attrs: {})

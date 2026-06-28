@@ -10,10 +10,34 @@ class Pos::TenderTypePolicyTest < ActiveSupport::TestCase
     @transaction = create_pos_transaction!(store: @store, workstation: create_workstation!(store: @store), user: @user)
   end
 
-  test "returns base types without stored value permissions" do
+  test "returns no tender types without permissions" do
     types = Pos::TenderTypePolicy.allowed_types(@transaction, actor: @user, store: @store)
 
-    assert_equal %w[cash card check], types
+    assert_empty types
+  end
+
+  test "includes only cash when cash permission granted" do
+    grant_permission!(@user, "pos.tenders.cash", store: @store)
+
+    types = Pos::TenderTypePolicy.allowed_types(@transaction, actor: @user, store: @store)
+
+    assert_equal %w[cash], types
+  end
+
+  test "includes only card when card permission granted" do
+    grant_permission!(@user, "pos.tenders.card", store: @store)
+
+    types = Pos::TenderTypePolicy.allowed_types(@transaction, actor: @user, store: @store)
+
+    assert_equal %w[card], types
+  end
+
+  test "includes only gift card when gift card permission granted" do
+    grant_permission!(@user, "pos.tenders.gift_card", store: @store)
+
+    types = Pos::TenderTypePolicy.allowed_types(@transaction, actor: @user, store: @store)
+
+    assert_equal %w[gift_card], types
   end
 
   test "adds store credit on sale with redeem permission" do
@@ -21,7 +45,7 @@ class Pos::TenderTypePolicyTest < ActiveSupport::TestCase
 
     types = Pos::TenderTypePolicy.allowed_types(@transaction, actor: @user, store: @store)
 
-    assert_includes types, "store_credit"
+    assert_equal %w[store_credit], types
   end
 
   test "adds store credit on refund with refund permission" do

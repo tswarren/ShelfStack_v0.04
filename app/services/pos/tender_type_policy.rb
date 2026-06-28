@@ -2,7 +2,13 @@
 
 module Pos
   class TenderTypePolicy
-    BASE_TYPES = PosTender::PHASE6_ALLOWED_TYPES
+    TENDER_PERMISSIONS = {
+      "cash" => "pos.tenders.cash",
+      "card" => "pos.tenders.card",
+      "check" => "pos.tenders.check",
+      "store_credit" => "pos.tenders.store_credit",
+      "gift_card" => "pos.tenders.gift_card"
+    }.freeze
 
     def self.allowed_types(transaction, actor:, store: nil)
       new(transaction:, actor:, store:).allowed_types
@@ -40,15 +46,37 @@ module Pos
     end
 
     def allowed_types
-      types = BASE_TYPES.dup
+      types = []
+      types << "cash" if cash_allowed?
+      types << "card" if card_allowed?
+      types << "check" if check_allowed?
       types << "store_credit" if store_credit_allowed?
       types << "gift_card" if gift_card_allowed?
-      types.uniq
+      types
     end
 
     private
 
     attr_reader :transaction, :actor, :store
+
+    def cash_allowed?
+      tender_permission_allowed?("cash")
+    end
+
+    def card_allowed?
+      tender_permission_allowed?("card")
+    end
+
+    def check_allowed?
+      tender_permission_allowed?("check")
+    end
+
+    def tender_permission_allowed?(tender_type)
+      permission_key = TENDER_PERMISSIONS.fetch(tender_type)
+      return false if actor.blank?
+
+      Authorization.allowed?(user: actor, permission_key: permission_key, store: store)
+    end
 
     def store_credit_allowed?
       if refund_transaction?

@@ -1,11 +1,23 @@
 <%#
   locals:
-    title: optional summary title
-    open: false
+    open: false — when false, row is hidden and keyboard scope inactive
+    colspan: 1
+    line_id: optional data-line-id
+    target: optional Stimulus target name (e.g. "editRow" on pos-cart-line)
+    keyboard_action: optional data-action for keyboard-scope:keydown
 %>
-<tr class="ss-expand-row<%= " ss-expand-row--active" if local_assigns[:open] %>"
-    data-controller="keyboard-scope"
-    data-keyboard-scope-active-value="<%= local_assigns.fetch(:open, false) %>">
+<% open = local_assigns.fetch(:open, false) %>
+<tr class="ss-expand-row<%= " ss-expand-row--active" if open %>"
+    <%= tag.attributes(
+          hidden: !open,
+          data: {
+            controller: "keyboard-scope",
+            keyboard_scope_active_value: open,
+            pos_cart_line_target: local_assigns[:target],
+            line_id: local_assigns[:line_id],
+            action: local_assigns[:keyboard_action]
+          }.compact
+        ) %>>
   <td colspan="<%= local_assigns.fetch(:colspan, 1) %>">
     <%= yield %>
   </td>

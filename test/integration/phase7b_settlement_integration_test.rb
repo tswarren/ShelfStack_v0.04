@@ -87,9 +87,10 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
     get edit_pos_transaction_path(@transaction)
     assert_response :success
     assert_select "#pos_settlement_modal[hidden]"
-    assert_select "#pos_settlement_actions .ss-pos-settlement-open-btn"
+    assert_select "#pos_settlement_actions .ss-pos-settlement-open-btn", text: "Complete Transaction"
     assert_select "#pos_tender_panel", false
-    assert_select "details.ss-pos-adjustments summary", text: "Discount/Adjustment"
+    assert_select "#pos_status_panel"
+    assert_select "details.ss-pos-adjustments", false
     assert_select "#pos_settlement_actions .ss-pos-secondary-actions--inline"
   end
 
@@ -104,7 +105,7 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
         { tender_type: "cash", tendered_dollars: format("%.2f", (total - half) / 100.0) }
       ]
     }
-    assert_redirected_to pos_transaction_path(@transaction)
+    assert_redirected_to completed_pos_transaction_path(@transaction)
 
     @transaction.reload
     assert @transaction.completed?

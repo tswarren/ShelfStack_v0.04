@@ -232,7 +232,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development follows the phase roadmap. **Phase 10-C (POS keyboard workspace)** is active after Phase 10-B completion.
+Development follows the phase roadmap. **Phase 10-D (workflow polish)** is active after Phase 10-C completion.
 
 ## Phase 1: Foundation — **Complete**
 
@@ -365,7 +365,7 @@ See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-g
 
 ## Phase 10: Comprehensive UI/UX Expansion — **In progress**
 
-**Current priority:** Phase 10-C (POS keyboard workspace).
+**Current priority:** Phase 10-D (workflow polish across remaining workspaces).
 
 See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). Delivery order: 10-A → 10-B (items) → 10-C (POS) → 10-D → 10-E. Phase 10 is complete when all sub-phases are done.
 
@@ -388,16 +388,19 @@ Phase 10-B was completed on 2026-06-26. See [docs/implementation/phase-10b-compl
 - Item setup quick modals (identifier, price, vendor source, classification/tax preview) via shared Turbo modal contract
 - Phase 9 drill-down contract preserved
 
-## Phase 10-C: POS Keyboard Workspace — **Planned** (current priority)
+## Phase 10-C: POS Keyboard Workspace — **Complete**
 
-Authoritative direction: [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md), [docs/specifications/phase-10c-pos-keyboard-workspace-spec.md](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md).
+Phase 10-C was completed on 2026-06-26. See [docs/implementation/phase-10c-completion.md](docs/implementation/phase-10c-completion.md). Authoritative direction: [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md), [docs/specifications/phase-10c-pos-keyboard-workspace-spec.md](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md). Slice 11 layout cleanup: [docs/roadmap/phase-10c-11-workspace-layout-status-panel-cleanup.md](docs/roadmap/phase-10c-11-workspace-layout-status-panel-cleanup.md). Transaction discount modal: [docs/roadmap/phase-10c-9a-transaction-discount-modal.md](docs/roadmap/phase-10c-9a-transaction-discount-modal.md). Tender/completion UX: [docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md](docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md).
 
 - Idle POS workspace when register open and no active draft; command field is home base (not silent auto-create)
 - Active draft always wins on `/pos` (one per register session + workstation + cashier)
 - Two-lane parser: slash → `Pos::CommandRegistry`; non-slash → scan/catalog lookup only
 - Remove implicit open-ring/receipt/amount guessing from `Pos::CommandBarRouter`
-- Separate line vs transaction discount commands; `/gc` modal-first; `/cashdrop` deferred
-- Return/pickup drawer workflows; `/close` blocked while active draft exists
+- Separate line vs transaction discount commands; `/gc` with amount adds line, without amount opens amount panel; `/cashdrop` deferred
+- Return/pickup drawer workflows; tender → settlement; utility commands (session, reports, close, cash in/out); `/close` blocked while active draft exists
+- **Slice 9A:** transaction discount modal with preview total
+- **Slice 9B:** keyboard-first tender modal, explicit completion, post-completion workspace
+- **Slice 11:** shared workspace header + Actions menu, unified status panel (customer/discount/tax), readiness blockers only, completed/summary/receipt flow polish, voided summary layout
 
 ## Phase 10 Documents
 
@@ -406,7 +409,8 @@ docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
 docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
-docs/specifications/phase-10a-interaction-infrastructure-spec.md
+docs/roadmap/phase-10c-9a-transaction-discount-modal.md
+docs/roadmap/phase-10c-11-workspace-layout-status-panel-cleanup.md
 docs/specifications/phase-10a-test-plan.md
 docs/specifications/phase-10b-item-cockpit-spec.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
@@ -419,6 +423,7 @@ docs/specifications/modal-and-drawer-patterns.md
 docs/specifications/phase-10b-test-plan.md
 docs/implementation/phase-10a-completion.md
 docs/implementation/phase-10b-completion.md
+docs/implementation/phase-10c-completion.md
 docs/samples/phase-10-mockups/
 ```
 

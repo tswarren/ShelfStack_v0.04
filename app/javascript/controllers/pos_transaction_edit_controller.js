@@ -41,7 +41,12 @@ export default class extends Controller {
     const modal = document.getElementById("pos_settlement_modal")
     if (!modal) return []
 
-    return Array.from(modal.querySelectorAll("[data-settlement-amount]"))
+    return Array.from(modal.querySelectorAll("[data-settlement-amount]")).filter((field) => {
+      const row = field.closest("[data-settlement-row]")
+      if (!row) return true
+
+      return row.dataset.destroyed !== "true" && !row.hidden
+    })
   }
 
   tenderAmountFields() {
@@ -99,9 +104,11 @@ export default class extends Controller {
   }
 
   applyPreview(data) {
-    if (data.panel_html) {
-      const panel = document.getElementById("pos_readiness")
-      if (panel) panel.innerHTML = data.panel_html
+    if (data.panel_html !== undefined) {
+      document.querySelectorAll(".js-pos-readiness-host").forEach((panel) => {
+        panel.innerHTML = data.panel_html
+        panel.hidden = data.readiness_visible !== true
+      })
     }
 
     if (this.hasCompleteButtonTarget) {
@@ -232,12 +239,16 @@ export default class extends Controller {
   }
 
   setAuthorizationId(event) {
-    const { authorizationId } = event.detail
+    const { authorizationId, authorizationType } = event.detail
     if (!authorizationId) return
 
     this.authorizationIdTargets.forEach((field) => {
       field.value = authorizationId
     })
+
+    if (authorizationType === "discount_reason_approval" || authorizationType === "void_transaction") {
+      return
+    }
 
     const url = new URL(window.location.href)
     url.searchParams.set("pos_authorization_id", authorizationId)

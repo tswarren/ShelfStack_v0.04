@@ -2,9 +2,10 @@
 
 module Phase2TestHelper
   def create_tax_category!(**attrs)
+    suffix = SecureRandom.hex(3)
     TaxCategory.create!({
-      name: "Test Tax Category",
-      short_name: "Test",
+      name: "Test Tax Category #{suffix}",
+      short_name: "T#{suffix}",
       sort_order: 10,
       active: true
     }.merge(attrs))
@@ -36,10 +37,11 @@ module Phase2TestHelper
   end
 
   def create_department!(**attrs)
+    suffix = SecureRandom.hex(3)
     Department.create!({
-      department_number: "099",
-      name: "Test Department",
-      short_name: "Test Dept",
+      department_number: format("%03d", rand(100..999)),
+      name: "Test Department #{suffix}",
+      short_name: "TD#{suffix}",
       active: true
     }.merge(attrs))
   end

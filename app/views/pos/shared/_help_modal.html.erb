@@ -1,0 +1,15 @@
+<%= render "shared/interaction/modal",
+      id: "pos-help-modal",
+      title: "POS commands",
+      size: :lg,
+      close_on_backdrop: true,
+      dirty_guard: false do %>
+  <div class="ss-pos-help-modal__body" data-pos-command-bar-target="helpBody"></div>
+  <p class="ss-hint ss-pos-help-modal__hint">
+    Type <kbd>/help</kbd>, <kbd>/?</kbd>, or <kbd>?</kbd> to open this list again.
+  </p>
+  <p class="ss-pos-help-modal__legend">
+    <span class="ss-pos-help-modal__legend-item ss-pos-help-modal__legend-item--unavailable">Unavailable here</span>
+    <span class="ss-pos-help-modal__legend-item ss-pos-help-modal__legend-item--planned">Planned</span>
+  </p>
+<% end %>

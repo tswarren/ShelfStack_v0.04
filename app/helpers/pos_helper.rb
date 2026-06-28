@@ -25,6 +25,24 @@ module PosHelper
     POS_WORKSPACE_MODES.include?(mode) ? mode : "sale"
   end
 
+  def pos_mode_switch_active?(mode)
+    carry_forward = params[:carry_forward].presence
+    case mode.to_s
+    when "sale"
+      carry_forward.blank? && !legacy_return_or_pickup_mode?
+    when "return"
+      carry_forward == "return" || (carry_forward.blank? && params[:mode] == "return")
+    when "pickup"
+      carry_forward == "pickup" || (carry_forward.blank? && params[:mode] == "pickup")
+    else
+      false
+    end
+  end
+
+  def legacy_return_or_pickup_mode?
+    params[:mode].in?(%w[return pickup])
+  end
+
   def pos_initial_entry_action(mode)
     mode.to_s == "return" ? "return_receipt" : "sale"
   end
@@ -184,6 +202,28 @@ module PosHelper
     !(line.return_line? && line.source_transaction_line_id.present?)
   end
 
+  def pos_cart_line_edit_panel_available?(line)
+    !line.gift_card_sale_line?
+  end
+
+  def pos_cart_line_discount_panel_available?(line)
+    !line.return_line? && !line.gift_card_sale_line?
+  end
+
+  def pos_cart_line_tax_panel_available?(line)
+    pos_line_tax_override_eligible?(line)
+  end
+
+  def pos_cart_line_panel_open?(line, panel_error)
+    panel_error.present? && panel_error[:line_id].to_i == line.id
+  end
+
+  def pos_cart_line_active_panel(line, panel_error)
+    return panel_error[:panel].to_s if pos_cart_line_panel_open?(line, panel_error)
+
+    nil
+  end
+
   def pos_tender_field_label(tender_type, transaction)
     if transaction.total_cents.negative?
       case tender_type
@@ -229,6 +269,20 @@ module PosHelper
     end
   end
 
+  def pos_supervisor_authorization_type(check)
+    pos_supervisor_authorization_type_for_key(check.key)
+  end
+
+  def pos_supervisor_authorization_type_for_key(key)
+    case key
+    when :discount_auth then "discount_over_limit"
+    when :discount_reason_auth then "discount_reason_approval"
+    when :no_receipt_return then "no_receipt_return"
+    when :cash_refund_auth then "cash_refund_over_threshold"
+    when :reserved_stock_auth then "sell_reserved_stock_override"
+    end
+  end
+
   def pos_lookup_preview_text(variant)
     price = pos_money(variant[:selling_price_cents] || variant["selling_price_cents"])
     on_hand = variant[:quantity_on_hand] || variant["quantity_on_hand"] || 0
@@ -263,7 +317,12 @@ module PosHelper
       [
         reason.name,
         reason.id,
-        { data: { requires_authorization: reason.requires_authorization? } }
+        {
+          data: {
+            requires_authorization: reason.requires_authorization?,
+            requires_note: reason.requires_note?
+          }
+        }
       ]
     end
   end
@@ -279,7 +338,22 @@ module PosHelper
   end
 
   def pos_tax_override_reason_options
-    TaxExceptionReason.active_records.for_rate_override.order(:sort_order, :name)
+    pos_tax_exception_reason_select_options(TaxExceptionReason.active_records.for_rate_override)
+  end
+
+  def pos_tax_exception_reason_select_options(scope)
+    scope.order(:sort_order, :name).map do |reason|
+      [
+        reason.name,
+        reason.id,
+        {
+          data: {
+            requires_note: reason.requires_note?,
+            requires_certificate: reason.requires_certificate?
+          }
+        }
+      ]
+    end
   end
 
   def pos_tax_category_options
@@ -329,6 +403,16 @@ module PosHelper
     end
   end
 
+  def pos_transaction_applied_transaction_discount_cents(transaction)
+    transaction.pos_discount_applications.active_records.where(scope: "transaction").sum(:applied_discount_cents)
+  end
+
+  def pos_transaction_discount_modal_available?(transaction, user: current_user, store: current_store)
+    transaction.present? &&
+      transaction.editable? &&
+      Authorization.allowed?(user: user, permission_key: "pos.discounts.transaction.apply", store: store)
+  end
+
   def pos_discount_amount_display(cents)
     format("%.2f", cents.to_i / 100.0)
   end
@@ -347,12 +431,37 @@ module PosHelper
     PosTender::PHASE6_ALLOWED_TYPES.map { |value| [ value.humanize, value ] }
   end
 
-  def pos_can_use_stored_value_tender?(transaction, tender_type, user = current_user)
+  def pos_can_use_tender_type?(transaction, tender_type, user = current_user)
     Pos::TenderTypePolicy.allowed?(transaction, actor: user, tender_type:, store: transaction.store)
+  end
+
+  def pos_can_use_stored_value_tender?(transaction, tender_type, user = current_user)
+    pos_can_use_tender_type?(transaction, tender_type, user)
+  end
+
+  def pos_can_open_return_workflow?(user = current_user, store: current_store)
+    Authorization.allowed?(user: user, permission_key: "pos.returns.receipted", store: store) ||
+      Authorization.allowed?(user: user, permission_key: "pos.returns.no_receipt", store: store)
+  end
+
+  def pos_can_add_no_receipt_return?(user = current_user, store: current_store)
+    Authorization.allowed?(user: user, permission_key: "pos.returns.no_receipt", store: store)
+  end
+
+  def pos_stored_value_tender_available?(transaction, user = current_user)
+    pos_can_use_tender_type?(transaction, "gift_card", user) ||
+      pos_can_use_tender_type?(transaction, "store_credit", user)
   end
 
   def pos_can_issue_gift_card_sale?(transaction, user = current_user)
     Pos::GiftCardSalePolicy.issue_permitted?(actor: user, store: transaction.store)
+  end
+
+  def pos_can_resume_transaction?(transaction, user = current_user)
+    return false unless Authorization.allowed?(user: user, permission_key: "pos.transactions.resume", store: transaction.store)
+
+    transaction.cashier_user_id == user.id ||
+      Authorization.allowed?(user: user, permission_key: "pos.transactions.resume.other_cashier", store: transaction.store)
   end
 
   def pos_gift_card_sale_activation_status(line)
@@ -478,6 +587,8 @@ module PosHelper
       label = pos_stored_value_tender_label(row)
       amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
       { label: label, amount: pos_money(amount_cents) }
+    when "stored_value"
+      { label: "Stored value", amount: pos_money(0) }
     else
       { label: row.tender_type.humanize, amount: pos_money(0) }
     end
@@ -538,17 +649,62 @@ module PosHelper
     identifier
   end
 
-  TaxSubtotal = Data.define(:short_name, :tax_cents)
+  TaxSubtotal = Data.define(:short_name, :tax_cents, :taxable_base_cents, :tax_rate_bps)
 
   def pos_transaction_tax_subtotals(transaction)
-    grouped = transaction.pos_transaction_lines.group_by { |line| pos_line_tax_short_name(line) }
+    grouped = transaction.pos_transaction_lines.group_by do |line|
+      [ pos_line_tax_short_name(line), line.tax_rate_bps.to_i ]
+    end
 
-    grouped.filter_map do |short_name, lines|
+    grouped.filter_map do |(short_name, tax_rate_bps), lines|
       tax_cents = lines.sum { |line| line.quantity.negative? ? -line.tax_cents : line.tax_cents }
-      next if tax_cents.zero? && lines.all? { |line| line.tax_cents.zero? }
+      taxable_base_cents = lines.sum do |line|
+        next 0 unless line.tax_cents.to_i.nonzero? || tax_rate_bps.positive?
 
-      TaxSubtotal.new(short_name: short_name, tax_cents: tax_cents)
+        line.extended_price_cents.to_i
+      end
+      next if tax_cents.zero? && taxable_base_cents.zero?
+
+      TaxSubtotal.new(
+        short_name: short_name,
+        tax_cents: tax_cents,
+        taxable_base_cents: taxable_base_cents,
+        tax_rate_bps: tax_rate_bps
+      )
     end.sort_by(&:short_name)
+  end
+
+  def pos_format_tax_rate_bps(tax_rate_bps)
+    return if tax_rate_bps.to_i.zero?
+
+    format("%.2f%%", tax_rate_bps.to_i / 100.0)
+  end
+
+  def pos_transaction_item_counts(transaction)
+    sold = 0
+    returned = 0
+
+    transaction.pos_transaction_lines.each do |line|
+      next unless line.line_type.in?(%w[variant open_ring])
+
+      quantity = line.quantity.to_i
+      if quantity.positive?
+        sold += quantity
+      elsif quantity.negative?
+        returned += quantity.abs
+      end
+    end
+
+    { sold: sold, returned: returned }
+  end
+
+  def pos_line_tax_display(line)
+    label = pos_line_tax_short_name(line)
+    if line.tax_cents.to_i.zero?
+      return { label: (label == "Tax" ? "—" : label), amount_cents: nil }
+    end
+
+    { label: label, amount_cents: line.tax_cents.to_i }
   end
 
   def pos_line_tax_identifier(line)
@@ -575,6 +731,34 @@ module PosHelper
 
   def pos_receipt_change_cents(transaction)
     pos_settlement_tenders(transaction).sum(&:change_display_cents)
+  end
+
+  def pos_completed_workspace_heading(_transaction)
+    "Sale complete"
+  end
+
+  def pos_completed_workspace_type_label(transaction)
+    case transaction.transaction_type
+    when "return" then "Return complete"
+    when "exchange" then "Exchange complete"
+    else "Sale complete"
+    end
+  end
+
+  def pos_transaction_summary?(transaction)
+    transaction.completed? || transaction.voided?
+  end
+
+  def pos_transaction_summary_eyebrow(transaction)
+    return "Transaction voided" if transaction.voided?
+
+    pos_completed_workspace_type_label(transaction)
+  end
+
+  def pos_completed_tendered_summary(transaction)
+    pos_settlement_tenders(transaction).order(:line_number).map do |tender|
+      "#{pos_money(pos_tender_receipt_amount_cents(tender))} #{pos_tender_receipt_label(tender)}"
+    end.join(", ")
   end
 
   def pos_settlement_tenders(transaction)

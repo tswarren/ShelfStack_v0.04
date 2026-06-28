@@ -1,8 +1,15 @@
-<%= render "pos/transactions/register_header", transaction: @transaction %>
+<%= render "pos/shared/workspace_header",
+      register_session: @transaction.pos_register_session || current_register_session,
+      transaction: @transaction,
+      context: :transaction %>
 
 <div id="pos_flash">
   <%= render "pos/transactions/flash" %>
 </div>
+
+<% if pos_exchange_summary(@transaction) %>
+  <%= render "pos/transactions/register_header", transaction: @transaction %>
+<% end %>
 
 <% unless current_register_session %>
   <div class="ss-pos-alert">No register session is open. Complete will be blocked until you <%= link_to "open the register", new_pos_register_session_path %>.</div>
@@ -13,13 +20,22 @@
 <% end %>
 
 <div id="pos_transaction_workspace"
-     data-controller="pos-transaction-edit pos-settlement-panel"
+     data-controller="pos-command-bar pos-line-entry pos-transaction-edit pos-settlement-panel pos-workspace-focus"
+     data-pos-command-bar-route-url-value="<%= route_command_pos_transaction_path(@transaction) %>"
+     data-pos-command-bar-add-gift-card-url-value="<%= add_gift_card_sale_line_pos_transaction_path(@transaction) %>"
+     data-pos-command-bar-return-mode-value="false"
+     data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
+     data-pos-line-entry-add-url-value="<%= add_line_pos_transaction_path(@transaction) %>"
+     data-pos-line-entry-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(@transaction) %>"
+     data-pos-line-entry-return-mode-value="false"
+     data-pos-line-entry-mode-value="<%= pos_workspace_mode %>"
      data-pos-transaction-edit-readiness-url-value="<%= readiness_preview_pos_transaction_path(@transaction) %>"
      data-pos-transaction-edit-transaction-id-value="<%= @transaction.id %>"
+     data-pos-settlement-panel-sync-url-value="<%= sync_tenders_pos_transaction_path(@transaction) %>"
      data-pos-settlement-panel-total-cents-value="<%= @transaction.total_cents %>"
      data-pos-settlement-panel-refund-value="<%= Pos::TenderTypePolicy.refund_transaction?(@transaction) %>"
      data-pos-settlement-panel-lookup-url-value="<%= pos_stored_value_lookup_path %>"
-     data-action="pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange pos:settlement-updated@document->pos-transaction-edit#updateChange pos:workspace-updated@document->pos-settlement-panel#syncTotal">
+     data-action="modal:closed@document->pos-command-bar#modalClosed pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange pos:settlement-updated@document->pos-transaction-edit#updateChange pos:workspace-updated@document->pos-settlement-panel#syncTotal">
 
   <div class="ss-pos-layout" data-controller="pos-cart-line">
     <div class="ss-pos-layout__main">
@@ -28,9 +44,6 @@
             sub_departments: @sub_departments %>
       <div id="pos_cart">
         <%= render "pos/transactions/cart", transaction: @transaction %>
-      </div>
-      <div id="pos_readiness">
-        <%= render "pos/transactions/readiness_panel", transaction: @transaction, readiness: @readiness %>
       </div>
     </div>
 

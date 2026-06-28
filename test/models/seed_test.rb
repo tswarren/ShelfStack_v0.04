@@ -88,11 +88,13 @@ class SeedTest < ActiveSupport::TestCase
 
     load Rails.root.join("db/seeds.rb")
 
-    Store.find_each do |store|
-      TaxCategory.active_records.find_each do |tax_category|
-        assert_nothing_raised do
-          TaxRateLookup.call(store: store, tax_category: tax_category, date: Date.new(2026, 6, 15))
-        end
+    StoreTaxCategoryRate.active_records.find_each do |mapping|
+      assert_nothing_raised do
+        TaxRateLookup.call(
+          store: mapping.store,
+          tax_category: mapping.tax_category,
+          date: Date.new(2026, 6, 15)
+        )
       end
     end
   ensure

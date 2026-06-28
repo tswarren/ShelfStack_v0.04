@@ -1,0 +1,10 @@
+<div class="ss-pos-workspace__actions">
+  <% held_count = @suspended_transactions&.size.to_i %>
+  <% if held_count.positive? %>
+    <button type="button"
+            class="ss-btn ss-btn-secondary"
+            data-action="pos-command-bar#openHeldDrawer">
+      Held sales (<%= held_count %>)
+    </button>
+  <% end %>
+</div>

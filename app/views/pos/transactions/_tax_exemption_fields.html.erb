@@ -1,17 +1,67 @@
-<div class="ss-form-grid">
-  <div class="ss-field">
-    <%= label_tag :tax_exception_reason_id, "Reason" %>
+<%# locals: (id_prefix: nil, submitted: nil, invalid_fields: nil) %>
+<% field_id = local_assigns[:id_prefix].presence || "tax_exemption" %>
+<% submitted = local_assigns[:submitted].presence || {} %>
+<% invalid_fields = Array(local_assigns[:invalid_fields]).map(&:to_s) %>
+<% invalid = ->(name) { invalid_fields.include?(name.to_s) } %>
+<% selected_reason_id = submitted[:tax_exception_reason_id].presence || params[:tax_exception_reason_id] %>
+<% invalid_fields_json = invalid_fields.to_json %>
+
+<div class="ss-form-grid ss-pos-tax-exemption-fields"
+     data-controller="pos-tax-exemption-input"
+     data-pos-tax-exemption-input-invalid-fields-value="<%= invalid_fields_json %>">
+  <div class="ss-field<%= " ss-field--invalid" if invalid.call("tax_exception_reason_id") %>"
+       data-pos-tax-exemption-input-target="reasonFieldWrap">
+    <%= label_tag "#{field_id}_tax_exception_reason_id", "Reason" %>
     <%= select_tag :tax_exception_reason_id,
-          options_from_collection_for_select(pos_tax_exception_reason_options, :id, :name),
+          options_for_select(
+            pos_tax_exception_reason_select_options(TaxExceptionReason.active_records.for_exemption),
+            selected_reason_id
+          ),
+          id: "#{field_id}_tax_exception_reason_id",
           include_blank: "Select reason",
-          required: true %>
+          aria_invalid: invalid.call("tax_exception_reason_id"),
+          data: {
+            pos_tax_exemption_input_target: "reason",
+            action: "change->pos-tax-exemption-input#reasonChanged input->pos-tax-exemption-input#clearFieldInvalid"
+          } %>
   </div>
-  <div class="ss-field">
-    <%= label_tag :certificate_number, "Certificate/reference" %>
-    <%= text_field_tag :certificate_number %>
+  <div class="ss-field<%= " ss-field--invalid" if invalid.call("certificate_number") %>"
+       data-pos-tax-exemption-input-target="certificateFieldWrap">
+    <%= label_tag "#{field_id}_certificate_number", class: "ss-label" do %>
+      Certificate/reference
+      <abbr title="required"
+            class="ss-required"
+            data-pos-tax-exemption-input-target="certificateRequiredMarker"
+            hidden
+            aria-hidden="true">*</abbr>
+    <% end %>
+    <%= text_field_tag :certificate_number,
+          submitted[:certificate_number],
+          id: "#{field_id}_certificate_number",
+          aria_invalid: invalid.call("certificate_number"),
+          data: {
+            pos_tax_exemption_input_target: "certificate",
+            action: "input->pos-tax-exemption-input#clearFieldInvalid"
+          } %>
   </div>
-  <div class="ss-field">
-    <%= label_tag :tax_exemption_note, "Note" %>
-    <%= text_area_tag :tax_exemption_note, nil, rows: 2 %>
+  <div class="ss-field<%= " ss-field--invalid" if invalid.call("tax_exemption_note") %>"
+       data-pos-tax-exemption-input-target="noteFieldWrap">
+    <%= label_tag "#{field_id}_tax_exemption_note", class: "ss-label" do %>
+      Note
+      <abbr title="required"
+            class="ss-required"
+            data-pos-tax-exemption-input-target="noteRequiredMarker"
+            hidden
+            aria-hidden="true">*</abbr>
+    <% end %>
+    <%= text_area_tag :tax_exemption_note,
+          submitted[:tax_exemption_note],
+          id: "#{field_id}_tax_exemption_note",
+          rows: 2,
+          aria_invalid: invalid.call("tax_exemption_note"),
+          data: {
+            pos_tax_exemption_input_target: "note",
+            action: "input->pos-tax-exemption-input#clearFieldInvalid"
+          } %>
   </div>
 </div>

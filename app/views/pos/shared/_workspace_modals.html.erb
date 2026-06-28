@@ -1,0 +1,74 @@
+<%# locals: transaction: nil, register_session: nil, sub_departments: nil %>
+<% transaction = local_assigns[:transaction] %>
+<% register_session = local_assigns[:register_session] || transaction&.pos_register_session || current_register_session %>
+<% transaction_context = transaction.present? %>
+
+<%= render "shared/interaction/modal",
+      id: "pos-balance-inquiry-modal",
+      title: "Check balance",
+      size: :pos,
+      close_on_backdrop: true do %>
+  <%= render "pos/shared/stored_value_balance_inquiry", modal: true %>
+<% end %>
+
+<% if transaction_context && pos_can_issue_gift_card_sale?(transaction) %>
+  <%= render "shared/interaction/modal",
+        id: "pos-gift-card-sale-modal",
+        title: "Sell gift card",
+        size: :pos,
+        close_on_backdrop: true do %>
+    <%= render "pos/transactions/gift_card_sale_form", transaction: transaction %>
+  <% end %>
+<% end %>
+
+<% if Authorization.allowed?(user: current_user, permission_key: "pos.access", store: current_store) %>
+  <%= render "shared/interaction/modal",
+        id: "pos-customer-lookup-modal",
+        title: "Customer lookup",
+        size: :pos,
+        close_on_backdrop: true do %>
+    <%= render "pos/shared/customer_lookup_modal_body",
+          transaction: transaction,
+          attach_url: transaction_context ? attach_customer_pos_transaction_path(transaction) : nil,
+          start_sale_url: transaction_context ? nil : pos_workspace_start_sale_path %>
+  <% end %>
+<% end %>
+
+<% if transaction_context &&
+      Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.apply", store: current_store) &&
+      transaction.editable? %>
+  <%= render "shared/interaction/modal",
+        id: "pos-tax-exemption-modal",
+        title: "Tax exemption",
+        size: :pos,
+        close_on_backdrop: true,
+        dirty_guard: false do %>
+    <div id="pos_tax_exemption_modal_content">
+      <%= render "pos/transactions/tax_exemption_modal_body", transaction: transaction %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if transaction_context &&
+      Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) &&
+      transaction.editable? %>
+  <%= render "shared/interaction/modal",
+        id: "pos-transaction-discount-modal",
+        title: "Transaction discount",
+        size: :pos,
+        close_on_backdrop: true,
+        dirty_guard: false do %>
+    <div id="pos_transaction_discount_modal_content">
+      <%= render "pos/transactions/transaction_discount_modal_body", transaction: transaction %>
+    </div>
+  <% end %>
+<% end %>
+
+<%= render "pos/shared/help_modal" %>
+<%= render "pos/shared/drawer_action_modal" %>
+<%= render "pos/shared/cash_movement_modal", register_session: register_session %>
+<% if register_session.present? && Authorization.allowed?(user: current_user, permission_key: "pos.register_sessions.view", store: current_store) %>
+  <%= render "pos/shared/session_drawer",
+        register_session: register_session,
+        suspended_transactions: local_assigns.fetch(:suspended_transactions, @suspended_transactions || []) %>
+<% end %>

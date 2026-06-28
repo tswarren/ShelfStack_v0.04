@@ -428,10 +428,17 @@ Rails.application.routes.draw do
 
   namespace :pos do
     root to: "home#show"
+    post "route_command", to: "workspace_commands#route_command"
+    post "workspace/start_sale", to: "workspace_sales#create", as: :workspace_start_sale
+    post "workspace/add_return_line", to: "workspace_lines#add_return_line"
+    post "workspace/add_no_receipt_line", to: "workspace_lines#add_no_receipt_line"
+    post "workspace/add_open_ring_line", to: "workspace_lines#add_open_ring_line"
+    post "workspace/add_reservation_line", to: "workspace_lines#add_reservation_line"
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]
     resource :stored_value_lookup, only: %i[show]
+    resource :customer_lookup, only: %i[show]
     resource :stored_value_balance, only: %i[show], controller: "stored_value_balance"
     resource :pickup_lookup, only: %i[create]
     resources :authorizations, only: %i[create]
@@ -444,6 +451,7 @@ Rails.application.routes.draw do
     end
     resources :transactions do
       member do
+        get :completed
         patch :complete
         patch :suspend
         patch :resume
@@ -467,6 +475,8 @@ Rails.application.routes.draw do
         patch :sync_tenders
         post :readiness_preview
         post :route_command
+        patch :attach_customer
+        patch :detach_customer
       end
     end
     resources :receipts, only: %i[show] do

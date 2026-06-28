@@ -1,10 +1,16 @@
 # Phase 10-C — POS Keyboard Workspace Test Plan
 
-**Status:** Planned
+**Status:** Delivered on integration branch — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
+
+**Manual QA coverage map:** [phase-10c-manual-qa.md#automated-coverage-map](../implementation/phase-10c-manual-qa.md#automated-coverage-map)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
+
+**Slice 9A:** [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md)
+
+**Slice 9B:** [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md)
 
 ---
 
@@ -52,10 +58,13 @@ Suggested: extend or replace `Pos::CommandBarRouter` tests → `Pos::CommandRegi
 
 | Case | Expected |
 | ---- | -------- |
-| `/gc 50` from idle | Draft + modal with $50 prefilled; line **not** auto-posted |
+| `/gc 50` from idle | Draft + gift card sale line for $50; command focus returns |
+| `/gc` from idle | Draft + amount panel; focus amount field |
+| `/gc 50` on active transaction | Gift card sale line added; command focus returns |
 | `/cash 20` from idle | No draft; no-active-transaction message |
 | `/cashdrop` | Planned/disabled message; no `PosCashMovement` created |
-| `/cashin`, `/cashout` | Modal workflow when permitted |
+| `/cashin`, `/cashout` | Modal workflow when permitted; Escape dismisses modal |
+| `/session`, `/reports`, `/close`, `/drawer` | Per slice 7 utility command tests |
 
 ---
 
@@ -86,6 +95,8 @@ Suggested: extend or replace `Pos::CommandBarRouter` tests → `Pos::CommandRegi
 | ---- | ----------------------- |
 | Expanded-row line edit | System test — POS cart line edit |
 | Settlement modal shell | Integration/system — settlement entry |
+| Transaction discount modal (slice 9A) | See [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md#suggested-tests) |
+| Tender workspace UX (slice 9B) | See [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md#suggested-tests) |
 | Readiness blockers | Extend `Pos::CompletionReadiness` tests + system |
 | `/reports` with active draft | Confirm dialog; same-tab navigate on confirm |
 
@@ -95,13 +106,34 @@ Suggested: extend or replace `Pos::CommandBarRouter` tests → `Pos::CommandRegi
 
 Per [keyboard-and-focus.md](keyboard-and-focus.md) and spec acceptance criteria:
 
-* Command field focus on idle and active workspace load
-* Focus after line add
+* Command field focus after workspace Turbo updates when no blocking panel/modal is open
+* Open gift card amount panel, cash movement modal, and help modal skip command focus until closed
 * Modal/drawer trap and restore
 * Settlement reachable without function keys
 * Touch targets ~44px on expanded row and settlement actions
 
 Suggested: system tests where practical; integration for focus-restore hooks where Stimulus is heavy.
+
+---
+
+## Slice 11 — Workspace layout cleanup
+
+| Area | Test file(s) |
+| ---- | ------------ |
+| Header actions presenter | `test/presenters/pos/header_actions_presenter_test.rb` |
+| Tax/totals/cart display helpers | `test/helpers/pos_workspace_display_test.rb` |
+| Shared workspace header | `test/integration/pos_workspace_header_test.rb` |
+| Customer attach/detach | `test/integration/pos_customer_workspace_test.rb` |
+| Status panel (discount/tax/customer) | `test/integration/pos_status_panel_test.rb` |
+| Readiness blockers (`alert_blockers`) | `test/integration/pos_readiness_preview_test.rb`; `test/services/pos/completion_readiness_test.rb` |
+| No-receipt return + supervisor auth | `test/integration/pos_no_receipt_return_readiness_test.rb`; `test/integration/pos_workspace_lines_controller_test.rb` |
+| Completed workspace + New Sale → `/pos` | `test/integration/pos_completed_workspace_test.rb`; `test/system/pos/completed_workspace_test.rb` |
+| Receipt return paths | `test/integration/pos_receipt_return_path_test.rb`; `test/integration/pos_receipts_controller_test.rb` |
+| Summary / voided summary layout | `test/integration/pos_transaction_confirmation_test.rb` |
+| Layout / flash / Complete CTA | `test/system/pos/workspace_layout_test.rb` |
+| Balance without register | `test/services/pos/command_registry_test.rb` (balance availability) |
+
+Manual QA: [phase-10c-manual-qa.md](../implementation/phase-10c-manual-qa.md) — **§11 Workspace layout and status panel**.
 
 ---
 
