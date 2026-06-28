@@ -4189,6 +4189,14 @@ body.ss-pos-modal-open {
   margin-top: 1rem;
 }
 
+.ss-pos-tax-exemption-form__footer {
+  margin-top: 1rem;
+}
+
+.ss-pos-tax-exemption-form__error {
+  margin-bottom: 0.75rem;
+}
+
 .ss-pos-advanced-actions__panel {
   margin-top: 0.75rem;
 }

@@ -28,9 +28,32 @@ class PosTransactionDiscountModalTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, 'id="pos-transaction-discount-modal"'
-    assert_includes response.body, 'id="pos_transaction_discount_modal_content"'
+    assert_includes response.body, 'data-modal-dirty-guard-value="false"'
+    assert_match(/id="pos-transaction-discount-modal"[\s\S]*?data-modal-dirty-guard-value="false"/, response.body)
     assert_includes response.body, "Preview total after discount"
-    assert_includes response.body, 'data-action="pos-command-bar#showTransactionDiscountModal"'
+    assert_includes response.body, 'data-controller="pos-transaction-discount-modal-open"'
+    assert_includes response.body, 'data-action="click->pos-transaction-discount-modal-open#open"'
+  end
+
+  test "route_command discount with whole number prefill percent" do
+    post route_command_pos_transaction_path(@transaction), params: { input: "/discount 10" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "transaction_discount_offer", body["action"]
+    assert_equal "percent", body["payload"]["discount_type"]
+    assert_equal "10", body["payload"]["discount_value"]
+    assert_equal "amount", body["payload"]["focus"]
+  end
+
+  test "route_command discount with decimal prefill amount" do
+    post route_command_pos_transaction_path(@transaction), params: { input: "/di 5.00" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "transaction_discount_offer", body["action"]
+    assert_equal "amount", body["payload"]["discount_type"]
+    assert_equal "5.00", body["payload"]["discount_value"]
   end
 
   test "route_command discount returns transaction discount offer" do
@@ -54,6 +77,7 @@ class PosTransactionDiscountModalTest < ActionDispatch::IntegrationTest
     assert_operator @transaction.total_cents, :<, @gross_total
     assert_equal 100, @transaction.pos_discount_applications.active_records.where(scope: "transaction").sum(:applied_discount_cents)
     assert_includes response.body, "Current transaction discount"
+    assert_includes response.body, 'target="pos_transaction_discount_modal_content"'
     assert_includes response.body, format("$%.2f", @transaction.total_cents / 100.0)
   end
 

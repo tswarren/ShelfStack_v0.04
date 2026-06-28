@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = {
-    focus: { type: String, default: "reason" }
+    focus: { type: String, default: "firstInvalid" }
   }
 
   connect() {
@@ -18,7 +18,7 @@ export default class extends Controller {
   }
 
   dispatchOpen() {
-    document.dispatchEvent(new CustomEvent("pos:open-transaction-discount-modal", {
+    document.dispatchEvent(new CustomEvent("pos:open-tax-exemption-modal", {
       detail: { focus: this.focusValue }
     }))
   }

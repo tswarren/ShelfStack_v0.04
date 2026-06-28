@@ -10,7 +10,9 @@ export default class extends Controller {
 
   connect() {
     this.boundOpenTransactionDiscount = this.handleOpenTransactionDiscount.bind(this)
+    this.boundOpenTaxExemption = this.handleOpenTaxExemption.bind(this)
     document.addEventListener("pos:open-transaction-discount-modal", this.boundOpenTransactionDiscount)
+    document.addEventListener("pos:open-tax-exemption-modal", this.boundOpenTaxExemption)
     this.focusInput()
     this.syncOpenRingReturnMode()
     requestAnimationFrame(() => {
@@ -21,6 +23,7 @@ export default class extends Controller {
 
   disconnect() {
     document.removeEventListener("pos:open-transaction-discount-modal", this.boundOpenTransactionDiscount)
+    document.removeEventListener("pos:open-tax-exemption-modal", this.boundOpenTaxExemption)
   }
 
   toggleReturnMode() {
@@ -119,7 +122,7 @@ export default class extends Controller {
         break
       case "line_discount_offer":
         if (data.payload?.line_id) {
-          this.openLineDiscount(data.payload.line_id)
+          this.openLineDiscount(data.payload)
         } else {
           this.dispatchMessage(data.message || "No line available for discount.")
         }
@@ -287,10 +290,42 @@ export default class extends Controller {
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
   }
 
-  showTaxExemptionModal() {
+  showTaxExemptionModal(payload = {}) {
     if (!this.openWorkspaceModal("pos-tax-exemption-modal")) {
       this.dispatchMessage("Tax exemption is not available.")
+      return
     }
+
+    this.inputTarget.value = ""
+    requestAnimationFrame(() => this.focusTaxExemptionModal(payload))
+  }
+
+  handleOpenTaxExemption(event) {
+    this.showTaxExemptionModal(event.detail || {})
+  }
+
+  focusTaxExemptionModal(payload = {}) {
+    const modal = document.getElementById("pos-tax-exemption-modal")
+    if (!modal) return
+
+    if (payload.focus === "firstInvalid") {
+      const invalid = modal.querySelector(".ss-field--invalid input, .ss-field--invalid select, .ss-field--invalid textarea")
+      if (invalid) {
+        invalid.focus()
+        return
+      }
+    }
+
+    modal.querySelector("[name='tax_exception_reason_id']")?.focus()
+  }
+
+  closeTaxExemptionModal(arg) {
+    const options = arg instanceof Event ? {} : (arg || {})
+    const focusInput = options.focusInput ?? true
+    arg?.preventDefault?.()
+
+    this.closeWorkspaceModal("pos-tax-exemption-modal")
+    if (focusInput) this.focusInput()
   }
 
   handleOpenTransactionDiscount(event) {
@@ -304,7 +339,28 @@ export default class extends Controller {
     }
 
     this.inputTarget.value = ""
-    requestAnimationFrame(() => this.focusTransactionDiscountModal(payload))
+    requestAnimationFrame(() => {
+      this.prefillTransactionDiscountModal(payload)
+      this.focusTransactionDiscountModal(payload)
+    })
+  }
+
+  prefillTransactionDiscountModal(payload = {}) {
+    const modal = document.getElementById("pos-transaction-discount-modal")
+    if (!modal) return
+
+    const controller = this.discountInputControllerFor(modal)
+    controller?.prefill({
+      discountType: payload.discount_type,
+      discountValue: payload.discount_value
+    })
+  }
+
+  discountInputControllerFor(container) {
+    const element = container.querySelector("[data-controller~='pos-discount-input']")
+    if (!element) return null
+
+    return this.application.getControllerForElementAndIdentifier(element, "pos-discount-input")
   }
 
   focusTransactionDiscountModal(payload = {}) {
@@ -547,10 +603,9 @@ export default class extends Controller {
   }
 
   taxExemptionSubmitted(event) {
-    if (event.detail.success) {
-      this.closeWorkspaceModal("pos-tax-exemption-modal")
-      requestAnimationFrame(() => this.focusInput())
-    }
+    if (event.detail?.success === false) return
+
+    this.closeTaxExemptionModal({ focusInput: true })
   }
 
   hidePanels() {
@@ -762,10 +817,18 @@ export default class extends Controller {
     this.inputTarget?.focus()
   }
 
-  openLineDiscount(lineId) {
+  openLineDiscount(payload = {}) {
+    const lineId = payload.line_id ?? payload.lineId
+    if (!lineId) return
+
     this.inputTarget.value = ""
     document.dispatchEvent(new CustomEvent("pos:open-line-discount", {
-      detail: { lineId: String(lineId) }
+      detail: {
+        lineId: String(lineId),
+        discount_type: payload.discount_type,
+        discount_value: payload.discount_value,
+        focus: payload.focus || (payload.discount_value ? "amount" : null)
+      }
     }))
   }
 

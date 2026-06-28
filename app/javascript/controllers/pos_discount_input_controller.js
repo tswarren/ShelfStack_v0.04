@@ -53,6 +53,19 @@ export default class extends Controller {
     }
   }
 
+  prefill({ discountType = null, discountValue = null } = {}) {
+    if (discountType && this.hasTypeTarget) {
+      this.typeTarget.value = discountType
+      this.syncModeButtons()
+      this.updateMode()
+    }
+
+    if (discountValue != null && discountValue !== "" && this.hasValueTarget) {
+      this.valueTarget.value = discountValue
+      this.updatePreview()
+    }
+  }
+
   validateSubmit(event) {
     this.clearInvalidHighlights()
     const invalidFields = this.collectValidationErrors()

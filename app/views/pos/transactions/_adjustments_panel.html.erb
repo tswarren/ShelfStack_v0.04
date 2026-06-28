@@ -6,7 +6,8 @@
     <% if transaction.editable? %>
       <button type="button"
               class="ss-btn ss-btn-secondary ss-pos-adjustments__launcher"
-              data-action="pos-command-bar#showTransactionDiscountModal">Apply transaction discount</button>
+              data-controller="pos-transaction-discount-modal-open"
+              data-action="click->pos-transaction-discount-modal-open#open">Apply transaction discount</button>
     <% end %>
     <% transaction.pos_discount_applications.active_records.where(scope: "transaction").order(:stack_order).each do |application| %>
       <div class="ss-pos-discount-list__item">
@@ -54,7 +55,7 @@
     </div>
   <% elsif Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.apply", store: current_store) && transaction.editable? %>
     <%= form_with url: apply_tax_exemption_pos_transaction_path(transaction), method: :post, class: "ss-form", data: { turbo_stream: true } do %>
-      <%= render "pos/transactions/tax_exemption_fields", transaction: transaction %>
+      <%= render "pos/transactions/tax_exemption_fields", id_prefix: "tax_exemption_adjustments" %>
       <%= submit_tag "Apply tax exemption", class: "ss-btn ss-btn-secondary" %>
     <% end %>
   <% end %>

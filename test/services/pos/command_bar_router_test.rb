@@ -177,6 +177,75 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal :transaction_discount_offer, route.action
   end
 
+  test "/discount with whole number includes percent prefill payload" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/discount 10"
+    )
+
+    assert_equal :transaction_discount_offer, route.action
+    assert_equal "percent", route.payload[:discount_type]
+    assert_equal "10", route.payload[:discount_value]
+    assert_equal "amount", route.payload[:focus]
+  end
+
+  test "/discount with decimal includes amount prefill payload" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/dt 5.50"
+    )
+
+    assert_equal :transaction_discount_offer, route.action
+    assert_equal "amount", route.payload[:discount_type]
+    assert_equal "5.50", route.payload[:discount_value]
+  end
+
+  test "/linediscount with whole number includes percent prefill on line" do
+    transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        { product_variant: @variant, quantity: 1, unit_price_cents: 1000, extended_price_cents: 1000 }
+      ]
+    )
+    line = transaction.pos_transaction_lines.first
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/linediscount 15"
+    )
+
+    assert_equal :line_discount_offer, route.action
+    assert_equal line.id, route.payload[:line_id]
+    assert_equal "percent", route.payload[:discount_type]
+    assert_equal "15", route.payload[:discount_value]
+  end
+
+  test "/discount with invalid args returns message" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      transaction: transaction,
+      input: "/discount abc"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRouteBuilder::INVALID_DISCOUNT_MESSAGE, route.message
+  end
+
   test "/cashdrop returns planned disabled message" do
     route = Pos::CommandBarRouter.call(
       store: @store,

@@ -102,7 +102,7 @@ export function showOverlay(controller) {
     if (event.key === "Escape") {
       if (controller.closeOnEscapeValue) {
         event.preventDefault()
-        closeOverlay(controller)
+        closeOverlay(controller, { force: !controller.dirtyGuardValue })
       }
       return
     }

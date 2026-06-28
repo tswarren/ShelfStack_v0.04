@@ -18,13 +18,27 @@
   <%= render "pos/transactions/adjustments_panel", transaction: @transaction %>
 <% end %>
 
-<% if defined?(@transaction_discount_error) && @transaction_discount_error.present? %>
+<% if pos_transaction_discount_modal_available?(@transaction) %>
   <%= turbo_stream.update "pos_transaction_discount_modal_content" do %>
     <%= render "pos/transactions/transaction_discount_modal_body", transaction: @transaction %>
   <% end %>
+<% end %>
+
+<% if defined?(@transaction_discount_error) && @transaction_discount_error.present? %>
+  <%= turbo_stream.append "pos_workspace_events" do %>
+    <div data-controller="pos-transaction-discount-modal-open"
+         data-pos-transaction-discount-modal-open-focus-value="firstInvalid"></div>
+  <% end %>
+<% end %>
+
+<% if defined?(@tax_exemption_error) && @tax_exemption_error.present? %>
+  <%= turbo_stream.update "pos_tax_exemption_modal_content" do %>
+    <%= render "pos/transactions/tax_exemption_modal_body", transaction: @transaction %>
+  <% end %>
 
   <%= turbo_stream.append "pos_workspace_events" do %>
-    <div data-controller="pos-transaction-discount-modal-open"></div>
+    <div data-controller="pos-tax-exemption-modal-open"
+         data-pos-tax-exemption-modal-open-focus-value="firstInvalid"></div>
   <% end %>
 <% end %>
 

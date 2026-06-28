@@ -407,6 +407,12 @@ module PosHelper
     transaction.pos_discount_applications.active_records.where(scope: "transaction").sum(:applied_discount_cents)
   end
 
+  def pos_transaction_discount_modal_available?(transaction, user: current_user, store: current_store)
+    transaction.present? &&
+      transaction.editable? &&
+      Authorization.allowed?(user: user, permission_key: "pos.discounts.transaction.apply", store: store)
+  end
+
   def pos_discount_amount_display(cents)
     format("%.2f", cents.to_i / 100.0)
   end

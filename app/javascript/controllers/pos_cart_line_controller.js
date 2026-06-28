@@ -125,14 +125,41 @@ export default class extends Controller {
   }
 
   openLineDiscount(event) {
-    const lineId = event.detail?.lineId
+    const detail = event.detail || {}
+    const lineId = detail.lineId
     if (!lineId) return
 
     const commandInput = document.querySelector("[data-pos-command-bar-target='input']")
-    this.openPanel(lineId, "discount", {
-      opener: commandInput,
-      focusSelector: ".ss-pos-line-discount-form [name='discount_reason_id']"
+    this.openPanel(lineId, "discount", { opener: commandInput })
+
+    requestAnimationFrame(() => {
+      const editRow = this.editRowForLine(lineId)
+      if (!editRow) return
+
+      this.prefillDiscountForm(editRow, detail)
+      this.focusDiscountField(editRow, detail)
     })
+  }
+
+  prefillDiscountForm(container, detail = {}) {
+    const element = container.querySelector("[data-controller~='pos-discount-input']")
+    if (!element) return
+
+    const controller = this.application.getControllerForElementAndIdentifier(element, "pos-discount-input")
+    controller?.prefill({
+      discountType: detail.discount_type,
+      discountValue: detail.discount_value
+    })
+  }
+
+  focusDiscountField(editRow, detail = {}) {
+    const focusAmount = detail.focus === "amount" || detail.discount_value
+    const selector = focusAmount
+      ? ".ss-pos-line-discount-form .ss-pos-discount-input"
+      : ".ss-pos-line-discount-form [name='discount_reason_id']"
+    const field = editRow.querySelector(selector)
+    field?.focus()
+    field?.select?.()
   }
 
   openPanel(lineId, panel, { opener = null, focusSelector = null } = {}) {

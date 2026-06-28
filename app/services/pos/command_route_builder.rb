@@ -7,6 +7,7 @@ module Pos
     NOT_YET_AVAILABLE_MESSAGE = "That command is not available yet."
     RETURN_BLOCKED_TENDERS_MESSAGE = "Complete, cancel, hold, or clear settlement before adding return lines."
     INVALID_AMOUNT_MESSAGE = "Amount must be a valid dollar amount."
+    INVALID_DISCOUNT_MESSAGE = "Discount must be a whole-number percent or a dollar amount with cents."
     TENDER_AMOUNT_REJECTED_MESSAGE = "/tender does not accept an amount. Use /cash 20, /card 20, /check 20, /giftredeem 20, or /storecredit 20."
     CLOSE_BLOCKED_MESSAGE = "Cannot close register while a transaction is active. Complete, cancel, or hold the current transaction first."
     REPORTS_CONFIRM_MESSAGE = "Leave the current transaction and open Reports? The draft will remain on the server."
@@ -98,7 +99,7 @@ module Pos
       when :line_discount
         line_discount_route
       when :transaction_discount
-        Route.new(action: :transaction_discount_offer, payload: {}, message: nil)
+        transaction_discount_route
       when :settlement_modal
         settlement_modal_route
       when :tender_cash, :tender_card, :tender_check, :tender_store_credit, :gift_redeem
@@ -205,7 +206,15 @@ module Pos
       Route.new(action: :message, payload: {}, message: INVALID_AMOUNT_MESSAGE)
     end
 
+    def transaction_discount_route
+      return invalid_discount_route if invalid_discount_args?
+
+      Route.new(action: :transaction_discount_offer, payload: discount_payload, message: nil)
+    end
+
     def line_discount_route
+      return invalid_discount_route if invalid_discount_args?
+
       line = previous_discountable_line
       if line.blank?
         return Route.new(
@@ -215,7 +224,11 @@ module Pos
         )
       end
 
-      Route.new(action: :line_discount_offer, payload: { line_id: line.id }, message: nil)
+      Route.new(
+        action: :line_discount_offer,
+        payload: { line_id: line.id }.merge(discount_payload),
+        message: nil
+      )
     end
 
     def previous_discountable_line
@@ -244,6 +257,49 @@ module Pos
       return unless normalized.match?(/\A\d+(?:\.\d{1,2})?\z/)
 
       (BigDecimal(normalized) * 100).round.to_i
+    end
+
+    def discount_payload
+      parsed = parse_discount_args(match.args)
+      return {} if parsed.blank?
+
+      payload = {
+        discount_type: parsed[:discount_type],
+        discount_value: parsed[:discount_value]
+      }
+      payload[:focus] = "amount"
+      payload
+    end
+
+    def invalid_discount_args?
+      match.args.present? && parse_discount_args(match.args) == :invalid
+    end
+
+    def invalid_discount_route
+      Route.new(action: :message, payload: {}, message: INVALID_DISCOUNT_MESSAGE)
+    end
+
+    def parse_discount_args(args)
+      return if args.blank?
+
+      normalized = args.strip.delete_prefix("$").delete_suffix("%").strip
+      return :invalid if normalized.blank?
+
+      if normalized.include?(".")
+        return :invalid unless normalized.match?(/\A\d+(?:\.\d{1,2})?\z/)
+
+        amount = BigDecimal(normalized)
+        return :invalid if amount <= 0
+
+        { discount_type: "amount", discount_value: format("%.2f", amount) }
+      else
+        return :invalid unless normalized.match?(/\A\d+\z/)
+
+        percent = normalized.to_i
+        return :invalid if percent <= 0 || percent > 100
+
+        { discount_type: "percent", discount_value: normalized }
+      end
     end
 
     def reports_route
