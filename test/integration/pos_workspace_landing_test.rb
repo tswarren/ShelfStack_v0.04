@@ -10,6 +10,7 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     @workstation = @ctx[:workstation]
     @register_session = @ctx[:register_session]
     @variant = @ctx[:variant]
+    ensure_gift_card_sale_classification!(store: @store)
     grant_pos_stored_value_tender_permissions!(@cashier, store: @store)
   end
 
@@ -102,15 +103,18 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, body["message"]
   end
 
-  test "root route_command gc creates draft and redirects with carry-forward" do
+  test "root route_command gc creates draft and adds gift card sale line" do
     assert_difference -> { PosTransaction.count }, 1 do
       post pos_route_command_path, params: { input: "/gc 50" }, as: :json
     end
 
     body = JSON.parse(response.body)
     assert_equal "redirect", body["action"]
-    assert_match(/carry_forward=gift_card/, body["payload"]["url"])
-    assert_match(/amount_cents=5000/, body["payload"]["url"])
+    assert_match %r{/pos/transactions/\d+/edit}, body["payload"]["url"]
+
+    transaction = PosTransaction.order(:id).last
+    line = transaction.pos_transaction_lines.find_by!(line_type: "gift_card_sale")
+    assert_equal 5000, line.unit_price_cents
   end
 
   test "root route_command open ring opens drawer without creating draft" do
@@ -172,6 +176,34 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, body["message"]
   end
 
+  test "idle landing renders session drawer shell" do
+    get pos_root_path
+
+    assert_response :success
+    assert_select "#pos-session-drawer"
+    assert_includes response.body, "Held sales"
+  end
+
+  test "root route_command session returns drawer offer without creating draft" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/session" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "session_drawer_offer", body["action"]
+    assert_equal "session", body.dig("payload", "focus")
+  end
+
+  test "root route_command held returns drawer offer focused on held sales" do
+    assert_no_difference -> { PosTransaction.count } do
+      post pos_route_command_path, params: { input: "/held" }, as: :json
+    end
+
+    body = JSON.parse(response.body)
+    assert_equal "session_drawer_offer", body["action"]
+    assert_equal "held", body.dig("payload", "focus")
+  end
+
   test "idle landing renders return and pickup drawer panels" do
     get pos_root_path
 
@@ -184,7 +216,7 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, pos_workspace_add_no_receipt_line_path
     assert_includes response.body, pos_workspace_add_reservation_line_path
     assert_includes response.body, pos_workspace_add_open_ring_line_path
-    assert_includes response.body, 'data-pos-command-bar-target="helpModal"'
+    assert_includes response.body, "pos-help-modal"
     assert_includes response.body, "POS commands"
   end
 

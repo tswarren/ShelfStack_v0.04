@@ -109,6 +109,41 @@ class PosTransactionRouteCommandTest < ActionDispatch::IntegrationTest
     assert_equal "held", body.dig("payload", "focus")
   end
 
+  test "route_command tender opens settlement modal without tender type" do
+    grant_permission!(@cashier, "pos.tenders.cash", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/tender" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "settlement_offer", body["action"]
+    assert_nil body.dig("payload", "tender_type")
+  end
+
+  test "route_command card with amount prefills settlement payload" do
+    grant_permission!(@cashier, "pos.tenders.card", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/card 20" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "settlement_offer", body["action"]
+    assert_equal "card", body.dig("payload", "tender_type")
+    assert_equal 2000, body.dig("payload", "amount_cents")
+  end
+
+  test "route_command giftredeem opens stored value settlement offer" do
+    grant_permission!(@cashier, "pos.tenders.gift_card", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/giftredeem" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "settlement_offer", body["action"]
+    assert_equal "stored_value", body.dig("payload", "tender_type")
+    assert_equal true, body.dig("payload", "prefill_remaining")
+  end
+
   test "route_command cashin returns cash movement offer" do
     grant_permission!(@cashier, "pos.cash_movements.create", store: @store)
 

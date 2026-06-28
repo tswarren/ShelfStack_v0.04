@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard-First Transaction Workspace
 
-**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–8 delivered; 9 in review; **9A**, **9B**, and **10** pending)
+**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–9, **9A**, **9B**, and **10** delivered; final QA and merge to `main` pending)
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
@@ -645,10 +645,10 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 6 | Merged — tender commands → settlement modal |
 | 7 | Merged — utility commands (`/session`, `/reports`, `/close`, cash in/out, `/drawer`) |
 | 8 | Merged — modal standardization |
-| 9 | In review — cart expanded-row polish, More menu, task-specific line panels |
-| **9A** | **Planned** — transaction discount modal, preview total, adjustments panel as launcher |
-| **9B** | **Planned** — tender workspace UX, explicit completion, post-completion workspace |
-| 10 | Pending — session drawer, held-sale access, docs sync |
+| 9 | **Merged** — cart expanded-row polish, More menu, task-specific line panels |
+| **9A** | **Merged** — transaction discount modal |
+| **9B** | **Merged** — tender workspace UX, explicit completion, post-completion workspace |
+| 10 | **Delivered** — session drawer, held-sale access, runbook refresh, acceptance tests; mark 10-C complete after full manual QA |
 
 Interim record: [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 

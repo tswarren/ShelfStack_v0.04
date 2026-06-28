@@ -59,7 +59,7 @@ Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are 
 | --------- | -------- | --- | ---------- | ------ |
 | **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | **Complete** |
 | **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | **Complete** |
-| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **In progress** (slices 1–8; [completion](../implementation/phase-10c-completion.md); **9A**, **9B** planned) |
+| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **Near complete** (slices 1–10 delivered; [completion](../implementation/phase-10c-completion.md); final QA pending) |
 | **10-D** | This document (Workstreams 4–6) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | Planned |
 | **10-E** | This document (below) | Consistency sweep, accessibility, report regression | All | Planned |
 
@@ -219,7 +219,7 @@ Command aliases make common actions fast.
 
 Key decisions: idle workspace when no active draft; active draft always wins on landing; two-lane parser (slash commands vs scan lookup only); no implicit workflow guessing; one active draft per register session + workstation + cashier; return/pickup drawer workflows; `/reports` confirms when active draft exists; **function keys out of scope for 10-C completion**.
 
-**Remaining 10-C slices:** 9 (cart line More menu / inline panels, in review), **9A** ([transaction discount modal](phase-10c-9a-transaction-discount-modal.md)), **9B** ([tender workspace and completion ergonomics](phase-10c-9b-tender-workspace-and-completion.md)), 10 (session drawer, held-sale access, docs sync). Slice 9A moves transaction discount out of the hidden adjustments panel into a focused modal with preview total. Slice 9B refines the settlement modal into a keyboard-first tender workspace, keeps completion explicit, and adds a post-completion cashier workspace.
+**Remaining 10-C:** Final manual QA, mark complete, merge integration branch to `main`. Optional follow-ons: gift receipt printing, tax panel error reopen, `/cashdrop` when domain approved.
 
 ---
 

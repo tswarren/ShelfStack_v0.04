@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace Test Plan
 
-**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
+**Status:** Delivered on integration branch — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md)
 

@@ -59,6 +59,20 @@ class PosCompletedWorkspaceTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-controller="pos-completed-workspace"'
   end
 
+  test "new sale from completed workspace starts a fresh draft" do
+    get completed_pos_transaction_path(@transaction)
+    assert_response :success
+    assert_select "button", text: "New Sale"
+
+    assert_difference -> { PosTransaction.drafts.count }, 1 do
+      post pos_transactions_path, params: { mode: "sale" }
+    end
+
+    new_draft = PosTransaction.drafts.order(:id).last
+    assert_redirected_to edit_pos_transaction_path(new_draft, mode: "sale")
+    assert_not_equal @transaction.id, new_draft.id
+  end
+
   test "draft transaction cannot view completed workspace" do
     draft = create_pos_transaction!(store: @store, workstation: @ctx[:workstation], user: @cashier)
 

@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace
 
-**Status:** In progress (slices 1–9, **9A**, and **9B** delivered; slice **10** in progress)
+**Status:** Near complete (slices 1–10 delivered; pending full manual QA before marking **Complete**)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
@@ -12,7 +12,7 @@
 
 **Test plan:** [phase-10c-test-plan.md](../specifications/phase-10c-test-plan.md)
 
-Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after slice 10 (remaining tests, docs sync, full manual QA) lands.
+Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after full manual QA and merge to `main`.
 
 ---
 
@@ -54,7 +54,8 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ### Slice 7 — Utility commands
 
-- `/session` — session summary panel
+- `/session` — register session drawer (slice 10: shared 10-A drawer with held sales)
+- `/held` — held/suspended transactions drawer section
 - `/reports` — navigate to `/reports`; confirm when active draft exists
 - `/close` — close-register workflow; blocked when active draft exists
 - `/cashin`, `/cashout` — cash movement modal (Escape dismisses); posts via `Pos::CashMovementsController` with return-to-workspace redirect
@@ -105,24 +106,27 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
-## In progress (slice 10)
+## Delivered (slice 10)
 
-- Register session drawer (`/session`, `/held`) on shared 10-A drawer shell with session summary + held sales list
-- Held sales access from idle workspace actions and command bar
-- `Pos::SuspendedTransactionsLookup` shared query for workstation held transactions
-- Remaining: broader acceptance test coverage, mark 10-C complete
-
-Foundation runbook POS section refreshed in [foundation-runbook.md](../operations/foundation-runbook.md).
+- Register session drawer (`/session`, `/held`) on shared 10-A drawer shell
+- Held sales table with permission-aware resume links
+- Idle workspace **Session** and **Held sales (N)** actions
+- `Pos::SuspendedTransactionsLookup` shared query
+- Foundation runbook POS section refreshed
+- Acceptance tests: session/held routing, suspended lookup, tender route commands, completed workspace New Sale
 
 ---
 
-## Verification (slices 1–8)
+## Verification (slices 1–10)
 
 ```bash
 docker compose exec -T web bin/rails test test/services/pos/
+docker compose exec -T web bin/rails test test/integration/pos_workspace_landing_test.rb
 docker compose exec -T web bin/rails test test/integration/pos_transaction_route_command_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_completed_workspace_test.rb
 docker compose exec -T web bin/rails test test/services/pos/root_command_router_test.rb
 docker compose exec -T web bin/rails test test/services/pos/command_bar_router_test.rb
+docker compose exec -T web bin/rails test test/services/pos/suspended_transactions_lookup_test.rb
 ```
 
 ---
@@ -135,7 +139,7 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 | `/gc` without amount | Open modal | Opens amount panel; focus amount field; submit returns to command |
 | Cash in/out UX | Modal (not register session page) | Modal posts with `return_path` back to workspace |
 | Transaction discount entry | Adjustments `<details>` panel | **Slice 9A:** transaction discount modal with preview total; adjustments panel is launcher + list |
-| Post-completion landing | Idle workspace immediately | **Slice 9B (in progress):** `/completed` workspace with New Sale primary action |
+| Post-completion landing | Idle workspace immediately | **Slice 9B:** `/completed` workspace with New Sale primary action |
 
 ---
 
@@ -143,7 +147,6 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 
 - `/cashdrop` execution until `cash_drop` movement type exists
 - Function-key bindings and F-key legend
-- Full foundation runbook POS section refresh (slice 10)
-- Merge to `main` after slices 9, 9A, 9B, 10 and completion QA
+- Merge to `main` after full manual QA
 - Gift receipt printing (placeholder in slice 9B completed workspace)
 - Tax panel server-side error reopen with preserved values (follow-up from slice 9)
