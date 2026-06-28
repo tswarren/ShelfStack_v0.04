@@ -61,11 +61,16 @@ export default class extends Controller {
 
   close(event) {
     event?.preventDefault()
-    if (!this.hasModalTarget) return
+    if (!this.hasModalTarget || this.modalTarget.hidden) return
 
     this.modalTarget.hidden = true
     document.body.classList.remove("ss-pos-modal-open")
     document.removeEventListener("keydown", this.boundKeydown)
+    requestAnimationFrame(() => this.focusCommandInput())
+  }
+
+  focusCommandInput() {
+    document.querySelector("[data-pos-command-bar-target='input']")?.focus()
   }
 
   keydown(event) {
