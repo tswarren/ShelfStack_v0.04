@@ -76,8 +76,9 @@ class PosTransactionDiscountModalSystemTest < ApplicationSystemTestCase
   private
 
   def open_transaction_discount_modal_from_sidebar!
-    find("summary", text: "Discount/Adjustment").click
-    click_button "Apply transaction discount"
+    within "#pos_status_panel" do
+      click_button "Add discount"
+    end
     assert_no_selector "#pos-transaction-discount-modal[hidden]", wait: 5
 
     reason_field = find("#transaction_discount_modal_discount_reason_id", wait: 5)

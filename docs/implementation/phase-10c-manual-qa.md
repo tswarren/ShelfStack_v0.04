@@ -1,5 +1,7 @@
 # Phase 10-C — Manual QA Checklist
 
+**Status:** Phase 10-C marked **Complete** 2026-06-26. This checklist remains useful for regression passes before merge to `main` or after POS changes.
+
 **Branch:** `phase-10c-pos-keyboard-workspace` (or after merge to `main`)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
@@ -8,7 +10,7 @@
 
 **Runbook:** [foundation-runbook.md](../operations/foundation-runbook.md#pos-register-operations-phase-6--phase-10-c)
 
-Use this checklist before marking Phase 10-C **Complete**. Test on a **register workstation** with at least two roles: **pos_cashier** and **pos_lead** or **pos_manager**.
+Use this checklist for regression verification. Test on a **register workstation** with at least two roles: **pos_cashier** and **pos_lead** or **pos_manager**.
 
 **Suggested browsers:** Chrome plus one of Safari or Firefox (keyboard/focus behavior differs).
 
@@ -203,6 +205,26 @@ Use this checklist before marking Phase 10-C **Complete**. Test on a **register 
 
 ---
 
+## 10-C-11 Workspace layout (slice 11)
+
+| # | Step | Expected | Pass |
+|---|------|----------|------|
+| 11.1 | Open active transaction | Shared header: POS \| store \| workstation \| register \| business date \| **Actions** | ☐ |
+| 11.2 | Actions menu (register open) | Balance, Session, Cash In/Out, Close, Reports, Drawer available per permissions | ☐ |
+| 11.3 | Close register → idle | Header shows **Closed**; balance action works; Cash In disabled with message | ☐ |
+| 11.4 | Customer strip | None + Link / attached name + Remove; detach updates strip via turbo | ☐ |
+| 11.5 | Status panel | Transaction discount list + Add discount; tax exempt summary + Apply; no adjustments `<details>` | ☐ |
+| 11.6 | Cart columns | Qty \| Item \| Discount (line/trans split) \| Total \| Tax (subtle amount) \| More | ☐ |
+| 11.7 | Totals panel | Tax rows show amount + subtle rate/base; items sold/returned counts | ☐ |
+| 11.8 | Flash notice | Auto-clears ~5s; Dismiss works; command field focus not stolen | ☐ |
+| 11.9 | Flash error | Persists until dismissed | ☐ |
+| 11.10 | Complete Transaction | Opens settlement modal; Suspend/Cancel on right rail | ☐ |
+| 11.11 | Structural blocker | Single alert above Complete (no full readiness checklist in main column) | ☐ |
+| 11.12 | Idle workspace | Open Ring / Gift Card buttons; Held sales chip when suspended exist; no New sale/Session primary row | ☐ |
+| 11.13 | Completed → View receipt → Back | Returns to completed workspace | ☐ |
+
+---
+
 ## 11. Keyboard and focus (cross-cutting)
 
 | # | Step | Expected | Pass |
@@ -281,7 +303,7 @@ docker compose exec -T web bin/rails test \
 | 1.3 | Partial | `pos_workspace_landing_test.rb` (scan → draft + line); `root_command_router_test.rb` | Focus return after Turbo is manual (§11.1) |
 | 1.4 | Auto | `pos_workspace_landing_test.rb` (`active session-scoped draft redirects to edit`) | |
 | 1.5 | Partial | `pos_draft_lifecycle_test.rb` (resume existing draft); `active_draft_resolver_test.rb` | Empty-draft persistence via navigation not system-tested |
-| 1.6 | Partial | `pos_held_sales_lifecycle_test.rb` (`suspend returns cashier to idle landing`) | `/hold` command registered but **not wired**; suspend uses `PATCH suspend` |
+| 1.6 | Auto | `pos_held_sales_lifecycle_test.rb` (`hold command suspends draft…`) | `/hold` routes to suspend; JS PATCH follows route payload |
 | 1.7 | Auto | `pos_workspace_landing_test.rb` (legacy conflict picker); `active_draft_resolver_test.rb` (`legacy_found`) | |
 | 1.8 | Partial | `active_draft_resolver_test.rb` (workstation/cashier scope, conflict); `pos_home_controller_test.rb` (queue tables) | Cross-cashier takeover UX manual |
 

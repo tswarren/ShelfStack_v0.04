@@ -548,6 +548,22 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal 2500, route.payload[:amount_cents]
   end
 
+  test "/hold returns suspend transaction route" do
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/hold"
+    )
+
+    assert_equal :suspend_transaction, route.action
+    assert_equal Rails.application.routes.url_helpers.suspend_pos_transaction_path(transaction), route.payload[:url]
+    assert_equal Rails.application.routes.url_helpers.pos_root_path, route.payload[:redirect_url]
+  end
+
   test "/cash without transaction returns no active transaction message" do
     route = Pos::CommandBarRouter.call(
       store: @store,

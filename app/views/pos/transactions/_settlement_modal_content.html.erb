@@ -23,6 +23,10 @@
 
     <h2 id="pos-settlement-title" class="ss-pos-modal__title">Tender transaction</h2>
 
+    <div id="pos_settlement_readiness" class="js-pos-readiness-host"<%= " hidden" if readiness.alert_blockers.empty? %>>
+      <%= render "pos/transactions/readiness_alerts", transaction: transaction, readiness: readiness %>
+    </div>
+
     <dl class="ss-pos-tender-workspace__summary">
       <div class="ss-pos-tender-workspace__summary-row">
         <dt>Amount due</dt>
@@ -46,12 +50,18 @@
          role="group"
          aria-label="Tender type"
          data-pos-settlement-panel-target="typeSelector">
-      <%= button_tag "1 Cash", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-            data: { action: "pos-settlement-panel#selectTenderType", tender_type: "cash", hotkey: "1" } %>
-      <%= button_tag "2 Card", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-            data: { action: "pos-settlement-panel#selectTenderType", tender_type: "card", hotkey: "2" } %>
-      <%= button_tag "3 Check", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-            data: { action: "pos-settlement-panel#selectTenderType", tender_type: "check", hotkey: "3" } %>
+      <% if pos_can_use_tender_type?(transaction, "cash") %>
+        <%= button_tag "1 Cash", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
+              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "cash", hotkey: "1" } %>
+      <% end %>
+      <% if pos_can_use_tender_type?(transaction, "card") %>
+        <%= button_tag "2 Card", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
+              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "card", hotkey: "2" } %>
+      <% end %>
+      <% if pos_can_use_tender_type?(transaction, "check") %>
+        <%= button_tag "3 Check", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
+              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "check", hotkey: "3" } %>
+      <% end %>
       <% if pos_stored_value_tender_available?(transaction) %>
         <%= button_tag "4 Stored value", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
               data: { action: "pos-settlement-panel#selectTenderType", tender_type: "stored_value", hotkey: "4" } %>
@@ -148,9 +158,6 @@
 
     <div class="ss-pos-settlement-modal-footer">
       <div class="ss-pos-settlement-modal-footer__toolbar">
-        <div class="ss-pos-settlement-modal-footer__left">
-          <%= render "pos/transactions/settlement_secondary_actions", transaction: transaction, compact: true %>
-        </div>
         <div class="ss-pos-settlement-modal-footer__right">
           <%= button_tag "Back", type: "button", class: "ss-btn ss-btn-secondary ss-btn--small", data: { action: "pos-settlement-panel#close" } %>
         </div>

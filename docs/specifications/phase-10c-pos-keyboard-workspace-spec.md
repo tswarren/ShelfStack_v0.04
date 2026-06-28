@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace Specification
 
-**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
+**Status:** Complete (2026-06-26) — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
 
@@ -8,7 +8,7 @@
 
 **Transaction discount modal (slice 9A):** [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md)
 
-**Mockup reference:** [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html)
+**Mockup reference:** [phase-10c-11-pos-mockup.png](../samples/phase-10-mockups/phase-10c-11-pos-mockup.png) (slice 11 layout); [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html) (earlier slices)
 
 **Depends on:** Phase 10-A (**hard** — modal, drawer, expanded row, focus helpers); Phase 10-B **complete per delivery order** (proves shared interaction patterns on Items before POS)
 
@@ -297,9 +297,33 @@ See [phase-10c-test-plan.md](phase-10c-test-plan.md) for the full checklist. Sum
 
 * Blockers visible; completion disabled until ready
 
-### Keyboard/focus integration
+### Slice 11 — Workspace layout cleanup
 
-* Required criteria (system/integration tests where practical)
+Four-zone layout on idle and active transaction workspaces:
+
+```text
+Header (POS | store | workstation | register | business date | Actions)
+Command row (scan field, mode switcher, Open Ring / Gift Card, customer strip)
+Cart (Qty | Item | Discount | Total | Tax | More)
+Right rail (totals, transaction discount + tax exempt status, Complete / Suspend / Cancel)
+```
+
+| Topic | Decision |
+| ----- | -------- |
+| **Header Actions** | `Pos::HeaderActionsPresenter` + shared `_workspace_header`; menu dispatches existing `pos-command-bar` handlers (balance, session, cash in/out, close, reports, drawer) |
+| **Closed register balance** | `/balance` and header balance action available without open register (`register_session_required: false` on balance command) |
+| **Customer** | Command-row strip (`None` + Link / name + Remove); `PATCH detach_customer` clears FK with audit |
+| **Status panel** | Replaces adjustments `<details>`; transaction discount list + Add discount modal; tax exempt summary + Apply modal; no inline rounding/recalculate forms |
+| **Cart columns** | Qty \| Item \| Discount (line/trans split) \| Total (unit hint when qty > 1) \| Tax (label primary, amount subtle) \| More |
+| **Totals tax display** | Primary tax amount; subtle rate + taxable base per tax group |
+| **Item counts** | Items sold / items returned on totals panel |
+| **Readiness** | Persistent checklist removed from main column; contextual `#pos_completion_alert` above Complete when structurally blocked; `readiness_preview` JSON retained for settlement |
+| **Flash** | `pos-flash` Stimulus: dismiss on all; auto-clear notices ~5s; errors persist; must not steal command-field focus |
+| **Idle actions** | Held sales chip only (plus Open Ring / Gift Card in command row); New sale / Reports / Session primary buttons removed from idle shell |
+| **Receipt return path** | Completed workspace receipt links pass `return_to=completed`; receipt actions show **Back to completed sale** |
+| **Complete CTA** | Right-rail **Complete Transaction** opens settlement modal (9B behavior); Suspend / Cancel on right rail |
+
+Resolved: adjustments panel retired; cash rounding field removed from workspace UI (model field unchanged).
 
 ---
 

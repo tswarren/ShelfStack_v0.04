@@ -1,3 +1,9 @@
-<td class="ss-pos-line-tax">
-  <%= render "pos/transactions/line_tax_indicator", line: line, show_amount: true %>
-</td>
+<span class="ss-pos-line-tax">
+  <% display = pos_line_tax_display(line) %>
+  <% if display[:amount_cents].nil? %>
+    <span class="ss-pos-line-tax__label"><%= display[:label] %></span>
+  <% else %>
+    <span class="ss-pos-line-tax__label"><%= display[:label] %></span>
+    <span class="ss-pos-line-tax__amount ss-pos-line-tax__amount--subtle"><%= pos_money(display[:amount_cents]) %></span>
+  <% end %>
+</span>

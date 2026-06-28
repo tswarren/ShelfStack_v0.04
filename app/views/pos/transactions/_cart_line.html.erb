@@ -5,6 +5,9 @@
      Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) %>
 <% can_tax = pos_cart_line_tax_panel_available?(line) &&
      Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.apply", store: current_store) %>
+<% line_discount_total = pos_line_total_discount_cents(line) %>
+<% line_discount_share = line.line_discount_cents.to_i %>
+<% transaction_discount_share = pos_line_transaction_discount_cents(line) %>
 <tr class="ss-pos-cart-line <%= 'ss-pos-cart-line--return' if line.return_line? %><%= ' ss-pos-cart-line--editing' if line_editing %>"
     id="<%= dom_id(line) %>"
     data-pos-cart-line-target="displayRow"
@@ -36,7 +39,6 @@
       <% if line.gift_card_sale_line? %><span class="ss-pos-cart-line__badge">GIFT CARD</span><% end %>
       <% if line.inventory_reservation_id.present? %><span class="ss-pos-cart-line__badge">PICKUP</span><% end %>
       <span class="ss-pos-cart-line__meta"><%= pos_line_display_sku(line) %></span>
-      <span class="ss-pos-cart-line__tax-letter"><%= render "pos/transactions/line_tax_indicator", line: line %></span>
     </div>
     <strong class="ss-pos-cart-line__title"><%= pos_line_display_title(line) %></strong>
     <div class="ss-pos-cart-line__details">
@@ -56,15 +58,32 @@
       <% end %>
     </div>
   </td>
-  <td class="ss-pos-money-col"><%= pos_money(line.unit_price_cents) %></td>
-  <td class="ss-pos-money-col">
-    <% if pos_line_total_discount_cents(line).positive? %>
-      <span class="ss-pos-discount-amount">−<%= pos_money(pos_line_total_discount_cents(line)) %></span>
+  <td class="ss-pos-money-col ss-pos-cart-line__discount">
+    <% if line_discount_total.positive? %>
+      <span class="ss-pos-discount-amount">−<%= pos_money(line_discount_total) %></span>
+      <% if line_discount_share.positive? || transaction_discount_share.positive? %>
+        <div class="ss-pos-cart-line__discount-breakdown">
+          <% if line_discount_share.positive? %>
+            <span>Line: <%= pos_money(line_discount_share) %></span>
+          <% end %>
+          <% if transaction_discount_share.positive? %>
+            <span>Trans: <%= pos_money(transaction_discount_share) %></span>
+          <% end %>
+        </div>
+      <% end %>
     <% else %>
       —
     <% end %>
   </td>
-  <td class="ss-pos-money-col ss-pos-cart-line__total"><%= pos_money(pos_line_total_cents(line)) %></td>
+  <td class="ss-pos-money-col ss-pos-cart-line__total">
+    <%= pos_money(pos_line_total_cents(line)) %>
+    <% if line.quantity.to_i.abs > 1 && !line.gift_card_sale_line? %>
+      <div class="ss-pos-cart-line__unit-hint"><%= line.quantity.abs %> @ <%= pos_money(line.unit_price_cents) %></div>
+    <% end %>
+  </td>
+  <td class="ss-pos-cart-line__tax">
+    <%= render "pos/transactions/line_tax_cell", line: line %>
+  </td>
   <td class="ss-pos-cart-line__actions">
     <div class="ss-pos-line-actions">
       <button type="button"

@@ -1,0 +1,18 @@
+<%# locals: (transaction:, readiness:) %>
+<% blockers = readiness.alert_blockers %>
+<% if blockers.any? %>
+  <div class="ss-pos-readiness-alerts">
+    <% blockers.each do |check| %>
+      <div class="ss-pos-alert ss-pos-readiness-alert ss-pos-readiness-alert--<%= check.status %>">
+        <div class="ss-pos-readiness-alert__content">
+          <p class="ss-pos-readiness-alert__message"><%= check.message %></p>
+          <% if check.action_key.present? %>
+            <div class="ss-pos-readiness-alert__action">
+              <%= render "pos/transactions/readiness_check_action", transaction: transaction, check: check %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

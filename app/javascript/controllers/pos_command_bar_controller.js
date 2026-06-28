@@ -52,6 +52,15 @@ export default class extends Controller {
     const input = this.inputTarget.value.trim()
     if (!input) return
 
+    this.runSlashCommand(input)
+  }
+
+  runSlashCommand(input) {
+    if (!this.routeUrlValue) {
+      this.dispatchMessage("Command routing is not available.")
+      return
+    }
+
     const body = new FormData()
     body.append("input", input)
     body.append("return_mode", this.returnMode ? "1" : "0")
@@ -153,6 +162,10 @@ export default class extends Controller {
       case "reports_confirm_offer":
         this.inputTarget.value = ""
         this.confirmReportsNavigation(data.payload || {}, data.message)
+        break
+      case "suspend_transaction":
+        this.inputTarget.value = ""
+        this.suspendTransaction(data.payload || {})
         break
       default:
         this.dispatchMessage(data.message)
@@ -457,6 +470,41 @@ export default class extends Controller {
     this.showSessionDrawer({ focus: "held" })
   }
 
+  openRingQuickAction(event) {
+    event?.preventDefault()
+    this.showOpenRingPanel({})
+  }
+
+  openGiftCardQuickAction(event) {
+    event?.preventDefault()
+    this.showGiftCardModal({})
+  }
+
+  openCashIn(event) {
+    event?.preventDefault()
+    this.showCashMovementModal({ movement_type: "paid_in" })
+  }
+
+  openCashOut(event) {
+    event?.preventDefault()
+    this.showCashMovementModal({ movement_type: "paid_out" })
+  }
+
+  openDrawerQuickAction(event) {
+    event?.preventDefault()
+    this.showDrawerActionModal({})
+  }
+
+  runCloseRegister(event) {
+    event?.preventDefault()
+    this.runSlashCommand("/close")
+  }
+
+  runReports(event) {
+    event?.preventDefault()
+    this.runSlashCommand("/reports")
+  }
+
   focusSessionDrawerSection(focus) {
     const sectionId = focus === "held" ? "pos-session-drawer-held" : "pos-session-drawer-summary"
     const section = document.getElementById(sectionId)
@@ -557,6 +605,32 @@ export default class extends Controller {
     } else {
       this.focusInput()
     }
+  }
+
+  suspendTransaction(payload) {
+    const url = payload.url
+    if (!url) {
+      this.dispatchMessage("Unable to hold transaction.")
+      return
+    }
+
+    fetch(url, {
+      method: "PATCH",
+      headers: {
+        "X-CSRF-Token": this.csrfToken,
+        Accept: "text/html"
+      },
+      redirect: "follow"
+    })
+      .then((response) => {
+        if (response.ok || response.redirected) {
+          window.location.href = payload.redirect_url || response.url
+          return
+        }
+
+        this.dispatchMessage("Unable to hold transaction.")
+      })
+      .catch(() => this.dispatchMessage("Unable to hold transaction."))
   }
 
   closeBalancePanel(event) {

@@ -78,6 +78,19 @@ class PosCustomerWorkspaceTest < ActionDispatch::IntegrationTest
     assert_nil @transaction.reload.customer_id
   end
 
+  test "detach_customer clears attached customer and records audit event" do
+    @transaction.update!(customer: @customer)
+
+    assert_difference -> { AuditEvent.where(event_name: "pos.transaction.customer_detached", auditable: @transaction).count }, 1 do
+      patch detach_customer_pos_transaction_path(@transaction),
+            headers: { Accept: "text/vnd.turbo-stream.html" }
+    end
+
+    assert_response :success
+    assert_nil @transaction.reload.customer_id
+    assert_match 'target="pos_customer_status"', response.body
+  end
+
   test "start_sale with customer creates draft and attaches customer" do
     @transaction.update!(status: "cancelled")
 

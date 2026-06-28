@@ -1,16 +1,21 @@
-<div class="ss-pos-transaction-show" data-controller="pos-void" data-pos-void-transaction-id-value="<%= @transaction.id %>">
-  <% if @transaction.completed? %>
+<div class="ss-pos-transaction-show<%= " ss-pos-transaction-show--summary" if pos_transaction_summary?(@transaction) %>"
+     <% if @transaction.completed? && !@transaction.voided? %>
+       data-controller="pos-void"
+       data-pos-void-transaction-id-value="<%= @transaction.id %>"
+     <% end %>>
+  <% if pos_transaction_summary?(@transaction) %>
     <header class="ss-pos-transaction-show__header">
       <%= render "completion_header", transaction: @transaction %>
     </header>
 
+    <%= render "void_notice", transaction: @transaction if @transaction.voided? %>
     <%= render "completion_change", transaction: @transaction %>
     <%= render "generated_stored_value_identifiers" %>
     <%= render "completion_actions", transaction: @transaction %>
     <%= render "completion_summary", transaction: @transaction %>
     <%= render "completion_lines", transaction: @transaction %>
 
-    <% if !@transaction.voided? %>
+    <% if @transaction.completed? && !@transaction.voided? %>
       <div class="ss-pos-confirmation__void">
         <button type="button" class="ss-btn ss-btn--danger ss-btn--small" data-action="pos-void#open">Void transaction</button>
       </div>

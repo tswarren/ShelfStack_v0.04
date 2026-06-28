@@ -27,7 +27,7 @@
         </div>
       <% end %>
       <% if change_cents.positive? %>
-        <div class="ss-pos-completed-workspace__totals-row">
+        <div class="ss-pos-completed-workspace__totals-row ss-pos-completed-workspace__totals-row--change-due">
           <dt>Change due</dt>
           <dd><%= pos_money(change_cents) %></dd>
         </div>
@@ -41,7 +41,7 @@
       <li class="ss-pos-completed-workspace__document-item">
         <% if transaction.pos_receipt %>
           <%= link_to "Print receipt",
-                pos_receipt_path(transaction.pos_receipt),
+                pos_receipt_path(transaction.pos_receipt, return_to: "completed"),
                 class: "ss-btn ss-btn-secondary ss-pos-completed-workspace__document-action",
                 data: { pos_completed_workspace_target: "receiptAction" } %>
         <% else %>
@@ -66,19 +66,13 @@
   </section>
 
   <footer class="ss-pos-completed-workspace__footer">
-    <%= button_to "New Sale",
-          pos_transactions_path,
-          method: :post,
-          params: { mode: "sale" },
+    <%= link_to "New Sale",
+          pos_root_path,
           class: "ss-btn ss-pos-completed-workspace__primary-action",
           data: { pos_completed_workspace_target: "newSaleAction" } %>
 
-    <div class="ss-pos-completed-workspace__secondary-actions">
-      <% if transaction.pos_receipt %>
-        <%= link_to "View receipt", pos_receipt_path(transaction.pos_receipt), class: "ss-btn ss-btn-secondary ss-btn--small" %>
-      <% end %>
-      <%= link_to "View summary", pos_transaction_path(transaction), class: "ss-btn ss-btn-secondary ss-btn--small" %>
-      <%= link_to "POS home", pos_root_path, class: "ss-btn ss-btn-secondary ss-btn--small" %>
-    </div>
+    <%= link_to "View Summary",
+          pos_transaction_path(transaction),
+          class: "ss-btn ss-btn-tertiary ss-pos-completed-workspace__tertiary-action" %>
   </footer>
 </div>

@@ -4,7 +4,7 @@ Quick reference: domain → tables → services → workspace → documentation.
 
 For layering principles see [architecture.md](architecture.md). For business concepts see [domain-model.md](domain-model.md).
 
-**Service names in the table are implemented unless marked *planned* or *evolving*.** Phase 10-C `Pos::CommandRegistry`, `Pos::LandingRouter`, and `Pos::ActiveDraftResolver` are **implemented** (slices 1–8; see [phase-10c-completion.md](implementation/phase-10c-completion.md)). Transaction discount modal UX is **planned** (slice 9A — [phase-10c-9a-transaction-discount-modal.md](roadmap/phase-10c-9a-transaction-discount-modal.md)). Tender workspace and post-completion UX are **planned** (slice 9B — [phase-10c-9b-tender-workspace-and-completion.md](roadmap/phase-10c-9b-tender-workspace-and-completion.md)).
+**Service names in the table are implemented unless marked *planned* or *evolving*.** Phase 10-C POS keyboard workspace services (`Pos::CommandRegistry`, `Pos::LandingRouter`, `Pos::ActiveDraftResolver`, completion readiness, header actions) are **implemented** — **Complete** 2026-06-26 (see [phase-10c-completion.md](implementation/phase-10c-completion.md)).
 
 ---
 

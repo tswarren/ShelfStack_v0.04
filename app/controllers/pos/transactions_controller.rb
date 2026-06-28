@@ -4,7 +4,7 @@ module Pos
   class TransactionsController < BaseController
     before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show completed]
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
-    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview route_command attach_customer]
+    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview route_command attach_customer detach_customer]
     before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line]
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
@@ -27,13 +27,13 @@ module Pos
     before_action :set_transaction, only: %i[
       show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount void_discount_application
-      apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override attach_customer
+      apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override attach_customer detach_customer
       sync_tenders complete completed suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
       edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount
-      void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command attach_customer
+      void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command attach_customer detach_customer
     ]
     before_action :load_edit_context, only: %i[
       edit add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
@@ -113,10 +113,11 @@ module Pos
         tender_inputs: inputs
       )
       payload[:panel_html] = render_to_string(
-        partial: "pos/transactions/readiness_panel",
+        partial: "pos/transactions/readiness_alerts",
         formats: [ :html ],
         locals: { transaction: @transaction, readiness: readiness }
       )
+      payload[:readiness_visible] = readiness.alert_blockers.any?
 
       render json: payload
     end
@@ -336,6 +337,12 @@ module Pos
       respond_to_workspace(notice: "Customer attached to transaction.")
     rescue ActiveRecord::RecordNotFound
       respond_to_workspace(alert: "Customer could not be found.", status: :unprocessable_entity)
+    end
+
+    def detach_customer
+      @transaction.update!(customer: nil)
+      record_audit!("pos.transaction.customer_detached", @transaction)
+      respond_to_workspace(notice: "Customer removed from transaction.")
     end
 
     def apply_tax_exemption

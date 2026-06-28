@@ -43,6 +43,27 @@ class PosHeldSalesLifecycleTest < ActionDispatch::IntegrationTest
     assert_select "button", text: "Held sales (1)"
   end
 
+  test "hold command suspends draft and returns to idle landing" do
+    get edit_pos_transaction_path(@transaction)
+    assert_response :success
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/hold" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "suspend_transaction", body["action"]
+
+    patch body.dig("payload", "url")
+
+    assert_redirected_to pos_root_path
+    assert @transaction.reload.suspended?
+
+    get pos_root_path
+
+    assert_response :success
+    assert_select "button", text: "Held sales (1)"
+  end
+
   test "cashier resumes own held sale" do
     @transaction.update!(status: "suspended", suspended_at: Time.current)
 

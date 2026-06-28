@@ -1,10 +1,10 @@
-<div class="ss-pos-action-grid ss-pos-action-grid--three">
-  <%= link_to "POS Menu", pos_root_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
+<div class="ss-pos-transaction-show__actions">
+  <%= link_to "POS Menu", pos_root_path, class: "ss-btn ss-pos-transaction-show__primary-action" %>
+
   <% if transaction.pos_receipt %>
-    <%= link_to "Receipt", pos_receipt_path(transaction.pos_receipt), class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
+    <%= link_to "Receipt", pos_receipt_path(transaction.pos_receipt), class: "ss-btn ss-btn-secondary ss-pos-transaction-show__secondary-action" %>
   <% else %>
-    <span class="ss-pos-action-grid__btn ss-btn ss-btn-secondary" aria-disabled="true">Receipt</span>
+    <span class="ss-btn ss-btn-secondary ss-pos-transaction-show__secondary-action" aria-disabled="true">Receipt</span>
   <% end %>
-  <%= button_to "New Transaction", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-pos-action-grid__btn ss-btn" %>
 </div>
 <%= render "pos/transactions/issuance_slip_links", transaction: transaction %>

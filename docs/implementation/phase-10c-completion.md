@@ -1,10 +1,12 @@
 # Phase 10-C — POS Keyboard Workspace
 
-**Status:** Near complete (slices 1–10 delivered; pending full manual QA before marking **Complete**)
+**Status:** **Complete** (2026-06-26)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
+
+**Slice 11:** [phase-10c-11-workspace-layout-status-panel-cleanup.md](../roadmap/phase-10c-11-workspace-layout-status-panel-cleanup.md)
 
 **Slice 9A (transaction discount modal):** [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md)
 
@@ -12,7 +14,7 @@
 
 **Test plan:** [phase-10c-test-plan.md](../specifications/phase-10c-test-plan.md)
 
-Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after full manual QA and merge to `main`.
+Integration branch: `phase-10c-pos-keyboard-workspace`. Merge to `main` when ready.
 
 **Manual QA:** [phase-10c-manual-qa.md](phase-10c-manual-qa.md) (includes [automated coverage map](phase-10c-manual-qa.md#automated-coverage-map))
 
@@ -119,6 +121,62 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
+## Delivered (slice 11)
+
+**Completed:** 2026-06-26
+
+**Branch:** `phase-10c-pos-keyboard-workspace`
+
+### Layout and workspace chrome
+
+- Shared `_workspace_header` + `Pos::HeaderActionsPresenter` Actions dropdown (replaces legacy black `pos_banner`)
+- Balance inquiry when register closed (`register_session_required: false` on balance command)
+- `pos-flash` Stimulus: dismiss + auto-clear notices; errors persist
+- Cart columns: Qty \| Item \| Discount \| Total \| Tax \| More; totals tax base/rate + item counts
+- Idle shell trimmed (Held sales chip; Open Ring / Gift Card in command row; **New Sale** in Actions menu when idle)
+
+### Status panel and customer
+
+- `_status_panel` replaces adjustments `<details>` (transaction discount + tax exempt sections)
+- Customer, discount, and tax exempt in one right-rail panel with table layout and link-style Remove actions
+- Modal launchers: Add discount, Apply exemption, Link customer
+- `PATCH detach_customer` + turbo `#pos_customer_status`
+
+### Readiness and completion
+
+- Persistent readiness checklist removed from main column
+- `alert_blockers` only (excludes empty “Enter tender amounts”); manager sign-in in sidebar and settlement modal
+- No-receipt open-ring return in return drawer
+- Complete Transaction + Suspend/Cancel on right rail
+
+### Post-completion and summary flows
+
+- Completed workspace at `/pos/transactions/:id/completed`: full-width document buttons; **New Sale** → `/pos`; **View Summary** tertiary
+- Initial focus on first printable document; emphasized **Change due** row
+- Receipt preview: Print + single back link (**Back to completed sale** or **Back to summary**)
+- Transaction summary: side-by-side **POS Menu** + **Receipt**; voided transactions use same summary layout with void notice
+
+### Verification (slice 11)
+
+```bash
+docker compose exec -T web bin/rails test test/presenters/pos/header_actions_presenter_test.rb
+docker compose exec -T web bin/rails test test/helpers/pos_workspace_display_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_workspace_header_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_status_panel_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_receipt_return_path_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_customer_workspace_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_no_receipt_return_readiness_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_readiness_preview_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_completed_workspace_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_receipts_controller_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_transaction_confirmation_test.rb
+docker compose exec -T web bin/rails test test/system/pos/workspace_layout_test.rb
+docker compose exec -T web bin/rails test test/system/pos/completed_workspace_test.rb
+docker compose exec -T web bin/rails test test/integration/pos_* test/system/pos/
+```
+
+---
+
 ## Verification (slices 1–10)
 
 ```bash
@@ -141,7 +199,12 @@ docker compose exec -T web bin/rails test test/services/pos/suspended_transactio
 | `/gc` without amount | Open modal | Opens amount panel; focus amount field; submit returns to command |
 | Cash in/out UX | Modal (not register session page) | Modal posts with `return_path` back to workspace |
 | Transaction discount entry | Adjustments `<details>` panel | **Slice 9A:** transaction discount modal with preview total; adjustments panel is launcher + list |
-| Post-completion landing | Idle workspace immediately | **Slice 9B:** `/completed` workspace with New Sale primary action |
+| Post-completion landing | Idle workspace immediately | **Slice 9B/11:** `/completed` workspace; **New Sale** → `/pos` (POS home) |
+| Adjustments panel | `<details>` Discount/Adjustment with inline forms | **Slice 11:** unified status panel (customer, discount, tax exempt); modal launchers |
+| Customer on workspace | Command-row strip | **Slice 11:** status panel Customer section |
+| Readiness display | Persistent checklist | **Slice 11:** blockers only via `alert_blockers`; no “Enter tender amounts” |
+| Receipt / summary actions | Multiple footer links | **Slice 11:** receipt back link only; summary POS Menu + Receipt side-by-side |
+| Balance from closed register | Redirect to balance page | **Slice 11:** balance modal via header Actions and `/balance` without open register |
 
 ---
 
@@ -149,6 +212,6 @@ docker compose exec -T web bin/rails test test/services/pos/suspended_transactio
 
 - `/cashdrop` execution until `cash_drop` movement type exists
 - Function-key bindings and F-key legend
-- Merge to `main` after full manual QA
 - Gift receipt printing (placeholder in slice 9B completed workspace)
 - Tax panel server-side error reopen with preserved values (follow-up from slice 9)
+- Discount command amount parsing ergonomics (`/dt` vs `/di` intent) — see review follow-up

@@ -16,33 +16,28 @@ class PosCompletedWorkspaceSystemTest < ApplicationSystemTestCase
     @transaction.reload
   end
 
-  test "completed workspace focuses new sale action" do
+  test "completed workspace focuses first document action" do
     visit completed_pos_transaction_path(@transaction)
 
     assert_text "SALE COMPLETE", wait: 10
-    new_sale = find("[data-pos-completed-workspace-target='newSaleAction']", wait: 5)
-    assert_equal new_sale, page.active_element
+    receipt = find("[data-pos-completed-workspace-target='receiptAction']", wait: 5)
+    assert_equal receipt, page.active_element
   end
 
-  test "enter on completed workspace starts a fresh draft" do
+  test "enter on completed workspace opens first document" do
     visit completed_pos_transaction_path(@transaction)
     assert_text "SALE COMPLETE", wait: 10
 
     page.driver.browser.action.send_keys(:enter).perform
 
-    assert_selector "#pos_command_input", wait: 15
-    new_draft = PosTransaction.drafts.order(:id).last
-    assert_not_equal @transaction.id, new_draft.id
-    assert_current_path edit_pos_transaction_path(new_draft, mode: "sale"), wait: 10
+    assert_current_path pos_receipt_path(@transaction.pos_receipt, return_to: "completed"), wait: 15
   end
 
-  test "new sale button starts a fresh draft" do
+  test "new sale action returns to pos home" do
     visit completed_pos_transaction_path(@transaction)
 
-    click_button "New Sale"
+    click_link "New Sale"
 
-    assert_selector "#pos_command_input", wait: 15
-    new_draft = PosTransaction.drafts.order(:id).last
-    assert_not_equal @transaction.id, new_draft.id
+    assert_current_path pos_root_path, wait: 15
   end
 end

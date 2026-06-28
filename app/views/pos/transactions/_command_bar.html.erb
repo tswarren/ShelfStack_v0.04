@@ -1,15 +1,6 @@
 <% return_mode = false %>
 
 <section class="ss-pos-panel ss-pos-command-bar"
-         data-controller="pos-command-bar pos-line-entry"
-         data-pos-command-bar-route-url-value="<%= route_command_pos_transaction_path(transaction) %>"
-         data-pos-command-bar-add-gift-card-url-value="<%= add_gift_card_sale_line_pos_transaction_path(transaction) %>"
-         data-pos-command-bar-return-mode-value="<%= return_mode %>"
-         data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
-         data-pos-line-entry-add-url-value="<%= add_line_pos_transaction_path(transaction) %>"
-         data-pos-line-entry-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>"
-         data-pos-line-entry-return-mode-value="<%= return_mode %>"
-         data-pos-line-entry-mode-value="<%= pos_workspace_mode %>"
          data-action="modal:closed@document->pos-command-bar#modalClosed">
   <div class="ss-pos-command-bar__entry-row">
     <div class="ss-pos-command-bar__scan-column">
@@ -29,11 +20,26 @@
     </div>
   </div>
 
+  <div class="ss-pos-command-bar__quick-row">
+    <div class="ss-pos-command-bar__quick-actions">
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn--small"
+              data-action="pos-command-bar#openRingQuickAction">
+        Open Ring
+      </button>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn--small"
+              data-action="pos-command-bar#openGiftCardQuickAction">
+        Gift Card
+      </button>
+    </div>
+  </div>
+
   <p class="ss-hint" data-pos-line-entry-target="message"></p>
   <div class="ss-pos-choices" data-pos-line-entry-target="choices"></div>
 
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="receiptPanel" hidden>
-    <%= render "pos/transactions/return_drawer", transaction: transaction, inline: true %>
+    <%= render "pos/transactions/return_drawer", transaction: transaction, inline: true, sub_departments: sub_departments %>
   </div>
 
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="openRingPanel" hidden>

@@ -39,10 +39,12 @@ class PosReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Items at list"
     assert_not_includes response.body, ">Net<"
     assert_includes response.body, "Print"
-    assert_includes response.body, "Summary"
-    assert_includes response.body, "Menu"
+    assert_includes response.body, "Back to summary"
+    refute_includes response.body, "Summary"
+    refute_includes response.body, ">New<"
+    refute_includes response.body, "Menu"
     assert_not_includes response.body, "Reprint"
-    assert_select "a[href=?]", pos_transaction_path(transaction), text: "Summary"
+    assert_select "a[href=?]", pos_transaction_path(transaction), text: "Back to summary"
   end
 
   test "print increments reprint count and records audit event" do

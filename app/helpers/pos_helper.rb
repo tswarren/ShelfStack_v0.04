@@ -431,13 +431,17 @@ module PosHelper
     PosTender::PHASE6_ALLOWED_TYPES.map { |value| [ value.humanize, value ] }
   end
 
-  def pos_can_use_stored_value_tender?(transaction, tender_type, user = current_user)
+  def pos_can_use_tender_type?(transaction, tender_type, user = current_user)
     Pos::TenderTypePolicy.allowed?(transaction, actor: user, tender_type:, store: transaction.store)
   end
 
+  def pos_can_use_stored_value_tender?(transaction, tender_type, user = current_user)
+    pos_can_use_tender_type?(transaction, tender_type, user)
+  end
+
   def pos_stored_value_tender_available?(transaction, user = current_user)
-    pos_can_use_stored_value_tender?(transaction, "gift_card", user) ||
-      pos_can_use_stored_value_tender?(transaction, "store_credit", user)
+    pos_can_use_tender_type?(transaction, "gift_card", user) ||
+      pos_can_use_tender_type?(transaction, "store_credit", user)
   end
 
   def pos_can_issue_gift_card_sale?(transaction, user = current_user)
@@ -636,17 +640,62 @@ module PosHelper
     identifier
   end
 
-  TaxSubtotal = Data.define(:short_name, :tax_cents)
+  TaxSubtotal = Data.define(:short_name, :tax_cents, :taxable_base_cents, :tax_rate_bps)
 
   def pos_transaction_tax_subtotals(transaction)
-    grouped = transaction.pos_transaction_lines.group_by { |line| pos_line_tax_short_name(line) }
+    grouped = transaction.pos_transaction_lines.group_by do |line|
+      [ pos_line_tax_short_name(line), line.tax_rate_bps.to_i ]
+    end
 
-    grouped.filter_map do |short_name, lines|
+    grouped.filter_map do |(short_name, tax_rate_bps), lines|
       tax_cents = lines.sum { |line| line.quantity.negative? ? -line.tax_cents : line.tax_cents }
-      next if tax_cents.zero? && lines.all? { |line| line.tax_cents.zero? }
+      taxable_base_cents = lines.sum do |line|
+        next 0 unless line.tax_cents.to_i.nonzero? || tax_rate_bps.positive?
 
-      TaxSubtotal.new(short_name: short_name, tax_cents: tax_cents)
+        line.extended_price_cents.to_i
+      end
+      next if tax_cents.zero? && taxable_base_cents.zero?
+
+      TaxSubtotal.new(
+        short_name: short_name,
+        tax_cents: tax_cents,
+        taxable_base_cents: taxable_base_cents,
+        tax_rate_bps: tax_rate_bps
+      )
     end.sort_by(&:short_name)
+  end
+
+  def pos_format_tax_rate_bps(tax_rate_bps)
+    return if tax_rate_bps.to_i.zero?
+
+    format("%.2f%%", tax_rate_bps.to_i / 100.0)
+  end
+
+  def pos_transaction_item_counts(transaction)
+    sold = 0
+    returned = 0
+
+    transaction.pos_transaction_lines.each do |line|
+      next unless line.line_type.in?(%w[variant open_ring])
+
+      quantity = line.quantity.to_i
+      if quantity.positive?
+        sold += quantity
+      elsif quantity.negative?
+        returned += quantity.abs
+      end
+    end
+
+    { sold: sold, returned: returned }
+  end
+
+  def pos_line_tax_display(line)
+    label = pos_line_tax_short_name(line)
+    if line.tax_cents.to_i.zero?
+      return { label: (label == "Tax" ? "—" : label), amount_cents: nil }
+    end
+
+    { label: label, amount_cents: line.tax_cents.to_i }
   end
 
   def pos_line_tax_identifier(line)
@@ -685,6 +734,16 @@ module PosHelper
     when "exchange" then "Exchange complete"
     else "Sale complete"
     end
+  end
+
+  def pos_transaction_summary?(transaction)
+    transaction.completed? || transaction.voided?
+  end
+
+  def pos_transaction_summary_eyebrow(transaction)
+    return "Transaction voided" if transaction.voided?
+
+    pos_completed_workspace_type_label(transaction)
   end
 
   def pos_completed_tendered_summary(transaction)

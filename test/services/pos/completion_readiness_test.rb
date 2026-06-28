@@ -65,14 +65,30 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
   end
 
   test "blocked when tender total is short" do
+    partial = format("%.2f", @transaction.total_cents / 200.0)
+
     result = Pos::CompletionReadiness.check(
       transaction: @transaction,
       register_session: @session,
-      tender_inputs: [ { tender_type: "cash", amount_dollars: "1.00" } ]
+      tender_inputs: [ { tender_type: "cash", amount_dollars: partial } ]
     )
 
     assert result.blocked?
-    assert result.blockers.any? { |check| check.key == :tenders }
+    tender_blocker = result.blockers.find { |check| check.key == :tenders }
+    assert tender_blocker.message.include?("short")
+    assert result.alert_blockers.any? { |check| check.key == :tenders }
+  end
+
+  test "pending tender entry is blocked but not shown as readiness alert" do
+    result = Pos::CompletionReadiness.check(
+      transaction: @transaction,
+      register_session: @session
+    )
+
+    assert result.blocked?
+    refute result.tender_ready?
+    assert result.blockers.any? { |check| check.key == :tenders && check.message == Pos::CompletionReadiness::TENDER_AMOUNTS_PENDING_MESSAGE }
+    assert result.alert_blockers.none? { |check| check.key == :tenders }
   end
 
   test "structural blocked without register but tender not structural" do

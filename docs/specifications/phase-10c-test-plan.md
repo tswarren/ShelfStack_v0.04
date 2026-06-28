@@ -116,6 +116,23 @@ Suggested: system tests where practical; integration for focus-restore hooks whe
 
 ---
 
+## Slice 11 — Workspace layout cleanup
+
+| Area | Test file(s) |
+| ---- | ------------ |
+| Header actions presenter | `test/presenters/pos/header_actions_presenter_test.rb` |
+| Tax/totals/cart display helpers | `test/helpers/pos_workspace_display_test.rb` |
+| Shared workspace header | `test/integration/pos_workspace_header_test.rb` |
+| Customer attach/detach | `test/integration/pos_customer_workspace_test.rb` |
+| Status panel (discount/tax) | `test/integration/pos_status_panel_test.rb` |
+| Receipt return path | `test/integration/pos_receipt_return_path_test.rb` |
+| Layout / flash / Complete CTA | `test/system/pos/workspace_layout_test.rb` |
+| Balance without register | `test/services/pos/command_registry_test.rb` (balance availability) |
+
+Manual QA: [phase-10c-manual-qa.md](../implementation/phase-10c-manual-qa.md) — section **10-C-11 Workspace layout**.
+
+---
+
 ## Regression guardrails
 
 * Do not regress Phase 6 completion, void, inventory posting, or tender validation

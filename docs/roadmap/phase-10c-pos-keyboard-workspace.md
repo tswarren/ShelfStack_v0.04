@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard-First Transaction Workspace
 
-**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–9, **9A**, **9B**, and **10** delivered; final QA and merge to `main` pending)
+**Status:** **Complete** (2026-06-26) — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
@@ -635,7 +635,8 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 9 | Cart expanded-row polish, More menu, task-specific line panels | 10-A |
 | **9A** | **Transaction discount modal ergonomics** — see [phase-10c-9a-transaction-discount-modal.md](phase-10c-9a-transaction-discount-modal.md) | Slices 8, 9 |
 | **9B** | **Tender workspace and completion ergonomics** — see [phase-10c-9b-tender-workspace-and-completion.md](phase-10c-9b-tender-workspace-and-completion.md) | Slices 6, 8 |
-| 10 | Session drawer polish, held-sale access, tests, docs sync, mark complete | All above |
+| 10 | Session drawer polish, held-sale access, tests, docs sync | All above |
+| **11** | **Workspace layout cleanup** — see [phase-10c-11-workspace-layout-status-panel-cleanup.md](phase-10c-11-workspace-layout-status-panel-cleanup.md) | Slices 9–10 |
 
 ### Implementation progress
 
@@ -648,7 +649,10 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 9 | **Merged** — cart expanded-row polish, More menu, task-specific line panels |
 | **9A** | **Merged** — transaction discount modal |
 | **9B** | **Merged** — tender workspace UX, explicit completion, post-completion workspace |
-| 10 | **Delivered** — session drawer, held-sale access, runbook refresh, acceptance tests; mark 10-C complete after full manual QA |
+| 10 | **Complete** — session drawer, held-sale access, runbook refresh, acceptance tests |
+| **11** | **Complete** — shared header + Actions menu, status panel, cart/totals layout, readiness alerts, completed/summary/receipt flows, voided summary layout |
+
+**Phase 10-C:** **Complete** (2026-06-26).
 
 Interim record: [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 

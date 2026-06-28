@@ -173,6 +173,7 @@ module Pos
           aliases: %w[bl],
           description: "Stored value balance inquiry",
           permission_keys: [ "pos.tenders.gift_card", "pos.tenders.store_credit" ],
+          register_session_required: false,
           handler: :balance_inquiry,
           root_implemented: true,
           transaction_implemented: true
@@ -284,7 +285,8 @@ module Pos
           permission_keys: [ "pos.transactions.suspend" ],
           transaction_required: true,
           handler: :hold,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 

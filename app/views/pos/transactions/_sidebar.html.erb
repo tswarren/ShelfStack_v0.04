@@ -2,12 +2,12 @@
   <%= render "pos/transactions/totals_panel", transaction: transaction %>
 </div>
 
-<div id="pos_adjustments">
-  <%= render "pos/transactions/adjustments_panel", transaction: transaction %>
+<div id="pos_status_panel">
+  <%= render "pos/transactions/status_panel", transaction: transaction %>
 </div>
 
 <div id="pos_settlement_actions">
-  <%= render "pos/transactions/settlement_actions",
+  <%= render "pos/transactions/workspace_completion_actions",
         transaction: transaction,
         readiness: readiness,
         inactive_warnings: inactive_warnings %>

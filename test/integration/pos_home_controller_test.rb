@@ -18,10 +18,9 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
     get pos_root_path
     assert_response :success
 
-    assert_select "h1", text: "Point of Sale"
-    assert_match "Reports", response.body
-    assert_select "button", text: "New sale"
-    assert_select "button", text: "Session"
+    assert_select ".ss-pos-workspace-header__brand", text: "Point of Sale"
+    assert_select ".ss-pos-workspace-header__actions summary", text: "Actions"
+    assert_select "button", text: "Open Ring"
     assert_select "#pos-session-drawer"
     assert_select ".ss-pos-panel__title", text: "Session Summary"
     assert_select "a[href=?]", register_summary_pos_reports_path(register_session_id: @register_session.id), text: "Register Summary"

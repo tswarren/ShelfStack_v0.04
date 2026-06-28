@@ -9,20 +9,31 @@ export default class extends Controller {
   connect() {
     this.boundKeydown = this.keydown.bind(this)
     document.addEventListener("keydown", this.boundKeydown)
-    this.focusPrimaryAction()
+    this.focusInitialAction()
   }
 
   disconnect() {
     document.removeEventListener("keydown", this.boundKeydown)
   }
 
-  focusPrimaryAction() {
-    if (this.requiredSlipPending()) {
-      this.requiredSlipAction()?.focus()
+  focusInitialAction() {
+    const documentAction = this.primaryDocumentAction()
+    if (documentAction) {
+      documentAction.focus()
       return
     }
 
     this.newSaleActionTarget?.focus()
+  }
+
+  primaryDocumentAction() {
+    if (this.requiredSlipPending()) return this.requiredSlipAction()
+
+    if (this.hasReceiptActionTarget) return this.receiptActionTarget
+
+    if (this.slipActionTargets.length > 0) return this.slipActionTargets[0]
+
+    return null
   }
 
   keydown(event) {
@@ -33,8 +44,9 @@ export default class extends Controller {
         if (this.isInteractiveControl(event.target)) return
 
         event.preventDefault()
-        if (this.requiredSlipPending()) {
-          this.requiredSlipAction()?.click()
+        const documentAction = this.primaryDocumentAction()
+        if (documentAction) {
+          documentAction.click()
         } else {
           this.newSaleActionTarget?.click()
         }

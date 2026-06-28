@@ -476,6 +476,7 @@ Rails.application.routes.draw do
         post :readiness_preview
         post :route_command
         patch :attach_customer
+        patch :detach_customer
       end
     end
     resources :receipts, only: %i[show] do

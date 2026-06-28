@@ -104,9 +104,11 @@ export default class extends Controller {
   }
 
   applyPreview(data) {
-    if (data.panel_html) {
-      const panel = document.getElementById("pos_readiness")
-      if (panel) panel.innerHTML = data.panel_html
+    if (data.panel_html !== undefined) {
+      document.querySelectorAll(".js-pos-readiness-host").forEach((panel) => {
+        panel.innerHTML = data.panel_html
+        panel.hidden = data.readiness_visible !== true
+      })
     }
 
     if (this.hasCompleteButtonTarget) {

@@ -95,6 +95,35 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
     assert availability.available
   end
 
+  test "balance command is available without register session" do
+    command = Pos::CommandRegistry[:balance]
+    availability = Pos::CommandRegistry.availability(
+      command: command,
+      context: :root,
+      user: nil,
+      store: create_store!,
+      register_session: nil,
+      check_permissions: false
+    )
+
+    assert availability.available
+  end
+
+  test "cashin command requires register session" do
+    command = Pos::CommandRegistry[:cashin]
+    availability = Pos::CommandRegistry.availability(
+      command: command,
+      context: :root,
+      user: nil,
+      store: create_store!,
+      register_session: nil,
+      check_permissions: false
+    )
+
+    assert_not availability.available
+    assert_equal Pos::CommandRegistry::NO_REGISTER_SESSION_MESSAGE, availability.message
+  end
+
   test "help pattern matches parser command-lane help tokens" do
     assert_match Pos::CommandParser::HELP_COMMAND_PATTERN, "/help"
     assert_match Pos::CommandParser::HELP_COMMAND_PATTERN, "/?"

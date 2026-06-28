@@ -120,6 +120,8 @@ module Pos
         customer_lookup_route
       when :tax_exempt
         Route.new(action: :tax_exemption_offer, payload: {}, message: nil)
+      when :hold
+        hold_route
       else
         raise ArgumentError, "No route handler wired for #{command.key.inspect}"
       end
@@ -314,6 +316,17 @@ module Pos
       else
         Route.new(action: :redirect, payload: { url: reports_root_url }, message: nil)
       end
+    end
+
+    def hold_route
+      Route.new(
+        action: :suspend_transaction,
+        payload: {
+          url: Rails.application.routes.url_helpers.suspend_pos_transaction_path(transaction),
+          redirect_url: Rails.application.routes.url_helpers.pos_root_path
+        },
+        message: nil
+      )
     end
 
     def close_register_route

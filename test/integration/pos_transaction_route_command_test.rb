@@ -144,6 +144,27 @@ class PosTransactionRouteCommandTest < ActionDispatch::IntegrationTest
     assert_equal true, body.dig("payload", "prefill_remaining")
   end
 
+  test "route_command hold returns suspend transaction action" do
+    grant_permission!(@cashier, "pos.transactions.suspend", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/hold" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "suspend_transaction", body["action"]
+    assert_equal suspend_pos_transaction_path(@transaction), body.dig("payload", "url")
+    assert_equal pos_root_path, body.dig("payload", "redirect_url")
+  end
+
+  test "route_command hold denied without suspend permission" do
+    post route_command_pos_transaction_path(@transaction), params: { input: "/hold" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "message", body["action"]
+    assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, body["message"]
+  end
+
   test "route_command cashin returns cash movement offer" do
     grant_permission!(@cashier, "pos.cash_movements.create", store: @store)
 

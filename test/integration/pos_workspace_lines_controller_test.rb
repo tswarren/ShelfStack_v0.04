@@ -81,4 +81,26 @@ class Pos::WorkspaceLinesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Gift wrap", line.open_ring_description
     assert_equal 500, line.unit_price_cents
   end
+
+  test "workspace add open ring return creates negative open ring line" do
+    sub_department = @variant.sub_department
+
+    assert_difference -> { PosTransaction.count }, 1 do
+      post pos_workspace_add_open_ring_line_path,
+           params: {
+             entry_action: "return_no_receipt",
+             description: "Misc return",
+             sub_department_id: sub_department.id,
+             unit_price: "8.00",
+             quantity: -1
+           }
+    end
+
+    transaction = PosTransaction.drafts.order(:id).last
+    assert_redirected_to edit_pos_transaction_path(transaction, mode: "sale")
+    line = transaction.pos_transaction_lines.sole
+    assert line.open_ring_line?
+    assert_equal(-1, line.quantity)
+    assert_equal "return_to_stock", line.return_disposition
+  end
 end

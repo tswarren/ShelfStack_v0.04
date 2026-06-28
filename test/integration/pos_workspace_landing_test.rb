@@ -14,12 +14,14 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     grant_pos_stored_value_tender_permissions!(@cashier, store: @store)
   end
 
-  test "idle landing renders command field and new sale secondary action" do
+  test "idle landing renders command field and quick actions" do
     get pos_root_path
 
     assert_response :success
     assert_select "input[data-pos-command-bar-target='input']"
-    assert_select "button", text: "New sale"
+    assert_select "button", text: "Open Ring"
+    assert_select "button", text: "Gift Card"
+    assert_select ".ss-pos-banner", count: 0
     assert_no_match "New Transaction", response.body
   end
 

@@ -48,7 +48,7 @@
   </div>
 
   <div data-pos-return-drawer-target="noReceiptSection" hidden>
-    <p class="ss-hint">Scan SKU or ISBN to add a return line. Supervisor approval is required at complete.</p>
+    <p class="ss-hint">Scan SKU or ISBN to add a catalog return line. Supervisor approval is required at complete.</p>
     <div data-controller="pos-line-entry"
          data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
          data-pos-line-entry-add-url-value="<%= add_no_receipt_line_url %>"
@@ -65,5 +65,22 @@
       <p class="ss-hint ss-hint--warning" data-pos-line-entry-target="message" hidden></p>
       <div class="ss-pos-choices" data-pos-line-entry-target="choices"></div>
     </div>
+
+    <% sub_departments = local_assigns[:sub_departments] || @sub_departments %>
+    <% if sub_departments.present? %>
+      <div class="ss-pos-return-drawer__open-ring">
+        <p class="ss-hint">Or enter an open-ring item without a receipt.</p>
+        <%= render "pos/transactions/open_ring_drawer",
+              sub_departments: sub_departments,
+              inline: false,
+              return_mode: true,
+              add_open_ring_url: local_assigns.fetch(:add_open_ring_url) {
+                transaction.present? ?
+                  add_open_ring_line_pos_transaction_path(transaction) :
+                  pos_workspace_add_open_ring_line_path
+              },
+              redirect_on_success: redirect_on_success %>
+      </div>
+    <% end %>
   </div>
 </section>

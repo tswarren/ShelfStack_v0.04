@@ -27,8 +27,15 @@ class Pos::TenderValidatorTest < ActiveSupport::TestCase
       line_number: 1,
       stored_value_account: account
     )
-    error = assert_raises(Pos::TenderValidator::Error) { Pos::TenderValidator.validate!(@transaction) }
+    error = assert_raises(Pos::TenderValidator::Error) { Pos::TenderValidator.validate!(@transaction, actor: @user) }
     assert_match(/gift_card|not enabled/i, error.message)
+  end
+
+  test "rejects cash without cash permission" do
+    error = assert_raises(Pos::TenderValidator::Error) do
+      Pos::TenderValidator.validate!(@transaction, actor: @user)
+    end
+    assert_match(/cash|not enabled/i, error.message)
   end
 
   test "allows gift card with policy permissions" do

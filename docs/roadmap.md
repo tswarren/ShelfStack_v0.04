@@ -32,7 +32,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **In review** (branch merge pending). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
 | Phase 9 | Reporting and Accounting        | Report UX foundation (9a) and operational reports (9b) **complete**. GL-shaped financial postings and export (9c) **deferred**; see Phase 10. |
-| Phase 10 | Comprehensive UI/UX Expansion  | Interaction infra (10-A ✓), item cockpit (10-B ✓), POS workspace (10-C **current**), workflow polish (10-D), consistency sweep (10-E). |
+| Phase 10 | Comprehensive UI/UX Expansion  | Interaction infra (10-A ✓), item cockpit (10-B ✓), POS workspace (10-C ✓), workflow polish (10-D **current**), consistency sweep (10-E). |
 
 Later phases may be split or reordered as implementation details become clearer.
 
@@ -557,7 +557,7 @@ Operational reports (9b) use POS and ledger sources. Financial reports and GL ex
 
 ## Current priority
 
-Phase 9a and 9b are complete. Phase 9c is deferred. **Phase 10** is the next active roadmap phase.
+Phase 9a and 9b are complete. Phase 9c is deferred. **Phase 10-D** is the next active roadmap priority (10-C complete 2026-06-26).
 
 ### Phase 10 sub-phases
 
@@ -567,7 +567,7 @@ Delivery order: **10-A → 10-B → 10-C → 10-D → 10-E**. Phase 10 is comple
 | --------- | -------- |
 | 10-A Interaction infrastructure | [phase-10a-interaction-infrastructure.md](roadmap/phase-10a-interaction-infrastructure.md) |
 | 10-B Item cockpit completion | [phase-10b-item-cockpit-completion.md](roadmap/phase-10b-item-cockpit-completion.md) |
-| 10-C POS keyboard workspace | [phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) |
+| 10-C POS keyboard workspace | [phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) — **Complete** |
 | 10-C slice 9A (transaction discount modal) | [phase-10c-9a-transaction-discount-modal.md](roadmap/phase-10c-9a-transaction-discount-modal.md) |
 | 10-C slice 9B (tender/completion) | [phase-10c-9b-tender-workspace-and-completion.md](roadmap/phase-10c-9b-tender-workspace-and-completion.md) |
 | 10-D / 10-E | [Phase-x10-comprehensive-ux-expansion.md](roadmap/Phase-x10-comprehensive-ux-expansion.md) |
@@ -641,10 +641,10 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 Phases 1–8, 7A, 7B, 7C, Phase 9a, and Phase 9b are complete. See implementation records under `docs/implementation/`.
 
 ```text
-Phase 9a ✓ → Phase 9b ✓ → Phase 9c deferred → Phase 10-A ✓ → 10-B ✓ → 10-C → 10-D → 10-E (next)
+Phase 9a ✓ → Phase 9b ✓ → Phase 9c deferred → Phase 10-A ✓ → 10-B ✓ → 10-C ✓ → 10-D → 10-E (next)
 ```
 
-**Active work:** Phase 10-C — POS keyboard workspace. Phase 9c GL-shaped financial layer remains documented but deferred.
+**Active work:** Phase 10-D — workflow polish across remaining workspaces. Phase 9c GL-shaped financial layer remains documented but deferred.
 
 Implementation records:
 

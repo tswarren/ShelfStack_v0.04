@@ -2,6 +2,8 @@
 
 module Pos
   class CompletionReadiness
+    TENDER_AMOUNTS_PENDING_MESSAGE = "Enter tender amounts"
+
     STRUCTURAL_KEYS = %i[
       register_session
       lines
@@ -24,6 +26,10 @@ module Pos
 
       def blockers
         checks.select { |check| check.status == :block }
+      end
+
+      def alert_blockers
+        blockers.reject { |check| check.key == :tenders && check.message == CompletionReadiness::TENDER_AMOUNTS_PENDING_MESSAGE }
       end
 
       def warnings
@@ -253,34 +259,44 @@ module Pos
       tender_total = effective_tender_total_cents
 
       if tender_total.nil?
+        applied_total = effective_tender_applied_cents
+        if applied_total.nil?
+          return Check.new(
+            key: :tenders,
+            status: :block,
+            message: TENDER_AMOUNTS_PENDING_MESSAGE,
+            action_key: :fill_cash,
+            action_label: "Fill cash"
+          )
+        end
+
+        return tender_mismatch_check(total_cents - applied_total)
+      end
+
+      if tender_total == total_cents
+        Check.new(key: :tenders, status: :ok, message: "Tendered in full", action_key: nil, action_label: nil)
+      else
+        tender_mismatch_check(total_cents - tender_total)
+      end
+    end
+
+    def tender_mismatch_check(shortfall)
+      if shortfall.positive?
         Check.new(
           key: :tenders,
           status: :block,
-          message: "Enter tender amounts",
+          message: "Tender total is short by #{format_money(shortfall)}",
           action_key: :fill_cash,
-          action_label: "Fill cash"
+          action_label: "Fill remaining with cash"
         )
-      elsif tender_total == total_cents
-        Check.new(key: :tenders, status: :ok, message: "Tendered in full", action_key: nil, action_label: nil)
       else
-        shortfall = total_cents - tender_total
-        if shortfall.positive?
-          Check.new(
-            key: :tenders,
-            status: :block,
-            message: "Tender total is short by #{format_money(shortfall)}",
-            action_key: :fill_cash,
-            action_label: "Fill remaining with cash"
-          )
-        else
-          Check.new(
-            key: :tenders,
-            status: :block,
-            message: "Tender total exceeds amount due by #{format_money(shortfall.abs)}",
-            action_key: :fill_cash,
-            action_label: "Adjust tender"
-          )
-        end
+        Check.new(
+          key: :tenders,
+          status: :block,
+          message: "Tender total exceeds amount due by #{format_money(shortfall.abs)}",
+          action_key: :fill_cash,
+          action_label: "Adjust tender"
+        )
       end
     end
 
@@ -384,6 +400,50 @@ module Pos
       else
         active.sum(&:amount_cents)
       end
+    end
+
+    def effective_tender_applied_cents
+      if tender_inputs.blank?
+        return nil if transaction.pos_tenders.settlement_rows.empty? && transaction.total_cents.nonzero?
+
+        return transaction.pos_tenders.settlement_rows.sum(&:amount_cents) if transaction.pos_tenders.settlement_rows.any?
+
+        return 0 if transaction.total_cents.zero?
+
+        return nil
+      end
+
+      parsed = SettlementInputParser.parse(transaction:, raw_inputs: tender_inputs)
+      active = parsed.reject(&:destroy)
+      return nil if active.empty? && transaction.total_cents.nonzero?
+
+      total_cents = transaction.total_cents
+      if total_cents.positive?
+        applied_sale_tender_cents(active)
+      else
+        active.sum(&:amount_cents)
+      end
+    end
+
+    def applied_sale_tender_cents(active)
+      non_cash = active.reject { |row| row.tender_type == "cash" }
+      cash = active.find { |row| row.tender_type == "cash" }
+      non_cash_sum = non_cash.sum do |row|
+        StoredValueTenderSupport.capped_redeem_amount_cents(
+          transaction:,
+          tender_type: row.tender_type,
+          amount_cents: row.amount_cents,
+          stored_value_account_id: row.stored_value_account_id
+        )
+      end
+
+      return non_cash_sum if cash.blank?
+
+      remaining = transaction.total_cents - non_cash_sum
+      return non_cash_sum if remaining <= 0
+
+      tendered = cash.tendered_cents || cash.amount_cents
+      non_cash_sum + [ tendered, remaining ].min
     end
 
     def effective_cash_tender_cents

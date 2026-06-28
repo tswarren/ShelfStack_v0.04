@@ -164,14 +164,14 @@ UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_pas
 
 ## POS Register Operations (Phase 6 + Phase 10-C)
 
-> **Note:** Phase 10-C ships the keyboard-first POS workspace on branch `phase-10c-pos-keyboard-workspace`. See [phase-10c-completion.md](../implementation/phase-10c-completion.md) for slice status. Slices 1–9B and the start of slice 10 (session/held drawer) are delivered on the integration branch; mark 10-C complete only after remaining acceptance QA.
+> **Note:** Phase 10-C (keyboard-first POS workspace) is **Complete** (2026-06-26). See [phase-10c-completion.md](../implementation/phase-10c-completion.md). Integration branch: `phase-10c-pos-keyboard-workspace`.
 
 ### Workspace landing
 
 1. Log in with POS access (`pos.access`) on a register workstation.
 2. Go to **POS** (`/pos`).
 3. If no register session is open, choose **Open register** and enter business date and opening cash.
-4. When the register is open and **no active draft** exists, the idle workspace appears with the **command field** focused. No draft is created until you scan an item, run a transaction-starting command, or click **New sale**.
+4. When the register is open and **no active draft** exists, the idle workspace appears with the **command field** focused. No draft is created until you scan an item, run a transaction-starting command, or choose **New Sale** from the **Actions** menu.
 5. When an **active draft** exists for this register session + workstation + cashier, `/pos` returns directly to that transaction.
 
 ### Command field (home base)
@@ -204,12 +204,12 @@ Cash **tender** (`/cash 20`) and cash **movements** (`/cashin`, `/cashout`) are 
 
 ### Sale
 
-1. Scan or type a SKU in the command field, or run `/op` for open ring, or click **New sale**.
+1. Scan or type a SKU in the command field, run `/op` for open ring, or choose **New Sale** from the **Actions** menu when idle.
 2. Review cart lines and sidebar totals.
 3. Open settlement via **Settle**, `/tender`, or a specific tender command (`/cash`, `/card`, etc.).
 4. In the tender modal: use `1`–`4` for tender type, enter detail, **Save** (Enter). Saving sufficient tender marks **Ready to complete** but does **not** auto-complete.
 5. **Complete** explicitly when ready (register session must be open).
-6. After completion, the **completed workspace** appears with **New Sale** as the primary next action. Print receipt or stored value slips as needed before starting the next sale.
+6. After completion, the **completed workspace** appears with full-width document actions. **New Sale** returns to `/pos` (idle workspace). **View Summary** opens the transaction summary; receipt preview offers a single back link to completed sale or summary.
 
 ### Return
 

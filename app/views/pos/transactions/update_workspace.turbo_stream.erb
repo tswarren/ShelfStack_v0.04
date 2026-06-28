@@ -6,16 +6,16 @@
   <%= render "pos/transactions/cart", transaction: @transaction %>
 <% end %>
 
-<%= turbo_stream.update "pos_readiness" do %>
-  <%= render "pos/transactions/readiness_panel", transaction: @transaction, readiness: @readiness %>
-<% end %>
-
 <%= turbo_stream.update "pos_totals" do %>
   <%= render "pos/transactions/totals_panel", transaction: @transaction %>
 <% end %>
 
-<%= turbo_stream.update "pos_adjustments" do %>
-  <%= render "pos/transactions/adjustments_panel", transaction: @transaction %>
+<%= turbo_stream.update "pos_status_panel" do %>
+  <%= render "pos/transactions/status_panel", transaction: @transaction %>
+<% end %>
+
+<%= turbo_stream.update "pos_customer_status" do %>
+  <%= render "pos/transactions/customer_status", transaction: @transaction %>
 <% end %>
 
 <% if pos_transaction_discount_modal_available?(@transaction) %>
@@ -45,7 +45,7 @@
 <% end %>
 
 <%= turbo_stream.update "pos_settlement_actions" do %>
-  <%= render "pos/transactions/settlement_actions",
+  <%= render "pos/transactions/workspace_completion_actions",
         transaction: @transaction,
         readiness: @readiness,
         inactive_warnings: @inactive_warnings %>
