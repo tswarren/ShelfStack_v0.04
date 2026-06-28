@@ -403,6 +403,10 @@ module PosHelper
     end
   end
 
+  def pos_transaction_applied_transaction_discount_cents(transaction)
+    transaction.pos_discount_applications.active_records.where(scope: "transaction").sum(:applied_discount_cents)
+  end
+
   def pos_discount_amount_display(cents)
     format("%.2f", cents.to_i / 100.0)
   end

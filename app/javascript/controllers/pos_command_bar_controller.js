@@ -9,6 +9,8 @@ export default class extends Controller {
   }
 
   connect() {
+    this.boundOpenTransactionDiscount = this.handleOpenTransactionDiscount.bind(this)
+    document.addEventListener("pos:open-transaction-discount-modal", this.boundOpenTransactionDiscount)
     this.focusInput()
     this.syncOpenRingReturnMode()
     requestAnimationFrame(() => {
@@ -18,6 +20,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    document.removeEventListener("pos:open-transaction-discount-modal", this.boundOpenTransactionDiscount)
   }
 
   toggleReturnMode() {
@@ -122,7 +125,7 @@ export default class extends Controller {
         }
         break
       case "transaction_discount_offer":
-        this.openTransactionDiscountPanel(true)
+        this.showTransactionDiscountModal(data.payload || {})
         break
       case "settlement_offer":
         this.inputTarget.value = ""
@@ -288,6 +291,60 @@ export default class extends Controller {
     if (!this.openWorkspaceModal("pos-tax-exemption-modal")) {
       this.dispatchMessage("Tax exemption is not available.")
     }
+  }
+
+  handleOpenTransactionDiscount(event) {
+    this.showTransactionDiscountModal(event.detail || {})
+  }
+
+  showTransactionDiscountModal(payload = {}) {
+    if (!this.openWorkspaceModal("pos-transaction-discount-modal")) {
+      this.dispatchMessage("Transaction discount is not available.")
+      return
+    }
+
+    this.inputTarget.value = ""
+    requestAnimationFrame(() => this.focusTransactionDiscountModal(payload))
+  }
+
+  focusTransactionDiscountModal(payload = {}) {
+    const modal = document.getElementById("pos-transaction-discount-modal")
+    if (!modal) return
+
+    const reason = modal.querySelector("[name='discount_reason_id']")
+    const value = modal.querySelector(".ss-pos-discount-input")
+
+    if (payload.focus === "amount" && value) {
+      value.focus()
+      value.select()
+      return
+    }
+
+    if (payload.focus === "firstInvalid") {
+      const invalid = modal.querySelector(".ss-field--invalid input, .ss-field--invalid select, .ss-field--invalid textarea")
+      if (invalid) {
+        invalid.focus()
+        invalid.select?.()
+        return
+      }
+    }
+
+    reason?.focus()
+  }
+
+  closeTransactionDiscountModal(arg) {
+    const options = arg instanceof Event ? {} : (arg || {})
+    const focusInput = options.focusInput ?? true
+    arg?.preventDefault?.()
+
+    this.closeWorkspaceModal("pos-transaction-discount-modal")
+    if (focusInput) this.focusInput()
+  }
+
+  transactionDiscountSubmitted(event) {
+    if (event.detail?.success === false) return
+
+    this.closeTransactionDiscountModal({ focusInput: true })
   }
 
   openWorkspaceModal(modalId) {
@@ -509,6 +566,7 @@ export default class extends Controller {
     this.closeWorkspaceModal("pos-gift-card-sale-modal")
     this.closeWorkspaceModal("pos-customer-lookup-modal")
     this.closeWorkspaceModal("pos-tax-exemption-modal")
+    this.closeWorkspaceModal("pos-transaction-discount-modal")
   }
 
   showHelpModal(payload) {
@@ -709,16 +767,6 @@ export default class extends Controller {
     document.dispatchEvent(new CustomEvent("pos:open-line-discount", {
       detail: { lineId: String(lineId) }
     }))
-  }
-
-  openTransactionDiscountPanel(open = true) {
-    const panel = this.hasTransactionDiscountPanelTarget
-      ? this.transactionDiscountPanelTarget
-      : document.querySelector("[data-pos-command-bar-target='transactionDiscountPanel']")
-    if (!panel) return
-
-    panel.open = open
-    panel.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }
 
   dispatchMessage(message) {

@@ -4143,6 +4143,52 @@ body.ss-pos-modal-open {
   margin-top: 0.5rem;
 }
 
+.ss-pos-adjustments__launcher {
+  margin-bottom: 0.75rem;
+}
+
+.ss-pos-transaction-discount-summary {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ss-border-subtle, #e5e7eb);
+  border-radius: 0.375rem;
+  background: var(--ss-surface-muted, #f9fafb);
+}
+
+.ss-pos-transaction-discount-summary__list {
+  margin: 0;
+}
+
+.ss-pos-transaction-discount-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.15rem 0;
+  font-size: 0.875rem;
+}
+
+.ss-pos-transaction-discount-summary__row dt {
+  margin: 0;
+  color: var(--ss-text-muted, #6b7280);
+}
+
+.ss-pos-transaction-discount-summary__row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-transaction-discount-summary__row--preview {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--ss-border-subtle, #e5e7eb);
+  font-weight: 600;
+}
+
+.ss-pos-transaction-discount-form__footer {
+  margin-top: 1rem;
+}
+
 .ss-pos-advanced-actions__panel {
   margin-top: 0.75rem;
 }

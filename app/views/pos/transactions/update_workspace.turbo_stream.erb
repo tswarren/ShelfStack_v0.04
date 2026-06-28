@@ -18,6 +18,16 @@
   <%= render "pos/transactions/adjustments_panel", transaction: @transaction %>
 <% end %>
 
+<% if defined?(@transaction_discount_error) && @transaction_discount_error.present? %>
+  <%= turbo_stream.update "pos_transaction_discount_modal_content" do %>
+    <%= render "pos/transactions/transaction_discount_modal_body", transaction: @transaction %>
+  <% end %>
+
+  <%= turbo_stream.append "pos_workspace_events" do %>
+    <div data-controller="pos-transaction-discount-modal-open"></div>
+  <% end %>
+<% end %>
+
 <%= turbo_stream.update "pos_settlement_actions" do %>
   <%= render "pos/transactions/settlement_actions",
         transaction: @transaction,

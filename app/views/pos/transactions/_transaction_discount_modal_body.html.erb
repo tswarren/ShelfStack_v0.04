@@ -1,0 +1,40 @@
+<%# locals: (transaction:, discount_error: nil, prefill: nil) %>
+<% discount_error ||= @transaction_discount_error if defined?(@transaction_discount_error) && @transaction_discount_error.present? %>
+<% submitted = discount_error&.dig(:submitted) || {} %>
+<% invalid_fields = discount_error&.dig(:invalid_fields) || [] %>
+<% prefill = local_assigns[:prefill].presence || {} %>
+<% default_type = submitted[:discount_type].presence || prefill[:discount_type].presence || "amount" %>
+<% default_value = submitted[:discount_value].presence || prefill[:discount_value] %>
+<% eligible_base_cents = pos_transaction_discount_base_cents(transaction) %>
+<% applied_transaction_discount_cents = pos_transaction_applied_transaction_discount_cents(transaction) %>
+<% current_total_cents = transaction.total_cents.to_i %>
+
+<%= form_with url: apply_transaction_discount_pos_transaction_path(transaction),
+      method: :post,
+      class: "ss-pos-transaction-discount-form",
+      html: { novalidate: true },
+      data: {
+        turbo_stream: true,
+        action: "submit->pos-discount-input#validateSubmit turbo:submit-end->pos-command-bar#transactionDiscountSubmitted"
+      } do %>
+  <%= render "pos/transactions/discount_fields",
+        transaction: transaction,
+        label: "Discount",
+        id_prefix: "transaction_discount_modal",
+        type_name: :discount_type,
+        value_name: :discount_value,
+        default_type: default_type,
+        submitted: submitted.merge(discount_value: default_value),
+        invalid_fields: invalid_fields,
+        show_preview: true,
+        eligible_base_cents: eligible_base_cents,
+        applied_transaction_discount_cents: applied_transaction_discount_cents,
+        current_total_cents: current_total_cents %>
+
+  <footer class="ss-modal-form-footer ss-pos-transaction-discount-form__footer">
+    <%= submit_tag "Apply discount", class: "ss-btn ss-pos-transaction-discount-form__action" %>
+    <button type="button"
+            class="ss-btn ss-btn-secondary ss-pos-transaction-discount-form__action"
+            data-action="pos-command-bar#closeTransactionDiscountModal">Cancel</button>
+  </footer>
+<% end %>

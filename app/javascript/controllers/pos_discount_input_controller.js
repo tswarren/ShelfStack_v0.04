@@ -24,7 +24,8 @@ export default class extends Controller {
     "percentAdornment",
     "authorizePanel",
     "authorizedStatus",
-    "authorizationId"
+    "authorizationId",
+    "previewTotal"
   ]
 
   static values = {
@@ -32,7 +33,10 @@ export default class extends Controller {
     percentLabel: String,
     transactionId: String,
     authorizationType: { type: String, default: "discount_reason_approval" },
-    invalidFields: { type: Array, default: [] }
+    invalidFields: { type: Array, default: [] },
+    showPreview: { type: Boolean, default: false },
+    eligibleBaseCents: { type: Number, default: 0 },
+    currentTotalCents: { type: Number, default: 0 }
   }
 
   connect() {
@@ -41,6 +45,7 @@ export default class extends Controller {
     this.updateMode()
     this.syncAuthorizationUi()
     this.syncNoteRequired()
+    this.updatePreview()
 
     if (this.invalidFieldsValue.length > 0) {
       this.invalidFieldsValue.forEach((field) => this.markInvalid(field))
@@ -82,6 +87,7 @@ export default class extends Controller {
     this.syncModeButtons()
     this.updateMode()
     this.clearInvalid("discount_value")
+    this.updatePreview()
 
     if (this.hasValueTarget) {
       this.valueTarget.focus()
@@ -127,6 +133,37 @@ export default class extends Controller {
     this.clearInvalid("discount_note")
     this.syncAuthorizationUi()
     this.syncNoteRequired()
+    this.updatePreview()
+  }
+
+  updatePreview() {
+    if (!this.showPreviewValue || !this.hasPreviewTotalTarget) return
+
+    const discountCents = this.estimatedDiscountCents()
+    const previewCents = Math.max(0, this.currentTotalCentsValue - discountCents)
+    this.previewTotalTarget.textContent = this.formatMoney(previewCents)
+  }
+
+  estimatedDiscountCents() {
+    const raw = this.valueTarget?.value?.trim()
+    if (!raw) return 0
+
+    const base = this.eligibleBaseCentsValue
+    if (this.typeTarget?.value === "percent") {
+      const percent = Number.parseFloat(raw)
+      if (Number.isNaN(percent) || percent <= 0) return 0
+
+      return Math.round((base * percent) / 100)
+    }
+
+    const amount = Number.parseFloat(raw)
+    if (Number.isNaN(amount) || amount <= 0) return 0
+
+    return Math.min(Math.round(amount * 100), base)
+  }
+
+  formatMoney(cents) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
   }
 
   authorizationGranted(event) {

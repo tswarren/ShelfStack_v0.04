@@ -2,14 +2,11 @@
   <summary>Discount/Adjustment</summary>
   <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) %>
     <p class="ss-hint">Eligible discount base: <%= pos_money(pos_transaction_discount_base_cents(transaction)) %></p>
-    <%= form_with url: apply_transaction_discount_pos_transaction_path(transaction), method: :post, class: "ss-form", html: { novalidate: true }, data: { turbo_stream: true, action: "submit->pos-discount-input#validateSubmit" } do %>
-      <%= render "pos/transactions/discount_fields",
-            transaction: transaction,
-            label: "Transaction discount",
-            id_prefix: "transaction_discount",
-            type_name: :discount_type,
-            value_name: :discount_value %>
-      <%= submit_tag "Apply discount", class: "ss-btn ss-btn-secondary" %>
+    <p class="ss-hint">Current transaction discount: <%= pos_money(pos_transaction_applied_transaction_discount_cents(transaction)) %></p>
+    <% if transaction.editable? %>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-pos-adjustments__launcher"
+              data-action="pos-command-bar#showTransactionDiscountModal">Apply transaction discount</button>
     <% end %>
     <% transaction.pos_discount_applications.active_records.where(scope: "transaction").order(:stack_order).each do |application| %>
       <div class="ss-pos-discount-list__item">
