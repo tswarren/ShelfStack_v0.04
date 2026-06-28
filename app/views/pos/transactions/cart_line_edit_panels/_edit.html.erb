@@ -3,17 +3,20 @@
      data-pos-cart-line-panel="edit"
      data-pos-cart-line-target="panel"
      <%= "hidden" unless active %>>
-  <header class="ss-row-detail__header ss-pos-line-edit__header">
-    <h4 class="ss-pos-line-edit__title">Edit line · <%= pos_line_display_title(line) %></h4>
-  </header>
+  <%= form_with url: update_line_pos_transaction_path(transaction),
+        method: :patch,
+        id: form_id,
+        class: "ss-pos-line-edit-form",
+        data: {
+          turbo_stream: true,
+          action: "keydown.enter->pos-cart-line#submitPanelForm"
+        } do %>
+    <%= hidden_field_tag :line_id, line.id %>
+    <header class="ss-row-detail__header ss-pos-line-edit__header">
+      <h4 class="ss-pos-line-edit__title">Edit line · <%= pos_line_display_title(line) %></h4>
+    </header>
 
-  <div class="ss-row-detail__body ss-pos-line-edit__body">
-    <%= form_with url: update_line_pos_transaction_path(transaction),
-          method: :patch,
-          id: form_id,
-          class: "ss-pos-line-edit-form",
-          data: { turbo_stream: true } do %>
-      <%= hidden_field_tag :line_id, line.id %>
+    <div class="ss-row-detail__body ss-pos-line-edit__body">
       <div class="ss-pos-line-edit-form__fields">
         <div class="ss-field">
           <%= label_tag "quantity_#{line.id}", "Qty" %>
@@ -32,14 +35,14 @@
           </div>
         <% end %>
       </div>
-    <% end %>
-  </div>
+    </div>
 
-  <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
-    <%= submit_tag "Save", form: form_id, class: "ss-btn ss-pos-line-edit__action" %>
-    <button type="button"
-            class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
-            data-action="pos-cart-line#cancel"
-            data-line-id="<%= line.id %>">Cancel</button>
-  </footer>
+    <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
+      <%= submit_tag "Save", class: "ss-btn ss-pos-line-edit__action" %>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
+              data-action="pos-cart-line#cancel"
+              data-line-id="<%= line.id %>">Cancel</button>
+    </footer>
+  <% end %>
 </div>

@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Planned — follows slice **9A** (transaction discount modal); precedes slice **10**.
 
 ## Parent Phase
 
@@ -666,6 +666,7 @@ Expected behavior:
 
 ```text
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/roadmap/phase-10c-9a-transaction-discount-modal.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
 docs/specifications/phase-10c-test-plan.md
 docs/implementation/phase-10c-completion.md

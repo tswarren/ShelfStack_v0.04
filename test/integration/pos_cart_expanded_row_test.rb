@@ -33,6 +33,8 @@ class PosCartExpandedRowTest < ActionDispatch::IntegrationTest
     assert_select "[data-pos-cart-line-panel='discount'][hidden]"
     assert_select "button[data-action='pos-cart-line#selectPanel'][data-panel='edit']", text: "Change quantity/price"
     assert_select "button[data-action='pos-cart-line#selectPanel'][data-panel='discount']", text: "Discount line"
+    assert_select "#pos_line_edit_form_#{@line.id}.ss-pos-line-edit-form"
+    assert_select "#pos_line_edit_form_#{@line.id} input[type='submit'][value='Save']"
   end
 
   test "update line via turbo stream re-renders collapsed expanded row" do

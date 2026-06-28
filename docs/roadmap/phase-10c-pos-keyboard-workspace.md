@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard-First Transaction Workspace
 
-**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–8 delivered; 9 in review; **9B** and **10** pending)
+**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–8 delivered; 9 in review; **9A**, **9B**, and **10** pending)
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
@@ -249,7 +249,7 @@ A draft is created or resumed only when input crosses the **transaction intent b
 | `/pickup`, `/pu` | Not immediately | Open pickup drawer; draft starts when fulfillment adds lines |
 | `/customer`, `/cu` | Not immediately | Customer lookup modal/drawer; attach/start-sale are explicit actions |
 | `/linediscount`, `/ld`, legacy `/d` | Requires active draft | Open line discount workflow |
-| `/discount`, `/di`, legacy `/dt` | Requires active draft | Open transaction discount workflow |
+| `/discount`, `/di`, legacy `/dt` | Requires active draft | Transaction discount **modal** (slice 9A) |
 | `/taxexempt`, `/tx` | Requires active draft | Tax exemption modal |
 | `/tender`, `/tn` | Requires active draft | Settlement modal; no tender selected |
 | `/cash`, `/card`, `/check`, `/giftredeem`, `/storecredit` (+ aliases) | Requires active draft | Settlement modal; tender selected/prefilled |
@@ -322,9 +322,9 @@ Sidebar (when transaction active)
   Totals, discounts/tax adjustments, readiness, settlement action
 
 Modal layer
-  Settlement, customer lookup, gift card issue/reload, balance inquiry,
-  supervisor authorization, tax exemption, cash movements, cash drawer,
-  confirm void/remove
+  Settlement (9B), customer lookup, gift card issue/reload, balance inquiry,
+  supervisor authorization, tax exemption, **transaction discount (9A)**,
+  cash movements, cash drawer, confirm void/remove
 
 Drawer layer
   Return workflow, pickup/customer requests, item detail, customer detail,
@@ -356,7 +356,7 @@ Each command defines: canonical name, aliases, legacy aliases, description, perm
 | `/customer` | `/cu` | — | search text optional | Customer lookup modal/drawer |
 | `/openring` | `/op` | `/open` | amount optional | Open-ring entry |
 | `/linediscount` | `/ld` | `/d` | amount/percent optional† | Line discount |
-| `/discount` | `/di` | `/dt` | amount/percent optional† | Transaction discount |
+| `/discount` | `/di` | `/dt` | amount/percent optional† | Transaction discount **modal** (slice 9A) |
 | `/taxexempt` | `/tx` | — | none | Tax exemption modal |
 | `/giftcard` | `/gc` | — | amount optional | Gift card issue/reload modal |
 | `/giftredeem` | `/gr` | — | amount optional | Gift card redemption tender |
@@ -386,8 +386,8 @@ Each command defines: canonical name, aliases, legacy aliases, description, perm
 
 | Command | Behavior |
 | ------- | -------- |
-| `/linediscount`, `/ld`, legacy `/d` | Discount previous discountable line (enhancement: selected line when cart selection exists) |
-| `/discount`, `/di`, legacy `/dt` | Transaction-level discount |
+| `/linediscount`, `/ld`, legacy `/d` | Line discount **inline panel** (slice 9); discount previous discountable line (enhancement: selected line when cart selection exists) |
+| `/discount`, `/di`, legacy `/dt` | Transaction-level discount **modal** (slice 9A) |
 
 If no line is eligible for line discount:
 
@@ -632,7 +632,8 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 6 | Tender commands → settlement modal | Phase 7B |
 | 7 | Utility commands: balance, session, reports, drawer, cash in/out; `/cashdrop` planned/disabled | Session/cash services |
 | 8 | Modal standardization (settlement, customer, tax, gift card, balance, cash) | 10-A |
-| 9 | Cart expanded-row polish, focus restoration | 10-A |
+| 9 | Cart expanded-row polish, More menu, task-specific line panels | 10-A |
+| **9A** | **Transaction discount modal ergonomics** — see [phase-10c-9a-transaction-discount-modal.md](phase-10c-9a-transaction-discount-modal.md) | Slices 8, 9 |
 | **9B** | **Tender workspace and completion ergonomics** — see [phase-10c-9b-tender-workspace-and-completion.md](phase-10c-9b-tender-workspace-and-completion.md) | Slices 6, 8 |
 | 10 | Session drawer polish, held-sale access, tests, docs sync, mark complete | All above |
 
@@ -645,6 +646,7 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 7 | Merged — utility commands (`/session`, `/reports`, `/close`, cash in/out, `/drawer`) |
 | 8 | Merged — modal standardization |
 | 9 | In review — cart expanded-row polish, More menu, task-specific line panels |
+| **9A** | **Planned** — transaction discount modal, preview total, adjustments panel as launcher |
 | **9B** | **Planned** — tender workspace UX, explicit completion, post-completion workspace |
 | 10 | Pending — session drawer, held-sale access, docs sync |
 
@@ -750,6 +752,8 @@ See [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-k
 ## Related Documents
 
 ```text
+```text
+docs/roadmap/phase-10c-9a-transaction-discount-modal.md
 docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
 docs/specifications/phase-10c-test-plan.md

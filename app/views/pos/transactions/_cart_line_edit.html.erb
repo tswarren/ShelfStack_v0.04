@@ -1,4 +1,4 @@
-<% form_id = "pos_line_edit_#{line.id}" %>
+<% form_id = "pos_line_edit_form_#{line.id}" %>
 <% panel_error = @line_panel_error if defined?(@line_panel_error) && @line_panel_error.present? %>
 <% line_editing = pos_cart_line_panel_open?(line, panel_error) %>
 <% active_panel = pos_cart_line_active_panel(line, panel_error) %>

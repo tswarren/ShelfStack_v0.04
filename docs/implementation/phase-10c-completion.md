@@ -1,10 +1,12 @@
 # Phase 10-C — POS Keyboard Workspace
 
-**Status:** In progress (slices 1–8 delivered; slice 9 in review; slices **9B** and **10** pending)
+**Status:** In progress (slices 1–8 delivered; slice 9 in review; slices **9A**, **9B**, and **10** pending)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
+
+**Slice 9A (transaction discount modal):** [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md)
 
 **Slice 9B (tender/completion):** [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md)
 
@@ -83,10 +85,11 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
-## Pending (slices 9B and 10)
+## Pending (slices 9A, 9B, and 10)
 
 | Slice | Deliverable |
 | ----- | ----------- |
+| **9A** | Transaction discount modal, preview total, adjustments panel as launcher — [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md) |
 | **9B** | Tender workspace UX, explicit completion, post-completion workspace — [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md) |
 | 10 | Session drawer polish, held-sale access, full docs sync, mark complete |
 
@@ -110,6 +113,7 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 | `/gc` with amount | Modal with prefilled amount; no auto-post (original spec) | **Adopted after QA:** adds `gift_card_sale` line immediately; command focus returns. `/gc` without amount opens amount panel. Documented as intentional spec change. |
 | `/gc` without amount | Open modal | Opens amount panel; focus amount field; submit returns to command |
 | Cash in/out UX | Modal (not register session page) | Modal posts with `return_path` back to workspace |
+| Transaction discount entry | Adjustments `<details>` panel | **Deferred to slice 9A:** transaction discount modal |
 | Post-completion landing | Idle workspace immediately | **Deferred to slice 9B:** completed transaction workspace with New Sale as primary action |
 
 ---
@@ -119,5 +123,6 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 - `/cashdrop` execution until `cash_drop` movement type exists
 - Function-key bindings and F-key legend
 - Full foundation runbook POS section refresh (slice 10)
-- Merge to `main` after slices 9, 9B, 10 and completion QA
+- Merge to `main` after slices 9, 9A, 9B, 10 and completion QA
 - Gift receipt printing (placeholder in slice 9B completed workspace)
+- Tax panel server-side error reopen with preserved values (follow-up from slice 9)

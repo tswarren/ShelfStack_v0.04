@@ -95,6 +95,15 @@ export default class extends Controller {
     this.collapseLine(event.currentTarget.dataset.lineId, { restoreFocus: true })
   }
 
+  submitPanelForm(event) {
+    if (event.key !== "Enter") return
+    if (event.target.matches("textarea")) return
+    if (event.target.closest("button[type='submit']")) return
+
+    event.preventDefault()
+    event.currentTarget.requestSubmit()
+  }
+
   handleKeydown(event) {
     const original = event.detail?.originalEvent
     if (!original || original.key !== "Escape") return
