@@ -48,15 +48,17 @@ class Pos::TenderSyncTest < ActiveSupport::TestCase
     Pos::TenderValidator.validate!(@transaction)
   end
 
-  test "rejects insufficient cash tender" do
-    error = assert_raises(Pos::TenderSync::Error) do
-      Pos::TenderSync.call!(
-        transaction: @transaction,
-        tender_inputs: [ { tender_type: "cash", amount_dollars: "5.00" } ]
-      )
-    end
+  test "persists partial cash tender and reports remaining due" do
+    result = Pos::TenderSync.call!(
+      transaction: @transaction,
+      tender_inputs: [ { tender_type: "cash", amount_dollars: "5.00" } ]
+    )
 
-    assert_match(/insufficient cash/i, error.message)
+    cash = @transaction.pos_tenders.find_by!(tender_type: "cash")
+    assert_equal 500, cash.amount_cents
+    assert_equal 500, cash.tendered_cents
+    assert_operator result.remaining_cents, :>, 0
+    assert_match(/remaining due/i, result.message)
   end
 
   test "accepts zero cash tender on even exchange" do

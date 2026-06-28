@@ -82,7 +82,7 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
     assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, availability.message
   end
 
-  test "unimplemented commands are unavailable for routing" do
+  test "customer command is available at root with register session" do
     command = Pos::CommandRegistry[:customer]
     availability = Pos::CommandRegistry.availability(
       command: command,
@@ -92,8 +92,7 @@ class Pos::CommandRegistryTest < ActiveSupport::TestCase
       register_session: Pos::CommandRegistry::NOT_PROVIDED
     )
 
-    assert_not availability.available
-    assert_equal Pos::CommandRouteBuilder::NOT_YET_AVAILABLE_MESSAGE, availability.message
+    assert availability.available
   end
 
   test "help pattern matches parser command-lane help tokens" do

@@ -14,6 +14,9 @@ class PurchaseRequestTest < ActiveSupport::TestCase
   end
 
   test "creating purchase request does not change inventory" do
+    balance_count_before = InventoryBalance.where(store: @store, product_variant: @variant).count
+    posting_count_before = InventoryPosting.count
+
     request = PurchaseRequest.create!(store: @store, status: "open")
     request.purchase_request_lines.create!(
       product_variant: @variant,
@@ -22,8 +25,8 @@ class PurchaseRequestTest < ActiveSupport::TestCase
       status: "open"
     )
 
-    assert_equal 0, InventoryBalance.where(store: @store, product_variant: @variant).count
-    assert_equal 0, InventoryPosting.count
+    assert_equal balance_count_before, InventoryBalance.where(store: @store, product_variant: @variant).count
+    assert_equal posting_count_before, InventoryPosting.count
   end
 
   test "buildable lines exclude added_to_po and cancelled" do

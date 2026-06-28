@@ -263,7 +263,7 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
   test "balance inquiry page renders for authorized cashier" do
     get pos_stored_value_balance_path
     assert_response :success
-    assert_includes response.body, "Check balance"
+    assert_includes response.body, "Check Balance"
   end
 
   test "rejects store credit tender without actor permissions" do

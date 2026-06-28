@@ -22,12 +22,21 @@ module Phase3bTestHelper
   end
 
   def create_category_scheme!(**attrs)
-    CategoryScheme.create!({
+    defaults = {
       scheme_key: "test_scheme_#{SecureRandom.hex(3)}",
       name: "Test Scheme #{SecureRandom.hex(2)}",
       purpose: "store_categories",
       active: true
-    }.merge(attrs))
+    }
+    merged = defaults.merge(attrs)
+    scheme_key = merged[:scheme_key]
+
+    CategoryScheme.find_or_initialize_by(scheme_key: scheme_key).tap do |scheme|
+      scheme.name = merged[:name]
+      scheme.purpose = merged[:purpose]
+      scheme.active = merged[:active]
+      scheme.save!
+    end
   end
 
   def create_category_node!(category_scheme: nil, **attrs)

@@ -104,7 +104,7 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
         { tender_type: "cash", tendered_dollars: format("%.2f", (total - half) / 100.0) }
       ]
     }
-    assert_redirected_to pos_transaction_path(@transaction)
+    assert_redirected_to completed_pos_transaction_path(@transaction)
 
     @transaction.reload
     assert @transaction.completed?

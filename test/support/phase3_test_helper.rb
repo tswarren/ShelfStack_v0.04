@@ -60,10 +60,11 @@ module Phase3TestHelper
   end
 
   def create_product_condition!(**attrs)
+    suffix = SecureRandom.hex(3)
     ProductCondition.create!({
-      condition_key: "test_new",
-      name: "Test New",
-      short_name: "Test New",
+      condition_key: "test_new_#{suffix}",
+      name: "Test New #{suffix}",
+      short_name: "TN#{suffix}",
       sort_order: 99,
       new_condition: true,
       default_list_price_factor_bps: 10_000,
