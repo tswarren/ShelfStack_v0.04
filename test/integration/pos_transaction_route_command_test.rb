@@ -94,7 +94,19 @@ class PosTransactionRouteCommandTest < ActionDispatch::IntegrationTest
     assert_response :success
     body = JSON.parse(response.body)
     assert_equal "session_drawer_offer", body["action"]
+    assert_equal "session", body.dig("payload", "focus")
     assert_equal line_count_before, @transaction.reload.pos_transaction_lines.count
+  end
+
+  test "route_command held returns drawer offer focused on held sales" do
+    grant_permission!(@cashier, "pos.transactions.view", store: @store)
+
+    post route_command_pos_transaction_path(@transaction), params: { input: "/held" }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "session_drawer_offer", body["action"]
+    assert_equal "held", body.dig("payload", "focus")
   end
 
   test "route_command cashin returns cash movement offer" do

@@ -44,9 +44,8 @@
     <%= render "pos/transactions/pickup_panel", transaction: transaction, inline: true %>
   </div>
 
-  <div class="ss-pos-inline-panel" data-pos-command-bar-target="sessionPanel" hidden>
-    <%= render "pos/shared/session_summary_panel", register_session: transaction.pos_register_session || current_register_session, show_close: true %>
-  </div>
-
-  <%= render "pos/shared/workspace_modals", transaction: transaction, register_session: transaction.pos_register_session || current_register_session %>
+  <%= render "pos/shared/workspace_modals",
+        transaction: transaction,
+        register_session: transaction.pos_register_session || current_register_session,
+        suspended_transactions: @suspended_transactions %>
 </section>

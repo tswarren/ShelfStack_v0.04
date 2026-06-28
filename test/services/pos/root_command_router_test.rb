@@ -199,6 +199,19 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     )
 
     assert_equal :session_drawer_offer, route.action
+    assert_equal "session", route.payload[:focus]
+  end
+
+  test "/held returns session drawer offer focused on held sales" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/hs"
+    )
+
+    assert_equal :session_drawer_offer, route.action
+    assert_equal "held", route.payload[:focus]
   end
 
   test "/reports redirects to reports hub when no active draft" do

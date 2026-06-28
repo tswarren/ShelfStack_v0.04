@@ -2,7 +2,7 @@
 
 module Pos
   class TransactionsController < BaseController
-    before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show]
+    before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show completed]
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
     before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview route_command attach_customer]
     before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line]
@@ -28,7 +28,7 @@ module Pos
       show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount void_discount_application
       apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override attach_customer
-      sync_tenders complete suspend resume void cancel readiness_preview route_command
+      sync_tenders complete completed suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
       edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
@@ -45,6 +45,15 @@ module Pos
     end
 
     def show
+    end
+
+    def completed
+      unless @transaction.completed?
+        redirect_to edit_pos_transaction_path(@transaction), alert: "Complete the transaction before viewing the completion workspace."
+        return
+      end
+
+      @issuance_slips = Pos::StoredValueIssuanceSlips.for_transaction(@transaction)
     end
 
     def new
@@ -420,7 +429,11 @@ module Pos
       notice = [ "Settlement updated.", result.message ].compact.join(" ")
       respond_to_workspace(notice: notice)
     rescue Pos::SettlementSync::Error => e
-      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+      if params[:reopen_settlement_modal].present?
+        respond_to_incremental_sync_error(e.message)
+      else
+        respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+      end
     end
 
     def complete
@@ -450,7 +463,7 @@ module Pos
       )
       generated_identifiers.concat(completed_transaction.pos_generated_stored_value_identifiers || [])
       store_pos_generated_identifier_flash!(generated_identifiers)
-      redirect_to pos_transaction_path(completed_transaction), notice: completion_notice(generated_identifiers)
+      redirect_to completed_pos_transaction_path(completed_transaction), notice: completion_notice(generated_identifiers)
     rescue Pos::SettlementSync::Error => e
       flash[:complete_error] = e.message
       redirect_to edit_pos_transaction_path(@transaction, confirm_inactive: params[:confirm_inactive])
@@ -528,6 +541,10 @@ module Pos
       @complete_error = flash[:complete_error]
       @sub_departments = SubDepartment.active_records.order(:name)
       @readiness = build_readiness
+      @suspended_transactions = current_workstation && Pos::SuspendedTransactionsLookup.for_workstation(
+        store: pos_store,
+        workstation: current_workstation
+      )
     end
 
     def build_readiness(tender_inputs: nil)
@@ -565,6 +582,20 @@ module Pos
           else
             redirect_to edit_pos_transaction_path(@transaction), notice: notice
           end
+        end
+      end
+    end
+
+    def respond_to_incremental_sync_error(message)
+      flash.now[:alert] = message
+
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.update("pos_flash", partial: "pos/transactions/flash"),
+                 status: :unprocessable_entity
+        end
+        format.html do
+          redirect_to edit_pos_transaction_path(@transaction), alert: message
         end
       end
     end

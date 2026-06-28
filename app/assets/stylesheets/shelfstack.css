@@ -4201,6 +4201,153 @@ body.ss-pos-modal-open {
   margin-bottom: 0.75rem;
 }
 
+.ss-pos-completed-workspace {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+}
+
+.ss-pos-completed-workspace__eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ss-text-muted, #6b7280);
+}
+
+.ss-pos-completed-workspace__title {
+  margin: 0 0 0.35rem;
+}
+
+.ss-pos-completed-workspace__meta {
+  margin: 0 0 1.25rem;
+  color: var(--ss-text-muted, #6b7280);
+}
+
+.ss-pos-completed-workspace__totals,
+.ss-pos-completed-workspace__documents {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--ss-border-subtle, #e5e7eb);
+  border-radius: 0.375rem;
+  background: var(--ss-surface-muted, #f9fafb);
+}
+
+.ss-pos-completed-workspace__totals-list {
+  margin: 0;
+}
+
+.ss-pos-completed-workspace__totals-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.2rem 0;
+}
+
+.ss-pos-completed-workspace__totals-row--emphasis {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.ss-pos-completed-workspace__section-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.ss-pos-completed-workspace__document-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ss-pos-completed-workspace__footer {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ss-pos-completed-workspace__primary-action {
+  width: 100%;
+}
+
+.ss-pos-completed-workspace__secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ss-pos-tender-workspace__summary {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ss-border-subtle, #e5e7eb);
+  border-radius: 0.375rem;
+  background: var(--ss-surface-muted, #f9fafb);
+}
+
+.ss-pos-tender-workspace__summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+}
+
+.ss-pos-tender-workspace__summary-row dt {
+  margin: 0;
+  color: var(--ss-text-muted, #6b7280);
+}
+
+.ss-pos-tender-workspace__summary-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-pos-tender-workspace__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ss-pos-tender-workspace__type-btn--active {
+  box-shadow: inset 0 0 0 2px var(--ss-accent, #2563eb);
+}
+
+.ss-pos-tender-workspace__active-detail {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ss-border-subtle, #e5e7eb);
+  border-radius: 0.375rem;
+}
+
+.ss-pos-tender-workspace__active-title,
+.ss-pos-tender-workspace__saved-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.ss-pos-tender-workspace__active-footer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.ss-pos-tender-workspace__ready {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.ss-pos-tender-workspace__ready-label {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
 .ss-pos-advanced-actions__panel {
   margin-top: 0.75rem;
 }

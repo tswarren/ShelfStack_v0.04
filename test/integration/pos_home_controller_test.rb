@@ -19,14 +19,14 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h1", text: "Point of Sale"
-    assert_match "Manage Session", response.body
-    assert_match "Cash In/Out", response.body
     assert_match "Reports", response.body
     assert_select "button", text: "New sale"
+    assert_select "button", text: "Session"
+    assert_select "#pos-session-drawer"
     assert_select ".ss-pos-panel__title", text: "Session Summary"
     assert_select "a[href=?]", register_summary_pos_reports_path(register_session_id: @register_session.id), text: "Register Summary"
     assert_select "a[href=?]", drawer_pos_reports_path, text: "Session history"
-    assert_select ".ss-pos-panel__title", text: "Suspended Transactions"
+    assert_select ".ss-pos-panel__title", text: "Held Sales"
     assert_select ".ss-pos-panel__title", text: "Draft Queue"
     assert_select "td.ss-pos-home__empty", text: "None"
   end
@@ -50,7 +50,23 @@ class PosHomeControllerTest < ActionDispatch::IntegrationTest
     assert_match "Reports", response.body
     assert_no_match "Session Summary", response.body
     assert_select ".ss-pos-panel__title", text: "Draft Queue"
-    assert_no_match "Suspended Transactions", response.body
+    assert_no_match "Held Sales", response.body
+  end
+
+  test "idle workspace shows held sales button when suspended transactions exist" do
+    @register_session = @ctx[:register_session]
+
+    create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @cashier,
+      attrs: { status: "suspended", suspended_at: Time.current },
+      lines: [ { product_variant: @variant, quantity: 1, unit_price_cents: 1200, extended_price_cents: 1200 } ]
+    )
+
+    get pos_root_path
+    assert_response :success
+    assert_select "button", text: "Held sales (1)"
   end
 
   test "queue tables render draft and suspended rows when landing shows conflict picker" do

@@ -1,0 +1,84 @@
+<%# locals: (transaction:, issuance_slips:) %>
+<% change_cents = pos_receipt_change_cents(transaction) %>
+<% required_slip = issuance_slips.first if flash[:pos_generated_stored_value_identifiers].present? %>
+
+<div class="ss-pos-completed-workspace"
+     data-controller="pos-completed-workspace"
+     data-pos-completed-workspace-required-slip-url-value="<%= required_slip ? pos_stored_value_issuance_slip_path(required_slip.ledger_entry_id) : "" %>">
+  <header class="ss-pos-completed-workspace__header">
+    <p class="ss-pos-completed-workspace__eyebrow"><%= pos_completed_workspace_type_label(transaction).upcase %></p>
+    <h1 class="ss-pos-completed-workspace__title">Transaction <%= transaction.transaction_number %></h1>
+    <p class="ss-pos-completed-workspace__meta">
+      <%= l(transaction.completed_at.in_time_zone(current_store.time_zone), format: :short) %>
+      · <%= transaction.cashier_user.display_name.presence || transaction.cashier_user.username %>
+    </p>
+  </header>
+
+  <section class="ss-pos-completed-workspace__totals" aria-label="Transaction totals">
+    <dl class="ss-pos-completed-workspace__totals-list">
+      <div class="ss-pos-completed-workspace__totals-row ss-pos-completed-workspace__totals-row--emphasis">
+        <dt>Total</dt>
+        <dd><%= pos_money(transaction.total_cents) %></dd>
+      </div>
+      <% if pos_completed_tendered_summary(transaction).present? %>
+        <div class="ss-pos-completed-workspace__totals-row">
+          <dt>Tendered</dt>
+          <dd><%= pos_completed_tendered_summary(transaction) %></dd>
+        </div>
+      <% end %>
+      <% if change_cents.positive? %>
+        <div class="ss-pos-completed-workspace__totals-row">
+          <dt>Change due</dt>
+          <dd><%= pos_money(change_cents) %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </section>
+
+  <section class="ss-pos-completed-workspace__documents" aria-label="Documents">
+    <h2 class="ss-pos-completed-workspace__section-title">Documents</h2>
+    <ul class="ss-pos-completed-workspace__document-list">
+      <li class="ss-pos-completed-workspace__document-item">
+        <% if transaction.pos_receipt %>
+          <%= link_to "Print receipt",
+                pos_receipt_path(transaction.pos_receipt),
+                class: "ss-btn ss-btn-secondary ss-pos-completed-workspace__document-action",
+                data: { pos_completed_workspace_target: "receiptAction" } %>
+        <% else %>
+          <span class="ss-hint">Receipt will be available shortly.</span>
+        <% end %>
+      </li>
+      <% issuance_slips.each do |slip| %>
+        <li class="ss-pos-completed-workspace__document-item">
+          <%= link_to slip.label,
+                pos_stored_value_issuance_slip_path(slip.ledger_entry_id),
+                class: "ss-btn ss-btn-secondary ss-pos-completed-workspace__document-action#{' ss-pos-completed-workspace__document-action--required' if slip == required_slip}",
+                data: {
+                  pos_completed_workspace_target: "slipAction",
+                  required: slip == required_slip ? "true" : "false"
+                } %>
+        </li>
+      <% end %>
+      <li class="ss-pos-completed-workspace__document-item ss-pos-completed-workspace__document-item--planned">
+        <span class="ss-hint">Gift receipt — planned enhancement</span>
+      </li>
+    </ul>
+  </section>
+
+  <footer class="ss-pos-completed-workspace__footer">
+    <%= button_to "New Sale",
+          pos_transactions_path,
+          method: :post,
+          params: { mode: "sale" },
+          class: "ss-btn ss-pos-completed-workspace__primary-action",
+          data: { pos_completed_workspace_target: "newSaleAction" } %>
+
+    <div class="ss-pos-completed-workspace__secondary-actions">
+      <% if transaction.pos_receipt %>
+        <%= link_to "View receipt", pos_receipt_path(transaction.pos_receipt), class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <% end %>
+      <%= link_to "View summary", pos_transaction_path(transaction), class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <%= link_to "POS home", pos_root_path, class: "ss-btn ss-btn-secondary ss-btn--small" %>
+    </div>
+  </footer>
+</div>

@@ -67,3 +67,8 @@
 <%= render "pos/shared/help_modal" %>
 <%= render "pos/shared/drawer_action_modal" %>
 <%= render "pos/shared/cash_movement_modal", register_session: register_session %>
+<% if register_session.present? && Authorization.allowed?(user: current_user, permission_key: "pos.register_sessions.view", store: current_store) %>
+  <%= render "pos/shared/session_drawer",
+        register_session: register_session,
+        suspended_transactions: local_assigns.fetch(:suspended_transactions, @suspended_transactions || []) %>
+<% end %>

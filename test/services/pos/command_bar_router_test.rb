@@ -532,7 +532,7 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal 2000, route.payload[:amount_cents]
   end
 
-  test "/giftredeem opens settlement offer with gift card tender" do
+  test "/giftredeem opens settlement offer with consolidated stored value tender" do
     transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
 
     route = Pos::CommandBarRouter.call(
@@ -544,7 +544,7 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     )
 
     assert_equal :settlement_offer, route.action
-    assert_equal "gift_card", route.payload[:tender_type]
+    assert_equal "stored_value", route.payload[:tender_type]
     assert_equal 2500, route.payload[:amount_cents]
   end
 

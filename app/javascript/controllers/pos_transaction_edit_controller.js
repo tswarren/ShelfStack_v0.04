@@ -41,7 +41,12 @@ export default class extends Controller {
     const modal = document.getElementById("pos_settlement_modal")
     if (!modal) return []
 
-    return Array.from(modal.querySelectorAll("[data-settlement-amount]"))
+    return Array.from(modal.querySelectorAll("[data-settlement-amount]")).filter((field) => {
+      const row = field.closest("[data-settlement-row]")
+      if (!row) return true
+
+      return row.dataset.destroyed !== "true" && !row.hidden
+    })
   }
 
   tenderAmountFields() {

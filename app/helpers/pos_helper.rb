@@ -435,8 +435,20 @@ module PosHelper
     Pos::TenderTypePolicy.allowed?(transaction, actor: user, tender_type:, store: transaction.store)
   end
 
+  def pos_stored_value_tender_available?(transaction, user = current_user)
+    pos_can_use_stored_value_tender?(transaction, "gift_card", user) ||
+      pos_can_use_stored_value_tender?(transaction, "store_credit", user)
+  end
+
   def pos_can_issue_gift_card_sale?(transaction, user = current_user)
     Pos::GiftCardSalePolicy.issue_permitted?(actor: user, store: transaction.store)
+  end
+
+  def pos_can_resume_transaction?(transaction, user = current_user)
+    return false unless Authorization.allowed?(user: user, permission_key: "pos.transactions.resume", store: transaction.store)
+
+    transaction.cashier_user_id == user.id ||
+      Authorization.allowed?(user: user, permission_key: "pos.transactions.resume.other_cashier", store: transaction.store)
   end
 
   def pos_gift_card_sale_activation_status(line)
@@ -562,6 +574,8 @@ module PosHelper
       label = pos_stored_value_tender_label(row)
       amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
       { label: label, amount: pos_money(amount_cents) }
+    when "stored_value"
+      { label: "Stored value", amount: pos_money(0) }
     else
       { label: row.tender_type.humanize, amount: pos_money(0) }
     end
@@ -659,6 +673,24 @@ module PosHelper
 
   def pos_receipt_change_cents(transaction)
     pos_settlement_tenders(transaction).sum(&:change_display_cents)
+  end
+
+  def pos_completed_workspace_heading(_transaction)
+    "Sale complete"
+  end
+
+  def pos_completed_workspace_type_label(transaction)
+    case transaction.transaction_type
+    when "return" then "Return complete"
+    when "exchange" then "Exchange complete"
+    else "Sale complete"
+    end
+  end
+
+  def pos_completed_tendered_summary(transaction)
+    pos_settlement_tenders(transaction).order(:line_number).map do |tender|
+      "#{pos_money(pos_tender_receipt_amount_cents(tender))} #{pos_tender_receipt_label(tender)}"
+    end.join(", ")
   end
 
   def pos_settlement_tenders(transaction)

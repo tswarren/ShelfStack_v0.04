@@ -27,10 +27,10 @@ module Pos
         .includes(:pos_transaction_lines, :cashier_user)
         .where(store: pos_store, workstation: current_workstation, cashier_user: current_user)
         .order(updated_at: :desc)
-      @suspended_transactions = PosTransaction.suspended
-        .includes(:pos_transaction_lines, :cashier_user)
-        .where(store: pos_store, workstation: current_workstation)
-        .order(suspended_at: :desc)
+      @suspended_transactions = Pos::SuspendedTransactionsLookup.for_workstation(
+        store: pos_store,
+        workstation: current_workstation
+      )
     end
 
     def locked_out

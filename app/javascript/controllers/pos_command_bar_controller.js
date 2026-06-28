@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
+import { closeOverlay, openOverlayById } from "shelfstack/overlay_shell"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "pickupPanel", "sessionPanel", "helpBody", "cashMovementForm", "cashMovementType", "cashMovementAmount", "cashMovementReason", "cashMovementSubmit", "drawerActionReason"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "pickupPanel", "helpBody", "cashMovementForm", "cashMovementType", "cashMovementAmount", "cashMovementReason", "cashMovementSubmit", "drawerActionReason"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,
@@ -13,6 +14,8 @@ export default class extends Controller {
     this.boundOpenTaxExemption = this.handleOpenTaxExemption.bind(this)
     document.addEventListener("pos:open-transaction-discount-modal", this.boundOpenTransactionDiscount)
     document.addEventListener("pos:open-tax-exemption-modal", this.boundOpenTaxExemption)
+    this.boundSessionDrawerClosed = this.handleSessionDrawerClosed.bind(this)
+    document.addEventListener("drawer:closed", this.boundSessionDrawerClosed)
     this.focusInput()
     this.syncOpenRingReturnMode()
     requestAnimationFrame(() => {
@@ -24,6 +27,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("pos:open-transaction-discount-modal", this.boundOpenTransactionDiscount)
     document.removeEventListener("pos:open-tax-exemption-modal", this.boundOpenTaxExemption)
+    document.removeEventListener("drawer:closed", this.boundSessionDrawerClosed)
   }
 
   toggleReturnMode() {
@@ -136,7 +140,7 @@ export default class extends Controller {
         break
       case "session_drawer_offer":
         this.inputTarget.value = ""
-        this.showSessionPanel()
+        this.showSessionDrawer(data.payload || {})
         break
       case "cash_movement_offer":
         this.inputTarget.value = ""
@@ -433,21 +437,47 @@ export default class extends Controller {
     requestAnimationFrame(() => this.focusInput())
   }
 
-  showSessionPanel() {
-    if (!this.hasSessionPanelTarget) {
+  showSessionDrawer(payload = {}) {
+    const opened = openOverlayById(this.application, "drawer", "pos-session-drawer", this.inputTarget)
+    if (!opened) {
       this.dispatchMessage("Session summary is not available.")
       return
     }
 
-    this.sessionPanelTarget.hidden = false
-    this.sessionPanelTarget.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    requestAnimationFrame(() => this.focusSessionDrawerSection(payload.focus || "session"))
   }
 
-  closeSessionPanel(event) {
+  openSessionDrawer(event) {
     event?.preventDefault()
-    if (!this.hasSessionPanelTarget) return
+    this.showSessionDrawer({ focus: "session" })
+  }
 
-    this.sessionPanelTarget.hidden = true
+  openHeldDrawer(event) {
+    event?.preventDefault()
+    this.showSessionDrawer({ focus: "held" })
+  }
+
+  focusSessionDrawerSection(focus) {
+    const sectionId = focus === "held" ? "pos-session-drawer-held" : "pos-session-drawer-summary"
+    const section = document.getElementById(sectionId)
+    section?.scrollIntoView({ behavior: "smooth", block: "start" })
+
+    if (focus === "held") {
+      section?.querySelector("a.ss-btn, button.ss-btn")?.focus()
+    }
+  }
+
+  closeSessionDrawer() {
+    const drawer = document.getElementById("pos-session-drawer")
+    if (!drawer || drawer.hidden) return
+
+    const controller = this.application.getControllerForElementAndIdentifier(drawer, "drawer")
+    if (controller?._overlayShell) closeOverlay(controller, { force: true })
+  }
+
+  handleSessionDrawerClosed(event) {
+    if (event.target?.id !== "pos-session-drawer") return
+
     this.focusInput()
   }
 
@@ -612,7 +642,7 @@ export default class extends Controller {
     if (this.hasReceiptPanelTarget) this.receiptPanelTarget.hidden = true
     if (this.hasOpenRingPanelTarget) this.openRingPanelTarget.hidden = true
     if (this.hasPickupPanelTarget) this.pickupPanelTarget.hidden = true
-    if (this.hasSessionPanelTarget) this.sessionPanelTarget.hidden = true
+    this.closeSessionDrawer()
     this.closeCashMovementModal({ focusInput: false })
     this.closeDrawerActionModal({ focusInput: false })
     this.closeWorkspaceModal("pos-help-modal")

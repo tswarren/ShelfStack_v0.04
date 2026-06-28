@@ -16,8 +16,8 @@ module Pos
       tender_cash: "cash",
       tender_card: "card",
       tender_check: "check",
-      tender_store_credit: "store_credit",
-      gift_redeem: "gift_card"
+      tender_store_credit: "stored_value",
+      gift_redeem: "stored_value"
     }.freeze
 
     def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)
@@ -105,7 +105,9 @@ module Pos
       when :tender_cash, :tender_card, :tender_check, :tender_store_credit, :gift_redeem
         settlement_tender_route(TENDER_TYPE_BY_HANDLER.fetch(command.handler))
       when :session_drawer
-        Route.new(action: :session_drawer_offer, payload: {}, message: nil)
+        Route.new(action: :session_drawer_offer, payload: { focus: "session" }, message: nil)
+      when :held_transactions_drawer
+        Route.new(action: :session_drawer_offer, payload: { focus: "held" }, message: nil)
       when :reports
         reports_route
       when :close_register
