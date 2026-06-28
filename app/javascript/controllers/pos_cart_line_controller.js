@@ -16,6 +16,7 @@ export default class extends Controller {
     this.boundOpenLineDiscount = this.openLineDiscount.bind(this)
     this.boundDocumentClick = this.handleDocumentClick.bind(this)
     this.boundCloseMenusOnScroll = this.closeAllMenus.bind(this)
+    this.boundMenuKeydown = this.handleMenuKeydown.bind(this)
     document.addEventListener("pos:open-line-discount", this.boundOpenLineDiscount)
     document.addEventListener("click", this.boundDocumentClick)
   }
@@ -24,6 +25,7 @@ export default class extends Controller {
     document.removeEventListener("pos:open-line-discount", this.boundOpenLineDiscount)
     document.removeEventListener("click", this.boundDocumentClick)
     window.removeEventListener("scroll", this.boundCloseMenusOnScroll, true)
+    this.menuTargets.forEach((menu) => menu.removeEventListener("keydown", this.boundMenuKeydown))
   }
 
   toggleMenu(event) {
@@ -66,7 +68,19 @@ export default class extends Controller {
 
     button.setAttribute("aria-expanded", "true")
     window.addEventListener("scroll", this.boundCloseMenusOnScroll, true)
+    menu.addEventListener("keydown", this.boundMenuKeydown)
     menu.querySelector("[role='menuitem']")?.focus()
+  }
+
+  handleMenuKeydown(event) {
+    if (event.key !== "Escape") return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const lineId = event.currentTarget.dataset.lineId
+    this.closeAllMenus()
+    restoreFocus(this.moreButtonForLine(lineId))
   }
 
   selectPanel(event) {
@@ -176,8 +190,6 @@ export default class extends Controller {
     const displayRow = this.displayRowForLine(lineId)
     if (displayRow) {
       displayRow.classList.add("ss-pos-cart-line--editing")
-      const moreButton = this.moreButtonForLine(lineId)
-      if (moreButton) moreButton.setAttribute("aria-expanded", "true")
     }
   }
 
@@ -190,8 +202,6 @@ export default class extends Controller {
     const displayRow = this.displayRowForLine(lineId)
     if (displayRow) {
       displayRow.classList.remove("ss-pos-cart-line--editing")
-      const moreButton = this.moreButtonForLine(lineId)
-      if (moreButton) moreButton.setAttribute("aria-expanded", "false")
     }
   }
 
@@ -207,6 +217,7 @@ export default class extends Controller {
   closeAllMenus() {
     window.removeEventListener("scroll", this.boundCloseMenusOnScroll, true)
     this.menuTargets.forEach((menu) => {
+      menu.removeEventListener("keydown", this.boundMenuKeydown)
       menu.hidden = true
       menu.classList.remove("ss-pos-line-menu--floating")
       menu.style.top = ""
