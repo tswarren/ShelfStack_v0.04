@@ -1,18 +1,20 @@
 # Phase 10-C — POS Keyboard Workspace
 
-**Status:** In progress (slices 1–7 delivered; slices 8–10 pending)
+**Status:** In progress (slices 1–8 delivered; slice 9 in review; slices **9B** and **10** pending)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
 
+**Slice 9B (tender/completion):** [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md)
+
 **Test plan:** [phase-10c-test-plan.md](../specifications/phase-10c-test-plan.md)
 
-Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after slice 10 (docs sync, held-sale access, remaining acceptance criteria) and full manual QA.
+Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after slice 10 (session drawer, held-sale access, docs sync, remaining acceptance criteria) and full manual QA.
 
 ---
 
-## Delivered (slices 1–7)
+## Delivered (slices 1–8)
 
 ### Slice 1 — Workspace shell, landing, draft lifecycle
 
@@ -58,6 +60,11 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 - `/balance` — redirect on idle; inline panel on active transaction
 - `/cashdrop` — planned/disabled
 
+### Slice 8 — Modal standardization
+
+- Settlement, customer lookup, tax exemption, gift card, balance inquiry, and cash movement modals on shared 10-A interaction shells
+- Supervisor authorization modal wiring for readiness blockers
+
 ### Focus and keyboard (cross-cutting)
 
 - `pos-workspace-focus` restores command field after Turbo workspace updates when no blocking panel/modal is open
@@ -65,17 +72,27 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
-## Pending (slices 8–10)
+## In review (slice 9)
+
+**Branch:** `phase-10c-9-cart-expanded-row` (PR on integration branch)
+
+- Cart line **More** menu with task-specific panels (edit, discount, tax)
+- Floating menu positioning (not clipped by cart table)
+- Expanded-row focus restore; `/linediscount` opens discount panel
+- Consistent discount/tax note fields (dynamic required marker, single-line input)
+
+---
+
+## Pending (slices 9B and 10)
 
 | Slice | Deliverable |
 | ----- | ----------- |
-| 8 | Modal standardization (settlement, customer, tax, gift card, balance, cash) |
-| 9 | Cart expanded-row polish, focus restoration |
+| **9B** | Tender workspace UX, explicit completion, post-completion workspace — [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md) |
 | 10 | Session drawer polish, held-sale access, full docs sync, mark complete |
 
 ---
 
-## Verification (slices 1–7)
+## Verification (slices 1–8)
 
 ```bash
 docker compose exec -T web bin/rails test test/services/pos/
@@ -93,6 +110,7 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 | `/gc` with amount | Modal with prefilled amount; no auto-post (original spec) | **Adopted after QA:** adds `gift_card_sale` line immediately; command focus returns. `/gc` without amount opens amount panel. Documented as intentional spec change. |
 | `/gc` without amount | Open modal | Opens amount panel; focus amount field; submit returns to command |
 | Cash in/out UX | Modal (not register session page) | Modal posts with `return_path` back to workspace |
+| Post-completion landing | Idle workspace immediately | **Deferred to slice 9B:** completed transaction workspace with New Sale as primary action |
 
 ---
 
@@ -101,4 +119,5 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 - `/cashdrop` execution until `cash_drop` movement type exists
 - Function-key bindings and F-key legend
 - Full foundation runbook POS section refresh (slice 10)
-- Merge to `main` after slices 8–10 and completion QA
+- Merge to `main` after slices 9, 9B, 10 and completion QA
+- Gift receipt printing (placeholder in slice 9B completed workspace)

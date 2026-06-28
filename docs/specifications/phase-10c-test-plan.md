@@ -6,6 +6,8 @@
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
 
+**Slice 9B:** [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md)
+
 ---
 
 ## PR 1 — Workspace shell, landing, draft resolver, intent boundary
@@ -89,6 +91,7 @@ Suggested: extend or replace `Pos::CommandBarRouter` tests → `Pos::CommandRegi
 | ---- | ----------------------- |
 | Expanded-row line edit | System test — POS cart line edit |
 | Settlement modal shell | Integration/system — settlement entry |
+| Tender workspace UX (slice 9B) | See [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md#suggested-tests) |
 | Readiness blockers | Extend `Pos::CompletionReadiness` tests + system |
 | `/reports` with active draft | Confirm dialog; same-tab navigate on confirm |
 

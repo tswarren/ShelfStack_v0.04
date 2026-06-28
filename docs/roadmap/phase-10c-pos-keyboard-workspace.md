@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard-First Transaction Workspace
 
-**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–7 delivered; 8–10 pending)
+**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–8 delivered; 9 in review; **9B** and **10** pending)
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
@@ -568,10 +568,18 @@ After Save/Cancel: collapse row; restore focus to command field or triggering Mo
 
 ## Settlement
 
-Settlement remains a modal showing remaining balance, change due, tender rows, add-tender actions, readiness blockers, and complete action.
+Settlement remains a **modal** tender workspace (not a drawer). Slice 6 wired tender commands to the settlement modal; slice 8 standardized modal shells. **Slice 9B** ([phase-10c-9b-tender-workspace-and-completion.md](phase-10c-9b-tender-workspace-and-completion.md)) refines tendering and post-completion ergonomics:
+
+* Hotkey-driven tender type selection (`1`–`4`) with one active detail form at a time
+* Enter saves the active tender detail form; Escape cancels detail or closes modal
+* Saving a sufficient tender does **not** auto-complete; completion stays explicit
+* After completion, route to a **completed transaction workspace** (read-only handoff) with document checklist and **New Sale** as the primary next action — not directly back to idle editable cart
+
+Baseline rules (unchanged across slices):
 
 * Completion disabled until readiness passes
-* After completion, workspace returns to **idle** with command field focused and no active draft
+* Tender commands from idle do not create empty drafts
+* Domain behavior (tender validation, settlement math, stored value ledger) unchanged
 
 ---
 
@@ -625,7 +633,8 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 7 | Utility commands: balance, session, reports, drawer, cash in/out; `/cashdrop` planned/disabled | Session/cash services |
 | 8 | Modal standardization (settlement, customer, tax, gift card, balance, cash) | 10-A |
 | 9 | Cart expanded-row polish, focus restoration | 10-A |
-| 10 | Session drawer, held-sale access, tests, docs sync | All above |
+| **9B** | **Tender workspace and completion ergonomics** — see [phase-10c-9b-tender-workspace-and-completion.md](phase-10c-9b-tender-workspace-and-completion.md) | Slices 6, 8 |
+| 10 | Session drawer polish, held-sale access, tests, docs sync, mark complete | All above |
 
 ### Implementation progress
 
@@ -634,7 +643,10 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 1–5 | Merged — shell, parser, registry, transaction commands, return/pickup drawers |
 | 6 | Merged — tender commands → settlement modal |
 | 7 | Merged — utility commands (`/session`, `/reports`, `/close`, cash in/out, `/drawer`) |
-| 8–10 | Pending |
+| 8 | Merged — modal standardization |
+| 9 | In review — cart expanded-row polish, More menu, task-specific line panels |
+| **9B** | **Planned** — tender workspace UX, explicit completion, post-completion workspace |
+| 10 | Pending — session drawer, held-sale access, docs sync |
 
 Interim record: [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
@@ -653,7 +665,7 @@ Interim record: [phase-10c-completion.md](../implementation/phase-10c-completion
 * Modals/drawers trap and restore focus per 10-A
 * Expanded line edit focuses first editable field; focus restored after Save/Cancel
 * Settlement reachable via visible controls and commands — not function keys
-* After completed sale → idle workspace, command field focused
+* After completed sale → completed transaction workspace (slice 9B); **New Sale** returns to idle workspace with command field focused
 * Touch targets ~44px on expanded row and settlement actions
 * Mouse-accessible equivalents for all primary actions
 
@@ -738,6 +750,7 @@ See [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-k
 ## Related Documents
 
 ```text
+docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
 docs/specifications/phase-10c-test-plan.md
 docs/specifications/pos-keyboard-workspace.md

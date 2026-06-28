@@ -59,7 +59,7 @@ Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are 
 | --------- | -------- | --- | ---------- | ------ |
 | **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | **Complete** |
 | **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | **Complete** |
-| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **In progress** (slices 1–7; [completion](../implementation/phase-10c-completion.md)) |
+| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **In progress** (slices 1–8; [completion](../implementation/phase-10c-completion.md); **9B** planned) |
 | **10-D** | This document (Workstreams 4–6) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | Planned |
 | **10-E** | This document (below) | Consistency sweep, accessibility, report regression | All | Planned |
 
@@ -218,6 +218,8 @@ Command aliases make common actions fast.
 ```
 
 Key decisions: idle workspace when no active draft; active draft always wins on landing; two-lane parser (slash commands vs scan lookup only); no implicit workflow guessing; one active draft per register session + workstation + cashier; return/pickup drawer workflows; `/reports` confirms when active draft exists; **function keys out of scope for 10-C completion**.
+
+**Remaining 10-C slices:** 9 (cart expanded-row polish, in review), **9B** ([tender workspace and completion ergonomics](phase-10c-9b-tender-workspace-and-completion.md)), 10 (session drawer, held-sale access, docs sync). Slice 9B refines the settlement modal into a keyboard-first tender workspace, keeps completion explicit (no auto-complete on tender save), and adds a post-completion cashier workspace with document checklist and **New Sale** as the primary next action.
 
 ---
 
@@ -433,6 +435,7 @@ Phase 10 is complete when all sub-phases meet their criteria.
 * Separate line vs transaction discount commands; `/gc` amount adds line / no amount opens panel; `/cashdrop` planned/disabled; return/pickup drawer workflows
 * Command field primary focus (idle and active); **required** keyboard/focus criteria met
 * Expanded-row line edits; settlement on shared modal; readiness blockers actionable near completion
+* Tender workspace (slice 9B): hotkey tender type selection, one active detail form, explicit completion, post-completion workspace with New Sale primary action
 * `Pos::CommandRegistry` with permissions and state checks; `/reports` confirms before navigate when draft exists
 * `/close` blocked while active draft exists; return blocked when tender rows present
 * Command aliases and visible controls required; function keys **out of scope** for 10-C completion
@@ -537,6 +540,7 @@ Recommended implementation approach:
 docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md
 docs/specifications/phase-10a-interaction-infrastructure-spec.md
 docs/specifications/phase-10b-item-cockpit-spec.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
