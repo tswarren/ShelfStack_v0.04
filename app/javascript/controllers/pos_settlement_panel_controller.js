@@ -4,6 +4,12 @@ export default class extends Controller {
   static targets = [
     "modal",
     "rows",
+    "draftRows",
+    "activeDetail",
+    "typeSelector",
+    "amountDue",
+    "tenderedTotal",
+    "readyComplete",
     "emptyRow",
     "cardTemplate",
     "checkTemplate",
@@ -22,11 +28,13 @@ export default class extends Controller {
   static values = {
     totalCents: Number,
     refund: Boolean,
-    lookupUrl: String
+    lookupUrl: String,
+    syncUrl: String
   }
 
   connect() {
     this.boundKeydown = this.keydown.bind(this)
+    this.modalWasOpen = false
     this.visibleRows().forEach((row) => {
       this.syncRowLayout(row)
       this.updateRowSummary(row)
@@ -48,14 +56,21 @@ export default class extends Controller {
     this.update()
     this.element.dispatchEvent(new CustomEvent("pos:settlement-opened", { bubbles: true }))
 
+    if (this.hasActiveDraft()) {
+      this.focusRowEntry(this.activeDraftRow())
+      return
+    }
+
     const rows = this.visibleRows()
     const emptyAmountRow = rows.find((row) => !this.rowHasAmount(row))
     if (emptyAmountRow) {
       this.focusRowEntry(emptyAmountRow)
-    } else if (rows.length === 0) {
-      this.modalTarget.querySelector(".ss-pos-settlement-modal-footer__center .ss-btn")?.focus()
+    } else if (this.readyToComplete()) {
+      this.focusCompleteButton()
+    } else if (rows.length === 0 && this.hasTypeSelectorTarget) {
+      this.typeSelectorTarget.querySelector("button")?.focus()
     } else {
-      this.modalTarget.querySelector("[data-pos-transaction-edit-target='completeButton']")?.focus()
+      this.focusCompleteButton()
     }
   }
 
@@ -74,9 +89,255 @@ export default class extends Controller {
   }
 
   keydown(event) {
+    if (this.isTypingInField(event.target) && !this.isHotkeySelection(event)) return
+
     if (event.key === "Escape") {
-      this.close()
+      event.preventDefault()
+      if (this.hasActiveDraft()) {
+        this.cancelActiveDetail()
+      } else {
+        this.close()
+      }
+      return
     }
+
+    if (event.key === "Enter" && !this.isSubmitControl(event.target)) {
+      if (this.hasActiveDraft()) {
+        event.preventDefault()
+        this.saveActiveDetail()
+        return
+      }
+
+      if (this.readyToComplete()) {
+        event.preventDefault()
+        this.focusCompleteButton()?.click()
+      }
+      return
+    }
+
+    const hotkey = this.hotkeyForEvent(event)
+    if (hotkey) {
+      event.preventDefault()
+      this.selectTenderTypeByKey(hotkey)
+    }
+  }
+
+  isTypingInField(target) {
+    if (!(target instanceof HTMLElement)) return false
+
+    const tag = target.tagName
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable
+  }
+
+  isSubmitControl(target) {
+    return target instanceof HTMLElement && target.closest("button[type='submit'], input[type='submit']")
+  }
+
+  isHotkeySelection(event) {
+    return !this.isTypingInField(event.target) && ["1", "2", "3", "4"].includes(event.key)
+  }
+
+  hotkeyForEvent(event) {
+    if (this.isTypingInField(event.target)) return null
+    if (!["1", "2", "3", "4"].includes(event.key)) return null
+
+    const button = this.typeSelectorTarget?.querySelector(`[data-hotkey='${event.key}']`)
+    return button ? event.key : null
+  }
+
+  selectTenderType(event) {
+    event?.preventDefault()
+    const tenderType = event.currentTarget.dataset.tenderType
+    if (!tenderType) return
+
+    this.openDraftForType(tenderType)
+  }
+
+  selectTenderTypeByKey(key) {
+    const button = this.typeSelectorTarget?.querySelector(`[data-hotkey='${key}']`)
+    button?.click()
+  }
+
+  openDraftForType(tenderType, { amountCents = null, prefillRemaining = false } = {}) {
+    const templateFor = {
+      cash: this.cashTemplateTarget,
+      card: this.cardTemplateTarget,
+      check: this.checkTemplateTarget,
+      store_credit: this.storeCreditTemplateTarget,
+      gift_card: this.giftCardTemplateTarget
+    }
+    const template = templateFor[tenderType]
+    if (!template) return
+
+    this.clearDraftRow()
+    const row = this.appendDraftRow(template, tenderType)
+    if (!row) return
+
+    if (amountCents != null) {
+      this.setRowAmountCents(row, amountCents)
+    } else if (prefillRemaining) {
+      this.fillRemainingForRow(row, tenderType)
+    }
+
+    if (this.hasActiveDetailTarget) {
+      this.activeDetailTarget.hidden = false
+    }
+
+    this.highlightActiveType(tenderType)
+    this.update()
+    this.focusRowEntry(row)
+  }
+
+  appendDraftRow(template, tenderType) {
+    if (!this.hasDraftRowsTarget) return null
+
+    const index = this.nextSettlementIndex()
+    const fragment = template.content.cloneNode(true)
+    const row = fragment.querySelector("[data-settlement-row]")
+    if (!row) return null
+
+    fragment.querySelectorAll("[name]").forEach((field) => {
+      field.name = field.name.replace("[TEMPLATE]", `[${index}]`)
+    })
+
+    row.dataset.rowId = ""
+    row.dataset.settlementIndex = String(index)
+    row.dataset.settlementType = tenderType
+    row.dataset.draft = "true"
+    row.removeAttribute("data-destroyed")
+    row.dataset.collapsed = "false"
+    this.draftRowsTarget.appendChild(fragment)
+    this.syncRowLayout(row)
+    return row
+  }
+
+  clearDraftRow() {
+    if (!this.hasDraftRowsTarget) return
+
+    this.draftRowsTarget.innerHTML = ""
+    if (this.hasActiveDetailTarget) {
+      this.activeDetailTarget.hidden = true
+    }
+    this.clearActiveTypeHighlight()
+  }
+
+  cancelActiveDetail(event) {
+    event?.preventDefault()
+    this.clearDraftRow()
+    this.update()
+    this.typeSelectorTarget?.querySelector("button")?.focus()
+  }
+
+  async saveActiveDetail(event) {
+    event?.preventDefault()
+    const draftRow = this.activeDraftRow()
+    if (!draftRow) return
+
+    if (!this.rowHasAmount(draftRow) && draftRow.dataset.settlementType !== "store_credit" && draftRow.dataset.settlementType !== "gift_card") {
+      this.focusRowEntry(draftRow)
+      return
+    }
+
+    const syncUrl = this.syncUrlValue || this.modalTarget?.dataset?.posSettlementPanelSyncUrlValue
+    if (!syncUrl) return
+
+    this.modalWasOpen = !this.modalTarget.hidden
+    const body = this.buildSyncFormData(draftRow)
+
+    try {
+      const response = await fetch(syncUrl, {
+        method: "PATCH",
+        headers: {
+          Accept: "text/vnd.turbo-stream.html",
+          "X-CSRF-Token": this.csrfToken
+        },
+        credentials: "same-origin",
+        body
+      })
+
+      if (!response.ok) return
+
+      const html = await response.text()
+      window.Turbo.renderStreamMessage(html)
+
+      if (this.modalWasOpen) {
+        requestAnimationFrame(() => this.open())
+      }
+    } catch (_error) {
+      // Keep the modal open; server-side flash handles validation errors.
+    }
+  }
+
+  buildSyncFormData(draftRow) {
+    const body = new FormData()
+    const form = this.modalTarget.querySelector("form")
+
+    this.visibleRows().forEach((row) => {
+      this.appendRowFields(body, row)
+    })
+    this.appendRowFields(body, draftRow)
+
+    if (form) {
+      const authorizationId = form.querySelector("[name='pos_authorization_id']")?.value
+      if (authorizationId) body.append("pos_authorization_id", authorizationId)
+      const confirmInactive = form.querySelector("[name='confirm_inactive']")
+      if (confirmInactive && !confirmInactive.disabled) body.append("confirm_inactive", "1")
+    }
+
+    body.append("reopen_settlement_modal", "1")
+    return body
+  }
+
+  appendRowFields(body, row) {
+    row.querySelectorAll("input[name], select[name], textarea[name]").forEach((field) => {
+      if (field.type === "checkbox" && !field.checked) return
+      body.append(field.name, field.value)
+    })
+  }
+
+  hasActiveDraft() {
+    return this.activeDraftRow() != null
+  }
+
+  activeDraftRow() {
+    if (!this.hasDraftRowsTarget) return null
+
+    return this.draftRowsTarget.querySelector("[data-settlement-row]")
+  }
+
+  highlightActiveType(tenderType) {
+    if (!this.hasTypeSelectorTarget) return
+
+    this.typeSelectorTarget.querySelectorAll("[data-tender-type]").forEach((button) => {
+      button.classList.toggle("ss-pos-tender-workspace__type-btn--active", button.dataset.tenderType === tenderType)
+    })
+  }
+
+  clearActiveTypeHighlight() {
+    if (!this.hasTypeSelectorTarget) return
+
+    this.typeSelectorTarget.querySelectorAll("[data-tender-type]").forEach((button) => {
+      button.classList.remove("ss-pos-tender-workspace__type-btn--active")
+    })
+  }
+
+  readyToComplete() {
+    const button = this.completeButton()
+    return button && !button.disabled
+  }
+
+  focusCompleteButton() {
+    const button = this.completeButton()
+    button?.focus()
+    return button
+  }
+
+  completeButton() {
+    return this.modalTarget?.querySelector("[data-pos-transaction-edit-target='completeButton']")
+  }
+
+  get csrfToken() {
+    return document.querySelector("meta[name='csrf-token']")?.content
   }
 
   syncTotal() {
@@ -103,34 +364,7 @@ export default class extends Controller {
 
     if (!tenderType) return
 
-    const templateFor = {
-      cash: this.cashTemplateTarget,
-      card: this.cardTemplateTarget,
-      check: this.checkTemplateTarget,
-      store_credit: this.storeCreditTemplateTarget,
-      gift_card: this.giftCardTemplateTarget
-    }
-    const template = templateFor[tenderType]
-    if (!template) return
-
-    let row = this.rowsTarget.querySelector(`[data-settlement-type='${tenderType}']:not([data-destroyed='true'])`)
-    if (!row || row.hidden) {
-      this.appendRow(template)
-      row = this.visibleRows().find((visibleRow) => visibleRow.dataset.settlementType === tenderType)
-    } else {
-      this.expandRowElement(row)
-    }
-
-    if (!row) return
-
-    if (amountCents != null) {
-      this.setRowAmountCents(row, amountCents)
-    } else if (prefillRemaining) {
-      this.fillRemainingForRow(row, tenderType)
-    }
-
-    this.update()
-    this.focusRowEntry(row)
+    this.openDraftForType(tenderType, { amountCents, prefillRemaining: amountCents == null && prefillRemaining })
   }
 
   update() {
@@ -468,7 +702,29 @@ export default class extends Controller {
       this.changeDueTarget.textContent = changeDisplay
     }
 
+    if (this.hasTenderedTotalTarget) {
+      this.tenderedTotalTarget.textContent = this.formatMoney(nonCashCents + cashTenderedCents)
+    }
+
+    if (this.hasReadyCompleteTarget) {
+      const ready = this.readyToCompleteFromTotals(nonCashCents, cashTenderedCents, totalCents)
+      this.readyCompleteTarget.hidden = !ready
+    }
+
     this.updateCompleteButton(nonCashCents, cashTenderedCents, totalCents)
+  }
+
+  readyToCompleteFromTotals(nonCashCents, cashTenderedCents, totalCents) {
+    if (totalCents > 0) {
+      const remainingAfterNonCash = Math.max(totalCents - nonCashCents, 0)
+      return nonCashCents <= totalCents && cashTenderedCents >= remainingAfterNonCash
+    }
+
+    if (totalCents < 0) {
+      return Math.abs(totalCents) <= nonCashCents + cashTenderedCents
+    }
+
+    return true
   }
 
   updateCompleteButton(nonCashCents, cashTenderedCents, totalCents) {

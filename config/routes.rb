@@ -451,6 +451,7 @@ Rails.application.routes.draw do
     end
     resources :transactions do
       member do
+        get :completed
         patch :complete
         patch :suspend
         patch :resume

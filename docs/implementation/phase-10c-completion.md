@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace
 
-**Status:** In progress (slices 1–9 delivered; slice **9A** in review; slices **9B** and **10** pending)
+**Status:** In progress (slices 1–9 and **9A** delivered; slice **9B** in progress; slice **10** pending)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
@@ -83,23 +83,28 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
-## In review (slice 9A)
+## Delivered (slice 9A)
 
-**Branch:** `phase-10c-9a-transaction-discount-modal`
-
-- Transaction discount modal (`/discount`, `/di`, `/dt`)
-- Preview total after discount in modal
-- Adjustments panel as summary + launcher (existing discounts list unchanged)
-- Server-side validation errors reopen modal with submitted values
+- Transaction discount modal (`/discount`, `/di`, `/dt`) with command prefill
+- Estimated total preview in modal; sidebar launcher via document event
+- Tax exemption modal in-modal validation errors
+- Integration + system tests for discount modal
 
 ---
 
-## Pending (slices 9B and 10)
+## In progress (slice 9B)
 
-| Slice | Deliverable |
-| ----- | ----------- |
-| **9B** | Tender workspace UX, explicit completion, post-completion workspace — [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md) |
-| 10 | Session drawer polish, held-sale access, full docs sync, mark complete |
+**Branch:** `phase-10c-9b-tender-workspace`
+
+- Completed transaction workspace at `/pos/transactions/:id/completed` with New Sale primary action
+- Complete action redirects to completed workspace
+- Tender modal restructure: summary (amount due/tendered/remaining), hotkey type selector, active detail panel
+- Save tender via `sync_tenders` without auto-complete; Enter/Escape keyboard behavior
+- Ready-to-complete state when tenders cover balance
+
+---
+
+## Pending (slice 10)
 
 ---
 
@@ -122,7 +127,7 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 | `/gc` without amount | Open modal | Opens amount panel; focus amount field; submit returns to command |
 | Cash in/out UX | Modal (not register session page) | Modal posts with `return_path` back to workspace |
 | Transaction discount entry | Adjustments `<details>` panel | **Slice 9A:** transaction discount modal with preview total; adjustments panel is launcher + list |
-| Post-completion landing | Idle workspace immediately | **Deferred to slice 9B:** completed transaction workspace with New Sale as primary action |
+| Post-completion landing | Idle workspace immediately | **Slice 9B (in progress):** `/completed` workspace with New Sale primary action |
 
 ---
 

@@ -661,6 +661,24 @@ module PosHelper
     pos_settlement_tenders(transaction).sum(&:change_display_cents)
   end
 
+  def pos_completed_workspace_heading(_transaction)
+    "Sale complete"
+  end
+
+  def pos_completed_workspace_type_label(transaction)
+    case transaction.transaction_type
+    when "return" then "Return complete"
+    when "exchange" then "Exchange complete"
+    else "Sale complete"
+    end
+  end
+
+  def pos_completed_tendered_summary(transaction)
+    pos_settlement_tenders(transaction).order(:line_number).map do |tender|
+      "#{pos_money(pos_tender_receipt_amount_cents(tender))} #{pos_tender_receipt_label(tender)}"
+    end.join(", ")
+  end
+
   def pos_settlement_tenders(transaction)
     if transaction.persisted?
       transaction.pos_tenders.settlement_rows

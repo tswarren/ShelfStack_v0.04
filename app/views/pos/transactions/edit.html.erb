@@ -16,6 +16,7 @@
      data-controller="pos-transaction-edit pos-settlement-panel"
      data-pos-transaction-edit-readiness-url-value="<%= readiness_preview_pos_transaction_path(@transaction) %>"
      data-pos-transaction-edit-transaction-id-value="<%= @transaction.id %>"
+     data-pos-settlement-panel-sync-url-value="<%= sync_tenders_pos_transaction_path(@transaction) %>"
      data-pos-settlement-panel-total-cents-value="<%= @transaction.total_cents %>"
      data-pos-settlement-panel-refund-value="<%= Pos::TenderTypePolicy.refund_transaction?(@transaction) %>"
      data-pos-settlement-panel-lookup-url-value="<%= pos_stored_value_lookup_path %>"
