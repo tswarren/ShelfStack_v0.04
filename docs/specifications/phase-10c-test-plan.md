@@ -2,6 +2,8 @@
 
 **Status:** Delivered on integration branch — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
+**Manual QA coverage map:** [phase-10c-manual-qa.md#automated-coverage-map](../implementation/phase-10c-manual-qa.md#automated-coverage-map)
+
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md)
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)

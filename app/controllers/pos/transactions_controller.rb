@@ -481,6 +481,7 @@ module Pos
     def resume
       if @transaction.cashier_user_id != current_user.id
         authorize_pos!("pos.transactions.resume.other_cashier")
+        return if performed?
       end
 
       @transaction.update!(status: "draft", suspended_at: nil)

@@ -387,6 +387,64 @@ class PosHelperTest < ActionView::TestCase
     assert_equal 700, pos_receipt_discounted_subtotal_cents(transaction)
   end
 
+  test "pos_can_resume_transaction allows owner with resume permission" do
+    owner = create_user!(username: "resume_owner_#{SecureRandom.hex(4)}")
+    store = create_store!(store_number: unique_store_number)
+    transaction = PosTransaction.create!(
+      store: store,
+      workstation: create_workstation!(store: store),
+      cashier_user: owner,
+      status: "suspended"
+    )
+    grant_permission!(owner, "pos.transactions.resume", store: store)
+
+    assert pos_can_resume_transaction?(transaction, owner)
+  end
+
+  test "pos_can_resume_transaction denies other cashier without other_cashier permission" do
+    owner = create_user!(username: "resume_owner_b_#{SecureRandom.hex(4)}")
+    coworker = create_user!(username: "resume_coworker_#{SecureRandom.hex(4)}")
+    store = create_store!(store_number: unique_store_number)
+    transaction = PosTransaction.create!(
+      store: store,
+      workstation: create_workstation!(store: store),
+      cashier_user: owner,
+      status: "suspended"
+    )
+    grant_permission!(coworker, "pos.transactions.resume", store: store)
+
+    refute pos_can_resume_transaction?(transaction, coworker)
+  end
+
+  test "pos_can_resume_transaction allows lead with other_cashier permission" do
+    owner = create_user!(username: "resume_owner_c_#{SecureRandom.hex(4)}")
+    lead = create_user!(username: "resume_lead_#{SecureRandom.hex(4)}")
+    store = create_store!(store_number: unique_store_number)
+    transaction = PosTransaction.create!(
+      store: store,
+      workstation: create_workstation!(store: store),
+      cashier_user: owner,
+      status: "suspended"
+    )
+    grant_permission!(lead, "pos.transactions.resume", store: store)
+    grant_permission!(lead, "pos.transactions.resume.other_cashier", store: store)
+
+    assert pos_can_resume_transaction?(transaction, lead)
+  end
+
+  test "pos_can_resume_transaction requires resume permission" do
+    owner = create_user!(username: "resume_owner_d_#{SecureRandom.hex(4)}")
+    store = create_store!(store_number: unique_store_number)
+    transaction = PosTransaction.create!(
+      store: store,
+      workstation: create_workstation!(store: store),
+      cashier_user: owner,
+      status: "suspended"
+    )
+
+    refute pos_can_resume_transaction?(transaction, owner)
+  end
+
   test "supervisor authorization type maps readiness check keys" do
     check = Pos::CompletionReadiness::Check.new(
       key: :reserved_stock_auth,

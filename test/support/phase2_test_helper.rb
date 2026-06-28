@@ -2,9 +2,10 @@
 
 module Phase2TestHelper
   def create_tax_category!(**attrs)
+    suffix = SecureRandom.hex(3)
     TaxCategory.create!({
-      name: "Test Tax Category",
-      short_name: "Test",
+      name: "Test Tax Category #{suffix}",
+      short_name: "T#{suffix}",
       sort_order: 10,
       active: true
     }.merge(attrs))

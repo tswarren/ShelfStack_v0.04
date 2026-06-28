@@ -26,6 +26,10 @@ module Phase1TestHelper
     }.merge(attrs))
   end
 
+  def unique_store_number
+    format("%03d", rand(100..999))
+  end
+
   def create_workstation!(store: nil, attrs: {})
     store ||= create_store!
     Workstation.create!({

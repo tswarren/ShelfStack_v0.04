@@ -27,6 +27,7 @@ require_relative "support/phase65_test_helper"
 require_relative "support/phase7a_test_helper"
 require_relative "support/phase7b_test_helper"
 require_relative "support/phase7c_test_helper"
+require_relative "support/pos_system_test_helper"
 
 module ActiveSupport
   class TestCase

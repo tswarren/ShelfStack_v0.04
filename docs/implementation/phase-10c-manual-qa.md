@@ -12,6 +12,8 @@ Use this checklist before marking Phase 10-C **Complete**. Test on a **register 
 
 **Suggested browsers:** Chrome plus one of Safari or Firefox (keyboard/focus behavior differs).
 
+**Automated coverage map:** [below](#automated-coverage-map) — maps each checklist row to test files and coverage level.
+
 ---
 
 ## Setup
@@ -242,6 +244,212 @@ Use this checklist before marking Phase 10-C **Complete**. Test on a **register 
 ## Quick smoke path (~15 min)
 
 1.2 → 2.1 → 3.1 → 8.1–8.8 → 9.1–9.8 → 5.3–5.5
+
+---
+
+## Automated coverage map
+
+Maps manual QA checklist rows to automated tests on branch `phase-10c-pos-keyboard-workspace`.
+
+**Legend**
+
+| Symbol | Meaning |
+|--------|---------|
+| **Auto** | Primary behavior covered by automated test(s) |
+| **Partial** | Domain/routing/API covered; browser UX, focus, or edge case still manual |
+| **Manual** | No meaningful automated coverage — checklist row required |
+
+**Summary (checklist rows only):** ~45% **Auto**, ~30% **Partial**, ~25% **Manual**. Keyboard/focus (§11) and visual/touch checks remain mostly manual by design.
+
+**Run scaffolded browser tests:**
+
+```bash
+docker compose exec -T web bin/rails test \
+  test/system/pos/ \
+  test/integration/pos_held_sales_lifecycle_test.rb \
+  test/integration/pos_completed_workspace_test.rb \
+  test/integration/pos_workspace_landing_test.rb \
+  test/integration/pos_transaction_route_command_test.rb
+```
+
+### §1 Landing and active draft
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 1.1 | Partial | `landing_router_test.rb` (`closed`); `pos_home_controller_test.rb` (closed register) | Open-register workflow UI not system-tested |
+| 1.2 | Partial | `pos_workspace_landing_test.rb` (idle command field); `landing_router_test.rb` (`idle`) | Focus-on-load is manual |
+| 1.3 | Partial | `pos_workspace_landing_test.rb` (scan → draft + line); `root_command_router_test.rb` | Focus return after Turbo is manual (§11.1) |
+| 1.4 | Auto | `pos_workspace_landing_test.rb` (`active session-scoped draft redirects to edit`) | |
+| 1.5 | Partial | `pos_draft_lifecycle_test.rb` (resume existing draft); `active_draft_resolver_test.rb` | Empty-draft persistence via navigation not system-tested |
+| 1.6 | Partial | `pos_held_sales_lifecycle_test.rb` (`suspend returns cashier to idle landing`) | `/hold` command registered but **not wired**; suspend uses `PATCH suspend` |
+| 1.7 | Auto | `pos_workspace_landing_test.rb` (legacy conflict picker); `active_draft_resolver_test.rb` (`legacy_found`) | |
+| 1.8 | Partial | `active_draft_resolver_test.rb` (workstation/cashier scope, conflict); `pos_home_controller_test.rb` (queue tables) | Cross-cashier takeover UX manual |
+
+### §2 Command field and two-lane parser
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 2.1 | Auto | `pos_workspace_landing_test.rb`; `root_command_router_test.rb`; `command_parser_test.rb` | |
+| 2.2 | Auto | `pos_workspace_landing_test.rb` (`receipt-shaped input`) | |
+| 2.3 | Auto | `pos_workspace_landing_test.rb` (`failed lookup`) | |
+| 2.4 | Auto | `pos_workspace_landing_test.rb` (`/help`, `?`); `command_registry_test.rb` (help metadata) | Modal display manual |
+| 2.5 | Auto | `pos_workspace_landing_test.rb`; `root_command_router_test.rb` | |
+| 2.6 | Auto | `pos_workspace_landing_test.rb`; `root_command_router_test.rb` | |
+| 2.7 | Partial | `command_registry_test.rb` (`/tender` rejects amount via route builder message) | Idle-path integration not dedicated |
+| 2.8 | Auto | `command_registry_test.rb` (`cashdrop` planned); `root_command_router_test.rb` | |
+
+### §3 Transaction-starting commands (idle → draft)
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 3.1 | Partial | `pos_workspace_landing_test.rb` (open ring drawer offer); `root_command_router_test.rb` (`/op`) | Draft + $10 prefill via carry-forward manual |
+| 3.2 | Auto | `pos_workspace_landing_test.rb` (`/gc 50`); `root_command_router_test.rb` | |
+| 3.3 | Partial | `root_command_router_test.rb` (`/gc` carry-forward); `pos_workspace_landing_test.rb` | Amount panel focus manual |
+| 3.4 | Auto | `pos_workspace_landing_test.rb`; `root_command_router_test.rb` | |
+| 3.5 | Auto | `pos_workspace_landing_test.rb`; `root_command_router_test.rb` | |
+| 3.6 | Partial | `pos_customer_workspace_test.rb` (`start_sale`); `root_command_router_test.rb` | `/customer` lookup modal UX manual |
+
+### §4 Transactionless commands (with active draft)
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 4.1 | Partial | `command_bar_router_test.rb`; `root_command_router_test.rb` (`/balance` routing) | Modal open with active draft manual |
+| 4.2 | Auto | `pos_transaction_route_command_test.rb`; `pos_workspace_landing_test.rb` | |
+| 4.3 | Auto | `pos_transaction_route_command_test.rb`; `pos_workspace_landing_test.rb` (focus payload) | Scroll-to-held UX manual |
+| 4.4 | Partial | `pos_transaction_route_command_test.rb` (implicit via transaction route tests) | Help modal with draft open manual |
+| 4.5 | Auto | `pos_transaction_route_command_test.rb` (`/cashin`); `pos_cash_movements_controller_test.rb` | Modal workflow manual |
+| 4.6 | Auto | `pos_transaction_route_command_test.rb` (`/reports` confirm) | |
+| 4.7 | Auto | `pos_transaction_route_command_test.rb`; `pos_workspace_landing_test.rb` (return blocked with settlement) | |
+
+### §5 Session drawer and held sales
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 5.1 | Partial | `pos_workspace_landing_test.rb`; `pos_home_controller_test.rb` (drawer shell) | Drawer open animation/focus manual |
+| 5.2 | Manual | — | Session button click not system-tested |
+| 5.3 | Partial | `pos_held_sales_lifecycle_test.rb`; `suspended_transactions_lookup_test.rb` | `/held` command + list content manual |
+| 5.4 | Manual | — | Held sales (N) button not system-tested |
+| 5.5 | Auto | `pos_held_sales_lifecycle_test.rb` (`cashier resumes own held sale`) | |
+| 5.6 | Auto | `pos_held_sales_lifecycle_test.rb`; `pos_helper_test.rb` (`pos_can_resume_transaction?`) | |
+| 5.7 | Auto | `pos_held_sales_lifecycle_test.rb`; `pos_helper_test.rb` | |
+| 5.8 | Manual | — | Esc/backdrop focus restore manual (see §11) |
+
+### §6 Cart and line editing
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 6.1 | Partial | `pos_cart_expanded_row_test.rb` (More menu panels) | Full panel UX manual |
+| 6.2 | Partial | `pos_cart_expanded_row_test.rb`; `phase6_pos_polish_integration_test.rb` (update line) | First-field focus manual |
+| 6.3 | Partial | `pos_cart_expanded_row_test.rb` (collapsed after save) | Focus restore manual |
+| 6.4 | Auto | `command_bar_router_test.rb` (`/d`, `/ld`); `command_registry_test.rb` | |
+| 6.5 | Auto | `command_bar_router_test.rb` (`/discount`, `/dt`); `pos_transaction_discount_modal_test.rb` | |
+| 6.6 | Auto | `command_registry_test.rb` (`/d` → linediscount, not transaction discount) | |
+| 6.7 | Auto | `pos_transaction_discount_modal_test.rb` (integration + system); `pos_line_discount_workspace_test.rb` | Preview total in browser partial |
+| 6.8 | Partial | `pos_tax_exemption_modal_test.rb` (integration) | `/tx` command routing + modal UX manual |
+
+### §7 Return and pickup
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 7.1 | Partial | `pos_workspace_landing_test.rb`; `root_command_router_test.rb` | Drawer UX manual |
+| 7.2 | Partial | `phase6_pos_polish_integration_test.rb` (returns/exchange) | Mixed exchange totals manual |
+| 7.3 | Auto | `pos_workspace_landing_test.rb`; `root_command_router_test.rb` (settlement blocks return) | |
+| 7.4 | Partial | `root_command_router_test.rb` (`/rt` receipt prefill) | Receipted return flow manual |
+| 7.5 | Partial | `phase6_pos_polish_integration_test.rb` (no-receipt return) | Tab UX manual |
+| 7.6 | Manual | — | Pickup fulfillment end-to-end manual |
+
+### §8 Tender workspace
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 8.1 | Partial | `pos_transaction_route_command_test.rb` (`/tender`); `tender_workspace_test.rb` (via `/tender` hotkey test) | No-type-preselected assertion partial |
+| 8.2 | Auto | `tender_workspace_test.rb`; `pos_transaction_route_command_test.rb` (`/cash`) | |
+| 8.3 | Auto | `pos_transaction_route_command_test.rb` (`/card 20`) | Browser prefill manual |
+| 8.4 | Partial | `pos_transaction_route_command_test.rb` (`/giftredeem`); `settlement_sync_test.rb` | `/check`, `/storecredit` browser manual |
+| 8.5 | Auto | `tender_workspace_test.rb` (hotkey 2 → card); cash hotkey implicit in `/cash` test | Hotkeys 3–4 manual |
+| 8.6 | Partial | `tender_workspace_test.rb` (partial save shows remaining); `readiness_preview_test.rb` | Live summary updates in browser partial |
+| 8.7 | Auto | `tender_workspace_test.rb`; `settlement_sync_test.rb` (partial cash) | |
+| 8.8 | Partial | `settlement_sync_test.rb` (split tender); `tender_workspace_test.rb` (full cash ready) | Two-tender browser flow manual |
+| 8.9 | Auto | `settlement_sync_test.rb` (`destroy` row) | Browser remove row manual |
+| 8.10 | Partial | `settlement_sync_test.rb` (validation) | Flash/modal error display manual |
+| 8.11 | Manual | — | Enter-on-amount-field save not system-tested |
+| 8.12 | Auto | `tender_workspace_test.rb` (`escape cancels active detail`) | |
+| 8.13 | Manual | — | Escape closes modal with saved rows manual |
+| 8.14 | Manual | — | Enter on Cancel/Save buttons manual |
+| 8.15 | Partial | `pos_transaction_route_command_test.rb` (`/giftredeem`) | Lookup → resolve type in browser manual |
+| 8.16 | Partial | `phase7b_settlement_integration_test.rb`; stored-value service tests | Lookup UX manual |
+| 8.17 | Partial | `settlement_sync_test.rb`; `phase7b_settlement_integration_test.rb` | Cap/error display manual |
+| 8.18 | Partial | `phase7b_settlement_integration_test.rb` | Invalid identifier UX manual |
+| 8.19 | Auto | `settlement_sync_test.rb` (split cash + card) | Browser split flow manual |
+| 8.20 | Auto | `settlement_sync_test.rb` (cash overpay change); `phase6_pos_polish_integration_test.rb` | |
+| 8.21 | Auto | `settlement_sync_test.rb` (refund tenders) | Browser refund modal manual |
+
+### §9 Completion and completed workspace
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 9.1 | Auto | `tender_workspace_test.rb` (Complete button); `pos_completed_workspace_test.rb` | |
+| 9.2 | Manual | — | Enter-to-complete from ready state not system-tested |
+| 9.3 | Auto | `tender_workspace_test.rb`; `pos_completed_workspace_test.rb` | |
+| 9.4 | Partial | `pos_completed_workspace_test.rb` (HTML assertions) | Tendered/change display manual |
+| 9.5 | Partial | `pos_receipts_controller_test.rb` | Print from completed workspace manual |
+| 9.6 | Partial | `pos_stored_value_issuance_slips_controller_test.rb`; `post_gift_card_sale_ledger_test.rb` | Slip link on completed page manual |
+| 9.7 | Manual | — | Gift receipt placeholder visual |
+| 9.8 | Partial | `completed_workspace_test.rb` (system, focus); `pos_completed_workspace_test.rb` | Idle landing + command focus manual |
+| 9.9 | Auto | `completed_workspace_test.rb` (Enter → new draft) | |
+| 9.10 | Manual | — | Required SV slip focus priority not system-tested |
+| 9.11 | Partial | `pos_completed_workspace_test.rb` (View summary link in HTML) | Navigation manual |
+
+### §10 Register utilities
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 10.1 | Partial | `root_command_router_test.rb` (`/close` idle) | Close workflow UI manual |
+| 10.2 | Auto | `pos_register_close_test.rb` (suspended warning) | |
+| 10.3 | Partial | `root_command_router_test.rb` (`/drawer`) | Modal UX manual |
+| 10.4 | Partial | `pos_transaction_route_command_test.rb` (`/cashin` vs `/cash`) | Distinct UX manual |
+| 10.5 | Partial | `phase6_pos_polish_integration_test.rb`; `void_transaction_test.rb`; `post_void_inventory_test.rb` | Void from completed workspace manual |
+
+### §11 Keyboard and focus (cross-cutting)
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 11.1 | Manual | — | Turbo refocus after cart update |
+| 11.2 | Manual | — | Modal vs command field focus steal |
+| 11.3 | Partial | `modal_drawer_shell_test.rb` (interaction shell fixture) | POS-specific restore paths manual |
+| 11.4 | Partial | `modal_drawer_shell_test.rb` (tab trap) | POS settlement/discount modals manual |
+| 11.5 | Manual | — | Mouse-only path |
+| 11.6 | Manual | — | Touch target sizing |
+
+### §12 Regression smoke (prior phases)
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 12.1 | Auto | `post_inventory_test.rb`; `phase6_pos_polish_integration_test.rb` | |
+| 12.2 | Auto | `post_gift_card_sale_ledger_test.rb`; `phase7b_pos_stored_value_test.rb` | |
+| 12.3 | Auto | `post_stored_value_ledger_test.rb`; `phase7b_settlement_integration_test.rb` | |
+| 12.4 | Auto | `pos_transaction_discount_modal_test.rb`; `pos_line_discount_workspace_test.rb`; discount service tests | |
+| 12.5 | Auto | `pos_tax_exemption_modal_test.rb`; tax recalculator tests | |
+| 12.6 | Partial | Phase 7A integration tests | Pickup POS line manual (§7.6) |
+| 12.7 | Auto | `phase6_pos_polish_integration_test.rb` (inactive variant confirm) | |
+
+### Key test file index
+
+| File | Primary checklist sections |
+|------|---------------------------|
+| `test/system/pos/tender_workspace_test.rb` | §8, §9.1, §9.3 |
+| `test/system/pos/completed_workspace_test.rb` | §9.8–9.9 |
+| `test/system/pos/transaction_discount_modal_test.rb` | §6.7 |
+| `test/integration/pos_held_sales_lifecycle_test.rb` | §1.6, §5.3, §5.5–5.7 |
+| `test/integration/pos_workspace_landing_test.rb` | §1–§4 (idle/routing) |
+| `test/integration/pos_transaction_route_command_test.rb` | §4, §8.1–8.4 |
+| `test/integration/pos_completed_workspace_test.rb` | §9.3–9.4, §9.11 |
+| `test/services/pos/settlement_sync_test.rb` | §8.7–8.9, §8.19–8.21 |
+| `test/services/pos/command_bar_router_test.rb` | §2, §6.4–6.5 |
+| `test/services/pos/root_command_router_test.rb` | §2–§4 (idle routing) |
+| `test/services/pos/landing_router_test.rb` | §1.1–1.2 |
+| `test/services/pos/active_draft_resolver_test.rb` | §1.4–1.8 |
+| `test/helpers/pos_helper_test.rb` | §5.6–5.7 (`pos_can_resume_transaction?`) |
 
 ---
 
