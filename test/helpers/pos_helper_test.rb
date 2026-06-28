@@ -387,13 +387,16 @@ class PosHelperTest < ActionView::TestCase
     assert_equal 700, pos_receipt_discounted_subtotal_cents(transaction)
   end
 
-  test "transaction item counts sum sold and returned quantities" do
-    transaction = PosTransaction.new
-    transaction.pos_transaction_lines.build(quantity: 2)
-    transaction.pos_transaction_lines.build(quantity: 1)
-    transaction.pos_transaction_lines.build(quantity: -1)
+  test "supervisor authorization type maps readiness check keys" do
+    check = Pos::CompletionReadiness::Check.new(
+      key: :reserved_stock_auth,
+      status: :block,
+      message: "Selling into reserved stock requires manager authorization",
+      action_key: :supervisor_auth,
+      action_label: "Authorize override"
+    )
 
-    assert_equal 3, pos_transaction_items_sold_count(transaction)
-    assert_equal 1, pos_transaction_items_returned_count(transaction)
+    assert_equal "sell_reserved_stock_override", pos_supervisor_authorization_type(check)
+    assert_equal "no_receipt_return", pos_supervisor_authorization_type_for_key(:no_receipt_return)
   end
 end

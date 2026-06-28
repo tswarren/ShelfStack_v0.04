@@ -1,4 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
+import { closeOverlay, openOverlayById } from "shelfstack/overlay_shell"
+
+const MODAL_ID = "pos-supervisor-auth-modal"
 
 export default class extends Controller {
   static targets = [
@@ -11,6 +14,18 @@ export default class extends Controller {
     "managerUsername",
     "managerPin"
   ]
+
+  connect() {
+    this.boundOpen = this.open.bind(this)
+    this.boundFocusFirst = this.focusFirst.bind(this)
+    document.addEventListener("pos:authorization-request", this.boundOpen)
+    document.addEventListener("modal:opened", this.boundFocusFirst)
+  }
+
+  disconnect() {
+    document.removeEventListener("pos:authorization-request", this.boundOpen)
+    document.removeEventListener("modal:opened", this.boundFocusFirst)
+  }
 
   open(event) {
     const detail = event.detail || {}
@@ -36,7 +51,7 @@ export default class extends Controller {
   }
 
   focusFirst(event) {
-    if (event.target?.id !== "pos-supervisor-auth-modal") return
+    if (event.target?.id !== MODAL_ID) return
 
     this.managerUsernameTarget?.focus()
   }
@@ -82,16 +97,14 @@ export default class extends Controller {
   }
 
   openModal() {
-    const modal = document.getElementById("pos-supervisor-auth-modal")
-    const controller = this.application.getControllerForElementAndIdentifier(modal, "modal")
-    controller?.open()
+    openOverlayById(this.application, "modal", MODAL_ID)
   }
 
   closeModal() {
-    const modal = document.getElementById("pos-supervisor-auth-modal")
+    const modal = document.getElementById(MODAL_ID)
+    if (!modal) return
+
     const controller = this.application.getControllerForElementAndIdentifier(modal, "modal")
-    if (controller) {
-      controller.close()
-    }
+    if (controller) closeOverlay(controller, { force: true })
   }
 }

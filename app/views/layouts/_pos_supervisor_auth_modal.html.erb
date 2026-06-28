@@ -4,8 +4,7 @@
       size: :pos,
       close_on_backdrop: true,
       dirty_guard: true do %>
-  <div data-controller="pos-supervisor-auth"
-       data-action="pos:authorization-request@document->pos-supervisor-auth#open modal:opened@document->pos-supervisor-auth#focusFirst">
+  <div data-controller="pos-supervisor-auth">
     <p class="ss-hint" data-pos-supervisor-auth-target="message">A manager must enter their username and PIN to approve this action.</p>
     <%= form_with url: pos_authorizations_path, method: :post, html: { data: { pos_supervisor_auth_target: "form", action: "submit->pos-supervisor-auth#submit" } } do %>
       <%= hidden_field_tag :authorization_type, nil, data: { pos_supervisor_auth_target: "authorizationType" } %>
