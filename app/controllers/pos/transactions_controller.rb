@@ -4,7 +4,7 @@ module Pos
   class TransactionsController < BaseController
     before_action -> { authorize_pos!("pos.transactions.view") }, only: %i[index show]
     before_action -> { authorize_pos!("pos.transactions.create") }, only: %i[new create]
-    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview route_command]
+    before_action -> { authorize_pos!("pos.transactions.update") }, only: %i[edit update sync_tenders readiness_preview route_command attach_customer]
     before_action -> { authorize_pos!("pos.lines.add") }, only: %i[add_line]
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
@@ -27,13 +27,13 @@ module Pos
     before_action :set_transaction, only: %i[
       show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount void_discount_application
-      apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override
+      apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override attach_customer
       sync_tenders complete suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
       edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount
-      void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command
+      void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command attach_customer
     ]
     before_action :load_edit_context, only: %i[
       edit add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
@@ -317,6 +317,14 @@ module Pos
       respond_to_workspace(notice: "Discount removed.")
     rescue Pos::VoidDiscountApplication::Error, ActiveRecord::RecordNotFound => e
       respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+    end
+
+    def attach_customer
+      customer = Customer.find(params[:customer_id])
+      @transaction.update!(customer: customer)
+      respond_to_workspace(notice: "Customer attached to transaction.")
+    rescue ActiveRecord::RecordNotFound
+      respond_to_workspace(alert: "Customer could not be found.", status: :unprocessable_entity)
     end
 
     def apply_tax_exemption

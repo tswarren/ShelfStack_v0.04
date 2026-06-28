@@ -1,0 +1,49 @@
+<%# locals: transaction: nil, attach_url: nil, start_sale_url: nil %>
+<div class="ss-form"
+     data-controller="customer-lookup pos-customer-lookup"
+     data-customer-lookup-url-value="<%= customers_customer_lookup_path %>"
+     data-pos-customer-lookup-attach-url-value="<%= attach_url %>"
+     data-pos-customer-lookup-start-sale-url-value="<%= start_sale_url %>"
+     data-pos-customer-lookup-transaction-id-value="<%= transaction&.id %>"
+     data-action="modal:closed@document->pos-customer-lookup#resetIfClosed">
+  <% selected = transaction&.customer %>
+  <div class="ss-field">
+    <%= label_tag :pos_customer_lookup_query, "Customer" %>
+    <%= text_field_tag :pos_customer_lookup_query, selected&.display_name,
+          autocomplete: "off",
+          placeholder: "Search by name, email, or phone…",
+          data: {
+            customer_lookup_target: "lookupInput",
+            action: "keydown->customer-lookup#lookupExact input->customer-lookup#search"
+          } %>
+    <%= hidden_field_tag :pos_customer_lookup_id, selected&.id,
+          data: { customer_lookup_target: "customerId" } %>
+    <p class="ss-hint" data-customer-lookup-target="preview"></p>
+    <p class="ss-hint" data-customer-lookup-target="message"></p>
+    <div class="ss-pos-choices" data-customer-lookup-target="choices"></div>
+  </div>
+
+  <div class="ss-form__actions" data-pos-customer-lookup-target="actions" hidden>
+    <% if attach_url.present? %>
+      <button type="button"
+              class="ss-btn"
+              data-action="pos-customer-lookup#attach"
+              data-pos-customer-lookup-target="attachButton">
+        Attach to transaction
+      </button>
+    <% end %>
+    <% if start_sale_url.present? %>
+      <button type="button"
+              class="ss-btn"
+              data-action="pos-customer-lookup#startSale"
+              data-pos-customer-lookup-target="startSaleButton">
+        Start sale with this customer
+      </button>
+    <% end %>
+    <button type="button"
+            class="ss-btn ss-btn-secondary"
+            data-action="customer-lookup#clearCustomer">
+      Clear selection
+    </button>
+  </div>
+</div>

@@ -1,15 +1,9 @@
-<div class="ss-pos-modal" data-pos-command-bar-target="drawerActionModal" hidden>
-  <div class="ss-pos-modal__backdrop" data-action="click->pos-command-bar#closeDrawerActionModal"></div>
-  <div class="ss-pos-modal__panel" role="dialog" aria-labelledby="pos-drawer-action-title" aria-modal="true">
-    <header class="ss-pos-modal__header">
-      <h2 id="pos-drawer-action-title" class="ss-pos-modal__title">Cash drawer</h2>
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-command-bar#closeDrawerActionModal">
-        Close
-      </button>
-    </header>
-    <p>Use the physical drawer key. Record paid-in or paid-out activity with <kbd>/cashin</kbd> or <kbd>/cashout</kbd>.</p>
-    <p class="ss-hint" data-pos-command-bar-target="drawerActionReason" hidden></p>
-  </div>
-</div>
+<%= render "shared/interaction/modal",
+      id: "pos-drawer-action-modal",
+      title: "Cash drawer",
+      size: :pos,
+      close_on_backdrop: true,
+      dirty_guard: false do %>
+  <p>Use the physical drawer key. Record paid-in or paid-out activity with <kbd>/cashin</kbd> or <kbd>/cashout</kbd>.</p>
+  <p class="ss-hint" data-pos-command-bar-target="drawerActionReason" hidden></p>
+<% end %>

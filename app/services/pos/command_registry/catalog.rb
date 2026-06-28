@@ -74,7 +74,9 @@ module Pos
           aliases: %w[cu],
           description: "Customer lookup",
           permission_keys: [ "pos.access" ],
-          handler: :customer_lookup
+          handler: :customer_lookup,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -131,7 +133,8 @@ module Pos
           permission_keys: [ "pos.tax_exemptions.apply" ],
           transaction_required: true,
           handler: :tax_exempt,
-          root_available: false
+          root_available: false,
+          transaction_implemented: true
         )
       end
 

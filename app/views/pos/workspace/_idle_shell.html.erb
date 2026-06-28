@@ -3,7 +3,8 @@
          data-pos-command-bar-route-url-value="<%= pos_route_command_path %>"
          data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
          data-pos-line-entry-add-url-value="<%= pos_route_command_path %>"
-         data-pos-line-entry-mode-value="sale">
+         data-pos-line-entry-mode-value="sale"
+         data-action="modal:closed@document->pos-command-bar#modalClosed">
   <%= render "pos/workspace/context_bar" %>
   <div class="ss-pos-command-bar__entry-row ss-pos-workspace__entry-row">
     <%= render "pos/workspace/command_field",
@@ -14,11 +15,9 @@
   </div>
   <%= render "pos/workspace/command_feedback" %>
   <%= render "pos/workspace/drawer_panels" %>
-  <%= render "pos/shared/help_modal" %>
-  <%= render "pos/shared/drawer_action_modal" %>
-  <%= render "pos/shared/cash_movement_modal", register_session: @register_session %>
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="sessionPanel" hidden>
     <%= render "pos/shared/session_summary_panel", register_session: @register_session, show_close: true %>
   </div>
+  <%= render "pos/shared/workspace_modals", register_session: @register_session %>
   <%= render "pos/workspace/idle_actions" %>
 </section>

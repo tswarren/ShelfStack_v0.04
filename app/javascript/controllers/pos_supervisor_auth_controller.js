@@ -12,10 +12,6 @@ export default class extends Controller {
     "managerPin"
   ]
 
-  static values = {
-    url: String
-  }
-
   open(event) {
     const detail = event.detail || {}
     const authorizationType = detail.authorizationType || event.params?.authorizationType
@@ -36,13 +32,18 @@ export default class extends Controller {
       this.messageTarget.textContent = message || "A manager must approve this action."
     }
     this.errorTarget.hidden = true
-    this.element.hidden = false
+    this.openModal()
+  }
+
+  focusFirst(event) {
+    if (event.target?.id !== "pos-supervisor-auth-modal") return
+
     this.managerUsernameTarget?.focus()
   }
 
   close(event) {
     if (event) event.preventDefault()
-    this.element.hidden = true
+    this.closeModal()
     this.formTarget.reset()
   }
 
@@ -50,7 +51,7 @@ export default class extends Controller {
     event.preventDefault()
 
     const body = new FormData(this.formTarget)
-    fetch(this.urlValue, {
+    fetch(this.formTarget.action, {
       method: "POST",
       headers: {
         "X-CSRF-Token": document.querySelector("meta[name='csrf-token']").content,
@@ -78,5 +79,19 @@ export default class extends Controller {
         this.errorTarget.textContent = "Unable to request authorization."
         this.errorTarget.hidden = false
       })
+  }
+
+  openModal() {
+    const modal = document.getElementById("pos-supervisor-auth-modal")
+    const controller = this.application.getControllerForElementAndIdentifier(modal, "modal")
+    controller?.open()
+  }
+
+  closeModal() {
+    const modal = document.getElementById("pos-supervisor-auth-modal")
+    const controller = this.application.getControllerForElementAndIdentifier(modal, "modal")
+    if (controller) {
+      controller.close()
+    }
   }
 }

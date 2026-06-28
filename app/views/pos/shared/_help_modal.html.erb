@@ -1,24 +1,15 @@
-<div class="ss-pos-modal" data-pos-command-bar-target="helpModal" hidden>
-  <div class="ss-pos-modal__backdrop" data-action="click->pos-command-bar#closeHelpModal"></div>
-  <div class="ss-pos-modal__panel ss-pos-modal__panel--help" role="dialog" aria-labelledby="pos-help-title" aria-modal="true">
-    <header class="ss-pos-help-modal__header">
-      <h2 id="pos-help-title" class="ss-pos-modal__title">POS commands</h2>
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-command-bar#closeHelpModal"
-              data-pos-command-bar-target="helpCloseButton">
-        Close
-      </button>
-    </header>
-    <div class="ss-pos-help-modal__body" data-pos-command-bar-target="helpBody"></div>
-    <footer class="ss-pos-help-modal__footer">
-      <p class="ss-hint ss-pos-help-modal__hint">
-        Type <kbd>/help</kbd>, <kbd>/?</kbd>, or <kbd>?</kbd> to open this list again.
-      </p>
-      <p class="ss-pos-help-modal__legend">
-        <span class="ss-pos-help-modal__legend-item ss-pos-help-modal__legend-item--unavailable">Unavailable here</span>
-        <span class="ss-pos-help-modal__legend-item ss-pos-help-modal__legend-item--planned">Planned</span>
-      </p>
-    </footer>
-  </div>
-</div>
+<%= render "shared/interaction/modal",
+      id: "pos-help-modal",
+      title: "POS commands",
+      size: :lg,
+      close_on_backdrop: true,
+      dirty_guard: false do %>
+  <div class="ss-pos-help-modal__body" data-pos-command-bar-target="helpBody"></div>
+  <p class="ss-hint ss-pos-help-modal__hint">
+    Type <kbd>/help</kbd>, <kbd>/?</kbd>, or <kbd>?</kbd> to open this list again.
+  </p>
+  <p class="ss-pos-help-modal__legend">
+    <span class="ss-pos-help-modal__legend-item ss-pos-help-modal__legend-item--unavailable">Unavailable here</span>
+    <span class="ss-pos-help-modal__legend-item ss-pos-help-modal__legend-item--planned">Planned</span>
+  </p>
+<% end %>

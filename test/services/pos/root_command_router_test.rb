@@ -106,14 +106,14 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_equal Pos::CommandParser::UNKNOWN_COMMAND_MESSAGE, route.message
   end
 
-  test "/balance returns balance redirect action" do
+  test "/balance returns balance inquiry offer on idle workspace" do
     route = Pos::RootCommandRouter.call(
       store: @store,
       register_session: @register_session,
       input: "/balance"
     )
 
-    assert_equal :balance_redirect, route.action
+    assert_equal :balance_inquiry_offer, route.action
   end
 
   test "/cashdrop returns planned disabled message" do

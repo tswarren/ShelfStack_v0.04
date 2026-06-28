@@ -75,6 +75,10 @@ function isTopmostOverlay(controller) {
   return overlayStack.length > 0 && overlayStack[overlayStack.length - 1] === controller
 }
 
+export function isAnyOverlayOpen() {
+  return overlayStack.length > 0
+}
+
 export function overlayStackDepthForTests() {
   return overlayStack.length
 }

@@ -429,6 +429,7 @@ Rails.application.routes.draw do
   namespace :pos do
     root to: "home#show"
     post "route_command", to: "workspace_commands#route_command"
+    post "workspace/start_sale", to: "workspace_sales#create", as: :workspace_start_sale
     post "workspace/add_return_line", to: "workspace_lines#add_return_line"
     post "workspace/add_no_receipt_line", to: "workspace_lines#add_no_receipt_line"
     post "workspace/add_open_ring_line", to: "workspace_lines#add_open_ring_line"
@@ -472,6 +473,7 @@ Rails.application.routes.draw do
         patch :sync_tenders
         post :readiness_preview
         post :route_command
+        patch :attach_customer
       end
     end
     resources :receipts, only: %i[show] do

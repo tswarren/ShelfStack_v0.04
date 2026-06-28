@@ -1,14 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
+import { isAnyOverlayOpen } from "shelfstack/overlay_shell"
 
 const BLOCKING_PANEL_TARGETS = [
-  "giftCardPanel",
   "openRingPanel",
   "sessionPanel",
   "transactionDiscountPanel",
-  "cashMovementModal",
-  "helpModal",
-  "drawerActionModal",
-  "balancePanel",
   "receiptPanel",
   "pickupPanel"
 ]
@@ -25,6 +21,11 @@ export default class extends Controller {
   }
 
   static shouldSkipCommandFocus() {
+    if (isAnyOverlayOpen()) return true
+
+    const settlementModal = document.getElementById("pos_settlement_modal")
+    if (settlementModal && !settlementModal.hidden) return true
+
     return BLOCKING_PANEL_TARGETS.some((target) => {
       const element = document.querySelector(`[data-pos-command-bar-target="${target}"]`)
       if (!element) return false

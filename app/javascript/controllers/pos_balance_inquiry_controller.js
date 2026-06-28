@@ -7,6 +7,21 @@ export default class extends Controller {
   }
 
   connect() {
+    this.boundModalOpened = this.onModalOpened.bind(this)
+    document.addEventListener("modal:opened", this.boundModalOpened)
+  }
+
+  disconnect() {
+    document.removeEventListener("modal:opened", this.boundModalOpened)
+  }
+
+  onModalOpened(event) {
+    if (event.target?.id !== "pos-balance-inquiry-modal") return
+
+    this.focusInput()
+  }
+
+  focusInput() {
     this.inputTarget?.focus()
   }
 

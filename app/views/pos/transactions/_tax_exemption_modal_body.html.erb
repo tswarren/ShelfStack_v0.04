@@ -1,0 +1,29 @@
+<% exemption = transaction.active_tax_exemption %>
+<% if exemption.present? %>
+  <% summary = pos_transaction_tax_exemption_summary(transaction) %>
+  <div class="ss-pos-tax-exemption-summary">
+    <p><strong>Active exemption:</strong> <%= exemption.tax_exception_reason.name %></p>
+    <% if exemption.certificate_number.present? %>
+      <p><strong>Certificate:</strong> <%= exemption.certificate_number %></p>
+    <% end %>
+    <% if summary[:expected_tax_cents].positive? %>
+      <p><strong>Expected tax:</strong> <%= pos_money(summary[:expected_tax_cents]) %></p>
+      <p><strong>Tax removed:</strong> −<%= pos_money(summary[:tax_removed_cents]) %></p>
+    <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.void", store: current_store) %>
+      <%= button_to "Remove exemption",
+            void_tax_exemption_pos_transaction_path(transaction, exemption_id: exemption.id),
+            method: :delete,
+            class: "ss-btn ss-btn-secondary",
+            form: { data: { turbo_stream: true, action: "turbo:submit-end->pos-command-bar#taxExemptionSubmitted" } } %>
+    <% end %>
+  </div>
+<% else %>
+  <%= form_with url: apply_tax_exemption_pos_transaction_path(transaction),
+                method: :post,
+                class: "ss-form",
+                data: { turbo_stream: true, action: "turbo:submit-end->pos-command-bar#taxExemptionSubmitted" } do %>
+    <%= render "pos/transactions/tax_exemption_fields", transaction: transaction %>
+    <%= submit_tag "Apply tax exemption", class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+<% end %>
