@@ -101,6 +101,7 @@ export default class extends Controller {
         this.showPickupDrawerPanel()
         break
       case "balance_inquiry_offer":
+        this.inputTarget.value = ""
         this.showBalanceModal()
         break
       case "customer_lookup_offer":
@@ -309,6 +310,11 @@ export default class extends Controller {
   modalClosed(event) {
     if (!event.target?.classList?.contains("ss-modal")) return
 
+    if (event.target.id === "pos-balance-inquiry-modal") {
+      this.resetBalanceInquiry()
+      this.inputTarget.value = ""
+    }
+
     requestAnimationFrame(() => this.focusInput())
   }
 
@@ -412,6 +418,7 @@ export default class extends Controller {
     event?.preventDefault()
     this.resetBalanceInquiry()
     this.closeWorkspaceModal("pos-balance-inquiry-modal")
+    this.inputTarget.value = ""
     this.focusInput()
   }
 
@@ -495,6 +502,7 @@ export default class extends Controller {
     this.closeCashMovementModal({ focusInput: false })
     this.closeDrawerActionModal({ focusInput: false })
     this.closeWorkspaceModal("pos-help-modal")
+    this.resetBalanceInquiry()
     this.closeWorkspaceModal("pos-balance-inquiry-modal")
     this.closeWorkspaceModal("pos-gift-card-sale-modal")
     this.closeWorkspaceModal("pos-customer-lookup-modal")
