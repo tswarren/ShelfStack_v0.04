@@ -43,10 +43,11 @@
           <dd><%= pos_money(current_total_cents) %></dd>
         </div>
         <div class="ss-pos-transaction-discount-summary__row ss-pos-transaction-discount-summary__row--preview">
-          <dt>Preview total after discount</dt>
+          <dt>Estimated total after discount</dt>
           <dd data-pos-discount-input-target="previewTotal"><%= pos_money(current_total_cents) %></dd>
         </div>
       </dl>
+      <p class="ss-hint ss-pos-transaction-discount-summary__hint">Final tax and total are recalculated after applying.</p>
     </div>
   <% end %>
   <% if show_reason %>

@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "pickupPanel", "sessionPanel", "transactionDiscountPanel", "helpBody", "cashMovementForm", "cashMovementType", "cashMovementAmount", "cashMovementReason", "cashMovementSubmit", "drawerActionReason"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "pickupPanel", "sessionPanel", "helpBody", "cashMovementForm", "cashMovementType", "cashMovementAmount", "cashMovementReason", "cashMovementSubmit", "drawerActionReason"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,

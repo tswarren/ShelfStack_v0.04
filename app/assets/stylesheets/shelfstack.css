@@ -4185,6 +4185,10 @@ body.ss-pos-modal-open {
   font-weight: 600;
 }
 
+.ss-pos-transaction-discount-summary__hint {
+  margin-top: 0.5rem;
+}
+
 .ss-pos-transaction-discount-form__footer {
   margin-top: 1rem;
 }

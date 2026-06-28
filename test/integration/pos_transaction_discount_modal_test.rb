@@ -30,7 +30,7 @@ class PosTransactionDiscountModalTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'id="pos-transaction-discount-modal"'
     assert_includes response.body, 'data-modal-dirty-guard-value="false"'
     assert_match(/id="pos-transaction-discount-modal"[\s\S]*?data-modal-dirty-guard-value="false"/, response.body)
-    assert_includes response.body, "Preview total after discount"
+    assert_includes response.body, "Estimated total after discount"
     assert_includes response.body, 'data-controller="pos-transaction-discount-modal-open"'
     assert_includes response.body, 'data-action="click->pos-transaction-discount-modal-open#open"'
   end

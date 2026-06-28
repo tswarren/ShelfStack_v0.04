@@ -27,6 +27,7 @@
 <% if defined?(@transaction_discount_error) && @transaction_discount_error.present? %>
   <%= turbo_stream.append "pos_workspace_events" do %>
     <div data-controller="pos-transaction-discount-modal-open"
+         data-pos-transaction-discount-modal-open-open-on-connect-value="true"
          data-pos-transaction-discount-modal-open-focus-value="firstInvalid"></div>
   <% end %>
 <% end %>
@@ -38,6 +39,7 @@
 
   <%= turbo_stream.append "pos_workspace_events" do %>
     <div data-controller="pos-tax-exemption-modal-open"
+         data-pos-tax-exemption-modal-open-open-on-connect-value="true"
          data-pos-tax-exemption-modal-open-focus-value="firstInvalid"></div>
   <% end %>
 <% end %>

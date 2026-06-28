@@ -2,11 +2,12 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = {
-    focus: { type: String, default: "firstInvalid" }
+    focus: { type: String, default: "firstInvalid" },
+    openOnConnect: { type: Boolean, default: false }
   }
 
   connect() {
-    if (!this.element.hasAttribute("data-action")) {
+    if (this.openOnConnectValue) {
       this.dispatchOpen()
       this.element.remove()
     }
