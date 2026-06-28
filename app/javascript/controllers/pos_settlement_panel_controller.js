@@ -16,6 +16,7 @@ export default class extends Controller {
     "cashTemplate",
     "storeCreditTemplate",
     "giftCardTemplate",
+    "storedValueTemplate",
     "destroyField",
     "amountField",
     "lookupCodeField",
@@ -212,7 +213,8 @@ export default class extends Controller {
       card: this.cardTemplateTarget,
       check: this.checkTemplateTarget,
       store_credit: this.storeCreditTemplateTarget,
-      gift_card: this.giftCardTemplateTarget
+      gift_card: this.giftCardTemplateTarget,
+      stored_value: this.storedValueTemplateTarget
     }
     const template = templateFor[tenderType]
     if (!template) return
@@ -284,7 +286,19 @@ export default class extends Controller {
     const draftRow = this.activeDraftRow()
     if (!draftRow) return
 
-    if (!this.rowHasAmount(draftRow) && draftRow.dataset.settlementType !== "store_credit" && draftRow.dataset.settlementType !== "gift_card") {
+    if (!this.rowHasAmount(draftRow) &&
+        !this.isStoredValueTenderType(draftRow.dataset.settlementType)) {
+      this.focusRowEntry(draftRow)
+      return
+    }
+
+    if (draftRow.dataset.settlementType === "stored_value") {
+      this.focusRowEntry(draftRow)
+      return
+    }
+
+    if (this.isStoredValueTenderType(draftRow.dataset.settlementType) &&
+        !draftRow.querySelector("[name*='[stored_value_account_id]']")?.value) {
       this.focusRowEntry(draftRow)
       return
     }
@@ -450,7 +464,7 @@ export default class extends Controller {
 
     const inferredPrefill =
       prefillRemaining ??
-      (amountCents == null && !["store_credit", "gift_card"].includes(tenderType))
+      (amountCents == null && !this.isStoredValueTenderType(tenderType))
 
     this.openDraftForType(tenderType, {
       amountCents,
@@ -528,18 +542,23 @@ export default class extends Controller {
         return
       }
 
+      this.applyResolvedStoredValueType(row, payload)
+
       const accountField = row.querySelector("[name*='[stored_value_account_id]']")
       const identifierField = row.querySelector("[name*='[stored_value_identifier_id]']")
       if (accountField) accountField.value = payload.account_id
       if (identifierField) identifierField.value = payload.identifier_id
       row.dataset.storedValueBalanceCents = String(payload.current_balance_cents)
 
+      const resolvedType = row.dataset.settlementType
+      const typeLabel = payload.resolved_tender_type_label || this.storedValueTypeLabel(resolvedType)
+
       if (statusEl) {
-        statusEl.textContent = `${payload.display_value_masked} · Balance ${this.formatMoney(payload.current_balance_cents)}`
+        statusEl.textContent = `${typeLabel} · ${payload.display_value_masked} · Balance ${this.formatMoney(payload.current_balance_cents)}`
       }
 
       if (this.rowAmountCents(row) === 0) {
-        this.fillRemainingForRow(row, tenderType)
+        this.fillRemainingForRow(row, resolvedType)
       } else {
         this.clampStoredValueAmount(row)
       }
@@ -633,7 +652,7 @@ export default class extends Controller {
 
     displayCents = Math.max(0, displayCents)
 
-    if (tenderType === "store_credit" || tenderType === "gift_card") {
+    if (tenderType === "store_credit" || tenderType === "gift_card" || tenderType === "stored_value") {
       displayCents = this.cappedStoredValueAmountCents(row, displayCents)
     }
 
@@ -721,8 +740,8 @@ export default class extends Controller {
       return { label, amount }
     }
 
-    if (tenderType === "store_credit" || tenderType === "gift_card") {
-      const base = tenderType === "gift_card" ? "Gift card" : "Store credit"
+    if (tenderType === "store_credit" || tenderType === "gift_card" || tenderType === "stored_value") {
+      const base = tenderType === "gift_card" ? "Gift card" : tenderType === "store_credit" ? "Store credit" : "Stored value"
       const status = row.querySelector("[data-pos-settlement-panel-target='lookupStatus']")?.textContent
       const label = status ? `${base} ${status.split("·")[0].trim()}` : base
       return { label, amount }
@@ -882,7 +901,7 @@ export default class extends Controller {
     this.expandRowElement(row)
 
     const tenderType = row.dataset.settlementType
-    if (tenderType === "store_credit" || tenderType === "gift_card") {
+    if (tenderType === "store_credit" || tenderType === "gift_card" || tenderType === "stored_value") {
       if (this.focusField(row.querySelector("[data-pos-settlement-panel-target='lookupCodeField']"))) return
     }
 
@@ -901,11 +920,30 @@ export default class extends Controller {
   }
 
   shouldPrefillRemainingForRow(tenderType, row, prefillRemaining) {
-    if (tenderType === "store_credit" || tenderType === "gift_card") {
+    if (this.isStoredValueTenderType(tenderType)) {
       return prefillRemaining && this.storedValueBalanceCents(row) != null
     }
 
     return prefillRemaining
+  }
+
+  isStoredValueTenderType(tenderType) {
+    return tenderType === "stored_value" || tenderType === "store_credit" || tenderType === "gift_card"
+  }
+
+  applyResolvedStoredValueType(row, payload) {
+    const resolvedType = payload.resolved_tender_type
+    if (!resolvedType) return
+
+    row.dataset.settlementType = resolvedType
+    const tenderTypeField = row.querySelector("[name*='[tender_type]']")
+    if (tenderTypeField) tenderTypeField.value = resolvedType
+  }
+
+  storedValueTypeLabel(tenderType) {
+    if (tenderType === "gift_card") return "Gift card"
+    if (tenderType === "store_credit") return "Store credit"
+    return "Stored value"
   }
 
   focusField(field) {
@@ -946,7 +984,7 @@ export default class extends Controller {
 
   clampStoredValueAmount(row) {
     if (this.refundValue) return
-    if (row.dataset.settlementType !== "store_credit" && row.dataset.settlementType !== "gift_card") return
+    if (!this.isStoredValueTenderType(row.dataset.settlementType) || row.dataset.settlementType === "stored_value") return
 
     const balanceCents = this.storedValueBalanceCents(row)
     if (balanceCents == null) return

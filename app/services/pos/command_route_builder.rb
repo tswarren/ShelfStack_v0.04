@@ -16,8 +16,8 @@ module Pos
       tender_cash: "cash",
       tender_card: "card",
       tender_check: "check",
-      tender_store_credit: "store_credit",
-      gift_redeem: "gift_card"
+      tender_store_credit: "stored_value",
+      gift_redeem: "stored_value"
     }.freeze
 
     def self.call(match:, context:, store:, transaction: nil, user: nil, register_session: nil)

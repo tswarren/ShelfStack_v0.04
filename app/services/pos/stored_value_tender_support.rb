@@ -3,6 +3,7 @@
 module Pos
   module StoredValueTenderSupport
     STORED_VALUE_TENDER_TYPES = %w[store_credit gift_card].freeze
+    STORED_VALUE_PLACEHOLDER_TYPE = "stored_value"
     STORE_CREDIT_ACCOUNT_TYPES = %w[
       merchandise_credit
       manual_store_credit
@@ -16,6 +17,31 @@ module Pos
 
     def stored_value_tender?(tender_type)
       STORED_VALUE_TENDER_TYPES.include?(tender_type.to_s)
+    end
+
+    def stored_value_placeholder?(tender_type)
+      tender_type.to_s == STORED_VALUE_PLACEHOLDER_TYPE
+    end
+
+    def resolve_tender_type_for_account(account)
+      if GIFT_CARD_ACCOUNT_TYPES.include?(account.account_type)
+        "gift_card"
+      else
+        "store_credit"
+      end
+    end
+
+    def stored_value_type_label(tender_type)
+      case tender_type.to_s
+      when "gift_card"
+        "Gift card"
+      when "store_credit"
+        "Store credit"
+      when STORED_VALUE_PLACEHOLDER_TYPE
+        "Stored value"
+      else
+        tender_type.to_s.humanize
+      end
     end
 
     def account_types_for_tender(tender_type)

@@ -435,6 +435,11 @@ module PosHelper
     Pos::TenderTypePolicy.allowed?(transaction, actor: user, tender_type:, store: transaction.store)
   end
 
+  def pos_stored_value_tender_available?(transaction, user = current_user)
+    pos_can_use_stored_value_tender?(transaction, "gift_card", user) ||
+      pos_can_use_stored_value_tender?(transaction, "store_credit", user)
+  end
+
   def pos_can_issue_gift_card_sale?(transaction, user = current_user)
     Pos::GiftCardSalePolicy.issue_permitted?(actor: user, store: transaction.store)
   end
@@ -562,6 +567,8 @@ module PosHelper
       label = pos_stored_value_tender_label(row)
       amount_cents = refund && row.amount_cents.to_i.negative? ? row.amount_cents.abs : row.amount_cents.to_i
       { label: label, amount: pos_money(amount_cents) }
+    when "stored_value"
+      { label: "Stored value", amount: pos_money(0) }
     else
       { label: row.tender_type.humanize, amount: pos_money(0) }
     end

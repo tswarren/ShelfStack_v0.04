@@ -95,11 +95,15 @@
           <%= text_field_tag "settlements[#{row_index}][check_number]", row.check_number,
                 data: { action: "input->pos-settlement-panel#update change->pos-settlement-panel#update" } %>
         </div>
-      <% elsif row.tender_type.in?(%w[store_credit gift_card]) %>
-        <% default_account = pos_customer_stored_value_account(transaction, tender_type: row.tender_type) %>
+      <% elsif row.tender_type.in?(%w[store_credit gift_card stored_value]) %>
+        <% default_account = if row.tender_type == "stored_value"
+             nil
+           else
+             pos_customer_stored_value_account(transaction, tender_type: row.tender_type)
+           end %>
         <%= hidden_field_tag "settlements[#{row_index}][stored_value_account_id]", row.stored_value_account_id || default_account&.id %>
         <%= hidden_field_tag "settlements[#{row_index}][stored_value_identifier_id]", row.stored_value_identifier_id %>
-        <% if refund && row.tender_type == "store_credit" %>
+        <% if refund && row.tender_type.in?(%w[store_credit stored_value]) %>
           <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--generate">
             <label class="ss-pos-settlement-row__checkbox-label">
               <%= check_box_tag "settlements[#{row_index}][generate_identifier]",

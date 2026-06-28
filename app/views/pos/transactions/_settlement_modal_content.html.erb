@@ -52,14 +52,9 @@
             data: { action: "pos-settlement-panel#selectTenderType", tender_type: "card", hotkey: "2" } %>
       <%= button_tag "3 Check", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
             data: { action: "pos-settlement-panel#selectTenderType", tender_type: "check", hotkey: "3" } %>
-      <% stored_value_type = if pos_can_use_stored_value_tender?(transaction, "gift_card")
-           "gift_card"
-         elsif pos_can_use_stored_value_tender?(transaction, "store_credit")
-           "store_credit"
-         end %>
-      <% if stored_value_type.present? %>
+      <% if pos_stored_value_tender_available?(transaction) %>
         <%= button_tag "4 Stored value", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-              data: { action: "pos-settlement-panel#selectTenderType", tender_type: stored_value_type, hotkey: "4" } %>
+              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "stored_value", hotkey: "4" } %>
       <% end %>
     </div>
 
@@ -115,6 +110,14 @@
     <template data-pos-settlement-panel-target="cashTemplate">
       <%= render "pos/transactions/settlement_row",
             row: PosTender.new(tender_type: "cash", line_number: 0),
+            transaction: transaction,
+            row_index: "TEMPLATE",
+            modal: true %>
+    </template>
+
+    <template data-pos-settlement-panel-target="storedValueTemplate">
+      <%= render "pos/transactions/settlement_row",
+            row: PosTender.new(tender_type: "stored_value", line_number: 0),
             transaction: transaction,
             row_index: "TEMPLATE",
             modal: true %>
