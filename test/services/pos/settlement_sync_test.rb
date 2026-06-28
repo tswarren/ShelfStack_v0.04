@@ -86,15 +86,37 @@ class Pos::SettlementSyncTest < ActiveSupport::TestCase
     Pos::TenderValidator.validate!(@transaction)
   end
 
-  test "rejects insufficient cash tender" do
-    error = assert_raises(Pos::SettlementSync::Error) do
-      Pos::SettlementSync.call!(
-        transaction: @transaction,
-        tender_inputs: [ { tender_type: "cash", amount_dollars: "5.00" } ]
-      )
-    end
+  test "persists partial card tender and reports remaining due" do
+    partial = @transaction.total_cents / 2
 
-    assert_match(/insufficient cash/i, error.message)
+    result = Pos::SettlementSync.call!(
+      transaction: @transaction,
+      tender_inputs: [
+        { tender_type: "card", amount_cents: partial, card_brand: "visa" }
+      ]
+    )
+
+    card = @transaction.pos_tenders.find_by!(tender_type: "card")
+    assert_equal partial, card.amount_cents
+    assert_equal @transaction.total_cents - partial, result.remaining_cents
+    assert_match(/remaining due/i, result.message)
+  end
+
+  test "persists partial cash tender and reports remaining due" do
+    partial = @transaction.total_cents / 2
+
+    result = Pos::SettlementSync.call!(
+      transaction: @transaction,
+      tender_inputs: [
+        { tender_type: "cash", amount_dollars: format("%.2f", partial / 100.0) }
+      ]
+    )
+
+    cash = @transaction.pos_tenders.find_by!(tender_type: "cash")
+    assert_equal partial, cash.amount_cents
+    assert_equal partial, cash.tendered_cents
+    assert_equal @transaction.total_cents - partial, result.remaining_cents
+    assert_match(/remaining due/i, result.message)
   end
 
   test "rejects check refunds from user input" do

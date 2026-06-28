@@ -135,10 +135,13 @@ module Pos
 
       remaining = transaction.total_cents - non_cash_sum
       return [ 0, 0 ] if remaining.zero?
-      raise Error, "Add a cash tender for the remaining #{format_money(remaining)}." if cash.blank?
+      return [ 0, remaining ] if cash.blank?
 
       tendered = cash.tendered_cents || cash.amount_cents
-      raise Error, "Insufficient cash tendered (#{format_money(tendered)}; #{format_money(remaining)} due)." if tendered < remaining
+      if tendered < remaining
+        create_row_from_parsed!(cash, amount_cents: tendered, tendered_cents: tendered)
+        return [ 0, remaining - tendered ]
+      end
 
       change = tendered - remaining
       create_row_from_parsed!(cash, amount_cents: remaining, tendered_cents: tendered, change_cents: change.positive? ? change : nil)
@@ -158,10 +161,13 @@ module Pos
 
       remaining = transaction.total_cents - non_cash_sum
       return [ 0, remaining ] if remaining.zero?
-      raise Error, "Add a cash tender for the remaining #{format_money(remaining)}." if cash.blank?
+      return [ 0, remaining ] if cash.blank?
 
       tendered = cash.tendered_cents || cash.amount_cents
-      raise Error, "Insufficient cash tendered (#{format_money(tendered)}; #{format_money(remaining)} due)." if tendered < remaining
+      if tendered < remaining
+        upsert_row!(cash, amount_cents: tendered, tendered_cents: tendered)
+        return [ 0, remaining - tendered ]
+      end
 
       change = tendered - remaining
       upsert_row!(cash, amount_cents: remaining, tendered_cents: tendered, change_cents: change.positive? ? change : nil)

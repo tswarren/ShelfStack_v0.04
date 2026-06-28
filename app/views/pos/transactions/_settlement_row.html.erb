@@ -51,7 +51,10 @@
           <%= label_tag nil, "Brand", class: "ss-pos-settlement-row__field-label" %>
           <%= select_tag "settlements[#{row_index}][card_brand]",
                 options_for_select(pos_card_brand_options, row.card_brand || "other"),
-                data: { action: "change->pos-settlement-panel#update" } %>
+                data: {
+                  pos_settlement_panel_target: "cardBrandField",
+                  action: "change->pos-settlement-panel#update"
+                } %>
         </div>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--last-four">
           <%= label_tag nil, "Last four", class: "ss-pos-settlement-row__field-label" %>
@@ -77,11 +80,6 @@
                 } %>
         </div>
       <% elsif row.tender_type == "check" %>
-        <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--check-number">
-          <%= label_tag nil, "Check number", class: "ss-pos-settlement-row__field-label" %>
-          <%= text_field_tag "settlements[#{row_index}][check_number]", row.check_number,
-                data: { action: "input->pos-settlement-panel#update change->pos-settlement-panel#update" } %>
-        </div>
         <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--amount">
           <%= label_tag nil, refund ? "Refund amount" : "Amount", class: "ss-pos-settlement-row__field-label" %>
           <%= pos_money_field "settlements[#{row_index}][amount_dollars]", display_amount, min: 0,
@@ -91,6 +89,11 @@
                   settlement_amount: true,
                   action: "input->pos-settlement-panel#update change->pos-settlement-panel#update"
                 } %>
+        </div>
+        <div class="ss-pos-settlement-row__field-group ss-pos-settlement-row__field-group--check-number">
+          <%= label_tag nil, "Check number", class: "ss-pos-settlement-row__field-label" %>
+          <%= text_field_tag "settlements[#{row_index}][check_number]", row.check_number,
+                data: { action: "input->pos-settlement-panel#update change->pos-settlement-panel#update" } %>
         </div>
       <% elsif row.tender_type.in?(%w[store_credit gift_card]) %>
         <% default_account = pos_customer_stored_value_account(transaction, tender_type: row.tender_type) %>

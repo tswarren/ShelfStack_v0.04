@@ -429,7 +429,11 @@ module Pos
       notice = [ "Settlement updated.", result.message ].compact.join(" ")
       respond_to_workspace(notice: notice)
     rescue Pos::SettlementSync::Error => e
-      respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+      if params[:reopen_settlement_modal].present?
+        respond_to_incremental_sync_error(e.message)
+      else
+        respond_to_workspace(alert: e.message, status: :unprocessable_entity)
+      end
     end
 
     def complete
@@ -574,6 +578,20 @@ module Pos
           else
             redirect_to edit_pos_transaction_path(@transaction), notice: notice
           end
+        end
+      end
+    end
+
+    def respond_to_incremental_sync_error(message)
+      flash.now[:alert] = message
+
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.update("pos_flash", partial: "pos/transactions/flash"),
+                 status: :unprocessable_entity
+        end
+        format.html do
+          redirect_to edit_pos_transaction_path(@transaction), alert: message
         end
       end
     end

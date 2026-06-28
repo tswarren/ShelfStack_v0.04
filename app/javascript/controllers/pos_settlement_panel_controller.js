@@ -46,32 +46,55 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.boundKeydown)
   }
 
-  open(event) {
+  open(event, { skipInitialFocus = false } = {}) {
     event?.preventDefault()
     if (!this.hasModalTarget) return
 
     this.modalTarget.hidden = false
     document.body.classList.add("ss-pos-modal-open")
     document.addEventListener("keydown", this.boundKeydown)
+    this.syncTotal()
     this.update()
     this.element.dispatchEvent(new CustomEvent("pos:settlement-opened", { bubbles: true }))
 
-    if (this.hasActiveDraft()) {
-      this.focusRowEntry(this.activeDraftRow())
-      return
+    if (!skipInitialFocus) {
+      this.focusModalInitial()
     }
+  }
 
-    const rows = this.visibleRows()
-    const emptyAmountRow = rows.find((row) => !this.rowHasAmount(row))
-    if (emptyAmountRow) {
-      this.focusRowEntry(emptyAmountRow)
-    } else if (this.readyToComplete()) {
-      this.focusCompleteButton()
-    } else if (rows.length === 0 && this.hasTypeSelectorTarget) {
-      this.typeSelectorTarget.querySelector("button")?.focus()
-    } else {
-      this.focusCompleteButton()
-    }
+  focusModalInitial() {
+    this.focusModalEntry(() => {
+      if (this.hasActiveDraft()) {
+        this.focusRowEntry(this.activeDraftRow())
+        return
+      }
+
+      const rows = this.visibleRows()
+      const emptyAmountRow = rows.find((row) => !this.rowHasAmount(row))
+      if (emptyAmountRow) {
+        this.focusRowEntry(emptyAmountRow)
+        return
+      }
+
+      if (this.readyToComplete()) {
+        this.completeButton()?.focus()
+        return
+      }
+
+      if (this.hasTypeSelectorTarget) {
+        this.typeSelectorTarget.querySelector("button")?.focus()
+        return
+      }
+
+      this.completeButton()?.focus()
+    })
+  }
+
+  focusModalEntry(focusFn) {
+    requestAnimationFrame(() => {
+      document.querySelector("[data-pos-command-bar-target='input']")?.blur()
+      focusFn()
+    })
   }
 
   close(event) {
@@ -89,12 +112,15 @@ export default class extends Controller {
   }
 
   keydown(event) {
-    if (this.isTypingInField(event.target) && !this.isHotkeySelection(event)) return
+    if (!this.hasModalTarget || this.modalTarget.hidden) return
 
     if (event.key === "Escape") {
       event.preventDefault()
+      event.stopPropagation()
       if (this.hasActiveDraft()) {
         this.cancelActiveDetail()
+      } else if (this.hasExpandedSavedRow()) {
+        this.collapseExpandedSavedRows()
       } else {
         this.close()
       }
@@ -104,6 +130,7 @@ export default class extends Controller {
     if (event.key === "Enter" && !this.isSubmitControl(event.target)) {
       if (this.hasActiveDraft()) {
         event.preventDefault()
+        event.stopPropagation()
         this.saveActiveDetail()
         return
       }
@@ -115,11 +142,28 @@ export default class extends Controller {
       return
     }
 
+    if (this.isTypingInField(event.target) && !this.isHotkeySelection(event)) return
+
     const hotkey = this.hotkeyForEvent(event)
     if (hotkey) {
       event.preventDefault()
       this.selectTenderTypeByKey(hotkey)
     }
+  }
+
+  hasExpandedSavedRow() {
+    return this.visibleRows().some((row) => row.dataset.collapsed === "false")
+  }
+
+  collapseExpandedSavedRows() {
+    this.visibleRows().forEach((row) => {
+      if (row.dataset.collapsed !== "false") return
+
+      row.dataset.collapsed = "true"
+      this.syncRowLayout(row)
+      this.updateRowSummary(row)
+    })
+    this.typeSelectorTarget?.querySelector("button")?.focus()
   }
 
   isTypingInField(target) {
@@ -150,7 +194,7 @@ export default class extends Controller {
     const tenderType = event.currentTarget.dataset.tenderType
     if (!tenderType) return
 
-    this.openDraftForType(tenderType)
+    this.openDraftForType(tenderType, { prefillRemaining: true })
   }
 
   selectTenderTypeByKey(key) {
@@ -169,13 +213,14 @@ export default class extends Controller {
     const template = templateFor[tenderType]
     if (!template) return
 
+    this.syncTotal()
     this.clearDraftRow()
     const row = this.appendDraftRow(template, tenderType)
     if (!row) return
 
     if (amountCents != null) {
       this.setRowAmountCents(row, amountCents)
-    } else if (prefillRemaining) {
+    } else if (this.shouldPrefillRemainingForRow(tenderType, row, prefillRemaining)) {
       this.fillRemainingForRow(row, tenderType)
     }
 
@@ -185,7 +230,9 @@ export default class extends Controller {
 
     this.highlightActiveType(tenderType)
     this.update()
-    this.focusRowEntry(row)
+    this.focusModalEntry(() => {
+      this.focusRowEntry(row)
+    })
   }
 
   appendDraftRow(template, tenderType) {
@@ -238,8 +285,13 @@ export default class extends Controller {
       return
     }
 
+    this.clampStoredValueAmount(draftRow)
+    await this.syncSettlementRows(draftRow)
+  }
+
+  async syncSettlementRows(draftRow = null) {
     const syncUrl = this.syncUrlValue || this.modalTarget?.dataset?.posSettlementPanelSyncUrlValue
-    if (!syncUrl) return
+    if (!syncUrl) return false
 
     this.modalWasOpen = !this.modalTarget.hidden
     const body = this.buildSyncFormData(draftRow)
@@ -255,27 +307,32 @@ export default class extends Controller {
         body
       })
 
-      if (!response.ok) return
-
       const html = await response.text()
-      window.Turbo.renderStreamMessage(html)
+      if (html) {
+        window.Turbo.renderStreamMessage(html)
+      }
 
-      if (this.modalWasOpen) {
+      if (response.ok && this.modalWasOpen) {
         requestAnimationFrame(() => this.open())
       }
+
+      return response.ok
     } catch (_error) {
-      // Keep the modal open; server-side flash handles validation errors.
+      return false
     }
   }
 
-  buildSyncFormData(draftRow) {
+  buildSyncFormData(draftRow = null) {
     const body = new FormData()
     const form = this.modalTarget.querySelector("form")
 
-    this.visibleRows().forEach((row) => {
-      this.appendRowFields(body, row)
+    this.allSavedRows().forEach((row) => {
+      this.appendRowToFormData(body, row)
     })
-    this.appendRowFields(body, draftRow)
+
+    if (draftRow) {
+      this.appendRowToFormData(body, draftRow)
+    }
 
     if (form) {
       const authorizationId = form.querySelector("[name='pos_authorization_id']")?.value
@@ -286,6 +343,26 @@ export default class extends Controller {
 
     body.append("reopen_settlement_modal", "1")
     return body
+  }
+
+  allSavedRows() {
+    if (!this.hasRowsTarget) return []
+
+    return Array.from(this.rowsTarget.querySelectorAll("[data-settlement-row]"))
+  }
+
+  appendRowToFormData(body, row) {
+    if (row.dataset.destroyed === "true" || row.hidden) {
+      const index = row.dataset.settlementIndex
+      if (!index) return
+
+      body.append(`settlements[${index}][id]`, row.dataset.rowId || "")
+      body.append(`settlements[${index}][_destroy]`, "1")
+      body.append(`settlements[${index}][tender_type]`, row.dataset.settlementType || "")
+      return
+    }
+
+    this.appendRowFields(body, row)
   }
 
   appendRowFields(body, row) {
@@ -359,12 +436,22 @@ export default class extends Controller {
     this.openWithOffer({ tenderType: "cash", prefillRemaining: true })
   }
 
-  openWithOffer({ tenderType = null, amountCents = null, prefillRemaining = false } = {}) {
-    this.open()
+  openWithOffer({ tenderType = null, amountCents = null, prefillRemaining = null } = {}) {
+    this.open(null, { skipInitialFocus: tenderType != null })
 
-    if (!tenderType) return
+    if (!tenderType) {
+      this.focusModalInitial()
+      return
+    }
 
-    this.openDraftForType(tenderType, { amountCents, prefillRemaining: amountCents == null && prefillRemaining })
+    const inferredPrefill =
+      prefillRemaining ??
+      (amountCents == null && !["store_credit", "gift_card"].includes(tenderType))
+
+    this.openDraftForType(tenderType, {
+      amountCents,
+      prefillRemaining: amountCents == null && inferredPrefill
+    })
   }
 
   update() {
@@ -447,7 +534,6 @@ export default class extends Controller {
         statusEl.textContent = `${payload.display_value_masked} · Balance ${this.formatMoney(payload.current_balance_cents)}`
       }
 
-      this.clampStoredValueAmount(row)
       if (this.rowAmountCents(row) === 0) {
         this.fillRemainingForRow(row, tenderType)
       } else {
@@ -456,6 +542,7 @@ export default class extends Controller {
       this.updateRowSummary(row)
       this.updateHints()
       this.dispatchUpdate()
+      this.focusStoredValueAmount(row)
     } catch (_error) {
       if (statusEl) statusEl.textContent = "Lookup failed."
     }
@@ -488,7 +575,9 @@ export default class extends Controller {
     if (!row) return
 
     const destroyField = row.querySelector("[data-pos-settlement-panel-target='destroyField']")
-    if (row.dataset.rowId) {
+    const persisted = Boolean(row.dataset.rowId)
+
+    if (persisted) {
       if (destroyField) destroyField.value = "1"
       row.dataset.destroyed = "true"
       row.hidden = true
@@ -501,6 +590,10 @@ export default class extends Controller {
     }
 
     this.update()
+
+    if (persisted) {
+      this.syncSettlementRows()
+    }
   }
 
   fillRemaining(event) {
@@ -518,7 +611,7 @@ export default class extends Controller {
     if (Number.isNaN(totalCents)) return
 
     let otherTotal = 0
-    this.visibleRows().forEach((visibleRow) => {
+    this.rowsForTotals().forEach((visibleRow) => {
       if (visibleRow === row) return
 
       otherTotal += this.rowAmountCents(visibleRow)
@@ -569,6 +662,7 @@ export default class extends Controller {
   }
 
   collapseRowIfReady(row) {
+    if (row.dataset.draft === "true") return
     if (!this.rowHasAmount(row)) return
 
     row.dataset.collapsed = "true"
@@ -634,8 +728,15 @@ export default class extends Controller {
   }
 
   visibleRows() {
-    return Array.from(this.rowsTarget.querySelectorAll("[data-settlement-row]"))
-      .filter((row) => row.dataset.destroyed !== "true" && !row.hidden)
+    return this.allSavedRows().filter((row) => row.dataset.destroyed !== "true" && !row.hidden)
+  }
+
+  rowsForTotals() {
+    const rows = [ ...this.visibleRows() ]
+    const draftRow = this.activeDraftRow()
+    if (draftRow) rows.push(draftRow)
+
+    return rows
   }
 
   rowAmountCents(row) {
@@ -667,6 +768,16 @@ export default class extends Controller {
         nonCashCents += cents
       }
     })
+
+    const draftRow = this.activeDraftRow()
+    if (draftRow) {
+      const cents = this.rowAmountCents(draftRow)
+      if (draftRow.dataset.settlementType === "cash") {
+        cashTenderedCents += cents
+      } else {
+        nonCashCents += cents
+      }
+    }
 
     let remainingDisplay = "—"
     let changeDisplay = "—"
@@ -766,22 +877,53 @@ export default class extends Controller {
   focusRowEntry(row) {
     this.expandRowElement(row)
 
-    const amountField = row.querySelector("[data-settlement-amount]")
-    if (amountField) {
-      amountField.focus()
-      if (typeof amountField.select === "function") amountField.select()
-      return
+    const tenderType = row.dataset.settlementType
+    if (tenderType === "store_credit" || tenderType === "gift_card") {
+      if (this.focusField(row.querySelector("[data-pos-settlement-panel-target='lookupCodeField']"))) return
     }
 
-    row.querySelector("input:not([type='hidden']), select")?.focus()
+    if (tenderType === "card") {
+      if (this.focusField(row.querySelector("[data-pos-settlement-panel-target='cardBrandField']"))) return
+    }
+
+    if (this.focusField(row.querySelector("[data-settlement-amount]"))) return
+
+    this.focusField(row.querySelector("input:not([type='hidden']), select"))
+  }
+
+  focusStoredValueAmount(row) {
+    this.expandRowElement(row)
+    this.focusField(row.querySelector("[data-settlement-amount]"))
+  }
+
+  shouldPrefillRemainingForRow(tenderType, row, prefillRemaining) {
+    if (tenderType === "store_credit" || tenderType === "gift_card") {
+      return prefillRemaining && this.storedValueBalanceCents(row) != null
+    }
+
+    return prefillRemaining
+  }
+
+  focusField(field) {
+    if (!field) return false
+
+    field.focus()
+    if (field.tagName !== "SELECT" && typeof field.select === "function") {
+      field.select()
+    }
+    return true
   }
 
   nextSettlementIndex() {
-    const rows = this.rowsTarget.querySelectorAll("[data-settlement-row]")
+    const selectors = [this.rowsTarget]
+    if (this.hasDraftRowsTarget) selectors.push(this.draftRowsTarget)
+
     let max = -1
-    rows.forEach((row) => {
-      const index = parseInt(row.dataset.settlementIndex, 10)
-      if (!Number.isNaN(index)) max = Math.max(max, index)
+    selectors.forEach((container) => {
+      container.querySelectorAll("[data-settlement-row]").forEach((row) => {
+        const index = parseInt(row.dataset.settlementIndex, 10)
+        if (!Number.isNaN(index)) max = Math.max(max, index)
+      })
     })
     return max + 1
   }
