@@ -2,7 +2,7 @@
   <summary>Discount/Adjustment</summary>
   <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) %>
     <p class="ss-hint">Eligible discount base: <%= pos_money(pos_transaction_discount_base_cents(transaction)) %></p>
-    <%= form_with url: apply_transaction_discount_pos_transaction_path(transaction), method: :post, class: "ss-form", data: { turbo_stream: true } do %>
+    <%= form_with url: apply_transaction_discount_pos_transaction_path(transaction), method: :post, class: "ss-form", html: { novalidate: true }, data: { turbo_stream: true, action: "submit->pos-discount-input#validateSubmit" } do %>
       <%= render "pos/transactions/discount_fields",
             transaction: transaction,
             label: "Transaction discount",

@@ -31,6 +31,8 @@ export default class extends Controller {
     if (!(target instanceof HTMLElement)) return false
     if (!target.matches(INPUT_LIKE)) return false
 
+    if (event.key === "Escape") return false
+
     if (target.matches("textarea") && event.key === "Enter" && !event.metaKey && !event.ctrlKey) {
       return true
     }

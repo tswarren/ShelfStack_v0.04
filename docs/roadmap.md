@@ -568,6 +568,8 @@ Delivery order: **10-A → 10-B → 10-C → 10-D → 10-E**. Phase 10 is comple
 | 10-A Interaction infrastructure | [phase-10a-interaction-infrastructure.md](roadmap/phase-10a-interaction-infrastructure.md) |
 | 10-B Item cockpit completion | [phase-10b-item-cockpit-completion.md](roadmap/phase-10b-item-cockpit-completion.md) |
 | 10-C POS keyboard workspace | [phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) |
+| 10-C slice 9A (transaction discount modal) | [phase-10c-9a-transaction-discount-modal.md](roadmap/phase-10c-9a-transaction-discount-modal.md) |
+| 10-C slice 9B (tender/completion) | [phase-10c-9b-tender-workspace-and-completion.md](roadmap/phase-10c-9b-tender-workspace-and-completion.md) |
 | 10-D / 10-E | [Phase-x10-comprehensive-ux-expansion.md](roadmap/Phase-x10-comprehensive-ux-expansion.md) |
 
 Visual mockups: [docs/samples/phase-10-mockups/](samples/phase-10-mockups/)
@@ -590,6 +592,8 @@ docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
 docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/roadmap/phase-10c-9a-transaction-discount-modal.md
+docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md
 docs/specifications/phase-10c-pos-keyboard-workspace-spec.md
 docs/specifications/phase-10c-test-plan.md
 docs/specifications/pos-keyboard-workspace.md

@@ -1,10 +1,16 @@
-<%# locals: (transaction:, label: nil, id_prefix: nil, type_name: :discount_type, value_name: :discount_value, show_reason: true) %>
+<%# locals: (transaction:, label: nil, id_prefix: nil, type_name: :discount_type, value_name: :discount_value, show_reason: true, default_type: "amount", submitted: nil, invalid_fields: nil) %>
 <% field_id = local_assigns[:id_prefix].presence || "discount" %>
 <% type_name = local_assigns.fetch(:type_name, "discount_type") %>
 <% value_name = local_assigns.fetch(:value_name, "discount_value") %>
 <% show_reason = local_assigns.fetch(:show_reason, true) %>
-<% authorization_id = params[:pos_authorization_id] %>
-<% selected_reason_requires_auth = pos_discount_reason_requires_authorization?(params[:discount_reason_id]) %>
+<% submitted = local_assigns[:submitted].presence || {} %>
+<% invalid_fields = Array(local_assigns[:invalid_fields]).map(&:to_s) %>
+<% invalid = ->(name) { invalid_fields.include?(name.to_s) } %>
+<% default_type = submitted[:discount_type].presence || local_assigns.fetch(:default_type, "amount") %>
+<% authorization_id = submitted[:pos_authorization_id].presence || params[:pos_authorization_id] %>
+<% selected_reason_id = submitted[:discount_reason_id].presence || params[:discount_reason_id] %>
+<% selected_reason_requires_auth = pos_discount_reason_requires_authorization?(selected_reason_id) %>
+<% invalid_fields_json = invalid_fields.to_json %>
 
 <div class="ss-field ss-pos-discount-field"
      data-controller="pos-discount-input"
@@ -12,42 +18,97 @@
      data-pos-discount-input-percent-label-value="% Percent"
      data-pos-discount-input-transaction-id-value="<%= transaction.id %>"
      data-pos-discount-input-authorization-type-value="discount_reason_approval"
+     data-pos-discount-input-invalid-fields-value="<%= invalid_fields_json %>"
      data-action="pos:authorization-granted@document->pos-discount-input#authorizationGranted">
-  <%= label_tag "#{field_id}_discount_value", local_assigns.fetch(:label, "Discount") %>
-  <div class="ss-pos-discount-field__row">
-    <%= select_tag type_name,
-          options_for_select(pos_discount_type_options, "amount"),
-          id: "#{field_id}_discount_type",
-          data: { pos_discount_input_target: "type", action: "change->pos-discount-input#updateMode" } %>
-    <%= number_field_tag value_name,
-          nil,
-          id: "#{field_id}_discount_value",
-          min: 0,
-          step: 0.01,
-          class: "ss-pos-discount-input",
-          data: { pos_discount_input_target: "value" } %>
-  </div>
   <% if show_reason %>
-    <div class="ss-field">
+    <div class="ss-field<%= " ss-field--invalid" if invalid.call("discount_reason_id") %>"
+         data-pos-discount-input-target="reasonFieldWrap">
       <%= label_tag "#{field_id}_discount_reason_id", "Reason" %>
       <%= select_tag :discount_reason_id,
-            options_for_select(pos_discount_reason_options, params[:discount_reason_id]),
+            options_for_select(pos_discount_reason_options, selected_reason_id),
             id: "#{field_id}_discount_reason_id",
             include_blank: "Select a reason",
-            required: true,
+            aria_invalid: invalid.call("discount_reason_id"),
             data: {
               pos_discount_input_target: "reason",
-              action: "change->pos-discount-input#reasonChanged"
+              action: "change->pos-discount-input#reasonChanged input->pos-discount-input#clearFieldInvalid"
             } %>
     </div>
-    <div class="ss-field">
-      <%= label_tag "#{field_id}_discount_note", "Note" %>
-      <%= text_area_tag :discount_note, nil, id: "#{field_id}_discount_note", rows: 2 %>
+  <% end %>
+  <div class="ss-field<%= " ss-field--invalid" if invalid.call("discount_value") %>"
+       data-pos-discount-input-target="valueFieldWrap">
+    <%= label_tag "#{field_id}_discount_value", local_assigns.fetch(:label, "Discount") %>
+    <div class="ss-pos-discount-field__row">
+      <div class="ss-pos-discount-value<%= " ss-pos-discount-value--invalid" if invalid.call("discount_value") %>"
+           data-pos-discount-input-target="valueWrap">
+        <span class="ss-pos-discount-value__adornment ss-pos-discount-value__adornment--prefix"
+              data-pos-discount-input-target="amountAdornment"
+              aria-hidden="true"
+              <%= "hidden" if default_type == "percent" %>>$</span>
+        <%= number_field_tag value_name,
+              submitted[:discount_value],
+              id: "#{field_id}_discount_value",
+              min: 0,
+              step: 0.01,
+              class: "ss-pos-discount-input",
+              inputmode: "decimal",
+              aria_invalid: invalid.call("discount_value"),
+              data: {
+                pos_discount_input_target: "value",
+                action: "input->pos-discount-input#clearFieldInvalid"
+              } %>
+        <span class="ss-pos-discount-value__adornment ss-pos-discount-value__adornment--suffix"
+              data-pos-discount-input-target="percentAdornment"
+              aria-hidden="true"
+              <%= "hidden" if default_type == "amount" %>>%</span>
+      </div>
+      <div class="ss-pos-discount-mode"
+           role="group"
+           aria-label="Discount type"
+           data-pos-discount-input-target="modeGroup">
+        <button type="button"
+                class="ss-pos-discount-mode__btn<%= " ss-pos-discount-mode__btn--active" if default_type == "percent" %>"
+                data-mode="percent"
+                data-pos-discount-input-target="modeButton"
+                data-action="pos-discount-input#selectMode"
+                aria-pressed="<%= default_type == "percent" %>">%</button>
+        <button type="button"
+                class="ss-pos-discount-mode__btn<%= " ss-pos-discount-mode__btn--active" if default_type == "amount" %>"
+                data-mode="amount"
+                data-pos-discount-input-target="modeButton"
+                data-action="pos-discount-input#selectMode"
+                aria-pressed="<%= default_type == "amount" %>">$</button>
+      </div>
+      <%= hidden_field_tag type_name,
+            default_type,
+            id: "#{field_id}_discount_type",
+            data: { pos_discount_input_target: "type" } %>
     </div>
-  <%= hidden_field_tag :pos_authorization_id, authorization_id, data: { pos_discount_input_target: "authorizationId", pos_transaction_edit_target: "authorizationId" } %>
-    <div class="ss-pos-discount-auth"
+  </div>
+  <% if show_reason %>
+    <div class="ss-field<%= " ss-field--invalid" if invalid.call("discount_note") %>"
+         data-pos-discount-input-target="noteFieldWrap">
+      <%= label_tag "#{field_id}_discount_note", class: "ss-label" do %>
+        Note
+        <abbr title="required"
+              class="ss-required"
+              data-pos-discount-input-target="noteRequiredMarker"
+              hidden
+              aria-hidden="true">*</abbr>
+      <% end %>
+      <%= text_field_tag :discount_note,
+            submitted[:discount_note],
+            id: "#{field_id}_discount_note",
+            aria_invalid: invalid.call("discount_note"),
+            data: {
+              pos_discount_input_target: "note",
+              action: "input->pos-discount-input#clearFieldInvalid"
+            } %>
+    </div>
+    <%= hidden_field_tag :pos_authorization_id, authorization_id, data: { pos_discount_input_target: "authorizationId", pos_transaction_edit_target: "authorizationId" } %>
+    <div class="ss-pos-discount-auth<%= " ss-pos-discount-auth--invalid" if invalid.call("discount_authorization") %>"
          data-pos-discount-input-target="authorizePanel"
-         <%= "hidden" unless selected_reason_requires_auth && authorization_id.blank? %>>
+         <%= "hidden" unless (selected_reason_requires_auth && authorization_id.blank?) || invalid.call("discount_authorization") %>>
       <p class="ss-hint ss-hint--warning">This reason requires manager approval before applying the discount.</p>
       <button type="button"
               class="ss-btn ss-btn-secondary ss-btn--small"

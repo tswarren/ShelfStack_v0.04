@@ -164,7 +164,7 @@ UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_pas
 
 ## POS Register Operations (Phase 6.1)
 
-> **Note:** Phase 10-C POS command UX is partially shipped (slices 1–7). See [phase-10c-completion.md](../implementation/phase-10c-completion.md). This section describes legacy dashboard-oriented flows; a full 10-C runbook refresh is deferred to slice 10.
+> **Note:** Phase 10-C POS command UX is partially shipped (slices 1–8; slice 9 in review). See [phase-10c-completion.md](../implementation/phase-10c-completion.md). Transaction discount modal planned in [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md); tender/completion UX in [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md). This section describes legacy dashboard-oriented flows; a full 10-C runbook refresh is deferred to slice 10.
 
 ### Open register
 

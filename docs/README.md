@@ -65,9 +65,9 @@ Deferred:    Phase 9c
 | Phase 9c | Deferred | [roadmap/phase-9c-gl-shaped-financial-layer.md](roadmap/phase-9c-gl-shaped-financial-layer.md) |
 | Phase 10-A | Complete | [implementation/phase-10a-completion.md](implementation/phase-10a-completion.md) |
 | Phase 10-B | Complete | [implementation/phase-10b-completion.md](implementation/phase-10b-completion.md) |
-| Phase 10-C | In progress (slices 1–7) | [implementation/phase-10c-completion.md](implementation/phase-10c-completion.md), [roadmap/phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) |
+| Phase 10-C | In progress (slices 1–8; 9 in review; **9A**, **9B**, 10 pending) | [implementation/phase-10c-completion.md](implementation/phase-10c-completion.md), [roadmap/phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md), [roadmap/phase-10c-9a-transaction-discount-modal.md](roadmap/phase-10c-9a-transaction-discount-modal.md), [roadmap/phase-10c-9b-tender-workspace-and-completion.md](roadmap/phase-10c-9b-tender-workspace-and-completion.md) |
 
-Operational tasks (login, workstation assignment, PIN/password onboarding, sessions, admin recovery, POS register basics): [operations/foundation-runbook.md](operations/foundation-runbook.md). Phase 10-C POS command UX is partially shipped — see [implementation/phase-10c-completion.md](implementation/phase-10c-completion.md); runbook POS section refresh deferred to slice 10.
+Operational tasks (login, workstation assignment, PIN/password onboarding, sessions, admin recovery, POS register basics): [operations/foundation-runbook.md](operations/foundation-runbook.md). Phase 10-C POS command UX is partially shipped — see [implementation/phase-10c-completion.md](implementation/phase-10c-completion.md); runbook POS section refresh deferred to slice 10 (after slices 9A/9B).
 
 Classification CSV seeds: [implementation/csv-seeds.md](implementation/csv-seeds.md), [specifications/seed-data-spec.md](specifications/seed-data-spec.md).
 
@@ -199,7 +199,7 @@ Parent roadmap: [roadmap/Phase-x10-comprehensive-ux-expansion.md](roadmap/Phase-
 | --------- | ------ | ------- | ---- | --------- |
 | 10-A Interaction infrastructure | Complete | [phase-10a-interaction-infrastructure.md](roadmap/phase-10a-interaction-infrastructure.md) | [phase-10a-interaction-infrastructure-spec.md](specifications/phase-10a-interaction-infrastructure-spec.md) | [phase-10a-test-plan.md](specifications/phase-10a-test-plan.md) |
 | 10-B Item cockpit | Complete | [phase-10b-item-cockpit-completion.md](roadmap/phase-10b-item-cockpit-completion.md) | [phase-10b-item-cockpit-spec.md](specifications/phase-10b-item-cockpit-spec.md) | [phase-10b-test-plan.md](specifications/phase-10b-test-plan.md) |
-| 10-C POS keyboard workspace | **In progress** (slices 1–7) | [phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) | [phase-10c-pos-keyboard-workspace-spec.md](specifications/phase-10c-pos-keyboard-workspace-spec.md) | [phase-10c-test-plan.md](specifications/phase-10c-test-plan.md) |
+| 10-C POS keyboard workspace | **In progress** (slices 1–8; 9 in review; **9A**, **9B**, 10 pending) | [phase-10c-pos-keyboard-workspace.md](roadmap/phase-10c-pos-keyboard-workspace.md) (+ [9A transaction discount](roadmap/phase-10c-9a-transaction-discount-modal.md), [9B tender/completion](roadmap/phase-10c-9b-tender-workspace-and-completion.md)) | [phase-10c-pos-keyboard-workspace-spec.md](specifications/phase-10c-pos-keyboard-workspace-spec.md) | [phase-10c-test-plan.md](specifications/phase-10c-test-plan.md) |
 
 Cross-cutting Phase 10 UX documents:
 

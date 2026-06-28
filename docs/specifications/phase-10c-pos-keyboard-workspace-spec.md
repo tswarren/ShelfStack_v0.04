@@ -4,6 +4,10 @@
 
 **Roadmap:** [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md)
 
+**Tender/completion detail (slice 9B):** [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md)
+
+**Transaction discount modal (slice 9A):** [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md)
+
 **Mockup reference:** [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html)
 
 **Depends on:** Phase 10-A (**hard** — modal, drawer, expanded row, focus helpers); Phase 10-B **complete per delivery order** (proves shared interaction patterns on Items before POS)
@@ -202,8 +206,10 @@ Cash drop is not available yet.
 
 ### Line edit and settlement
 
-* Cart line edits use 10-A expanded-row pattern
-* Settlement uses 10-A modal shell
+* Cart line edits use 10-A expanded-row / More menu task panels (slice 9)
+* Transaction discount uses focused modal, not adjustments `<details>` panel (slice 9A)
+* Settlement uses 10-A modal shell (slice 8)
+* Tender workspace UX, explicit completion, and post-completion workspace — slice **9B** ([phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md))
 * Readiness blockers near settlement and inside modal
 
 ### Keyboard/focus — required
@@ -224,6 +230,8 @@ Cash drop is not available yet.
 | Document | Role |
 | -------- | ---- |
 | [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md) | Command → surface mapping, draft gating, PR slices, policy tables |
+| [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md) | Transaction discount modal UX, preview total, adjustments launcher (slice 9A) |
+| [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md) | Tender modal UX, completion flow, post-completion workspace (slice 9B) |
 | This spec | Resolved decisions, acceptance criteria |
 | [phase-10c-test-plan.md](phase-10c-test-plan.md) | Test cases by area |
 | [phase-10a-interaction-infrastructure-spec.md](phase-10a-interaction-infrastructure-spec.md), [modal-and-drawer-patterns.md](modal-and-drawer-patterns.md) | Shell mechanics only |

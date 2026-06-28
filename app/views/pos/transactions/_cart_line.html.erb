@@ -1,4 +1,11 @@
-<tr class="ss-pos-cart-line <%= 'ss-pos-cart-line--return' if line.return_line? %>"
+<% panel_error = @line_panel_error if defined?(@line_panel_error) && @line_panel_error.present? %>
+<% line_editing = pos_cart_line_panel_open?(line, panel_error) %>
+<% can_edit = pos_cart_line_edit_panel_available?(line) %>
+<% can_discount = pos_cart_line_discount_panel_available?(line) &&
+     Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) %>
+<% can_tax = pos_cart_line_tax_panel_available?(line) &&
+     Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.apply", store: current_store) %>
+<tr class="ss-pos-cart-line <%= 'ss-pos-cart-line--return' if line.return_line? %><%= ' ss-pos-cart-line--editing' if line_editing %>"
     id="<%= dom_id(line) %>"
     data-pos-cart-line-target="displayRow"
     data-line-id="<%= line.id %>">
@@ -59,11 +66,50 @@
   </td>
   <td class="ss-pos-money-col ss-pos-cart-line__total"><%= pos_money(pos_line_total_cents(line)) %></td>
   <td class="ss-pos-cart-line__actions">
-    <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-cart-line#edit" data-line-id="<%= line.id %>">More</button>
-    <%= button_to "Remove",
-          remove_line_pos_transaction_path(transaction, line_id: line.id),
-          method: :delete,
-          class: "ss-btn ss-btn-secondary ss-btn--small",
-          form: { data: { turbo_stream: true, turbo_confirm: "Remove this line?" } } %>
+    <div class="ss-pos-line-actions">
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn--small"
+              data-action="pos-cart-line#toggleMenu"
+              data-line-id="<%= line.id %>"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="pos_line_menu_<%= line.id %>">More ▾</button>
+      <div class="ss-pos-line-menu"
+           id="pos_line_menu_<%= line.id %>"
+           role="menu"
+           data-pos-cart-line-target="menu"
+           data-line-id="<%= line.id %>"
+           hidden>
+        <% if can_edit %>
+          <button type="button"
+                  class="ss-pos-line-menu__item"
+                  role="menuitem"
+                  data-action="pos-cart-line#selectPanel"
+                  data-panel="edit"
+                  data-line-id="<%= line.id %>">Change quantity/price</button>
+        <% end %>
+        <% if can_discount %>
+          <button type="button"
+                  class="ss-pos-line-menu__item"
+                  role="menuitem"
+                  data-action="pos-cart-line#selectPanel"
+                  data-panel="discount"
+                  data-line-id="<%= line.id %>">Discount line</button>
+        <% end %>
+        <% if can_tax %>
+          <button type="button"
+                  class="ss-pos-line-menu__item"
+                  role="menuitem"
+                  data-action="pos-cart-line#selectPanel"
+                  data-panel="tax"
+                  data-line-id="<%= line.id %>">Change tax</button>
+        <% end %>
+        <%= button_to "Remove line",
+              remove_line_pos_transaction_path(transaction, line_id: line.id),
+              method: :delete,
+              class: "ss-pos-line-menu__item ss-pos-line-menu__item--danger",
+              form: { data: { turbo_stream: true, turbo_confirm: "Remove this line?" }, class: "ss-pos-line-menu__form" } %>
+      </div>
+    </div>
   </td>
 </tr>

@@ -273,6 +273,7 @@ module Pos
       respond_to_workspace(notice: "Line discount applied.")
     rescue Pos::DiscountApplicationService::Error, Pos::DiscountInput::Error, ActiveRecord::RecordNotFound => e
       flash.now[:alert] = e.message
+      assign_line_panel_error!(panel: "discount", error: e)
       load_edit_context
       respond_to do |format|
         format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
@@ -650,6 +651,33 @@ module Pos
       @pos_discount_authorization = if params[:pos_authorization_id].present?
         PosAuthorization.find_by(id: params[:pos_authorization_id])
       end
+    end
+
+    def assign_line_panel_error!(panel:, error:)
+      @line_panel_error = {
+        line_id: params[:line_id].to_i,
+        panel: panel.to_s,
+        invalid_fields: line_discount_invalid_fields(error),
+        submitted: {
+          discount_type: params[:discount_type],
+          discount_value: params[:discount_value],
+          discount_reason_id: params[:discount_reason_id],
+          discount_note: params[:discount_note],
+          pos_authorization_id: params[:pos_authorization_id]
+        }
+      }
+    end
+
+    def line_discount_invalid_fields(error)
+      fields = []
+      fields << "discount_reason_id" if params[:discount_reason_id].blank?
+      fields << "discount_value" if params[:discount_value].blank?
+
+      message = error.message.to_s
+      fields << "discount_note" if message.match?(/note is required/i)
+      fields << "discount_authorization" if message.match?(/authorization is required/i)
+
+      fields.uniq
     end
 
     def transaction_params

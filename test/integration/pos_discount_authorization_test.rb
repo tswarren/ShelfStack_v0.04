@@ -43,7 +43,33 @@ class PosDiscountAuthorizationTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "Authorize discount"
+    assert_includes response.body, "ss-expand-row--active"
+    assert_includes response.body, "ss-pos-discount-auth--invalid"
+    assert_no_match(/ss-expand-row--active[^>]*hidden/, response.body)
     assert_equal 0, @line.reload.line_discount_cents
+  end
+
+  test "apply line discount without required note keeps expanded row open" do
+    note_reason = DiscountReason.find_or_create_by!(reason_key: "damaged") do |reason|
+      reason.name = "Damaged Item"
+      reason.sort_order = 20
+      reason.requires_note = true
+      reason.active = true
+    end
+    note_reason.update!(requires_note: true, active: true)
+
+    post apply_line_discount_pos_transaction_path(@transaction), params: {
+      line_id: @line.id,
+      discount_reason_id: note_reason.id,
+      discount_type: "percent",
+      discount_value: "10"
+    }, as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "note is required"
+    assert_includes response.body, "ss-expand-row--active"
+    assert_includes response.body, "ss-field--invalid"
+    assert_includes response.body, 'data-pos-discount-input-invalid-fields-value="[&quot;discount_note&quot;]"'
   end
 
   test "apply line discount succeeds after manager authorization" do

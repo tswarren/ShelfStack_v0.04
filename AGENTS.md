@@ -388,9 +388,9 @@ Phase 10-B was completed on 2026-06-26. See [docs/implementation/phase-10b-compl
 - Item setup quick modals (identifier, price, vendor source, classification/tax preview) via shared Turbo modal contract
 - Phase 9 drill-down contract preserved
 
-## Phase 10-C: POS Keyboard Workspace — **In progress** (slices 1–7)
+## Phase 10-C: POS Keyboard Workspace — **In progress** (slices 1–8; 9 in review; **9A**, **9B**, and **10** pending)
 
-See [docs/implementation/phase-10c-completion.md](docs/implementation/phase-10c-completion.md). Authoritative direction: [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md), [docs/specifications/phase-10c-pos-keyboard-workspace-spec.md](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md).
+See [docs/implementation/phase-10c-completion.md](docs/implementation/phase-10c-completion.md). Authoritative direction: [docs/roadmap/phase-10c-pos-keyboard-workspace.md](docs/roadmap/phase-10c-pos-keyboard-workspace.md), [docs/specifications/phase-10c-pos-keyboard-workspace-spec.md](docs/specifications/phase-10c-pos-keyboard-workspace-spec.md). Transaction discount modal: [docs/roadmap/phase-10c-9a-transaction-discount-modal.md](docs/roadmap/phase-10c-9a-transaction-discount-modal.md). Tender/completion UX: [docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md](docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md).
 
 - Idle POS workspace when register open and no active draft; command field is home base (not silent auto-create)
 - Active draft always wins on `/pos` (one per register session + workstation + cashier)
@@ -398,6 +398,8 @@ See [docs/implementation/phase-10c-completion.md](docs/implementation/phase-10c-
 - Remove implicit open-ring/receipt/amount guessing from `Pos::CommandBarRouter`
 - Separate line vs transaction discount commands; `/gc` with amount adds line, without amount opens amount panel; `/cashdrop` deferred
 - Return/pickup drawer workflows; tender → settlement; utility commands (session, reports, close, cash in/out); `/close` blocked while active draft exists
+- **Slice 9A (planned):** transaction discount modal with preview total; adjustments panel as launcher
+- **Slice 9B (planned):** keyboard-first tender modal, explicit completion, post-completion workspace with New Sale primary action
 
 ## Phase 10 Documents
 
@@ -406,6 +408,8 @@ docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
 docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md
+docs/roadmap/phase-10c-9a-transaction-discount-modal.md
+docs/roadmap/phase-10c-9b-tender-workspace-and-completion.md
 docs/specifications/phase-10a-interaction-infrastructure-spec.md
 docs/specifications/phase-10a-test-plan.md
 docs/specifications/phase-10b-item-cockpit-spec.md
