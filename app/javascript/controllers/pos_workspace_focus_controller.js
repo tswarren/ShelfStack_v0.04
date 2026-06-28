@@ -23,6 +23,8 @@ export default class extends Controller {
   static shouldSkipCommandFocus() {
     if (isAnyOverlayOpen()) return true
 
+    if (document.querySelector(".ss-expand-row--active:not([hidden])")) return true
+
     const settlementModal = document.getElementById("pos_settlement_modal")
     if (settlementModal && !settlementModal.hidden) return true
 

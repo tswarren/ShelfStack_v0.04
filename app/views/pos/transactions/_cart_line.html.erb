@@ -59,7 +59,12 @@
   </td>
   <td class="ss-pos-money-col ss-pos-cart-line__total"><%= pos_money(pos_line_total_cents(line)) %></td>
   <td class="ss-pos-cart-line__actions">
-    <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-cart-line#edit" data-line-id="<%= line.id %>">More</button>
+    <button type="button"
+            class="ss-btn ss-btn-secondary ss-btn--small"
+            data-action="pos-cart-line#edit"
+            data-line-id="<%= line.id %>"
+            aria-expanded="false"
+            aria-controls="pos_line_edit_<%= line.id %>">More</button>
     <%= button_to "Remove",
           remove_line_pos_transaction_path(transaction, line_id: line.id),
           method: :delete,

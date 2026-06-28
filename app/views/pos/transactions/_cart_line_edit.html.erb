@@ -1,80 +1,119 @@
-<tr class="ss-pos-cart-line-edit" data-pos-cart-line-target="editRow" data-line-id="<%= line.id %>" hidden>
-  <td colspan="6">
-    <%= form_with url: update_line_pos_transaction_path(transaction), method: :patch, class: "ss-pos-line-edit-form", data: { turbo_stream: true } do %>
-      <%= hidden_field_tag :line_id, line.id %>
-      <div class="ss-pos-line-edit-form__fields">
-        <div class="ss-field">
-          <%= label_tag "quantity_#{line.id}", "Qty" %>
-          <%= number_field_tag :quantity, line.quantity, id: "quantity_#{line.id}", class: "ss-pos-qty-input" %>
-        </div>
-        <% if pos_line_price_editable?(line) %>
-          <div class="ss-field">
-            <%= label_tag "unit_price_#{line.id}", "Unit price" %>
-            <%= pos_money_field :unit_price, line.unit_price_cents, id: "unit_price_#{line.id}", min: 0, class: "ss-pos-money-input" %>
-          </div>
-        <% end %>
-        <% if line.return_line? %>
-          <div class="ss-field">
-            <%= label_tag "return_disposition_#{line.id}", "Disposition" %>
-            <%= select_tag :return_disposition, options_for_select(pos_return_disposition_options, line.return_disposition), id: "return_disposition_#{line.id}" %>
-          </div>
-        <% end %>
+<% form_id = "pos_line_edit_#{line.id}" %>
+<%= render layout: "shared/interaction/expanded_row",
+      locals: {
+        colspan: 6,
+        open: false,
+        target: "editRow",
+        line_id: line.id,
+        keyboard_action: "keyboard-scope:keydown->pos-cart-line#handleKeydown"
+      } do %>
+  <div class="ss-row-detail ss-pos-line-edit" id="pos_line_edit_<%= line.id %>">
+    <header class="ss-row-detail__header ss-pos-line-edit__header">
+      <div>
+        <h4 class="ss-pos-line-edit__title">Edit line · <%= pos_line_display_title(line) %></h4>
+        <p class="ss-hint">Make bounded changes without leaving the POS workspace.</p>
       </div>
-      <div class="ss-pos-line-edit-form__actions">
-        <%= submit_tag "Save", class: "ss-btn" %>
-        <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-cart-line#cancel" data-line-id="<%= line.id %>">Cancel</button>
-      </div>
-    <% end %>
+    </header>
 
-    <% eligibility = Pos::DiscountEligibilityResolver.call(line) %>
-    <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) && !line.return_line? %>
-      <% if eligibility.discountable %>
-        <%= form_with url: apply_line_discount_pos_transaction_path(transaction), method: :post, class: "ss-pos-line-discount-form", data: { turbo_stream: true } do %>
+    <div class="ss-row-detail__body ss-pos-line-edit__body">
+      <section class="ss-pos-line-edit__section">
+        <h5 class="ss-pos-line-edit__section-title">Line fields</h5>
+        <%= form_with url: update_line_pos_transaction_path(transaction),
+              method: :patch,
+              id: form_id,
+              class: "ss-pos-line-edit-form",
+              data: { turbo_stream: true } do %>
           <%= hidden_field_tag :line_id, line.id %>
-          <%= render "pos/transactions/discount_fields",
-                transaction: transaction,
-                label: "Add line discount",
-                id_prefix: "line_discount_#{line.id}",
-                type_name: :discount_type,
-                value_name: :discount_value %>
-          <%= submit_tag "Apply discount", class: "ss-btn ss-btn-secondary" %>
-        <% end %>
-        <%= render "pos/transactions/line_discount_list", transaction: transaction, line: line %>
-      <% else %>
-        <p class="ss-hint"><%= eligibility.message %></p>
-      <% end %>
-    <% end %>
-
-    <% if Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.apply", store: current_store) && pos_line_tax_override_eligible?(line) %>
-      <%= render "pos/transactions/line_tax_override_summary", transaction: transaction, line: line %>
-      <% unless line.pos_line_tax_overrides.active_records.exists? %>
-        <%= form_with url: apply_line_tax_override_pos_transaction_path(transaction), method: :post, class: "ss-pos-line-tax-override-form", data: { turbo_stream: true } do %>
-          <%= hidden_field_tag :line_id, line.id %>
-          <div class="ss-form-grid">
+          <div class="ss-pos-line-edit-form__fields">
             <div class="ss-field">
-              <%= label_tag "override_tax_category_id_#{line.id}", "Override tax category" %>
-              <%= select_tag :override_tax_category_id,
-                    options_from_collection_for_select(pos_tax_category_options, :id, :name),
-                    include_blank: "Select category",
-                    id: "override_tax_category_id_#{line.id}",
-                    required: true %>
+              <%= label_tag "quantity_#{line.id}", "Qty" %>
+              <%= number_field_tag :quantity, line.quantity, id: "quantity_#{line.id}", class: "ss-pos-qty-input" %>
             </div>
-            <div class="ss-field">
-              <%= label_tag "tax_exception_reason_id_#{line.id}", "Reason" %>
-              <%= select_tag :tax_exception_reason_id,
-                    options_from_collection_for_select(pos_tax_override_reason_options, :id, :name),
-                    include_blank: "Select reason",
-                    id: "tax_exception_reason_id_#{line.id}",
-                    required: true %>
-            </div>
-            <div class="ss-field">
-              <%= label_tag "tax_override_note_#{line.id}", "Note" %>
-              <%= text_area_tag :tax_override_note, nil, id: "tax_override_note_#{line.id}", rows: 2 %>
-            </div>
+            <% if pos_line_price_editable?(line) %>
+              <div class="ss-field">
+                <%= label_tag "unit_price_#{line.id}", "Unit price" %>
+                <%= pos_money_field :unit_price, line.unit_price_cents, id: "unit_price_#{line.id}", min: 0, class: "ss-pos-money-input" %>
+              </div>
+            <% end %>
+            <% if line.return_line? %>
+              <div class="ss-field">
+                <%= label_tag "return_disposition_#{line.id}", "Disposition" %>
+                <%= select_tag :return_disposition, options_for_select(pos_return_disposition_options, line.return_disposition), id: "return_disposition_#{line.id}" %>
+              </div>
+            <% end %>
           </div>
-          <%= submit_tag "Apply tax override", class: "ss-btn ss-btn-secondary" %>
         <% end %>
+      </section>
+
+      <% eligibility = Pos::DiscountEligibilityResolver.call(line) %>
+      <% if Authorization.allowed?(user: current_user, permission_key: "pos.discounts.line.apply", store: current_store) && !line.return_line? %>
+        <section class="ss-pos-line-edit__section">
+          <% if eligibility.discountable %>
+            <%= form_with url: apply_line_discount_pos_transaction_path(transaction),
+                  method: :post,
+                  class: "ss-pos-line-discount-form",
+                  data: { turbo_stream: true } do %>
+              <%= hidden_field_tag :line_id, line.id %>
+              <%= render "pos/transactions/discount_fields",
+                    transaction: transaction,
+                    label: "Add line discount",
+                    id_prefix: "line_discount_#{line.id}",
+                    type_name: :discount_type,
+                    value_name: :discount_value %>
+              <%= submit_tag "Apply discount", class: "ss-btn ss-btn-secondary ss-pos-line-edit__action" %>
+            <% end %>
+            <%= render "pos/transactions/line_discount_list", transaction: transaction, line: line %>
+          <% else %>
+            <h5 class="ss-pos-line-edit__section-title">Line discount</h5>
+            <p class="ss-hint"><%= eligibility.message %></p>
+          <% end %>
+        </section>
       <% end %>
-    <% end %>
-  </td>
-</tr>
+
+      <% if Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.apply", store: current_store) && pos_line_tax_override_eligible?(line) %>
+        <section class="ss-pos-line-edit__section">
+          <%= render "pos/transactions/line_tax_override_summary", transaction: transaction, line: line %>
+          <% unless line.pos_line_tax_overrides.active_records.exists? %>
+            <%= form_with url: apply_line_tax_override_pos_transaction_path(transaction),
+                  method: :post,
+                  class: "ss-pos-line-tax-override-form",
+                  data: { turbo_stream: true } do %>
+              <%= hidden_field_tag :line_id, line.id %>
+              <div class="ss-form-grid">
+                <div class="ss-field">
+                  <%= label_tag "override_tax_category_id_#{line.id}", "Override tax category" %>
+                  <%= select_tag :override_tax_category_id,
+                        options_from_collection_for_select(pos_tax_category_options, :id, :name),
+                        include_blank: "Select category",
+                        id: "override_tax_category_id_#{line.id}",
+                        required: true %>
+                </div>
+                <div class="ss-field">
+                  <%= label_tag "tax_exception_reason_id_#{line.id}", "Reason" %>
+                  <%= select_tag :tax_exception_reason_id,
+                        options_from_collection_for_select(pos_tax_override_reason_options, :id, :name),
+                        include_blank: "Select reason",
+                        id: "tax_exception_reason_id_#{line.id}",
+                        required: true %>
+                </div>
+                <div class="ss-field">
+                  <%= label_tag "tax_override_note_#{line.id}", "Note" %>
+                  <%= text_area_tag :tax_override_note, nil, id: "tax_override_note_#{line.id}", rows: 2 %>
+                </div>
+              </div>
+              <%= submit_tag "Apply tax override", class: "ss-btn ss-btn-secondary ss-pos-line-edit__action" %>
+            <% end %>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+
+    <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
+      <%= submit_tag "Save", form: form_id, class: "ss-btn ss-pos-line-edit__action" %>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
+              data-action="pos-cart-line#cancel"
+              data-line-id="<%= line.id %>">Cancel</button>
+    </footer>
+  </div>
+<% end %>
