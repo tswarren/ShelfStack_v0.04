@@ -202,6 +202,28 @@ module PosHelper
     !(line.return_line? && line.source_transaction_line_id.present?)
   end
 
+  def pos_cart_line_edit_panel_available?(line)
+    !line.gift_card_sale_line?
+  end
+
+  def pos_cart_line_discount_panel_available?(line)
+    !line.return_line? && !line.gift_card_sale_line?
+  end
+
+  def pos_cart_line_tax_panel_available?(line)
+    pos_line_tax_override_eligible?(line)
+  end
+
+  def pos_cart_line_panel_open?(line, panel_error)
+    panel_error.present? && panel_error[:line_id].to_i == line.id
+  end
+
+  def pos_cart_line_active_panel(line, panel_error)
+    return panel_error[:panel].to_s if pos_cart_line_panel_open?(line, panel_error)
+
+    nil
+  end
+
   def pos_tender_field_label(tender_type, transaction)
     if transaction.total_cents.negative?
       case tender_type
@@ -316,7 +338,22 @@ module PosHelper
   end
 
   def pos_tax_override_reason_options
-    TaxExceptionReason.active_records.for_rate_override.order(:sort_order, :name)
+    pos_tax_exception_reason_select_options(TaxExceptionReason.active_records.for_rate_override)
+  end
+
+  def pos_tax_exception_reason_select_options(scope)
+    scope.order(:sort_order, :name).map do |reason|
+      [
+        reason.name,
+        reason.id,
+        {
+          data: {
+            requires_note: reason.requires_note?,
+            requires_certificate: reason.requires_certificate?
+          }
+        }
+      ]
+    end
   end
 
   def pos_tax_category_options

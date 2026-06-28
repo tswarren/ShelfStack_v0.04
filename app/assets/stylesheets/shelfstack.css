@@ -3789,8 +3789,72 @@ body.ss-pos-modal-open {
   color: #9a3412;
 }
 
+.ss-pos-cart .ss-table {
+  overflow: visible;
+}
+
 .ss-pos-cart-line__actions {
   white-space: nowrap;
+  overflow: visible;
+}
+
+.ss-pos-line-actions {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+.ss-pos-line-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 30;
+  min-width: 12rem;
+  padding: 0.35rem 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.ss-pos-line-menu--floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  z-index: 50;
+}
+
+.ss-pos-line-menu__form {
+  display: block;
+  margin: 0;
+}
+
+.ss-pos-line-menu__item {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.85rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ss-pos-line-menu__item:hover,
+.ss-pos-line-menu__item:focus-visible {
+  background: #f1f5f9;
+  outline: none;
+}
+
+.ss-pos-line-menu__item--danger {
+  color: var(--color-error, #b91c1c);
+}
+
+.ss-pos-line-panel[hidden] {
+  display: none !important;
 }
 
 .ss-pos-cart-line--editing {

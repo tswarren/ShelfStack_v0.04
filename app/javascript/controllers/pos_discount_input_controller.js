@@ -17,6 +17,7 @@ export default class extends Controller {
     "reasonFieldWrap",
     "note",
     "noteFieldWrap",
+    "noteRequiredMarker",
     "modeButton",
     "modeGroup",
     "amountAdornment",
@@ -39,6 +40,7 @@ export default class extends Controller {
     this.syncModeButtons()
     this.updateMode()
     this.syncAuthorizationUi()
+    this.syncNoteRequired()
 
     if (this.invalidFieldsValue.length > 0) {
       this.invalidFieldsValue.forEach((field) => this.markInvalid(field))
@@ -122,7 +124,9 @@ export default class extends Controller {
 
   reasonChanged() {
     this.clearInvalid("discount_reason_id")
+    this.clearInvalid("discount_note")
     this.syncAuthorizationUi()
+    this.syncNoteRequired()
   }
 
   authorizationGranted(event) {
@@ -176,6 +180,19 @@ export default class extends Controller {
     }
   }
 
+  syncNoteRequired() {
+    const required = this.selectedReasonRequiresNote()
+
+    if (this.hasNoteRequiredMarkerTarget) {
+      this.noteRequiredMarkerTarget.hidden = !required
+      this.noteRequiredMarkerTarget.setAttribute("aria-hidden", required ? "false" : "true")
+    }
+
+    if (this.hasNoteTarget) {
+      this.noteTarget.setAttribute("aria-required", required ? "true" : "false")
+    }
+  }
+
   collectValidationErrors() {
     const invalidFields = []
 
@@ -188,11 +205,10 @@ export default class extends Controller {
     }
 
     if (this.reasonTarget?.value) {
-      const selected = this.reasonTarget.selectedOptions[0]
-      if (selected?.dataset?.requiresNote === "true" && !this.noteTarget?.value?.trim()) {
+      if (this.selectedReasonRequiresNote() && !this.noteTarget?.value?.trim()) {
         invalidFields.push("discount_note")
       }
-      if (selected?.dataset?.requiresAuthorization === "true" && !this.authorizationPresent()) {
+      if (this.selectedReasonRequiresAuthorization() && !this.authorizationPresent()) {
         invalidFields.push("discount_authorization")
       }
     }
@@ -294,6 +310,13 @@ export default class extends Controller {
 
     const selected = this.reasonTarget.selectedOptions[0]
     return selected?.dataset?.requiresAuthorization === "true"
+  }
+
+  selectedReasonRequiresNote() {
+    if (!this.hasReasonTarget) return false
+
+    const selected = this.reasonTarget.selectedOptions[0]
+    return selected?.dataset?.requiresNote === "true"
   }
 
   authorizationPresent() {

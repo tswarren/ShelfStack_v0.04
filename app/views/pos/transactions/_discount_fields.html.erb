@@ -88,11 +88,17 @@
   <% if show_reason %>
     <div class="ss-field<%= " ss-field--invalid" if invalid.call("discount_note") %>"
          data-pos-discount-input-target="noteFieldWrap">
-      <%= label_tag "#{field_id}_discount_note", "Note" %>
-      <%= text_area_tag :discount_note,
+      <%= label_tag "#{field_id}_discount_note", class: "ss-label" do %>
+        Note
+        <abbr title="required"
+              class="ss-required"
+              data-pos-discount-input-target="noteRequiredMarker"
+              hidden
+              aria-hidden="true">*</abbr>
+      <% end %>
+      <%= text_field_tag :discount_note,
             submitted[:discount_note],
             id: "#{field_id}_discount_note",
-            rows: 2,
             aria_invalid: invalid.call("discount_note"),
             data: {
               pos_discount_input_target: "note",

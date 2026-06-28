@@ -1,0 +1,88 @@
+<%# locals: (transaction:, line:, active:) %>
+<% override = line.pos_line_tax_overrides.active_records.first %>
+<div class="ss-pos-line-panel<%= " ss-pos-line-panel--active" if active %>"
+     data-pos-cart-line-panel="tax"
+     data-pos-cart-line-target="panel"
+     <%= "hidden" unless active %>>
+  <header class="ss-row-detail__header ss-pos-line-edit__header">
+    <h4 class="ss-pos-line-edit__title">Tax override · <%= pos_line_display_title(line) %></h4>
+  </header>
+
+  <div class="ss-row-detail__body ss-pos-line-edit__body">
+    <% if Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.apply", store: current_store) %>
+      <%= render "pos/transactions/line_tax_override_summary", transaction: transaction, line: line %>
+      <% if override.blank? %>
+        <%= form_with url: apply_line_tax_override_pos_transaction_path(transaction),
+              method: :post,
+              id: "line_tax_form_#{line.id}",
+              class: "ss-pos-line-tax-override-form",
+              html: { novalidate: true },
+              data: {
+                turbo_stream: true,
+                controller: "pos-tax-override-input",
+                action: "submit->pos-tax-override-input#validateSubmit"
+              } do %>
+          <%= hidden_field_tag :line_id, line.id %>
+          <div class="ss-form-grid">
+            <div class="ss-field"
+                 data-pos-tax-override-input-target="categoryFieldWrap">
+              <%= label_tag "override_tax_category_id_#{line.id}", "Override tax category", class: "ss-label" %>
+              <%= select_tag :override_tax_category_id,
+                    options_from_collection_for_select(pos_tax_category_options, :id, :name),
+                    include_blank: "Select category",
+                    id: "override_tax_category_id_#{line.id}",
+                    data: {
+                      pos_tax_override_input_target: "category",
+                      action: "change->pos-tax-override-input#clearFieldInvalid"
+                    } %>
+            </div>
+            <div class="ss-field"
+                 data-pos-tax-override-input-target="reasonFieldWrap">
+              <%= label_tag "tax_exception_reason_id_#{line.id}", "Reason", class: "ss-label" %>
+              <%= select_tag :tax_exception_reason_id,
+                    options_for_select(pos_tax_override_reason_options),
+                    include_blank: "Select reason",
+                    id: "tax_exception_reason_id_#{line.id}",
+                    data: {
+                      pos_tax_override_input_target: "reason",
+                      action: "change->pos-tax-override-input#reasonChanged input->pos-tax-override-input#clearFieldInvalid"
+                    } %>
+            </div>
+            <div class="ss-field"
+                 data-pos-tax-override-input-target="noteFieldWrap">
+              <%= label_tag "tax_override_note_#{line.id}", class: "ss-label" do %>
+                Note
+                <abbr title="required"
+                      class="ss-required"
+                      data-pos-tax-override-input-target="noteRequiredMarker"
+                      hidden
+                      aria-hidden="true">*</abbr>
+              <% end %>
+              <%= text_field_tag :tax_override_note,
+                    nil,
+                    id: "tax_override_note_#{line.id}",
+                    data: {
+                      pos_tax_override_input_target: "note",
+                      action: "input->pos-tax-override-input#clearFieldInvalid"
+                    } %>
+            </div>
+          </div>
+          <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
+            <%= submit_tag "Apply tax override", class: "ss-btn ss-pos-line-edit__action" %>
+            <button type="button"
+                    class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
+                    data-action="pos-cart-line#cancel"
+                    data-line-id="<%= line.id %>">Cancel</button>
+          </footer>
+        <% end %>
+      <% else %>
+        <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
+          <button type="button"
+                  class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
+                  data-action="pos-cart-line#cancel"
+                  data-line-id="<%= line.id %>">Cancel</button>
+        </footer>
+      <% end %>
+    <% end %>
+  </div>
+</div>

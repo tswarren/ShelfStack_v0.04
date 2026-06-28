@@ -273,7 +273,7 @@ module Pos
       respond_to_workspace(notice: "Line discount applied.")
     rescue Pos::DiscountApplicationService::Error, Pos::DiscountInput::Error, ActiveRecord::RecordNotFound => e
       flash.now[:alert] = e.message
-      assign_line_discount_error!(e)
+      assign_line_panel_error!(panel: "discount", error: e)
       load_edit_context
       respond_to do |format|
         format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
@@ -653,9 +653,10 @@ module Pos
       end
     end
 
-    def assign_line_discount_error!(error)
-      @line_discount_error = {
+    def assign_line_panel_error!(panel:, error:)
+      @line_panel_error = {
         line_id: params[:line_id].to_i,
+        panel: panel.to_s,
         invalid_fields: line_discount_invalid_fields(error),
         submitted: {
           discount_type: params[:discount_type],
