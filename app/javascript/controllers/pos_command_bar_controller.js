@@ -351,16 +351,18 @@ export default class extends Controller {
 
     this.drawerActionModalTarget.hidden = false
     document.body.classList.add("ss-pos-modal-open")
+    document.addEventListener("keydown", this.boundModalKeydown)
   }
 
   closeDrawerActionModal(arg) {
     const options = arg instanceof Event ? {} : (arg || {})
     const focusInput = options.focusInput ?? true
+    arg?.preventDefault?.()
 
-    if (!this.hasDrawerActionModalTarget) return
+    if (!this.hasDrawerActionModalTarget || this.drawerActionModalTarget.hidden) return
 
     this.drawerActionModalTarget.hidden = true
-    document.body.classList.remove("ss-pos-modal-open")
+    this.releaseModalKeydownUnlessOpen()
     if (focusInput) this.focusInput()
   }
 
@@ -490,6 +492,11 @@ export default class extends Controller {
       return
     }
 
+    if (this.hasDrawerActionModalTarget && !this.drawerActionModalTarget.hidden) {
+      this.closeDrawerActionModal(event)
+      return
+    }
+
     if (this.hasHelpModalTarget && !this.helpModalTarget.hidden) {
       this.closeHelpModal(event)
     }
@@ -498,7 +505,8 @@ export default class extends Controller {
   releaseModalKeydownUnlessOpen() {
     const modalOpen =
       (this.hasHelpModalTarget && !this.helpModalTarget.hidden) ||
-      (this.hasCashMovementModalTarget && !this.cashMovementModalTarget.hidden)
+      (this.hasCashMovementModalTarget && !this.cashMovementModalTarget.hidden) ||
+      (this.hasDrawerActionModalTarget && !this.drawerActionModalTarget.hidden)
 
     if (modalOpen) return
 

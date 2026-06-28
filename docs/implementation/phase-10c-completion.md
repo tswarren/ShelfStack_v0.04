@@ -90,7 +90,7 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 
 | Topic | Original spec | Implemented (slices 1–7) |
 | ----- | ------------- | ------------------------ |
-| `/gc` with amount | Modal with prefilled amount; no auto-post | Adds `gift_card_sale` line immediately; command focus returns |
+| `/gc` with amount | Modal with prefilled amount; no auto-post (original spec) | **Adopted after QA:** adds `gift_card_sale` line immediately; command focus returns. `/gc` without amount opens amount panel. Documented as intentional spec change. |
 | `/gc` without amount | Open modal | Opens amount panel; focus amount field; submit returns to command |
 | Cash in/out UX | Modal (not register session page) | Modal posts with `return_path` back to workspace |
 

@@ -44,6 +44,8 @@ module Pos
       when :open_ring_offer
         drawer_offer_result(route)
       when :gift_card_sale_offer
+        # Intentional: /gc with amount adds the sale line immediately (see phase-10c-completion.md).
+        # /gc without amount carry-forwards to the amount panel on the transaction workspace.
         if route.payload[:amount_cents].present?
           add_gift_card_and_redirect(route.payload[:amount_cents])
         else
