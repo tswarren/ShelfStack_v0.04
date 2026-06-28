@@ -41,8 +41,26 @@
         id: "pos-tax-exemption-modal",
         title: "Tax exemption",
         size: :pos,
-        close_on_backdrop: true do %>
-    <%= render "pos/transactions/tax_exemption_modal_body", transaction: transaction %>
+        close_on_backdrop: true,
+        dirty_guard: false do %>
+    <div id="pos_tax_exemption_modal_content">
+      <%= render "pos/transactions/tax_exemption_modal_body", transaction: transaction %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if transaction_context &&
+      Authorization.allowed?(user: current_user, permission_key: "pos.discounts.transaction.apply", store: current_store) &&
+      transaction.editable? %>
+  <%= render "shared/interaction/modal",
+        id: "pos-transaction-discount-modal",
+        title: "Transaction discount",
+        size: :pos,
+        close_on_backdrop: true,
+        dirty_guard: false do %>
+    <div id="pos_transaction_discount_modal_content">
+      <%= render "pos/transactions/transaction_discount_modal_body", transaction: transaction %>
+    </div>
   <% end %>
 <% end %>
 

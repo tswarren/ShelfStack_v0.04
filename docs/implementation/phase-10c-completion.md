@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace
 
-**Status:** In progress (slices 1–8 delivered; slice 9 in review; slices **9A**, **9B**, and **10** pending)
+**Status:** In progress (slices 1–9 delivered; slice **9A** in review; slices **9B** and **10** pending)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
@@ -74,9 +74,7 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
-## In review (slice 9)
-
-**Branch:** `phase-10c-9-cart-expanded-row` (PR on integration branch)
+## Delivered (slice 9)
 
 - Cart line **More** menu with task-specific panels (edit, discount, tax)
 - Floating menu positioning (not clipped by cart table)
@@ -85,11 +83,21 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
-## Pending (slices 9A, 9B, and 10)
+## In review (slice 9A)
+
+**Branch:** `phase-10c-9a-transaction-discount-modal`
+
+- Transaction discount modal (`/discount`, `/di`, `/dt`)
+- Preview total after discount in modal
+- Adjustments panel as summary + launcher (existing discounts list unchanged)
+- Server-side validation errors reopen modal with submitted values
+
+---
+
+## Pending (slices 9B and 10)
 
 | Slice | Deliverable |
 | ----- | ----------- |
-| **9A** | Transaction discount modal, preview total, adjustments panel as launcher — [phase-10c-9a-transaction-discount-modal.md](../roadmap/phase-10c-9a-transaction-discount-modal.md) |
 | **9B** | Tender workspace UX, explicit completion, post-completion workspace — [phase-10c-9b-tender-workspace-and-completion.md](../roadmap/phase-10c-9b-tender-workspace-and-completion.md) |
 | 10 | Session drawer polish, held-sale access, full docs sync, mark complete |
 
@@ -113,7 +121,7 @@ docker compose exec -T web bin/rails test test/services/pos/command_bar_router_t
 | `/gc` with amount | Modal with prefilled amount; no auto-post (original spec) | **Adopted after QA:** adds `gift_card_sale` line immediately; command focus returns. `/gc` without amount opens amount panel. Documented as intentional spec change. |
 | `/gc` without amount | Open modal | Opens amount panel; focus amount field; submit returns to command |
 | Cash in/out UX | Modal (not register session page) | Modal posts with `return_path` back to workspace |
-| Transaction discount entry | Adjustments `<details>` panel | **Deferred to slice 9A:** transaction discount modal |
+| Transaction discount entry | Adjustments `<details>` panel | **Slice 9A:** transaction discount modal with preview total; adjustments panel is launcher + list |
 | Post-completion landing | Idle workspace immediately | **Deferred to slice 9B:** completed transaction workspace with New Sale as primary action |
 
 ---

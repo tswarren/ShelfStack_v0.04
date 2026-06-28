@@ -300,6 +300,7 @@ module Pos
       respond_to_workspace(notice: "Transaction discount applied.")
     rescue Pos::DiscountApplicationService::Error, Pos::DiscountInput::Error, ActiveRecord::RecordNotFound => e
       flash.now[:alert] = e.message
+      assign_transaction_discount_error!(error: e)
       load_edit_context
       respond_to do |format|
         format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
@@ -342,7 +343,7 @@ module Pos
       refresh_transaction_after_discount_change!
       respond_to_workspace(notice: "Tax exemption applied.")
     rescue Pos::TaxExceptionApplicationService::Error, ActiveRecord::RecordNotFound => e
-      flash.now[:alert] = e.message
+      assign_tax_exemption_error!(error: e)
       load_edit_context
       respond_to do |format|
         format.turbo_stream { render :update_workspace, status: :unprocessable_entity }
@@ -653,6 +654,31 @@ module Pos
       end
     end
 
+    def assign_transaction_discount_error!(error:)
+      @transaction_discount_error = {
+        invalid_fields: line_discount_invalid_fields(error),
+        submitted: {
+          discount_type: params[:discount_type],
+          discount_value: params[:discount_value],
+          discount_reason_id: params[:discount_reason_id],
+          discount_note: params[:discount_note],
+          pos_authorization_id: params[:pos_authorization_id]
+        }
+      }
+    end
+
+    def assign_tax_exemption_error!(error:)
+      @tax_exemption_error = {
+        message: error.message,
+        invalid_fields: tax_exemption_invalid_fields(error),
+        submitted: {
+          tax_exception_reason_id: params[:tax_exception_reason_id],
+          certificate_number: params[:certificate_number],
+          tax_exemption_note: params[:tax_exemption_note]
+        }
+      }
+    end
+
     def assign_line_panel_error!(panel:, error:)
       @line_panel_error = {
         line_id: params[:line_id].to_i,
@@ -676,6 +702,17 @@ module Pos
       message = error.message.to_s
       fields << "discount_note" if message.match?(/note is required/i)
       fields << "discount_authorization" if message.match?(/authorization is required/i)
+
+      fields.uniq
+    end
+
+    def tax_exemption_invalid_fields(error)
+      fields = []
+      fields << "tax_exception_reason_id" if params[:tax_exception_reason_id].blank?
+
+      message = error.message.to_s
+      fields << "tax_exemption_note" if message.match?(/note is required/i)
+      fields << "certificate_number" if message.match?(/certificate|reference is required/i)
 
       fields.uniq
     end
