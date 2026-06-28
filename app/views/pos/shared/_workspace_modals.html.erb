@@ -1,5 +1,6 @@
 <%# locals: transaction: nil, register_session: nil, sub_departments: nil %>
-<% register_session ||= transaction&.pos_register_session || current_register_session %>
+<% transaction = local_assigns[:transaction] %>
+<% register_session = local_assigns[:register_session] || transaction&.pos_register_session || current_register_session %>
 <% transaction_context = transaction.present? %>
 
 <%= render "shared/interaction/modal",
@@ -47,4 +48,4 @@
 
 <%= render "pos/shared/help_modal" %>
 <%= render "pos/shared/drawer_action_modal" %>
-<%= render "pos/shared/cash_movement_modal", register_session: register_session, transaction: transaction %>
+<%= render "pos/shared/cash_movement_modal", register_session: register_session %>
