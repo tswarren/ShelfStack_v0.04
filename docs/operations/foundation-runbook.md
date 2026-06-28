@@ -215,7 +215,7 @@ Cash **tender** (`/cash 20`) and cash **movements** (`/cashin`, `/cashout`) are 
 
 1. Run `/return` or open **Return** from the mode switcher.
 2. **Receipted:** enter receipt number, choose lines and quantities, set disposition.
-3. **No-receipt:** scan items into the draft cart. Supervisor authorization is required at **complete**; `pos.returns.no_receipt` no longer blocks adding draft lines.
+3. **No-receipt:** scan items when you have `pos.returns.no_receipt`. Supervisor authorization is still required at **complete**.
 4. Return lines commit into the active draft when selected. If settlement/tenders exist on the draft, clear them before adding return lines.
 5. Add refund tenders (negative totals use negative cash tender amounts for refunds).
 6. Complete the return transaction.

@@ -124,12 +124,16 @@ Suggested: system tests where practical; integration for focus-restore hooks whe
 | Tax/totals/cart display helpers | `test/helpers/pos_workspace_display_test.rb` |
 | Shared workspace header | `test/integration/pos_workspace_header_test.rb` |
 | Customer attach/detach | `test/integration/pos_customer_workspace_test.rb` |
-| Status panel (discount/tax) | `test/integration/pos_status_panel_test.rb` |
-| Receipt return path | `test/integration/pos_receipt_return_path_test.rb` |
+| Status panel (discount/tax/customer) | `test/integration/pos_status_panel_test.rb` |
+| Readiness blockers (`alert_blockers`) | `test/integration/pos_readiness_preview_test.rb`; `test/services/pos/completion_readiness_test.rb` |
+| No-receipt return + supervisor auth | `test/integration/pos_no_receipt_return_readiness_test.rb`; `test/integration/pos_workspace_lines_controller_test.rb` |
+| Completed workspace + New Sale → `/pos` | `test/integration/pos_completed_workspace_test.rb`; `test/system/pos/completed_workspace_test.rb` |
+| Receipt return paths | `test/integration/pos_receipt_return_path_test.rb`; `test/integration/pos_receipts_controller_test.rb` |
+| Summary / voided summary layout | `test/integration/pos_transaction_confirmation_test.rb` |
 | Layout / flash / Complete CTA | `test/system/pos/workspace_layout_test.rb` |
 | Balance without register | `test/services/pos/command_registry_test.rb` (balance availability) |
 
-Manual QA: [phase-10c-manual-qa.md](../implementation/phase-10c-manual-qa.md) — section **10-C-11 Workspace layout**.
+Manual QA: [phase-10c-manual-qa.md](../implementation/phase-10c-manual-qa.md) — **§11 Workspace layout and status panel**.
 
 ---
 

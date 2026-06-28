@@ -439,6 +439,15 @@ module PosHelper
     pos_can_use_tender_type?(transaction, tender_type, user)
   end
 
+  def pos_can_open_return_workflow?(user = current_user, store: current_store)
+    Authorization.allowed?(user: user, permission_key: "pos.returns.receipted", store: store) ||
+      Authorization.allowed?(user: user, permission_key: "pos.returns.no_receipt", store: store)
+  end
+
+  def pos_can_add_no_receipt_return?(user = current_user, store: current_store)
+    Authorization.allowed?(user: user, permission_key: "pos.returns.no_receipt", store: store)
+  end
+
   def pos_stored_value_tender_available?(transaction, user = current_user)
     pos_can_use_tender_type?(transaction, "gift_card", user) ||
       pos_can_use_tender_type?(transaction, "store_credit", user)

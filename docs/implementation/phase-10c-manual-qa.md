@@ -38,7 +38,7 @@ Use this checklist for regression verification. Test on a **register workstation
 | 1.2 | Open register, land on `/pos` | Idle workspace; **command field focused**; no draft until action | ☐ |
 | 1.3 | Scan SKU from idle | Draft created/resumed; line added; focus returns to command | ☐ |
 | 1.4 | Navigate away, return to `/pos` with active draft | Returns to same draft (not idle) | ☐ |
-| 1.5 | Start empty draft (New sale), leave, return `/pos` | Still on empty draft until cancel/hold/complete | ☐ |
+| 1.5 | Choose **New Sale** from **Actions** menu, leave, return `/pos` | Still on empty draft until cancel/hold/complete | ☐ |
 | 1.6 | `/hold` current draft, return `/pos` | Idle workspace (active slot cleared) | ☐ |
 | 1.7 | Create legacy/conflict scenario (if testable) | Conflict picker; no silent second draft | ☐ |
 | 1.8 | Different cashier on same workstation with another's draft | Conflict/resume UI; no silent takeover | ☐ |
@@ -92,7 +92,7 @@ Use this checklist for regression verification. Test on a **register workstation
 | # | Step | Expected | Pass |
 |---|------|----------|------|
 | 5.1 | `/session` from idle | Drawer opens; session summary visible | ☐ |
-| 5.2 | **Session** button on idle workspace | Same drawer | ☐ |
+| 5.2 | **Actions** menu → Session (or `/session`) | Same drawer | ☐ |
 | 5.3 | Suspend a sale (`/hold`), `/held` | Held list shows transaction; **not auto-resumed** | ☐ |
 | 5.4 | **Held sales (N)** button when N > 0 | Opens drawer on held section | ☐ |
 | 5.5 | **Resume** on own held sale | Returns to editable draft | ☐ |
@@ -125,7 +125,7 @@ Use this checklist for regression verification. Test on a **register workstation
 | 7.2 | Mixed sale + return lines | Exchange totals behave correctly | ☐ |
 | 7.3 | Add tender, then `/return` | Blocked until settlement cleared | ☐ |
 | 7.4 | Receipted return via `/rt <receipt>` | Receipt prefilled/lookup runs | ☐ |
-| 7.5 | No-receipt return tab | Scan adds return line | ☐ |
+| 7.5 | No-receipt return tab | Requires `pos.returns.no_receipt`; scan or open-ring return adds line; supervisor auth still required at complete | ☐ |
 | 7.6 | `/pickup` → fulfill ready request | Pickup line added; draft created if needed | ☐ |
 
 ---
@@ -175,21 +175,22 @@ Use this checklist for regression verification. Test on a **register workstation
 
 ---
 
-## 9. Completion and completed workspace (slice 9B)
+## 9. Completion and completed workspace (slice 9B + 11)
 
 | # | Step | Expected | Pass |
 |---|------|----------|------|
 | 9.1 | Ready to complete → explicit **Complete** | Transaction completes | ☐ |
-| 9.2 | Enter from ready state | Completes (when not on button/link) | ☐ |
+| 9.2 | Enter from ready state in settlement modal | Completes when appropriate (when not on button/link) | ☐ |
 | 9.3 | After complete | Redirect to **completed workspace** (not editable cart) | ☐ |
-| 9.4 | Completed workspace | Trans #, total, tendered, change shown | ☐ |
-| 9.5 | **Print receipt** | Receipt link works | ☐ |
-| 9.6 | Gift card sale complete | Stored value slip link visible | ☐ |
+| 9.4 | Completed workspace | Trans #, total, tendered, change shown; **Change due** visually emphasized when positive | ☐ |
+| 9.5 | **Print receipt** (document list) | Receipt opens with `return_to=completed` | ☐ |
+| 9.6 | Gift card sale complete | Stored value slip link visible in document list | ☐ |
 | 9.7 | Gift receipt placeholder | Shown as optional/non-blocking | ☐ |
-| 9.8 | **New Sale** (primary) | Idle workspace; command field focused | ☐ |
-| 9.9 | Enter on completed workspace | Starts new sale (or focuses required slip first) | ☐ |
-| 9.10 | Required unprinted SV slip | Enter focuses slip action, not New Sale | ☐ |
-| 9.11 | Secondary: View summary | Read-only transaction detail | ☐ |
+| 9.8 | **New Sale** on completed workspace | Navigates to `/pos` idle; command field focused (not POST new draft) | ☐ |
+| 9.9 | Initial focus on completed workspace | First document action focused (Print receipt) | ☐ |
+| 9.10 | Enter on completed workspace | Activates focused document (required SV slip prioritized over New Sale) | ☐ |
+| 9.11 | **View Summary** | Tertiary link to read-only transaction summary | ☐ |
+| 9.12 | Completed workspace footer | No separate “View receipt” or “POS home” links | ☐ |
 
 ---
 
@@ -205,50 +206,57 @@ Use this checklist for regression verification. Test on a **register workstation
 
 ---
 
-## 10-C-11 Workspace layout (slice 11)
+## 11. Workspace layout and status panel (slice 11)
 
 | # | Step | Expected | Pass |
 |---|------|----------|------|
-| 11.1 | Open active transaction | Shared header: POS \| store \| workstation \| register \| business date \| **Actions** | ☐ |
-| 11.2 | Actions menu (register open) | Balance, Session, Cash In/Out, Close, Reports, Drawer available per permissions | ☐ |
-| 11.3 | Close register → idle | Header shows **Closed**; balance action works; Cash In disabled with message | ☐ |
-| 11.4 | Customer strip | None + Link / attached name + Remove; detach updates strip via turbo | ☐ |
-| 11.5 | Status panel | Transaction discount list + Add discount; tax exempt summary + Apply; no adjustments `<details>` | ☐ |
+| 11.1 | Active transaction edit page | Shared header: POS \| store \| workstation \| register \| business date \| **Actions** dropdown; no legacy black `pos_banner` | ☐ |
+| 11.2 | Open **Actions** menu (register open) | Traditional dropdown: Balance, Session, Cash In/Out, Close, Reports, Drawer per permissions | ☐ |
+| 11.3 | Closed register, idle workspace | Header shows **Closed**; Balance works; Cash In disabled with clear message | ☐ |
+| 11.4 | Status panel → Customer | None + **Link customer** / attached name + link-style **Remove**; detach updates panel via turbo | ☐ |
+| 11.5 | Status panel → discounts/tax | Transaction discount table + **Add discount**; tax exempt summary + **Apply exemption**; no adjustments `<details>` | ☐ |
 | 11.6 | Cart columns | Qty \| Item \| Discount (line/trans split) \| Total \| Tax (subtle amount) \| More | ☐ |
 | 11.7 | Totals panel | Tax rows show amount + subtle rate/base; items sold/returned counts | ☐ |
-| 11.8 | Flash notice | Auto-clears ~5s; Dismiss works; command field focus not stolen | ☐ |
-| 11.9 | Flash error | Persists until dismissed | ☐ |
-| 11.10 | Complete Transaction | Opens settlement modal; Suspend/Cancel on right rail | ☐ |
-| 11.11 | Structural blocker | Single alert above Complete (no full readiness checklist in main column) | ☐ |
-| 11.12 | Idle workspace | Open Ring / Gift Card buttons; Held sales chip when suspended exist; no New sale/Session primary row | ☐ |
-| 11.13 | Completed → View receipt → Back | Returns to completed workspace | ☐ |
+| 11.8 | Success flash | Auto-clears ~5s; Dismiss works; command field focus not stolen | ☐ |
+| 11.9 | Error flash | Persists until dismissed | ☐ |
+| 11.10 | Right rail actions | **Complete Transaction** opens settlement modal; Suspend / Cancel present | ☐ |
+| 11.11 | Readiness (sidebar) | **Blockers only**; hidden when none; no persistent checklist; no “Enter tender amounts” alert | ☐ |
+| 11.12 | No-receipt return without `pos.returns.no_receipt` | Return drawer hides no-receipt tab; direct POST forbidden | ☐ |
+| 11.13 | Settlement modal readiness | Same blocker alerts when applicable; hidden when clear | ☐ |
+| 11.14 | Idle workspace | Open Ring / Gift Card near command; Held sales chip when N > 0; **New Sale** in Actions menu only | ☐ |
+| 11.15 | Completed workspace documents | Full-width Print receipt / slip buttons | ☐ |
+| 11.16 | Completed → View receipt → Back | **Back to completed sale** returns to completed workspace | ☐ |
+| 11.17 | Summary → Receipt → Back | **Back to summary** only (no Summary/New/POS home on receipt) | ☐ |
+| 11.18 | Transaction summary (completed) | Side-by-side **POS Menu** + **Receipt** actions | ☐ |
+| 11.19 | Voided transaction summary | Same summary layout + void notice; **POS Menu** present | ☐ |
+| 11.20 | No-receipt return without supervisor auth at complete | Blocker alert with **Manager sign-in** action | ☐ |
 
 ---
 
-## 11. Keyboard and focus (cross-cutting)
+## 12. Keyboard and focus (cross-cutting)
 
 | # | Step | Expected | Pass |
 |---|------|----------|------|
-| 11.1 | After Turbo cart update | Command field refocuses when no modal open | ☐ |
-| 11.2 | Modal open (discount, tax, tender) | Command field does **not** steal focus | ☐ |
-| 11.3 | Close modal/drawer | Focus restored to opener or command | ☐ |
-| 11.4 | Tab trap inside modal | Cannot tab to background | ☐ |
-| 11.5 | Mouse-only path | All primary actions reachable without keyboard | ☐ |
-| 11.6 | Touch targets on cart More / settlement | ~44px; usable on touch screen | ☐ |
+| 12.1 | After Turbo cart update | Command field refocuses when no modal open | ☐ |
+| 12.2 | Modal open (discount, tax, tender) | Command field does **not** steal focus | ☐ |
+| 12.3 | Close modal/drawer | Focus restored to opener or command | ☐ |
+| 12.4 | Tab trap inside modal | Cannot tab to background | ☐ |
+| 12.5 | Mouse-only path | All primary actions reachable without keyboard | ☐ |
+| 12.6 | Touch targets on cart More / settlement | ~44px; usable on touch screen | ☐ |
 
 ---
 
-## 12. Regression smoke (prior phases)
+## 13. Regression smoke (prior phases)
 
 | # | Step | Expected | Pass |
 |---|------|----------|------|
-| 12.1 | Standard sale → inventory | On-hand decrements | ☐ |
-| 12.2 | Gift card sale at complete | SV ledger issued | ☐ |
-| 12.3 | Gift card redeem tender | Balance decrements | ☐ |
-| 12.4 | Transaction + line discounts | Totals and cached cents correct | ☐ |
-| 12.5 | Tax exemption + line override | Applied tax source snapshots correct | ☐ |
-| 12.6 | Customer pickup with reservation | Reservation chain honored | ☐ |
-| 12.7 | Inactive item sell | Warning + confirm path | ☐ |
+| 13.1 | Standard sale → inventory | On-hand decrements | ☐ |
+| 13.2 | Gift card sale at complete | SV ledger issued | ☐ |
+| 13.3 | Gift card redeem tender | Balance decrements | ☐ |
+| 13.4 | Transaction + line discounts | Totals and cached cents correct | ☐ |
+| 13.5 | Tax exemption + line override | Applied tax source snapshots correct | ☐ |
+| 13.6 | Customer pickup with reservation | Reservation chain honored | ☐ |
+| 13.7 | Inactive item sell | Warning + confirm path | ☐ |
 
 ---
 
@@ -263,9 +271,9 @@ Use this checklist for regression verification. Test on a **register workstation
 
 ---
 
-## Quick smoke path (~15 min)
+## Quick smoke path (~20 min)
 
-1.2 → 2.1 → 3.1 → 8.1–8.8 → 9.1–9.8 → 5.3–5.5
+1.2 → 2.1 → 3.1 → 8.1–8.8 → 9.1–9.3, 9.8–9.10 → 11.1–11.14 → 5.3–5.5 → 13.1
 
 ---
 
@@ -281,17 +289,25 @@ Maps manual QA checklist rows to automated tests on branch `phase-10c-pos-keyboa
 | **Partial** | Domain/routing/API covered; browser UX, focus, or edge case still manual |
 | **Manual** | No meaningful automated coverage — checklist row required |
 
-**Summary (checklist rows only):** ~45% **Auto**, ~30% **Partial**, ~25% **Manual**. Keyboard/focus (§11) and visual/touch checks remain mostly manual by design.
+**Summary (checklist rows only):** ~50% **Auto**, ~28% **Partial**, ~22% **Manual**. Keyboard/focus (§12) and visual/touch checks remain mostly manual by design.
 
 **Run scaffolded browser tests:**
 
 ```bash
 docker compose exec -T web bin/rails test \
   test/system/pos/ \
+  test/presenters/pos/header_actions_presenter_test.rb \
+  test/helpers/pos_workspace_display_test.rb \
+  test/integration/pos_workspace_header_test.rb \
+  test/integration/pos_status_panel_test.rb \
+  test/integration/pos_receipt_return_path_test.rb \
+  test/integration/pos_no_receipt_return_readiness_test.rb \
+  test/integration/pos_readiness_preview_test.rb \
   test/integration/pos_held_sales_lifecycle_test.rb \
   test/integration/pos_completed_workspace_test.rb \
   test/integration/pos_workspace_landing_test.rb \
-  test/integration/pos_transaction_route_command_test.rb
+  test/integration/pos_transaction_route_command_test.rb \
+  test/integration/pos_transaction_confirmation_test.rb
 ```
 
 ### §1 Landing and active draft
@@ -300,7 +316,7 @@ docker compose exec -T web bin/rails test \
 |---|----------|--------------|-------|
 | 1.1 | Partial | `landing_router_test.rb` (`closed`); `pos_home_controller_test.rb` (closed register) | Open-register workflow UI not system-tested |
 | 1.2 | Partial | `pos_workspace_landing_test.rb` (idle command field); `landing_router_test.rb` (`idle`) | Focus-on-load is manual |
-| 1.3 | Partial | `pos_workspace_landing_test.rb` (scan → draft + line); `root_command_router_test.rb` | Focus return after Turbo is manual (§11.1) |
+| 1.3 | Partial | `pos_workspace_landing_test.rb` (scan → draft + line); `root_command_router_test.rb` | Focus return after Turbo is manual (§12.1) |
 | 1.4 | Auto | `pos_workspace_landing_test.rb` (`active session-scoped draft redirects to edit`) | |
 | 1.5 | Partial | `pos_draft_lifecycle_test.rb` (resume existing draft); `active_draft_resolver_test.rb` | Empty-draft persistence via navigation not system-tested |
 | 1.6 | Auto | `pos_held_sales_lifecycle_test.rb` (`hold command suspends draft…`) | `/hold` routes to suspend; JS PATCH follows route payload |
@@ -348,13 +364,13 @@ docker compose exec -T web bin/rails test \
 | # | Coverage | Test file(s) | Notes |
 |---|----------|--------------|-------|
 | 5.1 | Partial | `pos_workspace_landing_test.rb`; `pos_home_controller_test.rb` (drawer shell) | Drawer open animation/focus manual |
-| 5.2 | Manual | — | Session button click not system-tested |
+| 5.2 | Partial | `pos_workspace_header_test.rb` (Actions menu); `pos_header_actions_presenter_test.rb` | Dropdown open/close UX manual |
 | 5.3 | Partial | `pos_held_sales_lifecycle_test.rb`; `suspended_transactions_lookup_test.rb` | `/held` command + list content manual |
 | 5.4 | Manual | — | Held sales (N) button not system-tested |
 | 5.5 | Auto | `pos_held_sales_lifecycle_test.rb` (`cashier resumes own held sale`) | |
 | 5.6 | Auto | `pos_held_sales_lifecycle_test.rb`; `pos_helper_test.rb` (`pos_can_resume_transaction?`) | |
 | 5.7 | Auto | `pos_held_sales_lifecycle_test.rb`; `pos_helper_test.rb` | |
-| 5.8 | Manual | — | Esc/backdrop focus restore manual (see §11) |
+| 5.8 | Manual | — | Esc/backdrop focus restore manual (see §12) |
 
 ### §6 Cart and line editing
 
@@ -377,7 +393,7 @@ docker compose exec -T web bin/rails test \
 | 7.2 | Partial | `phase6_pos_polish_integration_test.rb` (returns/exchange) | Mixed exchange totals manual |
 | 7.3 | Auto | `pos_workspace_landing_test.rb`; `root_command_router_test.rb` (settlement blocks return) | |
 | 7.4 | Partial | `root_command_router_test.rb` (`/rt` receipt prefill) | Receipted return flow manual |
-| 7.5 | Partial | `phase6_pos_polish_integration_test.rb` (no-receipt return) | Tab UX manual |
+| 7.5 | Partial | `phase6_pos_polish_integration_test.rb` (no-receipt return); `pos_workspace_lines_controller_test.rb` (open-ring return); `pos_no_receipt_return_readiness_test.rb` | Drawer tab UX manual |
 | 7.6 | Manual | — | Pickup fulfillment end-to-end manual |
 
 ### §8 Tender workspace
@@ -413,14 +429,15 @@ docker compose exec -T web bin/rails test \
 | 9.1 | Auto | `tender_workspace_test.rb` (Complete button); `pos_completed_workspace_test.rb` | |
 | 9.2 | Manual | — | Enter-to-complete from ready state not system-tested |
 | 9.3 | Auto | `tender_workspace_test.rb`; `pos_completed_workspace_test.rb` | |
-| 9.4 | Partial | `pos_completed_workspace_test.rb` (HTML assertions) | Tendered/change display manual |
-| 9.5 | Partial | `pos_receipts_controller_test.rb` | Print from completed workspace manual |
+| 9.4 | Partial | `pos_completed_workspace_test.rb` (HTML assertions); `completed_workspace_test.rb` (system) | Change due emphasis manual |
+| 9.5 | Auto | `pos_receipt_return_path_test.rb`; `pos_completed_workspace_test.rb` (`return_to=completed`) | Print button browser manual |
 | 9.6 | Partial | `pos_stored_value_issuance_slips_controller_test.rb`; `post_gift_card_sale_ledger_test.rb` | Slip link on completed page manual |
 | 9.7 | Manual | — | Gift receipt placeholder visual |
-| 9.8 | Partial | `completed_workspace_test.rb` (system, focus); `pos_completed_workspace_test.rb` | Idle landing + command focus manual |
-| 9.9 | Auto | `completed_workspace_test.rb` (Enter → new draft) | |
-| 9.10 | Manual | — | Required SV slip focus priority not system-tested |
-| 9.11 | Partial | `pos_completed_workspace_test.rb` (View summary link in HTML) | Navigation manual |
+| 9.8 | Auto | `pos_completed_workspace_test.rb` (`new sale returns to pos home`); `completed_workspace_test.rb` (system) | Command focus on idle manual |
+| 9.9 | Auto | `completed_workspace_test.rb` (focus first document) | |
+| 9.10 | Partial | `completed_workspace_test.rb` (Enter opens first document) | Required SV slip priority manual |
+| 9.11 | Partial | `pos_completed_workspace_test.rb` (View Summary link) | Navigation manual |
+| 9.12 | Partial | `pos_completed_workspace_test.rb` | Absence of legacy footer links manual |
 
 ### §10 Register utilities
 
@@ -430,43 +447,78 @@ docker compose exec -T web bin/rails test \
 | 10.2 | Auto | `pos_register_close_test.rb` (suspended warning) | |
 | 10.3 | Partial | `root_command_router_test.rb` (`/drawer`) | Modal UX manual |
 | 10.4 | Partial | `pos_transaction_route_command_test.rb` (`/cashin` vs `/cash`) | Distinct UX manual |
-| 10.5 | Partial | `phase6_pos_polish_integration_test.rb`; `void_transaction_test.rb`; `post_void_inventory_test.rb` | Void from completed workspace manual |
+| 10.5 | Partial | `phase6_pos_polish_integration_test.rb`; `void_transaction_test.rb`; `post_void_inventory_test.rb`; `pos_transaction_confirmation_test.rb` (voided summary) | Void from completed workspace manual |
 
-### §11 Keyboard and focus (cross-cutting)
-
-| # | Coverage | Test file(s) | Notes |
-|---|----------|--------------|-------|
-| 11.1 | Manual | — | Turbo refocus after cart update |
-| 11.2 | Manual | — | Modal vs command field focus steal |
-| 11.3 | Partial | `modal_drawer_shell_test.rb` (interaction shell fixture) | POS-specific restore paths manual |
-| 11.4 | Partial | `modal_drawer_shell_test.rb` (tab trap) | POS settlement/discount modals manual |
-| 11.5 | Manual | — | Mouse-only path |
-| 11.6 | Manual | — | Touch target sizing |
-
-### §12 Regression smoke (prior phases)
+### §11 Workspace layout and status panel (slice 11)
 
 | # | Coverage | Test file(s) | Notes |
 |---|----------|--------------|-------|
-| 12.1 | Auto | `post_inventory_test.rb`; `phase6_pos_polish_integration_test.rb` | |
-| 12.2 | Auto | `post_gift_card_sale_ledger_test.rb`; `phase7b_pos_stored_value_test.rb` | |
-| 12.3 | Auto | `post_stored_value_ledger_test.rb`; `phase7b_settlement_integration_test.rb` | |
-| 12.4 | Auto | `pos_transaction_discount_modal_test.rb`; `pos_line_discount_workspace_test.rb`; discount service tests | |
-| 12.5 | Auto | `pos_tax_exemption_modal_test.rb`; tax recalculator tests | |
-| 12.6 | Partial | Phase 7A integration tests | Pickup POS line manual (§7.6) |
-| 12.7 | Auto | `phase6_pos_polish_integration_test.rb` (inactive variant confirm) | |
+| 11.1 | Auto | `pos_workspace_header_test.rb`; `workspace_layout_test.rb` (system) | Legacy banner absence manual |
+| 11.2 | Auto | `header_actions_presenter_test.rb`; `pos_workspace_header_test.rb`; `workspace_layout_test.rb` | Permission-gated items manual |
+| 11.3 | Auto | `pos_workspace_header_test.rb` (closed register balance/cash in) | |
+| 11.4 | Auto | `pos_status_panel_test.rb`; `pos_customer_workspace_test.rb`; `workspace_layout_test.rb` (detach) | |
+| 11.5 | Auto | `pos_status_panel_test.rb` (discount/tax sections) | Apply exemption label manual |
+| 11.6 | Partial | `pos_workspace_display_test.rb` (line tax display); `workspace_layout_test.rb` | Column order/visual hierarchy manual |
+| 11.7 | Auto | `pos_workspace_display_test.rb` (tax subtotals, item counts) | |
+| 11.8 | Partial | `workspace_layout_test.rb` (flash dismiss) | Auto-clear timing manual |
+| 11.9 | Manual | — | Error flash persistence |
+| 11.10 | Auto | `workspace_layout_test.rb` (Complete → settlement modal) | Suspend/Cancel manual |
+| 11.11 | Auto | `pos_readiness_preview_test.rb`; `completion_readiness_test.rb` (`alert_blockers`) | Hidden-when-empty manual |
+| 11.12 | Auto | `pos_no_receipt_return_readiness_test.rb`; `phase6_pos_polish_integration_test.rb` | Manager sign-in modal UX manual |
+| 11.13 | Partial | `pos_readiness_preview_test.rb` (settlement modal host) | Blocker display in modal manual |
+| 11.14 | Partial | `pos_workspace_landing_test.rb` (idle quick actions); `pos_workspace_header_test.rb` | New Sale in Actions menu manual |
+| 11.15 | Partial | `pos_completed_workspace_test.rb` | Full-width document buttons manual |
+| 11.16 | Auto | `pos_receipt_return_path_test.rb` | |
+| 11.17 | Auto | `pos_receipts_controller_test.rb` (Back to summary only) | |
+| 11.18 | Auto | `pos_transaction_confirmation_test.rb` (completed summary actions) | Side-by-side layout manual |
+| 11.19 | Auto | `pos_transaction_confirmation_test.rb` (voided summary layout) | |
+
+### §12 Keyboard and focus (cross-cutting)
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 12.1 | Manual | — | Turbo refocus after cart update |
+| 12.2 | Manual | — | Modal vs command field focus steal |
+| 12.3 | Partial | `modal_drawer_shell_test.rb` (interaction shell fixture) | POS-specific restore paths manual |
+| 12.4 | Partial | `modal_drawer_shell_test.rb` (tab trap) | POS settlement/discount modals manual |
+| 12.5 | Manual | — | Mouse-only path |
+| 12.6 | Manual | — | Touch target sizing |
+
+### §13 Regression smoke (prior phases)
+
+| # | Coverage | Test file(s) | Notes |
+|---|----------|--------------|-------|
+| 13.1 | Auto | `post_inventory_test.rb`; `phase6_pos_polish_integration_test.rb` | |
+| 13.2 | Auto | `post_gift_card_sale_ledger_test.rb`; `phase7b_pos_stored_value_test.rb` | |
+| 13.3 | Auto | `post_stored_value_ledger_test.rb`; `phase7b_settlement_integration_test.rb` | |
+| 13.4 | Auto | `pos_transaction_discount_modal_test.rb`; `pos_line_discount_workspace_test.rb`; discount service tests | |
+| 13.5 | Auto | `pos_tax_exemption_modal_test.rb`; tax recalculator tests | |
+| 13.6 | Partial | Phase 7A integration tests | Pickup POS line manual (§7.6) |
+| 13.7 | Auto | `phase6_pos_polish_integration_test.rb` (inactive variant confirm) | |
 
 ### Key test file index
 
 | File | Primary checklist sections |
 |------|---------------------------|
 | `test/system/pos/tender_workspace_test.rb` | §8, §9.1, §9.3 |
-| `test/system/pos/completed_workspace_test.rb` | §9.8–9.9 |
+| `test/system/pos/completed_workspace_test.rb` | §9.8–9.10 |
+| `test/system/pos/workspace_layout_test.rb` | §11.1–11.4, §11.8, §11.10 |
 | `test/system/pos/transaction_discount_modal_test.rb` | §6.7 |
+| `test/presenters/pos/header_actions_presenter_test.rb` | §11.2 |
+| `test/helpers/pos_workspace_display_test.rb` | §11.6–11.7 |
+| `test/integration/pos_workspace_header_test.rb` | §11.1–11.3, §11.14 |
+| `test/integration/pos_status_panel_test.rb` | §11.4–11.5 |
+| `test/integration/pos_readiness_preview_test.rb` | §11.11, §11.13 |
+| `test/integration/pos_no_receipt_return_readiness_test.rb` | §7.5, §11.12 |
+| `test/integration/pos_receipt_return_path_test.rb` | §9.5, §11.16 |
+| `test/integration/pos_receipts_controller_test.rb` | §11.17 |
+| `test/integration/pos_transaction_confirmation_test.rb` | §11.18–11.19 |
 | `test/integration/pos_held_sales_lifecycle_test.rb` | §1.6, §5.3, §5.5–5.7 |
 | `test/integration/pos_workspace_landing_test.rb` | §1–§4 (idle/routing) |
 | `test/integration/pos_transaction_route_command_test.rb` | §4, §8.1–8.4 |
-| `test/integration/pos_completed_workspace_test.rb` | §9.3–9.4, §9.11 |
+| `test/integration/pos_completed_workspace_test.rb` | §9.3–9.4, §9.8, §9.11–9.12, §11.15 |
 | `test/services/pos/settlement_sync_test.rb` | §8.7–8.9, §8.19–8.21 |
+| `test/services/pos/completion_readiness_test.rb` | §11.11 (`alert_blockers`) |
 | `test/services/pos/command_bar_router_test.rb` | §2, §6.4–6.5 |
 | `test/services/pos/root_command_router_test.rb` | §2–§4 (idle routing) |
 | `test/services/pos/landing_router_test.rb` | §1.1–1.2 |
@@ -477,9 +529,11 @@ docker compose exec -T web bin/rails test \
 
 ## Sign-off
 
+Use for regression passes before merge or after POS changes.
+
 | Item | Name | Date |
 |------|------|------|
 | QA lead | | |
 | Browser(s) tested | | |
 | Blockers found | | |
-| Ready to mark 10-C **Complete** | ☐ Yes ☐ No | |
+| Regression pass complete | ☐ Yes ☐ No | |

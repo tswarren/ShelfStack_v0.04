@@ -286,6 +286,8 @@ export default class extends Controller {
     const draftRow = this.activeDraftRow()
     if (!draftRow) return
 
+    this.normalizeDraftRowTenderType(draftRow)
+
     if (!this.rowHasAmount(draftRow) &&
         !this.isStoredValueTenderType(draftRow.dataset.settlementType)) {
       this.focusRowEntry(draftRow)
@@ -938,6 +940,14 @@ export default class extends Controller {
     row.dataset.settlementType = resolvedType
     const tenderTypeField = row.querySelector("[name*='[tender_type]']")
     if (tenderTypeField) tenderTypeField.value = resolvedType
+  }
+
+  normalizeDraftRowTenderType(row) {
+    if (!this.refundValue) return row.dataset.settlementType
+    if (row.dataset.settlementType !== "stored_value") return row.dataset.settlementType
+
+    this.applyResolvedStoredValueType(row, { resolved_tender_type: "store_credit" })
+    return "store_credit"
   }
 
   storedValueTypeLabel(tenderType) {

@@ -7,10 +7,18 @@
             class: "ss-pos-mode-switch__btn #{'ss-pos-mode-switch__btn--active' if active}",
             data: { mode: "sale" },
             aria: { current: active ? "page" : nil } %>
-    <% else %>
+    <% elsif mode == "return" && pos_can_open_return_workflow? %>
       <button type="button"
               class="ss-pos-mode-switch__btn #{'ss-pos-mode-switch__btn--active' if active}"
-              data-mode="<%= mode %>"
+              data-mode="return"
+              data-action="pos-command-bar#openModeDrawer"
+              aria-current="<%= active ? 'page' : 'false' %>">
+        <%= pos_mode_label(mode) %>
+      </button>
+    <% elsif mode == "pickup" %>
+      <button type="button"
+              class="ss-pos-mode-switch__btn #{'ss-pos-mode-switch__btn--active' if active}"
+              data-mode="pickup"
               data-action="pos-command-bar#openModeDrawer"
               aria-current="<%= active ? 'page' : 'false' %>">
         <%= pos_mode_label(mode) %>

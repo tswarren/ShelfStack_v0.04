@@ -3,7 +3,9 @@
 module Pos
   class WorkspaceLinesController < BaseController
     before_action -> { authorize_pos!("pos.returns.receipted") }, only: :add_return_line
+    before_action -> { authorize_pos!("pos.returns.no_receipt") }, only: :add_no_receipt_line
     before_action -> { authorize_pos!("pos.lines.add") }, only: :add_no_receipt_line
+    before_action :authorize_no_receipt_return_line!, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
 

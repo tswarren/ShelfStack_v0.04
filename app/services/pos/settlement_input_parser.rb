@@ -46,11 +46,12 @@ module Pos
       return if amount_cents.zero? && tendered_cents.nil? && !zero_total_input?(attrs, amount_cents) && !truthy?(attrs[:_destroy])
 
       amount_cents = self.class.normalize_refund_amount_cents(transaction, amount_cents)
+      tender_type = normalize_tender_type(attrs[:tender_type])
 
       ParsedRow.new(
         id: attrs[:id].presence,
         destroy: truthy?(attrs[:_destroy]),
-        tender_type: attrs[:tender_type],
+        tender_type: tender_type,
         amount_cents: amount_cents,
         tendered_cents: tendered_cents,
         card_brand: attrs[:tender_type] == "card" ? (attrs[:card_brand].presence || "other") : attrs[:card_brand].presence,
@@ -105,10 +106,21 @@ module Pos
     end
 
     def parse_generate_identifier(attrs)
-      return false unless Pos::StoredValueTenderSupport.stored_value_tender?(attrs[:tender_type])
+      tender_type = normalize_tender_type(attrs[:tender_type])
+      return false unless Pos::StoredValueTenderSupport.stored_value_tender?(tender_type)
       return false unless Pos::TenderTypePolicy.refund_transaction?(transaction)
 
       truthy?(attrs[:generate_identifier])
+    end
+
+    def normalize_tender_type(tender_type)
+      tender_type = tender_type.to_s
+      if tender_type == Pos::StoredValueTenderSupport::STORED_VALUE_PLACEHOLDER_TYPE &&
+          Pos::TenderTypePolicy.refund_transaction?(transaction)
+        "store_credit"
+      else
+        tender_type
+      end
     end
 
     def normalize_attrs_hash(attrs)

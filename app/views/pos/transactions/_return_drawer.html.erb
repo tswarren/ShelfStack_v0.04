@@ -26,7 +26,8 @@
             role="tab"
             aria-selected="false"
             data-pos-return-drawer-target="noReceiptTab"
-            data-action="pos-return-drawer#showNoReceipt">
+            data-action="pos-return-drawer#showNoReceipt"
+            <%= "hidden" unless pos_can_add_no_receipt_return? %>>
       No receipt
     </button>
   </div>
@@ -48,7 +49,8 @@
   </div>
 
   <div data-pos-return-drawer-target="noReceiptSection" hidden>
-    <p class="ss-hint">Scan SKU or ISBN to add a catalog return line. Supervisor approval is required at complete.</p>
+    <% if pos_can_add_no_receipt_return? %>
+      <p class="ss-hint">Scan SKU or ISBN to add a catalog return line. Supervisor approval is required at complete.</p>
     <div data-controller="pos-line-entry"
          data-pos-line-entry-url-value="<%= pos_line_lookup_path %>"
          data-pos-line-entry-add-url-value="<%= add_no_receipt_line_url %>"
@@ -81,6 +83,9 @@
               },
               redirect_on_success: redirect_on_success %>
       </div>
+    <% end %>
+    <% else %>
+      <p class="ss-hint">No-receipt returns require additional permission. Use a receipted return or ask a manager.</p>
     <% end %>
   </div>
 </section>
