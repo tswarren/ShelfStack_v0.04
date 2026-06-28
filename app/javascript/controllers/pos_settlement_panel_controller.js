@@ -127,7 +127,7 @@ export default class extends Controller {
       return
     }
 
-    if (event.key === "Enter" && !this.isSubmitControl(event.target)) {
+    if (event.key === "Enter" && !this.isSubmitControl(event.target) && !this.isActionControl(event.target)) {
       if (this.hasActiveDraft()) {
         event.preventDefault()
         event.stopPropagation()
@@ -175,6 +175,10 @@ export default class extends Controller {
 
   isSubmitControl(target) {
     return target instanceof HTMLElement && target.closest("button[type='submit'], input[type='submit']")
+  }
+
+  isActionControl(target) {
+    return target instanceof HTMLElement && target.closest("button, a, [role='button']")
   }
 
   isHotkeySelection(event) {

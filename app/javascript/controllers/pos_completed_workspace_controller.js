@@ -30,6 +30,8 @@ export default class extends Controller {
 
     switch (event.key) {
       case "Enter":
+        if (this.isInteractiveControl(event.target)) return
+
         event.preventDefault()
         if (this.requiredSlipPending()) {
           this.requiredSlipAction()?.click()
@@ -39,14 +41,20 @@ export default class extends Controller {
         break
       case "p":
       case "P":
+        if (!this.hasReceiptActionTarget) return
+
         event.preventDefault()
-        this.receiptActionTarget?.click()
+        this.receiptActionTarget.click()
         break
       case "v":
-      case "V":
+      case "V": {
+        const slip = this.preferredSlipAction()
+        if (!slip) return
+
         event.preventDefault()
-        this.slipActionTargets.find((action) => action.dataset.required === "true")?.click()
+        slip.click()
         break
+      }
       case "Escape":
         event.preventDefault()
         window.location.assign("/pos")
@@ -56,12 +64,22 @@ export default class extends Controller {
     }
   }
 
+  preferredSlipAction() {
+    return this.slipActionTargets.find((action) => action.dataset.required === "true") ||
+      this.slipActionTargets[0]
+  }
+
   requiredSlipPending() {
     return this.requiredSlipUrlValue.length > 0
   }
 
   requiredSlipAction() {
-    return this.slipActionTargets.find((action) => action.dataset.required === "true")
+    return this.preferredSlipAction()
+  }
+
+  isInteractiveControl(target) {
+    return target instanceof HTMLElement &&
+      target.closest("button, a, input, textarea, select, [role='button']")
   }
 
   isTypingInField(target) {
