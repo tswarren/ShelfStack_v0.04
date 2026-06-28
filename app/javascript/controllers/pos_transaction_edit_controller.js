@@ -232,12 +232,16 @@ export default class extends Controller {
   }
 
   setAuthorizationId(event) {
-    const { authorizationId } = event.detail
+    const { authorizationId, authorizationType } = event.detail
     if (!authorizationId) return
 
     this.authorizationIdTargets.forEach((field) => {
       field.value = authorizationId
     })
+
+    if (authorizationType === "discount_reason_approval" || authorizationType === "void_transaction") {
+      return
+    }
 
     const url = new URL(window.location.href)
     url.searchParams.set("pos_authorization_id", authorizationId)

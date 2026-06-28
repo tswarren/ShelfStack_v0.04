@@ -1,4 +1,5 @@
-<tr class="ss-pos-cart-line <%= 'ss-pos-cart-line--return' if line.return_line? %>"
+<% line_editing = @line_discount_error.present? && @line_discount_error[:line_id].to_i == line.id %>
+<tr class="ss-pos-cart-line <%= 'ss-pos-cart-line--return' if line.return_line? %><%= ' ss-pos-cart-line--editing' if line_editing %>"
     id="<%= dom_id(line) %>"
     data-pos-cart-line-target="displayRow"
     data-line-id="<%= line.id %>">
@@ -63,7 +64,7 @@
             class="ss-btn ss-btn-secondary ss-btn--small"
             data-action="pos-cart-line#edit"
             data-line-id="<%= line.id %>"
-            aria-expanded="false"
+            aria-expanded="<%= line_editing %>"
             aria-controls="pos_line_edit_<%= line.id %>">More</button>
     <%= button_to "Remove",
           remove_line_pos_transaction_path(transaction, line_id: line.id),

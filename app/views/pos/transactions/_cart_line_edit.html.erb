@@ -1,8 +1,10 @@
 <% form_id = "pos_line_edit_#{line.id}" %>
+<% line_editing = @line_discount_error.present? && @line_discount_error[:line_id].to_i == line.id %>
+<% discount_error = line_editing ? @line_discount_error : nil %>
 <%= render layout: "shared/interaction/expanded_row",
       locals: {
         colspan: 6,
-        open: false,
+        open: line_editing,
         target: "editRow",
         line_id: line.id,
         keyboard_action: "keyboard-scope:keydown->pos-cart-line#handleKeydown"
@@ -52,14 +54,21 @@
             <%= form_with url: apply_line_discount_pos_transaction_path(transaction),
                   method: :post,
                   class: "ss-pos-line-discount-form",
-                  data: { turbo_stream: true } do %>
+                  html: { novalidate: true },
+                  data: {
+                    turbo_stream: true,
+                    action: "submit->pos-discount-input#validateSubmit"
+                  } do %>
               <%= hidden_field_tag :line_id, line.id %>
               <%= render "pos/transactions/discount_fields",
                     transaction: transaction,
                     label: "Add line discount",
                     id_prefix: "line_discount_#{line.id}",
                     type_name: :discount_type,
-                    value_name: :discount_value %>
+                    value_name: :discount_value,
+                    default_type: "percent",
+                    submitted: discount_error&.dig(:submitted),
+                    invalid_fields: discount_error&.dig(:invalid_fields) %>
               <%= submit_tag "Apply discount", class: "ss-btn ss-btn-secondary ss-pos-line-edit__action" %>
             <% end %>
             <%= render "pos/transactions/line_discount_list", transaction: transaction, line: line %>

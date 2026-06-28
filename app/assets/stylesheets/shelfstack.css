@@ -3270,12 +3270,110 @@ body.ss-pos-modal-open {
 .ss-pos-discount-field__row {
   display: flex;
   gap: 0.5rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.ss-pos-discount-value {
+  display: flex;
   align-items: center;
+  flex: 1 1 8rem;
+  min-width: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+.ss-pos-discount-value:focus-within {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.ss-pos-discount-value__adornment {
+  flex: 0 0 auto;
+  padding: 0 0.65rem;
+  color: #64748b;
+  font-weight: 600;
+  user-select: none;
+}
+
+.ss-pos-discount-value__adornment--prefix {
+  border-right: 1px solid #e2e8f0;
+}
+
+.ss-pos-discount-value__adornment--suffix {
+  border-left: 1px solid #e2e8f0;
 }
 
 .ss-pos-discount-field__row .ss-pos-discount-input {
-  flex: 1 1 8rem;
+  flex: 1 1 auto;
   min-width: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ss-pos-discount-field__row .ss-pos-discount-input:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+.ss-pos-discount-mode {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.ss-pos-discount-mode__btn {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.85rem;
+  border: 0;
+  background: #fff;
+  color: #475569;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ss-pos-discount-mode__btn + .ss-pos-discount-mode__btn {
+  border-left: 1px solid #cbd5e1;
+}
+
+.ss-pos-discount-mode__btn--active {
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+}
+
+.ss-pos-discount-mode__btn:focus-visible {
+  outline: 2px solid var(--color-primary, #2563eb);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.ss-field--invalid > label {
+  color: var(--color-error, #b91c1c);
+}
+
+.ss-field--invalid select,
+.ss-field--invalid textarea,
+.ss-pos-discount-value--invalid {
+  border-color: var(--color-error, #b91c1c);
+}
+
+.ss-pos-discount-value--invalid:focus-within {
+  border-color: var(--color-error, #b91c1c);
+  box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.15);
+}
+
+.ss-pos-discount-auth--invalid {
+  border: 1px solid var(--color-error, #b91c1c);
+  border-radius: 0.375rem;
+  padding: 0.65rem 0.75rem;
+  background: #fef2f2;
 }
 
 .ss-pos-scan-input {

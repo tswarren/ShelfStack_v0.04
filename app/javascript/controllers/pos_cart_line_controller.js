@@ -41,7 +41,7 @@ export default class extends Controller {
 
     const commandInput = document.querySelector("[data-pos-command-bar-target='input']")
     this.openEdit(lineId, commandInput, {
-      focusSelector: ".ss-pos-line-discount-form [name='discount_value']"
+      focusSelector: ".ss-pos-line-discount-form [name='discount_reason_id']"
     })
   }
 
@@ -61,7 +61,8 @@ export default class extends Controller {
     }
 
     const focusRoot = editRow.querySelector(".ss-row-detail") || editRow
-    focusFirstMeaningful(focusRoot)
+    const field = focusFirstMeaningful(focusRoot)
+    field?.select?.()
   }
 
   collapseLine(lineId, { restoreFocus: shouldRestore = false } = {}) {

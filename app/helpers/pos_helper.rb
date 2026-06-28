@@ -295,7 +295,12 @@ module PosHelper
       [
         reason.name,
         reason.id,
-        { data: { requires_authorization: reason.requires_authorization? } }
+        {
+          data: {
+            requires_authorization: reason.requires_authorization?,
+            requires_note: reason.requires_note?
+          }
+        }
       ]
     end
   end
