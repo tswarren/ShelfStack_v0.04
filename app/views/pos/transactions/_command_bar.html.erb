@@ -9,7 +9,8 @@
          data-pos-line-entry-add-url-value="<%= add_line_pos_transaction_path(transaction) %>"
          data-pos-line-entry-add-reservation-url-value="<%= add_reservation_line_pos_transaction_path(transaction) %>"
          data-pos-line-entry-return-mode-value="<%= return_mode %>"
-         data-pos-line-entry-mode-value="<%= pos_workspace_mode %>">
+         data-pos-line-entry-mode-value="<%= pos_workspace_mode %>"
+         data-action="modal:closed@document->pos-command-bar#modalClosed">
   <div class="ss-pos-command-bar__entry-row">
     <div class="ss-pos-command-bar__scan-column">
       <%= label_tag :pos_command_input, "Scan or enter item", class: "ss-pos-command-bar__scan-label" %>
@@ -39,14 +40,6 @@
     <%= render "pos/transactions/open_ring_drawer", transaction: transaction, sub_departments: sub_departments, inline: true %>
   </div>
 
-  <div class="ss-pos-inline-panel" data-pos-command-bar-target="giftCardPanel" hidden>
-    <%= render "pos/transactions/gift_card_sale_drawer", transaction: transaction, inline: true %>
-  </div>
-
-  <div class="ss-pos-inline-panel" data-pos-command-bar-target="balancePanel" hidden>
-    <%= render "pos/shared/stored_value_balance_inquiry", show_close: true %>
-  </div>
-
   <div class="ss-pos-inline-panel" data-pos-command-bar-target="pickupPanel" hidden>
     <%= render "pos/transactions/pickup_panel", transaction: transaction, inline: true %>
   </div>
@@ -55,7 +48,5 @@
     <%= render "pos/shared/session_summary_panel", register_session: transaction.pos_register_session || current_register_session, show_close: true %>
   </div>
 
-  <%= render "pos/shared/help_modal" %>
-  <%= render "pos/shared/drawer_action_modal" %>
-  <%= render "pos/shared/cash_movement_modal", register_session: transaction.pos_register_session || current_register_session, transaction: transaction %>
+  <%= render "pos/shared/workspace_modals", transaction: transaction, register_session: transaction.pos_register_session || current_register_session %>
 </section>

@@ -247,6 +247,20 @@ module PosHelper
     end
   end
 
+  def pos_supervisor_authorization_type(check)
+    pos_supervisor_authorization_type_for_key(check.key)
+  end
+
+  def pos_supervisor_authorization_type_for_key(key)
+    case key
+    when :discount_auth then "discount_over_limit"
+    when :discount_reason_auth then "discount_reason_approval"
+    when :no_receipt_return then "no_receipt_return"
+    when :cash_refund_auth then "cash_refund_over_threshold"
+    when :reserved_stock_auth then "sell_reserved_stock_override"
+    end
+  end
+
   def pos_lookup_preview_text(variant)
     price = pos_money(variant[:selling_price_cents] || variant["selling_price_cents"])
     on_hand = variant[:quantity_on_hand] || variant["quantity_on_hand"] || 0

@@ -53,7 +53,8 @@ module Pos
         end
       when :return_drawer_offer, :pickup_drawer_offer
         drawer_offer_result(route)
-      when :session_drawer_offer, :cash_movement_offer, :drawer_action_offer, :reports_confirm_offer
+      when :session_drawer_offer, :cash_movement_offer, :drawer_action_offer, :reports_confirm_offer,
+           :customer_lookup_offer, :balance_inquiry_offer
         Result.new(
           status: :json,
           redirect_path: nil,

@@ -490,4 +490,42 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
   end
+
+  test "/customer returns customer lookup offer with optional query" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/customer Smith"
+    )
+
+    assert_equal :customer_lookup_offer, route.action
+    assert_equal "Smith", route.payload[:query]
+  end
+
+  test "/taxexempt returns tax exemption offer when transaction is active" do
+    grant_permission!(@user, "pos.tax_exemptions.apply", store: @store)
+    transaction = create_pos_transaction!(store: @store, workstation: @workstation, user: @user)
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      transaction: transaction,
+      input: "/taxexempt"
+    )
+
+    assert_equal :tax_exemption_offer, route.action
+  end
+
+  test "/taxexempt without transaction returns no active transaction message" do
+    route = Pos::CommandBarRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/taxexempt"
+    )
+
+    assert_equal :message, route.action
+    assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
 end

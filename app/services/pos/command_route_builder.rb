@@ -113,17 +113,24 @@ module Pos
         cash_movement_route(command.handler)
       when :drawer_action
         drawer_action_route
+      when :customer_lookup
+        customer_lookup_route
+      when :tax_exempt
+        Route.new(action: :tax_exemption_offer, payload: {}, message: nil)
       else
         raise ArgumentError, "No route handler wired for #{command.key.inspect}"
       end
     end
 
     def balance_route
-      if context == :root
-        Route.new(action: :balance_redirect, payload: {}, message: nil)
-      else
-        Route.new(action: :balance_inquiry_offer, payload: {}, message: nil)
-      end
+      Route.new(action: :balance_inquiry_offer, payload: {}, message: nil)
+    end
+
+    def customer_lookup_route
+      payload = {}
+      payload[:query] = match.args.strip if match.args.present?
+
+      Route.new(action: :customer_lookup_offer, payload: payload, message: nil)
     end
 
     def open_ring_route

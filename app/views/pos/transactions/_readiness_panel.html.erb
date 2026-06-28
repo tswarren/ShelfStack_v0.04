@@ -32,7 +32,7 @@
               <button type="button"
                       class="ss-btn ss-btn-secondary ss-btn--small"
                       data-action="pos-transaction-edit#requestAuth"
-                      data-authorization-type="<%= { discount_auth: 'discount_over_limit', discount_reason_auth: 'discount_reason_approval', no_receipt_return: 'no_receipt_return', cash_refund_auth: 'cash_refund_over_threshold' }[check.key] %>"
+                      data-authorization-type="<%= pos_supervisor_authorization_type(check) %>"
                       data-transaction-id="<%= transaction.id %>"
                       data-authorization-message="<%= pos_supervisor_auth_message(check) %>">
                 <%= check.action_label %>

@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "giftCardPanel", "balancePanel", "pickupPanel", "sessionPanel", "transactionDiscountPanel", "helpModal", "helpBody", "helpCloseButton", "cashMovementModal", "cashMovementForm", "cashMovementType", "cashMovementAmount", "cashMovementReason", "cashMovementSubmit", "cashMovementTitle", "drawerActionModal", "drawerActionReason"]
+  static targets = ["input", "returnToggle", "receiptPanel", "openRingPanel", "openRingReturnMode", "pickupPanel", "sessionPanel", "transactionDiscountPanel", "helpBody", "cashMovementForm", "cashMovementType", "cashMovementAmount", "cashMovementReason", "cashMovementSubmit", "drawerActionReason"]
   static values = {
     routeUrl: String,
     addGiftCardUrl: String,
@@ -9,16 +9,15 @@ export default class extends Controller {
   }
 
   connect() {
-    this.boundModalKeydown = this.modalKeydown.bind(this)
     this.focusInput()
     this.syncOpenRingReturnMode()
-    this.applyLegacyModeDrawerFromUrl()
-    this.applyCarryForwardFromUrl()
+    requestAnimationFrame(() => {
+      this.applyLegacyModeDrawerFromUrl()
+      this.applyCarryForwardFromUrl()
+    })
   }
 
   disconnect() {
-    document.removeEventListener("keydown", this.boundModalKeydown)
-    document.body.classList.remove("ss-pos-modal-open")
   }
 
   toggleReturnMode() {
@@ -92,7 +91,7 @@ export default class extends Controller {
         if (data.payload?.amount_cents) {
           this.addGiftCardSale(data.payload)
         } else {
-          this.showGiftCardPanel(data.payload)
+          this.showGiftCardModal(data.payload)
         }
         break
       case "return_drawer_offer":
@@ -104,7 +103,16 @@ export default class extends Controller {
         this.showPickupDrawerPanel()
         break
       case "balance_inquiry_offer":
-        this.showBalancePanel()
+        this.inputTarget.value = ""
+        this.showBalanceModal()
+        break
+      case "customer_lookup_offer":
+        this.inputTarget.value = ""
+        this.showCustomerLookupModal(data.payload || {})
+        break
+      case "tax_exemption_offer":
+        this.inputTarget.value = ""
+        this.showTaxExemptionModal()
         break
       case "line_discount_offer":
         if (data.payload?.line_id) {
@@ -241,29 +249,75 @@ export default class extends Controller {
     ;(descriptionField || priceField)?.focus()
   }
 
-  showGiftCardPanel(payload = {}) {
-    if (!this.hasGiftCardPanelTarget) {
+  showGiftCardModal(payload = {}) {
+    if (!this.openWorkspaceModal("pos-gift-card-sale-modal")) {
       this.dispatchMessage("Gift card sales are not available.")
       return
     }
 
-    this.giftCardPanelTarget.hidden = false
-    const priceField = this.giftCardPanelTarget.querySelector("[name='unit_price']")
+    const priceField = document.querySelector("#pos-gift-card-sale-modal [name='unit_price']")
     if (priceField) {
       priceField.value = payload.amount_cents ? (payload.amount_cents / 100).toFixed(2) : ""
       priceField.focus()
     }
   }
 
-  showBalancePanel() {
-    if (!this.hasBalancePanelTarget) {
+  showBalanceModal() {
+    if (!this.openWorkspaceModal("pos-balance-inquiry-modal")) {
       this.dispatchMessage("Balance inquiry is not available.")
+    }
+  }
+
+  showCustomerLookupModal(payload = {}) {
+    if (!this.openWorkspaceModal("pos-customer-lookup-modal")) {
+      this.dispatchMessage("Customer lookup is not available.")
       return
     }
 
-    this.balancePanelTarget.hidden = false
-    const input = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='input']")
-    input?.focus()
+    const query = payload.query?.trim()
+    if (!query) return
+
+    const input = document.querySelector("#pos-customer-lookup-modal [data-customer-lookup-target='lookupInput']")
+    if (!input) return
+
+    input.value = query
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+  }
+
+  showTaxExemptionModal() {
+    if (!this.openWorkspaceModal("pos-tax-exemption-modal")) {
+      this.dispatchMessage("Tax exemption is not available.")
+    }
+  }
+
+  openWorkspaceModal(modalId) {
+    const modal = document.getElementById(modalId)
+    if (!modal) return false
+
+    const controller = this.application.getControllerForElementAndIdentifier(modal, "modal")
+    if (!controller) return false
+
+    controller.open()
+    return true
+  }
+
+  closeWorkspaceModal(modalId) {
+    const modal = document.getElementById(modalId)
+    if (!modal) return
+
+    const controller = this.application.getControllerForElementAndIdentifier(modal, "modal")
+    controller?.close()
+  }
+
+  modalClosed(event) {
+    if (!event.target?.classList?.contains("ss-modal")) return
+
+    if (event.target.id === "pos-balance-inquiry-modal") {
+      this.resetBalanceInquiry()
+      this.inputTarget.value = ""
+    }
+
+    requestAnimationFrame(() => this.focusInput())
   }
 
   showSessionPanel() {
@@ -285,17 +339,16 @@ export default class extends Controller {
   }
 
   showCashMovementModal(payload = {}) {
-    if (!this.hasCashMovementModalTarget) {
+    const movementType = payload.movement_type || "paid_in"
+    const title = movementType === "paid_out" ? "Cash out" : "Cash in"
+    const titleEl = document.getElementById("pos-cash-movement-modal-title")
+    if (titleEl) titleEl.textContent = title
+
+    if (!this.openWorkspaceModal("pos-cash-movement-modal")) {
       this.dispatchMessage("Cash movements are not available.")
       return
     }
 
-    const movementType = payload.movement_type || "paid_in"
-    const title = movementType === "paid_out" ? "Cash out" : "Cash in"
-
-    if (this.hasCashMovementTitleTarget) {
-      this.cashMovementTitleTarget.textContent = title
-    }
     if (this.hasCashMovementTypeTarget) {
       this.cashMovementTypeTarget.value = movementType
     }
@@ -309,9 +362,6 @@ export default class extends Controller {
       this.cashMovementReasonTarget.value = ""
     }
 
-    this.cashMovementModalTarget.hidden = false
-    document.body.classList.add("ss-pos-modal-open")
-    document.addEventListener("keydown", this.boundModalKeydown)
     this.cashMovementAmountTarget?.focus()
   }
 
@@ -320,10 +370,7 @@ export default class extends Controller {
     const focusInput = options.focusInput ?? true
     arg?.preventDefault?.()
 
-    if (!this.hasCashMovementModalTarget || this.cashMovementModalTarget.hidden) return
-
-    this.cashMovementModalTarget.hidden = true
-    this.releaseModalKeydownUnlessOpen()
+    this.closeWorkspaceModal("pos-cash-movement-modal")
     if (focusInput) this.focusInput()
   }
 
@@ -334,11 +381,6 @@ export default class extends Controller {
   }
 
   showDrawerActionModal(payload = {}) {
-    if (!this.hasDrawerActionModalTarget) {
-      this.dispatchMessage("Cash drawer action is not available.")
-      return
-    }
-
     if (this.hasDrawerActionReasonTarget) {
       if (payload.reason) {
         this.drawerActionReasonTarget.textContent = `Note: ${payload.reason}`
@@ -349,9 +391,9 @@ export default class extends Controller {
       }
     }
 
-    this.drawerActionModalTarget.hidden = false
-    document.body.classList.add("ss-pos-modal-open")
-    document.addEventListener("keydown", this.boundModalKeydown)
+    if (!this.openWorkspaceModal("pos-drawer-action-modal")) {
+      this.dispatchMessage("Cash drawer action is not available.")
+    }
   }
 
   closeDrawerActionModal(arg) {
@@ -359,10 +401,7 @@ export default class extends Controller {
     const focusInput = options.focusInput ?? true
     arg?.preventDefault?.()
 
-    if (!this.hasDrawerActionModalTarget || this.drawerActionModalTarget.hidden) return
-
-    this.drawerActionModalTarget.hidden = true
-    this.releaseModalKeydownUnlessOpen()
+    this.closeWorkspaceModal("pos-drawer-action-modal")
     if (focusInput) this.focusInput()
   }
 
@@ -379,22 +418,38 @@ export default class extends Controller {
 
   closeBalancePanel(event) {
     event?.preventDefault()
-    if (!this.hasBalancePanelTarget) return
+    this.resetBalanceInquiry()
+    this.closeWorkspaceModal("pos-balance-inquiry-modal")
+    this.inputTarget.value = ""
+    this.focusInput()
+  }
 
-    this.balancePanelTarget.hidden = true
-    const input = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='input']")
+  resetBalanceInquiry() {
+    const panel = document.getElementById("pos-balance-inquiry-modal")
+    if (!panel) return
+
+    const input = panel.querySelector("[data-pos-balance-inquiry-target='input']")
     if (input) input.value = ""
-    const status = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='status']")
+    const status = panel.querySelector("[data-pos-balance-inquiry-target='status']")
     if (status) {
       status.textContent = ""
       status.hidden = true
     }
-    const result = this.balancePanelTarget.querySelector("[data-pos-balance-inquiry-target='result']")
+    const result = panel.querySelector("[data-pos-balance-inquiry-target='result']")
     if (result) {
       result.innerHTML = ""
       result.hidden = true
     }
-    this.focusInput()
+  }
+
+  closeGiftCardPanel(arg) {
+    const options = arg instanceof Event ? {} : (arg || {})
+    const focusInput = options.focusInput ?? true
+    arg?.preventDefault?.()
+
+    this.closeWorkspaceModal("pos-gift-card-sale-modal")
+    document.querySelector("#pos-gift-card-sale-modal form")?.reset()
+    if (focusInput) this.focusInput()
   }
 
   addGiftCardSale(payload) {
@@ -426,21 +481,17 @@ export default class extends Controller {
       .catch(() => this.dispatchMessage("Unable to add gift card sale."))
   }
 
-  closeGiftCardPanel(arg) {
-    const options = arg instanceof Event ? {} : (arg || {})
-    const focusInput = options.focusInput ?? true
-    arg?.preventDefault?.()
-
-    if (!this.hasGiftCardPanelTarget) return
-
-    this.giftCardPanelTarget.hidden = true
-    this.giftCardPanelTarget.querySelector("form")?.reset()
-    if (focusInput) this.focusInput()
-  }
-
   giftCardSubmitted(event) {
     if (event.detail.success) {
-      this.closeGiftCardPanel({ focusInput: false })
+      this.closeWorkspaceModal("pos-gift-card-sale-modal")
+      document.querySelector("#pos-gift-card-sale-modal form")?.reset()
+      requestAnimationFrame(() => this.focusInput())
+    }
+  }
+
+  taxExemptionSubmitted(event) {
+    if (event.detail.success) {
+      this.closeWorkspaceModal("pos-tax-exemption-modal")
       requestAnimationFrame(() => this.focusInput())
     }
   }
@@ -448,27 +499,29 @@ export default class extends Controller {
   hidePanels() {
     if (this.hasReceiptPanelTarget) this.receiptPanelTarget.hidden = true
     if (this.hasOpenRingPanelTarget) this.openRingPanelTarget.hidden = true
-    if (this.hasGiftCardPanelTarget) this.giftCardPanelTarget.hidden = true
-    if (this.hasBalancePanelTarget) this.balancePanelTarget.hidden = true
     if (this.hasPickupPanelTarget) this.pickupPanelTarget.hidden = true
     if (this.hasSessionPanelTarget) this.sessionPanelTarget.hidden = true
     this.closeCashMovementModal({ focusInput: false })
     this.closeDrawerActionModal({ focusInput: false })
-    this.closeHelpModal({ focusInput: false })
+    this.closeWorkspaceModal("pos-help-modal")
+    this.resetBalanceInquiry()
+    this.closeWorkspaceModal("pos-balance-inquiry-modal")
+    this.closeWorkspaceModal("pos-gift-card-sale-modal")
+    this.closeWorkspaceModal("pos-customer-lookup-modal")
+    this.closeWorkspaceModal("pos-tax-exemption-modal")
   }
 
   showHelpModal(payload) {
-    if (!this.hasHelpModalTarget || !this.hasHelpBodyTarget) {
+    if (!this.hasHelpBodyTarget) {
       this.dispatchMessage("Help is not available.")
       return
     }
 
     const commands = payload.commands || []
     this.helpBodyTarget.innerHTML = this.renderHelpCommands(commands, payload.category_labels)
-    this.helpModalTarget.hidden = false
-    document.body.classList.add("ss-pos-modal-open")
-    document.addEventListener("keydown", this.boundModalKeydown)
-    this.helpCloseButtonTarget?.focus()
+    if (!this.openWorkspaceModal("pos-help-modal")) {
+      this.dispatchMessage("Help is not available.")
+    }
   }
 
   closeHelpModal(arg) {
@@ -476,42 +529,8 @@ export default class extends Controller {
     const focusInput = options.focusInput ?? true
     arg?.preventDefault?.()
 
-    if (!this.hasHelpModalTarget || this.helpModalTarget.hidden) return
-
-    this.helpModalTarget.hidden = true
-    this.releaseModalKeydownUnlessOpen()
-
+    this.closeWorkspaceModal("pos-help-modal")
     if (focusInput) this.focusInput()
-  }
-
-  modalKeydown(event) {
-    if (event.key !== "Escape") return
-
-    if (this.hasCashMovementModalTarget && !this.cashMovementModalTarget.hidden) {
-      this.closeCashMovementModal(event)
-      return
-    }
-
-    if (this.hasDrawerActionModalTarget && !this.drawerActionModalTarget.hidden) {
-      this.closeDrawerActionModal(event)
-      return
-    }
-
-    if (this.hasHelpModalTarget && !this.helpModalTarget.hidden) {
-      this.closeHelpModal(event)
-    }
-  }
-
-  releaseModalKeydownUnlessOpen() {
-    const modalOpen =
-      (this.hasHelpModalTarget && !this.helpModalTarget.hidden) ||
-      (this.hasCashMovementModalTarget && !this.cashMovementModalTarget.hidden) ||
-      (this.hasDrawerActionModalTarget && !this.drawerActionModalTarget.hidden)
-
-    if (modalOpen) return
-
-    document.body.classList.remove("ss-pos-modal-open")
-    document.removeEventListener("keydown", this.boundModalKeydown)
   }
 
   renderHelpCommands(commands, categoryLabels = {}) {
@@ -658,7 +677,7 @@ export default class extends Controller {
         if (payload.amount_cents) {
           this.addGiftCardSale(payload)
         } else {
-          this.showGiftCardPanel(payload)
+          this.showGiftCardModal(payload)
         }
         break
       case "return":

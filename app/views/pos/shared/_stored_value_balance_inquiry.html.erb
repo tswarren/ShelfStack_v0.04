@@ -1,14 +1,6 @@
-<section class="ss-pos-panel ss-pos-balance-inquiry"
+<section class="ss-pos-balance-inquiry"
          data-controller="pos-balance-inquiry"
          data-pos-balance-inquiry-lookup-url-value="<%= pos_stored_value_lookup_path %>">
-  <div class="ss-pos-balance-inquiry__header">
-    <h2 class="ss-panel__title">Check balance</h2>
-    <% if local_assigns.fetch(:show_close, false) %>
-      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-command-bar#closeBalancePanel">Close</button>
-    <% end %>
-  </div>
-
   <div class="ss-field">
     <%= label_tag :stored_value_balance_code, "Gift card or store credit number" %>
     <%= text_field_tag :stored_value_balance_code, nil,
