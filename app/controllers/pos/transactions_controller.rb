@@ -541,6 +541,10 @@ module Pos
       @complete_error = flash[:complete_error]
       @sub_departments = SubDepartment.active_records.order(:name)
       @readiness = build_readiness
+      @suspended_transactions = current_workstation && Pos::SuspendedTransactionsLookup.for_workstation(
+        store: pos_store,
+        workstation: current_workstation
+      )
     end
 
     def build_readiness(tender_inputs: nil)

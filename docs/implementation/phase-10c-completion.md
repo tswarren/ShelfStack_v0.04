@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard Workspace
 
-**Status:** In progress (slices 1–9 and **9A** delivered; slice **9B** in progress; slice **10** pending)
+**Status:** In progress (slices 1–9, **9A**, and **9B** delivered; slice **10** in progress)
 
 **Spec:** [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-keyboard-workspace-spec.md)
 
@@ -12,7 +12,7 @@
 
 **Test plan:** [phase-10c-test-plan.md](../specifications/phase-10c-test-plan.md)
 
-Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after slice 10 (session drawer, held-sale access, docs sync, remaining acceptance criteria) and full manual QA.
+Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only after slice 10 (remaining tests, docs sync, full manual QA) lands.
 
 ---
 
@@ -92,7 +92,7 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 
 ---
 
-## In progress (slice 9B)
+## Delivered (slice 9B)
 
 **Branch:** `phase-10c-9b-tender-workspace`
 
@@ -101,10 +101,18 @@ Integration branch: `phase-10c-pos-keyboard-workspace`. Mark **Complete** only a
 - Tender modal restructure: summary (amount due/tendered/remaining), hotkey type selector, active detail panel
 - Save tender via `sync_tenders` without auto-complete; Enter/Escape keyboard behavior
 - Ready-to-complete state when tenders cover balance
+- Stored value tender type resolved after identifier lookup (`/giftredeem`, `/storecredit` → unified stored value entry)
 
 ---
 
-## Pending (slice 10)
+## In progress (slice 10)
+
+- Register session drawer (`/session`, `/held`) on shared 10-A drawer shell with session summary + held sales list
+- Held sales access from idle workspace actions and command bar
+- `Pos::SuspendedTransactionsLookup` shared query for workstation held transactions
+- Remaining: broader acceptance test coverage, mark 10-C complete
+
+Foundation runbook POS section refreshed in [foundation-runbook.md](../operations/foundation-runbook.md).
 
 ---
 

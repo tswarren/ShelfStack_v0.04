@@ -27,6 +27,7 @@ module Pos
           storecredit_command,
           hold_command,
           session_command,
+          held_command,
           cashdrop_command,
           cashin_command,
           cashout_command,
@@ -295,6 +296,19 @@ module Pos
           description: "Register session summary",
           permission_keys: [ "pos.register_sessions.view" ],
           handler: :session_drawer,
+          root_implemented: true,
+          transaction_implemented: true
+        )
+      end
+
+      def held_command
+        build(
+          key: :held,
+          canonical: "/held",
+          aliases: %w[hs],
+          description: "Held and suspended transactions",
+          permission_keys: [ "pos.transactions.view" ],
+          handler: :held_transactions_drawer,
           root_implemented: true,
           transaction_implemented: true
         )

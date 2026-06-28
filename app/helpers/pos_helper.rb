@@ -444,6 +444,13 @@ module PosHelper
     Pos::GiftCardSalePolicy.issue_permitted?(actor: user, store: transaction.store)
   end
 
+  def pos_can_resume_transaction?(transaction, user = current_user)
+    return false unless Authorization.allowed?(user: user, permission_key: "pos.transactions.resume", store: transaction.store)
+
+    transaction.cashier_user_id == user.id ||
+      Authorization.allowed?(user: user, permission_key: "pos.transactions.resume.other_cashier", store: transaction.store)
+  end
+
   def pos_gift_card_sale_activation_status(line)
     if line.stored_value_identifier&.display_value_masked.present?
       if line.reload_gift_card_sale?

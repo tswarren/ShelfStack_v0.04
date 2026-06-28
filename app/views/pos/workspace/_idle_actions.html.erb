@@ -1,7 +1,18 @@
 <div class="ss-pos-workspace__actions">
   <%= button_to "New sale", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-btn ss-btn-secondary" %>
-  <%= link_to "Manage Session", pos_register_session_path(@register_session), class: "ss-btn ss-btn-secondary" %>
-  <%= link_to "Cash In/Out", pos_register_session_path(@register_session, anchor: "cash-movement"), class: "ss-btn ss-btn-secondary" %>
+  <% held_count = @suspended_transactions&.size.to_i %>
+  <% if held_count.positive? %>
+    <button type="button"
+            class="ss-btn ss-btn-secondary"
+            data-action="pos-command-bar#openHeldDrawer">
+      Held sales (<%= held_count %>)
+    </button>
+  <% end %>
+  <button type="button"
+          class="ss-btn ss-btn-secondary"
+          data-action="pos-command-bar#openSessionDrawer">
+    Session
+  </button>
   <%= link_to "Reports", pos_reports_path, class: "ss-btn ss-btn-secondary" %>
   <%= link_to "Check Balance", pos_stored_value_balance_path, class: "ss-btn ss-btn-secondary" %>
 </div>

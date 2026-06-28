@@ -15,9 +15,8 @@
   </div>
   <%= render "pos/workspace/command_feedback" %>
   <%= render "pos/workspace/drawer_panels" %>
-  <div class="ss-pos-inline-panel" data-pos-command-bar-target="sessionPanel" hidden>
-    <%= render "pos/shared/session_summary_panel", register_session: @register_session, show_close: true %>
-  </div>
-  <%= render "pos/shared/workspace_modals", register_session: @register_session %>
+  <%= render "pos/shared/workspace_modals",
+        register_session: @register_session,
+        suspended_transactions: @suspended_transactions %>
   <%= render "pos/workspace/idle_actions" %>
 </section>

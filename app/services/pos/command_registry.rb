@@ -81,6 +81,7 @@ module Pos
       balance: "payment",
       hold: "register",
       session: "register",
+      held: "register",
       cashdrop: "register",
       cashin: "register",
       cashout: "register",

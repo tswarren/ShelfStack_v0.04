@@ -3,7 +3,6 @@ import { isAnyOverlayOpen } from "shelfstack/overlay_shell"
 
 const BLOCKING_PANEL_TARGETS = [
   "openRingPanel",
-  "sessionPanel",
   "transactionDiscountPanel",
   "receiptPanel",
   "pickupPanel"
