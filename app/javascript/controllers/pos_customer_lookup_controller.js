@@ -98,14 +98,19 @@ export default class extends Controller {
 
   resetIfClosed(event) {
     if (event.target?.id !== "pos-customer-lookup-modal") return
-    if (!this.hasActionsTarget) return
 
-    this.element.querySelector("[data-customer-lookup-target='lookupInput']").value = ""
-    this.element.querySelector("[data-customer-lookup-target='customerId']").value = ""
-    this.element.querySelector("[data-customer-lookup-target='preview']").textContent = ""
-    this.element.querySelector("[data-customer-lookup-target='message']").textContent = ""
-    this.element.querySelector("[data-customer-lookup-target='choices']").innerHTML = ""
-    this.actionsTarget.hidden = true
+    const lookupInput = this.element.querySelector("[data-customer-lookup-target='lookupInput']")
+    const customerId = this.element.querySelector("[data-customer-lookup-target='customerId']")
+    const preview = this.element.querySelector("[data-customer-lookup-target='preview']")
+    const message = this.element.querySelector("[data-customer-lookup-target='message']")
+    const choices = this.element.querySelector("[data-customer-lookup-target='choices']")
+
+    if (lookupInput) lookupInput.value = ""
+    if (customerId) customerId.value = ""
+    if (preview) preview.textContent = ""
+    if (message) message.textContent = ""
+    if (choices) choices.innerHTML = ""
+    if (this.hasActionsTarget) this.actionsTarget.hidden = true
   }
 
   closeModal() {

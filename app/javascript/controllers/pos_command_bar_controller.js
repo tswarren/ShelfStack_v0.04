@@ -11,8 +11,10 @@ export default class extends Controller {
   connect() {
     this.focusInput()
     this.syncOpenRingReturnMode()
-    this.applyLegacyModeDrawerFromUrl()
-    this.applyCarryForwardFromUrl()
+    requestAnimationFrame(() => {
+      this.applyLegacyModeDrawerFromUrl()
+      this.applyCarryForwardFromUrl()
+    })
   }
 
   disconnect() {

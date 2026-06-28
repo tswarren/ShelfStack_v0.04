@@ -320,7 +320,7 @@ module Pos
     end
 
     def attach_customer
-      customer = Customer.find(params[:customer_id])
+      customer = Customer.active_records.find(params[:customer_id])
       @transaction.update!(customer: customer)
       respond_to_workspace(notice: "Customer attached to transaction.")
     rescue ActiveRecord::RecordNotFound

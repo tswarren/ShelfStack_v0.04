@@ -438,6 +438,7 @@ Rails.application.routes.draw do
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]
     resource :stored_value_lookup, only: %i[show]
+    resource :customer_lookup, only: %i[show]
     resource :stored_value_balance, only: %i[show], controller: "stored_value_balance"
     resource :pickup_lookup, only: %i[create]
     resources :authorizations, only: %i[create]
