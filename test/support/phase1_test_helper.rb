@@ -18,7 +18,7 @@ module Phase1TestHelper
 
   def create_store!(attrs = {})
     Store.create!({
-      store_number: "001",
+      store_number: unique_store_number,
       name: "Test Store",
       country_code: "US",
       time_zone: "America/New_York",
