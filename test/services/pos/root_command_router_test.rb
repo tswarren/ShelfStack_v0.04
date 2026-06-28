@@ -189,6 +189,78 @@ class Pos::RootCommandRouterTest < ActiveSupport::TestCase
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
   end
+
+  test "/session returns session drawer offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/se"
+    )
+
+    assert_equal :session_drawer_offer, route.action
+  end
+
+  test "/reports redirects to reports hub when no active draft" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/reports"
+    )
+
+    assert_equal :redirect, route.action
+    assert_equal Rails.application.routes.url_helpers.reports_root_path, route.payload[:url]
+  end
+
+  test "/close redirects to close register workflow when no active draft" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/close"
+    )
+
+    assert_equal :redirect, route.action
+    assert_equal "#{Rails.application.routes.url_helpers.pos_register_session_path(@register_session)}#close-register", route.payload[:url]
+  end
+
+  test "/cashin returns cash movement offer with prefilled amount" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/ci 25"
+    )
+
+    assert_equal :cash_movement_offer, route.action
+    assert_equal "paid_in", route.payload[:movement_type]
+    assert_equal 2500, route.payload[:amount_cents]
+  end
+
+  test "/cashout returns cash movement offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/cashout"
+    )
+
+    assert_equal :cash_movement_offer, route.action
+    assert_equal "paid_out", route.payload[:movement_type]
+  end
+
+  test "/drawer returns drawer action offer" do
+    route = Pos::RootCommandRouter.call(
+      store: @store,
+      register_session: @register_session,
+      user: @user,
+      input: "/dr petty cash"
+    )
+
+    assert_equal :drawer_action_offer, route.action
+    assert_equal "petty cash", route.payload[:reason]
+  end
 end
 
 class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
@@ -250,12 +322,50 @@ class Pos::RootCommandHandlerTest < ActiveSupport::TestCase
   test "/cash from idle returns no active transaction message without creating draft" do
     route = Pos::RootCommandRouter.call(
       store: @store,
-      user: @user,
+      user: @cashier,
       register_session: @register_session,
       input: "/cash"
     )
 
     assert_equal :message, route.action
     assert_equal Pos::CommandRegistry::NO_ACTIVE_TRANSACTION_MESSAGE, route.message
+  end
+
+  test "/gc with amount adds gift card line and redirects to transaction edit" do
+    ensure_gift_card_sale_classification!(store: @store)
+    grant_permission!(@cashier, "pos.gift_cards.issue", store: @store)
+
+    result = Pos::RootCommandHandler.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: @register_session,
+      user_session: nil,
+      input: "/gc 50"
+    )
+
+    assert_equal :redirect, result.status
+    transaction = PosTransaction.drafts.order(:id).last
+    line = transaction.pos_transaction_lines.find_by(line_type: "gift_card_sale")
+    assert_equal 5000, line.unit_price_cents
+    assert_includes result.redirect_path, "/pos/transactions/#{transaction.id}/edit"
+    refute_includes result.redirect_path, "carry_forward"
+  end
+
+  test "/gc without amount redirects with carry forward only" do
+    grant_permission!(@cashier, "pos.gift_cards.issue", store: @store)
+
+    result = Pos::RootCommandHandler.call(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @cashier,
+      register_session: @register_session,
+      user_session: nil,
+      input: "/gc"
+    )
+
+    assert_equal :redirect, result.status
+    assert_includes result.redirect_path, "carry_forward=gift_card"
+    refute_includes result.redirect_path, "amount_cents"
   end
 end

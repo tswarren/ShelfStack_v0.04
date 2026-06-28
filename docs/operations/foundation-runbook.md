@@ -164,7 +164,7 @@ UserPasswordReset.call(username: "admin", password: "NewPassword123!", force_pas
 
 ## POS Register Operations (Phase 6.1)
 
-> **Note:** POS landing and command UX evolve in [Phase 10-C](../roadmap/phase-10c-pos-keyboard-workspace.md) (idle workspace, two-lane parser, explicit commands). This section describes **current as-built** behavior until 10-C ships.
+> **Note:** Phase 10-C POS command UX is partially shipped (slices 1–7). See [phase-10c-completion.md](../implementation/phase-10c-completion.md). This section describes legacy dashboard-oriented flows; a full 10-C runbook refresh is deferred to slice 10.
 
 ### Open register
 

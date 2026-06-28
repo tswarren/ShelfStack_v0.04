@@ -291,7 +291,9 @@ module Pos
           aliases: %w[se],
           description: "Register session summary",
           permission_keys: [ "pos.register_sessions.view" ],
-          handler: :session_drawer
+          handler: :session_drawer,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -315,7 +317,9 @@ module Pos
           aliases: %w[ci],
           description: "Miscellaneous cash in",
           permission_keys: [ "pos.cash_movements.create" ],
-          handler: :cash_in
+          handler: :cash_in,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -326,7 +330,9 @@ module Pos
           aliases: %w[co],
           description: "Miscellaneous cash out",
           permission_keys: [ "pos.cash_movements.create" ],
-          handler: :cash_out
+          handler: :cash_out,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -337,7 +343,9 @@ module Pos
           aliases: %w[cl],
           description: "Close register workflow",
           permission_keys: [ "pos.register_sessions.close" ],
-          handler: :close_register
+          handler: :close_register,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -348,7 +356,9 @@ module Pos
           aliases: %w[rp],
           description: "Navigate to reports",
           permission_keys: [ "pos.reports.view" ],
-          handler: :reports
+          handler: :reports,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
 
@@ -359,7 +369,9 @@ module Pos
           aliases: %w[dr],
           description: "Cash drawer action",
           permission_keys: [ "pos.cash_movements.create" ],
-          handler: :drawer_action
+          handler: :drawer_action,
+          root_implemented: true,
+          transaction_implemented: true
         )
       end
     end

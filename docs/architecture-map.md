@@ -4,7 +4,7 @@ Quick reference: domain → tables → services → workspace → documentation.
 
 For layering principles see [architecture.md](architecture.md). For business concepts see [domain-model.md](domain-model.md).
 
-**Service names in the table are implemented unless marked *planned* or *evolving*.** Phase 10-C introduces `Pos::CommandRegistry` and related landing/draft services — *planned*; current POS command routing uses `Pos::CommandBarRouter`.
+**Service names in the table are implemented unless marked *planned* or *evolving*.** Phase 10-C `Pos::CommandRegistry`, `Pos::LandingRouter`, and `Pos::ActiveDraftResolver` are **implemented** (slices 1–7; see [phase-10c-completion.md](implementation/phase-10c-completion.md)).
 
 ---
 
@@ -16,11 +16,11 @@ For layering principles see [architecture.md](architecture.md). For business con
 | External lookup | (uses catalog tables) | ISBNdb local-first lookup, Add Item import | `/items/add` | [phase-6.5-completion.md](implementation/phase-6.5-completion.md) |
 | Inventory | `inventory_postings`, `inventory_ledger_entries`, `inventory_balances`, `inventory_adjustments` | `Inventory::Post`, `Inventory::BalanceUpdater`, `Inventory::TrackingResolver`, `Inventory::Eligibility` | `/inventory` | [phase-4-inventory-foundation-spec.md](specifications/phase-4-inventory-foundation-spec.md) |
 | Purchasing | `purchase_orders`, `purchase_order_lines`, `receipts`, `receipt_lines`, `returns_to_vendor` | `Purchasing::PostReceipt`, `Purchasing::MovingAverageCost`, `Purchasing::OrderEligibilityResolver` | `/orders` | [phase-5-purchasing-and-receiving-spec.md](specifications/phase-5-purchasing-and-receiving-spec.md) |
-| POS | `pos_register_sessions`, `pos_transactions`, `pos_transaction_lines`, `pos_tenders`, `pos_voids` | `Pos::CompleteTransaction`, `Pos::CommandBarRouter` (*evolving* → `Pos::CommandRegistry` 10-C), `Pos::TaxRecalculator`, `Pos::DiscountRecalculator` | `/pos` | [phase-6-pos-foundation-spec.md](specifications/phase-6-pos-foundation-spec.md), [phase-10c-pos-keyboard-workspace-spec.md](specifications/phase-10c-pos-keyboard-workspace-spec.md) |
+| POS | `pos_register_sessions`, `pos_transactions`, `pos_transaction_lines`, `pos_tenders`, `pos_voids` | `Pos::CompleteTransaction`, `Pos::CommandRegistry`, `Pos::CommandBarRouter`, `Pos::LandingRouter`, `Pos::ActiveDraftResolver`, `Pos::TaxRecalculator`, `Pos::DiscountRecalculator` | `/pos` | [phase-6-pos-foundation-spec.md](specifications/phase-6-pos-foundation-spec.md), [phase-10c-pos-keyboard-workspace-spec.md](specifications/phase-10c-pos-keyboard-workspace-spec.md) |
 | Stored value | `stored_value_accounts`, `stored_value_ledger_entries`, `stored_value_identifiers` | `StoredValue::Post`, `StoredValue::Issue`, `StoredValue::RedeemCredit`, `Pos::PostStoredValueLedger` | `/pos`, `/customers` | [phase-7b-pos-settlement-spec.md](specifications/phase-7b-pos-settlement-spec.md) |
 | Customer demand | `customer_requests`, `customer_request_lines`, `special_orders`, `inventory_reservations` | `CustomerRequests::HeaderStatusResolver`, `InventoryReservations::Expire` | `/customers`, `/items` | [phase-7a-customer-demand-spec.md](specifications/phase-7a-customer-demand-spec.md) |
 | Buyback | `buyback_sessions`, `buyback_session_lines`, `buyback_voids` | `Buybacks::CompleteSession`, `Buybacks::VoidSession`, `Buybacks::PriceLine` | `/buybacks` | [phase-7c-used-buyback-spec.md](specifications/phase-7c-used-buyback-spec.md) |
-| Interaction / UX | (no domain tables) | Shared modal/drawer shells; `Pos::CommandRegistry` (*planned* 10-C) | All workspaces | [phase-10a-interaction-infrastructure-spec.md](specifications/phase-10a-interaction-infrastructure-spec.md) |
+| Interaction / UX | (no domain tables) | Shared modal/drawer shells; `Pos::CommandRegistry` (10-C) | All workspaces | [phase-10a-interaction-infrastructure-spec.md](specifications/phase-10a-interaction-infrastructure-spec.md) |
 | Operational reports | (reads operational tables/snapshots) | Report query objects under `Reports::` | `/reports` | [phase-9b-operational-reports-spec.md](specifications/phase-9b-operational-reports-spec.md) |
 | GL / export | (deferred) | Phase 9c financial postings | — | [phase-9c-gl-shaped-financial-layer.md](roadmap/phase-9c-gl-shaped-financial-layer.md) |
 

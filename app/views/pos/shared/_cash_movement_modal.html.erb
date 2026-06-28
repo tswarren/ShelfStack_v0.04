@@ -1,0 +1,46 @@
+<% register_session = local_assigns[:register_session] || @register_session || @transaction&.pos_register_session %>
+
+<div class="ss-pos-modal" data-pos-command-bar-target="cashMovementModal" hidden>
+  <div class="ss-pos-modal__backdrop" data-action="click->pos-command-bar#closeCashMovementModal"></div>
+  <div class="ss-pos-modal__panel" role="dialog" aria-labelledby="pos-cash-movement-title" aria-modal="true">
+    <header class="ss-pos-modal__header">
+      <h2 id="pos-cash-movement-title" class="ss-pos-modal__title" data-pos-command-bar-target="cashMovementTitle">Cash movement</h2>
+      <button type="button"
+              class="ss-btn ss-btn-secondary ss-btn--small"
+              data-action="pos-command-bar#closeCashMovementModal">
+        Cancel
+      </button>
+    </header>
+
+    <% if register_session.blank? %>
+      <p class="ss-hint">Open the register before recording cash movements.</p>
+    <% else %>
+      <%= form_with url: pos_register_session_cash_movements_path(register_session),
+            class: "ss-form ss-pos-cash-movement-form",
+            data: { turbo: false, pos_command_bar_target: "cashMovementForm", action: "submit->pos-command-bar#cashMovementSubmitted" } do %>
+        <%= hidden_field_tag :movement_type, nil, data: { pos_command_bar_target: "cashMovementType" } %>
+        <%= hidden_field_tag :return_path, request.fullpath %>
+
+        <div class="ss-field">
+          <%= label_tag :amount_dollars, "Amount" %>
+          <%= pos_money_field :amount_dollars, nil,
+                min: 0.01,
+                required: true,
+                data: { pos_command_bar_target: "cashMovementAmount" } %>
+        </div>
+
+        <div class="ss-field">
+          <%= label_tag :reason_code, "Reason" %>
+          <%= text_field_tag :reason_code, nil,
+                required: true,
+                placeholder: "Required reason code",
+                data: { pos_command_bar_target: "cashMovementReason" } %>
+        </div>
+
+        <div class="ss-form__actions">
+          <%= submit_tag "Record movement", class: "ss-btn", data: { pos_command_bar_target: "cashMovementSubmit" } %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

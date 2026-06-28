@@ -1,6 +1,6 @@
 # POS Keyboard Workspace
 
-**Status:** Planned (Phase 10-C)
+**Status:** In progress (Phase 10-C) — see [phase-10c-completion.md](../implementation/phase-10c-completion.md)
 
 Detailed POS UX supplement. **Authoritative behavior:** [phase-10c-pos-keyboard-workspace-spec.md](phase-10c-pos-keyboard-workspace-spec.md) and [phase-10c-pos-keyboard-workspace.md](../roadmap/phase-10c-pos-keyboard-workspace.md).
 
@@ -37,7 +37,7 @@ Two-lane parser: slash commands → registry; non-slash → scan/catalog lookup 
 | ---- | -------- |
 | Line discount | `/linediscount`, `/ld`, legacy `/d` |
 | Transaction discount | `/discount`, `/di`, legacy `/dt` |
-| Gift card sale | `/giftcard`, `/gc` — modal-first; amount prefills modal, does not auto-post |
+| Gift card sale | `/giftcard`, `/gc` — with amount adds line; without amount opens amount panel |
 | Gift card redeem | `/giftredeem`, `/gr` |
 | Cash tender vs drawer | `/cash` (tender) vs `/cashin` / `/cashout` (drawer movement) |
 | Cash drop | `/cashdrop` — planned/disabled in 10-C |

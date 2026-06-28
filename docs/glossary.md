@@ -329,7 +329,7 @@ Examples:
 
 ## Gift Card Issue / Reload
 
-POS `gift_card_sale` line (not a tender) that issues stored-value balance at completion via `/giftcard` or `/gc`. Phase 10-C: modal-first; amount prefills modal, does not auto-post line.
+POS `gift_card_sale` line (not a tender) that issues stored-value balance at completion via `/giftcard` or `/gc`. Phase 10-C: `/gc` with amount adds the line immediately; without amount opens the amount panel (focus there; submit adds line and returns to command).
 
 ---
 

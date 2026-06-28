@@ -59,7 +59,7 @@ Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are 
 | --------- | -------- | --- | ---------- | ------ |
 | **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | **Complete** |
 | **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | **Complete** |
-| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **Planned** (current) |
+| **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **In progress** (slices 1–7; [completion](../implementation/phase-10c-completion.md)) |
 | **10-D** | This document (Workstreams 4–6) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | Planned |
 | **10-E** | This document (below) | Consistency sweep, accessibility, report regression | All | Planned |
 
@@ -430,7 +430,7 @@ Phase 10 is complete when all sub-phases meet their criteria.
 * POS landing: **idle workspace** when register open and no active draft (**no silent auto-create**); command field is home base
 * Active draft always wins on `/pos` (including empty); one active draft per register session + workstation + cashier; cross-cashier conflict UI when needed
 * Two-lane parser: slash → command registry; non-slash → scan/catalog lookup only (no implicit open-ring, receipt, or amount guessing)
-* Separate line vs transaction discount commands; `/gc` modal-first; `/cashdrop` planned/disabled; return/pickup drawer workflows
+* Separate line vs transaction discount commands; `/gc` amount adds line / no amount opens panel; `/cashdrop` planned/disabled; return/pickup drawer workflows
 * Command field primary focus (idle and active); **required** keyboard/focus criteria met
 * Expanded-row line edits; settlement on shared modal; readiness blockers actionable near completion
 * `Pos::CommandRegistry` with permissions and state checks; `/reports` confirms before navigate when draft exists

@@ -1,6 +1,6 @@
 # Phase 10-C — POS Keyboard-First Transaction Workspace
 
-**Status:** Planned
+**Status:** In progress — see [phase-10c-completion.md](../implementation/phase-10c-completion.md) (slices 1–7 delivered; 8–10 pending)
 
 **Parent:** [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md)
 
@@ -243,7 +243,7 @@ A draft is created or resumed only when input crosses the **transaction intent b
 | -------------- | ---------------------- | -------- |
 | Scan / lookup → add sellable variant | Yes | Create/resume draft; add line |
 | `/openring`, `/op`, `/open` (+ optional amount) | Yes | Create/resume draft; open-ring workflow with amount prefilled when provided |
-| `/giftcard`, `/gc` (+ optional amount) | Yes | Create/resume draft; open gift card issue/reload **modal** (amount prefilled when provided) |
+| `/giftcard`, `/gc` (+ optional amount) | Yes | Create/resume draft; **with amount** → add gift card sale line; **without amount** → amount panel (focus there) |
 | Explicit **New sale** / **Start sale** control | Yes | Create/resume empty draft explicitly |
 | `/return`, `/rt` (+ optional receipt) | Not immediately | Open return drawer; draft starts when return lines selected |
 | `/pickup`, `/pu` | Not immediately | Open pickup drawer; draft starts when fulfillment adds lines |
@@ -270,7 +270,8 @@ When transaction-starting input originates from idle workspace, carry the origin
 
 ```text
 /op 10        → create/resume draft → open-ring with $10 prefilled
-/gc 50        → create/resume draft → gift card modal with $50 prefilled
+/gc 50        → create/resume draft → add gift card sale line for $50
+/gc           → create/resume draft → gift card amount panel (blank)
 scan barcode  → create/resume draft → resolve and add first line
 ```
 
@@ -421,13 +422,14 @@ Specific tender commands (`/cash`, `/card`, etc.):
 #### Gift card issue/reload
 
 ```text
-/gc       → create/resume draft if needed → open issue/reload modal, amount blank
-/gc 50    → create/resume draft if needed → open issue/reload modal, $50 prefilled
+/gc       → create/resume draft if needed → amount panel, amount blank; focus amount field
+/gc 50    → create/resume draft if needed → add gift card sale line for $50; return focus to command
 ```
 
-* **Do not auto-post** a gift card line when an amount is provided (deliberate safety change from current shortcut behavior).
-* Issue vs reload is determined **after** card/account lookup in the modal/workflow (new card → issue; existing account → reload).
-* Completion requires confirmation; liability posts at transaction completion per Phase 7B.
+* **With amount:** add `gift_card_sale` line immediately (same as explicit amount entry + submit).
+* **Without amount:** open amount panel; Enter/submit adds line and returns focus to command field.
+* Issue vs reload is determined after card/account lookup on the cart activation row (new card → issue; existing account → reload).
+* Completion requires transaction completion; liability posts at completion per Phase 7B.
 
 #### Gift card redemption
 
@@ -625,6 +627,17 @@ Transactionless utilities must not force draft creation. `/reports` confirms bef
 | 9 | Cart expanded-row polish, focus restoration | 10-A |
 | 10 | Session drawer, held-sale access, tests, docs sync | All above |
 
+### Implementation progress
+
+| Slice | Status |
+| ----- | ------ |
+| 1–5 | Merged — shell, parser, registry, transaction commands, return/pickup drawers |
+| 6 | Merged — tender commands → settlement modal |
+| 7 | Merged — utility commands (`/session`, `/reports`, `/close`, cash in/out, `/drawer`) |
+| 8–10 | Pending |
+
+Interim record: [phase-10c-completion.md](../implementation/phase-10c-completion.md)
+
 ---
 
 ## Keyboard/Focus Acceptance Criteria
@@ -701,8 +714,9 @@ See [phase-10c-pos-keyboard-workspace-spec.md](../specifications/phase-10c-pos-k
 * `/pos` with active draft always returns to that draft (including empty)
 * `/balance`, `/session`, `/help`, cash movement commands, etc. do not create drafts and work while a draft is active
 * Scan from idle creates/resumes draft and adds item with carry-forward
-* `/op 10` and `/gc 50` from idle create/resume draft and carry prefilled amounts into workflows
-* `/gc` with amount opens modal; does not auto-post line
+* `/op 10` from idle create/resume draft and carry prefilled amount into open-ring workflow
+* `/gc 50` from idle create/resume draft and add gift card sale line; focus returns to command
+* `/gc` without amount opens amount panel with focus there; submit adds line and returns to command
 * `/tender` and specific tender commands from idle show no-active-transaction message; do not create empty draft
 * `/tender` rejects amount arguments; specific tender commands accept optional amounts when draft active
 * `/linediscount` and `/discount` are separate; legacy `/d` and `/dt` still work
