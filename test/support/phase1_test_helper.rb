@@ -28,7 +28,10 @@ module Phase1TestHelper
   end
 
   def unique_store_number
-    format("%03d", rand(100..999))
+    loop do
+      number = format("%04x", SecureRandom.random_number(65_536))
+      return number unless Store.exists?(store_number: number)
+    end
   end
 
   def create_workstation!(store: nil, attrs: {})
