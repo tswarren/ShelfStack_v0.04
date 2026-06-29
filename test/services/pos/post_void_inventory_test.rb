@@ -30,7 +30,7 @@ class Pos::PostVoidInventoryTest < ActiveSupport::TestCase
     )
     Pos::RecalculateTransaction.call!(transaction, business_date: @register_session.business_date)
     create_pos_tender!(transaction, tender_type: "cash", amount_cents: transaction.total_cents)
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @register_session,

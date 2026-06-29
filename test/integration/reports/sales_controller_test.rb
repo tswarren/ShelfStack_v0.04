@@ -47,7 +47,7 @@ class Reports::SalesControllerTest < ActionDispatch::IntegrationTest
     )
     Pos::RecalculateTransaction.call!(@return_tx, business_date: @register_session.business_date)
     create_pos_tender!(@return_tx, tender_type: "cash", amount_cents: @return_tx.total_cents)
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: @return_tx.reload,
       completed_by_user: @user,
       register_session: @register_session,

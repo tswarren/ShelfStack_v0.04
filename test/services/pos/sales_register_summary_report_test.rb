@@ -73,7 +73,7 @@ class Pos::SalesRegisterSummaryReportTest < ActiveSupport::TestCase
         { tender_type: "check", amount_cents: remainder, check_number: "1001" }
       ]
     )
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: sale.reload,
       completed_by_user: @cashier,
       register_session: @session,

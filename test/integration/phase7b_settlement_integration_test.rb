@@ -36,7 +36,7 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
       actor: @user
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: @transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -71,7 +71,7 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
       actor: @user
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: return_txn.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -132,7 +132,7 @@ class Phase7bSettlementIntegrationTest < ActionDispatch::IntegrationTest
       ],
       actor: @user
     )
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: @transaction.reload,
       completed_by_user: @user,
       register_session: @session,

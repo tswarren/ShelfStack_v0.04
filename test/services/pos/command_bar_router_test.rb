@@ -421,11 +421,10 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
     assert_equal Pos::CommandRegistry::PERMISSION_DENIED_MESSAGE, route.message
   end
 
-  test "register-session-required command without open session returns message" do
+  test "balance command without open session returns balance inquiry offer" do
     route = Pos::CommandBarRouter.call(store: @store, register_session: nil, input: "/balance")
 
-    assert_equal :message, route.action
-    assert_equal Pos::CommandRegistry::NO_REGISTER_SESSION_MESSAGE, route.message
+    assert_equal :balance_inquiry_offer, route.action
   end
 
   test "/help returns help action" do

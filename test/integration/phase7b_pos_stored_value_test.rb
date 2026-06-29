@@ -40,7 +40,7 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
       actor: @user
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -70,7 +70,7 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
     )
     grant_no_receipt_return_authorization!(transaction, requested_by: @user)
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -100,7 +100,7 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
     )
     grant_no_receipt_return_authorization!(transaction, requested_by: @user)
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -194,7 +194,7 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
     tender = transaction.pos_tenders.settlement_rows.find_by!(tender_type: "gift_card")
     assert_equal 2500, tender.amount_cents
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -303,7 +303,7 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
       actor: @user
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -343,7 +343,7 @@ class Phase7bPosStoredValueIntegrationTest < ActionDispatch::IntegrationTest
       actor: @user
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @session,

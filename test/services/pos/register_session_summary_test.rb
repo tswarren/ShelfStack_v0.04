@@ -39,7 +39,7 @@ class Pos::RegisterSessionSummaryTest < ActiveSupport::TestCase
     )
     Pos::RecalculateTransaction.call!(return_txn, business_date: @session.business_date)
     create_pos_tender!(return_txn, tender_type: "cash", amount_cents: return_txn.total_cents)
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: return_txn.reload,
       completed_by_user: @user,
       register_session: @session,

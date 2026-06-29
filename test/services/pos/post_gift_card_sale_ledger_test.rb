@@ -22,7 +22,7 @@ class Pos::PostGiftCardSaleLedgerTest < ActiveSupport::TestCase
   end
 
   test "issues gift card balance for new card sale line" do
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: @transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -50,7 +50,7 @@ class Pos::PostGiftCardSaleLedgerTest < ActiveSupport::TestCase
       generate_identifier: false
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: @transaction.reload,
       completed_by_user: @user,
       register_session: @session,
@@ -70,7 +70,7 @@ class Pos::PostGiftCardSaleLedgerTest < ActiveSupport::TestCase
       lookup_code: card_number
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: @transaction.reload,
       completed_by_user: @user,
       register_session: @session,

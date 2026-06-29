@@ -39,10 +39,17 @@ module Phase2TestHelper
   def create_department!(**attrs)
     suffix = SecureRandom.hex(3)
     Department.create!({
-      department_number: format("%03d", rand(100..999)),
+      department_number: unique_test_department_number,
       name: "Test Department #{suffix}",
       short_name: "TD#{suffix}",
       active: true
     }.merge(attrs))
+  end
+
+  def unique_test_department_number
+    loop do
+      number = format("%03d", SecureRandom.random_number(900) + 100)
+      return number unless Department.exists?(department_number: number)
+    end
   end
 end

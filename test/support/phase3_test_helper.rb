@@ -99,7 +99,6 @@ module Phase3TestHelper
     product ||= create_product!
     unless sub_department
       department = create_department!(
-        department_number: format("%03d", SecureRandom.random_number(900) + 100),
         name: "Test Department #{SecureRandom.hex(2)}",
         short_name: "TD#{SecureRandom.hex(2)}"
       )

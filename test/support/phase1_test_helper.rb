@@ -84,13 +84,15 @@ module Phase1TestHelper
       r.active = true
     end
     role.grant_permission!(permission)
-    UserRoleAssignment.create!(
+
+    assignment = UserRoleAssignment.find_or_initialize_by(
       user: user,
       role: role,
       scope_type: store ? "store" : "global",
-      store: store,
-      active: true
+      store: store
     )
+    assignment.active = true
+    assignment.save!
   end
 
   def assign_workstation!(workstation, cookies)
