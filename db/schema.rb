@@ -951,7 +951,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["tax_category_id"], name: "index_pos_discount_allocations_on_tax_category_id"
     t.check_constraint "allocated_discount_cents >= 0", name: "pos_discount_allocations_allocated_discount_cents_chk"
     t.check_constraint "allocation_base_cents >= 0", name: "pos_discount_allocations_allocation_base_cents_chk"
-    t.check_constraint "scope::text = ANY (ARRAY['line'::character varying, 'transaction'::character varying]::text[])", name: "pos_discount_allocations_scope_chk"
+    t.check_constraint "scope::text = ANY (ARRAY['line'::character varying::text, 'transaction'::character varying::text])", name: "pos_discount_allocations_scope_chk"
   end
 
   create_table "pos_discount_applications", force: :cascade do |t|
@@ -990,10 +990,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.check_constraint "applied_discount_cents >= 0", name: "pos_discount_applications_applied_discount_cents_chk"
     t.check_constraint "base_amount_cents >= 0", name: "pos_discount_applications_base_amount_cents_chk"
     t.check_constraint "calculated_discount_cents >= 0", name: "pos_discount_applications_calculated_discount_cents_chk"
-    t.check_constraint "discount_method::text = ANY (ARRAY['amount'::character varying, 'percent'::character varying, 'price_override'::character varying]::text[])", name: "pos_discount_applications_discount_method_chk"
+    t.check_constraint "discount_method::text = ANY (ARRAY['amount'::character varying::text, 'percent'::character varying::text, 'price_override'::character varying::text])", name: "pos_discount_applications_discount_method_chk"
     t.check_constraint "entered_percent_bps IS NULL OR entered_percent_bps >= 0 AND entered_percent_bps <= 10000", name: "pos_discount_applications_entered_percent_bps_chk"
-    t.check_constraint "scope::text = ANY (ARRAY['line'::character varying, 'transaction'::character varying]::text[])", name: "pos_discount_applications_scope_chk"
-    t.check_constraint "source::text = ANY (ARRAY['manual'::character varying, 'system'::character varying, 'promotion'::character varying, 'legacy'::character varying]::text[])", name: "pos_discount_applications_source_chk"
+    t.check_constraint "scope::text = ANY (ARRAY['line'::character varying::text, 'transaction'::character varying::text])", name: "pos_discount_applications_scope_chk"
+    t.check_constraint "source::text = ANY (ARRAY['manual'::character varying::text, 'system'::character varying::text, 'promotion'::character varying::text, 'legacy'::character varying::text])", name: "pos_discount_applications_source_chk"
   end
 
   create_table "pos_line_tax_overrides", force: :cascade do |t|
@@ -1175,11 +1175,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["stored_value_identifier_id"], name: "index_pos_transaction_lines_on_stored_value_identifier_id"
     t.index ["sub_department_id"], name: "index_pos_transaction_lines_on_sub_department_id"
     t.index ["tax_category_id"], name: "index_pos_transaction_lines_on_tax_category_id"
-    t.check_constraint "applied_tax_source IS NULL OR (applied_tax_source::text = ANY (ARRAY['normal'::character varying, 'non_taxable'::character varying, 'transaction_exemption'::character varying, 'sourced_return'::character varying, 'line_override'::character varying]::text[]))", name: "pos_transaction_lines_applied_tax_source_chk"
-    t.check_constraint "cogs_source IS NULL OR (cogs_source::text = ANY (ARRAY['moving_average'::character varying, 'unit_cost'::character varying, 'receipt_cost'::character varying, 'buyback_offer'::character varying, 'margin_estimate'::character varying, 'return_reversal'::character varying, 'none'::character varying, 'unknown'::character varying]::text[]))", name: "pos_transaction_lines_cogs_source_chk"
-    t.check_constraint "costing_method_snapshot IS NULL OR (costing_method_snapshot::text = ANY (ARRAY['moving_average'::character varying, 'unit_cost'::character varying, 'receipt_cost'::character varying, 'buyback_offer'::character varying, 'margin_estimate'::character varying, 'return_reversal'::character varying, 'none'::character varying, 'unknown'::character varying]::text[]))", name: "pos_transaction_lines_costing_method_snapshot_chk"
-    t.check_constraint "inventory_tracking_snapshot IS NULL OR (inventory_tracking_snapshot::text = ANY (ARRAY['inventory'::character varying, 'non_inventory'::character varying]::text[]))", name: "pos_transaction_lines_inventory_tracking_snapshot_chk"
-    t.check_constraint "revenue_treatment IS NULL OR (revenue_treatment::text = ANY (ARRAY['merchandise'::character varying, 'service'::character varying, 'liability'::character varying, 'passthrough'::character varying, 'none'::character varying]::text[]))", name: "pos_transaction_lines_revenue_treatment_chk"
+    t.check_constraint "applied_tax_source IS NULL OR (applied_tax_source::text = ANY (ARRAY['normal'::character varying::text, 'non_taxable'::character varying::text, 'transaction_exemption'::character varying::text, 'sourced_return'::character varying::text, 'line_override'::character varying::text]))", name: "pos_transaction_lines_applied_tax_source_chk"
+    t.check_constraint "cogs_source IS NULL OR (cogs_source::text = ANY (ARRAY['moving_average'::character varying::text, 'unit_cost'::character varying::text, 'receipt_cost'::character varying::text, 'buyback_offer'::character varying::text, 'margin_estimate'::character varying::text, 'return_reversal'::character varying::text, 'none'::character varying::text, 'unknown'::character varying::text]))", name: "pos_transaction_lines_cogs_source_chk"
+    t.check_constraint "costing_method_snapshot IS NULL OR (costing_method_snapshot::text = ANY (ARRAY['moving_average'::character varying::text, 'unit_cost'::character varying::text, 'receipt_cost'::character varying::text, 'buyback_offer'::character varying::text, 'margin_estimate'::character varying::text, 'return_reversal'::character varying::text, 'none'::character varying::text, 'unknown'::character varying::text]))", name: "pos_transaction_lines_costing_method_snapshot_chk"
+    t.check_constraint "inventory_tracking_snapshot IS NULL OR (inventory_tracking_snapshot::text = ANY (ARRAY['inventory'::character varying::text, 'non_inventory'::character varying::text]))", name: "pos_transaction_lines_inventory_tracking_snapshot_chk"
+    t.check_constraint "revenue_treatment IS NULL OR (revenue_treatment::text = ANY (ARRAY['merchandise'::character varying::text, 'service'::character varying::text, 'liability'::character varying::text, 'passthrough'::character varying::text, 'none'::character varying::text]))", name: "pos_transaction_lines_revenue_treatment_chk"
     t.check_constraint "unit_cogs_cents IS NULL OR unit_cogs_cents >= 0", name: "pos_transaction_lines_unit_cogs_cents_chk"
   end
 
@@ -1328,7 +1328,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_id"], name: "index_product_variants_on_product_id"
     t.index ["sku"], name: "index_product_variants_on_sku", unique: true
     t.index ["sub_department_id"], name: "index_product_variants_on_sub_department_id"
-    t.check_constraint "inventory_tracking_override IS NULL OR (inventory_tracking_override::text = ANY (ARRAY['inventory'::character varying, 'non_inventory'::character varying]::text[]))", name: "product_variants_inventory_tracking_override_chk"
+    t.check_constraint "inventory_tracking_override IS NULL OR (inventory_tracking_override::text = ANY (ARRAY['inventory'::character varying::text, 'non_inventory'::character varying::text]))", name: "product_variants_inventory_tracking_override_chk"
     t.check_constraint "returnability_status::text = ANY (ARRAY['returnable'::character varying::text, 'non_returnable'::character varying::text, 'conditional'::character varying::text, 'unknown'::character varying::text])", name: "chk_product_variants_returnability_status"
     t.check_constraint "selling_price_cents >= 0", name: "chk_product_variants_selling_price_cents"
   end
@@ -1383,7 +1383,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["product_type"], name: "index_products_on_product_type"
     t.index ["sku"], name: "index_products_on_sku", unique: true
     t.index ["variation_type"], name: "index_products_on_variation_type"
-    t.check_constraint "default_inventory_tracking IS NULL OR (default_inventory_tracking::text = ANY (ARRAY['inventory'::character varying, 'non_inventory'::character varying]::text[]))", name: "products_default_inventory_tracking_chk"
+    t.check_constraint "default_inventory_tracking IS NULL OR (default_inventory_tracking::text = ANY (ARRAY['inventory'::character varying::text, 'non_inventory'::character varying::text]))", name: "products_default_inventory_tracking_chk"
     t.check_constraint "list_price_cents >= 0", name: "chk_products_list_price_cents"
   end
 
@@ -1439,8 +1439,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
     t.index ["purchase_request_line_id"], name: "index_purchase_order_lines_on_purchase_request_line_id"
     t.index ["vendor_id"], name: "index_purchase_order_lines_on_vendor_id"
-    t.check_constraint "cost_source::text = ANY (ARRAY['vendor_source'::character varying, 'manual'::character varying, 'import'::character varying, 'default'::character varying, 'unknown'::character varying]::text[])", name: "purchase_order_lines_cost_source_chk"
-    t.check_constraint "price_source::text = ANY (ARRAY['variant'::character varying, 'vendor_source'::character varying, 'manual'::character varying, 'import'::character varying, 'unknown'::character varying]::text[])", name: "purchase_order_lines_price_source_chk"
+    t.check_constraint "cost_source::text = ANY (ARRAY['vendor_source'::character varying::text, 'manual'::character varying::text, 'import'::character varying::text, 'default'::character varying::text, 'unknown'::character varying::text])", name: "purchase_order_lines_cost_source_chk"
+    t.check_constraint "price_source::text = ANY (ARRAY['variant'::character varying::text, 'vendor_source'::character varying::text, 'manual'::character varying::text, 'import'::character varying::text, 'unknown'::character varying::text])", name: "purchase_order_lines_price_source_chk"
     t.check_constraint "quantity_ordered > 0", name: "chk_purchase_order_lines_quantity_ordered"
     t.check_constraint "quantity_received >= 0", name: "chk_purchase_order_lines_quantity_received"
     t.check_constraint "supplier_discount_bps IS NULL OR supplier_discount_bps >= 0 AND supplier_discount_bps <= 10000", name: "chk_purchase_order_lines_supplier_discount_bps"
@@ -1973,7 +1973,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_tax_exception_reasons_on_name", unique: true
     t.index ["reason_key"], name: "index_tax_exception_reasons_on_reason_key", unique: true
-    t.check_constraint "exception_type::text = ANY (ARRAY['exemption'::character varying, 'rate_override'::character varying, 'both'::character varying]::text[])", name: "tax_exception_reasons_exception_type_chk"
+    t.check_constraint "exception_type::text = ANY (ARRAY['exemption'::character varying::text, 'rate_override'::character varying::text, 'both'::character varying::text])", name: "tax_exception_reasons_exception_type_chk"
   end
 
   create_table "user_role_assignments", force: :cascade do |t|
