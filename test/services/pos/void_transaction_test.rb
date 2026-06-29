@@ -41,7 +41,7 @@ class Pos::VoidTransactionTest < ActiveSupport::TestCase
         }
       ]
     )
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: transaction.reload,
       completed_by_user: @user,
       register_session: @register_session,

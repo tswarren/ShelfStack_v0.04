@@ -7,6 +7,32 @@ module Phase6TestHelper
     end
   end
 
+  def grant_phase6_tender_permissions!(user, store: nil)
+    %w[
+      pos.tenders.cash
+      pos.tenders.card
+      pos.tenders.check
+      pos.tenders.store_credit
+      pos.tenders.gift_card
+      pos.tenders.refund
+      pos.refunds.store_credit
+    ].each do |permission_key|
+      grant_permission!(user, permission_key, store: store)
+    end
+  end
+
+  def complete_pos_transaction!(transaction:, completed_by_user:, register_session:, confirmed_inactive: true, pos_authorization_id: nil)
+    grant_phase6_tender_permissions!(completed_by_user, store: transaction.store)
+
+    Pos::CompleteTransaction.call!(
+      transaction: transaction.reload,
+      completed_by_user: completed_by_user,
+      register_session: register_session,
+      confirmed_inactive: confirmed_inactive,
+      pos_authorization_id: pos_authorization_id
+    )
+  end
+
   def open_register_session!(store:, workstation:, user:, business_date: Date.current, opening_cash_cents: 0)
     Pos::RegisterSessionLifecycle.open!(
       store: store,
@@ -49,8 +75,8 @@ module Phase6TestHelper
       )
     end
 
-    Pos::CompleteTransaction.call!(
-      transaction: transaction.reload,
+    complete_pos_transaction!(
+      transaction: transaction,
       completed_by_user: user,
       register_session: register_session,
       confirmed_inactive: true

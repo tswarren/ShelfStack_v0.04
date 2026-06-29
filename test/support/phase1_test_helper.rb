@@ -28,7 +28,10 @@ module Phase1TestHelper
   end
 
   def unique_store_number
-    format("%03d", rand(100..999))
+    loop do
+      number = format("%04x", SecureRandom.random_number(65_536))
+      return number unless Store.exists?(store_number: number)
+    end
   end
 
   def create_workstation!(store: nil, attrs: {})
@@ -84,13 +87,15 @@ module Phase1TestHelper
       r.active = true
     end
     role.grant_permission!(permission)
-    UserRoleAssignment.create!(
+
+    assignment = UserRoleAssignment.find_or_initialize_by(
       user: user,
       role: role,
       scope_type: store ? "store" : "global",
-      store: store,
-      active: true
+      store: store
     )
+    assignment.active = true
+    assignment.save!
   end
 
   def assign_workstation!(workstation, cookies)

@@ -66,7 +66,7 @@ class Pos::CompleteTransactionTest < ActiveSupport::TestCase
       tender_inputs: [ { tender_type: "cash", amount_dollars: "0.00" } ]
     )
 
-    Pos::CompleteTransaction.call!(
+    complete_pos_transaction!(
       transaction: @transaction.reload,
       completed_by_user: @user,
       register_session: @register_session,
