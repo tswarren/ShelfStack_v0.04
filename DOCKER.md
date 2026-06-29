@@ -33,7 +33,7 @@ The app container mounts the project directory at `/app`, so local file edits ar
 
 ```bash
 git clone <repository-url>
-cd ShelfStack_v0.03
+cd ShelfStack_v0.04
 docker compose up --build
 ```
 
@@ -158,6 +158,31 @@ Common database commands:
 ./dev/rails-docker bin/rails db:seed
 ./dev/rails-docker bin/rails db:reset
 ./dev/rails-docker bin/rails db:test:prepare
+```
+
+---
+
+## Migrating from v0.03
+
+If you previously ran Docker from `ShelfStack_v0.03` (or an older directory name), stop the old stack before starting v0.04:
+
+```bash
+docker compose -p shelfstack_v003 down
+```
+
+If you are unsure which project is holding ports, list containers:
+
+```bash
+docker ps -a --filter name=shelfstack
+```
+
+Port `5432` (PostgreSQL) and `3000` (Rails) must be free on the host. If another service still uses `5432`, stop it or change the host mapping in `compose.yml` (for example `"5433:5432"`).
+
+This project uses the Compose project name `shelfstack-v04` (set in `compose.yml`), so containers and volumes are named `shelfstack-v04-*` rather than following the directory name. Optional cleanup of obsolete v0.03 resources:
+
+```bash
+docker compose -p shelfstack_v003 down -v
+docker rmi shelfstack-web:dev 2>/dev/null || true
 ```
 
 ---

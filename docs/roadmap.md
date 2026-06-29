@@ -32,9 +32,23 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **In review** (branch merge pending). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
 | Phase 9 | Reporting and Accounting        | Report UX foundation (9a) and operational reports (9b) **complete**. GL-shaped financial postings and export (9c) **deferred**; see Phase 10. |
-| Phase 10 | Comprehensive UI/UX Expansion  | Interaction infra (10-A ✓), item cockpit (10-B ✓), POS workspace (10-C ✓), workflow polish (10-D **current**), consistency sweep (10-E). |
+| Phase 10 | Comprehensive UI/UX Expansion  | Interaction infra (10-A ✓), item cockpit (10-B ✓), POS workspace (10-C ✓), workflow polish (10-D ✓), consistency sweep (10-E **paused**). |
 
 Later phases may be split or reordered as implementation details become clearer.
+
+---
+
+# ShelfStack v0.04 Core
+
+**v0.04 is the core domain model** — not Phase 11. Phases 1–10 delivered the v0.03 codebase; v0.04 is the canonical architecture for products, identifiers, demand, sourcing, and receiving going forward.
+
+| Document | Purpose |
+| -------- | ------- |
+| [design/VERSION_0.04.md](design/VERSION_0.04.md) | Core domain model |
+| [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) | Implementation milestones |
+| [v0.04/README.md](v0.04/README.md) | Milestone spec index |
+
+**Status:** Active. Current milestone: v0.04-0 baseline.
 
 ---
 
@@ -612,6 +626,8 @@ docs/samples/phase-10-mockups/
 
 ---
 
+---
+
 # Roadmap Principles
 
 ## 1. Build foundations before workflows
@@ -638,16 +654,18 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 # Current Priority
 
-Phases 1–8, 7A, 7B, 7C, Phase 9a, and Phase 9b are complete. See implementation records under `docs/implementation/`.
+Phases 1–10-D are complete. See implementation records under `docs/implementation/`.
 
 ```text
-Phase 9a ✓ → Phase 9b ✓ → Phase 9c deferred → Phase 10-A ✓ → 10-B ✓ → 10-C ✓ → 10-D → 10-E (next)
+v0.04 core (active) → Phase 10-E resumes after v0.04-11
 ```
 
-**Active work:** Phase 10-D — workflow polish across remaining workspaces. Phase 9c GL-shaped financial layer remains documented but deferred.
+**Active work:** [ShelfStack v0.04 core](design/VERSION_0.04.md) — [delivery roadmap](roadmap/v0.04-delivery-roadmap.md). First milestone: v0.04-0 baseline, then v0.04-1 product fusion and v0.04-2 identifiers.
+
+Phase 9c GL-shaped financial layer and Phase 10-E consistency sweep resume after the v0.04 core stabilizes.
 
 Implementation records:
 
-- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through [phase-9b-completion.md](implementation/phase-9b-completion.md)
-- [docs/implementation/phase-10a-completion.md](implementation/phase-10a-completion.md), [phase-10b-completion.md](implementation/phase-10b-completion.md)
+- [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through [phase-10c-completion.md](implementation/phase-10c-completion.md)
+- [docs/implementation/phase-10a-completion.md](implementation/phase-10a-completion.md), [phase-10b-completion.md](implementation/phase-10b-completion.md), [phase-10c-completion.md](implementation/phase-10c-completion.md)
 - Phase 8.5 slice records: `docs/implementation/phase-8.5-*-completion.md`

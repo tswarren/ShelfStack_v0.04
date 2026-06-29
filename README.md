@@ -105,7 +105,7 @@ Quick start:
 
 ```bash
 git clone <repository-url>
-cd ShelfStack_v0.03
+cd ShelfStack_v0.04
 docker compose up --build
 ```
 

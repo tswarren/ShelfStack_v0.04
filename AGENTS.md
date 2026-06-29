@@ -53,6 +53,7 @@ Before implementing or changing major behavior, review the relevant documents.
 ## General Documents
 
 ```text
+docs/README.md
 docs/overview.md
 docs/domain-model.md
 docs/architecture.md
@@ -62,7 +63,19 @@ docs/glossary.md
 docs/schema-reference.md
 docs/specifications/seed-data-spec.md
 docs/implementation/csv-seeds.md
+docs/specifications/cross-cutting/README.md
 ```
+
+## ShelfStack v0.04 core (active)
+
+```text
+docs/design/VERSION_0.04.md
+docs/roadmap/v0.04-delivery-roadmap.md
+docs/v0.04/README.md
+docs/roadmap/README.md
+```
+
+v0.04 is the **core domain model**, not Phase 11. v0.03 specs under `docs/specifications/` are historical reference for code not yet migrated (catalog items, customer requests, TBO).
 
 ## Phase 1 Documents
 
@@ -232,7 +245,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development follows the phase roadmap. **Phase 10-D (workflow polish)** is active after Phase 10-C completion.
+Development priority is **ShelfStack v0.04 core** — the canonical domain model. v0.03 Phases 1–10 are complete. Phase 10-E is paused until v0.04 stabilizes.
 
 ## Phase 1: Foundation — **Complete**
 
@@ -363,11 +376,15 @@ See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-co
 
 See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-gl-shaped-financial-layer.md). Not scheduled for the current roadmap cycle. Operational reports in 9b remain authoritative for store reconciliation until 9c is resumed.
 
-## Phase 10: Comprehensive UI/UX Expansion — **In progress**
+## Phase 10: Comprehensive UI/UX Expansion — **Mostly complete** (10-E paused)
 
-**Current priority:** Phase 10-D (workflow polish across remaining workspaces).
+See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). **10-E (consistency sweep) paused** for ShelfStack v0.04 core.
 
-See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). Delivery order: 10-A → 10-B (items) → 10-C (POS) → 10-D → 10-E. Phase 10 is complete when all sub-phases are done.
+## ShelfStack v0.04 Core — **Active**
+
+**Current priority:** milestone v0.04-0 baseline, then v0.04-1 product model fusion and v0.04-2 product identifiers.
+
+See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 
 ## Phase 10-A: Interaction Infrastructure — **Complete**
 
