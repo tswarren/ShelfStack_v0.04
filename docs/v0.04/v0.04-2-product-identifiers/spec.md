@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned**
+**Complete**
 
 ## Job
 
@@ -25,7 +25,7 @@ v0.04-2:
   catalog_items retained (quarantined legacy metadata shell only)
 ```
 
-**Scope honesty:** v0.04-2 delivers **product metadata identifier ownership + scan resolution complete**. It is **not** “SKU invariant complete” for every downstream report/UI surface — variant SKU suffix derivation policy and full operational wire-through polish continue in v0.04-4 where noted below.
+**Scope honesty:** v0.04-2 delivers **product metadata identifier ownership + scan resolution complete**. It is **not** “SKU invariant complete” for every downstream report/UI surface — vv0.04-2 resolves the generated variant SKU policy for new variants. Full downstream operational wire-through polish continues in v0.04-4.
 
 ---
 
