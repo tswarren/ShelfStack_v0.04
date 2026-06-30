@@ -36,9 +36,18 @@ Examples of simpler/non-catalog items:
 * Gift cards
 * Event tickets
 
-ShelfStack separates descriptive catalog metadata from store-facing products and sellable SKUs.
+ShelfStack v0.04 collapses catalog metadata into products and rebuilds the demand-to-fulfillment pipeline. The **v0.03 codebase** still reflects the older stack until v0.04 milestones migrate it.
 
-Core model:
+**v0.04 target (canonical going forward):**
+
+```text
+Optional product_group
+  → Product (+ product_identifiers)
+    → Product Variant (system-assigned SKU)
+      → Demand → Allocation → Sourcing → PO/Receiving → Inventory::Post → Fulfillment
+```
+
+**v0.03 codebase (current until migrated):**
 
 ```text
 Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
@@ -69,6 +78,7 @@ docs/specifications/cross-cutting/README.md
 ## ShelfStack v0.04 core (active)
 
 ```text
+README.md
 docs/design/VERSION_0.04.md
 docs/roadmap/v0.04-delivery-roadmap.md
 docs/v0.04/README.md
@@ -76,6 +86,10 @@ docs/roadmap/README.md
 ```
 
 v0.04 is the **core domain model**, not Phase 11. v0.03 specs under `docs/specifications/` are historical reference for code not yet migrated (catalog items, customer requests, TBO).
+
+For **invariants**, legacy replacement map, demand taxonomy, and milestone boundaries, see [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md). Because ShelfStack is not yet in production, prefer **destructive schema changes** over long-lived compatibility shims when implementing v0.04 milestones.
+
+Do **not** extend v0.03 `catalog_items`, customer-request, special-order, or TBO patterns for new work.
 
 ## Phase 1 Documents
 
@@ -369,7 +383,7 @@ See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-co
 - Unified `/reports` hub with permission-union navigation
 - 13 operational reports on Phase 9a view contract; legacy URLs redirect (302)
 - Greenfield: tax collected, discount summary, inventory value, purchasing summary, customer request queue
-- **Next:** Phase 10 — comprehensive UI/UX expansion
+- **Next:** ShelfStack v0.04 core (see below)
 - **Deferred:** Phase 9c — GL-shaped financial layer (design reference retained)
 
 ## Phase 9c: GL-Shaped Financial Layer — **Deferred**
@@ -418,6 +432,16 @@ Phase 10-C was completed on 2026-06-26. See [docs/implementation/phase-10c-compl
 - **Slice 9A:** transaction discount modal with preview total
 - **Slice 9B:** keyboard-first tender modal, explicit completion, post-completion workspace
 - **Slice 11:** shared workspace header + Actions menu, unified status panel (customer/discount/tax), readiness blockers only, completed/summary/receipt flow polish, voided summary layout
+
+## Phase 10-D: Workflow Polish — **Complete**
+
+Phase 10-D was completed on 2026-06-26. See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md) (Workstreams 4–6).
+
+- **10-D1:** customer request index + scoped D0 patterns (`ss-filter-chip`, filter bar, empty state)
+- **10-D2:** customer request detail — record summary, danger zone, line action groups
+- **10-D3:** bounded PO/receipt line UX — warnings, demand summary, operational tables
+- **10-D4:** buyback index alignment with D1 header/table patterns
+- No domain rule changes; Phase 10-E and v0.04 core own further normalization
 
 ## Phase 10 Documents
 
@@ -726,11 +750,57 @@ Examples:
 ```text
 users.default_store_id → stores.id
 sub_departments.department_id → departments.id
-catalog_items.format_id → formats.id
-products.catalog_item_id → catalog_items.id
 product_variants.product_id → products.id
 product_variants.sub_department_id → sub_departments.id
 ```
+
+v0.03 only (removed or replaced under v0.04):
+
+```text
+catalog_items.format_id → formats.id
+products.catalog_item_id → catalog_items.id
+```
+
+---
+
+# v0.04 Domain Rules (active for new work)
+
+These rules apply to v0.04 milestones and supersede conflicting v0.03 catalog/ordering/SKU language. Full detail: [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md).
+
+## Identity and items
+
+* A **product** is one specific commercial item (one ISBN/UPC edition, release, or manufactured item) — metadata fused on `products`; `catalog_items` retired in v0.04-1.
+* **Product identifiers** live in `product_identifiers` with validation families: `gtin`, `isbn`, `freeform`, `house`.
+* **House EAN-13** (prefix 200–229) is a **product identifier**, not a variant SKU.
+* Optional **`product_groups`** with `group_type` (`work`, `series_cluster`, `release_family`, `merchandise_family`) — non-operational grouping only.
+* A **product variant** remains the operational grain for POS, inventory, purchasing, receiving, demand, allocations, and buybacks.
+
+## Variant SKUs
+
+* Variant SKUs are **system-assigned at variant creation** — not derived from product identifiers, `products.sku`, or condition/attribute suffixes.
+* Format (sequential internal vs system EAN-13) is an **open decision** resolved in v0.04-2 data model.
+* Until migrated, v0.03 `SkuGenerator` behavior may still exist in code; do not extend identifier-derived SKU patterns for new v0.04 work.
+
+## Demand, allocation, sourcing, receiving
+
+* **Demand** records a need; it does **not** change on-hand inventory.
+* **Allocation** claims supply (on-hand or inbound); it does **not** post inventory.
+* Only **`Inventory::Post`** mutates authoritative on-hand quantity.
+* Only **accepted receipt quantity** posts to inventory.
+* Vendor availability is **not** assumed at order time; confirmed quantity comes from vendor response (v0.04-8+).
+* Vendor cascade to the next source is **buyer-reviewed** in v0.04 baseline (not automatic).
+* Replaces v0.03: `customer_requests`, `special_orders`, `purchase_requests`/TBO, fragmented reservation/PO/receipt allocations → unified `demand_lines`, `demand_allocations`, sourcing.
+
+## Used variants
+
+* Used variants are **customer-reservable**, **not vendor-orderable**; used-wanted demand does not auto-create new-item PO lines.
+
+## Carry forward from v0.03 (do not break)
+
+* `Inventory::Post`, ledger, balances, eligibility gates
+* POS completion, void, tax, discount, tender, stored value
+* Buybacks, classification/tax, foundation auth/sessions/audit
+* Phase 10-A/C interaction infrastructure (modals, drawers, POS keyboard workspace)
 
 ---
 
@@ -763,7 +833,9 @@ product_variants.sub_department_id → sub_departments.id
 * Overlapping active tax mappings for the same store/tax category/date are not allowed.
 * Phase 2 `categories` table was **removed** (2025-06); sellable classification uses `sub_departments` and store category nodes instead.
 
-## Phase 3 Rules
+## Phase 3 Rules (v0.03 implementation — until v0.04 migration)
+
+These rules describe the **current codebase** and Phase 3 specs. For new v0.04 work, [v0.04 Domain Rules](#v0.04-domain-rules-active-for-new-work) and design doc §3 override SKU and catalog-item assumptions below.
 
 * Catalog items are metadata records, not sellable SKUs.
 * Products are store-facing product groupings.
@@ -1096,11 +1168,11 @@ Use dynamic forms where the domain calls for it.
 
 Examples:
 
-* `catalog_item_type` controls catalog metadata fields shown.
+* `catalog_item_type` controls catalog metadata fields shown *(v0.03; becomes product fields in v0.04-1)*.
 * `variation_type` controls variant attribute fields.
 * `inventory_behavior` controls future POS/inventory behavior.
 * Tax mapping screens should preview applicable date ranges.
-* SKU screens should preview generated SKUs.
+* SKU screens should preview generated SKUs *(v0.03 identifier-derived pattern until v0.04-2 UI migrates)*.
 
 ## Real-time previews
 

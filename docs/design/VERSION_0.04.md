@@ -162,8 +162,8 @@ The v0.03 model mixes three different ideas:
 
 ```text
 Commercial identity   → ISBN / UPC / publisher number (today: catalog_item_identifiers)
-Product grouping      → products.sku, often copied from the primary identifier
-Operational sellable  → product_variants.sku, derived from product SKU + condition suffix
+Product grouping      → products.sku, often copied from the primary identifier (display/search only)
+Operational sellable  → product_variants.sku, system-assigned; not derived from product identifiers
 ```
 
 That was tolerable while catalog items and products were separate, but it creates confusion after v0.04 collapses them. An ISBN identifies a **commercial product**, not necessarily the exact **variant** being sold, priced, received, or reserved.
@@ -230,7 +230,7 @@ BIPAD123456     → BIPAD (freeform)
 
 ### Why keep `isbn` separate from `gtin`?
 
-ISBN-10 uses mod-11 check-digit rules, not GTIN rules. It remains common on older stock, vendor files, and copyright pages. v0.04 stores ISBN-10 rows in the `isbn` family so ShelfStack can validate them correctly while still treating ISBN-13/EAN-13 as the canonical barcode form for primary lookup, variant SKU base, and POS scan resolution.
+ISBN-10 uses mod-11 check-digit rules, not GTIN rules. It remains common on older stock, vendor files, and copyright pages. v0.04 stores ISBN-10 rows in the `isbn` family so ShelfStack can validate them correctly while still treating ISBN-13/EAN-13 as the canonical barcode form for **product** lookup and POS scan resolution (see [POS and lookup behavior](#pos-and-lookup-behavior)).
 
 ### Automatic ISBN alternates
 
@@ -357,7 +357,9 @@ External `gtin` identifiers (ISBN-13, EAN-13, UPC normalized to EAN-13) share th
 
 #### House vs freeform
 
-Prefer **`house`** when the item will be scanned at POS or receiving. Use **`freeform`** only for non-scannable references (publisher numbers, BIPAD) that will never be label barcodes.
+Prefer **`house`** when the item will be scanned at POS or receiving **as a product identifier** (ISBN/UPC substitute on the product). Use **`freeform`** only for non-scannable references (publisher numbers, BIPAD) that will never be label barcodes.
+
+House EAN-13 rows are **product identifiers**, not variant SKUs. Variant SKUs are assigned separately (see [Variant SKUs](#variant-skus)).
 
 ### Stored fields
 
@@ -396,7 +398,7 @@ How do we match imports, vendor files, and external catalog lookup?
 
 They do **not** answer which used/new/signed copy is being sold. That remains variant grain.
 
-Optional convenience: `products.sku` may remain as a cached copy of the primary normalized identifier for display, search, and legacy joins. It is not a separate identity concept.
+Optional convenience: `products.sku` may remain as a cached copy of the primary normalized identifier for display, search, and legacy joins. It is not a separate identity concept and is **not** used to generate variant SKUs.
 
 ---
 
@@ -423,29 +425,25 @@ Which exact ShelfStack variant is being sold, reserved, received, or adjusted?
 
 ### Generation rules
 
-v0.04 keeps the proven v0.03 pattern: derive variant SKU from the product’s primary identifier base plus optional variant components.
+**Variant SKUs are system-assigned at variant creation.** They do **not** derive from product identifiers, `products.sku`, condition codes, or attribute suffixes. An ISBN or UPC identifies the **product**; the variant SKU identifies the **exact sellable form** (new, used, signed, etc.) as a distinct operational record.
 
-```text
-Base = product primary identifier, or products.sku for local-only products
+When staff create a variant, `SkuGenerator` (or successor) allocates the next SKU automatically. Baseline v0.04 does not treat the product’s ISBN/UPC as the variant barcode, even for a single new-condition variant.
 
-New condition, no extra components:
-  variant SKU = base
-  Example: 9781643751234
+**Open decision (resolve in v0.04-2 spec):** the allocator will use one of:
 
-Used / signed / damaged / remainder / matrix / variable variants:
-  variant SKU = base + condition/attribute suffix
-  Examples:
-    9781643751234-VG
-    9781643751234-SGN
-    9781643751234-RED-L
-```
+| Option | Description |
+| ------ | ----------- |
+| **Sequential internal codes** | Monotonic numeric or prefixed strings (e.g. `1000001`, `SKU00001234`) |
+| **System-generated EAN-13** | Allocated from a reserved prefix segment in 200–229, **distinct** from product `house` identifier segments if both use EAN form |
+
+Until the milestone spec chooses, documentation and tests should enforce **uniqueness**, **system assignment**, and **no derivation from product identifier values** — not a specific string format.
 
 Rules:
 
-* **New-only products** may use the primary identifier directly as the new variant SKU. Scanning the book’s ISBN at POS should resolve directly when only one active variant exists.
-* **Multi-variant products** must use suffixes so each variant SKU stays unique and scannable.
+* Variant SKUs must be **globally unique** across all variants.
 * Variant SKUs must **not** be reused across variants, even after inactivation, unless an explicit reuse policy is added later.
-* Opaque internal barcodes such as `SSV000001` are **not** part of the v0.04 baseline. They may be considered later for copy-level tracking or custom label programs, but they are not required for the core model.
+* **Product identifier scans at POS** resolve to the product; if multiple active variants exist, staff must disambiguate. Scanning the ISBN on the book does not identify which used/signed copy is being sold unless only one variant matches or staff scan the variant’s own label.
+* Buyback- and intake-created used variants receive a **new system-assigned SKU**, not an ISBN-derived suffix.
 
 Example:
 
@@ -454,13 +452,13 @@ Product:
 - North Woods hardcover
 - Primary identifier: 9781643751234
 
-Variants:
+Variants (SKUs system-assigned; values illustrative until v0.04-2 chooses format):
 - New hardcover
-  SKU: 9781643751234
+  SKU: 1000042
 - Used hardcover
-  SKU: 9781643751234-VG
+  SKU: 1000043
 - Signed hardcover
-  SKU: 9781643751234-SGN
+  SKU: 1000044
 ```
 
 ---
@@ -499,8 +497,8 @@ POS, receiving, inventory adjustment, and item lookup should resolve scans in th
 ### Scan variant SKU or sticker
 
 ```text
-Scan 9781643751234-VG
-→ Used hardcover variant
+Scan 1000043
+→ Used hardcover variant (system-assigned variant SKU on shelf label)
 → add used hardcover to cart
 ```
 
@@ -515,7 +513,7 @@ Scan 9781643751234
 → add new hardcover to cart
 ```
 
-When multiple active variants share the same product identifier, POS must prompt for the correct variant. Scanning the ISBN on a used book does not magically identify the used copy unless staff choose Used or scan the used variant’s SKU/sticker.
+When multiple active variants share the same product, POS must prompt for the correct variant. Scanning the ISBN on a used book does not identify the used copy unless only one variant matches or staff scan the variant’s system-assigned SKU on its label.
 
 ```text
 Scan 9781643751234
@@ -945,8 +943,8 @@ POS should sell at product variant grain.
 A scanned variant SKU identifies the exact variant.
 
 ```text
-Scan 9781643751234-VG
-→ Used hardcover variant
+Scan 1000043
+→ Used hardcover variant (system-assigned SKU)
 → add used hardcover to cart
 ```
 
@@ -1028,7 +1026,7 @@ ShelfStack v0.04 should use this model:
 Product = specific commercial item, edition, release, or manufactured item
 Product Variant = specific store-facing sellable/stockable/orderable/reservable form
 Product Identifier = external or local code that identifies the commercial product
-Variant SKU = unique operational code for the exact sellable form
+Variant SKU = unique system-assigned operational code for the exact sellable form (not derived from product identifiers)
 Demand = the store/customer need
 Allocation = the claim against stock or supply
 Sourcing = the attempt to satisfy unresolved demand
