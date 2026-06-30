@@ -53,7 +53,7 @@ module Items
     end
 
     def primary_identifier
-      product ? LegacyProductIdentifierBridge.primary_identifier(product) : catalog_item&.primary_identifier
+      product ? product.primary_identifier : nil
     end
 
     def primary_identifier_display
@@ -149,7 +149,7 @@ module Items
     def primary_identifier_label
       return "—" unless primary_identifier
 
-      type_label = primary_identifier.identifier_type.tr("_", "-").upcase
+      type_label = primary_identifier.validation_family.upcase
       "#{primary_identifier.normalized_identifier} (#{type_label})"
     end
 

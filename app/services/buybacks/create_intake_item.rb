@@ -46,16 +46,8 @@ module Buybacks
         product = Product.find_by(sku: normalized)
         return product if product.present?
 
-        bridge_product = Items::LegacyProductIdentifierBridge.find_products_by_identifier_query(normalized).order(:id).first
+        bridge_product = Items::ProductIdentifierLookup.find_products_by_query(normalized).order(:id).first
         return bridge_product if bridge_product.present?
-
-        legacy_ident = CatalogItemIdentifier.active_records.find_by(normalized_identifier: normalized)
-        if legacy_ident.present?
-          legacy_product = legacy_ident.catalog_item.products.active_records.order(:id).first
-          return legacy_product if legacy_product.present?
-
-          return create_product_for_legacy_catalog!(legacy_ident.catalog_item)
-        end
       end
 
       resolve = ResolveItem.call(store: session.store, identifier: identifier, title: title)

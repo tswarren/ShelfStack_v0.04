@@ -62,10 +62,10 @@ module Items
     end
 
     def apply_identifier_validation_notice!(record)
-      identifier = if record.is_a?(CatalogItemIdentifier)
-                       record
+      identifier = if record.is_a?(ProductIdentifier)
+                     record
       else
-                       record.reload.primary_identifier
+                     record.reload.primary_identifier
       end
       return if identifier.blank? || identifier.validation_message.blank?
 

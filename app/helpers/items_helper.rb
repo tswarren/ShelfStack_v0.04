@@ -7,7 +7,7 @@ module ItemsHelper
     "catalog_items" => "Item Details",
     "products" => "Selling Setup",
     "product_variants" => "Sellable SKUs",
-    "catalog_item_identifiers" => "Barcodes and Identifiers",
+    "product_identifiers" => "Barcodes and Identifiers",
     "product_conditions" => "Conditions",
     "display_locations" => "Shelf/Display Locations"
   }.freeze
@@ -148,6 +148,29 @@ module ItemsHelper
 
   def identifier_invalid_badge
     tag.span("Invalid identifier", class: "ss-status-badge status-warning")
+  end
+
+  def product_identifier_display_type(identifier)
+    identifier.validation_family
+  end
+
+  def product_identifier_legacy_type(identifier)
+    return "isbn13" if identifier.blank?
+
+    case identifier.validation_family
+    when "isbn" then "isbn10"
+    when "gtin" then "isbn13"
+    when "freeform"
+      identifier.freeform_scope == "publisher_number" ? "publisher_number" : "local"
+    when "house" then "ean"
+    else identifier.validation_family
+    end
+  end
+
+  def product_identifier_barcode_safe?(identifier)
+    return false unless identifier.is_a?(ProductIdentifier)
+
+    identifier.validation_family.in?(%w[gtin house])
   end
 
   def item_location_eyebrow(locations, topic_section: nil)

@@ -38,7 +38,7 @@ class ItemsSetupModalsIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "identifier quick create refreshes catalog section and closes modal" do
-    post items_setup_modals_identifiers_path(catalog_item_id: @catalog_item.id),
+    post items_setup_modals_identifiers_path(product_id: @product.id),
          params: {
            identifier_type: "upc",
            identifier_value: "012345678905",
@@ -51,6 +51,17 @@ class ItemsSetupModalsIntegrationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'target="toast_region"'
     assert_includes response.body, 'target="modal_close_triggers"'
     assert_includes response.body, "012345678905"
+  end
+
+  test "product-first item setup renders identifier modal" do
+    product = create_product!(sku: "PRODFIRST-001", name: "Product First")
+    ProductIdentifierService.sync_from_product_sku!(product: product)
+
+    get items_item_path(product_id: product.id, tab: "item_setup")
+
+    assert_response :success
+    assert_includes response.body, 'id="item-identifier-modal"'
+    assert_includes response.body, "Quick add identifier"
   end
 
   def second_variant
@@ -205,7 +216,7 @@ class ItemsSetupModalsIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "identifier validation error keeps modal body replaceable" do
-    post items_setup_modals_identifiers_path(catalog_item_id: @catalog_item.id),
+    post items_setup_modals_identifiers_path(product_id: @product.id),
          params: { identifier_type: "isbn13", identifier_value: "", primary: "0" },
          as: :turbo_stream
 

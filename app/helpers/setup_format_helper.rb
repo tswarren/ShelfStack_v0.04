@@ -38,7 +38,7 @@ module SetupFormatHelper
   def identifier_normalization_preview(identifier_type, value)
     return "—" if value.blank?
 
-    CatalogIdentifierService.normalize_preview(identifier_type, value)
+      ProductIdentifierService.normalize_preview(identifier_type, value)
   end
 
   def variant_sku_preview(product, condition: nil, attribute1_sku_component: nil, attribute2_sku_component: nil)

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-# Legacy transitional model (Path B). v0.04-1 runtime flows must not create or read
-# metadata from CatalogItem; use Product instead. Physical removal deferred to v0.04-2+.
+# Legacy metadata shell (Path B). Identifiers belong to products via product_identifiers (v0.04-2).
 class CatalogItem < ApplicationRecord
   CATALOG_ITEM_TYPES = ProductMetadata::CATALOG_ITEM_TYPES
   PUBLICATION_STATUSES = ProductMetadata::PUBLICATION_STATUSES
@@ -12,7 +11,6 @@ class CatalogItem < ApplicationRecord
   belongs_to :format
   belongs_to :store_category, class_name: "CategoryNode", optional: true
   belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
-  has_many :catalog_item_identifiers, dependent: :destroy
   has_many :products, dependent: :restrict_with_error
   has_many :external_catalog_imports, dependent: :restrict_with_error
   has_many :categorizations, as: :categorizable, dependent: :destroy
@@ -20,8 +18,6 @@ class CatalogItem < ApplicationRecord
 
   ALLOWED_THUMBNAIL_TYPES = Product::ALLOWED_COVER_IMAGE_TYPES
   MAX_THUMBNAIL_SIZE = Product::MAX_COVER_IMAGE_SIZE
-
-  accepts_nested_attributes_for :catalog_item_identifiers, allow_destroy: true, reject_if: :all_blank
 
   validates :catalog_item_type, presence: true, inclusion: { in: CATALOG_ITEM_TYPES }
   validates :title, presence: true
@@ -33,7 +29,6 @@ class CatalogItem < ApplicationRecord
   validate :format_must_be_active
   validate :store_category_must_be_valid
   validate :store_category_required_for_active_catalog, on: :update
-  validate :must_have_active_primary_identifier, on: :update
   validate :primary_thumbnail_must_be_valid, if: -> { primary_thumbnail.attached? }
 
   scope :active_records, -> { where(active: true) }
@@ -50,11 +45,14 @@ class CatalogItem < ApplicationRecord
   end
 
   def primary_identifier
-    catalog_item_identifiers.active_records.find_by(primary_identifier: true)
+    products.active_records.order(:id).first&.primary_identifier
   end
 
   def active_identifiers
-    catalog_item_identifiers.active_records
+    product = products.active_records.order(:id).first
+    return ProductIdentifier.none if product.blank?
+
+    product.product_identifiers.active_records
   end
 
   def bisac_categorizations
@@ -133,12 +131,6 @@ class CatalogItem < ApplicationRecord
     return unless products.exists?
 
     errors.add(:store_category, "must be selected for active catalog items with products")
-  end
-
-  def must_have_active_primary_identifier
-    return if catalog_item_identifiers.active_records.exists?(primary_identifier: true)
-
-    errors.add(:base, "must have exactly one active primary identifier")
   end
 
   def primary_thumbnail_must_be_valid

@@ -17,7 +17,7 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     post login_path, params: { username: "productadmin", password: "Password123!" }
   end
 
-  test "create catalog linked product defaults sku from primary identifier" do
+  test "create catalog linked product defaults sku and seeds identifier" do
     post items_products_path, params: {
       product: {
         catalog_item_id: @catalog_item.id,
@@ -29,9 +29,11 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     }
 
     product = Product.order(:id).last
-    assert_equal @catalog_item.primary_identifier.normalized_identifier, product.sku
     assert_equal @catalog_item.title, product.name
     assert_equal "standard", product.variation_type
+    assert product.sku.present?
+    assert product.primary_identifier.present?
+    assert_equal product.sku, product.primary_identifier.normalized_identifier
     assert AuditEvent.exists?(event_name: "product.created", auditable: product)
   end
 
@@ -136,5 +138,28 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to items_product_path(product)
     assert_not product.reload.cover_image.attached?
+  end
+
+  test "update product sku creates primary product identifier" do
+    product = create_product!(sku: "OLDSKU-001", skip_product_identifier: true)
+
+    patch items_product_path(product, return_to: "item"), params: {
+      product: {
+        name: product.name,
+        sku: "9780123456789",
+        product_type: product.product_type,
+        variation_type: product.variation_type,
+        list_price_cents: product.list_price_cents,
+        active: true
+      }
+    }
+
+    assert_redirected_to items_item_path(product_id: product.id, tab: "item_setup")
+    product.reload
+    assert_equal "9780123456789", product.sku
+    primary = product.primary_identifier
+    assert primary.present?
+    assert_equal "9780123456789", primary.normalized_identifier
+    assert primary.primary_identifier?
   end
 end

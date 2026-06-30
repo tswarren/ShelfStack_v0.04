@@ -129,18 +129,17 @@ module Purchasing
     end
 
     def find_variants_by_catalog_identifier
-      digits = normalized_digits(query)
-      return [] if digits.blank?
+      normalized = ProductIdentifierService.lookup_digit_prefix(query)
+      return [] if normalized.blank?
 
-      catalog_item_ids = CatalogItemIdentifier.active_records
-        .where(normalized_identifier: digits)
-        .select(:catalog_item_id)
+      products = Items::ProductIdentifierLookup.find_products_by_query(normalized, active_only: true)
+      return [] if products.none?
 
       ProductVariant.active_records
         .includes(:condition, :product)
         .joins(:product)
         .merge(Product.active_records)
-        .where(products: { catalog_item_id: catalog_item_ids })
+        .where(product_id: products.select(:id))
         .distinct
         .to_a
     end
@@ -173,10 +172,7 @@ module Purchasing
     end
 
     def normalized_digits(value)
-      normalized = CatalogIdentifierService.normalize_preview("isbn13", value).to_s
-      return nil if normalized.blank?
-
-      normalized
+      ProductIdentifierService.lookup_digit_prefix(value).presence
     end
   end
 end

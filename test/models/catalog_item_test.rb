@@ -11,11 +11,9 @@ class CatalogItemTest < ActiveSupport::TestCase
     assert_not item.valid?
   end
 
-  test "update requires active primary identifier" do
+  test "update allows catalog metadata changes without product identifiers" do
     item = create_catalog_item!
-    item.catalog_item_identifiers.update_all(primary_identifier: false, active: false)
-    assert_not item.update(title: "Changed Title")
-    assert_includes item.errors[:base], "must have exactly one active primary identifier"
+    assert item.update(title: "Changed Title")
   end
 
   test "parses creators into creator_details" do

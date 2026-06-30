@@ -16,28 +16,17 @@ class ProductTest < ActiveSupport::TestCase
     assert_not duplicate.valid?
   end
 
-  test "catalog linked product defaults sku from primary identifier" do
-    item = CatalogItem.create!(
-      catalog_item_type: "book",
-      title: "SKU Default Test",
-      publication_status: "active",
-      format: create_format!(format_key: "sku_test_#{SecureRandom.hex(2)}"),
-      active: true
-    )
-    CatalogIdentifierService.add_identifier!(
-      catalog_item: item,
-      identifier_type: "isbn10",
+  test "catalog linked product syncs sku from primary product identifier" do
+    item = create_catalog_item!
+    product = create_legacy_catalog_linked_product!(catalog_item: item)
+    ProductIdentifier.where(product_id: product.id).delete_all
+    ProductIdentifierService.add_identifier!(
+      product: product,
+      validation_family: "isbn",
       value: "0123456789",
       primary: true
     )
-    product = Product.create!(
-      catalog_item: item,
-      product_type: "physical",
-      variation_type: "standard",
-      list_price_cents: 1000,
-      active: true
-    )
-    assert_equal "9780123456786", product.sku
+    assert_equal "9780123456786", product.reload.sku
   end
 
   test "product is not sellable without active variant" do

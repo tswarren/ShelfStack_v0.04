@@ -31,39 +31,28 @@ module Pos
     attr_reader :store, :query, :mode
 
     def resolve_exact
-      if barcode_like_query?
-        [ true, false ].each do |active_only|
-          matches = find_by_catalog_identifiers(active_only: active_only)
+      [ true, false ].each do |active_only|
+        [
+          -> { find_by_variant_sku(active_only:) },
+          -> { find_by_lookup_code(active_only:) },
+          -> { find_by_product_identifiers(active_only:) },
+          -> { find_by_legacy_product_sku(active_only:) }
+        ].each do |finder|
+          matches = finder.call
           return build_result(matches) if matches.any?
         end
-      end
-
-      [
-        -> { find_by_variant_sku(active_only: true) },
-        -> { find_by_product_sku(active_only: true) },
-        -> { find_by_catalog_identifiers(active_only: true) },
-        -> { find_by_variant_sku(active_only: false) },
-        -> { find_by_product_sku(active_only: false) },
-        -> { find_by_catalog_identifiers(active_only: false) }
-      ].each do |finder|
-        matches = finder.call
-        return build_result(matches) if matches.any?
       end
 
       Result.new(status: :not_found, variants: [], message: "No matching SKU or barcode found.")
     end
 
-    def barcode_like_query?
-      CatalogIdentifierService.lookup_digit_prefix(query).length >= 10
-    end
-
     def search_results
       pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
       variants = active_scope
-        .where("product_variants.sku ILIKE :q OR products.sku ILIKE :q OR product_variants.name ILIKE :q", q: pattern)
+        .where("product_variants.sku ILIKE :q OR product_variants.name ILIKE :q", q: pattern)
         .to_a
 
-      variants.concat(find_by_catalog_identifiers_for_search(active_only: true))
+      variants.concat(find_by_product_identifiers_for_search(active_only: true))
       variants = dedupe_variants(variants)
 
       if variants.empty?
@@ -77,32 +66,41 @@ module Pos
       lookup_scope(active_only:).where("LOWER(product_variants.sku) = ?", query.downcase).to_a
     end
 
-    def find_by_product_sku(active_only:)
-      lookup_scope(active_only:).where("LOWER(products.sku) = ?", query.downcase).to_a
+    def find_by_lookup_code(active_only:)
+      variant = ProductVariants::LookupCodeService.resolve(query, store: store)
+      return [] if variant.blank?
+
+      lookup_scope(active_only:).where(id: variant.id).to_a
     end
 
-    def find_by_catalog_identifiers(active_only:)
-      candidates = CatalogIdentifierService.lookup_candidates(query)
-      return [] if candidates.empty?
+    def find_by_product_identifiers(active_only:)
+      normalized = ProductIdentifierService.lookup_digit_prefix(query)
+      return [] if normalized.blank?
 
-      identifier_scope = active_only ? CatalogItemIdentifier.active_records : CatalogItemIdentifier.all
-      catalog_item_ids = identifier_scope
-        .where(normalized_identifier: candidates)
-        .select(:catalog_item_id)
+      products = Items::ProductIdentifierLookup.find_products_by_query(normalized, active_only: active_only)
+      return [] if products.none?
 
-      lookup_scope(active_only:).where(products: { catalog_item_id: catalog_item_ids }).distinct.to_a
+      lookup_scope(active_only:).where(product_id: products.select(:id)).distinct.to_a
     end
 
-    def find_by_catalog_identifiers_for_search(active_only:)
-      prefix = CatalogIdentifierService.lookup_digit_prefix(query)
+    def find_by_legacy_product_sku(active_only:)
+      lookup_scope(active_only:)
+        .left_joins(product: :product_identifiers)
+        .where("LOWER(products.sku) = ?", query.downcase)
+        .where(product_identifiers: { id: nil })
+        .to_a
+    end
+
+    def find_by_product_identifiers_for_search(active_only:)
+      prefix = ProductIdentifierService.lookup_digit_prefix(query)
       return [] if prefix.blank? || prefix.length < 2
 
-      identifier_scope = active_only ? CatalogItemIdentifier.active_records : CatalogItemIdentifier.all
-      catalog_item_ids = identifier_scope
+      identifier_scope = active_only ? ProductIdentifier.active_records : ProductIdentifier.all
+      product_ids = identifier_scope
         .where("normalized_identifier LIKE ?", "#{ActiveRecord::Base.sanitize_sql_like(prefix)}%")
-        .select(:catalog_item_id)
+        .select(:product_id)
 
-      lookup_scope(active_only:).where(products: { catalog_item_id: catalog_item_ids }).distinct.to_a
+      lookup_scope(active_only:).where(product_id: product_ids).distinct.to_a
     end
 
     def build_result(variants)

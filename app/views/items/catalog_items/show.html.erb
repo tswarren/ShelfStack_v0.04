@@ -15,33 +15,44 @@
     <%= button_to "Reactivate", reactivate_items_catalog_item_path(@catalog_item), method: :patch, class: "ss-btn" %>
   <% end %>
   <%= button_to "Delete", items_catalog_item_path(@catalog_item), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this catalog item?" } %>
-  <%= button_to "Generate Local ID", generate_local_identifier_items_catalog_item_path(@catalog_item), method: :post, class: "ss-btn ss-btn-secondary" %>
+  <% if @product.present? %>
+    <%= button_to "Generate House EAN", generate_local_identifier_items_catalog_item_path(@catalog_item), method: :post, class: "ss-btn ss-btn-secondary" %>
+  <% end %>
 </div>
 
 <h2>Identifiers</h2>
-<table class="ss-table">
-  <thead><tr><th>Type</th><th>Value</th><th>Normalized</th><th>Primary</th><th>Valid</th><th>Warning</th><th></th></tr></thead>
-  <tbody>
-    <% @identifiers.each do |identifier| %>
-      <tr>
-        <td><%= identifier.identifier_type.upcase %></td>
-        <td><%= identifier.identifier_value %></td>
-        <td><%= identifier.normalized_identifier %></td>
-        <td><%= identifier.primary_identifier? ? "Yes" : "No" %></td>
-        <td><%= identifier.valid_check_digit.nil? ? "—" : (identifier.valid_check_digit? ? "Yes" : "No") %></td>
-        <td><%= identifier.validation_message || "—" %></td>
-        <td>
-          <% unless identifier.primary_identifier? %>
-            <%= button_to "Set Primary", set_primary_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id), method: :patch, class: "ss-btn ss-btn-secondary" %>
-          <% end %>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% if @product.blank? %>
+  <p class="ss-muted">Create a linked product before managing identifiers.</p>
+<% else %>
+  <table class="ss-table">
+    <thead><tr><th>Type</th><th>Value</th><th>Normalized</th><th>Primary</th><th>Valid</th><th>Warning</th><th></th></tr></thead>
+    <tbody>
+      <% @identifiers.each do |identifier| %>
+        <tr>
+          <td><%= product_identifier_display_type(identifier).upcase %></td>
+          <td><%= identifier.identifier_value %></td>
+          <td><%= identifier.normalized_identifier %></td>
+          <td><%= identifier.primary_identifier? ? "Yes" : "No" %></td>
+          <td><%= identifier.valid_check_digit.nil? ? "—" : (identifier.valid_check_digit? ? "Yes" : "No") %></td>
+          <td><%= identifier.validation_message || "—" %></td>
+          <td class="ss-row-actions">
+            <%= link_to "Edit", edit_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id), class: "ss-btn-link" %>
+            <% unless identifier.primary_identifier? %>
+              <%= button_to "Set Primary", set_primary_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id), method: :patch, class: "ss-btn ss-btn-secondary" %>
+            <% end %>
+            <%= button_to "Remove", destroy_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id),
+                  method: :delete,
+                  class: "ss-btn-link",
+                  data: { turbo_confirm: "Remove this identifier?" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 
-<h3>Add Identifier</h3>
-<%= render "add_identifier_form", catalog_item: @catalog_item %>
+  <h3>Add Identifier</h3>
+  <%= render "add_identifier_form", catalog_item: @catalog_item %>
+<% end %>
 
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>

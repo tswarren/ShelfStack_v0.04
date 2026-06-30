@@ -11,24 +11,24 @@ class Pos::LineLookupTest < ActiveSupport::TestCase
 
     seed_phase3_reference_data!
     @catalog_item = create_catalog_item!(title: "Multi Condition Book")
-    CatalogIdentifierService.add_identifier!(
+    @isbn_product = create_product!(catalog_item: @catalog_item, sku: "9780306406157")
+    add_test_product_identifier!(
       catalog_item: @catalog_item,
       identifier_type: "isbn13",
       value: "9780306406157",
       primary: true
     )
-    @isbn_product = create_product!(catalog_item: @catalog_item, sku: "9780306406157")
     @new_variant = create_product_variant!(
       product: @isbn_product,
       sub_department: @variant.sub_department,
-      sku: "9780306406157",
+      sku: "2110000000101",
       selling_price_cents: 1500
     )
     @used_variant = create_product_variant!(
       product: @isbn_product,
       sub_department: @variant.sub_department,
       condition: ProductCondition.find_by!(condition_key: "used_good"),
-      sku: "9780306406157UG",
+      sku: "2110000000102",
       selling_price_cents: 900
     )
   end
@@ -39,7 +39,8 @@ class Pos::LineLookupTest < ActiveSupport::TestCase
     assert_equal @variant.id, result.variants.first.id
   end
 
-  test "product sku ranks before catalog identifier" do
+  test "legacy product sku resolves when product has no identifiers" do
+    ProductIdentifier.where(product_id: @product.id).delete_all
     result = Pos::LineLookup.call(store: @store, query: "POS-PROD-001")
     assert_equal :found, result.status
     assert_equal @variant.id, result.variants.first.id
@@ -63,13 +64,14 @@ class Pos::LineLookupTest < ActiveSupport::TestCase
     assert_equal :not_found, result.status
   end
 
-  test "inactive product sku resolves through inactive fallback" do
+  test "inactive product sku resolves through inactive fallback when no identifiers" do
     variant = create_product_variant!(
       sub_department: @variant.sub_department,
       sku: "INACTIVE-VAR-PROD",
       active: true
     )
     product_sku = variant.product.sku
+    ProductIdentifier.where(product_id: variant.product_id).delete_all
     variant.update!(active: false)
 
     result = Pos::LineLookup.call(store: @store, query: product_sku)

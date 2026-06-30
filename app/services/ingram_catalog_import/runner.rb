@@ -55,7 +55,7 @@ module IngramCatalogImport
       )
     rescue FormatMapper::FormatError,
            ProductTypeMapper::ProductTypeError,
-           CatalogIdentifierService::IdentifierError,
+           ProductIdentifierService::IdentifierError,
            ActiveRecord::RecordInvalid => e
       add_outcome(row, status: :error, message: e.message)
     end
@@ -91,7 +91,6 @@ module IngramCatalogImport
         apply_store_category!(catalog_item)
         changed = catalog_item.changed?
         catalog_item.save!
-        ensure_identifiers!(catalog_item, row)
         sync_catalog_bisac!(catalog_item)
         record_audit!("catalog_item.updated", catalog_item) if changed
         [ catalog_item, :catalog_updated ]
@@ -100,7 +99,6 @@ module IngramCatalogImport
         apply_store_category!(catalog_item)
         CatalogItem.transaction do
           catalog_item.save!
-          create_identifiers!(catalog_item, row)
         end
         sync_catalog_bisac!(catalog_item.reload)
         record_audit!("catalog_item.created", catalog_item)
@@ -122,7 +120,7 @@ module IngramCatalogImport
         product.list_price_cents = row.us_srp_cents
         product.save!
         record_audit!("product.updated", product) if previous_price != row.us_srp_cents
-        finalize_product!(product)
+        finalize_product!(product, row)
         [ product, :product_updated, nil ]
       else
         product_attrs = {
@@ -130,7 +128,8 @@ module IngramCatalogImport
           active: true,
           product_type: "physical",
           variation_type: "conditional",
-          list_price_cents: row.us_srp_cents
+          list_price_cents: row.us_srp_cents,
+          sku: row.ean.presence || row.product_code.presence
         }
         defaults = StoreCategoryDefaults.for(store_category_node: catalog_item.store_category)
         product_attrs[:default_sub_department] = defaults.default_sub_department if defaults.default_sub_department.present?
@@ -139,7 +138,7 @@ module IngramCatalogImport
         Products::CopyCatalogMetadata.to_product(product, catalog_item)
         product.save!
         record_audit!("product.created", product)
-        finalize_product!(product)
+        finalize_product!(product, row)
         [ product, :product_created, nil ]
       end
     end
@@ -170,7 +169,8 @@ module IngramCatalogImport
       { status: :variant_created, variant: variant }
     end
 
-    def finalize_product!(product)
+    def finalize_product!(product, row = nil)
+      ensure_product_identifiers!(product, row) if row.present?
       apply_product_preferred_vendor_if_requested!(product)
       create_or_update_ingram_vendor_sources_if_requested!(product: product, variant: nil)
     end
@@ -227,56 +227,46 @@ module IngramCatalogImport
       @ingram_vendor ||= Vendor.find_by(name: "Ingram")
     end
 
-    def create_identifiers!(catalog_item, row)
+    def ensure_product_identifiers!(product, row)
       if row.product_code.present?
-        CatalogIdentifierService.add_identifier!(
-          catalog_item: catalog_item,
-          identifier_type: "isbn10",
-          value: row.product_code,
-          primary: true,
-          actor: @actor,
-          source: "ingram_import"
-        )
-      elsif row.ean.present?
-        CatalogIdentifierService.add_identifier!(
-          catalog_item: catalog_item,
-          identifier_type: "isbn13",
+        normalized = ProductIdentifierService.validation_preview(validation_family: "isbn", value: row.product_code)[:normalized]
+        unless product.product_identifiers.active_records.exists?(validation_family: "isbn", normalized_identifier: normalized)
+          ProductIdentifierService.add_identifier!(
+            product: product,
+            validation_family: "isbn",
+            value: row.product_code,
+            primary: product.primary_identifier.blank?,
+            actor: @actor,
+            source: "ingram_import"
+          )
+        end
+      end
+
+      return if row.ean.blank?
+
+      normalized = ProductIdentifierService.validation_preview(validation_family: "gtin", value: row.ean)[:normalized]
+      return if normalized.blank? || normalized == "—"
+
+      unless product.product_identifiers.active_records.exists?(validation_family: "gtin", normalized_identifier: normalized)
+        ProductIdentifierService.add_identifier!(
+          product: product,
+          validation_family: "gtin",
           value: row.ean,
-          primary: true,
+          primary: product.primary_identifier.blank?,
           actor: @actor,
           source: "ingram_import"
         )
       end
+    rescue ProductIdentifierService::IdentifierError
+      nil
     end
 
-    def ensure_identifiers!(catalog_item, row)
-      if row.product_code.present?
-        normalized = CatalogIdentifierService.normalize_preview("isbn10", row.product_code)
-        unless catalog_item.catalog_item_identifiers.active_records.exists?(identifier_type: "isbn10", normalized_identifier: normalized)
-          CatalogIdentifierService.add_identifier!(
-            catalog_item: catalog_item,
-            identifier_type: "isbn10",
-            value: row.product_code,
-            primary: false,
-            actor: @actor,
-            source: "ingram_import"
-          )
-        end
-      end
+    def create_identifiers!(_catalog_item, _row)
+      # v0.04-2: identifiers belong to products via ensure_product_identifiers!
+    end
 
-      if row.ean.present?
-        normalized = CatalogIdentifierService.normalize_preview("isbn13", row.ean)
-        unless catalog_item.catalog_item_identifiers.active_records.exists?(normalized_identifier: normalized)
-          CatalogIdentifierService.add_identifier!(
-            catalog_item: catalog_item,
-            identifier_type: "isbn13",
-            value: row.ean,
-            primary: catalog_item.primary_identifier.blank?,
-            actor: @actor,
-            source: "ingram_import"
-          )
-        end
-      end
+    def ensure_identifiers!(_catalog_item, _row)
+      # v0.04-2: identifiers belong to products via ensure_product_identifiers!
     end
 
     def add_outcome(row, status:, message: nil, catalog_item_id: nil, product_id: nil, product_variant_id: nil)

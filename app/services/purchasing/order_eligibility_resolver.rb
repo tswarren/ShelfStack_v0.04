@@ -193,10 +193,10 @@ module Purchasing
     end
 
     def missing_identifier?
-      catalog_item = product_variant.product&.catalog_item
-      return false if catalog_item.blank?
+      product = product_variant.product
+      return false if product.blank?
 
-      !catalog_item.catalog_item_identifiers.active_records.exists?
+      !product.product_identifiers.active_records.exists?
     end
 
     def reason(code, severity)

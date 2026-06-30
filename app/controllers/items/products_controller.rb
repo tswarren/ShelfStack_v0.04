@@ -41,6 +41,7 @@ module Items
       @product = Product.new(product_params)
       load_form_collections
       if @product.save
+        sync_identifiers_from_product_sku!
         record_audit!("product.created", @product)
         redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product created."
       else
@@ -55,7 +56,9 @@ module Items
     def update
       load_form_collections
       purge_cover_image_if_requested
+      previous_sku = @product.sku
       if @product.update(product_params)
+        sync_identifiers_from_product_sku! if @product.sku.present? && (@product.sku != previous_sku || @product.product_identifiers.active_records.none?)
         regenerate_catalog_linked_name!
         record_audit!("product.updated", @product)
         redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product updated."
@@ -124,6 +127,12 @@ module Items
       return if @product.catalog_item.blank?
 
       @product.update!(name: ProductNameRenderer.product_name(@product))
+    end
+
+    def sync_identifiers_from_product_sku!
+      ProductIdentifierService.sync_from_product_sku!(product: @product.reload, actor: current_user)
+    rescue ProductIdentifierService::IdentifierError => e
+      Rails.logger.warn("product sku identifier sync skipped: #{e.message}")
     end
 
     def product_params

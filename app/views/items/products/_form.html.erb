@@ -31,8 +31,11 @@
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU (leave blank for catalog default)" } do %>
       <%= f.text_field :sku, maxlength: 50 %>
-      <% if product.catalog_item&.primary_identifier %>
-        <p class="ss-hint">Source: catalog primary identifier (<%= product.catalog_item.primary_identifier.normalized_identifier %>)</p>
+      <% primary = product.primary_identifier %>
+      <% if primary.present? %>
+        <p class="ss-hint">Primary identifier: <%= primary.normalized_identifier %>. Editing SKU updates the primary product identifier when possible.</p>
+      <% else %>
+        <p class="ss-hint">Editing SKU creates or updates the primary product identifier for lookup and POS scan.</p>
       <% end %>
     <% end %>
   </div>

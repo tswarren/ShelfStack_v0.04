@@ -21,14 +21,14 @@ class ExternalCatalogLookupByIsbnTest < ActiveSupport::TestCase
   test "local match short-circuits without external call" do
     format = Format.find_by!(format_key: "trade_paperback")
     item = create_catalog_item!(format: format, title: "Local Book")
-    CatalogIdentifierService.add_identifier!(
+    product = create_product!(catalog_item: item)
+    add_test_product_identifier!(
       catalog_item: item,
       identifier_type: "isbn13",
       value: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
       primary: true,
       actor: @user
     )
-    product = create_product!(catalog_item: item)
 
     client = stub_isbndb_client(isbndb_response(status_code: 500, body: "{}"))
     outcome = ExternalCatalog::LookupByIsbn.call(

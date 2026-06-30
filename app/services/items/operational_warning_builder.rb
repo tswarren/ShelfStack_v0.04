@@ -354,20 +354,20 @@ module Items
     end
 
     def missing_identifier_warnings
-      catalog_item = item.product&.catalog_item || item.catalog_item
-      return [] if catalog_item.blank?
-      return [] if catalog_item.catalog_item_identifiers.active_records.exists?
+      product = item.product
+      return [] if product.blank?
+      return [] if product.product_identifiers.active_records.exists?
 
       [
         build_warning(
           severity: :info,
           category: :data_quality,
           code: :missing_identifier,
-          message: "No active catalog identifier on file.",
+          message: "No active product identifier on file.",
           variant_id: nil,
           corrective_path: item.tab_path("item_setup"),
           corrective_label: "Review identifiers",
-          source: :catalog
+          source: :product
         )
       ]
     end

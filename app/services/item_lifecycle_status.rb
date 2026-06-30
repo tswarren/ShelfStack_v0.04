@@ -61,9 +61,10 @@ class ItemLifecycleStatus
   end
 
   def invalid_identifier?
-    return false if @presenter.catalog_item.blank?
+    product = @presenter.product
+    return false if product.blank?
 
-    @presenter.catalog_item.catalog_item_identifiers.active_records.any? do |identifier|
+    product.product_identifiers.active_records.any? do |identifier|
       identifier.valid_check_digit == false
     end
   end

@@ -406,9 +406,9 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-1 (product fusion):** **Complete** — [v0.04-1-completion.md](docs/implementation/v0.04-1-completion.md).
 
-**v0.04-2 (product identifiers):** **Planned** — [spec bundle](docs/v0.04/v0.04-2-product-identifiers/spec.md).
+**v0.04-2 (product identifiers):** **Complete** — [spec bundle](docs/v0.04/v0.04-2-product-identifiers/spec.md) · [completion](docs/implementation/v0.04-2-completion.md).
 
-**Current priority:** milestone v0.04-2 product identifiers.
+**Current priority:** milestone v0.04-3 product groups next.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 

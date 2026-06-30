@@ -50,7 +50,7 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
 
   test "missing identifier appears once under data quality on item pages" do
     catalog_item = create_catalog_item!
-    catalog_item.catalog_item_identifiers.destroy_all
+    @product.product_identifiers.destroy_all
     @product.update!(catalog_item: catalog_item)
 
     warnings = Items::OperationalWarningBuilder.for_item(item: @item, store: @store, user: @user).fetch(@item, [])
@@ -63,7 +63,7 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
 
   test "missing identifier appears once for multi variant items" do
     catalog_item = create_catalog_item!
-    catalog_item.catalog_item_identifiers.destroy_all
+    @product.product_identifiers.destroy_all
     @product.update!(catalog_item: catalog_item)
 
     2.times do |index|

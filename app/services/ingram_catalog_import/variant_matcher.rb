@@ -12,12 +12,9 @@ module IngramCatalogImport
 
     def find_new_variant
       condition = ProductCondition.active_records.find_by!(condition_key: "new")
-      candidates = @product.product_variants.active_records
+      @product.product_variants.active_records
         .where(condition: condition)
-        .select { |variant| variant.attribute1_value.blank? && variant.attribute2_value.blank? }
-
-      expected_sku = SkuGenerator.preview_variant_sku(product: @product, condition: condition)
-      candidates.find { |variant| variant.sku == expected_sku } || candidates.first
+        .find { |variant| variant.attribute1_value.blank? && variant.attribute2_value.blank? }
     end
   end
 end

@@ -24,7 +24,8 @@ module Items
 
     def show
       @audit_events = AuditEvent.for_auditable(@catalog_item).limit(50)
-      @identifiers = @catalog_item.catalog_item_identifiers.order(:identifier_type, :normalized_identifier)
+      @product = @catalog_item.products.active_records.order(:id).first
+      @identifiers = @product&.product_identifiers&.order(primary_identifier: :desc, validation_family: :asc, normalized_identifier: :asc) || []
     end
 
     def new
@@ -38,48 +39,18 @@ module Items
       @catalog_item = CatalogItem.new(catalog_item_params)
       @formats = Format.active_records.order(:name)
 
-      saved = false
-      CatalogItem.transaction do
-        unless @catalog_item.save
-          raise ActiveRecord::Rollback
-        end
-
-        if identifier_value_param.present?
-          CatalogIdentifierService.add_identifier!(
-            catalog_item: @catalog_item,
-            identifier_type: identifier_type_param,
-            value: identifier_value_param,
-            primary: true,
-            actor: current_user
-          )
-        end
-
-        unless @catalog_item.reload.primary_identifier
-          @catalog_item.errors.add(:base, "must have at least one active identifier")
-          raise ActiveRecord::Rollback
-        end
-
-        saved = true
-      end
-
-      if saved
+      if @catalog_item.save
         bisac_result = sync_catalog_item_bisac!(@catalog_item)
         store_category_result = sync_catalog_store_category!(@catalog_item)
         record_audit!("catalog_item.created", @catalog_item)
         apply_bisac_sync_notice!(bisac_result)
         apply_store_category_sync_notice!(store_category_result)
-        apply_identifier_validation_notice!(@catalog_item)
         redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item created."
       else
         load_bisac_form_state(@catalog_item)
         load_store_category_collections
         render :new, status: :unprocessable_entity
       end
-    rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
-      @catalog_item.errors.add(:base, identifier_error_message(e))
-      load_bisac_form_state(@catalog_item)
-      load_store_category_collections
-      render :new, status: :unprocessable_entity
     end
 
     def edit
@@ -129,17 +100,18 @@ module Items
     end
 
     def add_identifier
-      identifier = CatalogIdentifierService.add_identifier!(
-        catalog_item: @catalog_item,
+      product = product_for_identifiers!
+      identifier = ProductIdentifierService.add_identifier_for_legacy_type!(
+        product: product,
         identifier_type: params.require(:identifier_type),
         value: params.require(:identifier_value),
         primary: params[:primary] == "1",
         actor: current_user
       )
-      record_audit!("catalog_item_identifier.created", identifier)
+      record_audit!("product_identifier.created", identifier)
       apply_identifier_validation_notice!(identifier)
       redirect_to identifier_return_path, notice: "Identifier added."
-    rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
+    rescue ProductIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
       redirect_to identifier_return_path, alert: e.message
     end
 
@@ -147,39 +119,44 @@ module Items
     end
 
     def generate_local_identifier
-      identifier = CatalogIdentifierService.generate_local!(catalog_item: @catalog_item, actor: current_user)
-      record_audit!("catalog_item_identifier.created", identifier)
-      redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "Local identifier generated."
+      product = product_for_identifiers!
+      identifier = ProductIdentifierService.generate_house!(product: product, actor: current_user)
+      record_audit!("product_identifier.house_generated", identifier)
+      redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "House identifier generated."
     end
 
     def set_primary_identifier
-      identifier = @catalog_item.catalog_item_identifiers.find(params[:identifier_id])
-      CatalogIdentifierService.set_primary!(identifier: identifier, actor: current_user)
+      product = product_for_identifiers!
+      identifier = product.product_identifiers.find(params[:identifier_id])
+      ProductIdentifierService.set_primary!(identifier: identifier, actor: current_user)
       redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "Primary identifier updated."
     end
 
     def edit_identifier
-      @identifier = @catalog_item.catalog_item_identifiers.find(params[:identifier_id])
+      product = product_for_identifiers!
+      @identifier = product.product_identifiers.find(params[:identifier_id])
     end
 
     def update_identifier
-      @identifier = @catalog_item.catalog_item_identifiers.find(params[:identifier_id])
-      CatalogIdentifierService.update_identifier!(
+      product = product_for_identifiers!
+      @identifier = product.product_identifiers.find(params[:identifier_id])
+      ProductIdentifierService.update_identifier!(
         identifier: @identifier,
         value: params.require(:identifier_value),
         actor: current_user
       )
       apply_identifier_validation_notice!(@identifier.reload)
       redirect_to identifier_return_path, notice: "Identifier updated."
-    rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
+    rescue ProductIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
       redirect_to identifier_return_path, alert: e.message
     end
 
     def destroy_identifier
-      @identifier = @catalog_item.catalog_item_identifiers.find(params[:identifier_id])
-      CatalogIdentifierService.remove_identifier!(identifier: @identifier, actor: current_user)
+      product = product_for_identifiers!
+      @identifier = product.product_identifiers.find(params[:identifier_id])
+      ProductIdentifierService.inactivate_identifier!(identifier: @identifier, actor: current_user)
       redirect_to identifier_return_path, notice: "Identifier removed."
-    rescue CatalogIdentifierService::IdentifierError => e
+    rescue ProductIdentifierService::IdentifierError => e
       redirect_to identifier_return_path, alert: e.message
     end
 
@@ -225,6 +202,13 @@ module Items
       flash.now[:alert] = [ flash.now[:alert], result.warnings.join(" ") ].compact.join(" ")
     end
 
+    def product_for_identifiers!
+      product = @catalog_item.products.active_records.order(:id).first
+      return product if product.present?
+
+      raise ActiveRecord::RecordNotFound, "Create a product before managing identifiers."
+    end
+
     def identifier_type_param
       params.dig(:catalog_item, :initial_identifier_type).presence || "isbn13"
     end
@@ -235,11 +219,11 @@ module Items
 
     def identifier_error_message(error)
       case error
-      when CatalogIdentifierService::IdentifierError
+      when ProductIdentifierService::IdentifierError
         error.message
       when ActiveRecord::RecordInvalid
         record = error.record
-        if record.is_a?(CatalogItemIdentifier)
+        if record.is_a?(ProductIdentifier)
           normalized = record.normalized_identifier
           normalized.present? ? "Identifier #{normalized} is already in use." : "Identifier is already in use."
         else

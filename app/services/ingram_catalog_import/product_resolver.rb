@@ -28,8 +28,10 @@ module IngramCatalogImport
       products = Product.active_records.where(catalog_item: @catalog_item).to_a
       return Result.new(status: :missing) if products.empty?
 
-      primary_sku = @catalog_item.primary_identifier&.normalized_identifier
-      sku_matches = products.select { |product| product.sku == primary_sku }
+      primary_sku = products.filter_map { |product| product.primary_identifier&.normalized_identifier }.first
+      primary_sku ||= @catalog_item.primary_identifier&.normalized_identifier
+      primary_sku ||= products.first&.sku
+      sku_matches = primary_sku.present? ? products.select { |product| product.sku == primary_sku } : []
       candidates = sku_matches.presence || products
       conditional_matches = candidates.select { |product| product.variation_type == "conditional" }
 

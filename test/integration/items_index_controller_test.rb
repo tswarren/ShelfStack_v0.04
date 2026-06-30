@@ -35,7 +35,7 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "search omits invalid identifier warning badge" do
-    CatalogIdentifierService.add_identifier!(
+    add_test_product_identifier!(
       catalog_item: @item,
       identifier_type: "isbn13",
       value: "9780123456780",

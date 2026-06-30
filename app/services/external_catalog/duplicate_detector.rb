@@ -39,22 +39,10 @@ module ExternalCatalog
     private
 
     def find_product(normalized, _types)
-      product = Product.find_by(sku: normalized)
+      product = Items::ProductIdentifierLookup.find_products_by_query(normalized).order(:id).first
       return product if product.present?
 
-      legacy_product = Items::LegacyProductIdentifierBridge
-        .find_products_by_identifier_query(normalized)
-        .order(:id)
-        .first
-      return legacy_product if legacy_product.present?
-
-      legacy_item = CatalogItemIdentifier.active_records
-        .where(identifier_type: _types, normalized_identifier: normalized)
-        .includes(:catalog_item)
-        .first&.catalog_item
-      return nil if legacy_item.blank?
-
-      legacy_item.products.active_records.order(:id).first
+      Product.find_by(sku: normalized)
     end
 
     def build_result(product, matched_isbn, matched_type)

@@ -160,11 +160,11 @@ module Items
     end
 
     def legacy_identifiers_for_setup
-      catalog_item = @item.product&.catalog_item || @item.catalog_item
-      return [] if catalog_item.blank?
+      product = @item.product
+      return [] if product.blank?
 
-      catalog_item.catalog_item_identifiers.active_records
-        .order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc)
+      product.product_identifiers.active_records
+        .order(primary_identifier: :desc, validation_family: :asc, normalized_identifier: :asc)
     end
 
     def load_display_vendor_data

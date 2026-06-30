@@ -5,7 +5,7 @@ module Items
     include Interaction::ModalStreamable
     include Items::SetupModalLocals
 
-    before_action -> { authorize!("items.catalog_items.update") }, only: %i[create_identifier update_identifier]
+    before_action -> { authorize!("items.catalog_items.update") }, only: %i[create_identifier update_identifier destroy_identifier generate_house_identifier]
     before_action -> { authorize!("items.product_variants.update") }, only: %i[edit_price update_price edit_classification update_classification classification_tax_preview]
     before_action -> { authorize!("setup.product_vendors.create") }, only: %i[new_product_vendor create_product_vendor]
     before_action -> { authorize!("setup.product_vendors.update") }, only: %i[edit_product_vendor update_product_vendor]
@@ -13,16 +13,16 @@ module Items
     before_action -> { authorize!("setup.product_variant_vendors.update") }, only: %i[edit_variant_vendor update_variant_vendor]
 
     def create_identifier
-      catalog_item = CatalogItem.find(params.require(:catalog_item_id))
-      identifier = CatalogIdentifierService.add_identifier!(
-        catalog_item: catalog_item,
+      product = resolve_product_for_identifier!
+      identifier = ProductIdentifierService.add_identifier_for_legacy_type!(
+        product: product,
         identifier_type: params.require(:identifier_type),
         value: params.require(:identifier_value),
         primary: ActiveModel::Type::Boolean.new.cast(params[:primary]),
         actor: current_user
       )
-      record_audit!("catalog_item_identifier.created", identifier)
-      item = ItemPresenter.from_catalog_item(catalog_item)
+      record_audit!("product_identifier.created", identifier)
+      item = item_from_product(product)
       render_modal_success(
         section_target: "catalog-setup-section",
         section_partial: "items/items/catalog",
@@ -30,22 +30,22 @@ module Items
         message: "Identifier added.",
         modal_id: "item-identifier-modal"
       )
-    rescue ActionController::ParameterMissing, CatalogIdentifierService::IdentifierError => e
-      render_identifier_error(catalog_item: catalog_item, message: e.message)
+    rescue ActionController::ParameterMissing, ProductIdentifierService::IdentifierError => e
+      render_identifier_error(product: product, message: e.message)
     end
 
     def update_identifier
-      catalog_item = CatalogItem.find(params.require(:catalog_item_id))
-      identifier = catalog_item.catalog_item_identifiers.find(params.require(:id))
-      CatalogIdentifierService.update_identifier!(
+      product = resolve_product_for_identifier!
+      identifier = product.product_identifiers.find(params.require(:id))
+      ProductIdentifierService.update_identifier!(
         identifier: identifier,
         value: params.require(:identifier_value),
         actor: current_user
       )
       if ActiveModel::Type::Boolean.new.cast(params[:primary])
-        CatalogIdentifierService.set_primary!(identifier: identifier.reload, actor: current_user)
+        ProductIdentifierService.set_primary!(identifier: identifier.reload, actor: current_user)
       end
-      item = ItemPresenter.from_catalog_item(catalog_item)
+      item = item_from_product(product)
       render_modal_success(
         section_target: "catalog-setup-section",
         section_partial: "items/items/catalog",
@@ -53,8 +53,38 @@ module Items
         message: "Identifier updated.",
         modal_id: "item-identifier-modal"
       )
-    rescue CatalogIdentifierService::IdentifierError => e
-      render_identifier_error(catalog_item: catalog_item, identifier: identifier, message: e.message)
+    rescue ProductIdentifierService::IdentifierError => e
+      render_identifier_error(product: product, identifier: identifier, message: e.message)
+    end
+
+    def destroy_identifier
+      product = resolve_product_for_identifier!
+      identifier = product.product_identifiers.find(params.require(:id))
+      ProductIdentifierService.inactivate_identifier!(identifier: identifier, actor: current_user)
+      item = item_from_product(product)
+      render turbo_stream: modal_success_streams(
+        section_target: "catalog-setup-section",
+        section_partial: "items/items/catalog",
+        section_locals: catalog_setup_locals(item),
+        message: "Identifier removed.",
+        modal_id: "item-identifier-modal"
+      )
+    rescue ProductIdentifierService::IdentifierError => e
+      redirect_to items_item_path(product_id: product.id, tab: "item_setup"), alert: e.message
+    end
+
+    def generate_house_identifier
+      product = resolve_product_for_identifier!
+      identifier = ProductIdentifierService.generate_house!(product: product, actor: current_user)
+      record_audit!("product_identifier.house_generated", identifier)
+      item = item_from_product(product)
+      render_modal_success(
+        section_target: "catalog-setup-section",
+        section_partial: "items/items/catalog",
+        section_locals: catalog_setup_locals(item),
+        message: "House identifier generated.",
+        modal_id: "item-identifier-modal"
+      )
     end
 
     def edit_price
@@ -293,17 +323,35 @@ module Items
       )
     end
 
-    def render_identifier_error(catalog_item:, message:, identifier: nil)
-      catalog_item ||= CatalogItem.find_by(id: params[:catalog_item_id])
+    def render_identifier_error(product: nil, catalog_item: nil, message:, identifier: nil)
+      product ||= resolve_product_for_identifier!
+      catalog_item ||= product.catalog_item
       modal_error_streams(
         body_target: "item-identifier-modal-body",
         body_partial: "items/setup_modals/identifier_quick_form",
         body_locals: {
+          product: product,
           catalog_item: catalog_item,
           identifier: identifier,
           error_message: message
         }
       )
+    rescue StandardError
+      redirect_to items_path, alert: message
+    end
+
+    def resolve_product_for_identifier!
+      if params[:product_id].present?
+        Product.find(params.require(:product_id))
+      else
+        catalog_item = CatalogItem.find(params.require(:catalog_item_id))
+        catalog_item.products.active_records.order(:id).first ||
+          raise(ProductIdentifierService::IdentifierError, "No product linked to catalog item.")
+      end
+    end
+
+    def item_from_product(product)
+      ItemPresenter.from_product(product)
     end
 
     def render_price_error(variant:)
