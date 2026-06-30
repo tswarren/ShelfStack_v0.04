@@ -48,26 +48,73 @@ module V0042
       return unless connection.table_exists?(:catalog_item_identifiers)
 
       connection.select_all("SELECT * FROM catalog_item_identifiers ORDER BY id").each do |legacy|
-        product = Product.find_by(catalog_item_id: legacy["catalog_item_id"])
-        next if product.blank?
+        Product.where(catalog_item_id: legacy["catalog_item_id"]).find_each do |product|
+          copy_legacy_row_to_product!(product, legacy)
+        end
+      end
+    end
 
-        family = LEGACY_TYPE_TO_FAMILY[legacy["identifier_type"]]
-        next if family.blank?
+    def copy_legacy_row_to_product!(product, legacy)
+      identifier_type = legacy["identifier_type"].to_s
+      family = LEGACY_TYPE_TO_FAMILY[identifier_type]
+      return if family.blank?
 
-        freeform_scope = freeform_scope_for(legacy["identifier_type"], legacy["normalized_identifier"])
-        next if insert_identifier!(
-          product: product,
-          validation_family: family,
-          identifier_value: legacy["identifier_value"],
-          normalized_identifier: legacy["normalized_identifier"],
-          freeform_scope: freeform_scope,
-          primary_identifier: legacy["primary_identifier"],
-          valid_check_digit: legacy["valid_check_digit"],
-          validation_message: legacy["validation_message"],
-          source: legacy["source"].presence || "catalog_backfill",
-          active: legacy["active"],
-          metadata: { "legacy_catalog_item_identifier_id" => legacy["id"] }
+      normalized = legacy["normalized_identifier"].to_s
+      return if normalized.blank?
+      return if legacy_row_present?(product, legacy)
+
+      primary = legacy["primary_identifier"] && legacy["active"]
+
+      identifier = ProductIdentifierService.add_identifier_for_legacy_type!(
+        product: product,
+        identifier_type: identifier_type,
+        value: legacy["identifier_value"],
+        primary: primary,
+        source: legacy["source"].presence || "catalog_backfill"
+      )
+
+      apply_legacy_row_state!(legacy, identifier)
+      @copied += 1
+    rescue ProductIdentifierService::IdentifierError
+      record_conflict!(
+        product: product,
+        validation_family: LEGACY_TYPE_TO_FAMILY[legacy["identifier_type"].to_s],
+        normalized_identifier: legacy["normalized_identifier"],
+        freeform_scope: freeform_scope_for(legacy["identifier_type"], legacy["normalized_identifier"])
+      )
+    end
+
+    def apply_legacy_row_state!(legacy, created_identifier)
+      target = created_identifier.reload
+
+      target.update!(
+        valid_check_digit: legacy["valid_check_digit"],
+        validation_message: legacy["validation_message"],
+        active: legacy["active"],
+        metadata: (target.metadata || {}).merge("legacy_catalog_item_identifier_id" => legacy["id"])
+      )
+
+      target.update!(primary_identifier: false, active: false) unless legacy["active"]
+    end
+
+    def legacy_row_present?(product, legacy)
+      family = LEGACY_TYPE_TO_FAMILY[legacy["identifier_type"].to_s]
+      normalized = legacy["normalized_identifier"].to_s
+      scope = freeform_scope_for(legacy["identifier_type"], normalized)
+
+      case family
+      when "gtin", "house"
+        product.product_identifiers.exists?(validation_family: %w[gtin house], normalized_identifier: normalized)
+      when "isbn"
+        product.product_identifiers.exists?(validation_family: "isbn", normalized_identifier: normalized)
+      when "freeform"
+        product.product_identifiers.exists?(
+          validation_family: "freeform",
+          freeform_scope: scope,
+          normalized_identifier: normalized
         )
+      else
+        false
       end
     end
 
@@ -75,27 +122,15 @@ module V0042
       Product.find_each do |product|
         next if product.product_identifiers.active_records.exists?
 
-        sku = product.sku.to_s.strip.upcase
+        sku = product.sku.to_s.strip
         next if sku.blank?
 
-        family, scope = classify_product_sku(sku)
-        next if family.blank?
-
-        if insert_identifier!(
-          product: product,
-          validation_family: family,
-          identifier_value: sku,
-          normalized_identifier: normalize_for_family(sku, family, scope),
-          freeform_scope: scope,
-          primary_identifier: true,
-          valid_check_digit: nil,
-          validation_message: nil,
-          source: "product_sku_backfill",
-          active: true,
-          metadata: {}
-        )
-          @backfilled_from_sku += 1
-        end
+        ProductIdentifierService.sync_from_product_sku!(product: product, source: "product_sku_backfill")
+        @backfilled_from_sku += 1
+      rescue ProductIdentifierService::IdentifierError
+        family, scope = ProductIdentifierService.send(:classify_product_sku, sku)
+        normalized = ProductIdentifierService.send(:normalize_sku_for_family, sku, family, scope)
+        record_conflict!(product:, validation_family: family, normalized_identifier: normalized, freeform_scope: scope)
       end
     end
 
@@ -105,58 +140,7 @@ module V0042
       end
     end
 
-    def insert_identifier!(product:, validation_family:, identifier_value:, normalized_identifier:,
-                           freeform_scope:, primary_identifier:, valid_check_digit:, validation_message:,
-                           source:, active:, metadata:)
-      if conflict?(product:, validation_family:, normalized_identifier:, freeform_scope:)
-        record_conflict!(product:, validation_family:, normalized_identifier:, freeform_scope:)
-        return false
-      end
-
-      ProductIdentifier.create!(
-        product: product,
-        validation_family: validation_family,
-        identifier_value: identifier_value,
-        normalized_identifier: normalized_identifier,
-        freeform_scope: freeform_scope,
-        primary_identifier: primary_identifier && active,
-        valid_check_digit: valid_check_digit,
-        validation_message: validation_message,
-        source: source,
-        active: active,
-        metadata: metadata
-      )
-      @copied += 1
-      true
-    end
-
-    def conflict?(product:, validation_family:, normalized_identifier:, freeform_scope:)
-      case validation_family
-      when "gtin", "house"
-        ProductIdentifier.active_records
-          .where(validation_family: %w[gtin house], normalized_identifier: normalized_identifier)
-          .where.not(product_id: product.id)
-          .exists?
-      when "isbn"
-        ProductIdentifier.active_records
-          .where(validation_family: "isbn", normalized_identifier: normalized_identifier)
-          .where.not(product_id: product.id)
-          .exists?
-      when "freeform"
-        ProductIdentifier.active_records
-          .where(
-            product_id: product.id,
-            validation_family: "freeform",
-            freeform_scope: freeform_scope,
-            normalized_identifier: normalized_identifier
-          )
-          .exists?
-      else
-        false
-      end
-    end
-
-    def record_conflict!(product:, validation_family:, normalized_identifier:, freeform_scope:)
+    def record_conflict!(product:, validation_family:, normalized_identifier:, freeform_scope: nil)
       @skipped_conflicts << {
         product_id: product.id,
         validation_family: validation_family,
@@ -174,32 +158,6 @@ module V0042
       return "publisher_number" if identifier_type == "publisher_number"
 
       "import_reference"
-    end
-
-    def classify_product_sku(sku)
-      digits = sku.gsub(/[^0-9X]/, "")
-      if sku.start_with?(ProductIdentifierService::LEGACY_LOCAL_PREFIX)
-        [ "freeform", "legacy_local" ]
-      elsif sku.start_with?(ProductIdentifierService::LEGACY_PRODUCT_SKU_PREFIX)
-        [ "freeform", "legacy_product_sku" ]
-      elsif [ 8, 12, 13, 14 ].include?(digits.length) && digits.match?(/\A[0-9]+\z/)
-        [ "gtin", nil ]
-      elsif digits.length == 10 && digits.match?(/\A[0-9]{9}[0-9X]\z/)
-        [ "isbn", nil ]
-      else
-        [ "freeform", "import_reference" ]
-      end
-    end
-
-    def normalize_for_family(value, family, scope)
-      case family
-      when "gtin" then value.gsub(/[^0-9]/, "")
-      when "isbn" then value.gsub(/[^0-9X]/, "").upcase
-      when "freeform"
-        scope == "publisher_number" ? value.gsub(/[^A-Za-z0-9]/, "").upcase : value.upcase
-      else
-        value
-      end
     end
   end
 end
