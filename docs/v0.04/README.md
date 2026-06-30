@@ -23,9 +23,9 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | Milestone | Status | Spec bundle |
 | --------- | ------ | ------------- |
 | v0.04-0 Baseline | **Complete** | [v0.04-0 completion](../implementation/v0.04-0-completion.md) |
-| v0.04-1 Product fusion | **In review** | [spec](v0.04-1-product-fusion/spec.md) · [data model](v0.04-1-product-fusion/data-model.md) · [test plan](v0.04-1-product-fusion/test-plan.md) · [completion](../implementation/v0.04-1-completion.md) |
-| v0.04-2 Product identifiers | **Next** | *(spec bundle TBD or in progress)* |
-| v0.04-3 Product groups | Planned | *(not yet created)* |
+| v0.04-1 Product fusion | **Complete** | [spec](v0.04-1-product-fusion/spec.md) · [data model](v0.04-1-product-fusion/data-model.md) · [test plan](v0.04-1-product-fusion/test-plan.md) · [completion](../implementation/v0.04-1-completion.md) |
+| v0.04-2 Product identifiers | **Current Priority** | *(spec bundle TBD or in progress)* |
+| v0.04-3 Product groups | **Next** | *(not yet created)* |
 | v0.04-4 Wire-through | Planned | *(not yet created)* |
 | v0.04-5 Used variant rules | Planned | *(not yet created)* |
 | v0.04-6 Demand foundation | Planned | *(not yet created)* |
