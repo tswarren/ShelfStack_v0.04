@@ -328,4 +328,4 @@ Flip status to **Complete** only after CI green on the merge commit.
 
 ## Next milestone
 
-**v0.04-4 — Variant-grain wire-through** (operational polish, reports, remaining transitional joins) and/or **v0.04-3 — Product groups**. v0.04-3 must not reopen identifier ownership, segment policy, or variant SKU policy.
+**v0.04-4 — Variant-grain wire-through** (operational polish, reports, remaining transitional joins). **v0.04-3 — Product groups** is deferred until after v0.04-4. Neither milestone may reopen identifier ownership, segment policy, or variant SKU policy established in v0.04-2.
