@@ -61,7 +61,7 @@ class ProductIdentifierService
 
   def self.add_house_from_value!(product:, value:, primary:, actor:, source:)
     normalized = normalize_standard_digits(value)
-    validate_house_segment!(normalized)
+    validation = validate_house_value!(normalized)
     ensure_unique_gtin!(product:, normalized:)
 
     identifier = product.product_identifiers.create!(
@@ -69,8 +69,8 @@ class ProductIdentifierService
       identifier_value: normalized,
       normalized_identifier: normalized,
       primary_identifier: false,
-      valid_check_digit: true,
-      validation_message: nil,
+      valid_check_digit: validation[:valid_check_digit],
+      validation_message: validation[:validation_message],
       source: source,
       active: true
     )
@@ -505,9 +505,8 @@ class ProductIdentifierService
 
   def self.update_house!(identifier:, value:, actor:, source:)
     normalized = normalize_standard_digits(value)
-    validate_house_segment!(normalized)
+    validation = validate_house_value!(normalized)
     ensure_unique_gtin!(product: identifier.product, normalized:, excluding_identifier_id: identifier.id)
-    validation = validate_gtin_family(normalized)
 
     identifier.update!(
       identifier_value: normalized,
@@ -687,6 +686,17 @@ class ProductIdentifierService
     raise IdentifierError, "House identifiers must use segment 201" unless normalized.match?(/\A201[0-9]{10}\z/)
   end
   private_class_method :validate_house_segment!
+
+  def self.validate_house_value!(normalized)
+    validate_house_segment!(normalized)
+    validation = validate_gtin_family(normalized)
+    unless validation[:valid_check_digit]
+      raise IdentifierError, validation[:validation_message].presence || "House identifier check digit is invalid"
+    end
+
+    validation
+  end
+  private_class_method :validate_house_value!
 
   def self.validate_gtin_family(normalized)
     return invalid_result("Identifier must contain digits only") unless normalized.match?(/\A[0-9]+\z/)

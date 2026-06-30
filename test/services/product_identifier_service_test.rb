@@ -248,6 +248,31 @@ class ProductIdentifierServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "house update rejects invalid 201 check digit" do
+    house = ProductIdentifierService.generate_house!(product: @product, actor: @actor)
+
+    assert_raises(ProductIdentifierService::IdentifierError) do
+      ProductIdentifierService.update_identifier!(
+        identifier: house,
+        value: "2010000000010",
+        actor: @actor
+      )
+    end
+  end
+
+  test "add_house_from_value rejects invalid 201 check digit" do
+    assert_raises(ProductIdentifierService::IdentifierError) do
+      ProductIdentifierService.send(
+        :add_house_from_value!,
+        product: @product,
+        value: "2010000000010",
+        primary: true,
+        actor: @actor,
+        source: "test"
+      )
+    end
+  end
+
   test "invalid isbn10 does not create gtin alternate" do
     ProductIdentifierService.add_identifier!(
       product: @product,
