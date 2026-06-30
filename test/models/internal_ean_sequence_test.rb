@@ -11,7 +11,8 @@ class InternalEanSequenceTest < ActiveSupport::TestCase
   end
 
   test "accepts product_house segment 201" do
-    sequence = InternalEanSequence.new(segment: "201", purpose: "product_house", last_sequence: 0)
+    sequence = InternalEanSequence.find_or_initialize_by(segment: "201")
+    sequence.assign_attributes(purpose: "product_house", last_sequence: 0, active: true)
 
     assert sequence.valid?
   end

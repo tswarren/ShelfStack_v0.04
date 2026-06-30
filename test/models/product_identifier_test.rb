@@ -4,7 +4,7 @@ require "test_helper"
 
 class ProductIdentifierTest < ActiveSupport::TestCase
   test "only one active primary identifier per product" do
-    product = create_product!
+    product = create_product!(skip_product_identifier: true)
     primary = ProductIdentifier.create!(
       product: product,
       validation_family: "gtin",

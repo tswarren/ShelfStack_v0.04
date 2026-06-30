@@ -93,8 +93,9 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     assert_equal catalog_only.id, result.catalog_item.id
     assert_equal inactive_product.id, result.product.id
     assert_not result.product.active?
-    assert_equal "buyback_intake", result.product.source
+    assert_equal "manual", result.product.source
+    assert_not result.created_new_catalog
     assert_nil result.product_variant
-    assert_equal "resolved", line.reload.status
+    assert_equal "priced", line.reload.status
   end
 end

@@ -52,13 +52,18 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
       value: "9780143127741",
       primary: true
     )
-    variant = create_product_variant!(product: product, sub_department: @variant.sub_department, sku: "9780143127741", selling_price_cents: 1200)
+    variant = create_product_variant!(
+      product: product,
+      sub_department: @variant.sub_department,
+      selling_price_cents: 1200,
+      sku: nil
+    )
     create_product_variant!(
       product: product,
       sub_department: @variant.sub_department,
       condition: ProductCondition.find_by!(condition_key: "used_good"),
-      sku: "9780143127741UG",
-      selling_price_cents: 800
+      selling_price_cents: 800,
+      sku: nil
     )
 
     route = Pos::CommandBarRouter.call(store: @store, input: "9780143127741")
