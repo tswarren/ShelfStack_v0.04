@@ -10,7 +10,7 @@ It is designed for independent bookstores and similar retailers that sell a mix 
 
 **ShelfStack v0.04 is the active core domain model for the application going forward.**
 
-The v0.03 implementation (Phases 1–10) delivered a working Rails codebase: foundation, inventory, POS, purchasing, buybacks, stored value, operational reports, and Phase 10-A/C/D interaction infrastructure. That code remains the implementation base, but it uses older vocabulary around `catalog_items`, customer requests, special orders, purchase requests, and TBO lines.
+The v0.03 implementation (Phases 1–10) delivered a working Rails codebase: foundation, inventory, POS, purchasing, buybacks, stored value, operational reports, and Phase 10-A/B/C/D interaction infrastructure (item cockpit, modals, drawers, POS workspace, workflow polish). That code remains the implementation base, but it uses older vocabulary around `catalog_items`, customer requests, special orders, purchase requests, and TBO lines.
 
 v0.04 is not “Phase 11.” It is the new canonical architecture for:
 
@@ -48,7 +48,7 @@ Because ShelfStack is not yet in production, v0.04 may use destructive schema ch
 | `Inventory::Post`, ledger, balances | `customer_requests`, `special_orders`, `purchase_requests` / TBO |
 | POS, voids, tax/discount/tender, stored value | Fragmented reservation + PO/receipt allocation model |
 | Buybacks, classification/tax, foundation auth | `catalog_item_identifiers` → `product_identifiers` |
-| Phase 10-A/C interaction infrastructure (modals, drawers, POS workspace) | Supplier availability assumed at order time |
+| Phase 10-A/B/C/D interaction infrastructure, item cockpit, modals, drawers, POS workspace, and workflow polish patterns | Supplier availability assumed at order time |
 | Phase 6.5 external catalog lookup (ISBNdb) for Add Item | — |
 
 Identity migration in brief:
@@ -176,7 +176,7 @@ Key rules:
 
 Variant SKUs belong to product variants and identify the exact sellable form. They are **system-assigned at variant creation** and do **not** derive from product identifiers, `products.sku`, or condition/attribute suffixes.
 
-**Open decision (v0.04-2):** sequential internal codes (e.g. `1000042`) or system-generated EAN-13 from a dedicated prefix segment — see [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md) §3.
+**Open decision (v0.04-2):** sequential internal codes (e.g. `1000042`) or system-generated EAN-13 from a dedicated prefix segment — see [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md) §3. If v0.04-2 chooses system-generated EAN-13 variant SKUs, they must use a prefix segment **reserved for variant SKUs** and **distinct from product `house` identifier segments** (prefix 200–229).
 
 Examples (illustrative until v0.04-2 chooses format):
 

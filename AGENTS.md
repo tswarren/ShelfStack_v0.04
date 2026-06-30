@@ -59,21 +59,7 @@ Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
 
 Before implementing or changing major behavior, review the relevant documents.
 
-## General Documents
-
-```text
-docs/README.md
-docs/overview.md
-docs/domain-model.md
-docs/architecture.md
-docs/roadmap.md
-docs/implementation-guide.md
-docs/glossary.md
-docs/schema-reference.md
-docs/specifications/seed-data-spec.md
-docs/implementation/csv-seeds.md
-docs/specifications/cross-cutting/README.md
-```
+**Start with the v0.04 core docs first.** General docs below still describe parts of the **v0.03 implementation** and should be treated as implementation reference until v0.04-11 updates them.
 
 ## ShelfStack v0.04 core (active)
 
@@ -90,6 +76,24 @@ v0.04 is the **core domain model**, not Phase 11. v0.03 specs under `docs/specif
 For **invariants**, legacy replacement map, demand taxonomy, and milestone boundaries, see [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md). Because ShelfStack is not yet in production, prefer **destructive schema changes** over long-lived compatibility shims when implementing v0.04 milestones.
 
 Do **not** extend v0.03 `catalog_items`, customer-request, special-order, or TBO patterns for new work.
+
+## General Documents (v0.03 implementation reference)
+
+```text
+docs/README.md
+docs/overview.md
+docs/domain-model.md
+docs/architecture.md
+docs/roadmap.md
+docs/implementation-guide.md
+docs/glossary.md
+docs/schema-reference.md
+docs/specifications/seed-data-spec.md
+docs/implementation/csv-seeds.md
+docs/specifications/cross-cutting/README.md
+```
+
+Several general docs (`overview.md`, `domain-model.md`, parts of `schema-reference.md`) still use v0.03 vocabulary until v0.04-11.
 
 ## Phase 1 Documents
 
@@ -259,7 +263,9 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development priority is **ShelfStack v0.04 core** — the canonical domain model. v0.03 Phases 1–10 are complete. Phase 10-E is paused until v0.04 stabilizes.
+Development priority is **ShelfStack v0.04 core** — the canonical domain model. The v0.03 phase work forms the **current implementation base**. Phase 10-E is paused until v0.04 stabilizes.
+
+Historical phase sections below are reference material for code not yet migrated. If their status labels (e.g. **In review** on some 8.5 branches) conflict with v0.04 priorities, follow the [v0.04 delivery roadmap](docs/roadmap/v0.04-delivery-roadmap.md) and [v0.04 domain rules](#v0.04-domain-rules-active-for-new-work).
 
 ## Phase 1: Foundation — **Complete**
 

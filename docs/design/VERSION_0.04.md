@@ -184,7 +184,7 @@ Those variants differ in price, cost, inventory behavior, orderability, returnab
 
 ## Design principle
 
-v0.04 uses two layers, not a universal identifier table:
+v0.04 keeps **three identifier concepts** separate, rather than introducing a universal identifier table:
 
 ```text
 Product identifier  → what commercial item is this?
