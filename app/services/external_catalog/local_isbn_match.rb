@@ -21,12 +21,10 @@ module ExternalCatalog
       return Result.new(product: nil, normalized_isbn: normalized) if normalized.blank?
 
       product = Product.find_by(sku: normalized)
-      product ||= Items::LegacyProductIdentifierBridge.find_products_by_identifier_query(normalized).order(:id).first
+      product ||= Items::ProductIdentifierLookup.find_products_by_identifier_query(normalized).order(:id).first
       unless product
         resolution = IngramCatalogImport::IdentifierResolver.resolve(product_code: @isbn, ean: @isbn)
-        unless resolution.conflict?
-          product = resolution.catalog_item&.products&.active_records&.order(:id)&.first
-        end
+        product = resolution.product unless resolution.conflict?
       end
 
       Result.new(product: product, normalized_isbn: normalized)
@@ -35,8 +33,8 @@ module ExternalCatalog
     private
 
     def normalize(value)
-      CatalogIdentifierService.normalize_preview("isbn13", value)
-    rescue CatalogIdentifierService::IdentifierError
+      ProductIdentifierService.normalize_preview("isbn13", value)
+    rescue ProductIdentifierService::IdentifierError
       nil
     end
   end

@@ -7,10 +7,16 @@ module Items
     private
 
     def catalog_setup_locals(item)
+      product = item.product || item.catalog_item&.products&.active_records&.order(:id)&.first
+      identifiers = if product.present?
+        product.product_identifiers.active_records
+          .order(primary_identifier: :desc, validation_family: :asc, normalized_identifier: :asc)
+      else
+        []
+      end
       {
         item: item,
-        identifiers: item.catalog_item&.catalog_item_identifiers&.active_records
-          &.order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc) || [],
+        identifiers: identifiers,
         external_catalog_import: item.catalog_item&.latest_external_catalog_import
       }
     end

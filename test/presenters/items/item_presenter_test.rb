@@ -120,17 +120,17 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
 
   test "search statuses omit invalid identifier warning" do
     item = create_catalog_item!
-    CatalogIdentifierService.add_identifier!(
-      catalog_item: item,
-      identifier_type: "isbn13",
+    product = create_legacy_catalog_linked_product!(catalog_item: item)
+    ProductIdentifierService.add_identifier!(
+      product: product,
+      validation_family: "gtin",
       value: "9780123456780",
       primary: false
     )
-    presenter = Items::ItemPresenter.from_catalog_item(item)
+    presenter = Items::ItemPresenter.from_product(product)
 
     assert_includes presenter.basic_statuses, "invalid_identifier_warning"
     assert_not_includes presenter.search_statuses, "invalid_identifier_warning"
-    assert_includes presenter.search_statuses, "catalog_only"
   end
 
   test "context actions include edit catalog for legacy linked product" do

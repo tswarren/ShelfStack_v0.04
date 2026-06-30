@@ -27,9 +27,9 @@ class IngramCatalogImport::RunnerTest < ActiveSupport::TestCase
     assert AuditEvent.exists?(event_name: "ingram_import.completed")
 
     item = CatalogItem.find_by!(title: "Communion: Finding My Way Back to Faith")
-    assert_equal "9780063575011", item.primary_identifier.normalized_identifier
-    assert item.products.active_records.exists?
-    assert item.products.active_records.first.product_variants.active_records.exists?
+    product = item.products.active_records.first!
+    assert_equal "9780063575011", product.primary_identifier.normalized_identifier
+    assert product.product_variants.active_records.exists?
   end
 
   test "imports rows and links bisac subject when tree is loaded" do
@@ -70,7 +70,7 @@ class IngramCatalogImport::RunnerTest < ActiveSupport::TestCase
       )
     end
 
-    assert @result.count(:variant_matched).positive?
+    assert @result.count(:variant_matched).positive?, @result.outcomes.map { |o| [ o.status, o.message ] }.inspect
     variant.reload
     assert_equal original_sku, variant.sku
     assert_equal 1234, variant.selling_price_cents
@@ -167,5 +167,27 @@ class IngramCatalogImport::RunnerTest < ActiveSupport::TestCase
 
     assert product_vendor.reload.active?
     assert variant_vendor.reload.active?
+  end
+
+  test "reuses product-first match and links catalog metadata shell" do
+    product = create_product!(sku: "9780063575011", skip_product_identifier: true)
+    ProductIdentifierService.add_identifier!(
+      product: product,
+      validation_family: "gtin",
+      value: "9780063575011",
+      primary: true
+    )
+
+    result = IngramCatalogImport::Runner.call(
+      path: @fixture_path,
+      actor: @actor,
+      options: @options
+    )
+
+    assert result.count(:error).zero?
+    product.reload
+    assert product.catalog_item.present?
+    assert_equal "Communion: Finding My Way Back to Faith", product.catalog_item.title
+    assert_equal 1, Product.where(id: product.id).count
   end
 end

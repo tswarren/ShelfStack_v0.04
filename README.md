@@ -311,10 +311,10 @@ Historical v0.03 phase specs remain useful for code not yet migrated. New work f
 | Milestone | Focus | Status |
 | --------- | ----- | ------ |
 | v0.04-0 | Baseline and cutover prep | **Complete** |
-| v0.04-1 | Product model fusion | **Current** |
-| v0.04-2 | Product identifiers | Planned |
-| v0.04-3 | Product groups | Planned |
-| v0.04-4 | Variant-grain wire-through | Planned |
+| v0.04-1 | Product model fusion | **Complete** |
+| v0.04-2 | Product identifiers | **In review** |
+| v0.04-3 | Product groups | **Deferred** |
+| v0.04-4 | Variant-grain wire-through | **Next** |
 | v0.04-5 | Used variant rules | Planned |
 | v0.04-6 | Demand foundation | Planned |
 | v0.04-7 | Allocations and reservations | Planned |

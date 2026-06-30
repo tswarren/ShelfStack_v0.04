@@ -36,8 +36,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     end
 
     variant = ProductVariant.order(:id).last
-    expected_sku = SkuGenerator.preview_variant_sku(product: @product, condition: @used_condition)
-    assert_equal expected_sku, variant.sku
+    assert_match(/\A211[0-9]{9}[0-9]\z/, variant.sku)
     assert_redirected_to items_item_path(
       product_id: @product.id,
       tab: "item_setup",

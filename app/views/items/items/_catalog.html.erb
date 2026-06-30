@@ -1,21 +1,30 @@
-<% if item.catalog_item.blank? %>
-  <p>This is a non-catalog product with no catalog metadata.</p>
-<% else %>
-  <% item_flow = { return_to: "item" } %>
-  <% if item.catalog_item.primary_thumbnail.attached? %>
+<% product = item.product %>
+<% catalog_item = item.catalog_item %>
+<% setup_product = product || catalog_item&.products&.active_records&.first %>
+<% setup_catalog_item = catalog_item || product&.catalog_item %>
+<% item_flow = { return_to: "item" } %>
+
+<% if setup_catalog_item.present? %>
+  <% if setup_catalog_item.primary_thumbnail.attached? %>
     <div class="ss-item-cover-preview">
-      <%= product_cover_image_tag(item.catalog_item.primary_thumbnail, size: :hero, alt: "Catalog thumbnail") %>
+      <%= product_cover_image_tag(setup_catalog_item.primary_thumbnail, size: :hero, alt: "Catalog thumbnail") %>
     </div>
   <% end %>
   <dl class="ss-summary">
-    <dt>Type</dt><dd><%= humanize_controlled_value(item.catalog_item.catalog_item_type) %></dd>
-    <dt>Format</dt><dd><%= item.catalog_item.format.name %></dd>
-    <dt>Publisher</dt><dd><%= item.catalog_item.publisher || "—" %></dd>
-    <dt>Creators</dt><dd><%= item.catalog_item.creators || "—" %></dd>
-    <dt>Publication status</dt><dd><%= humanize_controlled_value(item.catalog_item.publication_status) %></dd>
+    <dt>Type</dt><dd><%= humanize_controlled_value(setup_catalog_item.catalog_item_type) %></dd>
+    <dt>Format</dt><dd><%= setup_catalog_item.format.name %></dd>
+    <dt>Publisher</dt><dd><%= setup_catalog_item.publisher || "—" %></dd>
+    <dt>Creators</dt><dd><%= setup_catalog_item.creators || "—" %></dd>
+    <dt>Publication status</dt><dd><%= humanize_controlled_value(setup_catalog_item.publication_status) %></dd>
   </dl>
+<% elsif product.present? %>
+  <p>This is a product-first item without a linked catalog metadata shell.</p>
+<% else %>
+  <p>This item has no catalog metadata.</p>
+<% end %>
 
-  <h2><%= items_user_facing_label("catalog_item_identifiers") %></h2>
+<% if setup_product.present? || setup_catalog_item.present? %>
+  <h2>Product identifiers</h2>
   <table class="ss-table">
     <thead>
       <tr>
@@ -26,10 +35,12 @@
     </thead>
     <tbody>
       <% identifiers.each do |identifier| %>
+        <% display_type = product_identifier_display_type(identifier) %>
+        <% barcode_safe = product_identifier_barcode_safe?(identifier) %>
         <tr>
-          <td><%= identifier.identifier_type.upcase %></td>
+          <td><%= display_type.upcase %></td>
           <td>
-            <span class="ss-identifier-value">
+            <span class="ss-identifier-value<%= " ss-barcode-value" if barcode_safe %>">
               <%= identifier.normalized_identifier %>
               <% if identifier.primary_identifier? %>
                 <%= identifier_primary_badge %>
@@ -40,25 +51,26 @@
             </span>
           </td>
           <td class="ss-row-actions">
-            <% if Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
+            <% if setup_product.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
               <button type="button"
                       class="ss-btn-link"
                       data-action="item-setup-modal#prepareIdentifierEdit modal#open"
                       data-modal-target-id-param="item-identifier-modal"
                       data-identifier-value="<%= identifier.identifier_value %>"
-                      data-identifier-type="<%= identifier.identifier_type %>"
+                      data-identifier-type="<%= product_identifier_legacy_type(identifier) %>"
                       data-primary="<%= identifier.primary_identifier? %>"
-                      data-update-url="<%= items_setup_modals_identifier_path(identifier, catalog_item_id: item.catalog_item.id) %>">
+                      data-update-url="<%= items_setup_modals_identifier_path(identifier, product_id: setup_product.id) %>">
                 Quick edit
               </button>
+              <% if identifiers.size > 1 %>
+                <%= button_to "Remove",
+                      items_setup_modals_destroy_identifier_path(identifier, product_id: setup_product.id),
+                      method: :delete,
+                      class: "ss-btn-link",
+                      form: { data: { turbo_stream: true } },
+                      data: { turbo_confirm: "Remove this identifier?" } %>
+              <% end %>
             <% end %>
-            <%= link_to "Edit", edit_identifier_items_catalog_item_path(item.catalog_item, identifier_id: identifier.id, return_to: "item") %>
-            <%= button_to "Delete",
-                  destroy_identifier_items_catalog_item_path(item.catalog_item, identifier_id: identifier.id, return_to: "item"),
-                  method: :delete,
-                  class: "ss-btn-link",
-                  form: { class: "ss-inline-form" },
-                  data: { turbo_confirm: "Remove this identifier?" } %>
           </td>
         </tr>
       <% end %>
@@ -66,27 +78,30 @@
   </table>
 
   <div class="ss-catalog-actions">
-    <%= link_to "Edit catalog details", edit_items_catalog_item_path(item.catalog_item, item_flow), class: "ss-btn" %>
-    <% if external_catalog_import.present? && Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.access", store: current_store) %>
-      <%= link_to "View original metadata",
-                  items_item_external_metadata_path(catalog_item_id: item.catalog_item.id),
-                  class: "ss-btn ss-btn-secondary" %>
+    <% if setup_catalog_item.present? %>
+      <%= link_to "Edit catalog details", edit_items_catalog_item_path(setup_catalog_item, item_flow), class: "ss-btn" %>
+      <% if external_catalog_import.present? && Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.access", store: current_store) %>
+        <%= link_to "View original metadata",
+                    items_item_external_metadata_path(catalog_item_id: setup_catalog_item.id),
+                    class: "ss-btn ss-btn-secondary" %>
+      <% end %>
     <% end %>
-    <%= link_to "Add identifier", new_identifier_items_catalog_item_path(item.catalog_item, return_to: "item"), class: "ss-btn ss-btn-secondary" %>
-    <% if Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
+    <% if setup_product.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
       <button type="button"
               class="ss-btn ss-btn-secondary"
               data-action="item-setup-modal#prepareIdentifierCreate modal#open"
               data-modal-target-id-param="item-identifier-modal">
         Quick add identifier
       </button>
+      <%= button_to "Generate house EAN (201)",
+            items_setup_modals_generate_house_identifier_path(product_id: setup_product.id),
+            method: :post,
+            class: "ss-btn ss-btn-secondary" %>
     <% end %>
-    <% if item.catalog_item.active? %>
-      <%= button_to "Inactivate catalog item", inactivate_items_catalog_item_path(item.catalog_item, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
-    <% else %>
-      <%= button_to "Reactivate catalog item", reactivate_items_catalog_item_path(item.catalog_item, item_flow), method: :patch, class: "ss-btn" %>
+    <% if setup_catalog_item.present? && setup_catalog_item.active? %>
+      <%= button_to "Inactivate catalog item", inactivate_items_catalog_item_path(setup_catalog_item, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
+    <% elsif setup_catalog_item.present? %>
+      <%= button_to "Reactivate catalog item", reactivate_items_catalog_item_path(setup_catalog_item, item_flow), method: :patch, class: "ss-btn" %>
     <% end %>
-    <%= button_to "Generate local ID", generate_local_identifier_items_catalog_item_path(item.catalog_item, item_flow), method: :post, class: "ss-btn ss-btn-secondary" %>
-    <%= button_to "Delete catalog item", items_catalog_item_path(item.catalog_item, item_flow), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this catalog item?" } %>
   </div>
 <% end %>

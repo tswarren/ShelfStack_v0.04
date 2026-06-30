@@ -13,6 +13,7 @@ class Product < ApplicationRecord
   belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
   belongs_to :preferred_vendor, class_name: "Vendor", optional: true
   has_many :product_variants, dependent: :restrict_with_error
+  has_many :product_identifiers, dependent: :restrict_with_error
   has_many :product_vendors, dependent: :restrict_with_error
   has_one_attached :cover_image
 
@@ -51,6 +52,14 @@ class Product < ApplicationRecord
     product_variants.active_records.exists?
   end
 
+  def primary_identifier
+    product_identifiers.primary_records.first
+  end
+
+  def active_identifiers
+    product_identifiers.active_records
+  end
+
   def rendered_name
     ProductNameRenderer.product_name(self)
   end
@@ -81,13 +90,19 @@ class Product < ApplicationRecord
     if catalog_item.present?
       Products::CopyCatalogMetadata.to_product(self, catalog_item) unless metadata_fused?
       self.name = ProductNameRenderer.product_name(self) if name.blank?
-      self.sku = SkuGenerator.product_sku(self) if sku.blank?
+      if sku.blank?
+        self.sku = if catalog_item.primary_identifier.present?
+          SkuGenerator.product_sku(self)
+        else
+          AddItem::ProductSkuGenerator.generate!
+        end
+      end
       return
     end
 
     self.name = ProductNameRenderer.product_name(self) if name.blank? && title.present?
     self.title = name if title.blank? && name.present?
-    self.sku = SkuGenerator.product_sku(self) if sku.blank? && title.present?
+    self.sku = AddItem::ProductSkuGenerator.generate! if sku.blank? && title.present?
   end
 
   def catalog_item_must_be_active

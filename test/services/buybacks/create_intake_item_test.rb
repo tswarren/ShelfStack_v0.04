@@ -20,14 +20,14 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
       title_snapshot: "Cher: The Memoir"
     )
     @catalog_item = create_catalog_item!(title: "Cher: The Memoir")
-    CatalogIdentifierService.add_identifier!(
+    @product = create_product!(catalog_item: @catalog_item, variation_type: "conditional")
+    add_test_product_identifier!(
       catalog_item: @catalog_item,
       identifier_type: "isbn13",
       value: "9780740747467",
       primary: true,
       actor: @user
     )
-    @product = create_product!(catalog_item: @catalog_item, variation_type: "conditional")
     create_product_variant!(
       product: @product,
       sub_department: @sub,
@@ -59,11 +59,16 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     assert_equal 1, CatalogItem.where(title: "Cher: The Memoir").count
   end
 
-  test "creates product when legacy catalog exists without active product" do
+  test "creates product when matching product identifier exists on inactive product" do
     catalog_only = create_catalog_item!(title: "Orphan Catalog")
-    CatalogIdentifierService.add_identifier!(
+    inactive_product = create_product!(
       catalog_item: catalog_only,
-      identifier_type: "isbn13",
+      active: false,
+      skip_product_identifier: true
+    )
+    ProductIdentifierService.add_identifier!(
+      product: inactive_product,
+      validation_family: "gtin",
       value: "9780316769174",
       primary: true,
       actor: @user
@@ -86,10 +91,11 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     )
 
     assert_equal catalog_only.id, result.catalog_item.id
-    assert result.product.present?
-    assert result.product.active?
-    assert_equal "buyback_intake", result.product.source
+    assert_equal inactive_product.id, result.product.id
+    assert_not result.product.active?
+    assert_equal "manual", result.product.source
+    assert_not result.created_new_catalog
     assert_nil result.product_variant
-    assert_equal "resolved", line.reload.status
+    assert_equal "priced", line.reload.status
   end
 end

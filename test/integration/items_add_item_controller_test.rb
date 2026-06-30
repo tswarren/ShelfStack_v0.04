@@ -324,14 +324,15 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_includes response.body, "Identifier saved with warning"
-    assert_includes response.body, "ISBN-13 check digit is invalid"
+    assert_includes response.body, "Check digit is invalid"
   end
 
   test "duplicate primary identifier re-renders item details with warning and preserved fields" do
     existing = create_catalog_item!
-    CatalogIdentifierService.add_identifier!(
-      catalog_item: existing,
-      identifier_type: "isbn13",
+    product = create_product!(catalog_item: existing, skip_product_identifier: true)
+    ProductIdentifierService.add_identifier!(
+      product: product,
+      validation_family: "gtin",
       value: "9780306406157",
       primary: true
     )

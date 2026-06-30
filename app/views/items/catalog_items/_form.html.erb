@@ -166,7 +166,7 @@
         <div class="ss-field">
           <%= label_tag "catalog_item[initial_identifier_type]", "Identifier type", class: "ss-label" %>
           <%= select_tag "catalog_item[initial_identifier_type]",
-                options_for_select(CatalogItemIdentifier::IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, initial_identifier_type),
+                options_for_select(ProductIdentifierService::LEGACY_IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, initial_identifier_type),
                 data: { identifier_preview_target: "identifierType" } %>
         </div>
         <div class="ss-field">

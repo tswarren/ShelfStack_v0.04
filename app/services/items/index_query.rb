@@ -124,7 +124,7 @@ module Items
     end
 
     def identifier_hits
-      LegacyProductIdentifierBridge.find_products_by_identifier_query(@query, active_only: !@include_inactive)
+      Items::ProductIdentifierLookup.find_products_by_identifier_query(@query, active_only: !@include_inactive)
         .merge(product_browse_scope)
         .with_attached_cover_image
         .includes(:format, product_variants: %i[condition sub_department])

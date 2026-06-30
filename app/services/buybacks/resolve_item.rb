@@ -39,7 +39,7 @@ module Buybacks
       product = Product.find_by(sku: normalized)
       return product if product.present?
 
-      Items::LegacyProductIdentifierBridge.find_products_by_identifier_query(normalized).order(:id).first
+      Items::ProductIdentifierLookup.find_products_by_identifier_query(normalized).order(:id).first
     end
 
     def find_by_title

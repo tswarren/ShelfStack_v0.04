@@ -1,11 +1,14 @@
 <%# locals: item:, variants:, vendors:, sub_departments: %>
-<% if item.catalog_item.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
+<% if item.product.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
   <%= render "shared/interaction/modal",
         id: "item-identifier-modal",
         title: "Identifier",
         size: :sm do %>
     <%= turbo_frame_tag "item-identifier-modal-body" do %>
-      <%= render "items/setup_modals/identifier_quick_form", catalog_item: item.catalog_item, identifier: nil %>
+      <%= render "items/setup_modals/identifier_quick_form",
+            product: item.product,
+            catalog_item: item.catalog_item,
+            identifier: nil %>
     <% end %>
   <% end %>
 <% end %>

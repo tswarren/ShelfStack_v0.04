@@ -28,7 +28,7 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_includes variant.errors[:sub_department], "must be active"
   end
 
-  test "generates suffixed sku for non-new condition on standard product" do
+  test "generates segment 211 sku for new variants regardless of condition suffix" do
     product = create_product!(sku: "BASE-SKU-123", variation_type: "standard")
     used = create_product_condition!(condition_key: "used_test", sku_component: "UG", short_name: "Good", name: "Used - Good")
     variant = ProductVariant.create!(
@@ -39,7 +39,8 @@ class ProductVariantTest < ActiveSupport::TestCase
       inventory_behavior: "standard_physical",
       active: true
     )
-    assert_equal "BASE-SKU-123-UG", variant.sku
+    assert_match(/\A211[0-9]{9}[0-9]\z/, variant.sku)
+    assert_not_equal "BASE-SKU-123-UG", variant.sku
   end
 
   private

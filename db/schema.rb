@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_120700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -270,25 +270,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
     t.index ["void_stored_value_ledger_entry_id"], name: "index_buyback_voids_on_void_stored_value_ledger_entry_id"
     t.index ["voided_by_user_id"], name: "index_buyback_voids_on_voided_by_user_id"
     t.index ["workstation_id"], name: "index_buyback_voids_on_workstation_id"
-  end
-
-  create_table "catalog_item_identifiers", force: :cascade do |t|
-    t.boolean "active", default: true, null: false
-    t.bigint "catalog_item_id", null: false
-    t.datetime "created_at", null: false
-    t.string "identifier_type", null: false
-    t.string "identifier_value", limit: 100, null: false
-    t.string "normalized_identifier", limit: 100, null: false
-    t.boolean "primary_identifier", default: false, null: false
-    t.string "source"
-    t.datetime "updated_at", null: false
-    t.boolean "valid_check_digit"
-    t.string "validation_message"
-    t.index ["active"], name: "index_catalog_item_identifiers_on_active"
-    t.index ["catalog_item_id"], name: "index_catalog_item_identifiers_on_catalog_item_id"
-    t.index ["catalog_item_id"], name: "index_catalog_item_identifiers_one_active_primary", unique: true, where: "((active = true) AND (primary_identifier = true))"
-    t.index ["identifier_type", "normalized_identifier"], name: "idx_catalog_item_identifiers_standard_unique", unique: true, where: "((identifier_type)::text = ANY (ARRAY[('isbn10'::character varying)::text, ('isbn13'::character varying)::text, ('ean'::character varying)::text, ('upc'::character varying)::text, ('gtin'::character varying)::text, ('local'::character varying)::text]))"
-    t.index ["normalized_identifier"], name: "index_catalog_item_identifiers_on_normalized_identifier"
   end
 
   create_table "catalog_items", force: :cascade do |t|
@@ -683,6 +664,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
     t.index ["code"], name: "index_formats_on_code"
     t.index ["format_key"], name: "index_formats_on_format_key", unique: true
     t.index ["short_name"], name: "index_formats_on_short_name"
+  end
+
+  create_table "internal_ean_sequences", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.bigint "last_sequence", default: 0, null: false
+    t.string "purpose", limit: 50, null: false
+    t.string "segment", limit: 3, null: false
+    t.datetime "updated_at", null: false
+    t.index ["segment"], name: "index_internal_ean_sequences_on_segment", unique: true
   end
 
   create_table "inventory_adjustment_lines", force: :cascade do |t|
@@ -1272,6 +1263,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
     t.index ["sku_component"], name: "idx_product_conditions_sku_component_unique", unique: true, where: "(sku_component IS NOT NULL)"
     t.index ["sort_order"], name: "index_product_conditions_on_sort_order"
     t.check_constraint "default_list_price_factor_bps >= 0 AND default_list_price_factor_bps <= 10000", name: "chk_product_conditions_list_price_factor"
+  end
+
+  create_table "product_identifiers", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "display_label", limit: 100
+    t.string "freeform_scope", limit: 50
+    t.string "identifier_value", limit: 100, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "normalized_identifier", limit: 100, null: false
+    t.boolean "primary_identifier", default: false, null: false
+    t.bigint "product_id", null: false
+    t.string "source", default: "manual", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "valid_check_digit"
+    t.string "validation_family", null: false
+    t.string "validation_message"
+    t.index ["normalized_identifier"], name: "index_product_identifiers_unique_active_gtin_house", unique: true, where: "((active = true) AND ((validation_family)::text = ANY ((ARRAY['gtin'::character varying, 'house'::character varying])::text[])))"
+    t.index ["product_id", "validation_family", "freeform_scope", "normalized_identifier"], name: "index_product_identifiers_unique_active_freeform_per_product", unique: true, where: "((active = true) AND ((validation_family)::text = 'freeform'::text))"
+    t.index ["product_id"], name: "index_product_identifiers_on_product_id"
+    t.index ["product_id"], name: "index_product_identifiers_one_active_primary_per_product", unique: true, where: "((active = true) AND (primary_identifier = true))"
+    t.index ["validation_family", "normalized_identifier"], name: "index_product_identifiers_unique_active_isbn", unique: true, where: "((active = true) AND ((validation_family)::text = 'isbn'::text))"
+  end
+
+  create_table "product_variant_lookup_codes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "code", limit: 20, null: false
+    t.string "code_type", limit: 20, default: "manual", null: false
+    t.datetime "created_at", null: false
+    t.string "normalized_code", limit: 20, null: false
+    t.integer "priority", default: 0, null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "store_id"
+    t.datetime "updated_at", null: false
+    t.index ["normalized_code"], name: "index_variant_lookup_codes_unique_active_global_code", unique: true, where: "((active = true) AND (store_id IS NULL))"
+    t.index ["product_variant_id"], name: "index_product_variant_lookup_codes_on_product_variant_id"
+    t.index ["store_id", "normalized_code"], name: "index_variant_lookup_codes_unique_active_store_code", unique: true, where: "((active = true) AND (store_id IS NOT NULL))"
+    t.index ["store_id"], name: "index_product_variant_lookup_codes_on_store_id"
   end
 
   create_table "product_variant_vendors", force: :cascade do |t|
@@ -2203,7 +2232,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
   add_foreign_key "buyback_voids", "stores"
   add_foreign_key "buyback_voids", "users", column: "voided_by_user_id"
   add_foreign_key "buyback_voids", "workstations"
-  add_foreign_key "catalog_item_identifiers", "catalog_items"
   add_foreign_key "catalog_items", "buyback_sessions", column: "created_from_buyback_session_id"
   add_foreign_key "catalog_items", "category_nodes", column: "store_category_id"
   add_foreign_key "catalog_items", "formats"
@@ -2346,6 +2374,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
   add_foreign_key "pos_voids", "users", column: "voided_by_user_id"
   add_foreign_key "pos_voids", "workstations"
   add_foreign_key "pos_workstation_sequences", "workstations"
+  add_foreign_key "product_identifiers", "products"
+  add_foreign_key "product_variant_lookup_codes", "product_variants"
+  add_foreign_key "product_variant_lookup_codes", "stores"
   add_foreign_key "product_variant_vendors", "product_variants"
   add_foreign_key "product_variant_vendors", "vendors"
   add_foreign_key "product_variants", "buyback_sessions", column: "created_from_buyback_session_id"

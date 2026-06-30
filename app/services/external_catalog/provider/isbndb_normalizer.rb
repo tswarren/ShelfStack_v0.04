@@ -48,8 +48,8 @@ module ExternalCatalog
       def normalize_isbn(value)
         return nil if value.blank?
 
-        CatalogIdentifierService.normalize_preview("isbn13", value)
-      rescue CatalogIdentifierService::IdentifierError
+        ProductIdentifierService.normalize_preview("isbn13", value)
+      rescue ProductIdentifierService::IdentifierError
         nil
       end
 

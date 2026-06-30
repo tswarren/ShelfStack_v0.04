@@ -6,14 +6,15 @@ module Inventory
 
     Result = Data.define(:status, :variants, :message)
 
-    def self.call(query:, mode: :exact, eligible_only: true)
-      new(query:, mode:, eligible_only:).call
+    def self.call(query:, mode: :exact, eligible_only: true, store: nil)
+      new(query:, mode:, eligible_only:, store:).call
     end
 
-    def initialize(query:, mode: :exact, eligible_only: true)
+    def initialize(query:, mode: :exact, eligible_only: true, store: nil)
       @query = query.to_s.strip
       @mode = mode.to_sym
       @eligible_only = eligible_only
+      @store = store
     end
 
     def call
@@ -29,17 +30,20 @@ module Inventory
 
     private
 
-    attr_reader :query, :mode, :eligible_only
+    attr_reader :query, :mode, :eligible_only, :store
 
     def resolve_exact
       sku_matches = find_by_variant_sku
       return build_result(sku_matches) if sku_matches.any?
 
-      identifier_matches = find_by_catalog_identifiers
+      lookup_code_matches = find_by_lookup_code
+      return build_result(lookup_code_matches) if lookup_code_matches.any?
+
+      identifier_matches = find_by_product_identifiers
       return build_result(identifier_matches) if identifier_matches.any?
 
-      product_sku_matches = find_by_product_sku
-      return build_result(product_sku_matches) if product_sku_matches.any?
+      legacy_product_sku_matches = find_by_legacy_product_sku
+      return build_result(legacy_product_sku_matches) if legacy_product_sku_matches.any?
 
       Result.new(status: :not_found, variants: [], message: "No matching SKU or barcode found.")
     end
@@ -63,23 +67,29 @@ module Inventory
       base_scope.where("LOWER(product_variants.sku) = ?", query.downcase).to_a
     end
 
-    def find_by_product_sku
-      base_scope.where("LOWER(products.sku) = ?", query.downcase).to_a
+    def find_by_lookup_code
+      variant = ProductVariants::LookupCodeService.resolve(query, store: store)
+      return [] if variant.blank?
+
+      base_scope.where(id: variant.id).to_a
     end
 
-    def find_by_catalog_identifiers
-      digits = normalized_digits(query)
-      return [] if digits.blank?
-
-      catalog_item_ids = CatalogItemIdentifier.active_records
-        .where(normalized_identifier: digits)
-        .select(:catalog_item_id)
-
+    def find_by_legacy_product_sku
       base_scope
-        .joins(product: :catalog_item)
-        .where(products: { catalog_item_id: catalog_item_ids })
-        .distinct
+        .left_joins(product: :product_identifiers)
+        .where("LOWER(products.sku) = ?", query.downcase)
+        .where(product_identifiers: { id: nil })
         .to_a
+    end
+
+    def find_by_product_identifiers
+      normalized = ProductIdentifierService.lookup_digit_prefix(query)
+      return [] if normalized.blank?
+
+      products = Items::ProductIdentifierLookup.find_products_by_query(normalized, active_only: true)
+      return [] if products.none?
+
+      base_scope.where(product_id: products.select(:id)).distinct.to_a
     end
 
     def build_result(variants)
@@ -110,13 +120,6 @@ module Inventory
         .includes(:condition, :product)
         .joins(:product)
         .merge(Product.active_records)
-    end
-
-    def normalized_digits(value)
-      normalized = CatalogIdentifierService.normalize_preview("isbn13", value).to_s
-      return nil if normalized.blank?
-
-      normalized
     end
   end
 end

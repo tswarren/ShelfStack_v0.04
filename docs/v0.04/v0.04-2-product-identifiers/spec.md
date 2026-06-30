@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned**
+**Complete**
 
 ## Job
 
@@ -25,7 +25,7 @@ v0.04-2:
   catalog_items retained (quarantined legacy metadata shell only)
 ```
 
-**Scope honesty:** v0.04-2 delivers **product metadata identifier ownership + scan resolution complete**. It is **not** “SKU invariant complete” for every downstream report/UI surface — variant SKU suffix derivation policy and full operational wire-through polish continue in v0.04-4 where noted below.
+**Scope honesty:** v0.04-2 delivers **product metadata identifier ownership + scan resolution complete**. It is **not** “SKU invariant complete” for every downstream report/UI surface — vv0.04-2 resolves the generated variant SKU policy for new variants. Full downstream operational wire-through polish continues in v0.04-4.
 
 ---
 
@@ -328,4 +328,4 @@ Flip status to **Complete** only after CI green on the merge commit.
 
 ## Next milestone
 
-**v0.04-4 — Variant-grain wire-through** (operational polish, reports, remaining transitional joins) and/or **v0.04-3 — Product groups**. v0.04-3 must not reopen identifier ownership, segment policy, or variant SKU policy.
+**v0.04-4 — Variant-grain wire-through** (operational polish, reports, remaining transitional joins). **v0.04-3 — Product groups** is deferred until after v0.04-4. Neither milestone may reopen identifier ownership, segment policy, or variant SKU policy established in v0.04-2.

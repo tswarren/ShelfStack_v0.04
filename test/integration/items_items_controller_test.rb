@@ -117,9 +117,9 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
 
   test "item setup tab shows primary badge and identifier row actions" do
     grant_permission!(@user, "items.catalog_items.update")
-    primary = @product.catalog_item.primary_identifier
-    secondary = CatalogIdentifierService.add_identifier!(
-      catalog_item: @product.catalog_item,
+    primary = @product.primary_identifier
+    secondary = ProductIdentifierService.add_identifier_for_legacy_type!(
+      product: @product,
       identifier_type: "publisher_number",
       value: "ALT-ROW-ID",
       primary: false
@@ -130,22 +130,21 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "ss-status-badge status-active\">Primary", response.body
     assert_no_match "<th>Primary</th>", response.body
     assert_no_match "<th>Valid</th>", response.body
-    assert_match "edit_identifier?identifier_id=#{primary.id}", response.body
-    assert_match "destroy_identifier?identifier_id=#{secondary.id}", response.body
+    assert_match items_setup_modals_identifier_path(primary, product_id: @product.id), response.body
+    assert_match "Quick edit", response.body
     assert_match "Edit catalog details", response.body
-    assert_match "Add identifier", response.body
-    assert_match "new_identifier", response.body
+    assert_match "Quick add identifier", response.body
     assert_match edit_items_catalog_item_path(@product.catalog_item, return_to: "item"), response.body
     assert_match "Inactivate catalog item", response.body
-    assert_match "Generate local ID", response.body
+    assert_match "Generate house EAN (201)", response.body
     assert_no_match "ss-context-actions", response.body
   end
 
   test "item setup tab shows invalid identifier badge on invalid barcodes" do
     grant_permission!(@user, "items.catalog_items.update")
-    CatalogIdentifierService.add_identifier!(
-      catalog_item: @product.catalog_item,
-      identifier_type: "isbn13",
+    ProductIdentifierService.add_identifier!(
+      product: @product,
+      validation_family: "gtin",
       value: "9780123456780",
       primary: false
     )
@@ -158,9 +157,9 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
 
   test "item setup tab lists primary identifier before other identifiers" do
     grant_permission!(@user, "items.catalog_items.update")
-    primary = @product.catalog_item.primary_identifier
-    secondary = CatalogIdentifierService.add_identifier!(
-      catalog_item: @product.catalog_item,
+    primary = @product.primary_identifier
+    secondary = ProductIdentifierService.add_identifier_for_legacy_type!(
+      product: @product,
       identifier_type: "publisher_number",
       value: "SECONDARY-ID",
       primary: false
@@ -169,8 +168,8 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     get item_path(tab: "item_setup")
     assert_response :success
 
-    primary_pos = response.body.index("identifier_id=#{primary.id}")
-    secondary_pos = response.body.index("identifier_id=#{secondary.id}")
+    primary_pos = response.body.index(primary.normalized_identifier)
+    secondary_pos = response.body.index(secondary.normalized_identifier)
     assert primary_pos < secondary_pos
   end
 

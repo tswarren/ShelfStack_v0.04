@@ -45,20 +45,25 @@ class Pos::CommandBarRouterTest < ActiveSupport::TestCase
   test "isbn lookup routes to variant lookup with multiple matches" do
     seed_phase3_reference_data!
     catalog_item = create_catalog_item!(title: "Router Multi Book")
-    CatalogIdentifierService.add_identifier!(
+    product = create_product!(catalog_item: catalog_item, sku: "9780143127741")
+    add_test_product_identifier!(
       catalog_item: catalog_item,
       identifier_type: "isbn13",
       value: "9780143127741",
       primary: true
     )
-    product = create_product!(catalog_item: catalog_item, sku: "9780143127741")
-    variant = create_product_variant!(product: product, sub_department: @variant.sub_department, sku: "9780143127741", selling_price_cents: 1200)
+    variant = create_product_variant!(
+      product: product,
+      sub_department: @variant.sub_department,
+      selling_price_cents: 1200,
+      sku: nil
+    )
     create_product_variant!(
       product: product,
       sub_department: @variant.sub_department,
       condition: ProductCondition.find_by!(condition_key: "used_good"),
-      sku: "9780143127741UG",
-      selling_price_cents: 800
+      selling_price_cents: 800,
+      sku: nil
     )
 
     route = Pos::CommandBarRouter.call(store: @store, input: "9780143127741")

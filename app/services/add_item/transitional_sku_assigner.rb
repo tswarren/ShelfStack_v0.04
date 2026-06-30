@@ -43,7 +43,10 @@ module AddItem
 
       if identifier_value.present?
         normalized = normalize_identifier
-        preview = CatalogIdentifierService.validation_preview(identifier_type: identifier_type, value: identifier_value)
+        preview = ProductIdentifierService.validation_preview(
+          validation_family: identifier_type == "isbn10" ? "isbn" : "gtin",
+          value: identifier_value
+        )
         validation = { validation_message: preview[:message] }
         return [ normalized, validation ] if normalized.present?
       end
@@ -53,12 +56,15 @@ module AddItem
 
     def normalize_identifier
       if identifier_type == "isbn10"
-        normalized = CatalogIdentifierService.normalize_preview("isbn10", identifier_value)
-        CatalogIdentifierService.normalize_preview("isbn13", normalized) if normalized.present?
+        normalized = ProductIdentifierService.validation_preview(validation_family: "isbn", value: identifier_value)[:normalized]
+        return nil if normalized.blank? || normalized == "—"
+
+        ProductIdentifierService.validation_preview(validation_family: "gtin", value: normalized)[:normalized]
       else
-        CatalogIdentifierService.normalize_preview(identifier_type, identifier_value)
+        family = identifier_type.to_s == "isbn10" ? "isbn" : "gtin"
+        ProductIdentifierService.validation_preview(validation_family: family, value: identifier_value)[:normalized]
       end
-    rescue CatalogIdentifierService::IdentifierError
+    rescue ProductIdentifierService::IdentifierError
       nil
     end
 
@@ -76,21 +82,12 @@ module AddItem
       found = match.first
       return found if found.present?
 
-      bridge_scope = Items::LegacyProductIdentifierBridge.find_products_by_identifier_query(sku)
+      bridge_scope = Items::ProductIdentifierLookup.find_products_by_query(sku)
       bridge_scope = bridge_scope.where.not(id: product.id) if product.persisted?
       found = bridge_scope.first
       return found if found.present?
 
-      legacy_identifier = CatalogItemIdentifier.active_records
-        .where(normalized_identifier: sku)
-        .includes(:catalog_item)
-        .first
-      return nil if legacy_identifier.blank?
-
-      legacy_product = legacy_identifier.catalog_item.products.active_records.order(:id).first
-      return legacy_product if legacy_product.present? && (!product.persisted? || legacy_product.id != product.id)
-
-      raise ConflictError, "Identifier #{sku} is already assigned to \"#{legacy_identifier.catalog_item.title}\"."
+      nil
     end
   end
 end

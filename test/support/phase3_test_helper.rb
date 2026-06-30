@@ -30,11 +30,20 @@ module Phase3TestHelper
       active: true
     }.merge(attrs))
 
-    if item.catalog_item_identifiers.active_records.none?
-      CatalogIdentifierService.generate_local!(catalog_item: item)
-    end
-
     item.reload
+  end
+
+  def add_test_product_identifier!(catalog_item:, identifier_type:, value:, primary: false, actor: nil)
+    product = catalog_item.products.active_records.order(:id).first
+    product ||= create_legacy_catalog_linked_product!(catalog_item: catalog_item)
+    ProductIdentifierService.add_identifier_for_legacy_type!(
+      product: product,
+      identifier_type: identifier_type,
+      value: value,
+      primary: primary,
+      actor: actor,
+      source: "test"
+    )
   end
 
   def store_category_node_for_tests
@@ -126,18 +135,28 @@ module Phase3TestHelper
     }
   end
 
-  def create_legacy_catalog_linked_product!(catalog_item: nil, **attrs)
+  def create_legacy_catalog_linked_product!(catalog_item: nil, skip_product_identifier: false, **attrs)
     catalog_item ||= create_catalog_item! unless attrs.key?(:title)
     ensure_test_store_category!(catalog_item)
-    Product.create!({
+    product = Product.create!({
       catalog_item: catalog_item,
       name: catalog_item.title,
-      sku: catalog_item.primary_identifier.normalized_identifier,
+      sku: catalog_item.primary_identifier&.normalized_identifier || "P#{SecureRandom.hex(4).upcase}",
       product_type: "physical",
       variation_type: "standard",
       list_price_cents: 1000,
       active: true
     }.merge(catalog_metadata_attrs_for(catalog_item)).merge(attrs))
+    sync_catalog_identifiers_to_product!(product, catalog_item) unless skip_product_identifier
+    product
+  end
+
+  def sync_catalog_identifiers_to_product!(product, _catalog_item)
+    return if product.product_identifiers.active_records.exists?
+
+    ProductIdentifierService.generate_house!(product: product, source: "test_sync")
+  rescue ProductIdentifierService::IdentifierError
+    nil
   end
 
   def create_product!(**attrs)
@@ -147,10 +166,11 @@ module Phase3TestHelper
 
     attrs = attrs.dup
     attrs.delete(:catalog_item)
+    skip_product_identifier = attrs.delete(:skip_product_identifier)
     format = attrs.delete(:format) || create_format!
     title = attrs[:title] || attrs[:name] || "Test Product"
     sku = attrs[:sku] || "P#{SecureRandom.hex(4).upcase}"
-    Product.create!({
+    product = Product.create!({
       title: title,
       catalog_item_type: attrs[:catalog_item_type] || "book",
       format: format,
@@ -162,6 +182,32 @@ module Phase3TestHelper
       list_price_cents: 1000,
       active: true
     }.merge(attrs))
+    attach_test_product_identifier!(product) unless skip_product_identifier
+    product
+  end
+
+  def attach_test_product_identifier!(product)
+    return if product.product_identifiers.active_records.exists?
+
+    sku = product.sku.to_s
+    if sku.match?(/\A[0-9]{13}\z/) || sku.match?(/\A[0-9]{10}\z/)
+      ProductIdentifierService.add_identifier!(
+        product: product,
+        validation_family: sku.length == 10 ? "isbn" : "gtin",
+        value: sku,
+        primary: true
+      )
+    elsif sku.start_with?("P")
+      ProductIdentifierService.add_identifier!(
+        product: product,
+        validation_family: "freeform",
+        value: sku,
+        freeform_scope: "legacy_product_sku",
+        primary: true
+      )
+    end
+  rescue ProductIdentifierService::IdentifierError
+    nil
   end
 
   def create_product_variant!(product: nil, legacy_catalog_linked: false, sub_department: nil, condition: nil, **attrs)

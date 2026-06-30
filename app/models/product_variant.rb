@@ -16,6 +16,7 @@ class ProductVariant < ApplicationRecord
   belongs_to :created_from_buyback_session, class_name: "BuybackSession", optional: true
 
   has_many :categorizations, as: :categorizable, dependent: :destroy
+  has_many :product_variant_lookup_codes, dependent: :restrict_with_error
   has_many :product_variant_vendors, dependent: :restrict_with_error
 
   validates :name, presence: true
@@ -83,9 +84,8 @@ class ProductVariant < ApplicationRecord
   end
 
   def apply_generated_fields
-    generated_sku = SkuGenerator.variant_sku(self)
-    if sku.blank? || (condition&.sku_component.present? && sku == product.sku)
-      self.sku = generated_sku
+    if sku.blank?
+      ProductVariants::SkuAllocator.assign!(product_variant: self)
     end
     self.name = ProductNameRenderer.variant_name(self) if name.blank?
   end

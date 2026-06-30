@@ -30,6 +30,7 @@ module ExternalCatalog
         product = Product.new(attrs)
         assign_transitional_sku!(product)
         product.save!
+        create_product_identifiers!(product)
       end
 
       AuditEvents.record!(
@@ -48,6 +49,42 @@ module ExternalCatalog
         candidate: @candidate,
         actor: @actor
       )
+    end
+
+    private
+
+    def create_product_identifiers!(product)
+      if @candidate.isbn10.present?
+        ProductIdentifierService.add_identifier!(
+          product: product,
+          validation_family: "isbn",
+          value: @candidate.isbn10,
+          primary: true,
+          actor: @actor,
+          source: "external_catalog_import"
+        )
+      elsif @candidate.isbn13.present?
+        ProductIdentifierService.add_identifier!(
+          product: product,
+          validation_family: "gtin",
+          value: @candidate.isbn13,
+          primary: true,
+          actor: @actor,
+          source: "external_catalog_import"
+        )
+      elsif product.sku.present?
+        ProductIdentifierService.add_identifier!(
+          product: product,
+          validation_family: "freeform",
+          value: product.sku,
+          freeform_scope: ProductIdentifierService.infer_freeform_scope(product.sku),
+          primary: true,
+          actor: @actor,
+          source: "external_catalog_import"
+        )
+      end
+    rescue ProductIdentifierService::IdentifierError
+      nil
     end
   end
 end

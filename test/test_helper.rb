@@ -28,6 +28,7 @@ require_relative "support/phase65_test_helper"
 require_relative "support/phase7a_test_helper"
 require_relative "support/phase7b_test_helper"
 require_relative "support/phase7c_test_helper"
+require_relative "support/v0042_test_helper"
 require_relative "support/pos_system_test_helper"
 
 module ActiveSupport
@@ -43,11 +44,13 @@ module ActiveSupport
     include Phase7aTestHelper
     include Phase7bTestHelper
     include Phase7cTestHelper
+    include V0042TestHelper
 
     parallelize(workers: 1)
 
     setup do
       seed_minimal_permissions!
+      ensure_v0042_internal_ean_sequences!
     end
   end
 end

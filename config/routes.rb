@@ -49,7 +49,9 @@ Rails.application.routes.draw do
     get "variant_operations_drawer", to: "variant_operations_drawer#show", as: :variant_operations_drawer
 
     post "setup_modals/identifiers", to: "setup_modals#create_identifier", as: :setup_modals_identifiers
+    post "setup_modals/identifiers/generate_house", to: "setup_modals#generate_house_identifier", as: :setup_modals_generate_house_identifier
     patch "setup_modals/identifiers/:id", to: "setup_modals#update_identifier", as: :setup_modals_identifier
+    delete "setup_modals/identifiers/:id", to: "setup_modals#destroy_identifier", as: :setup_modals_destroy_identifier
     get "setup_modals/product_vendors/new", to: "setup_modals#new_product_vendor", as: :new_setup_modals_product_vendor
     get "setup_modals/product_vendors/:id/edit", to: "setup_modals#edit_product_vendor", as: :edit_setup_modals_product_vendor
     post "setup_modals/product_vendors", to: "setup_modals#create_product_vendor", as: :setup_modals_product_vendors
