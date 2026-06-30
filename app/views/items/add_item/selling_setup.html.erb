@@ -1,10 +1,10 @@
-<% if @catalog_item %>
+<% if @draft["workflow"] == "catalog_linked" %>
   <%= render "shared/forms/page_header",
              eyebrow: "Add Item",
              title: "Create Selling Setup",
-             description: "Catalog item: #{@catalog_item.title}" %>
+             description: "Product: #{@product.display_title}" %>
   <%= render "items/add_item/match_context" %>
-  <%= render "catalog_selling_setup", product: @product, catalog_item: @catalog_item, sub_departments: @sub_departments, display_locations: @display_locations %>
+  <%= render "catalog_selling_setup", product: @product, sub_departments: @sub_departments, display_locations: @display_locations %>
 <% else %>
   <%= render "shared/forms/page_header",
              eyebrow: "Add Item",

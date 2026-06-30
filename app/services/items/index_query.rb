@@ -51,16 +51,17 @@ module Items
     private
 
     def browse_entries
-      entries = []
-      entries.concat(catalog_browse_entries)
-      entries.concat(non_catalog_browse_entries) if include_non_catalog_browse?
-      sort_entries(entries)
+      product_browse_scope
+        .with_attached_cover_image
+        .includes(:format, product_variants: %i[condition sub_department])
+        .map { |product| hit("product", product) }
+        .then { |entries| sort_entries(entries) }
     end
 
     def search_entries
       hits = []
       hits.concat(identifier_hits)
-      hits.concat(catalog_item_hits)
+      hits.concat(product_metadata_hits)
       hits.concat(categorization_hits)
       hits.concat(product_hits)
       hits.concat(variant_hits)
@@ -70,78 +71,30 @@ module Items
       sort_entries(entries)
     end
 
-    def catalog_browse_entries
-      catalog_item_scope
-        .includes(:format, :catalog_item_identifiers, :primary_thumbnail_attachment, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
-        .map { |item| hit("catalog_item", item) }
-    end
-
-    def non_catalog_browse_entries
-      non_catalog_product_scope
-        .with_attached_cover_image
-        .includes(product_variants: %i[condition sub_department])
-        .map { |product| hit("product", product) }
-    end
-
-    def include_non_catalog_browse?
-      @format_id.blank? && @store_category_id.blank?
-    end
-
-    def catalog_item_scope
-      scope = CatalogItem.all
+    def product_browse_scope
+      scope = Product.all
       scope = scope.active_records unless @include_inactive
       scope = scope.where(source: "buyback_intake", needs_review: true) if @needs_review_intake
       scope = scope.where(format_id: @format_id) if @format_id.present?
       scope = scope.where(store_category_id: resolved_store_category_ids) if resolved_store_category_ids.present?
-      apply_classification_filter_to_catalog(scope)
-    end
-
-    def non_catalog_product_scope
-      scope = Product.where(catalog_item_id: nil)
-      scope = scope.active_records unless @include_inactive
-      scope = scope.where(source: "buyback_intake", needs_review: true) if @needs_review_intake
       apply_classification_filter_to_products(scope)
-    end
-
-    def apply_classification_filter_to_catalog(scope)
-      sub_department_ids = resolved_sub_department_ids
-      return scope if sub_department_ids.blank?
-
-      catalog_ids = catalog_ids_matching_classification(sub_department_ids)
-      scope.where(id: catalog_ids)
     end
 
     def apply_classification_filter_to_products(scope)
       sub_department_ids = resolved_sub_department_ids
       return scope if sub_department_ids.blank?
 
-      product_ids = non_catalog_product_ids_matching_classification(sub_department_ids)
+      product_ids = product_ids_matching_classification(sub_department_ids)
       scope.where(id: product_ids)
     end
 
-    def catalog_ids_matching_classification(sub_department_ids)
-      variant_catalog_ids = CatalogItem.joins(products: :product_variants)
+    def product_ids_matching_classification(sub_department_ids)
+      variant_product_ids = Product.joins(:product_variants)
         .merge(classified_variant_scope.where(sub_department_id: sub_department_ids))
         .distinct
         .pluck(:id)
 
-      default_catalog_ids = CatalogItem.joins(:products)
-        .where(products: { default_sub_department_id: sub_department_ids })
-        .distinct
-        .pluck(:id)
-
-      (variant_catalog_ids + default_catalog_ids).uniq
-    end
-
-    def non_catalog_product_ids_matching_classification(sub_department_ids)
-      variant_product_ids = Product.where(catalog_item_id: nil)
-        .joins(:product_variants)
-        .merge(classified_variant_scope.where(sub_department_id: sub_department_ids))
-        .distinct
-        .pluck(:id)
-
-      default_product_ids = Product.where(catalog_item_id: nil, default_sub_department_id: sub_department_ids)
-        .pluck(:id)
+      default_product_ids = Product.where(default_sub_department_id: sub_department_ids).pluck(:id)
 
       (variant_product_ids + default_product_ids).uniq
     end
@@ -171,62 +124,62 @@ module Items
     end
 
     def identifier_hits
-      CatalogItemIdentifier.joins(:catalog_item)
-        .merge(catalog_item_scope)
-        .where("catalog_item_identifiers.normalized_identifier ILIKE ? OR catalog_item_identifiers.identifier_value ILIKE ?",
-               text_query, text_query)
-        .includes(catalog_item: [ :format, { primary_thumbnail_attachment: :blob }, { products: { cover_image_attachment: :blob } }, :catalog_item_identifiers ])
+      LegacyProductIdentifierBridge.find_products_by_identifier_query(@query, active_only: !@include_inactive)
+        .merge(product_browse_scope)
+        .with_attached_cover_image
+        .includes(:format, product_variants: %i[condition sub_department])
         .limit(SEARCH_HIT_LIMIT)
-        .map { |identifier| hit("catalog_item_identifier", identifier.catalog_item) }
+        .map { |product| hit("product_identifier", product) }
     end
 
-    def catalog_item_hits
-      catalog_item_scope
-        .includes(:format, :catalog_item_identifiers, :primary_thumbnail_attachment, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
-        .where(catalog_item_text_conditions, *Array.new(10, text_query))
+    def product_metadata_hits
+      product_browse_scope
+        .with_attached_cover_image
+        .includes(:format, product_variants: %i[condition sub_department])
+        .where(product_text_conditions, *Array.new(10, text_query))
         .limit(SEARCH_HIT_LIMIT)
-        .map { |item| hit("catalog_item", item) }
+        .map { |product| hit("product", product) }
     end
 
-    def catalog_item_text_conditions
+    def product_text_conditions
       <<~SQL.squish
-        catalog_items.title ILIKE ? OR
-        catalog_items.creators ILIKE ? OR
-        catalog_items.publisher ILIKE ? OR
-        catalog_items.series_name ILIKE ? OR
-        catalog_items.series_enumeration ILIKE ? OR
-        catalog_items.bisac_subjects ILIKE ? OR
-        catalog_items.genres ILIKE ? OR
-        catalog_items.themes ILIKE ? OR
-        catalog_items.target_audiences ILIKE ? OR
-        catalog_items.description ILIKE ?
+        products.title ILIKE ? OR
+        products.name ILIKE ? OR
+        products.creators ILIKE ? OR
+        products.publisher ILIKE ? OR
+        products.series_name ILIKE ? OR
+        products.series_enumeration ILIKE ? OR
+        products.bisac_subjects ILIKE ? OR
+        products.genres ILIKE ? OR
+        products.themes ILIKE ? OR
+        products.description ILIKE ?
       SQL
     end
 
     def categorization_hits
-      CatalogItem.joins(categorizations: :category_node)
-        .merge(catalog_item_scope)
-        .includes(:format, :catalog_item_identifiers, :primary_thumbnail_attachment, products: { cover_image_attachment: :blob, product_variants: %i[condition sub_department] })
+      Product.joins(categorizations: :category_node)
+        .merge(product_browse_scope)
+        .with_attached_cover_image
+        .includes(:format, product_variants: %i[condition sub_department])
         .where("category_nodes.name ILIKE ?", text_query)
         .distinct
         .limit(SEARCH_HIT_LIMIT)
-        .map { |item| hit("catalog_item", item) }
+        .map { |product| hit("product", product) }
     end
 
     def product_hits
-      product_scope = Product.all
-      product_scope = product_scope.active_records unless @include_inactive
-      product_scope.where("sku ILIKE ? OR name ILIKE ?", text_query, text_query)
+      product_browse_scope
+        .where("products.sku ILIKE ?", text_query)
         .with_attached_cover_image
-        .includes(:catalog_item, product_variants: %i[condition sub_department])
+        .includes(:format, product_variants: %i[condition sub_department])
         .limit(SEARCH_HIT_LIMIT)
         .map { |product| hit("product", product) }
     end
 
     def variant_hits
-      variant_scope = classified_variant_scope
+      classified_variant_scope
         .where("sku ILIKE ? OR name ILIKE ?", text_query, text_query)
-        .includes(product: { cover_image_attachment: :blob, catalog_item: { primary_thumbnail_attachment: :blob } }, condition: nil, sub_department: nil)
+        .includes(product: { cover_image_attachment: :blob }, condition: nil, sub_department: nil)
         .limit(SEARCH_HIT_LIMIT)
         .map { |variant| hit("product_variant", variant) }
     end
@@ -241,10 +194,10 @@ module Items
 
     def sort_key_for(record, match_type)
       case match_type
-      when "catalog_item", "catalog_item_identifier"
-        record.is_a?(CatalogItem) ? record.title : record.catalog_item&.title
-      when "product", "product_variant"
-        record.is_a?(Product) ? record.name : record.product&.name
+      when "product", "product_identifier"
+        record.title.presence || record.name
+      when "product_variant"
+        record.product&.title.presence || record.product&.name || record.name
       else
         record.try(:title) || record.try(:name)
       end
@@ -253,36 +206,26 @@ module Items
     def dedupe_hits(hits)
       hits.each_with_object({}) do |entry, memo|
         presenter = presenter_for(entry)
-        key = dedupe_key(presenter)
-        memo[key] ||= entry
+        key = [ :product, presenter.product&.id ]
+        memo[key] ||= entry if key.last.present?
       end.values
-    end
-
-    def dedupe_key(presenter)
-      if presenter.catalog_item.present?
-        [ :catalog, presenter.catalog_item.id ]
-      else
-        [ :product, presenter.product&.id ]
-      end
     end
 
     def passes_filters?(entry)
       presenter = presenter_for(entry)
+      product = presenter.product
+      return false if product.blank?
 
       if @needs_review_intake
-        record = presenter.catalog_item || presenter.product
-        return false if record.blank?
-        return false unless record.source == "buyback_intake" && record.needs_review?
+        return false unless product.source == "buyback_intake" && product.needs_review?
       end
 
       if @format_id.present?
-        return false if presenter.catalog_item.blank?
-        return false unless presenter.catalog_item.format_id == @format_id.to_i
+        return false unless product.format_id == @format_id.to_i
       end
 
       if resolved_store_category_ids.present?
-        return false if presenter.catalog_item.blank?
-        return false unless presenter.catalog_item.store_category_id.in?(resolved_store_category_ids)
+        return false unless product.store_category_id.in?(resolved_store_category_ids)
       end
 
       sub_department_ids = resolved_sub_department_ids
@@ -307,10 +250,7 @@ module Items
 
     def presenter_for(entry)
       case entry[:match_type]
-      when "catalog_item", "catalog_item_identifier"
-        record = entry[:record].is_a?(CatalogItem) ? entry[:record] : entry[:record].catalog_item
-        Items::ItemPresenter.from_catalog_item(record)
-      when "product"
+      when "product", "product_identifier"
         Items::ItemPresenter.from_product(entry[:record])
       when "product_variant"
         Items::ItemPresenter.from_product_variant(entry[:record])

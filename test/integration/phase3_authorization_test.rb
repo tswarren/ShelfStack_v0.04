@@ -20,7 +20,7 @@ class Phase3AuthorizationTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     get items_catalog_items_path
-    assert_response :success
+    assert_redirected_to items_root_path
 
     get items_products_path
     assert_response :success

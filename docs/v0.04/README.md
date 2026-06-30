@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** milestone v0.04-1 product fusion, then v0.04-2 identifiers. v0.04-0 complete — [completion record](../implementation/v0.04-0-completion.md).
+**Current priority:** milestone v0.04-2 product identifiers. v0.04-0 complete — [completion record](../implementation/v0.04-0-completion.md). v0.04-1 complete — [completion record](../implementation/v0.04-1-completion.md).
 
 ---
 
@@ -23,7 +23,8 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | Milestone | Status | Spec bundle |
 | --------- | ------ | ------------- |
 | v0.04-0 Baseline | **Complete** | [v0.04-0 completion](../implementation/v0.04-0-completion.md) |
-| v0.04-1 Product fusion | **Current** | [spec](v0.04-1-product-fusion/spec.md) · [data model](v0.04-1-product-fusion/data-model.md) · [test plan](v0.04-1-product-fusion/test-plan.md) |
+| v0.04-1 Product fusion | **Complete** | [spec](v0.04-1-product-fusion/spec.md) · [data model](v0.04-1-product-fusion/data-model.md) · [test plan](v0.04-1-product-fusion/test-plan.md) · [completion](../implementation/v0.04-1-completion.md) |
+| v0.04-2 Product identifiers | **Current** | *(spec bundle TBD or in progress)* |
 | v0.04-2 Product identifiers | Planned | *(not yet created)* |
 | v0.04-3 Product groups | Planned | *(not yet created)* |
 | v0.04-4 Wire-through | Planned | *(not yet created)* |

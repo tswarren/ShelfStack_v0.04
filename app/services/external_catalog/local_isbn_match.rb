@@ -2,9 +2,9 @@
 
 module ExternalCatalog
   class LocalIsbnMatch
-    Result = Struct.new(:catalog_item, :normalized_isbn, keyword_init: true) do
+    Result = Struct.new(:product, :normalized_isbn, keyword_init: true) do
       def matched?
-        catalog_item.present?
+        product.present?
       end
     end
 
@@ -18,11 +18,18 @@ module ExternalCatalog
 
     def call
       normalized = normalize(@isbn)
-      return Result.new(catalog_item: nil, normalized_isbn: normalized) if normalized.blank?
+      return Result.new(product: nil, normalized_isbn: normalized) if normalized.blank?
 
-      resolution = IngramCatalogImport::IdentifierResolver.resolve(product_code: @isbn, ean: @isbn)
-      catalog_item = resolution.conflict? ? nil : resolution.catalog_item
-      Result.new(catalog_item: catalog_item, normalized_isbn: normalized)
+      product = Product.find_by(sku: normalized)
+      product ||= Items::LegacyProductIdentifierBridge.find_products_by_identifier_query(normalized).order(:id).first
+      unless product
+        resolution = IngramCatalogImport::IdentifierResolver.resolve(product_code: @isbn, ean: @isbn)
+        unless resolution.conflict?
+          product = resolution.catalog_item&.products&.active_records&.order(:id)&.first
+        end
+      end
+
+      Result.new(product: product, normalized_isbn: normalized)
     end
 
     private

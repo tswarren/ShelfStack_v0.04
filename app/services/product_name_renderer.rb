@@ -3,7 +3,8 @@
 class ProductNameRenderer
   def self.product_name(product)
     return product.name_override if product.name_override.present?
-    return product.catalog_item.title if product.catalog_item.present?
+    return product.title if product.title.present?
+    return product.catalog_item.title if product.catalog_item&.title.present?
 
     product.name
   end

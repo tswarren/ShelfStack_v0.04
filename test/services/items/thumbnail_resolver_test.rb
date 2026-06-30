@@ -9,12 +9,7 @@ class Items::ThumbnailResolverTest < ActiveSupport::TestCase
     @item = Items::ItemPresenter.from_product(@product)
   end
 
-  test "prefers product cover image over catalog thumbnail" do
-    @product.catalog_item.primary_thumbnail.attach(
-      io: StringIO.new("fake"),
-      filename: "catalog.jpg",
-      content_type: "image/jpeg"
-    )
+  test "uses product cover image when attached" do
     @product.cover_image.attach(
       io: StringIO.new("fake"),
       filename: "product.jpg",
@@ -27,7 +22,14 @@ class Items::ThumbnailResolverTest < ActiveSupport::TestCase
     assert result.attachment.present?
   end
 
-  test "falls back to catalog primary thumbnail" do
+  test "returns placeholder when product has no cover image" do
+    result = Items::ThumbnailResolver.resolve(item: @item)
+
+    assert_equal :placeholder, result.source
+    assert_nil result.attachment
+  end
+
+  test "ignores legacy catalog primary thumbnail" do
     @product.catalog_item.primary_thumbnail.attach(
       io: StringIO.new("fake"),
       filename: "catalog.jpg",
@@ -36,13 +38,6 @@ class Items::ThumbnailResolverTest < ActiveSupport::TestCase
 
     result = Items::ThumbnailResolver.resolve(item: @item)
 
-    assert_equal :catalog, result.source
-  end
-
-  test "returns placeholder when no attachments" do
-    result = Items::ThumbnailResolver.resolve(item: @item)
-
     assert_equal :placeholder, result.source
-    assert_nil result.attachment
   end
 end

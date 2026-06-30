@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
 class Product < ApplicationRecord
+  include ProductMetadata
+
   PRODUCT_TYPES = %w[physical digital service non_inventory financial].freeze
   VARIATION_TYPES = %w[standard conditional variable matrix].freeze
 
+  # Path B transitional bridge — do not set on new product-first creates after v0.04-1.
   belongs_to :catalog_item, optional: true
   belongs_to :default_display_location, class_name: "DisplayLocation", optional: true
   belongs_to :default_sub_department, class_name: "SubDepartment", optional: true
@@ -25,7 +28,7 @@ class Product < ApplicationRecord
   validates :default_inventory_tracking,
     inclusion: { in: Inventory::TrackingResolver::TRACKING_VALUES },
     allow_nil: true
-  validate :catalog_item_must_be_active
+  validate :catalog_item_must_be_active, if: -> { catalog_item_id.present? }
   validate :default_display_location_must_be_active
   validate :default_sub_department_must_be_active
   validate :preferred_vendor_must_be_active
@@ -34,7 +37,7 @@ class Product < ApplicationRecord
   scope :active_records, -> { where(active: true) }
 
   before_validation :normalize_strings
-  before_validation :apply_catalog_defaults, on: :create
+  before_validation :apply_product_defaults, on: :create
 
   def inactivate!
     update!(active: false)
@@ -52,6 +55,17 @@ class Product < ApplicationRecord
     ProductNameRenderer.product_name(self)
   end
 
+  def catalog_linked?
+    catalog_item_id.present?
+  end
+
+  def latest_external_catalog_import
+    ExternalCatalogImport.applied_imports
+      .where(product_id: id)
+      .order(applied_at: :desc, id: :desc)
+      .first
+  end
+
   private
 
   def normalize_strings
@@ -63,11 +77,17 @@ class Product < ApplicationRecord
     self.variant2_label = variant2_label&.strip.presence
   end
 
-  def apply_catalog_defaults
-    return if catalog_item.blank?
+  def apply_product_defaults
+    if catalog_item.present?
+      Products::CopyCatalogMetadata.to_product(self, catalog_item) unless metadata_fused?
+      self.name = ProductNameRenderer.product_name(self) if name.blank?
+      self.sku = SkuGenerator.product_sku(self) if sku.blank?
+      return
+    end
 
-    self.name = ProductNameRenderer.product_name(self) if name.blank?
-    self.sku = SkuGenerator.product_sku(self) if sku.blank?
+    self.name = ProductNameRenderer.product_name(self) if name.blank? && title.present?
+    self.title = name if title.blank? && name.present?
+    self.sku = SkuGenerator.product_sku(self) if sku.blank? && title.present?
   end
 
   def catalog_item_must_be_active

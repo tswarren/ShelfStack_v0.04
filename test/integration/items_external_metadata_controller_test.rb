@@ -27,6 +27,7 @@ class ItemsExternalMetadataControllerTest < ActionDispatch::IntegrationTest
       action_type: "create_catalog_item",
       imported_by_user: @user,
       catalog_item: @catalog_item,
+      product: @product,
       field_mapping_snapshot: { "title" => @lookup_result.title },
       raw_payload_json: @lookup_result.raw_payload_json,
       applied_at: Time.current
@@ -48,7 +49,7 @@ class ItemsExternalMetadataControllerTest < ActionDispatch::IntegrationTest
 
     get items_item_external_metadata_path(catalog_item_id: @catalog_item.id)
 
-    assert_redirected_to items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup")
+    assert_redirected_to items_item_path(product_id: @product.id, tab: "item_setup")
     assert_equal "No external catalog metadata is linked to this item.", flash[:alert]
   end
 
@@ -66,7 +67,7 @@ class ItemsExternalMetadataControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "item setup tab shows link when external import exists" do
-    get items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup")
+    get items_item_path(product_id: @product.id, tab: "item_setup")
 
     assert_response :success
     assert_match items_item_external_metadata_path(catalog_item_id: @catalog_item.id), response.body
@@ -76,7 +77,7 @@ class ItemsExternalMetadataControllerTest < ActionDispatch::IntegrationTest
   test "item setup tab hides link when no external import exists" do
     @import.destroy!
 
-    get items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup")
+    get items_item_path(product_id: @product.id, tab: "item_setup")
 
     assert_response :success
     assert_no_match "View original metadata", response.body

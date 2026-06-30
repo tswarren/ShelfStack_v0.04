@@ -2,7 +2,7 @@
 
 module ExternalCatalog
   class LookupByIsbn
-    Outcome = Struct.new(:status, :normalized_isbn, :catalog_item, :lookup_result, :request, :message, keyword_init: true)
+    Outcome = Struct.new(:status, :normalized_isbn, :product, :catalog_item, :lookup_result, :request, :message, keyword_init: true)
 
     def self.call(isbn:, actor:, source: nil, client: nil)
       new(isbn:, actor:, source:, client:).call
@@ -27,7 +27,8 @@ module ExternalCatalog
         return Outcome.new(
           status: :local_match,
           normalized_isbn: local.normalized_isbn,
-          catalog_item: local.catalog_item
+          product: local.product,
+          catalog_item: local.product&.catalog_item
         )
       end
 
@@ -87,7 +88,7 @@ module ExternalCatalog
         status: "completed",
         response_status_code: 200,
         candidate: candidate,
-        local_catalog_item: duplicate.catalog_item,
+        local_product: duplicate.product,
         started_at: started_at
       )
       record_audit!("external_lookup.completed", persisted.request, normalized)
@@ -97,6 +98,7 @@ module ExternalCatalog
         normalized_isbn: normalized,
         lookup_result: persisted.lookup_result,
         request: persisted.request,
+        product: duplicate.product,
         catalog_item: duplicate.catalog_item
       )
     end
@@ -112,7 +114,7 @@ module ExternalCatalog
     def record_local_match!(local)
       record_audit!(
         "external_lookup.local_match",
-        local.catalog_item,
+        local.product,
         local.normalized_isbn
       )
     end

@@ -1,30 +1,30 @@
 # frozen_string_literal: true
 
 module Items
-  module CatalogItemBisacSyncable
+  module ProductBisacSyncable
     extend ActiveSupport::Concern
 
     private
 
-    def load_bisac_form_state(catalog_item)
+    def load_bisac_form_state(product)
       @bisac_scheme_loaded = CategoryScheme.active_records.exists?(scheme_key: Bisac::CategoryNodeImporter::SCHEME_KEY)
 
       if bisac_structured_input?
         load_bisac_form_state_from_params
-      elsif catalog_item.persisted?
-        load_bisac_form_state_from_product(catalog_item)
+      elsif product.persisted?
+        load_bisac_form_state_from_product(product)
       else
         clear_bisac_form_state
       end
     end
 
-    def load_bisac_form_state_from_product(record)
-      primary = record.primary_bisac_categorization
+    def load_bisac_form_state_from_product(product)
+      primary = product.primary_bisac_categorization
       @primary_bisac_category_node_id = primary&.category_node_id
       @primary_bisac_category_node_label = bisac_node_label(primary&.category_node)
-      @bisac_category_node_ids = record.bisac_categorizations
-                                       .where.not(id: primary&.id)
-                                       .map { |categorization| bisac_selection_entry(categorization.category_node) }
+      @bisac_category_node_ids = product.bisac_categorizations
+                                        .where.not(id: primary&.id)
+                                        .map { |categorization| bisac_selection_entry(categorization.category_node) }
     end
 
     def load_bisac_form_state_from_params
@@ -42,12 +42,12 @@ module Items
       @bisac_category_node_ids = []
     end
 
-    def sync_catalog_item_bisac!(catalog_item)
-      CatalogItemBisacSync.sync!(
-        record: catalog_item,
+    def sync_product_bisac!(product)
+      ProductBisacSync.sync!(
+        product: product,
         primary_bisac_category_node_id: params[:primary_bisac_category_node_id],
         bisac_category_node_ids: params[:bisac_category_node_ids],
-        bisac_subjects: params.dig(:catalog_item, :bisac_subjects),
+        bisac_subjects: product_metadata_params_source.dig(:bisac_subjects),
         structured: bisac_structured_input?,
         source: bisac_sync_source
       )
@@ -61,15 +61,10 @@ module Items
       flash[:notice] = [ notice, warning_text ].compact.join(" ")
     end
 
-    def apply_identifier_validation_notice!(record)
-      identifier = if record.is_a?(CatalogItemIdentifier)
-                       record
-      else
-                       record.reload.primary_identifier
-      end
-      return if identifier.blank? || identifier.validation_message.blank?
+    def apply_transitional_identifier_notice!(validation_message)
+      return if validation_message.blank?
 
-      message = "Identifier saved with warning: #{identifier.validation_message}"
+      message = "Identifier saved with warning: #{validation_message}"
       flash[:warning] = [ flash[:warning], message ].compact.join(" ")
     end
 
@@ -100,6 +95,10 @@ module Items
         id: node.id,
         label: bisac_node_label(node)
       }
+    end
+
+    def product_metadata_params_source
+      params[:product].presence || params[:catalog_item].presence || {}
     end
   end
 end

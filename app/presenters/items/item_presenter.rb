@@ -7,12 +7,16 @@ module Items
     attr_reader :catalog_item, :product
 
     def self.from_catalog_item(catalog_item)
+      return new(catalog_item: nil, product: nil) if catalog_item.blank?
+
       product = catalog_item.products.active_records.order(:id).first
-      new(catalog_item: catalog_item, product: product)
+      return from_product(product) if product.present?
+
+      new(catalog_item: catalog_item, product: nil)
     end
 
     def self.from_product(product)
-      new(catalog_item: product.catalog_item, product: product)
+      new(product: product)
     end
 
     def self.from_product_variant(variant)
@@ -23,28 +27,29 @@ module Items
       case hit[:record_type]
       when "catalog_item"
         from_catalog_item(hit[:record])
-      when "product"
+      when "product", "product_identifier"
         from_product(hit[:record])
       when "product_variant"
         from_product_variant(hit[:record])
       when "catalog_item_identifier"
-        from_catalog_item(hit[:record].catalog_item)
+        product = hit[:record].catalog_item&.products&.active_records&.order(:id)&.first
+        product ? from_product(product) : from_catalog_item(hit[:record].catalog_item)
       else
         raise ArgumentError, "Unknown search hit type: #{hit[:record_type]}"
       end
     end
 
     def initialize(catalog_item: nil, product: nil)
-      @catalog_item = catalog_item
-      @product = product || catalog_item&.products&.active_records&.order(:id)&.first
+      @catalog_item = catalog_item || product&.catalog_item
+      @product = product
     end
 
     def title
-      catalog_item&.title || product&.name || "Untitled Item"
+      product&.title.presence || product&.name || catalog_item&.title || "Untitled Item"
     end
 
     def primary_identifier
-      catalog_item&.primary_identifier
+      product ? LegacyProductIdentifierBridge.primary_identifier(product) : catalog_item&.primary_identifier
     end
 
     def primary_identifier_display
@@ -73,7 +78,7 @@ module Items
     end
 
     def catalog_linked?
-      catalog_item.present?
+      product&.catalog_linked? || catalog_item.present?
     end
 
     def sellable?
@@ -81,35 +86,37 @@ module Items
     end
 
     def creator_line
-      catalog_item&.creators.presence || "—"
+      product&.creators.presence || catalog_item&.creators.presence || "—"
     end
 
     def creator_names
-      return [] if catalog_item&.creators.blank?
+      source = product&.creators.presence || catalog_item&.creators
+      return [] if source.blank?
 
-      catalog_item.creators.split(";").map(&:strip).reject(&:blank?)
+      source.split(";").map(&:strip).reject(&:blank?)
     end
 
     def creator_entries
-      return [] if catalog_item&.creators.blank?
+      source = product&.creators.presence || catalog_item&.creators
+      return [] if source.blank?
 
-      MetadataParser.parse_creators(catalog_item.creators)
+      MetadataParser.parse_creators(source)
     end
 
     def subtitle
-      catalog_item&.edition_statement.presence
+      product&.subtitle.presence || product&.edition_statement.presence || catalog_item&.edition_statement.presence
     end
 
     def format_name
-      catalog_item&.format&.name || "—"
+      (product&.format || catalog_item&.format)&.name || "—"
     end
 
     def format_label
-      return "—" unless catalog_item&.format
+      format_record = product&.format || catalog_item&.format
+      return "—" unless format_record
 
-      format = catalog_item.format
-      code = format.code.presence || format.short_name
-      code.present? ? "#{format.name} (#{code})" : format.name
+      code = format_record.code.presence || format_record.short_name
+      code.present? ? "#{format_record.name} (#{code})" : format_record.name
     end
 
     def released_label
@@ -117,19 +124,21 @@ module Items
     end
 
     def released_date_label
-      return nil unless catalog_item
+      meta = product || catalog_item
+      return nil unless meta
 
-      if catalog_item.publication_date.present?
-        catalog_item.publication_date.strftime("%B %-d, %Y")
-      elsif catalog_item.year.present?
-        catalog_item.year.to_s
+      if meta.publication_date.present?
+        meta.publication_date.strftime("%B %-d, %Y")
+      elsif meta.year.present?
+        meta.year.to_s
       end
     end
 
     def publication_status_label
-      return nil unless catalog_item&.publication_status.present?
+      status = product&.publication_status || catalog_item&.publication_status
+      return nil if status.blank?
 
-      humanize_status(catalog_item.publication_status)
+      humanize_status(status)
     end
 
     def primary_identifier_label
@@ -140,54 +149,60 @@ module Items
     end
 
     def series_label
-      return "—" unless catalog_item&.series_name.present?
+      name = product&.series_name || catalog_item&.series_name
+      return "—" if name.blank?
 
-      label = catalog_item.series_name
-      label += " (#{catalog_item.series_enumeration})" if catalog_item.series_enumeration.present?
+      enumeration = product&.series_enumeration || catalog_item&.series_enumeration
+      label = name
+      label += " (#{enumeration})" if enumeration.present?
       label
     end
 
     def pages_label
-      catalog_item&.page_count.present? ? catalog_item.page_count.to_s : nil
+      count = product&.page_count || catalog_item&.page_count
+      count.present? ? count.to_s : nil
     end
 
     def dimensions_label
-      return nil unless catalog_item
+      meta = product || catalog_item
+      return nil unless meta
 
-      item = catalog_item
-      dims = [ item.height, item.width, item.depth ].compact
-      return nil if dims.empty? && item.weight.blank?
+      dims = [ meta.height, meta.width, meta.depth ].compact
+      return nil if dims.empty? && meta.weight.blank?
 
       parts = []
       if dims.any?
-        unit = item.dimension_units.presence || "in"
+        unit = meta.dimension_units.presence || "in"
         parts << dims.map { |value| value.to_i == value ? value.to_i : value }.join(" x ") + " #{unit}"
       end
-      if item.weight.present?
-        weight_unit = item.weight_units.presence || "lb"
-        weight = item.weight.to_i == item.weight ? item.weight.to_i : item.weight
+      if meta.weight.present?
+        weight_unit = meta.weight_units.presence || "lb"
+        weight = meta.weight.to_i == meta.weight ? meta.weight.to_i : meta.weight
         parts << "(#{weight} #{weight_unit}.)"
       end
       parts.join(" ")
     end
 
     def running_time_label
-      return nil unless catalog_item&.duration_minutes.present?
+      minutes = product&.duration_minutes || catalog_item&.duration_minutes
+      return nil unless minutes.present?
 
-      "#{catalog_item.duration_minutes} minutes"
+      "#{minutes} minutes"
     end
 
     def pub_frequency_label
-      return nil if catalog_item&.publication_frequency.blank?
+      frequency = product&.publication_frequency || catalog_item&.publication_frequency
+      return nil if frequency.blank?
 
-      humanize_status(catalog_item.publication_frequency)
+      humanize_status(frequency)
     end
 
     def catalog_facts
+      meta = product || catalog_item
       [
         [ "Format", format_name ],
         [ "Released", released_date_label ],
-        [ "Publisher", catalog_item&.publisher ],
+        [ "Publisher", meta&.publisher ],
         [ "Primary Identifier", primary_identifier_label ],
         [ "Series", series_label ],
         [ "Pages", pages_label ],
@@ -206,17 +221,18 @@ module Items
     end
 
     def subject_groups
-      return [] unless catalog_item
+      meta = product || catalog_item
+      return [] unless meta
 
       [
         { label: "Subjects", headings: cleaned_headings_from(bisac_subject_source) },
-        { label: "Genres", headings: cleaned_headings_from({ data: catalog_item.genre_data, raw: catalog_item.genres }) },
-        { label: "Themes", headings: cleaned_headings_from({ data: catalog_item.theme_data, raw: catalog_item.themes }) }
+        { label: "Genres", headings: cleaned_headings_from({ data: meta.genre_data, raw: meta.genres }) },
+        { label: "Themes", headings: cleaned_headings_from({ data: meta.theme_data, raw: meta.themes }) }
       ].reject { |group| group[:headings].empty? }
     end
 
     def description_text
-      catalog_item&.description.presence
+      product&.description.presence || catalog_item&.description.presence
     end
 
     def description_long?(length: 280)
@@ -225,16 +241,15 @@ module Items
 
     def overview_actions(helper: self)
       actions = []
-      if catalog_item
-        actions << {
-          label: "Edit Catalog Item",
-          url: helper.edit_items_catalog_item_path(catalog_item, item_return_params)
-        }
-      end
       if product
         actions << {
           label: "Edit Product",
           url: helper.edit_items_product_path(product, item_return_params)
+        }
+      elsif catalog_item
+        actions << {
+          label: "Edit Catalog Item",
+          url: helper.edit_items_catalog_item_path(catalog_item, item_return_params)
         }
       end
       actions
@@ -249,7 +264,7 @@ module Items
 
       {
         sub_department: variant.sub_department&.name,
-        store_category: catalog_item&.store_category&.breadcrumb_label,
+        store_category: (product&.store_category || catalog_item&.store_category)&.breadcrumb_label,
         condition: variant.condition&.short_name || variant.condition&.name,
         display_location: variant.display_location&.name,
         defaults: defaults
@@ -267,7 +282,7 @@ module Items
     end
 
     def topic_section_label(variant: nil)
-      catalog_item&.store_category&.breadcrumb_label
+      (product&.store_category || catalog_item&.store_category)&.breadcrumb_label
     end
 
     def variant_for_eyebrow(variant)
@@ -355,10 +370,12 @@ module Items
     end
 
     def route_params
-      if catalog_item
+      if product.present?
+        { product_id: product.id }
+      elsif catalog_item.present?
         { catalog_item_id: catalog_item.id }
       else
-        { product_id: product.id }
+        {}
       end
     end
 
@@ -432,17 +449,31 @@ module Items
     end
 
     def subject_heading_sources
+      meta = product || catalog_item
+      return [] unless meta
+
       [
         bisac_subject_source,
-        { data: catalog_item.genre_data, raw: catalog_item.genres },
-        { data: catalog_item.theme_data, raw: catalog_item.themes }
+        { data: meta.genre_data, raw: meta.genres },
+        { data: meta.theme_data, raw: meta.themes }
       ]
     end
 
     def bisac_subject_source
+      if product&.respond_to?(:bisac_categorizations)
+        linked_headings = product.bisac_categorizations
+          .order(primary: :desc, id: :asc)
+          .map { |categorization| { "heading" => categorization.category_node.name } }
+        return { data: linked_headings, raw: nil } if linked_headings.any?
+
+        return { data: product.bisac_subject_data, raw: product.bisac_subjects } if product.bisac_subjects.present? || product.bisac_subject_data.present?
+      end
+
+      return { data: [], raw: nil } unless catalog_item
+
       linked_headings = catalog_item.bisac_categorizations
-                                    .order(primary: :desc, id: :asc)
-                                    .map { |categorization| { "heading" => categorization.category_node.name } }
+        .order(primary: :desc, id: :asc)
+        .map { |categorization| { "heading" => categorization.category_node.name } }
       return { data: linked_headings, raw: nil } if linked_headings.any?
 
       { data: catalog_item.bisac_subject_data, raw: catalog_item.bisac_subjects }

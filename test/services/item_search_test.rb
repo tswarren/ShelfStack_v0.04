@@ -5,11 +5,11 @@ require "test_helper"
 class ItemSearchTest < ActiveSupport::TestCase
   include Phase3TestHelper
 
-  test "finds catalog item by title" do
-    item = create_catalog_item!(title: "Unique Search Title XYZ")
+  test "finds product by title" do
+    product = create_product!(title: "Unique Search Title XYZ")
     results = ItemSearch.call(query: "Unique Search Title")
 
-    assert results.any? { |result| result.presenter.catalog_item == item }
+    assert results.any? { |result| result.presenter.product == product }
   end
 
   test "finds product by sku" do

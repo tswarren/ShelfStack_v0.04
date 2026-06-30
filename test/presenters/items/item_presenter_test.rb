@@ -20,15 +20,18 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     assert_equal variant.product, presenter.product
   end
 
-  test "non catalog product uses product anchor" do
-    product = Product.create!(
-      name: "Gift Card",
-      sku: "GIFT-001",
-      product_type: "financial",
-      variation_type: "standard",
-      list_price_cents: 0,
-      active: true
-    )
+    test "non catalog product uses product anchor" do
+      product = Product.create!(
+        title: "Gift Card",
+        name: "Gift Card",
+        catalog_item_type: "gift",
+        publication_status: "active",
+        sku: "GIFT-001",
+        product_type: "financial",
+        variation_type: "standard",
+        list_price_cents: 0,
+        active: true
+      )
     presenter = Items::ItemPresenter.from_product(product)
 
     assert_nil presenter.catalog_item
@@ -46,8 +49,8 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     product = create_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
-    assert_equal "/items/item?catalog_item_id=#{product.catalog_item.id}&tab=item_setup", presenter.tab_path("item_setup")
-    assert_equal "/items/item?catalog_item_id=#{product.catalog_item.id}", presenter.tab_path("overview")
+    assert_equal "/items/item?product_id=#{product.id}&tab=item_setup", presenter.tab_path("item_setup")
+    assert_equal "/items/item?product_id=#{product.id}", presenter.tab_path("overview")
   end
 
   test "variant summary label lists active condition names" do
@@ -135,7 +138,7 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
 
     labels = presenter.overview_actions.map { |action| action[:label] }
 
-    assert_equal [ "Edit Catalog Item", "Edit Product" ], labels
+    assert_equal [ "Edit Product" ], labels
   end
 
   test "creator entries parse display names and roles" do

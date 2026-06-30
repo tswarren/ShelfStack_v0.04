@@ -21,15 +21,21 @@ module Items
     private
 
     def set_item_presenter
-      if params[:catalog_item_id].present?
-        catalog_item = CatalogItem.with_attached_primary_thumbnail.includes(products: product_includes).find(params[:catalog_item_id])
-        @item = ItemPresenter.from_catalog_item(catalog_item)
-      elsif params[:product_id].present?
-        product = Product.with_attached_cover_image.includes(:catalog_item, product_includes).find(params[:product_id])
+      if params[:product_id].present?
+        product = Product.with_attached_cover_image.includes(product_includes).find(params[:product_id])
         @item = ItemPresenter.from_product(product)
       elsif params[:product_variant_id].present?
         variant = ProductVariant.includes(product: product_includes).find(params[:product_variant_id])
         @item = ItemPresenter.from_product_variant(variant)
+      elsif params[:catalog_item_id].present?
+        catalog_item = CatalogItem.includes(products: product_includes).find(params[:catalog_item_id])
+        product = catalog_item.products.active_records.order(:id).first
+        if product.present?
+          redirect_to items_item_path(product_id: product.id, tab: params[:tab], variant_id: params[:variant_id].presence)
+          return
+        end
+
+        @item = ItemPresenter.from_catalog_item(catalog_item)
       else
         redirect_to items_root_path, alert: "Item not found."
       end
@@ -38,7 +44,8 @@ module Items
     def product_includes
       {
         cover_image_attachment: :blob,
-        catalog_item: { primary_thumbnail_attachment: :blob },
+        format: {},
+        store_category: {},
         default_display_location: :parent,
         product_variants: [ :display_location, :condition, :sub_department ]
       }
@@ -51,10 +58,9 @@ module Items
       when "operations"
         nil
       when "item_setup"
-        @identifiers = @item.catalog_item&.catalog_item_identifiers&.active_records
-          &.order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc) || []
+        @identifiers = legacy_identifiers_for_setup
         @variants = @item.variants
-        @external_catalog_import = @item.catalog_item&.latest_external_catalog_import
+        @external_catalog_import = @item.product&.latest_external_catalog_import
         load_display_vendor_data
       when "activity"
         @audit_events = merged_audit_events
@@ -151,6 +157,14 @@ module Items
 
     def ledger_visible?
       Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store)
+    end
+
+    def legacy_identifiers_for_setup
+      catalog_item = @item.product&.catalog_item || @item.catalog_item
+      return [] if catalog_item.blank?
+
+      catalog_item.catalog_item_identifiers.active_records
+        .order(primary_identifier: :desc, identifier_type: :asc, normalized_identifier: :asc)
     end
 
     def load_display_vendor_data
