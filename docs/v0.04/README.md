@@ -18,22 +18,12 @@
 
 ## Milestone documents
 
-Create each bundle when a milestone is scoped:
-
-```text
-docs/v0.04/
-  v0.04-1-product-fusion/
-    spec.md
-    data-model.md
-    test-plan.md
-  v0.04-2-product-identifiers/
-    ...
-```
+Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `data-model.md`, and `test-plan.md` when scoped.
 
 | Milestone | Status | Spec bundle |
 | --------- | ------ | ------------- |
 | v0.04-0 Baseline | **Complete** | [v0.04-0 completion](../implementation/v0.04-0-completion.md) |
-| v0.04-1 Product fusion | **Current** | *(not yet created)* |
+| v0.04-1 Product fusion | **Current** | [spec](v0.04-1-product-fusion/spec.md) · [data model](v0.04-1-product-fusion/data-model.md) · [test plan](v0.04-1-product-fusion/test-plan.md) |
 | v0.04-2 Product identifiers | Planned | *(not yet created)* |
 | v0.04-3 Product groups | Planned | *(not yet created)* |
 | v0.04-4 Wire-through | Planned | *(not yet created)* |
