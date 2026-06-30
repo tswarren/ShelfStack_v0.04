@@ -73,6 +73,8 @@ Specifically, this milestone does **not** finish:
 
 Those belong to later milestones.
 
+**Review remediation boundaries (v0.04-1):** The “no new `CatalogItem` rows” rule applies to Add Item, external `ProductBuilder`, and buyback intake — not to the Ingram vendor feed, which remains a legacy exception until v0.04-2. Variant SKU suffix derivation and the final system-assigned variant SKU allocator are explicitly deferred to v0.04-2; v0.04-1 does not change `SkuGenerator.variant_sku` behavior.
+
 ---
 
 ## Important Boundary: Identifiers

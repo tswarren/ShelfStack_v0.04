@@ -43,15 +43,10 @@ class BackfillV0041ProductMetadataFromCatalogItems < ActiveRecord::Migration[8.1
 
     say_with_time "Backfill product categorizations from catalog items" do
       Product.where.not(catalog_item_id: nil).find_each do |product|
-        Categorization.where(categorizable_type: "CatalogItem", categorizable_id: product.catalog_item_id).find_each do |cat|
-          next if Categorization.exists?(
-            categorizable_type: "Product",
-            categorizable_id: product.id,
-            category_node_id: cat.category_node_id
-          )
+        catalog_item = CatalogItem.find_by(id: product.catalog_item_id)
+        next if catalog_item.blank?
 
-          cat.update_columns(categorizable_type: "Product", categorizable_id: product.id, updated_at: Time.current)
-        end
+        Products::CopyCategorizationsFromCatalogItem.to_product(product, catalog_item)
       end
     end
 

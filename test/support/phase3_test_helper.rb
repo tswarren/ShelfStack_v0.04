@@ -126,40 +126,46 @@ module Phase3TestHelper
     }
   end
 
-  def create_product!(catalog_item: nil, **attrs)
+  def create_legacy_catalog_linked_product!(catalog_item: nil, **attrs)
     catalog_item ||= create_catalog_item! unless attrs.key?(:title)
-
-    if catalog_item.present?
-      ensure_test_store_category!(catalog_item)
-      Product.create!({
-        catalog_item: catalog_item,
-        name: catalog_item.title,
-        sku: catalog_item.primary_identifier.normalized_identifier,
-        product_type: "physical",
-        variation_type: "standard",
-        list_price_cents: 1000,
-        active: true
-      }.merge(catalog_metadata_attrs_for(catalog_item)).merge(attrs))
-    else
-      format = attrs.delete(:format) || create_format!
-      title = attrs[:title] || attrs[:name] || "Test Product"
-      Product.create!({
-        title: title,
-        catalog_item_type: attrs[:catalog_item_type] || "sideline",
-        format: format,
-        publication_status: "active",
-        name: title,
-        sku: attrs[:sku] || "P#{SecureRandom.hex(4).upcase}",
-        product_type: "physical",
-        variation_type: "standard",
-        list_price_cents: 1000,
-        active: true
-      }.merge(attrs))
-    end
+    ensure_test_store_category!(catalog_item)
+    Product.create!({
+      catalog_item: catalog_item,
+      name: catalog_item.title,
+      sku: catalog_item.primary_identifier.normalized_identifier,
+      product_type: "physical",
+      variation_type: "standard",
+      list_price_cents: 1000,
+      active: true
+    }.merge(catalog_metadata_attrs_for(catalog_item)).merge(attrs))
   end
 
-  def create_product_variant!(product: nil, sub_department: nil, condition: nil, **attrs)
-    product ||= create_product!
+  def create_product!(**attrs)
+    if attrs.key?(:catalog_item) && attrs[:catalog_item].present?
+      return create_legacy_catalog_linked_product!(**attrs)
+    end
+
+    attrs = attrs.dup
+    attrs.delete(:catalog_item)
+    format = attrs.delete(:format) || create_format!
+    title = attrs[:title] || attrs[:name] || "Test Product"
+    sku = attrs[:sku] || "P#{SecureRandom.hex(4).upcase}"
+    Product.create!({
+      title: title,
+      catalog_item_type: attrs[:catalog_item_type] || "book",
+      format: format,
+      publication_status: "active",
+      name: title,
+      sku: sku,
+      product_type: "physical",
+      variation_type: "standard",
+      list_price_cents: 1000,
+      active: true
+    }.merge(attrs))
+  end
+
+  def create_product_variant!(product: nil, legacy_catalog_linked: false, sub_department: nil, condition: nil, **attrs)
+    product ||= legacy_catalog_linked ? create_legacy_catalog_linked_product! : create_product!
     unless sub_department
       department = create_department!(
         name: "Test Department #{SecureRandom.hex(2)}",

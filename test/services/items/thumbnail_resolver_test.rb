@@ -30,13 +30,15 @@ class Items::ThumbnailResolverTest < ActiveSupport::TestCase
   end
 
   test "ignores legacy catalog primary thumbnail" do
-    @product.catalog_item.primary_thumbnail.attach(
+    product = create_legacy_catalog_linked_product!
+    item = Items::ItemPresenter.from_product(product)
+    product.catalog_item.primary_thumbnail.attach(
       io: StringIO.new("fake"),
       filename: "catalog.jpg",
       content_type: "image/jpeg"
     )
 
-    result = Items::ThumbnailResolver.resolve(item: @item)
+    result = Items::ThumbnailResolver.resolve(item: item)
 
     assert_equal :placeholder, result.source
   end

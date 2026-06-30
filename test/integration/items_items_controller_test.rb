@@ -13,7 +13,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "items.catalog_items.view")
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "detailuser", password: "Password123!" }
-    @product = create_product!
+    @product = create_legacy_catalog_linked_product!
     @product.update!(bisac_subjects: "Fiction / General [bisac/FIC000000]")
     @variant = create_product_variant!(product: @product)
   end

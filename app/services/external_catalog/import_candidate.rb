@@ -99,6 +99,7 @@ module ExternalCatalog
     def finalize_create!(product)
       existing = ExternalCatalogImport.applied_imports.find_by(
         external_lookup_result: @lookup_result,
+        product_id: product.id,
         action_type: @action_type
       )
       raise ActiveRecord::RecordNotUnique, "Import already finalized" if existing.present?

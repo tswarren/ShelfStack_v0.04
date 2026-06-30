@@ -16,7 +16,7 @@ class ItemsExternalMetadataControllerTest < ActionDispatch::IntegrationTest
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "metadataser", password: "Password123!" }
 
-    @product = create_product!
+    @product = create_legacy_catalog_linked_product!
     @catalog_item = @product.catalog_item
     @source = create_isbndb_source!
     @lookup_result = persist_lookup_result!

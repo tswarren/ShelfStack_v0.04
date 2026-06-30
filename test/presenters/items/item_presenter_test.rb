@@ -5,8 +5,18 @@ require "test_helper"
 class ItemsItemPresenterTest < ActiveSupport::TestCase
   include Phase3TestHelper
 
+  test "from product uses product metadata only not catalog fallback" do
+    catalog_item = create_catalog_item!(title: "Catalog Title", creators: "Catalog Author [author]")
+    product = create_legacy_catalog_linked_product!(catalog_item: catalog_item)
+    product.update_columns(title: "", name: "", creators: nil)
+    presenter = Items::ItemPresenter.from_product(product)
+
+    assert_equal "Untitled Item", presenter.title
+    assert_equal "—", presenter.creator_line
+  end
+
   test "from catalog item resolves linked product" do
-    product = create_product!
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
     assert_equal product.catalog_item.title, presenter.title
@@ -39,14 +49,14 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
   end
 
   test "format name returns short format label for search" do
-    product = create_product!
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
     assert_equal product.catalog_item.format.name, presenter.format_name
   end
 
   test "tab path appends tab query param without breaking anchor param" do
-    product = create_product!
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
     assert_equal "/items/item?product_id=#{product.id}&tab=item_setup", presenter.tab_path("item_setup")
@@ -123,8 +133,8 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     assert_includes presenter.search_statuses, "catalog_only"
   end
 
-  test "context actions include edit catalog" do
-    product = create_product!
+  test "context actions include edit catalog for legacy linked product" do
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_product(product)
 
     labels = presenter.context_actions.map { |action| action[:label] }

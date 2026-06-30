@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -584,6 +584,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120100) do
     t.index ["catalog_item_id"], name: "index_external_catalog_imports_on_catalog_item_id"
     t.index ["external_data_source_id"], name: "index_external_catalog_imports_on_external_data_source_id"
     t.index ["external_lookup_result_id", "catalog_item_id", "action_type"], name: "index_external_catalog_imports_on_result_item_action_applied", unique: true, where: "(((status)::text = 'applied'::text) AND ((action_type)::text = ANY (ARRAY[('create_catalog_item'::character varying)::text, ('link_existing_catalog_item'::character varying)::text, ('fill_blank_existing_catalog_item'::character varying)::text])))"
+    t.index ["external_lookup_result_id", "product_id", "action_type"], name: "index_external_catalog_imports_on_result_product_action_applied", unique: true, where: "(((status)::text = 'applied'::text) AND (product_id IS NOT NULL) AND ((action_type)::text = ANY (ARRAY[('create_catalog_item'::character varying)::text, ('link_existing_catalog_item'::character varying)::text, ('fill_blank_existing_catalog_item'::character varying)::text])))"
     t.index ["external_lookup_result_id"], name: "index_external_catalog_imports_on_external_lookup_result_id"
     t.index ["imported_by_user_id"], name: "index_external_catalog_imports_on_imported_by_user_id"
     t.index ["product_id"], name: "index_external_catalog_imports_on_product_id"

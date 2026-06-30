@@ -86,32 +86,18 @@ module Seeds
       sideline_store_category = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
                                               .category_nodes.find_by!(node_key: "sideline")
 
-      catalog_item = CatalogItem.find_or_initialize_by(title: "The Hobbit", format: hardcover)
-      if catalog_item.new_record?
-        catalog_item.assign_attributes(
+      # Product-first demo items (v0.04-1). Legacy catalog rows are not created here.
+      product = Product.find_or_initialize_by(sku: "9780123456786")
+      if product.new_record?
+        product.assign_attributes(
+          title: "The Hobbit",
+          name: "The Hobbit",
           catalog_item_type: "book",
+          format: hardcover,
           creators: "Tolkien, J.R.R. [author]",
           publisher: "Houghton Mifflin",
           publication_status: "active",
           store_category: fiction_store_category,
-          active: true
-        )
-        catalog_item.save!
-        CatalogIdentifierService.add_identifier!(
-          catalog_item: catalog_item,
-          identifier_type: "isbn10",
-          value: "0123456789",
-          primary: true,
-          actor: User.find_by(username: "system"),
-          source: "seed"
-        )
-      end
-
-      product = Product.find_or_initialize_by(sku: "9780123456786")
-      if product.new_record?
-        product.assign_attributes(
-          catalog_item: catalog_item,
-          name: catalog_item.title,
           product_type: "physical",
           variation_type: "standard",
           list_price_cents: 1899,
@@ -119,7 +105,6 @@ module Seeds
           active: true
         )
         product.save!
-        copy_catalog_metadata_to_product!(product, catalog_item)
         ProductVariant.find_or_create_by!(product: product, sku: product.sku) do |variant|
           variant.assign_attributes(
             name: ProductNameRenderer.variant_name(
@@ -159,26 +144,15 @@ module Seeds
         end
       end
 
-      sideline_item = CatalogItem.find_or_initialize_by(title: "Bookstore Tote Bag", format: sideline)
-      if sideline_item.new_record?
-        sideline_item.assign_attributes(
-          catalog_item_type: "sideline",
-          publication_status: "active",
-          store_category: sideline_store_category,
-          active: true
-        )
-        sideline_item.save!
-        CatalogIdentifierService.generate_local!(
-          catalog_item: sideline_item,
-          actor: User.find_by(username: "system")
-        )
-      end
-
-      sideline_product = Product.find_or_initialize_by(sku: sideline_item.primary_identifier&.normalized_identifier || "LOCAL-TOTE-001")
+      sideline_product = Product.find_or_initialize_by(sku: "LOCAL-TOTE-001")
       if sideline_product.new_record?
         sideline_product.assign_attributes(
-          catalog_item: sideline_item,
-          name: sideline_item.title,
+          title: "Bookstore Tote Bag",
+          name: "Bookstore Tote Bag",
+          catalog_item_type: "sideline",
+          format: sideline,
+          publication_status: "active",
+          store_category: sideline_store_category,
           product_type: "physical",
           variation_type: "standard",
           list_price_cents: 1499,
@@ -186,7 +160,6 @@ module Seeds
           active: true
         )
         sideline_product.save!
-        copy_catalog_metadata_to_product!(sideline_product, sideline_item)
       end
     end
 
