@@ -12,19 +12,19 @@ module Items
       if bisac_structured_input?
         load_bisac_form_state_from_params
       elsif catalog_item.persisted?
-        load_bisac_form_state_from_catalog_item(catalog_item)
+        load_bisac_form_state_from_product(catalog_item)
       else
         clear_bisac_form_state
       end
     end
 
-    def load_bisac_form_state_from_catalog_item(catalog_item)
-      primary = catalog_item.primary_bisac_categorization
+    def load_bisac_form_state_from_product(record)
+      primary = record.primary_bisac_categorization
       @primary_bisac_category_node_id = primary&.category_node_id
       @primary_bisac_category_node_label = bisac_node_label(primary&.category_node)
-      @bisac_category_node_ids = catalog_item.bisac_categorizations
-                                             .where.not(id: primary&.id)
-                                             .map { |categorization| bisac_selection_entry(categorization.category_node) }
+      @bisac_category_node_ids = record.bisac_categorizations
+                                       .where.not(id: primary&.id)
+                                       .map { |categorization| bisac_selection_entry(categorization.category_node) }
     end
 
     def load_bisac_form_state_from_params
@@ -43,15 +43,14 @@ module Items
     end
 
     def sync_catalog_item_bisac!(catalog_item)
-      result = CatalogItemBisacSync.sync!(
-        catalog_item: catalog_item,
+      CatalogItemBisacSync.sync!(
+        record: catalog_item,
         primary_bisac_category_node_id: params[:primary_bisac_category_node_id],
         bisac_category_node_ids: params[:bisac_category_node_ids],
         bisac_subjects: params.dig(:catalog_item, :bisac_subjects),
         structured: bisac_structured_input?,
         source: bisac_sync_source
       )
-      result
     end
 
     def apply_bisac_sync_notice!(result)

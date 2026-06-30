@@ -5,8 +5,18 @@ require "test_helper"
 class ItemsItemPresenterTest < ActiveSupport::TestCase
   include Phase3TestHelper
 
+  test "from product uses product metadata only not catalog fallback" do
+    catalog_item = create_catalog_item!(title: "Catalog Title", creators: "Catalog Author [author]")
+    product = create_legacy_catalog_linked_product!(catalog_item: catalog_item)
+    product.update_columns(title: "", name: "", creators: nil)
+    presenter = Items::ItemPresenter.from_product(product)
+
+    assert_equal "Untitled Item", presenter.title
+    assert_equal "—", presenter.creator_line
+  end
+
   test "from catalog item resolves linked product" do
-    product = create_product!
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
     assert_equal product.catalog_item.title, presenter.title
@@ -20,15 +30,18 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     assert_equal variant.product, presenter.product
   end
 
-  test "non catalog product uses product anchor" do
-    product = Product.create!(
-      name: "Gift Card",
-      sku: "GIFT-001",
-      product_type: "financial",
-      variation_type: "standard",
-      list_price_cents: 0,
-      active: true
-    )
+    test "non catalog product uses product anchor" do
+      product = Product.create!(
+        title: "Gift Card",
+        name: "Gift Card",
+        catalog_item_type: "gift",
+        publication_status: "active",
+        sku: "GIFT-001",
+        product_type: "financial",
+        variation_type: "standard",
+        list_price_cents: 0,
+        active: true
+      )
     presenter = Items::ItemPresenter.from_product(product)
 
     assert_nil presenter.catalog_item
@@ -36,18 +49,18 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
   end
 
   test "format name returns short format label for search" do
-    product = create_product!
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
     assert_equal product.catalog_item.format.name, presenter.format_name
   end
 
   test "tab path appends tab query param without breaking anchor param" do
-    product = create_product!
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_catalog_item(product.catalog_item)
 
-    assert_equal "/items/item?catalog_item_id=#{product.catalog_item.id}&tab=item_setup", presenter.tab_path("item_setup")
-    assert_equal "/items/item?catalog_item_id=#{product.catalog_item.id}", presenter.tab_path("overview")
+    assert_equal "/items/item?product_id=#{product.id}&tab=item_setup", presenter.tab_path("item_setup")
+    assert_equal "/items/item?product_id=#{product.id}", presenter.tab_path("overview")
   end
 
   test "variant summary label lists active condition names" do
@@ -120,8 +133,8 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     assert_includes presenter.search_statuses, "catalog_only"
   end
 
-  test "context actions include edit catalog" do
-    product = create_product!
+  test "context actions include edit catalog for legacy linked product" do
+    product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_product(product)
 
     labels = presenter.context_actions.map { |action| action[:label] }
@@ -135,7 +148,7 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
 
     labels = presenter.overview_actions.map { |action| action[:label] }
 
-    assert_equal [ "Edit Catalog Item", "Edit Product" ], labels
+    assert_equal [ "Edit Product" ], labels
   end
 
   test "creator entries parse display names and roles" do

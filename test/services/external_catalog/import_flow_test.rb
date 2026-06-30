@@ -65,19 +65,22 @@ class ExternalCatalogImportFlowTest < ActiveSupport::TestCase
   end
 
   test "finalize create records import after item details save" do
-    item = create_catalog_item!(format: @paperback, title: "Edited Gatsby")
-    CatalogIdentifierService.add_identifier!(
-      catalog_item: item,
-      identifier_type: "isbn13",
-      value: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
-      primary: true,
-      actor: @user
+    product = Product.create!(
+      title: "Edited Gatsby",
+      catalog_item_type: "book",
+      format: @paperback,
+      publication_status: "active",
+      active: true,
+      product_type: "physical",
+      variation_type: "conditional",
+      sku: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
+      name: "Edited Gatsby"
     )
 
     assert_difference -> { ExternalCatalogImport.count }, 1 do
       result = ExternalCatalog::ImportCandidate.finalize_create!(
         lookup_result: @lookup_result,
-        catalog_item: item,
+        product: product,
         actor: @user
       )
       assert_equal :applied, result.status
@@ -85,30 +88,43 @@ class ExternalCatalogImportFlowTest < ActiveSupport::TestCase
   end
 
   test "repeat finalize create does not duplicate import row" do
-    item = create_catalog_item!(format: @paperback, title: "Edited Gatsby")
+    product = Product.create!(
+      title: "Edited Gatsby",
+      catalog_item_type: "book",
+      format: @paperback,
+      publication_status: "active",
+      active: true,
+      product_type: "physical",
+      variation_type: "conditional",
+      sku: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
+      name: "Edited Gatsby"
+    )
     ExternalCatalog::ImportCandidate.finalize_create!(
       lookup_result: @lookup_result,
-      catalog_item: item,
+      product: product,
       actor: @user
     )
 
     assert_raises(ActiveRecord::RecordNotUnique) do
       ExternalCatalog::ImportCandidate.finalize_create!(
         lookup_result: @lookup_result,
-        catalog_item: item,
+        product: product,
         actor: @user
       )
     end
   end
 
   test "duplicate isbn routes to link and fill blank actions" do
-    existing = create_catalog_item!(format: @paperback, title: "Existing")
-    CatalogIdentifierService.add_identifier!(
-      catalog_item: existing,
-      identifier_type: "isbn13",
-      value: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
-      primary: true,
-      actor: @user
+    existing = Product.create!(
+      title: "Existing",
+      catalog_item_type: "book",
+      format: @paperback,
+      publication_status: "active",
+      active: true,
+      product_type: "physical",
+      variation_type: "conditional",
+      sku: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
+      name: "Existing"
     )
 
     preview = ExternalCatalog::ImportPreview.call(lookup_result: @lookup_result)
@@ -131,18 +147,18 @@ class ExternalCatalogImportFlowTest < ActiveSupport::TestCase
   end
 
   test "fill blank leaves populated creators and themes unchanged" do
-    existing = create_catalog_item!(
-      format: @paperback,
+    existing = Product.create!(
       title: "Existing",
+      catalog_item_type: "book",
+      format: @paperback,
+      publication_status: "active",
+      active: true,
+      product_type: "physical",
+      variation_type: "conditional",
+      sku: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
+      name: "Existing",
       creators: "Local Author [author]",
       themes: "Local Theme"
-    )
-    CatalogIdentifierService.add_identifier!(
-      catalog_item: existing,
-      identifier_type: "isbn13",
-      value: Phase65TestHelper::ISBNDB_SUCCESS_ISBN,
-      primary: true,
-      actor: @user
     )
 
     result = ExternalCatalog::ImportCandidate.call(

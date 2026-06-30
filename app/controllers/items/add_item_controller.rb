@@ -2,7 +2,7 @@
 
 module Items
   class AddItemController < BaseController
-    include CatalogItemBisacSyncable
+    include ProductBisacSyncable
 
     STEPS = %w[choose_path identify item_details selling_setup sellable_sku].freeze
     WORKFLOWS = %w[catalog_linked non_catalog].freeze
@@ -83,15 +83,15 @@ module Items
         render "items/add_item/choose_path"
       when "identify"
         ensure_catalog_linked_workflow! or return
-        @local_catalog_item = local_match_catalog_item
+        @local_product = local_match_product
         @local_match_variant = local_match_variant_for_request
         render "items/add_item/identify"
       when "item_details"
         ensure_catalog_linked_workflow! or return
         @external_lookup_staged = external_lookup_staged?
-        @catalog_item = find_or_build_catalog_item
+        @product = find_or_build_product
         @formats = Format.active_records.order(:name)
-        load_bisac_form_state(@catalog_item)
+        load_bisac_form_state(@product)
         load_store_category_collections
         render "items/add_item/item_details"
       when "selling_setup"
@@ -100,7 +100,7 @@ module Items
           redirect_to items_add_item_path(step: "selling_setup") and return
         end
         if catalog_linked?
-          ensure_catalog_item_in_draft! or return
+          ensure_product_metadata_in_draft! or return
         else
           ensure_non_catalog_workflow! or return
         end
@@ -134,17 +134,17 @@ module Items
       redirect_to items_add_item_path(step: "identify")
     end
 
-    def local_match_catalog_item
-      return unless @draft["catalog_item_id"].present?
+    def local_match_product
+      return unless @draft["product_id"].present?
 
-      CatalogItem.find_by(id: @draft["catalog_item_id"])
+      Product.find_by(id: @draft["product_id"])
     end
 
     def local_match_variant_for_request
-      item = @local_catalog_item || local_match_catalog_item
-      return if item.blank?
+      product = @local_product || local_match_product
+      return if product.blank?
 
-      ProductVariant.active_records.joins(:product).where(products: { catalog_item_id: item.id }).first
+      product.product_variants.active_records.order(:id).first
     end
 
     def add_item_cancel_path
@@ -161,29 +161,37 @@ module Items
       @external_lookup_staged = external_lookup_staged?
 
       cover_image_url = external_lookup_result&.image_url if @external_lookup_staged
+      sku_validation = nil
 
-      if @draft["catalog_item_id"].present?
-        @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
-        @catalog_item.assign_attributes(catalog_item_params)
-        saved = persist_catalog_item_updates!(@catalog_item)
+      if @draft["product_id"].present?
+        @product = Product.find(@draft["product_id"])
+        @product.assign_attributes(product_metadata_params)
+        saved = persist_product_updates!(@product)
         created = false
       else
-        @catalog_item = CatalogItem.new(catalog_item_params.merge(active: true, publication_status: "active"))
-        saved = save_catalog_item!(@catalog_item)
+        @product = Product.new(
+          product_metadata_params.merge(
+            active: true,
+            publication_status: "active",
+            product_type: "physical",
+            variation_type: "conditional"
+          )
+        )
+        saved, sku_validation = save_product!(@product)
         created = saved
       end
       return unless saved
 
-      finalize_external_lookup_import!(@catalog_item) if @external_lookup_staged
+      finalize_external_lookup_import!(@product) if @external_lookup_staged
 
-      bisac_result = sync_catalog_item_bisac!(@catalog_item)
-      store_category_result = sync_catalog_store_category!(@catalog_item)
-      record_audit!(created ? "catalog_item.created" : "catalog_item.updated", @catalog_item)
+      bisac_result = sync_product_bisac!(@product)
+      store_category_result = sync_product_store_category!(@product)
+      record_audit!(created ? "product.created" : "product.updated", @product)
       apply_bisac_sync_notice!(bisac_result)
       apply_store_category_sync_notice!(store_category_result)
-      apply_identifier_validation_notice!(@catalog_item)
+      apply_transitional_identifier_notice!(sku_validation&.validation_message)
       draft_attrs = {
-        "catalog_item_id" => @catalog_item.id,
+        "product_id" => @product.id,
         "external_lookup_result_id" => nil,
         "external_lookup_format_id" => nil
       }
@@ -195,8 +203,8 @@ module Items
 
       if done_commit?
         reset_draft!
-        redirect_to ItemPresenter.from_catalog_item(@catalog_item).show_path,
-                    notice: "Item details saved. Status: Catalog Only."
+        redirect_to ItemPresenter.from_product(@product).show_path,
+                    notice: "Item details saved. Status: Product Only."
       else
         redirect_to items_add_item_path(step: "selling_setup")
       end
@@ -211,18 +219,17 @@ module Items
       end
 
       if catalog_linked?
-        ensure_catalog_item_in_draft! or return
+        ensure_product_metadata_in_draft! or return
       else
         ensure_non_catalog_workflow! or return
       end
 
       @product = build_product_from_params
       load_product_collections
-      @catalog_item = @product.catalog_item if catalog_linked?
 
       if @product.save
         cover_import_message = import_external_cover_image!(@product)
-        record_audit!("product.created", @product)
+        record_audit!(catalog_linked? ? "product.updated" : "product.created", @product)
         draft_updates = { "product_id" => @product.id, "external_lookup_msrp_cents" => nil }
         draft_updates["external_lookup_cover_image_url"] = nil if cover_import_message.nil?
         save_draft!(draft_updates)
@@ -244,7 +251,6 @@ module Items
       else
         @step = "selling_setup"
         load_product_collections
-        @catalog_item = @product.catalog_item if catalog_linked?
         render "items/add_item/selling_setup", status: :unprocessable_entity
       end
     end
@@ -290,66 +296,68 @@ module Items
       end
     end
 
-    def save_catalog_item!(catalog_item)
+    def save_product!(product)
+      sku_validation = nil
       saved = false
       lookup_result = external_lookup_result
       begin
-        CatalogItem.transaction do
-          raise ActiveRecord::Rollback unless catalog_item.save
-
-          if lookup_result.present?
-            ExternalCatalog::CatalogItemBuilder.add_identifiers!(
-              catalog_item: catalog_item,
-              candidate: lookup_result,
-              actor: current_user
-            )
-          elsif identifier_value_param.present?
-            CatalogIdentifierService.add_identifier!(
-              catalog_item: catalog_item,
-              identifier_type: identifier_type_param,
-              value: identifier_value_param,
-              primary: true,
-              actor: current_user
-            )
-          else
-            CatalogIdentifierService.generate_local!(catalog_item: catalog_item, actor: current_user)
+        Product.transaction do
+          unless product.persisted?
+            sku_validation = assign_transitional_sku!(product, lookup_result: lookup_result)
           end
+          raise ActiveRecord::Rollback unless product.save
 
-          saved = catalog_item.reload.primary_identifier.present?
+          saved = product.sku.present?
           raise ActiveRecord::Rollback unless saved
         end
-      rescue CatalogIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
-        apply_catalog_item_save_failure!(catalog_item, e)
+      rescue AddItem::TransitionalSkuAssigner::ConflictError => e
+        product.errors.add(:base, e.message)
+        saved = false
+      rescue ActiveRecord::RecordInvalid => e
+        product.errors.merge!(e.record.errors) unless e.record == product
         saved = false
       end
 
-      unless saved
-        render_item_details_errors(catalog_item)
-      end
+      render_item_details_errors(product) unless saved
 
-      saved
+      [ saved, sku_validation ]
     end
 
-    def persist_catalog_item_updates!(catalog_item)
-      return true if catalog_item.save
+    def persist_product_updates!(product)
+      return true if product.save
 
-      render_item_details_errors(catalog_item)
+      render_item_details_errors(product)
       false
     end
 
-    def finalize_external_lookup_import!(catalog_item)
+    def assign_transitional_sku!(product, lookup_result: nil)
+      if lookup_result.present?
+        AddItem::TransitionalSkuAssigner.assign!(product: product, candidate: lookup_result, actor: current_user)
+      elsif identifier_value_param.present?
+        AddItem::TransitionalSkuAssigner.assign!(
+          product: product,
+          identifier_type: identifier_type_param,
+          identifier_value: identifier_value_param,
+          actor: current_user
+        )
+      else
+        AddItem::TransitionalSkuAssigner.assign!(product: product, actor: current_user)
+      end
+    end
+
+    def finalize_external_lookup_import!(product)
       lookup_result = external_lookup_result
       return if lookup_result.blank?
 
       ExternalCatalog::ImportCandidate.finalize_create!(
         lookup_result: lookup_result,
-        catalog_item: catalog_item,
+        product: product,
         actor: current_user
       )
     end
 
     def external_lookup_staged?
-      @draft["external_lookup_result_id"].present? && @draft["catalog_item_id"].blank?
+      @draft["external_lookup_result_id"].present? && @draft["product_id"].blank?
     end
 
     def external_lookup_result
@@ -384,21 +392,15 @@ module Items
       load_product_collections
 
       if catalog_linked?
-        ensure_catalog_item_in_draft!
-        @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
-        @product = Product.new(
-          catalog_item: @catalog_item,
-          active: true,
-          product_type: "physical",
-          variation_type: "conditional",
-          name: ProductNameRenderer.product_name(Product.new(catalog_item: @catalog_item)),
-          sku: @catalog_item.primary_identifier&.normalized_identifier,
-          list_price_cents: external_lookup_msrp_cents
+        ensure_product_metadata_in_draft!
+        @product = Product.find(@draft["product_id"])
+        @product.assign_attributes(
+          list_price_cents: @product.list_price_cents.to_i.positive? ? @product.list_price_cents : external_lookup_msrp_cents,
+          default_sub_department_id: @product.default_sub_department_id,
+          default_display_location_id: @product.default_display_location_id
         )
         apply_store_category_product_defaults!(@product)
       else
-        ensure_non_catalog_workflow!
-        @catalog_item = nil
         @product = Product.new(
           active: true,
           product_type: "physical",
@@ -410,27 +412,29 @@ module Items
     end
 
     def build_product_from_params
-      attrs = product_params.to_h.symbolize_keys
-      attrs[:active] = true
-
       if catalog_linked?
-        @catalog_item = CatalogItem.find(@draft["catalog_item_id"])
-        attrs[:catalog_item] = @catalog_item
+        product = Product.find(@draft["product_id"])
+        attrs = product_params.to_h.symbolize_keys
         attrs[:variation_type] = resolved_variation_type(attrs[:product_type], attrs[:variation_type].presence || "conditional")
         attrs.delete(:name)
-        apply_store_category_product_defaults!(attrs)
+        attrs.delete(:sku) if attrs[:sku].blank?
+        product.assign_attributes(attrs)
+        apply_store_category_product_defaults!(product)
+        product.default_inventory_tracking ||= AddItem::InventoryTrackingMapper.for_product_type(product.product_type)
+        product
       else
+        attrs = product_params.to_h.symbolize_keys
+        attrs[:active] = true
         attrs[:variation_type] = resolved_variation_type(attrs[:product_type], attrs[:variation_type])
         attrs.delete(:name_override)
-      end
-
-      Product.new(attrs).tap do |product|
-        product.default_inventory_tracking ||= AddItem::InventoryTrackingMapper.for_product_type(product.product_type)
+        Product.new(attrs).tap do |built|
+          built.default_inventory_tracking ||= AddItem::InventoryTrackingMapper.for_product_type(built.product_type)
+        end
       end
     end
 
     def apply_store_category_product_defaults!(target)
-      defaults = StoreCategoryDefaults.for(store_category_node: @catalog_item&.store_category)
+      defaults = StoreCategoryDefaults.for(store_category_node: target.is_a?(Product) ? target.store_category : nil)
       return if defaults.source == "none"
 
       if target.is_a?(Hash)
@@ -484,15 +488,15 @@ module Items
         ProductCondition.active_records.order(:sort_order).first
     end
 
-    def find_or_build_catalog_item
+    def find_or_build_product
       if external_lookup_staged?
         lookup_result = external_lookup_result
         format = Format.active_records.find_by(id: @draft["external_lookup_format_id"])
-        ExternalCatalog::StagedCatalogItemBuilder.build(lookup_result:, format:)
-      elsif @draft["catalog_item_id"].present?
-        CatalogItem.find(@draft["catalog_item_id"])
+        ExternalCatalog::StagedProductBuilder.build(lookup_result:, format:)
+      elsif @draft["product_id"].present?
+        Product.find(@draft["product_id"])
       else
-        CatalogItem.new(active: true, publication_status: "active", catalog_item_type: "book")
+        Product.new(active: true, publication_status: "active", catalog_item_type: "book", product_type: "physical", variation_type: "conditional")
       end
     end
 
@@ -510,8 +514,8 @@ module Items
       false
     end
 
-    def ensure_catalog_item_in_draft!
-      return true if @draft["catalog_item_id"].present?
+    def ensure_product_metadata_in_draft!
+      return true if @draft["product_id"].present?
 
       redirect_to items_add_item_path(step: "item_details"), alert: "Complete item details first."
       false
@@ -543,8 +547,10 @@ module Items
       @conditions = ProductCondition.active_records.order(:sort_order, :name)
     end
 
-    def catalog_item_params
-      params.require(:catalog_item).permit(
+    def product_metadata_params
+      source = params[:product].presence || params[:catalog_item]
+      params_hash = source.is_a?(ActionController::Parameters) ? source : ActionController::Parameters.new(source || {})
+      params_hash.permit(
         :catalog_item_type, :title, :creators, :publisher, :publication_date, :publication_status,
         :series_name, :series_enumeration, :format_id, :edition_statement, :language_code,
         :height, :width, :depth, :dimension_units, :weight, :weight_units, :page_count,
@@ -570,10 +576,10 @@ module Items
       )
     end
 
-    def sync_catalog_store_category!(catalog_item)
-      CatalogItemStoreCategorySync.apply!(
-        catalog_item: catalog_item,
-        store_category_id: params.dig(:catalog_item, :store_category_id),
+    def sync_product_store_category!(product)
+      ProductStoreCategorySync.apply!(
+        product: product,
+        store_category_id: product_metadata_params_source[:store_category_id],
         bisac_category_node_ids: params[:bisac_category_node_ids]
       )
     end
@@ -585,42 +591,20 @@ module Items
     end
 
     def identifier_type_param
-      params.dig(:catalog_item, :initial_identifier_type).presence || "isbn13"
+      product_metadata_params_source[:initial_identifier_type].presence || "isbn13"
     end
 
     def identifier_value_param
-      params.dig(:catalog_item, :initial_identifier_value).to_s.strip
+      product_metadata_params_source[:initial_identifier_value].to_s.strip
     end
 
-    def render_item_details_errors(catalog_item)
+    def render_item_details_errors(product)
       @step = "item_details"
-      @catalog_item = catalog_item
+      @product = product
       @external_lookup_staged = external_lookup_staged?
-      load_bisac_form_state(catalog_item)
+      load_bisac_form_state(product)
       load_store_category_collections
       render "items/add_item/item_details", status: :unprocessable_entity
-    end
-
-    def apply_catalog_item_save_failure!(catalog_item, error)
-      case error
-      when CatalogIdentifierService::IdentifierError
-        catalog_item.errors.add(:base, error.message)
-      when ActiveRecord::RecordInvalid
-        record = error.record
-        if record.is_a?(CatalogItemIdentifier)
-          catalog_item.errors.add(:base, identifier_conflict_message(record))
-        else
-          catalog_item.errors.merge!(record.errors)
-        end
-      end
-    end
-
-    def identifier_conflict_message(identifier)
-      if identifier.normalized_identifier.present?
-        "Identifier #{identifier.normalized_identifier} is already in use."
-      else
-        "Identifier is already in use."
-      end
     end
 
     def done_commit?

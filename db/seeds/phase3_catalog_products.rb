@@ -86,32 +86,18 @@ module Seeds
       sideline_store_category = CategoryScheme.find_by!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
                                               .category_nodes.find_by!(node_key: "sideline")
 
-      catalog_item = CatalogItem.find_or_initialize_by(title: "The Hobbit", format: hardcover)
-      if catalog_item.new_record?
-        catalog_item.assign_attributes(
+      # Product-first demo items (v0.04-1). Legacy catalog rows are not created here.
+      product = Product.find_or_initialize_by(sku: "9780123456786")
+      if product.new_record?
+        product.assign_attributes(
+          title: "The Hobbit",
+          name: "The Hobbit",
           catalog_item_type: "book",
+          format: hardcover,
           creators: "Tolkien, J.R.R. [author]",
           publisher: "Houghton Mifflin",
           publication_status: "active",
           store_category: fiction_store_category,
-          active: true
-        )
-        catalog_item.save!
-        CatalogIdentifierService.add_identifier!(
-          catalog_item: catalog_item,
-          identifier_type: "isbn10",
-          value: "0123456789",
-          primary: true,
-          actor: User.find_by(username: "system"),
-          source: "seed"
-        )
-      end
-
-      product = Product.find_or_initialize_by(sku: "9780123456786")
-      if product.new_record?
-        product.assign_attributes(
-          catalog_item: catalog_item,
-          name: catalog_item.title,
           product_type: "physical",
           variation_type: "standard",
           list_price_cents: 1899,
@@ -136,7 +122,10 @@ module Seeds
       gift_product = Product.find_or_initialize_by(sku: "GIFT-CARD-25")
       if gift_product.new_record?
         gift_product.assign_attributes(
+          title: "Gift Card $25",
           name: "Gift Card $25",
+          catalog_item_type: "gift",
+          publication_status: "active",
           product_type: "financial",
           variation_type: "standard",
           list_price_cents: 2500,
@@ -155,20 +144,69 @@ module Seeds
         end
       end
 
-      sideline_item = CatalogItem.find_or_initialize_by(title: "Bookstore Tote Bag", format: sideline)
-      if sideline_item.new_record?
-        sideline_item.assign_attributes(
+      sideline_product = Product.find_or_initialize_by(sku: "LOCAL-TOTE-001")
+      if sideline_product.new_record?
+        sideline_product.assign_attributes(
+          title: "Bookstore Tote Bag",
+          name: "Bookstore Tote Bag",
           catalog_item_type: "sideline",
+          format: sideline,
           publication_status: "active",
           store_category: sideline_store_category,
+          product_type: "physical",
+          variation_type: "standard",
+          list_price_cents: 1499,
+          default_sub_department: gift_sub_department,
           active: true
         )
-        sideline_item.save!
-        CatalogIdentifierService.generate_local!(
-          catalog_item: sideline_item,
-          actor: User.find_by(username: "system")
-        )
+        sideline_product.save!
       end
+    end
+
+    def self.copy_catalog_metadata_to_product!(product, catalog_item)
+      product.assign_attributes(
+        catalog_item_type: catalog_item.catalog_item_type,
+        title: catalog_item.title,
+        creators: catalog_item.creators,
+        creator_details: catalog_item.creator_details,
+        publisher: catalog_item.publisher,
+        publisher_details: catalog_item.publisher_details,
+        publication_date: catalog_item.publication_date,
+        publication_status: catalog_item.publication_status,
+        series_name: catalog_item.series_name,
+        series_enumeration: catalog_item.series_enumeration,
+        series_data: catalog_item.series_data,
+        format_id: catalog_item.format_id,
+        edition_statement: catalog_item.edition_statement,
+        language_code: catalog_item.language_code,
+        description: catalog_item.description,
+        year: catalog_item.year,
+        bisac_subjects: catalog_item.bisac_subjects,
+        bisac_subject_data: catalog_item.bisac_subject_data,
+        genres: catalog_item.genres,
+        genre_data: catalog_item.genre_data,
+        themes: catalog_item.themes,
+        theme_data: catalog_item.theme_data,
+        target_audiences: catalog_item.target_audiences,
+        target_audience_data: catalog_item.target_audience_data,
+        access_restrictions: catalog_item.access_restrictions,
+        access_restriction_data: catalog_item.access_restriction_data,
+        publication_frequency: catalog_item.publication_frequency,
+        digital: catalog_item.digital,
+        large_print: catalog_item.large_print,
+        page_count: catalog_item.page_count,
+        duration_minutes: catalog_item.duration_minutes,
+        height: catalog_item.height,
+        width: catalog_item.width,
+        depth: catalog_item.depth,
+        dimension_units: catalog_item.dimension_units,
+        weight: catalog_item.weight,
+        weight_units: catalog_item.weight_units,
+        store_category_id: catalog_item.store_category_id,
+        source: catalog_item.source,
+        needs_review: catalog_item.needs_review
+      )
+      product.save!
     end
   end
 end

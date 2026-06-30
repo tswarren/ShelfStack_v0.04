@@ -58,7 +58,7 @@ class ItemsAddItemExternalLookupTest < ActionDispatch::IntegrationTest
       assert_includes elements.first.content, "Fiction; Classics"
     end
 
-    assert_difference -> { CatalogItem.count }, 1 do
+    assert_difference -> { Product.count }, 1 do
       assert_difference -> { ExternalCatalogImport.count }, 1 do
         post items_add_item_path(step: "item_details"), params: {
           catalog_item: {
@@ -71,8 +71,8 @@ class ItemsAddItemExternalLookupTest < ActionDispatch::IntegrationTest
       end
     end
 
-    item = CatalogItem.find_by!(title: "Edited Great Gatsby")
-    assert item.catalog_item_identifiers.active_records.exists?(identifier_type: "isbn13", normalized_identifier: Phase65TestHelper::ISBNDB_SUCCESS_ISBN)
+    product = Product.find_by!(title: "Edited Great Gatsby")
+    assert_equal Phase65TestHelper::ISBNDB_SUCCESS_ISBN, product.sku
     assert_redirected_to items_add_item_path(step: "selling_setup")
 
     follow_redirect!

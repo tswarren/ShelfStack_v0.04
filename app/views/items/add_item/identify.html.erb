@@ -1,16 +1,16 @@
 <%= render "shared/forms/page_header",
            eyebrow: "Add Item",
            title: "Identify by ISBN",
-           description: "Scan or enter an ISBN to search local catalog records and ISBNdb." %>
+           description: "Scan or enter an ISBN to search local products and ISBNdb." %>
 
 <%= render "items/add_item/match_context" %>
 
-<% if @local_catalog_item.present? %>
+<% if @local_product.present? %>
   <div class="ss-notice ss-notice--info">
-    <p><strong>Local match found:</strong> <%= @local_catalog_item.title %></p>
+    <p><strong>Local match found:</strong> <%= @local_product.display_title %></p>
     <p>
-      <%= link_to "Continue with this catalog item", items_add_item_path(step: "item_details"), class: "ss-btn ss-btn-secondary" %>
-      <%= link_to "View catalog item", items_catalog_item_path(@local_catalog_item), class: "ss-btn ss-btn-secondary" %>
+      <%= link_to "Continue with this product", items_add_item_path(step: "item_details"), class: "ss-btn ss-btn-secondary" %>
+      <%= link_to "View product", items_item_path(product_id: @local_product.id), class: "ss-btn ss-btn-secondary" %>
       <% if @match_context&.from_customer_request? && @local_match_variant.present? %>
         <%= button_to "Match existing variant to request",
               match_variant_customers_customer_request_path(@match_context.request_record, line_id: @match_context.line_id, product_variant_id: @local_match_variant.id),

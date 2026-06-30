@@ -14,6 +14,7 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "searchuser", password: "Password123!" }
     @item = create_catalog_item!(title: "Searchable Book Title")
+    @product = create_product!(catalog_item: @item)
   end
 
   test "browse without query returns index table" do
@@ -23,14 +24,14 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     assert_match "Items", response.body
     assert_match "Add Item", response.body
     assert_match "View Item", response.body
-    assert_match items_item_path(catalog_item_id: @item.id), response.body
+    assert_match items_item_path(product_id: @product.id), response.body
   end
 
   test "search returns matching item with lifecycle status" do
     get items_root_path, params: { q: "Searchable Book" }
     assert_response :success
     assert_match "Searchable Book Title", response.body
-    assert_match "Catalog Only", response.body
+    assert_match "Product Created", response.body
   end
 
   test "search omits invalid identifier warning badge" do
@@ -44,12 +45,11 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     get items_root_path, params: { q: @item.title }
     assert_response :success
     assert_no_match "Invalid Identifier Warning", response.body
-    assert_match "Catalog Only", response.body
+    assert_match "Product Created", response.body
   end
 
   test "search shows variant summary price range and view item action only" do
-    product = create_product!(catalog_item: @item)
-    variant = create_product_variant!(product: product, selling_price_cents: 1899)
+    variant = create_product_variant!(product: @product, selling_price_cents: 1899)
 
     get items_root_path, params: { q: @item.title }
     assert_response :success
@@ -61,13 +61,12 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Sell New", response.body
   end
 
-  test "index renders resolved catalog thumbnail in search results" do
-    @item.primary_thumbnail.attach(
+  test "index renders resolved product cover image in search results" do
+    @product.cover_image.attach(
       io: File.open(Rails.root.join("test/fixtures/files/cover.png")),
-      filename: "catalog-thumb.png",
+      filename: "product-cover.png",
       content_type: "image/png"
     )
-    create_product!(catalog_item: @item)
 
     get items_root_path, params: { q: @item.title }
 
@@ -80,8 +79,7 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
     grant_all_phase5_permissions!(@user, store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
-    product = create_product!(catalog_item: @item)
-    variant = create_product_variant!(product: product, selling_price_cents: 1899)
+    variant = create_product_variant!(product: @product, selling_price_cents: 1899)
     InventoryBalance.create!(
       store: @store,
       product_variant: variant,
@@ -100,6 +98,8 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
   test "filter by format narrows results" do
     hardcover = @item.format
     other_format = create_format!(format_key: "filter_fmt", name: "Filter Format Test")
+    matching = create_catalog_item!(title: "Hardcover Only Item", format: hardcover)
+    create_product!(catalog_item: matching)
     create_catalog_item!(title: "Other Format Book", format: other_format)
 
     get items_root_path, params: { format_id: hardcover.id, q: "Searchable" }

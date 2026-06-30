@@ -15,18 +15,17 @@ module Buybacks
     end
 
     def call
-      catalog_item = find_by_identifier
-      catalog_item ||= find_by_title if title.present?
-      return Result.new(catalog_item: nil, product: nil, variants: [], warnings: []) if catalog_item.blank?
+      product = find_by_identifier
+      product ||= find_by_title if title.present?
+      return Result.new(catalog_item: nil, product: nil, variants: [], warnings: []) if product.blank?
 
-      product = catalog_item.products.active_records.first
-      variants = product&.product_variants&.active_records&.includes(:condition) || []
+      variants = product.product_variants.active_records.includes(:condition) || []
       eligible = variants.select { |v| variant_eligible?(v) }
       warnings = variants.reject { |v| variant_eligible?(v) }.map do |v|
         "#{v.name} — not eligible for buyback"
       end
 
-      Result.new(catalog_item:, product:, variants: eligible, warnings:)
+      Result.new(catalog_item: product.catalog_item, product:, variants: eligible, warnings:)
     end
 
     private
@@ -37,12 +36,14 @@ module Buybacks
       return if identifier.blank?
 
       normalized = identifier.upcase.gsub(/[^0-9X]/i, "")
-      ident = CatalogItemIdentifier.active_records.find_by(normalized_identifier: normalized)
-      ident&.catalog_item
+      product = Product.find_by(sku: normalized)
+      return product if product.present?
+
+      Items::LegacyProductIdentifierBridge.find_products_by_identifier_query(normalized).order(:id).first
     end
 
     def find_by_title
-      CatalogItem.active_records.where("title ILIKE ?", "%#{title}%").first
+      Product.active_records.where("title ILIKE ?", "%#{title}%").order(:id).first
     end
 
     def variant_eligible?(variant)

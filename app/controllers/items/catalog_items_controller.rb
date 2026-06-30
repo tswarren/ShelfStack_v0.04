@@ -19,7 +19,7 @@ module Items
     before_action -> { authorize!("items.catalog_items.delete") }, only: :destroy
 
     def index
-      @catalog_items = CatalogItem.includes(:format, :catalog_item_identifiers).order(:title)
+      redirect_to items_root_path
     end
 
     def show

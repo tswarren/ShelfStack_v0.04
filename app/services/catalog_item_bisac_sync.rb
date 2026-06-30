@@ -3,10 +3,11 @@
 class CatalogItemBisacSync
   Result = Data.define(:linked_count, :unresolved_entries, :warnings, :skipped)
 
-  def self.sync!(catalog_item:, primary_bisac_category_node_id: nil, bisac_category_node_ids: nil,
+  def self.sync!(record: nil, catalog_item: nil, product: nil, primary_bisac_category_node_id: nil, bisac_category_node_ids: nil,
                  bisac_subjects: nil, source: "manual", structured: nil)
+    resolved_record = record || product || catalog_item
     new(
-      catalog_item: catalog_item,
+      record: resolved_record,
       primary_bisac_category_node_id: primary_bisac_category_node_id,
       bisac_category_node_ids: bisac_category_node_ids,
       bisac_subjects: bisac_subjects,
@@ -15,9 +16,9 @@ class CatalogItemBisacSync
     ).sync!
   end
 
-  def initialize(catalog_item:, primary_bisac_category_node_id: nil, bisac_category_node_ids: nil,
+  def initialize(record:, primary_bisac_category_node_id: nil, bisac_category_node_ids: nil,
                  bisac_subjects: nil, source: "manual", structured: nil)
-    @catalog_item = catalog_item
+    @record = record
     @primary_bisac_category_node_id = primary_bisac_category_node_id.presence
     @bisac_category_node_ids = Array(bisac_category_node_ids).map(&:presence).compact
     @bisac_subjects = bisac_subjects
@@ -40,7 +41,7 @@ class CatalogItemBisacSync
 
     if !structured_input? && bisac_subjects.blank?
       return Result.new(
-        linked_count: catalog_item.bisac_categorizations.count,
+        linked_count: record.bisac_categorizations.count,
         unresolved_entries: [],
         warnings: [],
         skipped: false
@@ -65,7 +66,7 @@ class CatalogItemBisacSync
     end
 
     Result.new(
-      linked_count: catalog_item.bisac_categorizations.count,
+      linked_count: record.bisac_categorizations.count,
       unresolved_entries: unresolved_entries,
       warnings: warnings,
       skipped: false
@@ -74,7 +75,7 @@ class CatalogItemBisacSync
 
   private
 
-  attr_reader :catalog_item, :primary_bisac_category_node_id, :bisac_category_node_ids,
+  attr_reader :record, :primary_bisac_category_node_id, :bisac_category_node_ids,
               :bisac_subjects, :source, :structured, :warnings, :unresolved_entries
 
   def structured_input?
@@ -142,10 +143,10 @@ class CatalogItemBisacSync
   def replace_bisac_categorizations!(nodes, primary_node)
     keep_ids = nodes.map(&:id)
 
-    catalog_item.bisac_categorizations.where.not(category_node_id: keep_ids).destroy_all
+    record.bisac_categorizations.where.not(category_node_id: keep_ids).destroy_all
 
     nodes.each do |node|
-      categorization = catalog_item.categorizations.find_or_initialize_by(category_node: node)
+      categorization = record.categorizations.find_or_initialize_by(category_node: node)
       categorization.assign_attributes(primary: primary_node&.id == node.id, source: source)
       categorization.save!
     end
@@ -154,7 +155,7 @@ class CatalogItemBisacSync
   end
 
   def remove_bisac_categorizations!
-    catalog_item.bisac_categorizations.destroy_all
+    record.bisac_categorizations.destroy_all
   end
 
   def ordered_nodes(nodes, primary_node)
@@ -167,7 +168,7 @@ class CatalogItemBisacSync
     subject_data = linked_nodes.map { |node| subject_entry_for(node) } + extra_entries
     subject_string = subject_data.map { |entry| subject_string_for(entry) }.join("; ")
 
-    catalog_item.update!(
+    record.update!(
       bisac_subjects: subject_string.presence,
       bisac_subject_data: subject_data.presence
     )

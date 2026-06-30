@@ -28,6 +28,7 @@ class ExternalCatalogLookupByIsbnTest < ActiveSupport::TestCase
       primary: true,
       actor: @user
     )
+    product = create_product!(catalog_item: item)
 
     client = stub_isbndb_client(isbndb_response(status_code: 500, body: "{}"))
     outcome = ExternalCatalog::LookupByIsbn.call(
@@ -38,6 +39,7 @@ class ExternalCatalogLookupByIsbnTest < ActiveSupport::TestCase
     )
 
     assert_equal :local_match, outcome.status
+    assert_equal product.id, outcome.product.id
     assert_equal item.id, outcome.catalog_item.id
     assert_equal 0, ExternalLookupRequest.count
   end

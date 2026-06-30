@@ -6,7 +6,7 @@ module ExternalCatalog
 
     def self.call(source:, actor:, query:, normalized_query:, lookup_type:, request_path:, status:,
                   response_status_code: nil, error_code: nil, error_message: nil,
-                  candidate: nil, local_catalog_item: nil, started_at: Time.current)
+                  candidate: nil, local_product: nil, local_catalog_item: nil, started_at: Time.current)
       new(
         source: source,
         actor: actor,
@@ -19,13 +19,14 @@ module ExternalCatalog
         error_code: error_code,
         error_message: error_message,
         candidate: candidate,
+        local_product: local_product,
         local_catalog_item: local_catalog_item,
         started_at: started_at
       ).call
     end
 
     def initialize(source:, actor:, query:, normalized_query:, lookup_type:, request_path:, status:,
-                   response_status_code:, error_code:, error_message:, candidate:, local_catalog_item:, started_at:)
+                   response_status_code:, error_code:, error_message:, candidate:, local_product: nil, local_catalog_item: nil, started_at:)
       @source = source
       @actor = actor
       @query = query
@@ -37,7 +38,8 @@ module ExternalCatalog
       @error_code = error_code
       @error_message = error_message
       @candidate = candidate
-      @local_catalog_item = local_catalog_item
+      @local_product = local_product
+      @local_catalog_item = local_catalog_item || local_product&.catalog_item
       @started_at = started_at
     end
 
@@ -84,6 +86,7 @@ module ExternalCatalog
             dimensions_snapshot: @candidate.dimensions_snapshot,
             other_isbns_snapshot: @candidate.other_isbns_snapshot,
             raw_payload_json: @candidate.raw_payload || {},
+            local_product: @local_product,
             local_catalog_item: @local_catalog_item
           )
         end

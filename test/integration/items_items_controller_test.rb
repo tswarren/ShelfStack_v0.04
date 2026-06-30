@@ -13,15 +13,19 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "items.catalog_items.view")
     assign_workstation!(@workstation, cookies)
     post login_path, params: { username: "detailuser", password: "Password123!" }
-    @product = create_product!
-    @product.catalog_item.update!(bisac_subjects: "Fiction / General [bisac/FIC000000]")
+    @product = create_legacy_catalog_linked_product!
+    @product.update!(bisac_subjects: "Fiction / General [bisac/FIC000000]")
     @variant = create_product_variant!(product: @product)
   end
 
+  def item_path(**params)
+    items_item_path({ product_id: @product.id }.merge(params))
+  end
+
   test "unified item detail shows catalog layout on overview" do
-    get items_item_path(catalog_item_id: @product.catalog_item.id)
+    get item_path
     assert_response :success
-    assert_match @product.catalog_item.title, response.body
+    assert_match @product.title, response.body
     assert_no_match "Location &amp; Availability", response.body
     assert_match @variant.sku, response.body
     assert_match "Sellable SKUs", response.body
@@ -48,7 +52,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       content_type: "image/png"
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id)
+    get item_path
     assert_response :success
     assert_match "ss-item-cover-image", response.body
   end
@@ -59,7 +63,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     shelf = create_display_location!(name: "Shelf A", short_name: "ShA #{SecureRandom.hex(2)}", parent: fiction)
     @product.update!(default_display_location: shelf)
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id)
+    get item_path
     assert_response :success
     assert_match "ss-item-location-eyebrow", response.body
     assert_match "Store Floor", response.body
@@ -73,10 +77,9 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     scheme = CategoryScheme.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY) ||
              create_category_scheme!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY, name: "Store Sections")
     biography = create_category_node!(category_scheme: scheme, node_key: "biography", name: "Biography")
-    @product.update!(default_display_location: shelf)
-    @product.catalog_item.update!(store_category: biography)
+    @product.update!(default_display_location: shelf, store_category: biography)
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id)
+    get item_path
     assert_response :success
 
     eyebrow = response.body[/ss-item-location-eyebrow.*?<\/nav>/m]
@@ -87,7 +90,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "item setup tab shows variant matrix and selling actions" do
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
+    get item_path(tab: "item_setup")
     assert_response :success
     assert_match "Catalog metadata", response.body
     assert_match "Product setup", response.body
@@ -103,8 +106,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "item setup tab highlights variant row when variant_id param present" do
-    get items_item_path(
-      catalog_item_id: @product.catalog_item.id,
+    get item_path(
       tab: "item_setup",
       variant_id: @variant.id
     )
@@ -123,7 +125,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       primary: false
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
+    get item_path(tab: "item_setup")
     assert_response :success
     assert_match "ss-status-badge status-active\">Primary", response.body
     assert_no_match "<th>Primary</th>", response.body
@@ -148,7 +150,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       primary: false
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
+    get item_path(tab: "item_setup")
     assert_response :success
     assert_match "Invalid identifier", response.body
     assert_no_match "Invalid Identifier Warning", response.body
@@ -164,7 +166,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       primary: false
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
+    get item_path(tab: "item_setup")
     assert_response :success
 
     primary_pos = response.body.index("identifier_id=#{primary.id}")
@@ -176,7 +178,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "setup.product_vendors.create", store: @store)
     grant_permission!(@user, "setup.product_variant_vendors.create", store: @store)
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "item_setup")
+    get item_path(tab: "item_setup")
     assert_response :success
     assert_match "Variant display locations", response.body
     assert_match @variant.sku, response.body
@@ -187,7 +189,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "operations tab renders variant summary and drawer entry point" do
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "operations")
+    get item_path(tab: "operations")
     assert_response :success
     assert_match "Variant operations", response.body
     assert_match @variant.sku, response.body
@@ -207,7 +209,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       status: "open"
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "activity")
+    get item_path(tab: "activity")
     assert_response :success
     assert_match "TBO #", response.body
     assert_match "Audit timeline", response.body
@@ -225,7 +227,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
       status: "open"
     )
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "overview")
+    get item_path(tab: "overview")
     assert_response :success
     assert_match "Needs Attention", response.body
     assert_match "open TBO", response.body
@@ -237,7 +239,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
 
-    get items_item_path(catalog_item_id: @product.catalog_item.id, tab: "operations")
+    get item_path(tab: "operations")
 
     assert_response :success
     assert_match "Variant operations", response.body

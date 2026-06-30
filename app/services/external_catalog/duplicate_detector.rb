@@ -2,9 +2,9 @@
 
 module ExternalCatalog
   class DuplicateDetector
-    Result = Struct.new(:catalog_item, :matched_isbn, :matched_type, keyword_init: true) do
+    Result = Struct.new(:product, :catalog_item, :matched_isbn, :matched_type, keyword_init: true) do
       def duplicate?
-        catalog_item.present?
+        product.present?
       end
     end
 
@@ -24,25 +24,46 @@ module ExternalCatalog
 
     def call
       if @isbn13.present?
-        item = find_item(@isbn13, ISBN_TYPES[:isbn13])
-        return Result.new(catalog_item: item, matched_isbn: @isbn13, matched_type: "isbn13") if item
+        match = find_product(@isbn13, ISBN_TYPES[:isbn13])
+        return build_result(match, @isbn13, "isbn13") if match
       end
 
       if @isbn10.present?
-        item = find_item(@isbn10, ISBN_TYPES[:isbn10])
-        return Result.new(catalog_item: item, matched_isbn: @isbn10, matched_type: "isbn10") if item
+        match = find_product(@isbn10, ISBN_TYPES[:isbn10])
+        return build_result(match, @isbn10, "isbn10") if match
       end
 
-      Result.new(catalog_item: nil, matched_isbn: nil, matched_type: nil)
+      Result.new(product: nil, catalog_item: nil, matched_isbn: nil, matched_type: nil)
     end
 
     private
 
-    def find_item(normalized, types)
-      CatalogItemIdentifier.active_records
-        .where(identifier_type: types, normalized_identifier: normalized)
+    def find_product(normalized, _types)
+      product = Product.find_by(sku: normalized)
+      return product if product.present?
+
+      legacy_product = Items::LegacyProductIdentifierBridge
+        .find_products_by_identifier_query(normalized)
+        .order(:id)
+        .first
+      return legacy_product if legacy_product.present?
+
+      legacy_item = CatalogItemIdentifier.active_records
+        .where(identifier_type: _types, normalized_identifier: normalized)
         .includes(:catalog_item)
         .first&.catalog_item
+      return nil if legacy_item.blank?
+
+      legacy_item.products.active_records.order(:id).first
+    end
+
+    def build_result(product, matched_isbn, matched_type)
+      Result.new(
+        product: product,
+        catalog_item: product&.catalog_item,
+        matched_isbn: matched_isbn,
+        matched_type: matched_type
+      )
     end
   end
 end

@@ -11,7 +11,10 @@ module Items
       create_product!(catalog_item: catalog_item)
 
       non_catalog = Product.create!(
+        title: "Browse Non-Catalog Gift",
         name: "Browse Non-Catalog Gift",
+        catalog_item_type: "gift",
+        publication_status: "active",
         sku: "BROWSE-GIFT-001",
         product_type: "financial",
         variation_type: "standard",
@@ -26,14 +29,15 @@ module Items
       assert_includes titles, "Browse Non-Catalog Gift"
     end
 
-    test "finds catalog item by series name" do
+    test "finds product by series name" do
       item = create_catalog_item!(title: "Indexed Series Book", series_name: "Mystery River")
+      product = create_product!(catalog_item: item)
       result = Items::IndexQuery.call(query: "Mystery River")
 
-      assert result.results.any? { |entry| entry.presenter.catalog_item == item }
+      assert result.results.any? { |entry| entry.presenter.product == product }
     end
 
-    test "finds catalog item by categorization subject word" do
+    test "finds product by categorization subject word" do
       scheme = CategoryScheme.create!(scheme_key: "test_bisac", name: "Test BISAC", purpose: "bisac", active: true)
       node = CategoryNode.create!(
         category_scheme: scheme,
@@ -43,39 +47,43 @@ module Items
         active: true
       )
       item = create_catalog_item!(title: "Hidden Fantasy Title")
-      Categorization.create!(categorizable: item, category_node: node, source: "manual")
+      product = create_product!(catalog_item: item)
+      Categorization.create!(categorizable: product, category_node: node, source: "manual")
 
       result = Items::IndexQuery.call(query: "Fantasy Adventure")
 
-      assert result.results.any? { |entry| entry.presenter.catalog_item == item }
+      assert result.results.any? { |entry| entry.presenter.product == product }
     end
 
     test "filters by format" do
       hardcover = Format.find_by(format_key: "hardcover") || create_format!(format_key: "hardcover", name: "Hardcover")
       paperback = create_format!(format_key: "pbk_filter", name: "Paperback Filter Test")
       matching = create_catalog_item!(title: "Hardcover Only Item", format: hardcover)
+      create_product!(catalog_item: matching)
       create_catalog_item!(title: "Paperback Only Item", format: paperback)
 
       results = Items::IndexQuery.call(format_id: hardcover.id).results
 
-      assert results.any? { |entry| entry.presenter.catalog_item == matching }
+      assert results.any? { |entry| entry.presenter.title == "Hardcover Only Item" }
       assert_not results.any? { |entry| entry.presenter.title == "Paperback Only Item" }
     end
 
-    test "include inactive shows inactivated catalog item" do
+    test "include inactive shows inactivated product" do
       item = create_catalog_item!(title: "Inactive Browse Item")
-      item.inactivate!
+      product = create_product!(catalog_item: item)
+      product.inactivate!
 
       active_results = Items::IndexQuery.call(query: "Inactive Browse Item").results
       inactive_results = Items::IndexQuery.call(query: "Inactive Browse Item", include_inactive: true).results
 
       assert_empty active_results
-      assert inactive_results.any? { |entry| entry.presenter.catalog_item == item }
+      assert inactive_results.any? { |entry| entry.presenter.product == product }
     end
 
     test "paginates browse results" do
       30.times do |index|
-        create_catalog_item!(title: "Paginated Item #{index.to_s.rjust(2, '0')}")
+        item = create_catalog_item!(title: "Paginated Item #{index.to_s.rjust(2, '0')}")
+        create_product!(catalog_item: item)
       end
 
       page_one = Items::IndexQuery.call(page: 1, per_page: 25)
@@ -118,6 +126,7 @@ module Items
       )
 
       in_child = create_catalog_item!(title: "Child Category Book #{suffix}", store_category: child)
+      create_product!(catalog_item: in_child)
       create_catalog_item!(title: "Sibling Category Book #{suffix}", store_category: sibling)
 
       results = Items::IndexQuery.call(store_category_id: parent.id, query: suffix).results
@@ -125,7 +134,7 @@ module Items
 
       assert_includes titles, "Child Category Book #{suffix}"
       assert_not_includes titles, "Sibling Category Book #{suffix}"
-      assert_equal in_child, results.find { |entry| entry.presenter.title == "Child Category Book #{suffix}" }.presenter.catalog_item
+      assert_equal in_child.title, results.find { |entry| entry.presenter.title == "Child Category Book #{suffix}" }.presenter.product.title
     end
 
     test "dedupes variant hits to one presenter" do

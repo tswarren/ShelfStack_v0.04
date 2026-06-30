@@ -28,9 +28,9 @@ module Buybacks
       raise Error, "Subdepartment does not allow buyback." unless sub_department.buyback_allowed?
       raise Error, "Condition is not buyback-eligible." unless condition.buyback_eligible?
 
-      existing_catalog = find_existing_catalog_item
-      if existing_catalog.present?
-        return link_existing_catalog!(existing_catalog)
+      existing_product = find_existing_product
+      if existing_product.present?
+        return link_existing_product!(existing_product)
       end
 
       create_full_intake!
@@ -40,27 +40,55 @@ module Buybacks
 
     attr_reader :session, :actor, :line, :title, :sub_department, :condition, :identifier, :list_price_cents
 
-    def find_existing_catalog_item
+    def find_existing_product
       if identifier.present?
-        ident = CatalogItemIdentifier.active_records.find_by(normalized_identifier: normalize_identifier(identifier))
-        return ident.catalog_item if ident.present?
+        normalized = normalize_identifier(identifier)
+        product = Product.find_by(sku: normalized)
+        return product if product.present?
+
+        bridge_product = Items::LegacyProductIdentifierBridge.find_products_by_identifier_query(normalized).order(:id).first
+        return bridge_product if bridge_product.present?
+
+        legacy_ident = CatalogItemIdentifier.active_records.find_by(normalized_identifier: normalized)
+        if legacy_ident.present?
+          legacy_product = legacy_ident.catalog_item.products.active_records.order(:id).first
+          return legacy_product if legacy_product.present?
+
+          return create_product_for_legacy_catalog!(legacy_ident.catalog_item)
+        end
       end
 
       resolve = ResolveItem.call(store: session.store, identifier: identifier, title: title)
-      resolve.catalog_item
+      resolve.product
     end
 
-    def link_existing_catalog!(catalog_item)
-      product = catalog_item.products.active_records.first
-      product = create_intake_product!(catalog_item) if product.blank?
+    def create_product_for_legacy_catalog!(catalog_item)
+      Product.create!(
+        catalog_item: catalog_item,
+        title: catalog_item.title,
+        catalog_item_type: catalog_item.catalog_item_type,
+        publication_status: catalog_item.publication_status,
+        format: catalog_item.format,
+        product_type: "physical",
+        variation_type: "conditional",
+        list_price_cents: list_price_cents.to_i,
+        default_sub_department: sub_department,
+        source: "buyback_intake",
+        needs_review: true,
+        created_from_buyback_session: session,
+        active: true,
+        sku: SkuGenerator.product_sku(Product.new(catalog_item: catalog_item))
+      )
+    end
 
+    def link_existing_product!(product)
       CatalogItem.transaction do
         line.update!(
-          catalog_item: catalog_item,
+          catalog_item: product.catalog_item,
           product: product,
           product_condition: condition,
           sub_department: sub_department,
-          title_snapshot: catalog_item.title,
+          title_snapshot: product.display_title,
           list_price_cents: list_price_cents || product.list_price_cents,
           status: "resolved"
         )
@@ -70,12 +98,12 @@ module Buybacks
       AuditEvents.record!(
         actor: actor,
         event_name: "buyback.intake.linked",
-        auditable: catalog_item,
+        auditable: product,
         source: session,
-        details: { "catalog_item_id" => catalog_item.id, "product_id" => product.id }
+        details: { "product_id" => product.id }
       )
 
-      Result.new(catalog_item:, product:, product_variant: nil, created_new_catalog: false)
+      Result.new(catalog_item: product.catalog_item, product:, product_variant: nil, created_new_catalog: false)
     end
 
     def create_full_intake!
@@ -83,11 +111,10 @@ module Buybacks
         Format.active_records.order(:name).first
       raise Error, "No active format available for intake." if format.blank?
 
-      catalog_item = nil
       product = nil
 
-      CatalogItem.transaction do
-        catalog_item = CatalogItem.create!(
+      Product.transaction do
+        product = Product.new(
           catalog_item_type: "book",
           title: title,
           publication_status: "active",
@@ -95,38 +122,19 @@ module Buybacks
           source: "buyback_intake",
           needs_review: true,
           created_from_buyback_session: session,
-          active: true
-        )
-
-        if identifier.present?
-          CatalogIdentifierService.add_identifier!(
-            catalog_item: catalog_item,
-            identifier_type: infer_identifier_type(identifier),
-            value: identifier,
-            primary: true,
-            actor: actor,
-            source: "buyback_intake"
-          )
-        else
-          CatalogIdentifierService.generate_local!(catalog_item: catalog_item, actor: actor)
-        end
-
-        product = Product.create!(
-          catalog_item: catalog_item,
+          active: true,
           product_type: "physical",
           variation_type: "conditional",
           list_price_cents: list_price_cents.to_i,
-          default_sub_department: sub_department,
-          source: "buyback_intake",
-          needs_review: true,
-          created_from_buyback_session: session,
-          active: true
+          default_sub_department: sub_department
         )
 
+        assign_transitional_sku!(product)
+        product.save!
+
         line.update!(
-          catalog_item: catalog_item,
+          catalog_item: product.catalog_item,
           product: product,
-          created_catalog_item: catalog_item,
           created_product: product,
           product_condition: condition,
           sub_department: sub_department,
@@ -137,8 +145,21 @@ module Buybacks
         PricingFieldSync.refresh!(line: line.reload)
       end
 
-      AuditEvents.record!(actor: actor, event_name: "buyback.intake.created", auditable: catalog_item, source: session)
-      Result.new(catalog_item:, product:, product_variant: nil, created_new_catalog: true)
+      AuditEvents.record!(actor: actor, event_name: "buyback.intake.created", auditable: product, source: session)
+      Result.new(catalog_item: product.catalog_item, product:, product_variant: nil, created_new_catalog: true)
+    end
+
+    def assign_transitional_sku!(product)
+      if identifier.present?
+        AddItem::TransitionalSkuAssigner.assign!(
+          product: product,
+          identifier_type: infer_identifier_type(identifier),
+          identifier_value: identifier,
+          actor: actor
+        )
+      else
+        AddItem::TransitionalSkuAssigner.assign!(product: product, actor: actor)
+      end
     end
 
     def default_condition
@@ -153,20 +174,6 @@ module Buybacks
     def infer_identifier_type(value)
       normalized = normalize_identifier(value)
       normalized.length == 13 ? "isbn13" : "isbn10"
-    end
-
-    def create_intake_product!(catalog_item)
-      Product.create!(
-        catalog_item: catalog_item,
-        product_type: "physical",
-        variation_type: "conditional",
-        list_price_cents: list_price_cents.to_i,
-        default_sub_department: sub_department,
-        source: "buyback_intake",
-        needs_review: true,
-        created_from_buyback_session: session,
-        active: true
-      )
     end
   end
 end

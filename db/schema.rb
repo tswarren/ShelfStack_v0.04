@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_120300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -584,6 +584,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
     t.index ["catalog_item_id"], name: "index_external_catalog_imports_on_catalog_item_id"
     t.index ["external_data_source_id"], name: "index_external_catalog_imports_on_external_data_source_id"
     t.index ["external_lookup_result_id", "catalog_item_id", "action_type"], name: "index_external_catalog_imports_on_result_item_action_applied", unique: true, where: "(((status)::text = 'applied'::text) AND ((action_type)::text = ANY (ARRAY[('create_catalog_item'::character varying)::text, ('link_existing_catalog_item'::character varying)::text, ('fill_blank_existing_catalog_item'::character varying)::text])))"
+    t.index ["external_lookup_result_id", "product_id", "action_type"], name: "index_external_catalog_imports_on_result_product_action_applied", unique: true, where: "(((status)::text = 'applied'::text) AND (product_id IS NOT NULL) AND ((action_type)::text = ANY (ARRAY[('create_catalog_item'::character varying)::text, ('link_existing_catalog_item'::character varying)::text, ('fill_blank_existing_catalog_item'::character varying)::text])))"
     t.index ["external_lookup_result_id"], name: "index_external_catalog_imports_on_external_lookup_result_id"
     t.index ["imported_by_user_id"], name: "index_external_catalog_imports_on_imported_by_user_id"
     t.index ["product_id"], name: "index_external_catalog_imports_on_product_id"
@@ -1352,39 +1353,87 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   end
 
   create_table "products", force: :cascade do |t|
+    t.jsonb "access_restriction_data"
+    t.string "access_restrictions"
     t.boolean "active", default: true, null: false
+    t.jsonb "bisac_subject_data"
+    t.string "bisac_subjects"
     t.bigint "catalog_item_id"
+    t.string "catalog_item_type"
     t.datetime "created_at", null: false
     t.bigint "created_from_buyback_session_id"
+    t.jsonb "creator_details"
+    t.string "creators"
     t.bigint "default_display_location_id"
     t.string "default_inventory_tracking"
     t.bigint "default_sub_department_id"
+    t.decimal "depth", precision: 10, scale: 2
+    t.text "description"
+    t.boolean "digital", default: false, null: false
+    t.string "dimension_units"
     t.boolean "discountable", default: true, null: false
+    t.integer "duration_minutes"
+    t.string "edition_statement"
+    t.bigint "format_id"
+    t.jsonb "genre_data"
+    t.string "genres"
+    t.decimal "height", precision: 10, scale: 2
+    t.string "language_code", limit: 10
+    t.boolean "large_print", default: false, null: false
     t.integer "list_price_cents", default: 0, null: false
     t.string "name", null: false
     t.string "name_override"
     t.boolean "needs_review", default: false, null: false
+    t.integer "page_count"
     t.bigint "preferred_vendor_id"
     t.string "product_type", default: "physical", null: false
+    t.date "publication_date"
+    t.string "publication_frequency"
+    t.string "publication_status", default: "active", null: false
+    t.string "publisher"
+    t.jsonb "publisher_details"
+    t.jsonb "series_data"
+    t.string "series_enumeration", limit: 15
+    t.string "series_name"
     t.string "short_name", limit: 40
     t.string "sku", limit: 50, null: false
     t.string "source", default: "manual", null: false
+    t.bigint "store_category_id"
+    t.string "subtitle"
+    t.jsonb "target_audience_data"
+    t.string "target_audiences"
+    t.jsonb "theme_data"
+    t.string "themes"
+    t.string "title"
     t.datetime "updated_at", null: false
     t.string "variant1_label"
     t.string "variant2_label"
     t.string "variation_type", default: "standard", null: false
+    t.decimal "weight", precision: 10, scale: 2
+    t.string "weight_units"
+    t.decimal "width", precision: 10, scale: 2
+    t.string "year", limit: 4
     t.index ["active"], name: "index_products_on_active"
     t.index ["catalog_item_id"], name: "index_products_on_catalog_item_id"
     t.index ["created_from_buyback_session_id"], name: "index_products_on_created_from_buyback_session_id"
     t.index ["default_display_location_id"], name: "index_products_on_default_display_location_id"
     t.index ["default_sub_department_id"], name: "index_products_on_default_sub_department_id"
+    t.index ["format_id"], name: "index_products_on_format_id"
     t.index ["name"], name: "index_products_on_name"
     t.index ["preferred_vendor_id"], name: "index_products_on_preferred_vendor_id"
     t.index ["product_type"], name: "index_products_on_product_type"
+    t.index ["publication_date"], name: "index_products_on_publication_date"
+    t.index ["publisher"], name: "index_products_on_publisher"
+    t.index ["series_name"], name: "index_products_on_series_name"
     t.index ["sku"], name: "index_products_on_sku", unique: true
+    t.index ["source"], name: "index_products_on_source"
+    t.index ["store_category_id"], name: "index_products_on_store_category_id"
+    t.index ["title"], name: "index_products_on_title"
     t.index ["variation_type"], name: "index_products_on_variation_type"
+    t.index ["year"], name: "index_products_on_year"
     t.check_constraint "default_inventory_tracking IS NULL OR (default_inventory_tracking::text = ANY (ARRAY['inventory'::character varying::text, 'non_inventory'::character varying::text]))", name: "products_default_inventory_tracking_chk"
     t.check_constraint "list_price_cents >= 0", name: "chk_products_list_price_cents"
+    t.check_constraint "year IS NULL OR year::text ~ '^[0-9]{4}$'::text", name: "chk_products_year_format"
   end
 
   create_table "purchase_order_line_allocations", force: :cascade do |t|
@@ -2309,7 +2358,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_010732) do
   add_foreign_key "product_vendors", "vendors"
   add_foreign_key "products", "buyback_sessions", column: "created_from_buyback_session_id"
   add_foreign_key "products", "catalog_items"
+  add_foreign_key "products", "category_nodes", column: "store_category_id"
   add_foreign_key "products", "display_locations", column: "default_display_location_id"
+  add_foreign_key "products", "formats"
   add_foreign_key "products", "sub_departments", column: "default_sub_department_id"
   add_foreign_key "products", "vendors", column: "preferred_vendor_id"
   add_foreign_key "purchase_order_line_allocations", "customer_request_lines"

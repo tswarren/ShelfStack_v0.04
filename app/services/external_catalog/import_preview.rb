@@ -26,12 +26,12 @@ module ExternalCatalog
 
     def call
       duplicate = DuplicateDetector.call(isbn13: @lookup_result.isbn13, isbn10: @lookup_result.isbn10)
-      catalog_item = duplicate.catalog_item || @lookup_result.local_catalog_item
+      product = duplicate.product || @lookup_result.local_product || @lookup_result.local_catalog_item&.products&.active_records&.order(:id)&.first
       resolved_format = CatalogImport::BindingFormatMapper.resolve(@lookup_result.binding_snapshot)
       format_required = resolved_format.blank?
 
-      field_diffs = build_field_diffs(catalog_item)
-      allowed_actions = allowed_actions_for(duplicate:, catalog_item:)
+      field_diffs = build_field_diffs(product)
+      allowed_actions = allowed_actions_for(duplicate:, product:)
 
       Preview.new(
         lookup_result: @lookup_result,
@@ -47,20 +47,20 @@ module ExternalCatalog
 
     private
 
-    def build_field_diffs(catalog_item)
+    def build_field_diffs(product)
       candidate = @lookup_result
       fields = {
-        title: [ catalog_item&.title, candidate.title ],
-        subtitle: [ nil, candidate.subtitle ],
-        creators: [ catalog_item&.creators, MetadataMapper.catalog_attributes(candidate: candidate)[:creators] ],
-        publisher: [ catalog_item&.publisher, publisher_name(candidate) ],
-        page_count: [ catalog_item&.page_count, candidate.pages ],
-        language_code: [ catalog_item&.language_code, candidate.language_snapshot ],
-        description: [ catalog_item&.description, candidate.synopsis ]
+        title: [ product&.title, candidate.title ],
+        subtitle: [ product&.subtitle, candidate.subtitle ],
+        creators: [ product&.creators, MetadataMapper.product_attributes(candidate: candidate)[:creators] ],
+        publisher: [ product&.publisher, publisher_name(candidate) ],
+        page_count: [ product&.page_count, candidate.pages ],
+        language_code: [ product&.language_code, candidate.language_snapshot ],
+        description: [ product&.description, candidate.synopsis ]
       }
 
       fields.map do |field, (current, proposed)|
-        action = if catalog_item.blank?
+        action = if product.blank?
                    :set
         elsif current.blank? && proposed.present?
                    :fill_blank
@@ -85,7 +85,7 @@ module ExternalCatalog
       snapshot["name"].presence || snapshot[:name].presence
     end
 
-    def allowed_actions_for(duplicate:, catalog_item:)
+    def allowed_actions_for(duplicate:, product:)
       if duplicate.duplicate?
         %w[link_existing_catalog_item fill_blank_existing_catalog_item skip]
       else

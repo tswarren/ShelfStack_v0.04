@@ -1,13 +1,13 @@
-<% catalog_item = local_assigns.fetch(:catalog_item) { product.catalog_item } %>
+<% metadata_product = local_assigns.fetch(:metadata_product) { product } %>
 
 <%= render layout: "shared/forms/section", locals: {
-  title: "Catalog Context",
-  description: "Linked catalog metadata is read-only here."
+  title: "Product Context",
+  description: "Metadata from the previous step is read-only here."
 } do %>
   <dl class="ss-summary">
-    <dt>Title</dt><dd><%= catalog_item.title %></dd>
-    <dt>Primary identifier</dt><dd><%= catalog_item.primary_identifier&.normalized_identifier || "—" %></dd>
-    <dt>Format</dt><dd><%= catalog_item.format.name %></dd>
+    <dt>Title</dt><dd><%= metadata_product.display_title %></dd>
+    <dt>Primary identifier</dt><dd><%= metadata_product.sku.presence || "—" %></dd>
+    <dt>Format</dt><dd><%= metadata_product.format&.name || "—" %></dd>
   </dl>
 <% end %>
 
@@ -20,8 +20,8 @@
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name_override, label: "Name override (optional)" } do %>
         <%= f.text_field :name_override %>
       <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", help: "Prefilled from catalog primary identifier." } do %>
-        <%= f.text_field :sku, value: product.sku.presence || catalog_item.primary_identifier&.normalized_identifier %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", help: "Transitional product identifier (cached in SKU until v0.04-2)." } do %>
+        <%= f.text_field :sku, value: product.sku %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
         <%= f.select :product_type,

@@ -59,11 +59,11 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    item = CatalogItem.find_by!(title: "Wizard Book")
-    product = item.products.first
-    assert_equal "conditional", product.variation_type
-    assert_equal @sub_department.id, product.default_sub_department_id
-    assert_redirected_to items_item_path(catalog_item_id: item.id)
+    item = Product.find_by!(title: "Wizard Book")
+    assert_nil item.catalog_item_id
+    assert_equal "conditional", item.variation_type
+    assert_equal @sub_department.id, item.default_sub_department_id
+    assert_redirected_to items_item_path(product_id: item.id)
   end
 
   test "catalog-linked selling setup allows non-conditional variation type" do
@@ -86,7 +86,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
       commit: "Done"
     }
 
-    product = CatalogItem.find_by!(title: "Variable Book").products.first
+    product = Product.find_by!(title: "Variable Book")
     assert_equal "standard", product.variation_type
     assert_equal @sub_department.id, product.default_sub_department_id
   end
@@ -107,11 +107,11 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name=\"product[product_type]\"] option[value='service']", count: 1
   end
 
-  test "catalog-linked done after item details saves catalog only" do
+  test "catalog-linked done after item details saves product only" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
 
-    assert_difference -> { CatalogItem.count }, 1 do
-      assert_no_difference -> { Product.count } do
+    assert_difference -> { Product.count }, 1 do
+      assert_no_difference -> { ProductVariant.count } do
         post items_add_item_path(step: "item_details"), params: {
           catalog_item: {
             title: "Catalog Only Book",
@@ -123,11 +123,11 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    item = CatalogItem.find_by!(title: "Catalog Only Book")
-    assert_redirected_to items_item_path(catalog_item_id: item.id)
+    product = Product.find_by!(title: "Catalog Only Book")
+    assert_redirected_to items_item_path(product_id: product.id)
 
     follow_redirect!
-    assert_match "Catalog Only", response.body
+    assert_match "Product Only", response.body
   end
 
   test "non-catalog full path creates product and variant without catalog item" do

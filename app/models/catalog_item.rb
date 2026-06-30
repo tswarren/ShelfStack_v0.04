@@ -1,23 +1,13 @@
 # frozen_string_literal: true
 
+# Legacy transitional model (Path B). v0.04-1 runtime flows must not create or read
+# metadata from CatalogItem; use Product instead. Physical removal deferred to v0.04-2+.
 class CatalogItem < ApplicationRecord
-  CATALOG_ITEM_TYPES = %w[
-    book calendar periodical recorded_music sideline videorecording
-    audiobook ebook map game gift other
-  ].freeze
-
-  PUBLICATION_STATUSES = %w[
-    active not_yet_published out_of_print out_of_stock_indefinitely
-    discontinued publication_cancelled unknown
-  ].freeze
-
-  PUBLICATION_FREQUENCIES = %w[
-    daily weekly biweekly semi_monthly monthly bi_monthly quarterly
-    semi_annual annual irregular unknown
-  ].freeze
-
-  DIMENSION_UNITS = %w[cm in].freeze
-  WEIGHT_UNITS = %w[g kg lb oz].freeze
+  CATALOG_ITEM_TYPES = ProductMetadata::CATALOG_ITEM_TYPES
+  PUBLICATION_STATUSES = ProductMetadata::PUBLICATION_STATUSES
+  PUBLICATION_FREQUENCIES = ProductMetadata::PUBLICATION_FREQUENCIES
+  DIMENSION_UNITS = ProductMetadata::DIMENSION_UNITS
+  WEIGHT_UNITS = ProductMetadata::WEIGHT_UNITS
 
   belongs_to :format
   belongs_to :store_category, class_name: "CategoryNode", optional: true

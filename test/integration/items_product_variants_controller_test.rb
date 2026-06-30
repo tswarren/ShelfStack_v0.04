@@ -39,7 +39,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     expected_sku = SkuGenerator.preview_variant_sku(product: @product, condition: @used_condition)
     assert_equal expected_sku, variant.sku
     assert_redirected_to items_item_path(
-      catalog_item_id: @product.catalog_item_id,
+      product_id: @product.id,
       tab: "item_setup",
       variant_id: variant.id
     )
@@ -60,7 +60,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to items_item_path(
-      catalog_item_id: @product.catalog_item_id,
+      product_id: @product.id,
       tab: "item_setup",
       variant_id: variant.id
     )
@@ -110,7 +110,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to items_item_path(
-      catalog_item_id: @product.catalog_item_id,
+      product_id: @product.id,
       tab: "item_setup",
       variant_id: variant.id
     )
@@ -207,7 +207,7 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to items_item_path(
-      catalog_item_id: @product.catalog_item_id,
+      product_id: @product.id,
       tab: "item_setup",
       variant_id: variant.id
     )

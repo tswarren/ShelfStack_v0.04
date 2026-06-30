@@ -19,7 +19,7 @@ class ItemsSetupModalsIntegrationTest < ActionDispatch::IntegrationTest
     grant_permission!(@user, "setup.product_variant_vendors.create", store: @store)
     grant_permission!(@user, "setup.product_variant_vendors.update", store: @store)
     login_user!(@user, workstation: @workstation)
-    @variant = create_product_variant!(inventory_behavior: "standard_physical", selling_price_cents: 1299)
+    @variant = create_product_variant!(legacy_catalog_linked: true, inventory_behavior: "standard_physical", selling_price_cents: 1299)
     @product = @variant.product
     @catalog_item = @product.catalog_item
     @vendor = create_vendor!(name: "Alpha Vendor")

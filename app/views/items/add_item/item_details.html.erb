@@ -1,16 +1,16 @@
 <%= render "shared/forms/page_header",
            eyebrow: "Add Item",
            title: "Add Catalog-Linked Item — Item Details",
-           description: @external_lookup_staged ? "Review imported metadata, edit as needed, then save to create the catalog record." : "Enter catalog metadata. You can finish after this step or continue to selling setup." %>
+           description: @external_lookup_staged ? "Review imported metadata, edit as needed, then save to create the product record." : "Enter product metadata. You can finish after this step or continue to selling setup." %>
 
 <%= render "items/add_item/match_context" %>
 
 <%= form_with url: items_add_item_path(step: "item_details"), method: :post, class: "ss-form ss-form--wide" do %>
   <%= render "shared/request_match_params_fields", context: @match_context if @match_context&.active? %>
-  <%= fields_for :catalog_item, @catalog_item do |f| %>
+  <%= fields_for :catalog_item, @product do |f| %>
     <%= render "items/catalog_items/form",
           f: f,
-          catalog_item: @catalog_item,
+          catalog_item: @product,
           formats: @formats,
           include_identifier: !@external_lookup_staged,
           primary_bisac_category_node_id: @primary_bisac_category_node_id,

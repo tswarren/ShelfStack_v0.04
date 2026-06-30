@@ -17,10 +17,6 @@ module Items
         return Result.new(attachment: item.product.cover_image, source: :product)
       end
 
-      if item.catalog_item&.primary_thumbnail&.attached?
-        return Result.new(attachment: item.catalog_item.primary_thumbnail, source: :catalog)
-      end
-
       Result.new(attachment: nil, source: :placeholder)
     end
 

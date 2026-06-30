@@ -1,8 +1,10 @@
 <div data-controller="catalog-item-form" data-action="change->catalog-item-form#refresh">
 <%= render "shared/forms/errors", record: catalog_item %>
 
+<% if catalog_item.is_a?(CatalogItem) %>
 <%= render layout: "shared/forms/section", locals: { title: "Catalog Image" } do %>
   <%= render "items/catalog_items/primary_thumbnail", f: f, catalog_item: catalog_item %>
+<% end %>
 <% end %>
 
 <%= render layout: "shared/forms/section", locals: { title: "Basic Details" } do %>

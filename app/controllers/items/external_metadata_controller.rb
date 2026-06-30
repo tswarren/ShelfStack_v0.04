@@ -25,8 +25,17 @@ module Items
       @import = @catalog_item.latest_external_catalog_import
       return if @import.present?
 
-      redirect_to items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup"),
+      redirect_to item_setup_return_path,
                   alert: "No external catalog metadata is linked to this item."
+    end
+
+    def item_setup_return_path
+      product = @catalog_item.products.active_records.order(:id).first
+      if product.present?
+        items_item_path(product_id: product.id, tab: "item_setup")
+      else
+        items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup")
+      end
     end
   end
 end

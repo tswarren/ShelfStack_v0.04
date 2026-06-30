@@ -18,9 +18,9 @@ module Items
       when :invalid
         redirect_to items_add_item_path(step: "identify"), alert: outcome.message
       when :local_match
-        save_draft_for_local_match!(outcome.catalog_item)
+        save_draft_for_local_match!(outcome.product)
         redirect_to items_add_item_path(step: "identify"),
-                    notice: "Local catalog match found for ISBN #{outcome.normalized_isbn}."
+                    notice: "Local product match found for ISBN #{outcome.normalized_isbn}."
       when :completed
         redirect_to items_external_lookup_result_path(outcome.lookup_result)
       else
@@ -60,10 +60,10 @@ module Items
         )
         redirect_to items_add_item_path(step: "item_details"),
                     notice: result.message
-      elsif result.status == :applied && result.catalog_item.present?
+      elsif result.status == :applied && result.product.present?
         session[:add_item_draft] = (session[:add_item_draft] || {}).merge(
           "workflow" => "catalog_linked",
-          "catalog_item_id" => result.catalog_item.id,
+          "product_id" => result.product.id,
           "external_lookup_cover_image_url" => @lookup_result.image_url,
           "external_lookup_msrp_cents" => @lookup_result.msrp_cents
         ).compact
@@ -96,10 +96,10 @@ module Items
       authorize!(permission)
     end
 
-    def save_draft_for_local_match!(catalog_item)
+    def save_draft_for_local_match!(product)
       session[:add_item_draft] = (session[:add_item_draft] || {}).merge(
         "workflow" => "catalog_linked",
-        "catalog_item_id" => catalog_item.id,
+        "product_id" => product.id,
         "local_match_isbn" => params[:isbn]
       )
     end

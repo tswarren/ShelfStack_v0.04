@@ -118,7 +118,9 @@ module IngramCatalogImport
       if resolution.found?
         product = resolution.product
         previous_price = product.list_price_cents
-        product.update!(list_price_cents: row.us_srp_cents)
+        Products::CopyCatalogMetadata.to_product(product, catalog_item)
+        product.list_price_cents = row.us_srp_cents
+        product.save!
         record_audit!("product.updated", product) if previous_price != row.us_srp_cents
         finalize_product!(product)
         [ product, :product_updated, nil ]
@@ -133,7 +135,9 @@ module IngramCatalogImport
         defaults = StoreCategoryDefaults.for(store_category_node: catalog_item.store_category)
         product_attrs[:default_sub_department] = defaults.default_sub_department if defaults.default_sub_department.present?
         product_attrs[:default_display_location] = defaults.default_display_location if defaults.default_display_location.present?
-        product = Product.create!(product_attrs)
+        product = Product.new(product_attrs)
+        Products::CopyCatalogMetadata.to_product(product, catalog_item)
+        product.save!
         record_audit!("product.created", product)
         finalize_product!(product)
         [ product, :product_created, nil ]

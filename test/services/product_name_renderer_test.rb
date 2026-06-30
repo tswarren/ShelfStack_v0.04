@@ -3,10 +3,15 @@
 require "test_helper"
 
 class ProductNameRendererTest < ActiveSupport::TestCase
-  test "product name uses catalog title" do
-    item = create_catalog_item!(title: "The Hobbit")
-    product = Product.new(catalog_item: item, name: "ignored until saved")
+  test "product name uses product title" do
+    product = Product.new(title: "The Hobbit", name: "The Hobbit")
     assert_equal "The Hobbit", ProductNameRenderer.product_name(product)
+  end
+
+  test "product name does not fall back to catalog title" do
+    item = create_catalog_item!(title: "Catalog Title Only")
+    product = Product.new(catalog_item: item, title: nil, name: "Product Name Fallback")
+    assert_equal "Product Name Fallback", ProductNameRenderer.product_name(product)
   end
 
   test "product name override takes precedence" do

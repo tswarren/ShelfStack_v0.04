@@ -59,7 +59,7 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     assert_equal 1, CatalogItem.where(title: "Cher: The Memoir").count
   end
 
-  test "creates product when catalog exists without active product" do
+  test "creates product when legacy catalog exists without active product" do
     catalog_only = create_catalog_item!(title: "Orphan Catalog")
     CatalogIdentifierService.add_identifier!(
       catalog_item: catalog_only,

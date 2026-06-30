@@ -3,14 +3,18 @@
 module ExternalCatalog
   class MetadataMapper
     def self.catalog_attributes(candidate:)
-      new(candidate:).catalog_attributes
+      product_attributes(candidate:)
+    end
+
+    def self.product_attributes(candidate:)
+      new(candidate:).product_attributes
     end
 
     def initialize(candidate:)
       @candidate = candidate
     end
 
-    def catalog_attributes
+    def product_attributes
       {
         catalog_item_type: "book",
         title: @candidate.title,
