@@ -108,7 +108,6 @@ module Items
         primary: params[:primary] == "1",
         actor: current_user
       )
-      record_audit!("product_identifier.created", identifier)
       apply_identifier_validation_notice!(identifier)
       redirect_to identifier_return_path, notice: "Identifier added."
     rescue ProductIdentifierService::IdentifierError, ActiveRecord::RecordInvalid => e
@@ -120,8 +119,7 @@ module Items
 
     def generate_local_identifier
       product = product_for_identifiers!
-      identifier = ProductIdentifierService.generate_house!(product: product, actor: current_user)
-      record_audit!("product_identifier.house_generated", identifier)
+      ProductIdentifierService.generate_house!(product: product, actor: current_user)
       redirect_to item_return_path(@catalog_item, tab: "item_setup"), notice: "House identifier generated."
     end
 

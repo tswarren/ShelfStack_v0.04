@@ -168,4 +168,26 @@ class IngramCatalogImport::RunnerTest < ActiveSupport::TestCase
     assert product_vendor.reload.active?
     assert variant_vendor.reload.active?
   end
+
+  test "reuses product-first match and links catalog metadata shell" do
+    product = create_product!(sku: "9780063575011", skip_product_identifier: true)
+    ProductIdentifierService.add_identifier!(
+      product: product,
+      validation_family: "gtin",
+      value: "9780063575011",
+      primary: true
+    )
+
+    result = IngramCatalogImport::Runner.call(
+      path: @fixture_path,
+      actor: @actor,
+      options: @options
+    )
+
+    assert result.count(:error).zero?
+    product.reload
+    assert product.catalog_item.present?
+    assert_equal "Communion: Finding My Way Back to Faith", product.catalog_item.title
+    assert_equal 1, Product.where(id: product.id).count
+  end
 end

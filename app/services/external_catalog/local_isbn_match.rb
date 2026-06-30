@@ -24,9 +24,7 @@ module ExternalCatalog
       product ||= Items::ProductIdentifierLookup.find_products_by_identifier_query(normalized).order(:id).first
       unless product
         resolution = IngramCatalogImport::IdentifierResolver.resolve(product_code: @isbn, ean: @isbn)
-        unless resolution.conflict?
-          product = resolution.catalog_item&.products&.active_records&.order(:id)&.first
-        end
+        product = resolution.product unless resolution.conflict?
       end
 
       Result.new(product: product, normalized_isbn: normalized)

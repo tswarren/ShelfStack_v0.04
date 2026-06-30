@@ -59,6 +59,34 @@ class ProductIdentifierService
     end
   end
 
+  def self.add_house_from_value!(product:, value:, primary:, actor:, source:)
+    normalized = normalize_standard_digits(value)
+    validate_house_segment!(normalized)
+    ensure_unique_gtin!(product:, normalized:)
+
+    identifier = product.product_identifiers.create!(
+      validation_family: "house",
+      identifier_value: normalized,
+      normalized_identifier: normalized,
+      primary_identifier: false,
+      valid_check_digit: true,
+      validation_message: nil,
+      source: source,
+      active: true
+    )
+
+    set_primary!(identifier:, actor: actor, source: source) if primary || product.primary_identifier.blank?
+
+    record_audit!(
+      actor: actor,
+      event_name: "product_identifier.created",
+      identifier: identifier,
+      source: source
+    )
+    identifier
+  end
+  private_class_method :add_house_from_value!
+
   def self.set_primary!(identifier:, actor: nil, source: "manual")
     Product.transaction do
       product = identifier.product
@@ -93,8 +121,10 @@ class ProductIdentifierService
       case identifier.validation_family
       when "isbn"
         raise IdentifierError, "ISBN alternates must be recreated via add_identifier!"
-      when "gtin", "house"
+      when "gtin"
         update_gtin_like!(identifier:, value:, actor:, source:)
+      when "house"
+        update_house!(identifier:, value:, actor:, source:)
       when "freeform"
         update_freeform!(identifier:, value:, actor:, source:)
       else
@@ -212,6 +242,8 @@ class ProductIdentifierService
         add_gtin!(product: product, value: sku, primary: true, actor: actor, source: source)
       when "isbn"
         add_isbn10!(product: product, value: sku, actor: actor, source: source)
+      when "house"
+        add_house_from_value!(product: product, value: sku, primary: true, actor: actor, source: source)
       when "freeform"
         add_freeform!(product: product, value: sku, freeform_scope: freeform_scope, primary: true, actor: actor, source: source)
       end
@@ -228,7 +260,9 @@ class ProductIdentifierService
       [ "freeform", "legacy_product_sku" ]
     else
       digits = normalized.gsub(/[^0-9X]/, "")
-      if [ 8, 12, 13, 14 ].include?(digits.length) && digits.match?(/\A[0-9]+\z/)
+      if digits.length == 13 && digits.start_with?("201") && digits.match?(/\A[0-9]+\z/)
+        [ "house", nil ]
+      elsif [ 8, 12, 13, 14 ].include?(digits.length) && digits.match?(/\A[0-9]+\z/)
         [ "gtin", nil ]
       elsif digits.length == 10 && digits.match?(/\A[0-9]{9}[0-9X]\z/)
         [ "isbn", nil ]
@@ -241,7 +275,7 @@ class ProductIdentifierService
 
   def self.normalize_sku_for_family(sku, family, scope)
     case family
-    when "gtin" then normalize_standard_digits(sku)
+    when "gtin", "house" then normalize_standard_digits(sku)
     when "isbn" then sku.gsub(/[^0-9X]/, "").upcase
     when "freeform" then normalize_freeform(sku, scope)
     else
@@ -252,8 +286,10 @@ class ProductIdentifierService
 
   def self.identifier_accepts_sku?(identifier, classified_family)
     case identifier.validation_family
-    when "gtin", "house"
+    when "gtin"
       classified_family == "gtin"
+    when "house"
+      classified_family == "house"
     when "freeform"
       classified_family == "freeform"
     when "isbn"
@@ -273,7 +309,11 @@ class ProductIdentifierService
   end
 
   def self.normalize_preview(identifier_type, value)
-    validation_preview_for_legacy_type(identifier_type: identifier_type, value: value)
+    preview = validation_preview_for_legacy_type(identifier_type: identifier_type, value: value)
+    normalized = preview[:normalized]
+    raise IdentifierError, preview[:message].presence || "Invalid identifier" if normalized.blank? || normalized == "—"
+
+    normalized
   end
 
   def self.legacy_type_to_family(identifier_type)
@@ -328,7 +368,7 @@ class ProductIdentifierService
       active: true
     )
 
-    maybe_create_isbn10_alternate!(product:, gtin_normalized: normalized, actor:, source:)
+    maybe_create_isbn10_alternate!(product:, gtin_normalized: normalized, actor:, source:) if validation[:valid_check_digit]
     set_primary!(identifier:, actor: actor, source: source) if primary || product.primary_identifier.blank?
 
     record_audit!(
@@ -388,33 +428,37 @@ class ProductIdentifierService
       active: true
     )
 
-    gtin_validation = validate_gtin_family(isbn13_normalized)
-    gtin = product.product_identifiers.find_or_initialize_by(
-      validation_family: "gtin",
-      normalized_identifier: isbn13_normalized
-    )
-    gtin.assign_attributes(
-      identifier_value: isbn13_normalized,
-      primary_identifier: false,
-      valid_check_digit: gtin_validation[:valid_check_digit],
-      validation_message: gtin_validation[:validation_message],
-      source: "isbn_alternate_created",
-      active: true
-    )
-    gtin.save!
+    if validation[:valid_check_digit]
+      gtin_validation = validate_gtin_family(isbn13_normalized)
+      gtin = product.product_identifiers.find_or_initialize_by(
+        validation_family: "gtin",
+        normalized_identifier: isbn13_normalized
+      )
+      gtin.assign_attributes(
+        identifier_value: isbn13_normalized,
+        primary_identifier: false,
+        valid_check_digit: gtin_validation[:valid_check_digit],
+        validation_message: gtin_validation[:validation_message],
+        source: "isbn_alternate_created",
+        active: true
+      )
+      gtin.save!
 
-    set_primary!(identifier: gtin, actor: actor, source: source)
+      set_primary!(identifier: gtin, actor: actor, source: source)
 
-    record_audit!(
-      actor: actor,
-      event_name: "product_identifier.isbn_alternate_created",
-      identifier: gtin,
-      source: source,
-      details: {
-        "isbn10" => normalized,
-        "isbn13" => isbn13_normalized
-      }
-    )
+      record_audit!(
+        actor: actor,
+        event_name: "product_identifier.isbn_alternate_created",
+        identifier: gtin,
+        source: source,
+        details: {
+          "isbn10" => normalized,
+          "isbn13" => isbn13_normalized
+        }
+      )
+    elsif product.primary_identifier.blank?
+      set_primary!(identifier: isbn, actor: actor, source: source)
+    end
     record_audit!(
       actor: actor,
       event_name: "product_identifier.created",
@@ -434,6 +478,7 @@ class ProductIdentifierService
 
     ensure_unique_isbn!(product:, normalized: isbn10)
     validation = validate_isbn10(isbn10)
+    return unless validation[:valid_check_digit]
     alternate = product.product_identifiers.create!(
       validation_family: "isbn",
       identifier_value: isbn10,
@@ -457,6 +502,31 @@ class ProductIdentifierService
     )
   end
   private_class_method :maybe_create_isbn10_alternate!
+
+  def self.update_house!(identifier:, value:, actor:, source:)
+    normalized = normalize_standard_digits(value)
+    validate_house_segment!(normalized)
+    ensure_unique_gtin!(product: identifier.product, normalized:, excluding_identifier_id: identifier.id)
+    validation = validate_gtin_family(normalized)
+
+    identifier.update!(
+      identifier_value: normalized,
+      normalized_identifier: normalized,
+      valid_check_digit: validation[:valid_check_digit],
+      validation_message: validation[:validation_message],
+      active: true
+    )
+    sync_product_sku_cache!(identifier.product) if identifier.primary_identifier?
+
+    record_audit!(
+      actor: actor,
+      event_name: "product_identifier.updated",
+      identifier: identifier,
+      source: source
+    )
+    identifier
+  end
+  private_class_method :update_house!
 
   def self.update_gtin_like!(identifier:, value:, actor:, source:)
     normalized = normalize_standard_digits(value)
@@ -612,6 +682,11 @@ class ProductIdentifierService
     valid ? valid_result : invalid_result("ISBN-10 check digit is invalid")
   end
   private_class_method :validate_isbn10
+
+  def self.validate_house_segment!(normalized)
+    raise IdentifierError, "House identifiers must use segment 201" unless normalized.match?(/\A201[0-9]{10}\z/)
+  end
+  private_class_method :validate_house_segment!
 
   def self.validate_gtin_family(normalized)
     return invalid_result("Identifier must contain digits only") unless normalized.match?(/\A[0-9]+\z/)

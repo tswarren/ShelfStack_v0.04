@@ -102,7 +102,7 @@ class Product < ApplicationRecord
 
     self.name = ProductNameRenderer.product_name(self) if name.blank? && title.present?
     self.title = name if title.blank? && name.present?
-    self.sku = SkuGenerator.product_sku(self) if sku.blank? && title.present?
+    self.sku = AddItem::ProductSkuGenerator.generate! if sku.blank? && title.present?
   end
 
   def catalog_item_must_be_active

@@ -228,4 +228,58 @@ class ProductIdentifierServiceTest < ActiveSupport::TestCase
     primary = @product.reload.primary_identifier
     assert_equal "9780123456786", primary.normalized_identifier
   end
+
+  test "normalize_preview returns normalized string" do
+    normalized = ProductIdentifierService.normalize_preview("isbn13", "978-0-123456-78-9")
+
+    assert_equal "9780123456789", normalized
+    assert_kind_of String, normalized
+  end
+
+  test "house update rejects non-201 values" do
+    house = ProductIdentifierService.generate_house!(product: @product, actor: @actor)
+
+    assert_raises(ProductIdentifierService::IdentifierError) do
+      ProductIdentifierService.update_identifier!(
+        identifier: house,
+        value: "9780123456789",
+        actor: @actor
+      )
+    end
+  end
+
+  test "invalid isbn10 does not create gtin alternate" do
+    ProductIdentifierService.add_identifier!(
+      product: @product,
+      validation_family: "isbn",
+      value: "0123456780",
+      primary: true,
+      actor: @actor
+    )
+
+    assert_equal 1, @product.product_identifiers.active_records.count
+    assert @product.product_identifiers.exists?(validation_family: "isbn")
+    assert_not @product.product_identifiers.exists?(validation_family: "gtin")
+  end
+
+  test "invalid 978 isbn13 does not create isbn10 alternate" do
+    ProductIdentifierService.add_identifier!(
+      product: @product,
+      validation_family: "gtin",
+      value: "9780123456780",
+      primary: true,
+      actor: @actor
+    )
+
+    assert_equal 1, @product.product_identifiers.active_records.count
+    assert @product.product_identifiers.exists?(validation_family: "gtin")
+    assert_not @product.product_identifiers.exists?(validation_family: "isbn")
+  end
+
+  test "classify_product_sku treats 201 ean as house" do
+    family, scope = ProductIdentifierService.send(:classify_product_sku, "2010000000012")
+
+    assert_equal "house", family
+    assert_nil scope
+  end
 end

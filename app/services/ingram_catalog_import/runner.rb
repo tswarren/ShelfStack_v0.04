@@ -39,8 +39,8 @@ module IngramCatalogImport
       end
 
       format = FormatMapper.resolve!(row.format)
-      catalog_item, catalog_status = upsert_catalog_item!(row, format)
-      product, product_status, product_message = upsert_product!(row, catalog_item)
+      catalog_item, catalog_status, matched_product = upsert_catalog_item!(row, format)
+      product, product_status, product_message = upsert_product!(row, catalog_item, matched_product: matched_product)
       variant_status = upsert_variant!(row, product)
 
       message = [ product_message, variant_status[:message] ].compact.join("; ").presence
@@ -87,13 +87,25 @@ module IngramCatalogImport
 
       if resolution.found?
         catalog_item = resolution.catalog_item
+        matched_product = resolution.product
+
+        if catalog_item.blank?
+          catalog_item = CatalogItem.new(attrs)
+          apply_store_category!(catalog_item)
+          catalog_item.save!
+          sync_catalog_bisac!(catalog_item.reload)
+          matched_product.update!(catalog_item: catalog_item)
+          record_audit!("catalog_item.created", catalog_item)
+          return [ catalog_item, :catalog_created, matched_product ]
+        end
+
         catalog_item.assign_attributes(attrs)
         apply_store_category!(catalog_item)
         changed = catalog_item.changed?
         catalog_item.save!
         sync_catalog_bisac!(catalog_item)
         record_audit!("catalog_item.updated", catalog_item) if changed
-        [ catalog_item, :catalog_updated ]
+        [ catalog_item, :catalog_updated, matched_product ]
       else
         catalog_item = CatalogItem.new(attrs)
         apply_store_category!(catalog_item)
@@ -102,12 +114,16 @@ module IngramCatalogImport
         end
         sync_catalog_bisac!(catalog_item.reload)
         record_audit!("catalog_item.created", catalog_item)
-        [ catalog_item.reload, :catalog_created ]
+        [ catalog_item.reload, :catalog_created, nil ]
       end
     end
 
-    def upsert_product!(row, catalog_item)
-      resolution = ProductResolver.resolve(catalog_item: catalog_item)
+    def upsert_product!(row, catalog_item, matched_product: nil)
+      resolution = if matched_product.present?
+        ProductResolver::Result.new(product: matched_product, status: :found)
+      else
+        ProductResolver.resolve(catalog_item: catalog_item)
+      end
 
       if resolution.ambiguous?
         return [ nil, :skipped, resolution.message ]

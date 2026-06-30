@@ -21,7 +21,6 @@ module Items
         primary: ActiveModel::Type::Boolean.new.cast(params[:primary]),
         actor: current_user
       )
-      record_audit!("product_identifier.created", identifier)
       item = item_from_product(product)
       render_modal_success(
         section_target: "catalog-setup-section",
@@ -76,7 +75,6 @@ module Items
     def generate_house_identifier
       product = resolve_product_for_identifier!
       identifier = ProductIdentifierService.generate_house!(product: product, actor: current_user)
-      record_audit!("product_identifier.house_generated", identifier)
       item = item_from_product(product)
       render_modal_success(
         section_target: "catalog-setup-section",

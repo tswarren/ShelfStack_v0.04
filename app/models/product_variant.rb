@@ -88,12 +88,6 @@ class ProductVariant < ApplicationRecord
       ProductVariants::SkuAllocator.assign!(product_variant: self)
     end
     self.name = ProductNameRenderer.variant_name(self) if name.blank?
-  rescue ProductVariants::SkuAllocator::AllocationError, InternalEanAllocator::AllocationError
-    generated_sku = SkuGenerator.variant_sku(self)
-    if sku.blank? || (condition&.sku_component.present? && sku == product.sku)
-      self.sku = generated_sku
-    end
-    self.name = ProductNameRenderer.variant_name(self) if name.blank?
   end
 
   def apply_orderability_default

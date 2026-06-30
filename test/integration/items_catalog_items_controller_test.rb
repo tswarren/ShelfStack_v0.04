@@ -37,8 +37,13 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
 
   test "update identifier from item catalog tab returns to item catalog tab" do
     item = create_catalog_item!(title: "Identifier Edit Book")
-    product = create_legacy_catalog_linked_product!(catalog_item: item)
-    identifier = product.primary_identifier
+    product = create_legacy_catalog_linked_product!(catalog_item: item, skip_product_identifier: true)
+    identifier = ProductIdentifierService.add_identifier!(
+      product: product,
+      validation_family: "gtin",
+      value: "9780123456789",
+      primary: true
+    )
 
     patch update_identifier_items_catalog_item_path(item, identifier_id: identifier.id, return_to: "item"),
           params: { identifier_value: "9780306406157" }
