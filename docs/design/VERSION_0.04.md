@@ -222,7 +222,7 @@ Examples of inferred display:
 0123456789      → ISBN-10 (isbn)
 9791643751234   → ISBN-13 (gtin; no ISBN-10 alternate)
 0049000007746   → UPC-A (gtin; normalize to 13-digit EAN with leading 0)
-2000000000015   → House EAN-13 (house; prefix 200, in-house item)
+2010000000014   → House EAN-13 (house; segment 201, product house identifier)
 012345678905    → EAN-13 (gtin; non-ISBN)
 PUB-ACME-8842   → Publisher number (freeform)
 BIPAD123456     → BIPAD (freeform)
@@ -330,26 +330,30 @@ Use a **sequential counter** per prefix segment (e.g. `…000000001`, `…000000
 
 `ProductIdentifierService` (or a dedicated allocator) should reserve the next sequence atomically per prefix segment.
 
-#### Segment prefixes within 200–229
+#### Internal EAN segment policy (prefix 200–229)
 
-Assign a **stable prefix segment** per house category so queries and reporting stay simple:
+ShelfStack uses the **EAN prefix range 200–229** for internally assigned scannable codes. Codes are stored as **13-digit EAN-13** with correct **EAN-13 check digit** (not UPC-A weighting).
 
-| Prefix | Use |
-| ------ | --- |
-| `200` | Custom manufactured / in-house items |
-| `201` | Bundles, kits, promotional gift baskets |
-| `202` | Service items or digital goods (labor fees, shipping charges, non-physical) |
-| `210` | Legacy imports from an old system missing barcodes |
-| `203`–`209`, `211`–`229` | Reserved for future store-defined categories |
+**Namespace layout (authoritative as of v0.04-2):**
 
-Example first in-house item:
+| Range | Purpose | Active in v0.04-2 |
+| ----- | ------- | ----------------- |
+| `20X` | Product-level identification | `201` = product house identifiers |
+| `21X` | Variant / copy / unit-level identification | `211` = generated variant SKUs |
+| `22X` | Operational series (gift certificates, store credits, claim tickets, buyback tickets, RTV authorizations) | Reserved — not generated |
+
+Only **`201`** (product house) and **`211`** (variant SKU) are active in v0.04-2. All other segments are reserved for future milestones.
+
+Example:
 
 ```text
-Prefix 200 + sequence 000000001 + EAN-13 check digit
-→ 2000000000015 (stored normalized; display may group digits for readability)
+2010000000014   # product house identifier
+2110000000011   # generated variant SKU
 ```
 
-#### Check digit: EAN-13, not UPC-A
+`InternalEanAllocator` (or equivalent) reserves the next sequence atomically per segment via `internal_ean_sequences`.
+
+#### Sequential, not random
 
 House codes must use **EAN-13** check-digit weighting (alternating **1 and 3** on the 12-digit body). This differs from **UPC-A** (12-digit) weighting because of the extra leading digit — implementations must not reuse UPC-only check-digit logic for house EAN-13 generation.
 
@@ -384,7 +388,7 @@ Rules:
 * **GTIN-family values** (`gtin`, converted ISBN-13) must normalize to digits and enforce **global uniqueness** on `normalized_identifier`.
 * **House EAN-13 values** (`house`) must normalize to 13 digits, use prefix **200–229**, pass EAN-13 check-digit validation, and enforce global uniqueness within the house family.
 * **ISBN-10 values** (`isbn`) must normalize to 10-character ISBN form and enforce global uniqueness within the `isbn` family.
-* **Freeform values** (`freeform`, including publisher numbers and BIPAD) normalize alphanumerically and enforce uniqueness within the freeform family.
+* **Freeform values** (`freeform`) normalize alphanumerically and enforce uniqueness on **`product_id + freeform_scope + normalized_identifier`** (not global — publisher numbers and vendor refs may repeat across products).
 * **Do not store duplicate rows** for the same normalized value in the same family.
 * **Automatic ISBN alternates** must stay in sync when either form is added or corrected.
 
@@ -398,7 +402,7 @@ How do we match imports, vendor files, and external catalog lookup?
 
 They do **not** answer which used/new/signed copy is being sold. That remains variant grain.
 
-Optional convenience: `products.sku` may remain as a cached copy of the primary normalized identifier for display, search, and legacy joins. It is not a separate identity concept and is **not** used to generate variant SKUs.
+Optional convenience: `products.sku` may remain as a **transitional/cache** copy of the primary normalized identifier for display, search, and legacy joins. It is **not** the source of truth for product lookup after v0.04-2 — `product_identifiers` is. It is **not** used to generate variant SKUs. New code must not treat `products.sku` as canonical except as an explicit legacy fallback during migration.
 
 ---
 
@@ -427,16 +431,9 @@ Which exact ShelfStack variant is being sold, reserved, received, or adjusted?
 
 **Variant SKUs are system-assigned at variant creation.** They do **not** derive from product identifiers, `products.sku`, condition codes, or attribute suffixes. An ISBN or UPC identifies the **product**; the variant SKU identifies the **exact sellable form** (new, used, signed, etc.) as a distinct operational record.
 
-When staff create a variant, `SkuGenerator` (or successor) allocates the next SKU automatically. Baseline v0.04 does not treat the product’s ISBN/UPC as the variant barcode, even for a single new-condition variant.
+When staff create a variant, `ProductVariants::SkuAllocator` (successor to suffix-based `SkuGenerator`) allocates the next SKU automatically from internal EAN segment **`211`**.
 
-**Open decision (resolve in v0.04-2 spec):** the allocator will use one of:
-
-| Option | Description |
-| ------ | ----------- |
-| **Sequential internal codes** | Monotonic numeric or prefixed strings (e.g. `1000001`, `SKU00001234`) |
-| **System-generated EAN-13** | Allocated from a reserved prefix segment in 200–229, **distinct** from product `house` identifier segments if both use EAN form |
-
-Until the milestone spec chooses, documentation and tests should enforce **uniqueness**, **system assignment**, and **no derivation from product identifier values** — not a specific string format.
+**Resolved in v0.04-2:** variant SKUs use **system-generated EAN-13** from segment `211`, distinct from product house segment `201`.
 
 Rules:
 
@@ -452,14 +449,26 @@ Product:
 - North Woods hardcover
 - Primary identifier: 9781643751234
 
-Variants (SKUs system-assigned; values illustrative until v0.04-2 chooses format):
+Variants (SKUs system-assigned from segment 211; illustrative):
 - New hardcover
-  SKU: 1000042
+  SKU: 2110000000042
 - Used hardcover
-  SKU: 1000043
+  SKU: 2110000000043
 - Signed hardcover
-  SKU: 1000044
+  SKU: 2110000000044
 ```
+
+---
+
+## Variant lookup codes (manual POS aliases)
+
+Some variants — especially café items, services, modifiers, and unlabeled sidelines — need **short staff-entered POS codes** that are not product identifiers and not canonical variant SKUs.
+
+Examples: `LATTE`, `COF`, `101`.
+
+ShelfStack stores these as `product_variant_lookup_codes` (variant grain). They resolve at POS **after** variant SKU match and **before** product identifier match.
+
+v0.04-2 introduces the model, service, basic assignment, and POS resolution. Polished café/menu UI defers to v0.04-4+.
 
 ---
 
@@ -487,17 +496,20 @@ POS, receiving, inventory adjustment, and item lookup should resolve scans in th
 
 ```text
 1. Exact match on product_variants.sku
-2. Match on product primary identifier / products.sku
-3. Match on any active product_identifiers row for the product
-4. If exactly one active variant matches → add/select that variant
-5. If multiple active variants match → disambiguation prompt
-6. Text search → product/variant name or SKU prefix search
+2. Exact match on active product_variant_lookup_codes.normalized_code
+3. Exact match on active product_identifiers.normalized_identifier
+4. Cross-form ISBN candidates (ISBN-10 ↔ ISBN-13)
+5. If exactly one active variant matches → add/select that variant
+6. If multiple active variants match → disambiguation prompt
+7. Text search → product/variant name or SKU prefix search
 ```
+
+`products.sku` is a legacy/cache field only — not a primary scan path after v0.04-2 except as an explicit documented fallback during migration.
 
 ### Scan variant SKU or sticker
 
 ```text
-Scan 1000043
+Scan 2110000000043
 → Used hardcover variant (system-assigned variant SKU on shelf label)
 → add used hardcover to cart
 ```
@@ -547,7 +559,8 @@ catalog_item_id           →  product_id
 identifier_type           →  validation_family (gtin | isbn | freeform | house)
 isbn10 rows               →  isbn
 isbn13 / ean / upc / gtin →  gtin
-publisher_number / local  →  freeform or house (house = EAN-13 in 200–229 with sequential allocator)
+publisher_number / local  →  freeform (legacy L... → freeform_scope legacy_local; new scannable locals → house 201)
+P... transitional SKU     →  freeform legacy_product_sku (v0.04-1); not house
 ```
 
 Retire separate stored subtypes (`isbn13`, `ean`, `upc`, `gtin`, `publisher_number`, `local`) in favor of validation families plus inferred display labels.
@@ -943,7 +956,7 @@ POS should sell at product variant grain.
 A scanned variant SKU identifies the exact variant.
 
 ```text
-Scan 1000043
+Scan 2110000000043
 → Used hardcover variant (system-assigned SKU)
 → add used hardcover to cart
 ```

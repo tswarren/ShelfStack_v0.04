@@ -404,9 +404,11 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-0 (baseline):** **Complete** — [v0.04-0-completion.md](docs/implementation/v0.04-0-completion.md), tag `v0.04-baseline`.
 
-**v0.04-1 (product fusion):** **In review** — [v0.04-1-completion.md](docs/implementation/v0.04-1-completion.md).
+**v0.04-1 (product fusion):** **Complete** — [v0.04-1-completion.md](docs/implementation/v0.04-1-completion.md).
 
-**Current priority:** v0.04-1 merge gate, then milestone v0.04-2 product identifiers.
+**v0.04-2 (product identifiers):** **Planned** — [spec bundle](docs/v0.04/v0.04-2-product-identifiers/spec.md).
+
+**Current priority:** milestone v0.04-2 product identifiers.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 
@@ -788,7 +790,7 @@ These rules apply to v0.04 milestones and supersede conflicting v0.03 catalog/or
 ## Variant SKUs
 
 * Variant SKUs are **system-assigned at variant creation** — not derived from product identifiers, `products.sku`, or condition/attribute suffixes.
-* Format (sequential internal vs system EAN-13) is an **open decision** resolved in v0.04-2 data model.
+* Variant SKUs use system-generated EAN-13 from internal segment **`211`** (v0.04-2); product house identifiers use segment **`201`**. See [v0.04-2 spec](docs/v0.04/v0.04-2-product-identifiers/spec.md).
 * Until migrated, v0.03 `SkuGenerator` behavior may still exist in code; do not extend identifier-derived SKU patterns for new v0.04 work.
 
 ## Demand, allocation, sourcing, receiving
