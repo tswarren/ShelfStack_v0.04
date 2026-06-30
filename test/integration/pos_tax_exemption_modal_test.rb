@@ -48,7 +48,7 @@ class PosTaxExemptionModalTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_includes response.body, 'target="pos_tax_exemption_modal_content"'
     assert_includes response.body, 'data-controller="pos-tax-exemption-modal-open"'
-    assert_includes response.body, '[&quot;tax_exception_reason_id&quot;]'
+    assert_includes response.body, "[&quot;tax_exception_reason_id&quot;]"
     assert_includes response.body, 'value="CERT-123"'
     assert_includes response.body, "ss-pos-tax-exemption-form__error"
     assert_no_match(/ss-pos-alert ss-pos-alert--error/, response.body)

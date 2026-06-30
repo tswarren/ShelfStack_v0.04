@@ -90,7 +90,7 @@ class PosTransactionDiscountModalTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_includes response.body, 'target="pos_transaction_discount_modal_content"'
     assert_includes response.body, 'data-controller="pos-transaction-discount-modal-open"'
-    assert_includes response.body, '[&quot;discount_reason_id&quot;]'
+    assert_includes response.body, "[&quot;discount_reason_id&quot;]"
     assert_includes response.body, 'value="1.00"'
     assert_equal 0, @transaction.reload.discount_cents
   end
