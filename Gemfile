@@ -43,7 +43,7 @@ gem "ruby-vips", "~> 2.0"
 
 # Spreadsheet parsing for Ingram catalog import
 gem "csv"
-gem "roo", "~> 2.10"
+gem "roo", "~> 3.0"
 gem "roo-xls"
 
 group :development, :test do
