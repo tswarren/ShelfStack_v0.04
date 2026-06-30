@@ -98,7 +98,8 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | Workstream | Status |
 | ---------- | ------ |
 | v0.03 Phases 1–10-D | Complete |
-| **ShelfStack v0.04 core** | **Active** (milestone v0.04-0) |
+| **ShelfStack v0.04 core** | **Active** (milestone v0.04-1) |
+| v0.04-0 Baseline | **Complete** — [v0.04-0-completion.md](implementation/v0.04-0-completion.md) |
 | Phase 9c GL layer | Deferred |
 | Phase 10-E consistency sweep | Paused |
 

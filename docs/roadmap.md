@@ -48,7 +48,7 @@ Later phases may be split or reordered as implementation details become clearer.
 | [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) | Implementation milestones |
 | [v0.04/README.md](v0.04/README.md) | Milestone spec index |
 
-**Status:** Active. Current milestone: v0.04-0 baseline.
+**Status:** Active. v0.04-0 complete. Current milestone: v0.04-1 product fusion.
 
 ---
 
@@ -660,7 +660,7 @@ Phases 1–10-D are complete. See implementation records under `docs/implementat
 v0.04 core (active) → Phase 10-E resumes after v0.04-11
 ```
 
-**Active work:** [ShelfStack v0.04 core](design/VERSION_0.04.md) — [delivery roadmap](roadmap/v0.04-delivery-roadmap.md). First milestone: v0.04-0 baseline, then v0.04-1 product fusion and v0.04-2 identifiers.
+**Active work:** [ShelfStack v0.04 core](design/VERSION_0.04.md) — [delivery roadmap](roadmap/v0.04-delivery-roadmap.md). v0.04-0 complete; current: v0.04-1 product fusion, then v0.04-2 identifiers. See [v0.04-0 completion](implementation/v0.04-0-completion.md).
 
 Phase 9c GL-shaped financial layer and Phase 10-E consistency sweep resume after the v0.04 core stabilizes.
 

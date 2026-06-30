@@ -31,10 +31,12 @@ Implementation happens through ordered v0.04 milestones inside the existing Rail
 **Current priority:**
 
 ```text
-Current:  v0.04-0 — Baseline and Cutover Prep
-Next:     v0.04-1 — Product Model Fusion
-Then:     v0.04-2 — Product Identifiers
+Complete: v0.04-0 — Baseline and Cutover Prep
+Current:  v0.04-1 — Product Model Fusion
+Next:     v0.04-2 — Product Identifiers
 ```
+
+See [docs/implementation/v0.04-0-completion.md](docs/implementation/v0.04-0-completion.md) for baseline tag, test baseline, and reseed strategy.
 
 **v0.03 status:** Phases 1–10 are mostly complete (including Phase 10-C POS keyboard workspace and 10-D workflow polish). **Phase 10-E** (app-wide consistency sweep) is **paused** until the v0.04 core stabilizes. Phase **9c** (GL-shaped financial layer) remains deferred.
 
@@ -308,8 +310,8 @@ Historical v0.03 phase specs remain useful for code not yet migrated. New work f
 
 | Milestone | Focus | Status |
 | --------- | ----- | ------ |
-| v0.04-0 | Baseline and cutover prep | **Current** |
-| v0.04-1 | Product model fusion | Planned |
+| v0.04-0 | Baseline and cutover prep | **Complete** |
+| v0.04-1 | Product model fusion | **Current** |
 | v0.04-2 | Product identifiers | Planned |
 | v0.04-3 | Product groups | Planned |
 | v0.04-4 | Variant-grain wire-through | Planned |

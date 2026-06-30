@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** milestone v0.04-0 baseline, then v0.04-1 product fusion and v0.04-2 identifiers.
+**Current priority:** milestone v0.04-1 product fusion, then v0.04-2 identifiers. v0.04-0 complete — [completion record](../implementation/v0.04-0-completion.md).
 
 ---
 
@@ -32,8 +32,8 @@ docs/v0.04/
 
 | Milestone | Status | Spec bundle |
 | --------- | ------ | ------------- |
-| v0.04-0 Baseline | Planned | — (delivery roadmap only) |
-| v0.04-1 Product fusion | Planned | *(not yet created)* |
+| v0.04-0 Baseline | **Complete** | [v0.04-0 completion](../implementation/v0.04-0-completion.md) |
+| v0.04-1 Product fusion | **Current** | *(not yet created)* |
 | v0.04-2 Product identifiers | Planned | *(not yet created)* |
 | v0.04-3 Product groups | Planned | *(not yet created)* |
 | v0.04-4 Wire-through | Planned | *(not yet created)* |
