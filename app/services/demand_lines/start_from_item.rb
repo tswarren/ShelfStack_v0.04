@@ -83,9 +83,19 @@ module DemandLines
       available = DemandAllocations::Availability.available_for_allocation(store: store, variant: variant)
       return :none if available <= 0
 
-      qty = [ quantity.to_i, available ].min
-      DemandAllocations::AllocateOnHand.call!(demand_line: demand_line, actor: actor, quantity: qty)
+      unallocated = DemandAllocations::AllocationQuantities.for_demand_line(demand_line)[:unallocated_quantity]
+      qty = [ quantity.to_i, available, unallocated ].min
+      return :none if qty <= 0
 
+      begin
+        DemandAllocations::AllocateOnHand.call!(demand_line: demand_line, actor: actor, quantity: qty)
+      rescue DemandAllocations::AllocateOnHand::AllocateError => e
+        return :none if e.message.start_with?("Insufficient available quantity")
+
+        raise
+      end
+
+      demand_line.reload
       if qty >= demand_line.quantity_requested
         :full
       else

@@ -4,8 +4,14 @@ module Shelfstack
   module V0047Verify
     module_function
 
-    V0047_SERVICE_GLOB = "app/services/demand_allocations/**/*.rb"
-    ALLOCATION_DEMAND_LINE_GLOB = "app/services/demand_lines/{recalculate_allocation_status,expire_due}.rb"
+    V0047_SERVICE_GLOBS = [
+      "app/services/demand_allocations/**/*.rb",
+      "app/services/demand_lines/recalculate_allocation_status.rb",
+      "app/services/demand_lines/expire_due.rb",
+      "app/services/demand_lines/start_from_item.rb",
+      "app/services/demand_lines/cancel.rb",
+      "app/services/demand_lines/expire.rb"
+    ].freeze
 
     FORBIDDEN_LEGACY_PATTERNS = [
       /InventoryReservation\.create/,
@@ -22,14 +28,26 @@ module Shelfstack
       DemandAllocation.table_exists?
     end
 
+    def system_user_present?
+      user = User.find_by(username: ShelfStack::SYSTEM_USERNAME)
+      user.present? && user.user_type == "system" && !user.interactive_login_enabled
+    end
+
+    def v0047_service_paths
+      V0047_SERVICE_GLOBS.flat_map { |glob| Dir.glob(Rails.root.join(glob)) }
+                         .map { |path| path.sub("#{Rails.root}/", "") }
+                         .uniq
+                         .sort
+    end
+
     def allocation_services_avoid_inventory_post?
-      allocation_service_paths.none? do |rel|
+      v0047_service_paths.none? do |rel|
         File.read(Rails.root.join(rel)).match?(INVENTORY_POST_PATTERN)
       end
     end
 
     def allocation_services_avoid_legacy_writes?
-      allocation_service_paths.none? do |rel|
+      v0047_service_paths.none? do |rel|
         content = File.read(Rails.root.join(rel))
         FORBIDDEN_LEGACY_PATTERNS.any? { |pattern| content.match?(pattern) }
       end
@@ -76,15 +94,19 @@ module Shelfstack
     end
 
     def inbound_within_open_qty?
-      DemandAllocation.active_allocations.inbound_kind.find_each.all? do |allocation|
-        po_line = allocation.purchase_order_line
-        next false if po_line.blank?
+      po_line_ids = DemandAllocation.active_allocations.inbound_kind.distinct.pluck(:purchase_order_line_id)
+      po_line_ids.all? do |po_line_id|
+        po_line = PurchaseOrderLine.find_by(id: po_line_id)
+        next true if po_line.blank?
 
         open_qty = po_line.purchase_order.open_quantity_for_line(po_line)
-        claimed = DemandAllocation.active_allocations.inbound_kind
-                                  .where(purchase_order_line: po_line)
-                                  .sum(:quantity_allocated)
-        claimed <= open_qty
+        legacy_claimed = po_line.purchase_order_line_allocations
+                                .where(status: DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES)
+                                .sum(:quantity_allocated)
+        v0047_claimed = DemandAllocation.active_allocations.inbound_kind
+                                        .where(purchase_order_line: po_line)
+                                        .sum(:quantity_allocated)
+        legacy_claimed + v0047_claimed <= open_qty
       end
     end
 
@@ -101,10 +123,6 @@ module Shelfstack
       end
     end
 
-    def allocation_service_paths
-      Dir.glob(Rails.root.join(V0047_SERVICE_GLOB)).map { |path| path.sub("#{Rails.root}/", "") }.sort
-    end
-
     def legacy_on_hand_reserved(balance)
       InventoryReservation.active_on_hand
                           .where(store: balance.store, product_variant: balance.product_variant)
@@ -114,8 +132,9 @@ module Shelfstack
     def report(strict: false)
       checks = {
         tables_present: tables_present?,
-        allocation_services_avoid_inventory_post: allocation_services_avoid_inventory_post?,
-        allocation_services_avoid_legacy_writes: allocation_services_avoid_legacy_writes?,
+        system_user_present: system_user_present?,
+        v0047_services_avoid_inventory_post: allocation_services_avoid_inventory_post?,
+        v0047_services_avoid_legacy_writes: allocation_services_avoid_legacy_writes?,
         expire_due_service_present: expire_due_service_present?,
         cache_consistency_valid: cache_consistency_valid?,
         override_overages_valid: override_overages_valid?,

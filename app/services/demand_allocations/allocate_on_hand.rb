@@ -33,6 +33,11 @@ module DemandAllocations
       DemandLine.transaction do
         locked_demand = DemandLine.lock.find(demand_line.id)
         MutationSupport.ensure_allocatable_demand!(locked_demand)
+        MutationSupport.ensure_quantity_within_unallocated_demand!(
+          demand_line: locked_demand,
+          quantity: quantity,
+          error_class: AllocateError
+        )
 
         balance = InventoryBalance.lock.find_or_initialize_by(store: store, product_variant: variant)
         balance.quantity_on_hand ||= 0

@@ -19,7 +19,10 @@ module DemandAllocations
       raise CancelError, "Cancel reason is required" if cancel_reason.blank?
 
       DemandLine.transaction do
-        locked_allocation = DemandAllocation.lock.find(allocation.id)
+        demand_line, locked_allocation = MutationSupport.lock_demand_and_allocation!(
+          demand_line_id: allocation.demand_line_id,
+          allocation_id: allocation.id
+        )
         raise CancelError, "Allocation is not active" unless locked_allocation.active?
 
         locked_allocation.update!(
@@ -28,8 +31,6 @@ module DemandAllocations
           canceled_at: Time.current,
           cancel_reason: cancel_reason
         )
-
-        demand_line = DemandLine.lock.find(locked_allocation.demand_line_id)
 
         AuditEvents.record!(
           actor: actor,

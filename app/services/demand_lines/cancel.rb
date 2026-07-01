@@ -16,7 +16,6 @@ module DemandLines
 
     def call!
       raise CancelError, "Demand line is already terminal" if demand_line.terminal?
-      raise CancelError, "Fulfilled demand cannot be canceled" if demand_line.status == "fulfilled"
 
       DemandLine.transaction do
         locked = DemandLine.lock.find(demand_line.id)

@@ -26,6 +26,15 @@ module DemandAllocations
         locked_po_line = PurchaseOrderLine.lock.find(purchase_order_line.id)
 
         MutationSupport.ensure_allocatable_demand!(locked_demand)
+        MutationSupport.ensure_quantity_within_unallocated_demand!(
+          demand_line: locked_demand,
+          quantity: quantity,
+          error_class: AllocateError
+        )
+
+        if locked_demand.capture_intent == "used_wanted"
+          raise AllocateError, "Used-wanted demand cannot be allocated to inbound purchase orders"
+        end
 
         if locked_demand.store_id != locked_po_line.purchase_order.store_id
           raise AllocateError, "Purchase order line must belong to the same store"

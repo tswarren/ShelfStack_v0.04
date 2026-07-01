@@ -26,7 +26,9 @@ module DemandAllocations
     end
 
     def eligible?
-      ELIGIBLE_PO_LINE_STATUSES.include?(purchase_order_line.status)
+      purchase_order = purchase_order_line.purchase_order
+      PurchaseOrder::RECEIVABLE_PO_STATUSES.include?(purchase_order.status) &&
+        ELIGIBLE_PO_LINE_STATUSES.include?(purchase_order_line.status)
     end
 
     private

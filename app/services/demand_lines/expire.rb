@@ -17,7 +17,6 @@ module DemandLines
 
     def call!
       raise ExpireError, "Demand line is already terminal" if demand_line.terminal?
-      raise ExpireError, "Fulfilled demand cannot be expired" if demand_line.status == "fulfilled"
       raise ExpireError, "Demand line is not eligible for manual expiry" unless EXPIRABLE_STATUSES.include?(demand_line.status)
 
       DemandLine.transaction do

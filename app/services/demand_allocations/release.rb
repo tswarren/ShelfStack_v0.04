@@ -18,7 +18,10 @@ module DemandAllocations
       raise ReleaseError, "Allocation is not active" unless allocation.active?
 
       DemandLine.transaction do
-        locked_allocation = DemandAllocation.lock.find(allocation.id)
+        demand_line, locked_allocation = MutationSupport.lock_demand_and_allocation!(
+          demand_line_id: allocation.demand_line_id,
+          allocation_id: allocation.id
+        )
         raise ReleaseError, "Allocation is not active" unless locked_allocation.active?
 
         locked_allocation.update!(
@@ -27,8 +30,6 @@ module DemandAllocations
           released_at: Time.current,
           release_reason: release_reason
         )
-
-        demand_line = DemandLine.lock.find(locked_allocation.demand_line_id)
 
         AuditEvents.record!(
           actor: actor,

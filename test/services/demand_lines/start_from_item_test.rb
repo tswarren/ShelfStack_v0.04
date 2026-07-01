@@ -93,4 +93,28 @@ class DemandLinesStartFromItemTest < ActiveSupport::TestCase
       assert_in_delta 14.days.from_now, result.demand_line.expires_at, 1.minute
     end
   end
+
+  test "hold returns none when allocation loses stock race" do
+    receive_inventory!(store: @store, vendor: @vendor, variant: @variant, user: @user, quantity: 1)
+
+    original = DemandAllocations::AllocateOnHand.method(:call!)
+    DemandAllocations::AllocateOnHand.singleton_class.define_method(:call!) do |**|
+      raise DemandAllocations::AllocateOnHand::AllocateError, "Insufficient available quantity (0)"
+    end
+
+    result = DemandLines::StartFromItem.call!(
+      store: @store,
+      variant: @variant,
+      actor: @user,
+      capture_intent: "hold",
+      customer: @customer,
+      quantity: 1
+    )
+
+    assert_equal :none, result.allocation_result
+    assert_equal "open", result.demand_line.status
+    assert_equal 0, result.demand_line.demand_allocations.count
+  ensure
+    DemandAllocations::AllocateOnHand.singleton_class.define_method(:call!, original)
+  end
 end
