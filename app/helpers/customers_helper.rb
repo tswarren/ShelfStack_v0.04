@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module CustomersHelper
+  include DemandHelper
+
   QUEUE_LABELS = {
     "new" => "New",
     "needs_research" => "Needs research",

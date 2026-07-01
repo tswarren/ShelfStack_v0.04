@@ -1,0 +1,44 @@
+<h1>Stock considerations
+  <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.create", store: current_store) %>
+    <%= link_to "New", new_demand_stock_consideration_path, class: "ss-btn" %>
+  <% end %>
+  <%= link_to "Demand lines", demand_root_path, class: "ss-btn ss-btn-secondary" %>
+</h1>
+
+<%= form_with url: demand_stock_considerations_path, method: :get, class: "ss-form" do %>
+  <%= hidden_field_tag :queue, "open" if params[:queue] == "open" %>
+  <%= submit_tag(params[:queue] == "open" ? "Show all" : "Open queue only", class: "ss-btn ss-btn-secondary") %>
+<% end %>
+
+<% if @stock_considerations.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Status</th>
+        <th>Reason</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @stock_considerations.each do |row| %>
+        <tr>
+          <td>
+            <% if row.product_variant.present? %>
+              <%= row.product_variant.sku %> — <%= row.product_variant.name %>
+            <% else %>
+              <%= row.provisional_title || "—" %>
+            <% end %>
+          </td>
+          <td><%= row.status.humanize %></td>
+          <td><%= row.reason.presence || "—" %></td>
+          <td><%= display_time(row.created_at) %></td>
+          <td><%= link_to "View", demand_stock_consideration_path(row) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No stock considerations.</p>
+<% end %>

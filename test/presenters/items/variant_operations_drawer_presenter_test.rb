@@ -13,9 +13,8 @@ class Items::VariantOperationsDrawerPresenterTest < ActiveSupport::TestCase
     grant_all_phase5_permissions!(@user, store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
-    grant_permission!(@user, "customer_requests.access", store: @store)
-    grant_permission!(@user, "customer_requests.create", store: @store)
-    grant_permission!(@user, "inventory_reservations.create", store: @store)
+    grant_permission!(@user, "demand.access", store: @store)
+    grant_permission!(@user, "demand.create", store: @store)
   end
 
   test "builds variant row and scoped operations tab for variant" do

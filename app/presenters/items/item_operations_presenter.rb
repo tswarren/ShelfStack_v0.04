@@ -132,7 +132,7 @@ module Items
     def customer_demand_visible?
       return false unless store.present? && user.present?
 
-      Authorization.allowed?(user: user, permission_key: "customer_requests.access", store: store)
+      Authorization.allowed?(user: user, permission_key: "demand.access", store: store)
     end
 
     def availability_context(variant)
@@ -153,28 +153,50 @@ module Items
 
       policy = ProductVariants::OperationalPolicy.for(variant)
       actions = []
-      if allowed?("customer_requests.create") && allowed?("inventory_reservations.create")
+
+      if allowed?("demand.create")
         actions << CustomerDemandAction.new(
-          label: "Hold for customer",
+          label: "Record hold request",
           drawer_key: "hold",
-          permission_key: "inventory_reservations.create"
+          permission_key: "demand.create"
+        )
+        actions << CustomerDemandAction.new(
+          label: "Notify customer",
+          drawer_key: "notify",
+          permission_key: "demand.create"
         )
       end
-      if allowed?("customer_requests.create") && allowed?("special_orders.create") &&
+
+      if allowed?("demand.create") &&
           policy.customer_request_block_reason(request_type: "special_order").blank?
         actions << CustomerDemandAction.new(
           label: "Special order",
           drawer_key: "special_order",
-          permission_key: "special_orders.create"
+          permission_key: "demand.create"
         )
       end
-      if allowed?("customer_requests.create")
+
+      if allowed?("demand.create") && policy.used_like?
         actions << CustomerDemandAction.new(
-          label: "Notify customer",
-          drawer_key: "notify",
-          permission_key: "customer_requests.create"
+          label: "Used wanted",
+          drawer_key: "used_wanted",
+          permission_key: "demand.create"
         )
       end
+
+      if allowed?("demand.create") && policy.vendor_orderable?
+        actions << CustomerDemandAction.new(
+          label: "Manual TBO / replenishment",
+          drawer_key: "manual_tbo",
+          permission_key: "demand.create"
+        )
+        actions << CustomerDemandAction.new(
+          label: "Buyer demand",
+          drawer_key: "buyer_replenishment",
+          permission_key: "demand.create"
+        )
+      end
+
       actions
     end
 

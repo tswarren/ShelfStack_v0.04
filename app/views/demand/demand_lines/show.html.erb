@@ -1,0 +1,53 @@
+<%= render "setup/shared/back_link", path: demand_root_path, label: "Demand" %>
+
+<h1><%= @demand_line.demand_number %></h1>
+
+<dl class="ss-summary">
+  <dt>Status</dt>
+  <dd><span class="<%= demand_status_class(@demand_line.status) %>"><%= demand_status_label(@demand_line.status) %></span></dd>
+  <dt>Capture intent</dt><dd><%= demand_capture_intent_label(@demand_line.capture_intent) %></dd>
+  <dt>Source / purpose</dt><dd><%= @demand_line.source %> / <%= @demand_line.purpose %></dd>
+  <dt>Customer</dt><dd><%= @demand_line.display_customer_name.presence || "—" %></dd>
+  <dt>Item</dt><dd><%= demand_item_label(@demand_line) %></dd>
+  <dt>Quantity</dt><dd class="ss-num"><%= @demand_line.quantity_requested %></dd>
+  <dt>Needed by</dt><dd><%= @demand_line.needed_by_date&.strftime("%Y-%m-%d") || "—" %></dd>
+  <dt>Expires</dt><dd><%= @demand_line.expires_at.present? ? display_time(@demand_line.expires_at) : "—" %></dd>
+  <dt>Notes</dt><dd><%= simple_format(@demand_line.notes.presence || "—") %></dd>
+  <dt>Created</dt><dd><%= display_time(@demand_line.created_at) %> by <%= @demand_line.created_by_user.display_name %></dd>
+</dl>
+
+<div class="ss-detail-actions">
+  <% if @demand_line.status == "open" && Authorization.allowed?(user: current_user, permission_key: "demand.expire", store: current_store) %>
+    <%= button_to "Expire", expire_demand_demand_line_path(@demand_line), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+  <% unless @demand_line.terminal? %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "demand.cancel", store: current_store) %>
+      <%= form_with url: cancel_demand_demand_line_path(@demand_line), method: :patch, class: "ss-form ss-form--inline" do %>
+        <%= text_field_tag :cancel_reason, nil, placeholder: "Cancel reason", class: "ss-input" %>
+        <%= submit_tag "Cancel", class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>
+
+<% if @demand_line.status == "captured" && Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
+  <h2>Match variant</h2>
+  <%= form_with url: match_variant_demand_demand_line_path(@demand_line), method: :post, class: "ss-form" do %>
+    <div class="ss-field">
+      <%= label_tag :product_variant_id, "Variant ID", class: "ss-label" %>
+      <%= number_field_tag :product_variant_id, nil, class: "ss-input", required: true %>
+    </div>
+    <%= submit_tag "Match variant", class: "ss-btn" %>
+  <% end %>
+<% end %>
+
+<h2>Audit</h2>
+<% if @audit_events.any? %>
+  <ul class="ss-audit-list">
+    <% @audit_events.each do |event| %>
+      <li><%= event.event_name %> — <%= display_time(event.occurred_at) %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="ss-muted">No audit events yet.</p>
+<% end %>

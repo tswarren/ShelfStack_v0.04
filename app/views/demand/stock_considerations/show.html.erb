@@ -1,0 +1,38 @@
+<%= render "setup/shared/back_link", path: demand_stock_considerations_path, label: "Stock considerations" %>
+
+<h1>Stock consideration</h1>
+
+<dl class="ss-summary">
+  <dt>Status</dt><dd><%= @stock_consideration.status.humanize %></dd>
+  <dt>Item</dt>
+  <dd>
+    <% if @stock_consideration.product_variant.present? %>
+      <%= @stock_consideration.product_variant.sku %> — <%= @stock_consideration.product_variant.name %>
+    <% else %>
+      <%= @stock_consideration.provisional_title || "—" %>
+    <% end %>
+  </dd>
+  <dt>Reason</dt><dd><%= @stock_consideration.reason.presence || "—" %></dd>
+  <dt>Notes</dt><dd><%= simple_format(@stock_consideration.notes.presence || "—") %></dd>
+  <dt>Created</dt><dd><%= display_time(@stock_consideration.created_at) %></dd>
+</dl>
+
+<% if @stock_consideration.converted_demand_line.present? %>
+  <p><%= link_to "View demand #{@stock_consideration.converted_demand_line.demand_number}",
+        demand_demand_line_path(@stock_consideration.converted_demand_line) %></p>
+<% end %>
+
+<div class="ss-detail-actions">
+  <% unless @stock_consideration.terminal? %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.convert", store: current_store) %>
+      <%= button_to "Convert to demand", convert_demand_stock_consideration_path(@stock_consideration),
+            method: :post, class: "ss-btn" %>
+    <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.dismiss", store: current_store) %>
+      <%= form_with url: dismiss_demand_stock_consideration_path(@stock_consideration), method: :patch, class: "ss-form ss-form--inline" do %>
+        <%= text_field_tag :dismiss_reason, nil, placeholder: "Dismiss reason", class: "ss-input" %>
+        <%= submit_tag "Dismiss", class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

@@ -1,0 +1,63 @@
+<h1>New demand line</h1>
+
+<%= form_with url: demand_demand_lines_path, method: :post, class: "ss-form ss-form--standard" do %>
+  <div class="ss-field">
+    <%= label_tag :capture_intent, "Capture intent", class: "ss-label" %>
+    <%= select_tag :capture_intent,
+          options_for_select(@capture_intents.map { |i| [demand_capture_intent_label(i), i] }),
+          class: "ss-input", required: true %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :product_variant_id, "Variant ID", class: "ss-label" %>
+    <%= number_field_tag :product_variant_id, @demand_line.product_variant_id, class: "ss-input" %>
+    <p class="ss-hint">Required for matched demand. Leave blank for research/provisional.</p>
+  </div>
+
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= label_tag :customer_id, "Customer ID", class: "ss-label" %>
+      <%= number_field_tag :customer_id, nil, class: "ss-input" %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :customer_name_snapshot, "Walk-in name", class: "ss-label" %>
+      <%= text_field_tag :customer_name_snapshot, @demand_line.customer_name_snapshot, class: "ss-input" %>
+    </div>
+  </div>
+
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= label_tag :provisional_title, "Provisional title", class: "ss-label" %>
+      <%= text_field_tag :provisional_title, @demand_line.provisional_title, class: "ss-input" %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :provisional_identifier, "Provisional identifier", class: "ss-label" %>
+      <%= text_field_tag :provisional_identifier, @demand_line.provisional_identifier, class: "ss-input" %>
+    </div>
+  </div>
+
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= label_tag :quantity, "Quantity", class: "ss-label" %>
+      <%= number_field_tag :quantity, @demand_line.quantity_requested || 1, min: 1, class: "ss-input" %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :needed_by_date, "Needed by", class: "ss-label" %>
+      <%= date_field_tag :needed_by_date, @demand_line.needed_by_date, class: "ss-input" %>
+    </div>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :notes, "Notes", class: "ss-label" %>
+    <%= text_area_tag :notes, @demand_line.notes, rows: 2, class: "ss-input" %>
+  </div>
+
+  <% if @demand_line.errors.any? %>
+    <div class="ss-form-errors"><%= @demand_line.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <footer class="ss-form-actions">
+    <%= submit_tag "Create demand", class: "ss-btn" %>
+    <%= link_to "Cancel", demand_root_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

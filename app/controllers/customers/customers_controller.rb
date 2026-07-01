@@ -16,6 +16,7 @@ module Customers
 
     def show
       @customer_requests = @customer.customer_requests.where(store: customers_store).order(created_at: :desc).limit(20)
+      @demand_lines = @customer.demand_lines.where(store: customers_store).order(created_at: :desc).limit(20)
       @contact_events = CustomerContactEvent.where(customer: @customer).order(occurred_at: :desc).limit(20)
       @audit_events = AuditEvent.for_auditable(@customer).limit(20)
       @profile_presenter = Customers::ProfilePresenter.build(

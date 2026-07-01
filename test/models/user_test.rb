@@ -4,8 +4,9 @@ require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
   test "normalizes username to lowercase" do
-    user = create_user!(username: "TestUser")
-    assert_equal "testuser", user.username
+    raw = "TestUser#{SecureRandom.hex(2)}"
+    user = create_user!(username: raw)
+    assert_equal raw.downcase, user.username
   end
 
   test "system user cannot be interactive" do

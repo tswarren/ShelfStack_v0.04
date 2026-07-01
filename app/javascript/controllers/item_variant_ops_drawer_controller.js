@@ -11,6 +11,9 @@ export default class extends Controller {
     "holdFields",
     "specialOrderNote",
     "notifyNote",
+    "usedWantedNote",
+    "replenishmentNote",
+    "customerFields",
     "submitButton"
   ]
 
@@ -46,8 +49,6 @@ export default class extends Controller {
     const button = event.currentTarget
     const drawerKey = button.dataset.drawerKey
     const variantId = button.dataset.variantId || this.variantIdValue
-    const available = button.dataset.available
-    const onHand = button.dataset.onHand
 
     if (this.hasRequestTypeFieldTarget) {
       this.requestTypeFieldTarget.value = drawerKey
@@ -56,17 +57,13 @@ export default class extends Controller {
       this.productVariantFieldTarget.value = variantId
     }
 
+    const customerRequired = ["hold", "notify", "special_order", "used_wanted"].includes(drawerKey)
+    if (this.hasCustomerFieldsTarget) {
+      this.customerFieldsTarget.hidden = !customerRequired
+    }
+
     if (this.hasHoldFieldsTarget) {
       this.holdFieldsTarget.hidden = drawerKey !== "hold"
-      const form = this.demandForm
-      if (form) {
-        const holdController = this.application.getControllerForElementAndIdentifier(
-          form, "customer-request-hold-form"
-        )
-        if (holdController) {
-          holdController.setAvailability({ available: available || "0", onHand: onHand || "0" })
-        }
-      }
     }
 
     if (this.hasSpecialOrderNoteTarget) {
@@ -77,11 +74,22 @@ export default class extends Controller {
       this.notifyNoteTarget.hidden = drawerKey !== "notify"
     }
 
+    if (this.hasUsedWantedNoteTarget) {
+      this.usedWantedNoteTarget.hidden = drawerKey !== "used_wanted"
+    }
+
+    if (this.hasReplenishmentNoteTarget) {
+      this.replenishmentNoteTarget.hidden = !["manual_tbo", "buyer_replenishment"].includes(drawerKey)
+    }
+
     if (this.hasSubmitButtonTarget) {
       const labels = {
-        hold: "Create hold",
-        special_order: "Create special order",
-        notify: "Create notify request"
+        hold: "Record hold request",
+        special_order: "Record special order",
+        notify: "Record notify request",
+        used_wanted: "Record used wanted",
+        manual_tbo: "Record manual TBO",
+        buyer_replenishment: "Record buyer demand"
       }
       this.submitButtonTarget.value = labels[drawerKey] || "Submit"
     }
@@ -116,15 +124,14 @@ export default class extends Controller {
     const form = this.demandForm
     if (form) {
       form.reset()
-      const holdController = this.application.getControllerForElementAndIdentifier(
-        form, "customer-request-hold-form"
-      )
-      holdController?.quantityChanged()
     }
 
     if (this.hasHoldFieldsTarget) this.holdFieldsTarget.hidden = true
     if (this.hasSpecialOrderNoteTarget) this.specialOrderNoteTarget.hidden = true
     if (this.hasNotifyNoteTarget) this.notifyNoteTarget.hidden = true
+    if (this.hasUsedWantedNoteTarget) this.usedWantedNoteTarget.hidden = true
+    if (this.hasReplenishmentNoteTarget) this.replenishmentNoteTarget.hidden = true
+    if (this.hasCustomerFieldsTarget) this.customerFieldsTarget.hidden = false
     if (this.hasSubmitButtonTarget) this.submitButtonTarget.value = "Submit"
 
     this.hideDemandSection()

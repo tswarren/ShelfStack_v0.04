@@ -45,7 +45,7 @@ Rails.application.routes.draw do
     }, as: :search
     get "item", to: "items#show", as: :item
     get "item/external_metadata", to: "external_metadata#show", as: :item_external_metadata
-    post "customer_demand", to: "customer_demand_actions#create", as: :customer_demand
+    post "demand", to: "demand_actions#create", as: :demand
     get "variant_operations_drawer", to: "variant_operations_drawer#show", as: :variant_operations_drawer
 
     post "setup_modals/identifiers", to: "setup_modals#create_identifier", as: :setup_modals_identifiers
@@ -301,6 +301,24 @@ Rails.application.routes.draw do
     resource :admin, only: %i[show], controller: "admin" do
       post :rebuild_balances
       post :integrity_check
+    end
+  end
+
+  namespace :demand do
+    root to: "demand_lines#index"
+    get "locked_out", to: "locked_out#show"
+    resources :demand_lines, only: %i[index show new create] do
+      member do
+        patch :cancel
+        patch :expire
+        post :match_variant
+      end
+    end
+    resources :stock_considerations, only: %i[index show new create] do
+      member do
+        post :convert
+        patch :dismiss
+      end
     end
   end
 

@@ -54,13 +54,20 @@ module Phase1TestHelper
     }.merge(attrs))
   end
 
+  def unique_username
+    loop do
+      username = "testuser_#{SecureRandom.hex(4)}"
+      return username unless User.exists?(username: username)
+    end
+  end
+
   def create_user!(attrs = {})
     pin_provided = attrs.key?(:pin)
     pin = attrs.delete(:pin) if pin_provided
 
     user = User.create!({
       user_type: "user",
-      username: "testuser",
+      username: unique_username,
       first_name: "Test",
       last_name: "User",
       display_name: "Test User",

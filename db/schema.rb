@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_120700) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_01_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -499,6 +499,61 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120700) do
     t.index ["merged_into_customer_id"], name: "index_customers_on_merged_into_customer_id"
     t.index ["phone"], name: "index_customers_on_phone_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["updated_by_user_id"], name: "index_customers_on_updated_by_user_id"
+  end
+
+  create_table "demand_line_sequences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "last_sequence", default: 0, null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["store_id"], name: "index_demand_line_sequences_on_store_id", unique: true
+  end
+
+  create_table "demand_lines", force: :cascade do |t|
+    t.text "cancel_reason"
+    t.datetime "canceled_at"
+    t.bigint "canceled_by_user_id"
+    t.string "capture_intent"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_user_id", null: false
+    t.string "customer_email_snapshot"
+    t.bigint "customer_id"
+    t.string "customer_name_snapshot"
+    t.string "customer_phone_snapshot"
+    t.string "demand_number", null: false
+    t.datetime "expired_at"
+    t.bigint "expired_by_user_id"
+    t.datetime "expires_at"
+    t.datetime "matched_at"
+    t.bigint "matched_by_user_id"
+    t.date "needed_by_date"
+    t.text "notes"
+    t.string "preferred_contact_method"
+    t.bigint "product_id"
+    t.bigint "product_variant_id"
+    t.string "provisional_creator"
+    t.string "provisional_identifier"
+    t.string "provisional_title"
+    t.string "purpose", null: false
+    t.integer "quantity_requested", default: 1, null: false
+    t.string "source", null: false
+    t.string "status", default: "open", null: false
+    t.bigint "stock_consideration_id"
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["canceled_by_user_id"], name: "index_demand_lines_on_canceled_by_user_id"
+    t.index ["created_by_user_id"], name: "index_demand_lines_on_created_by_user_id"
+    t.index ["customer_id"], name: "index_demand_lines_on_customer_id"
+    t.index ["expired_by_user_id"], name: "index_demand_lines_on_expired_by_user_id"
+    t.index ["matched_by_user_id"], name: "index_demand_lines_on_matched_by_user_id"
+    t.index ["product_id"], name: "index_demand_lines_on_product_id"
+    t.index ["product_variant_id"], name: "index_demand_lines_on_product_variant_id"
+    t.index ["source", "purpose", "status"], name: "index_demand_lines_on_source_and_purpose_and_status"
+    t.index ["stock_consideration_id"], name: "index_demand_lines_on_stock_consideration_id"
+    t.index ["store_id", "demand_number"], name: "index_demand_lines_on_store_id_and_demand_number", unique: true
+    t.index ["store_id", "status"], name: "index_demand_lines_on_store_id_and_status"
+    t.index ["store_id"], name: "index_demand_lines_on_store_id"
+    t.check_constraint "quantity_requested > 0", name: "chk_demand_lines_quantity_requested"
   end
 
   create_table "departments", force: :cascade do |t|
@@ -1850,6 +1905,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120700) do
     t.check_constraint "quantity_committed > 0", name: "chk_special_orders_quantity_committed"
   end
 
+  create_table "stock_considerations", force: :cascade do |t|
+    t.datetime "converted_at"
+    t.bigint "converted_by_user_id"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_user_id", null: false
+    t.text "dismiss_reason"
+    t.datetime "dismissed_at"
+    t.bigint "dismissed_by_user_id"
+    t.text "notes"
+    t.string "priority"
+    t.bigint "product_id"
+    t.bigint "product_variant_id"
+    t.string "provisional_creator"
+    t.string "provisional_identifier"
+    t.string "provisional_title"
+    t.integer "quantity_suggested"
+    t.text "reason"
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_user_id"
+    t.string "status", default: "open", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["converted_by_user_id"], name: "index_stock_considerations_on_converted_by_user_id"
+    t.index ["created_by_user_id"], name: "index_stock_considerations_on_created_by_user_id"
+    t.index ["dismissed_by_user_id"], name: "index_stock_considerations_on_dismissed_by_user_id"
+    t.index ["product_id"], name: "index_stock_considerations_on_product_id"
+    t.index ["product_variant_id"], name: "index_stock_considerations_on_product_variant_id"
+    t.index ["reviewed_by_user_id"], name: "index_stock_considerations_on_reviewed_by_user_id"
+    t.index ["store_id", "status"], name: "index_stock_considerations_on_store_id_and_status"
+    t.index ["store_id"], name: "index_stock_considerations_on_store_id"
+  end
+
   create_table "store_display_locations", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -2257,6 +2344,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120700) do
   add_foreign_key "customers", "stores", column: "home_store_id"
   add_foreign_key "customers", "users", column: "created_by_user_id"
   add_foreign_key "customers", "users", column: "updated_by_user_id"
+  add_foreign_key "demand_line_sequences", "stores"
+  add_foreign_key "demand_lines", "customers"
+  add_foreign_key "demand_lines", "product_variants"
+  add_foreign_key "demand_lines", "products"
+  add_foreign_key "demand_lines", "stock_considerations"
+  add_foreign_key "demand_lines", "stores"
+  add_foreign_key "demand_lines", "users", column: "canceled_by_user_id"
+  add_foreign_key "demand_lines", "users", column: "created_by_user_id"
+  add_foreign_key "demand_lines", "users", column: "expired_by_user_id"
+  add_foreign_key "demand_lines", "users", column: "matched_by_user_id"
   add_foreign_key "display_locations", "display_locations", column: "parent_id"
   add_foreign_key "external_catalog_imports", "catalog_items"
   add_foreign_key "external_catalog_imports", "external_data_sources"
@@ -2442,6 +2539,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_120700) do
   add_foreign_key "special_orders", "stores"
   add_foreign_key "special_orders", "users", column: "created_by_user_id"
   add_foreign_key "special_orders", "vendors"
+  add_foreign_key "stock_considerations", "product_variants"
+  add_foreign_key "stock_considerations", "products"
+  add_foreign_key "stock_considerations", "stores"
+  add_foreign_key "stock_considerations", "users", column: "converted_by_user_id"
+  add_foreign_key "stock_considerations", "users", column: "created_by_user_id"
+  add_foreign_key "stock_considerations", "users", column: "dismissed_by_user_id"
+  add_foreign_key "stock_considerations", "users", column: "reviewed_by_user_id"
   add_foreign_key "store_display_locations", "display_locations"
   add_foreign_key "store_display_locations", "stores"
   add_foreign_key "store_tax_category_rates", "store_tax_rates"

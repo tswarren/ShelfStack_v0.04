@@ -84,6 +84,40 @@
   <p class="ss-muted">No requests yet.</p>
 <% end %>
 
+<h2>Demand lines</h2>
+<% if @demand_lines.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Demand</th>
+        <th>Intent</th>
+        <th>Status</th>
+        <th>Item</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @demand_lines.each do |line| %>
+        <tr>
+          <td><%= line.demand_number %></td>
+          <td><%= demand_capture_intent_label(line.capture_intent) %></td>
+          <td><%= demand_status_label(line.status) %></td>
+          <td><%= demand_item_label(line) %></td>
+          <td><%= display_time(line.created_at) %></td>
+          <td>
+            <% if Authorization.allowed?(user: current_user, permission_key: "demand.access", store: current_store) %>
+              <%= link_to "View", demand_demand_line_path(line) %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No demand lines yet.</p>
+<% end %>
+
 <h2>Contact history</h2>
 <% if @contact_events.any? %>
   <table class="ss-table">
