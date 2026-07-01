@@ -11,7 +11,7 @@ module Items
       customer = resolve_customer
       capture_intent = params[:capture_intent].to_s
 
-      demand_line = DemandLines::StartFromItem.call!(
+      result = DemandLines::StartFromItem.call!(
         store: current_store,
         variant: variant,
         actor: current_user,
@@ -27,7 +27,8 @@ module Items
         expires_at: parse_expires_at
       )
 
-      notice = demand_notice_for(capture_intent)
+      demand_line = result.demand_line
+      notice = demand_notice_for(capture_intent, result.allocation_result, demand_line)
 
       respond_to do |format|
         format.html do
@@ -71,15 +72,35 @@ module Items
       Time.zone.parse(params[:expires_at].to_s)
     end
 
-    def demand_notice_for(capture_intent)
+    def demand_notice_for(capture_intent, allocation_result = nil, demand_line = nil)
+      if capture_intent == "hold"
+        return hold_allocation_notice(allocation_result, demand_line)
+      end
+
       {
-        "hold" => "Hold request recorded.",
         "special_order" => "Special order demand recorded.",
         "notify" => "Notify request recorded.",
         "used_wanted" => "Used wanted demand recorded.",
         "manual_tbo" => "Manual TBO demand recorded.",
         "buyer_replenishment" => "Buyer replenishment demand recorded."
       }[capture_intent] || "Demand line created."
+    end
+
+    def hold_allocation_notice(allocation_result, demand_line)
+      quantities = demand_line ? DemandAllocations::AllocationQuantities.for_demand_line(demand_line) : {}
+      active = quantities[:active_allocated_quantity].to_i
+      requested = demand_line&.quantity_requested.to_i
+
+      case allocation_result
+      when :full
+        "Hold request recorded and #{active} #{'copy'.pluralize(active)} allocated."
+      when :partial
+        "Hold request recorded; #{active} of #{requested} copies allocated."
+      when :none
+        "Hold request recorded, but no stock was available to allocate."
+      else
+        "Hold request recorded."
+      end
     end
 
     def demand_create_success_streams(variant:, notice:)

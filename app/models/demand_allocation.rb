@@ -1,0 +1,107 @@
+# frozen_string_literal: true
+
+class DemandAllocation < ApplicationRecord
+  ALLOCATION_KINDS = %w[on_hand inbound_purchase_order].freeze
+  STATUSES = %w[active fulfilled released expired canceled].freeze
+  ACTIVE_STATUS = "active".freeze
+  TERMINAL_STATUSES = %w[fulfilled released expired canceled].freeze
+
+  belongs_to :store
+  belongs_to :demand_line
+  belongs_to :product
+  belongs_to :product_variant
+  belongs_to :purchase_order_line, optional: true
+  belongs_to :allocated_by_user, class_name: "User"
+  belongs_to :released_by_user, class_name: "User", optional: true
+  belongs_to :canceled_by_user, class_name: "User", optional: true
+  belongs_to :expired_by_user, class_name: "User", optional: true
+  belongs_to :fulfilled_by_user, class_name: "User", optional: true
+  belongs_to :override_authorized_by_user, class_name: "User", optional: true
+
+  validates :allocation_kind, presence: true, inclusion: { in: ALLOCATION_KINDS }
+  validates :status, presence: true, inclusion: { in: STATUSES }
+  validates :quantity_allocated, numericality: { only_integer: true, greater_than: 0 }
+  validates :allocated_at, presence: true
+  validate :demand_line_consistency
+  validate :purchase_order_line_consistency
+  validate :override_fields_when_flagged
+  validate :terminal_status_fields
+
+  scope :active_allocations, -> { where(status: ACTIVE_STATUS) }
+  scope :on_hand_kind, -> { where(allocation_kind: "on_hand") }
+  scope :inbound_kind, -> { where(allocation_kind: "inbound_purchase_order") }
+
+  def active?
+    status == ACTIVE_STATUS
+  end
+
+  def terminal?
+    TERMINAL_STATUSES.include?(status)
+  end
+
+  def on_hand?
+    allocation_kind == "on_hand"
+  end
+
+  private
+
+  def demand_line_consistency
+    return if demand_line.blank?
+
+    if store_id.present? && demand_line.store_id != store_id
+      errors.add(:store, "must match demand line store")
+    end
+
+    if product_variant_id.present? && demand_line.product_variant_id != product_variant_id
+      errors.add(:product_variant, "must match demand line variant")
+    end
+
+    if product_id.present? && product_variant.present? && product_id != product_variant.product_id
+      errors.add(:product_id, "must match product variant product")
+    end
+
+    if product_id.present? && demand_line.product_id.present? && demand_line.product_id != product_id
+      errors.add(:product_id, "must match demand line product")
+    end
+  end
+
+  def purchase_order_line_consistency
+    if allocation_kind == "inbound_purchase_order"
+      errors.add(:purchase_order_line, "is required for inbound allocation") if purchase_order_line_id.blank?
+    elsif purchase_order_line_id.present?
+      errors.add(:purchase_order_line, "must be blank for on-hand allocation")
+    end
+  end
+
+  def override_fields_when_flagged
+    return unless override_availability?
+
+    if allocation_kind != "on_hand"
+      errors.add(:override_availability, "is only allowed for on-hand allocations")
+      return
+    end
+
+    errors.add(:override_authorized_by_user, "is required when overriding availability") if override_authorized_by_user_id.blank?
+    errors.add(:override_authorized_at, "is required when overriding availability") if override_authorized_at.blank?
+    errors.add(:override_reason, "is required when overriding availability") if override_reason.blank?
+  end
+
+  def terminal_status_fields
+    case status
+    when "released"
+      errors.add(:released_at, "is required") if released_at.blank?
+      errors.add(:released_by_user, "is required") if released_by_user_id.blank?
+    when "canceled"
+      errors.add(:canceled_at, "is required") if canceled_at.blank?
+      errors.add(:canceled_by_user, "is required") if canceled_by_user_id.blank?
+      errors.add(:cancel_reason, "is required") if cancel_reason.blank?
+    when "expired"
+      errors.add(:expired_at, "is required") if expired_at.blank?
+    when "fulfilled"
+      errors.add(:fulfilled_at, "is required") if fulfilled_at.blank?
+      if fulfilled_by_user_id.blank? && fulfillment_reference_type.blank?
+        errors.add(:base, "fulfilled_by_user or fulfillment reference is required")
+      end
+    end
+  end
+end

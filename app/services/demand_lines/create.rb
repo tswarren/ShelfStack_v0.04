@@ -4,6 +4,8 @@ module DemandLines
   class Create
     class CreateError < StandardError; end
 
+    DEFAULT_HOLD_EXPIRY_DAYS = InventoryReservations::ReserveOnHand::DEFAULT_EXPIRY_DAYS
+
     def self.call!(store:, actor:, capture_intent:, quantity: 1, variant: nil, customer: nil,
                    customer_name_snapshot: nil, customer_email_snapshot: nil, customer_phone_snapshot: nil,
                    preferred_contact_method: nil, needed_by_date: nil, expires_at: nil, notes: nil,
@@ -67,6 +69,11 @@ module DemandLines
 
       raise CreateError, "Quantity must be positive" unless quantity.positive?
 
+      resolved_expires_at = expires_at
+      if capture_intent == "hold" && resolved_expires_at.blank?
+        resolved_expires_at = DEFAULT_HOLD_EXPIRY_DAYS.days.from_now
+      end
+
       demand_line = nil
       DemandLine.transaction do
         demand_line = DemandLine.create!(
@@ -85,7 +92,7 @@ module DemandLines
           preferred_contact_method: preferred_contact_method,
           quantity_requested: quantity,
           needed_by_date: needed_by_date,
-          expires_at: expires_at,
+          expires_at: resolved_expires_at,
           notes: notes,
           provisional_title: provisional_title,
           provisional_identifier: provisional_identifier,

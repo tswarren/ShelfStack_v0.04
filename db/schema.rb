@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -499,6 +499,56 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_103000) do
     t.index ["merged_into_customer_id"], name: "index_customers_on_merged_into_customer_id"
     t.index ["phone"], name: "index_customers_on_phone_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["updated_by_user_id"], name: "index_customers_on_updated_by_user_id"
+  end
+
+  create_table "demand_allocations", force: :cascade do |t|
+    t.datetime "allocated_at", null: false
+    t.bigint "allocated_by_user_id", null: false
+    t.string "allocation_kind", null: false
+    t.text "cancel_reason"
+    t.datetime "canceled_at"
+    t.bigint "canceled_by_user_id"
+    t.datetime "created_at", null: false
+    t.bigint "demand_line_id", null: false
+    t.datetime "expired_at"
+    t.bigint "expired_by_user_id"
+    t.datetime "expires_at"
+    t.datetime "fulfilled_at"
+    t.bigint "fulfilled_by_user_id"
+    t.bigint "fulfillment_reference_id"
+    t.string "fulfillment_reference_type"
+    t.text "notes"
+    t.datetime "override_authorized_at"
+    t.bigint "override_authorized_by_user_id"
+    t.boolean "override_availability", default: false, null: false
+    t.text "override_reason"
+    t.bigint "product_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "purchase_order_line_id"
+    t.integer "quantity_allocated", null: false
+    t.text "release_reason"
+    t.datetime "released_at"
+    t.bigint "released_by_user_id"
+    t.string "status", default: "active", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["allocated_by_user_id"], name: "index_demand_allocations_on_allocated_by_user_id"
+    t.index ["canceled_by_user_id"], name: "index_demand_allocations_on_canceled_by_user_id"
+    t.index ["demand_line_id", "status"], name: "index_demand_allocations_on_demand_line_id_and_status"
+    t.index ["demand_line_id"], name: "index_demand_allocations_on_demand_line_id"
+    t.index ["expired_by_user_id"], name: "index_demand_allocations_on_expired_by_user_id"
+    t.index ["fulfilled_by_user_id"], name: "index_demand_allocations_on_fulfilled_by_user_id"
+    t.index ["override_authorized_by_user_id"], name: "index_demand_allocations_on_override_authorized_by_user_id"
+    t.index ["product_id"], name: "index_demand_allocations_on_product_id"
+    t.index ["product_variant_id"], name: "index_demand_allocations_on_product_variant_id"
+    t.index ["purchase_order_line_id", "status"], name: "index_demand_allocations_on_purchase_order_line_id_and_status"
+    t.index ["purchase_order_line_id"], name: "index_demand_allocations_on_purchase_order_line_id"
+    t.index ["released_by_user_id"], name: "index_demand_allocations_on_released_by_user_id"
+    t.index ["status", "expires_at"], name: "index_demand_allocations_on_status_and_expires_at"
+    t.index ["store_id", "product_variant_id", "allocation_kind", "status"], name: "index_demand_allocations_on_store_variant_kind_status"
+    t.index ["store_id", "status", "expires_at"], name: "index_demand_allocations_on_store_id_and_status_and_expires_at"
+    t.index ["store_id"], name: "index_demand_allocations_on_store_id"
+    t.check_constraint "quantity_allocated > 0", name: "demand_allocations_quantity_positive"
   end
 
   create_table "demand_line_sequences", force: :cascade do |t|
@@ -2344,6 +2394,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_103000) do
   add_foreign_key "customers", "stores", column: "home_store_id"
   add_foreign_key "customers", "users", column: "created_by_user_id"
   add_foreign_key "customers", "users", column: "updated_by_user_id"
+  add_foreign_key "demand_allocations", "demand_lines"
+  add_foreign_key "demand_allocations", "product_variants"
+  add_foreign_key "demand_allocations", "products"
+  add_foreign_key "demand_allocations", "purchase_order_lines"
+  add_foreign_key "demand_allocations", "stores"
+  add_foreign_key "demand_allocations", "users", column: "allocated_by_user_id"
+  add_foreign_key "demand_allocations", "users", column: "canceled_by_user_id"
+  add_foreign_key "demand_allocations", "users", column: "expired_by_user_id"
+  add_foreign_key "demand_allocations", "users", column: "fulfilled_by_user_id"
+  add_foreign_key "demand_allocations", "users", column: "override_authorized_by_user_id"
+  add_foreign_key "demand_allocations", "users", column: "released_by_user_id"
   add_foreign_key "demand_line_sequences", "stores"
   add_foreign_key "demand_lines", "customers"
   add_foreign_key "demand_lines", "product_variants"

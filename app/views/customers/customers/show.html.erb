@@ -94,6 +94,7 @@
         <th>Demand</th>
         <th>Intent</th>
         <th>Status</th>
+        <th>Allocation</th>
         <th>Item</th>
         <th>Created</th>
         <th></th>
@@ -105,6 +106,7 @@
           <td><%= line.demand_number %></td>
           <td><%= demand_capture_intent_label(line.capture_intent) %></td>
           <td><%= demand_status_label(line.status) %></td>
+          <td><%= demand_allocation_state_label(line) %></td>
           <td><%= demand_item_label(line) %></td>
           <td><%= display_time(line.created_at) %></td>
           <td>

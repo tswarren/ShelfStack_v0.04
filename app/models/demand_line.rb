@@ -35,9 +35,11 @@ class DemandLine < ApplicationRecord
     buyer_replenishment
   ].freeze
 
-  STATUSES = %w[captured open canceled expired].freeze
+  STATUSES = %w[captured open partially_allocated allocated fulfilled canceled expired].freeze
 
-  TERMINAL_STATUSES = %w[canceled expired].freeze
+  TERMINAL_STATUSES = %w[fulfilled canceled expired].freeze
+
+  ALLOCATION_ACTIVE_STATUSES = %w[open partially_allocated allocated].freeze
 
   PREFERRED_CONTACT_METHODS = Customer::PREFERRED_CONTACT_METHODS
 
@@ -50,6 +52,8 @@ class DemandLine < ApplicationRecord
   belongs_to :canceled_by_user, class_name: "User", optional: true
   belongs_to :expired_by_user, class_name: "User", optional: true
   belongs_to :stock_consideration, optional: true
+
+  has_many :demand_allocations, dependent: :restrict_with_error
 
   validates :demand_number, presence: true, uniqueness: { scope: :store_id }
   validates :source, presence: true, inclusion: { in: SOURCES }
@@ -90,10 +94,10 @@ class DemandLine < ApplicationRecord
   end
 
   def open_status_requires_variant
-    return unless status == "open"
+    return unless ALLOCATION_ACTIVE_STATUSES.include?(status) || status == "open"
     return if product_variant_id.present?
 
-    errors.add(:product_variant, "must be present when status is open")
+    errors.add(:product_variant, "must be present when status is #{status}")
   end
 
   def capture_intent_requires_customer?
