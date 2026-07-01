@@ -32,7 +32,7 @@ module DemandAllocations
 
       DemandLine.transaction do
         locked_demand = DemandLine.lock.find(demand_line.id)
-        MutationSupport.ensure_allocatable_demand!(locked_demand)
+        MutationSupport.ensure_allocatable_demand!(locked_demand, error_class: AllocateError)
         MutationSupport.ensure_quantity_within_unallocated_demand!(
           demand_line: locked_demand,
           quantity: quantity,

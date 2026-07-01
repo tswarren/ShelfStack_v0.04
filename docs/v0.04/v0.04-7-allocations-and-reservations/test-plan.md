@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md) and [data-model.md](data-model.md).
+**In review** — companion to [spec.md](spec.md) and [data-model.md](data-model.md).
 
 ---
 

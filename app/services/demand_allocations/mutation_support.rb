@@ -4,10 +4,10 @@ module DemandAllocations
   module MutationSupport
     module_function
 
-    def ensure_allocatable_demand!(demand_line)
-      raise ArgumentError, "Demand line is terminal" if demand_line.terminal?
-      raise ArgumentError, "Captured demand cannot be allocated" if demand_line.status == "captured"
-      raise ArgumentError, "Demand line requires a variant" if demand_line.product_variant_id.blank?
+    def ensure_allocatable_demand!(demand_line, error_class: StandardError)
+      raise error_class, "Demand line is terminal" if demand_line.terminal?
+      raise error_class, "Captured demand cannot be allocated" if demand_line.status == "captured"
+      raise error_class, "Demand line requires a variant" if demand_line.product_variant_id.blank?
     end
 
     def ensure_quantity_within_unallocated_demand!(demand_line:, quantity:, error_class: StandardError)

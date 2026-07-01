@@ -87,6 +87,18 @@ class DemandAllocationsAllocateOnHandTest < ActiveSupport::TestCase
     assert_equal 1, remaining_allocation.quantity_allocated
   end
 
+  test "rejects allocation for terminal demand line" do
+    DemandLines::Cancel.call!(demand_line: @demand_line, actor: @user, cancel_reason: "Test")
+
+    assert_raises(DemandAllocations::AllocateOnHand::AllocateError) do
+      DemandAllocations::AllocateOnHand.call!(
+        demand_line: @demand_line.reload,
+        actor: @user,
+        quantity: 1
+      )
+    end
+  end
+
   test "override allows stock overage but not demand overage" do
     grant_permission!(@user, "demand.allocations.override_availability", store: @store)
     InventoryBalance.find_by!(store: @store, product_variant: @variant).update!(

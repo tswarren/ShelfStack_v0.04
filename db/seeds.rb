@@ -50,7 +50,7 @@ Seeds::V0046Permissions.seed!
 Seeds::V0047Permissions.seed!
 Seeds::Phase6Roles.seed!
 
-system_user = User.find_or_initialize_by(username: "system")
+system_user = User.find_or_initialize_by(username: ShelfStack::SYSTEM_USERNAME)
 system_user.assign_attributes(
   user_type: "system",
   first_name: "ShelfStack",
