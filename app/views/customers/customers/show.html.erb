@@ -26,7 +26,9 @@
 
 <% if @profile_presenter %>
   <div class="ss-profile-actions ss-detail-actions">
-    <% if @profile_presenter.can_create_request? %>
+    <% if @profile_presenter.can_create_demand? %>
+      <%= link_to "New demand", @profile_presenter.new_demand_path, class: "ss-btn" %>
+    <% elsif @profile_presenter.can_create_request? %>
       <%= link_to "New request", @profile_presenter.new_request_path, class: "ss-btn" %>
     <% end %>
     <% if @profile_presenter.can_view_requests? && @profile_presenter.ready_for_pickup_line_count.positive? %>

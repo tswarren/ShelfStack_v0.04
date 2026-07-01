@@ -200,6 +200,10 @@ module Items
       actions
     end
 
+    def variant_drawer_actions(variant)
+      variant_actions(variant).reject { |action| %w[TBO Order].include?(action.label) }
+    end
+
     def variant_actions(variant)
       policy = ProductVariants::OperationalPolicy.for(variant)
       actions = []

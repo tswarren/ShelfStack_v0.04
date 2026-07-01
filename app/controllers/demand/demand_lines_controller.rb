@@ -36,12 +36,13 @@ module Demand
 
     def new
       @demand_line = DemandLine.new(store: demand_store, quantity_requested: 1)
+      @selected_customer = resolve_customer(id: params[:customer_id], required: false)
       load_form_collections
     end
 
     def create
-      variant = params[:product_variant_id].present? ? ProductVariant.find(params[:product_variant_id]) : nil
-      customer = params[:customer_id].present? ? Customer.find(params[:customer_id]) : nil
+      variant = resolve_variant(id: params[:product_variant_id], required: false)
+      customer = resolve_customer(id: params[:customer_id], required: false)
       capture_intent = params[:capture_intent].to_s
 
       @demand_line = if capture_intent == "research"
@@ -109,7 +110,7 @@ module Demand
     def match_variant
       return unless authorize_demand!("demand.match_variant")
 
-      variant = ProductVariant.find(params[:product_variant_id])
+      variant = resolve_variant(id: params[:product_variant_id], required: true)
       DemandLines::MatchVariant.call!(demand_line: @demand_line, variant: variant, actor: current_user)
       redirect_to demand_demand_line_path(@demand_line), notice: "Variant matched."
     rescue DemandLines::MatchVariant::MatchError, ActiveRecord::RecordNotFound => e
@@ -134,6 +135,20 @@ module Demand
       return nil if params[:expires_at].blank?
 
       Time.zone.parse(params[:expires_at].to_s)
+    end
+
+    def resolve_variant(id:, required:)
+      return nil if id.blank?
+      raise ActiveRecord::RecordNotFound, "Variant is required" if required && id.blank?
+
+      ProductVariant.find(id)
+    end
+
+    def resolve_customer(id:, required:)
+      return nil if id.blank?
+      raise ActiveRecord::RecordNotFound, "Customer is required" if required && id.blank?
+
+      Customer.find(id)
     end
   end
 end

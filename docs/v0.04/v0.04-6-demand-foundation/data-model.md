@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md).
+**In review** — companion to [spec.md](spec.md). Implementation matches this model on branch `v0.04-6-demand-foundation`.
 
 ---
 

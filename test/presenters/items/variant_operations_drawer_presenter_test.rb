@@ -41,4 +41,20 @@ class Items::VariantOperationsDrawerPresenterTest < ActiveSupport::TestCase
 
     assert drawer.warnings.any? { |warning| warning.category == :ordering }
   end
+
+  test "drawer recommended actions exclude legacy TBO and Order" do
+    grant_permission!(@user, "orders.purchase_requests.create", store: @store)
+    grant_permission!(@user, "orders.purchase_orders.create", store: @store)
+
+    drawer = Items::VariantOperationsDrawerPresenter.for(
+      item: @item,
+      store: @store,
+      user: @user,
+      variant: @variant
+    )
+
+    labels = drawer.recommended_actions.map(&:label)
+    refute_includes labels, "TBO"
+    refute_includes labels, "Order"
+  end
 end

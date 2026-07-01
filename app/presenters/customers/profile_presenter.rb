@@ -39,7 +39,13 @@ module Customers
                                                           .count
     end
 
+    def can_create_demand?
+      Authorization.allowed?(user: user, permission_key: "demand.create", store: store)
+    end
+
     def can_create_request?
+      return false if can_create_demand?
+
       Authorization.allowed?(user: user, permission_key: "customer_requests.create", store: store)
     end
 
@@ -67,6 +73,10 @@ module Customers
 
     def new_request_path
       Rails.application.routes.url_helpers.new_customers_customer_request_path(customer_id: customer.id)
+    end
+
+    def new_demand_path
+      Rails.application.routes.url_helpers.new_demand_demand_line_path(customer_id: customer.id)
     end
   end
 end

@@ -17,7 +17,7 @@
   <div class="ss-form-grid ss-form-grid--2">
     <div class="ss-field">
       <%= label_tag :customer_id, "Customer ID", class: "ss-label" %>
-      <%= number_field_tag :customer_id, nil, class: "ss-input" %>
+      <%= number_field_tag :customer_id, @selected_customer&.id, class: "ss-input" %>
     </div>
     <div class="ss-field">
       <%= label_tag :customer_name_snapshot, "Walk-in name", class: "ss-label" %>
