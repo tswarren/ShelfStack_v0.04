@@ -27,7 +27,7 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-2 Product identifiers | **Complete** | [spec](v0.04-2-product-identifiers/spec.md) · [data model](v0.04-2-product-identifiers/data-model.md) · [test plan](v0.04-2-product-identifiers/test-plan.md) · [completion](../implementation/v0.04-2-completion.md) |
 | v0.04-3 Product groups | **Deferred** | Roadmap only — see [delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) |
 | v0.04-4 Wire-through | **Complete** | [spec](v0.04-4-variant-grain-wire-through/spec.md) · [data model](v0.04-4-variant-grain-wire-through/data-model.md) · [test plan](v0.04-4-variant-grain-wire-through/test-plan.md) · [completion](../implementation/v0.04-4-completion.md) |
-| v0.04-5 Used variant rules | **Next** | *(not yet created)* |
+| v0.04-5 Used variant rules | **Next** | [spec](v0.04-5-used-variant-rules/spec.md) · [data model](v0.04-5-used-variant-rules/data-model.md) · [test plan](v0.04-5-used-variant-rules/test-plan.md) |
 | v0.04-6 Demand foundation | Planned | *(not yet created)* |
 | v0.04-7 Allocations | Planned | *(not yet created)* |
 | v0.04-8 Sourcing | Planned | *(not yet created)* |
