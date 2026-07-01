@@ -89,4 +89,25 @@ class ItemOperationsPresenterTest < ActiveSupport::TestCase
 
     refute presenter.header_actions.map(&:label).include?("Add to PO")
   end
+
+  test "header omits mark tbo and add to po when only used-like inventory-eligible variant exists" do
+    grant_permission!(@user, "orders.purchase_requests.create", store: @store)
+    grant_permission!(@user, "orders.purchase_orders.create", store: @store)
+    grant_permission!(@user, "orders.returns_to_vendor.create", store: @store)
+
+    used = ProductCondition.find_by(condition_key: "used_good") ||
+      create_product_condition!(condition_key: "used_good_header", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
+    @variant.update!(condition: used, orderable: false, inventory_behavior: "standard_physical")
+
+    presenter = Items::ItemOperationsPresenter.new(
+      item: Items::ItemPresenter.from_product(@product),
+      store: @store,
+      user: @user
+    )
+    labels = presenter.header_actions.map(&:label)
+
+    refute_includes labels, "Mark TBO"
+    refute_includes labels, "Add to PO"
+    assert_includes labels, "RTV"
+  end
 end

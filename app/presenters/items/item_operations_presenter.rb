@@ -68,17 +68,20 @@ module Items
 
     def header_actions
       actions = []
-      eligible_variant = item.variants.find { |variant| inventory_eligible?(variant) }
+      vendor_orderable_variant = item.variants.find do |variant|
+        inventory_eligible?(variant) && ProductVariants::OperationalPolicy.for(variant).vendor_orderable?
+      end
+      inventory_eligible_variant = item.variants.find { |variant| inventory_eligible?(variant) }
 
-      if eligible_variant && allowed?("orders.purchase_requests.create")
+      if vendor_orderable_variant && allowed?("orders.purchase_requests.create")
         actions << Action.new(
           label: "Mark TBO",
-          url: new_orders_purchase_request_path(product_variant_id: eligible_variant.id),
+          url: new_orders_purchase_request_path(product_variant_id: vendor_orderable_variant.id),
           permission_key: "orders.purchase_requests.create"
         )
       end
 
-      if eligible_variant && allowed?("orders.purchase_orders.create")
+      if vendor_orderable_variant && allowed?("orders.purchase_orders.create")
         actions << Action.new(
           label: "Add to PO",
           url: from_tbo_orders_purchase_orders_path,
@@ -95,7 +98,7 @@ module Items
         )
       end
 
-      if eligible_variant && allowed?("orders.returns_to_vendor.create")
+      if inventory_eligible_variant && allowed?("orders.returns_to_vendor.create")
         actions << Action.new(
           label: "RTV",
           url: new_orders_returns_to_vendor_path,

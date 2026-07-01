@@ -2,7 +2,7 @@
 
 ## Status
 
-**Complete** — see [v0.04-5-completion.md](../../implementation/v0.04-5-completion.md).
+**In review** — see [v0.04-5-completion.md](../../implementation/v0.04-5-completion.md). *(Mark **Complete** after merge to `main`.)*
 
 ## Job
 

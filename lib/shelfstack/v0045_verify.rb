@@ -36,14 +36,21 @@ module Shelfstack
     end
 
     def used_like_in_buildable_tbo_count(store: nil)
-      store ||= Store.active_records.first
-      return 0 if store.blank?
+      if store.present?
+        return PurchaseRequestLine
+          .buildable_for_store(store)
+          .joins(product_variant: :condition)
+          .where(product_conditions: { new_condition: false })
+          .count
+      end
 
-      PurchaseRequestLine
-        .buildable_for_store(store)
-        .joins(product_variant: :condition)
-        .where(product_conditions: { new_condition: false })
-        .count
+      Store.active_records.sum do |active_store|
+        PurchaseRequestLine
+          .buildable_for_store(active_store)
+          .joins(product_variant: :condition)
+          .where(product_conditions: { new_condition: false })
+          .count
+      end
     rescue StandardError
       0
     end
