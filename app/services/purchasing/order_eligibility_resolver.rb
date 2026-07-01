@@ -114,9 +114,9 @@ module Purchasing
       blocking << reason(:not_orderable, :blocking) unless product_variant.orderable?
       blocking << reason(:non_inventory_not_orderable, :blocking) if non_inventory_blocked?
 
-      if discontinued_catalog_item?
-        warnings << reason(:discontinued_catalog_item, :warning)
-        blocking << reason(:discontinued_catalog_item_submit_block, :blocking) if context == :purchase_order_submit
+      if discontinued_product?
+        warnings << reason(:discontinued_product, :warning)
+        blocking << reason(:discontinued_product_submit_block, :blocking) if context == :purchase_order_submit
       end
 
       evaluate_vendor_sourcing(warnings:, infos:)
@@ -128,8 +128,8 @@ module Purchasing
       warnings << reason(:not_orderable, :warning) unless product_variant.orderable?
       warnings << reason(:non_inventory_not_orderable, :warning) if non_inventory_blocked?
 
-      if discontinued_catalog_item?
-        warnings << reason(:discontinued_catalog_item, :warning)
+      if discontinued_product?
+        warnings << reason(:discontinued_product, :warning)
       end
 
       evaluate_vendor_sourcing(warnings:, infos:)
@@ -170,11 +170,11 @@ module Purchasing
       product_variant.product&.product_type == "non_inventory" && !product_variant.orderable?
     end
 
-    def discontinued_catalog_item?
-      catalog_item = product_variant.product&.catalog_item
-      return false if catalog_item.blank?
+    def discontinued_product?
+      product = product_variant.product
+      return false if product.blank?
 
-      DISCONTINUED_STATUSES.include?(catalog_item.publication_status)
+      DISCONTINUED_STATUSES.include?(product.publication_status)
     end
 
     def missing_cost?(resolved_sourcing: nil)
@@ -212,12 +212,14 @@ module Purchasing
       used_variant: "Used variants cannot be added to normal vendor purchase orders.",
       not_orderable: "This variant is not orderable from vendors.",
       non_inventory_not_orderable: "Non-inventory variants require explicit orderable flag.",
-      discontinued_catalog_item: "Catalog item is discontinued or publication cancelled.",
-      discontinued_catalog_item_submit_block: "Discontinued items cannot be submitted on a purchase order.",
+      discontinued_product: "Product is discontinued or publication cancelled.",
+      discontinued_product_submit_block: "Discontinued products cannot be submitted on a purchase order.",
+      discontinued_catalog_item: "Product is discontinued or publication cancelled.",
+      discontinued_catalog_item_submit_block: "Discontinued products cannot be submitted on a purchase order.",
       missing_vendor_source: "No vendor sourcing record exists for this item and vendor.",
       missing_preferred_vendor: "No preferred vendor is configured.",
       missing_cost: "Expected unit cost could not be determined.",
-      missing_identifier: "No active catalog identifier is on file."
+      missing_identifier: "No active product identifier is on file."
     }.freeze
     private_constant :REASON_MESSAGES
   end

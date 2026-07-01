@@ -37,6 +37,40 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     assert AuditEvent.exists?(event_name: "product.created", auditable: product)
   end
 
+  test "update product metadata for fused product" do
+    product = create_product!(
+      skip_product_identifier: true,
+      title: "Metadata Edit Book",
+      catalog_item_type: "book",
+      publication_status: "active"
+    )
+
+    patch update_metadata_items_product_path(product, return_to: "item"), params: {
+      product: {
+        catalog_item_type: "book",
+        title: "Updated Metadata Title",
+        format_id: product.format_id,
+        publication_status: "active",
+        active: true,
+        creators: "New Author"
+      }
+    }
+
+    assert_redirected_to items_item_path(product_id: product.id, tab: "item_setup")
+    product.reload
+    assert_equal "Updated Metadata Title", product.title
+    assert_equal "New Author", product.creators
+    assert AuditEvent.exists?(event_name: "product.updated", auditable: product)
+  end
+
+  test "edit metadata redirects legacy catalog linked products to catalog item edit" do
+    product = create_legacy_catalog_linked_product!
+
+    get edit_metadata_items_product_path(product, return_to: "item")
+
+    assert_redirected_to edit_items_catalog_item_path(product.catalog_item, return_to: "item")
+  end
+
   test "update product with cover image" do
     product = create_product!
     cover = fixture_file_upload("cover.png", "image/png")

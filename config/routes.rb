@@ -96,6 +96,8 @@ Rails.application.routes.draw do
     end
     resources :products do
       member do
+        get :edit_metadata
+        patch :update_metadata
         patch :inactivate
         patch :reactivate
         patch :regenerate_name

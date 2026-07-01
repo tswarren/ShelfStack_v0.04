@@ -1,11 +1,13 @@
 <%= render "shared/forms/page_header",
            eyebrow: "Items",
            title: "Original External Metadata",
-           description: "Provider snapshot captured when this catalog item was imported from an external lookup." %>
+           description: "Provider snapshot captured when this item was imported from an external lookup." %>
+
+<% @linked_product = @catalog_item.products.active_records.order(:id).first %>
 
 <%= render layout: "shared/forms/section", locals: { title: "Import" } do %>
   <dl class="ss-dl">
-    <dt>Catalog item</dt><dd><%= @catalog_item.title %></dd>
+    <dt>Item</dt><dd><%= @linked_product&.title || @catalog_item.title %></dd>
     <dt>Source</dt><dd><%= @import.external_data_source.name %></dd>
     <dt>Import action</dt><dd><%= @import.action_type.humanize %></dd>
     <dt>Imported at</dt><dd><%= l(@import.applied_at, format: :long) %></dd>
@@ -48,6 +50,6 @@
 
 <footer class="ss-form-actions">
   <%= link_to "Back to item setup",
-              items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup"),
+              @linked_product ? items_item_path(product_id: @linked_product.id, tab: "item_setup") : items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup"),
               class: "ss-btn ss-btn-secondary" %>
 </footer>

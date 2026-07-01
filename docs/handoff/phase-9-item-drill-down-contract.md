@@ -14,10 +14,18 @@ Phase 9b operational reports that consume this contract:
 
 ## Link conventions
 
+Canonical (use for all new report and workspace links):
+
 ```text
-/items/item?catalog_item_id=:id&tab=overview
 /items/item?product_id=:id&tab=overview
 /items/item?product_variant_id=:id&tab=overview
+```
+
+Legacy redirect only (do not emit from new code):
+
+```text
+/items/item?catalog_item_id=:id&tab=overview
+  → 302 to product_id when an active linked product exists
 ```
 
 Anchors:

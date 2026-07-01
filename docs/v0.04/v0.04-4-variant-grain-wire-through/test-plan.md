@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — executable when v0.04-4 implementation begins.
+**Complete** — executable; verified 2026-06-30.
 
 ---
 
@@ -87,6 +87,17 @@ Planned checks:
 | ---- | ------ |
 | `StartFromItem` | Creates/links with `product_id` context, not `catalog_item_id` |
 
+### Product-first intake hygiene
+
+| Test | Assert |
+| ---- | ------ |
+| `Items::PersistInitialProductIdentifier` | Creates primary identifier; syncs from SKU when value absent |
+| Add item catalog-linked `item_details` | ISBN persists to `product_identifiers` and `products.sku` |
+| Catalog item create with initial identifier | Bootstraps linked product + primary identifier |
+| `ProductsController#update_metadata` | Updates fused product bibliographic fields |
+| `ProductsController#edit_metadata` | Redirects catalog-linked products to catalog-item edit |
+| Item setup fused product | **Edit bibliographic details** links to `edit_metadata` |
+
 ---
 
 ## Integration tests
@@ -108,10 +119,12 @@ Document in completion note:
 
 1. Item index → product detail URL shape
 2. Legacy catalog_item bookmark redirect
-3. Buyback intake without catalog item creation
-4. External lookup import to existing product
-5. TBO queue format filter
-6. POS ISBN + variant SKU scan (v0.04-2 regression)
+3. Add item / catalog intake → identifier row + SKU cache
+4. Fused product bibliographic edit (`edit_metadata`)
+5. Buyback intake without catalog item creation
+6. External lookup import to existing product
+7. TBO queue format filter
+8. POS ISBN + variant SKU scan (v0.04-2 regression)
 
 ---
 

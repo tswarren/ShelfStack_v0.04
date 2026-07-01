@@ -45,7 +45,11 @@ module Items
         record_audit!("catalog_item.created", @catalog_item)
         apply_bisac_sync_notice!(bisac_result)
         apply_store_category_sync_notice!(store_category_result)
-        redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item created."
+        if identifier_value_param.present?
+          bootstrap_product_from_initial_identifier!
+        else
+          redirect_to items_catalog_item_path(@catalog_item), notice: "Catalog item created."
+        end
       else
         load_bisac_form_state(@catalog_item)
         load_store_category_collections
@@ -234,6 +238,30 @@ module Items
 
     def identifier_return_path
       item_return_path(@catalog_item, tab: "item_setup")
+    end
+
+    def bootstrap_product_from_initial_identifier!
+      authorize!("items.products.create")
+      result = Items::BootstrapCatalogLinkedProduct.call(
+        catalog_item: @catalog_item,
+        identifier_type: identifier_type_param,
+        identifier_value: identifier_value_param,
+        actor: current_user
+      )
+      record_audit!("product.created", result.product)
+      apply_transitional_identifier_notice!(result.sku_validation_message)
+      apply_identifier_validation_notice!(result.identifier) if result.identifier.present?
+      redirect_to items_item_path(product_id: result.product.id, tab: "item_setup"),
+                  notice: "Catalog item and product created."
+    rescue AddItem::TransitionalSkuAssigner::ConflictError, ProductIdentifierService::IdentifierError => e
+      redirect_to items_catalog_item_path(@catalog_item), alert: e.message
+    end
+
+    def apply_transitional_identifier_notice!(validation_message)
+      return if validation_message.blank?
+
+      message = "Identifier saved with warning: #{validation_message}"
+      flash[:warning] = [ flash[:warning], message ].compact.join(" ")
     end
   end
 end

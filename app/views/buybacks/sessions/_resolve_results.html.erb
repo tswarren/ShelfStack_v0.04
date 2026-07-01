@@ -1,18 +1,16 @@
 <%# locals: result, line, session, conditions, sub_departments %>
 <%= turbo_frame_tag dom_id(line, :resolve) do %>
 <div class="ss-buyback-resolve-results">
-  <% if result.catalog_item.blank? %>
-    <p class="ss-muted">No catalog match for this identifier or title.</p>
+  <% if result.product.blank? %>
+    <p class="ss-muted">No product match for this identifier or title.</p>
     <p class="ss-form-actions">
       <%= buyback_external_lookup_link(session, line) %>
     </p>
     <p class="ss-hint">Or use <strong>Create intake</strong> below to add a new item record.</p>
   <% else %>
     <p>
-      <strong><%= result.catalog_item.title %></strong>
-      <% if result.product.present? %>
-        <span class="ss-muted">· <%= result.product.sku %></span>
-      <% end %>
+      <strong><%= result.product.display_title %></strong>
+      <span class="ss-muted">· <%= result.product.sku %></span>
     </p>
 
     <% if result.variants.any? %>
@@ -36,7 +34,7 @@
       </p>
       <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline ss-buyback-add-used-variant", data: { turbo_stream: true } do %>
         <%= hidden_field_tag :identifier, line.identifier_entered %>
-        <%= hidden_field_tag :title, result.catalog_item.title %>
+        <%= hidden_field_tag :title, result.product.display_title %>
         <%= select_tag :sub_department_id,
               options_from_collection_for_select(sub_departments, :id, :name),
               include_blank: "Subdepartment",

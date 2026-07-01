@@ -2,10 +2,16 @@
 
 module Items
   class ProductsController < BaseController
-    before_action :set_product, only: %i[show edit update destroy inactivate reactivate regenerate_name]
+    include ProductBisacSyncable
+
+    before_action :set_product, only: %i[
+      show edit update destroy inactivate reactivate regenerate_name edit_metadata update_metadata
+    ]
     before_action -> { authorize!("items.products.view") }, only: %i[index show]
     before_action -> { authorize!("items.products.create") }, only: %i[new create]
-    before_action -> { authorize!("items.products.update") }, only: %i[edit update regenerate_name]
+    before_action -> { authorize!("items.products.update") }, only: %i[
+      edit update regenerate_name edit_metadata update_metadata
+    ]
     before_action -> { authorize!("items.products.inactivate") }, only: :inactivate
     before_action -> { authorize!("items.products.reactivate") }, only: :reactivate
     before_action -> { authorize!("items.products.delete") }, only: :destroy
@@ -96,6 +102,46 @@ module Items
       redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product name regenerated."
     end
 
+    def edit_metadata
+      if @product.catalog_linked?
+        redirect_to edit_items_catalog_item_path(@product.catalog_item, return_to: params[:return_to].presence || "item")
+        return
+      end
+      unless @product.metadata_fused?
+        redirect_to item_return_path(@product, tab: "item_setup"),
+                    alert: "Bibliographic metadata is not editable for this product."
+        return
+      end
+
+      load_metadata_form_collections
+    end
+
+    def update_metadata
+      if @product.catalog_linked?
+        redirect_to edit_items_catalog_item_path(@product.catalog_item, return_to: params[:return_to].presence || "item")
+        return
+      end
+      unless @product.metadata_fused?
+        redirect_to item_return_path(@product, tab: "item_setup"),
+                    alert: "Bibliographic metadata is not editable for this product."
+        return
+      end
+
+      load_metadata_form_collections
+      purge_cover_image_if_requested
+      if @product.update(product_metadata_params)
+        bisac_result = sync_product_bisac!(@product)
+        store_category_result = sync_product_store_category!(@product)
+        regenerate_metadata_product_name!
+        record_audit!("product.updated", @product)
+        apply_bisac_sync_notice!(bisac_result)
+        apply_store_category_sync_notice!(store_category_result)
+        redirect_to item_return_path(@product, tab: "item_setup"), notice: "Bibliographic details updated."
+      else
+        render :edit_metadata, status: :unprocessable_entity
+      end
+    end
+
     private
 
     def set_product
@@ -113,6 +159,48 @@ module Items
       @display_locations = DisplayLocation.active_for_tree_select
       @sub_departments = SubDepartment.active_records.order(:name)
       @vendors = Vendor.active_records.order(:name)
+    end
+
+    def load_metadata_form_collections
+      @formats = Format.active_records.order(:name)
+      load_store_category_collections
+      load_bisac_form_state(@product)
+    end
+
+    def load_store_category_collections
+      scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
+      @store_category_nodes = scheme ? CategoryNode.active_for_tree_select(scheme) : CategoryNode.none
+    end
+
+    def sync_product_store_category!(product)
+      ProductStoreCategorySync.apply!(
+        product: product,
+        store_category_id: product_metadata_params[:store_category_id],
+        bisac_category_node_ids: params[:bisac_category_node_ids]
+      )
+    end
+
+    def apply_store_category_sync_notice!(result)
+      return if result.warnings.blank?
+
+      flash.now[:alert] = [ flash.now[:alert], result.warnings.join(" ") ].compact.join(" ")
+    end
+
+    def regenerate_metadata_product_name!
+      return if @product.name_override.present?
+
+      @product.update!(name: ProductNameRenderer.product_name(@product))
+    end
+
+    def product_metadata_params
+      params.require(:product).permit(
+        :catalog_item_type, :title, :creators, :publisher, :publication_date, :publication_status,
+        :series_name, :series_enumeration, :format_id, :edition_statement, :language_code,
+        :height, :width, :depth, :dimension_units, :weight, :weight_units, :page_count,
+        :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
+        :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
+        :store_category_id, :cover_image
+      )
     end
 
     def apply_store_category_product_defaults!(product, catalog_item = product.catalog_item)

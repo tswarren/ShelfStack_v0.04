@@ -7,6 +7,18 @@ class SkuGeneratorTest < ActiveSupport::TestCase
     @product = create_product!(sku: "9780123456786", variation_type: "standard")
   end
 
+  test "product_sku uses product primary identifier" do
+    product = create_product!(sku: "ALT-SKU-#{SecureRandom.hex(2)}")
+    ProductIdentifierService.add_identifier!(
+      product: product,
+      validation_family: "gtin",
+      value: "9780123456793",
+      primary: true
+    )
+
+    assert_equal "9780123456793", SkuGenerator.product_sku(product)
+  end
+
   test "new standard variant uses product sku" do
     variant = ProductVariant.new(product: @product, condition: new_condition)
     assert_equal "9780123456786", SkuGenerator.variant_sku(variant)

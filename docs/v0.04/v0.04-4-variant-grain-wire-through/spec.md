@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — discovery audit complete (2026-06-30). Implementation starts after v0.04-2 merge.
+**Complete** — 2026-06-30. See [v0.04-4-completion.md](../../implementation/v0.04-4-completion.md).
 
 ## Job
 
@@ -73,7 +73,7 @@ Each remaining reference is assigned one action. The first implementation slice 
 
 ## Discovery audit — app runtime
 
-Audit date: 2026-06-30. Re-run before merge:
+Audit date: 2026-06-30 (re-run 2026-06-30 on implementation branch). Re-run before merge:
 
 ```bash
 grep -R "catalog_item_id" app test db docs -n
@@ -281,15 +281,16 @@ Re-run greps; update the audit table in this spec; open tracking issues per **Re
 
 ## Manual smoke
 
-After implementation:
+After implementation (recorded in completion note):
 
 1. Open item by product from index — URL contains `product_id`.
 2. Legacy bookmark with `catalog_item_id` redirects when product linked.
-3. Add item (product-first) — no catalog-item identifier dependency.
-4. External lookup duplicate → opens product item page.
-5. Buyback intake new title → product created; line resolves without catalog-item creation.
-6. TBO queue format filter still works via product format.
-7. POS scan ISBN and variant SKU unchanged from v0.04-2 behavior.
+3. Add item / catalog intake — primary identifier creates `product_identifiers` row (not SKU cache only).
+4. Fused product without `catalog_item` — bibliographic edit via `products#edit_metadata`.
+5. External lookup duplicate → opens product item page.
+6. Buyback intake new title → product created; line resolves without catalog-item creation.
+7. TBO queue format filter still works via product format.
+8. POS scan ISBN and variant SKU unchanged from v0.04-2 behavior.
 
 ---
 

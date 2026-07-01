@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md).
+**Complete** — companion to [spec.md](spec.md). No schema changes in this milestone.
 
 ---
 
@@ -67,6 +67,18 @@ Prefer: product_variant_id (variant-scoped reports)
 Prefer: product_id (product-scoped reports)
 Avoid new links: catalog_item_id
 ```
+
+Bibliographic metadata edit (item setup → **Edit bibliographic details**):
+
+```text
+Fused product (no catalog_item_id):
+  GET/PATCH /items/products/:id/edit_metadata
+
+Legacy catalog-linked product:
+  GET/PATCH /items/catalog_items/:id/edit
+```
+
+Selling setup (SKU, variation type, list price, cover) remains `edit_items_product_path`.
 
 ---
 

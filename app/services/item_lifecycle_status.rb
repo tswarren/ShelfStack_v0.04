@@ -2,7 +2,7 @@
 
 class ItemLifecycleStatus
   BASIC_STATUSES = %w[
-    catalog_only
+    needs_product
     product_created
     sellable
     no_active_variant
@@ -30,8 +30,8 @@ class ItemLifecycleStatus
 
   def basic
     statuses = []
-    if @presenter.catalog_item && @presenter.product.blank?
-      statuses << "catalog_only"
+    if @presenter.product.blank?
+      statuses << "needs_product"
     elsif @presenter.product && !@presenter.sellable?
       statuses << (@presenter.product.product_variants.exists? ? "no_active_variant" : "product_created")
     elsif @presenter.sellable?
@@ -50,7 +50,8 @@ class ItemLifecycleStatus
 
   def detail_statuses
     statuses = []
-    statuses << "missing_store_category" if @presenter.catalog_item.present? && @presenter.catalog_item.store_category.blank?
+    metadata = @presenter.product || @presenter.catalog_item
+    statuses << "missing_store_category" if metadata.present? && metadata.store_category.blank?
 
     @presenter.variants.each do |variant|
       statuses << "missing_sub_department" if variant.sub_department.blank?

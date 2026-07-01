@@ -92,7 +92,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
   test "item setup tab shows variant matrix and selling actions" do
     get item_path(tab: "item_setup")
     assert_response :success
-    assert_match "Catalog metadata", response.body
+    assert_match "Item metadata", response.body
     assert_match "Product setup", response.body
     assert_match "Display and vendor sourcing", response.body
     assert_match @variant.sku, response.body
@@ -132,7 +132,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "<th>Valid</th>", response.body
     assert_match items_setup_modals_identifier_path(primary, product_id: @product.id), response.body
     assert_match "Quick edit", response.body
-    assert_match "Edit catalog details", response.body
+    assert_match "Edit bibliographic details", response.body
     assert_match "Quick add identifier", response.body
     assert_match edit_items_catalog_item_path(@product.catalog_item, return_to: "item"), response.body
     assert_match "Inactivate catalog item", response.body
@@ -153,6 +153,23 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Invalid identifier", response.body
     assert_no_match "Invalid Identifier Warning", response.body
+  end
+
+  test "item setup tab shows bibliographic edit for fused product without catalog item" do
+    grant_permission!(@user, "items.products.update")
+    fused_product = create_product!(
+      skip_product_identifier: true,
+      title: "Fused Only Book",
+      catalog_item_type: "book",
+      publication_status: "active"
+    )
+    create_product_variant!(product: fused_product)
+
+    get items_item_path(product_id: fused_product.id, tab: "item_setup")
+
+    assert_response :success
+    assert_match "Edit bibliographic details", response.body
+    assert_match edit_metadata_items_product_path(fused_product, return_to: "item"), response.body
   end
 
   test "item setup tab lists primary identifier before other identifiers" do
@@ -230,6 +247,18 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Needs Attention", response.body
     assert_match "open TBO", response.body
+  end
+
+  test "legacy catalog_item_id redirects to product_id when product linked" do
+    get items_item_path(catalog_item_id: @product.catalog_item.id)
+    assert_redirected_to items_item_path(product_id: @product.id)
+  end
+
+  test "catalog-only shell loads and prompts for product creation" do
+    catalog_only = create_catalog_item!(title: "Bibliographic Shell Only")
+    get items_item_path(catalog_item_id: catalog_only.id, tab: "item_setup")
+    assert_response :success
+    assert_match "Create a product", response.body
   end
 
   test "operations tab omits overview summary cards and metric strip" do

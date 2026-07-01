@@ -275,6 +275,8 @@ module Items
     def edit_item_path
       if item.catalog_item.present? && allowed?("items.catalog_items.update")
         edit_items_catalog_item_path(item.catalog_item, return_to: "item")
+      elsif item.product&.metadata_fused? && allowed?("items.products.update")
+        edit_metadata_items_product_path(item.product, return_to: "item")
       elsif item.product.present? && allowed?("items.products.update")
         edit_items_product_path(item.product, return_to: "item")
       end

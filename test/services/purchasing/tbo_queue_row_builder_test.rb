@@ -90,4 +90,28 @@ class Purchasing::TboQueueRowBuilderTest < ActiveSupport::TestCase
     assert_equal 1, rows.size
     assert_equal @line.id, rows.first.line.id
   end
+
+  test "filters by product format" do
+    hardcover = Format.find_by(format_key: "hardcover") || Format.active_records.first
+    paperback = Format.active_records.where.not(id: hardcover.id).first ||
+      Format.create!(format_key: "pb_tbo", name: "Paperback TBO", active: true)
+
+    @variant.product.update!(format: hardcover)
+    other_variant = create_product_variant!(inventory_behavior: "standard_physical")
+    other_variant.product.update!(format: paperback)
+    @request.purchase_request_lines.create!(
+      product_variant: other_variant,
+      requested_quantity: 2,
+      status: "open"
+    )
+
+    rows = Purchasing::TboQueueRowBuilder.call(
+      store: @store,
+      vendor: @vendor,
+      format_id: hardcover.id
+    )
+
+    assert_equal 1, rows.size
+    assert_equal @line.id, rows.first.line.id
+  end
 end

@@ -29,7 +29,6 @@ module IngramCatalogImport
       return Result.new(status: :missing) if products.empty?
 
       primary_sku = products.filter_map { |product| product.primary_identifier&.normalized_identifier }.first
-      primary_sku ||= @catalog_item.primary_identifier&.normalized_identifier
       primary_sku ||= products.first&.sku
       sku_matches = primary_sku.present? ? products.select { |product| product.sku == primary_sku } : []
       candidates = sku_matches.presence || products
