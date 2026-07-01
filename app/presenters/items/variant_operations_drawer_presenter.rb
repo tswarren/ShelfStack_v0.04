@@ -40,11 +40,22 @@ module Items
     end
 
     def recommended_actions
-      variant_row&.actions || []
+      operations_presenter.variant_drawer_actions(variant)
     end
 
     def demand_actions
       operations_presenter.variant_customer_demand_actions(variant)
+    end
+
+    def legacy_activity_present?
+      tab = operations_tab
+      return false unless customer_demand_visible?
+
+      tab.variant_scoped_customer_request_lines.any? ||
+        tab.variant_scoped_active_holds.any? ||
+        tab.variant_scoped_incoming_reserves.any? ||
+        tab.variant_scoped_special_orders.any? ||
+        tab.variant_scoped_purchase_request_lines.any?
     end
 
     def availability_context

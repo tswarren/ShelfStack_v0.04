@@ -13,9 +13,8 @@ class Items::VariantOperationsDrawerPresenterTest < ActiveSupport::TestCase
     grant_all_phase5_permissions!(@user, store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
-    grant_permission!(@user, "customer_requests.access", store: @store)
-    grant_permission!(@user, "customer_requests.create", store: @store)
-    grant_permission!(@user, "inventory_reservations.create", store: @store)
+    grant_permission!(@user, "demand.access", store: @store)
+    grant_permission!(@user, "demand.create", store: @store)
   end
 
   test "builds variant row and scoped operations tab for variant" do
@@ -41,5 +40,21 @@ class Items::VariantOperationsDrawerPresenterTest < ActiveSupport::TestCase
     )
 
     assert drawer.warnings.any? { |warning| warning.category == :ordering }
+  end
+
+  test "drawer recommended actions exclude legacy TBO and Order" do
+    grant_permission!(@user, "orders.purchase_requests.create", store: @store)
+    grant_permission!(@user, "orders.purchase_orders.create", store: @store)
+
+    drawer = Items::VariantOperationsDrawerPresenter.for(
+      item: @item,
+      store: @store,
+      user: @user,
+      variant: @variant
+    )
+
+    labels = drawer.recommended_actions.map(&:label)
+    refute_includes labels, "TBO"
+    refute_includes labels, "Order"
   end
 end

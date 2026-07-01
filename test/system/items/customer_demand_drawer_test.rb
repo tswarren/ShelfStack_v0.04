@@ -8,15 +8,14 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
   include Phase7aTestHelper
 
   setup do
-    Seeds::Phase7aPermissions.seed!
+    Seeds::V0046Permissions.seed!
     @store = create_store!
     @workstation = create_workstation!(store: @store)
     @user = create_user!(pin: "1234")
     grant_permission!(@user, "items.access", store: @store)
     grant_permission!(@user, "items.catalog_items.view", store: @store)
-    grant_permission!(@user, "customer_requests.access", store: @store)
-    grant_permission!(@user, "customer_requests.create", store: @store)
-    grant_permission!(@user, "inventory_reservations.create", store: @store)
+    grant_permission!(@user, "demand.access", store: @store)
+    grant_permission!(@user, "demand.create", store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
@@ -50,7 +49,7 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
     details_button.click
     assert_no_selector "#item-variant-ops-drawer[hidden]"
 
-    hold_button = find("#item-variant-ops-drawer button", text: "Hold for customer")
+    hold_button = find("#item-variant-ops-drawer button", text: "Record hold request")
     hold_button.click
     assert_selector "#item-variant-ops-drawer [data-item-variant-ops-drawer-target='demandSection']:not([hidden])"
 
@@ -64,7 +63,7 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
 
     details_button = find("button", text: "Details", match: :first)
     open_variant_ops_drawer!
-    hold_button = find("#item-variant-ops-drawer button", text: "Hold for customer")
+    hold_button = find("#item-variant-ops-drawer button", text: "Record hold request")
     hold_button.click
 
     send_escape
@@ -75,7 +74,7 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
   test "demand form stays open on escape when dirty" do
     visit_item_operations!
     open_variant_ops_drawer!
-    find("#item-variant-ops-drawer button", text: "Hold for customer").click
+    find("#item-variant-ops-drawer button", text: "Record hold request").click
     find("#item-variant-ops-drawer input[name='quantity']").fill_in with: "2"
 
     send_escape
@@ -85,14 +84,14 @@ class ItemsCustomerDemandDrawerSystemTest < ApplicationSystemTestCase
   test "demand form resets after cancel" do
     visit_item_operations!
     open_variant_ops_drawer!
-    find("#item-variant-ops-drawer button", text: "Hold for customer").click
+    find("#item-variant-ops-drawer button", text: "Record hold request").click
     find("#item-variant-ops-drawer input[name='quantity']").fill_in with: "2"
     find("#item-variant-ops-drawer button", text: "Cancel").click
     assert_selector "#item-variant-ops-drawer[hidden]", visible: :all
 
     find("button", text: "Details", match: :first).click
     assert_no_selector "#item-variant-ops-drawer[hidden]"
-    find("#item-variant-ops-drawer button", text: "Hold for customer").click
+    find("#item-variant-ops-drawer button", text: "Record hold request").click
     assert_equal "1", find("#item-variant-ops-drawer input[name='quantity']").value
   end
 end

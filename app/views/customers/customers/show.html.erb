@@ -26,7 +26,9 @@
 
 <% if @profile_presenter %>
   <div class="ss-profile-actions ss-detail-actions">
-    <% if @profile_presenter.can_create_request? %>
+    <% if @profile_presenter.can_create_demand? %>
+      <%= link_to "New demand", @profile_presenter.new_demand_path, class: "ss-btn" %>
+    <% elsif @profile_presenter.can_create_request? %>
       <%= link_to "New request", @profile_presenter.new_request_path, class: "ss-btn" %>
     <% end %>
     <% if @profile_presenter.can_view_requests? && @profile_presenter.ready_for_pickup_line_count.positive? %>
@@ -82,6 +84,40 @@
   </table>
 <% else %>
   <p class="ss-muted">No requests yet.</p>
+<% end %>
+
+<h2>Demand lines</h2>
+<% if @demand_lines.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Demand</th>
+        <th>Intent</th>
+        <th>Status</th>
+        <th>Item</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @demand_lines.each do |line| %>
+        <tr>
+          <td><%= line.demand_number %></td>
+          <td><%= demand_capture_intent_label(line.capture_intent) %></td>
+          <td><%= demand_status_label(line.status) %></td>
+          <td><%= demand_item_label(line) %></td>
+          <td><%= display_time(line.created_at) %></td>
+          <td>
+            <% if Authorization.allowed?(user: current_user, permission_key: "demand.access", store: current_store) %>
+              <%= link_to "View", demand_demand_line_path(line) %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No demand lines yet.</p>
 <% end %>
 
 <h2>Contact history</h2>

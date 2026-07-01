@@ -6,10 +6,10 @@ class ItemsCustomerDemandOperationsTest < ActiveSupport::TestCase
   include Phase7aTestHelper
 
   setup do
-    Seeds::Phase7aPermissions.seed!
+    Seeds::V0046Permissions.seed!
     @store = create_store!
     @user = create_user!
-    grant_permission!(@user, "customer_requests.access", store: @store)
+    grant_permission!(@user, "demand.access", store: @store)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
     post_inventory_adjustment!(
       create_inventory_adjustment!(

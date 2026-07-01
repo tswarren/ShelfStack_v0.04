@@ -1,0 +1,52 @@
+<h1>Demand
+  <% if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
+    <%= link_to "New", new_demand_demand_line_path, class: "ss-btn" %>
+  <% end %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.access", store: current_store) %>
+    <%= link_to "Stock considerations", demand_stock_considerations_path, class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+</h1>
+
+<%= form_with url: demand_root_path, method: :get, class: "ss-filter-bar ss-form" do %>
+  <%= select_tag :status,
+        options_for_select([["All statuses", ""]] + DemandLine::STATUSES.map { |s| [demand_status_label(s), s] }, params[:status]),
+        class: "ss-input" %>
+  <%= select_tag :capture_intent,
+        options_for_select([["All intents", ""]] + DemandLine::CAPTURE_INTENTS.map { |i| [demand_capture_intent_label(i), i] }, params[:capture_intent]),
+        class: "ss-input" %>
+  <%= text_field_tag :q, params[:q], placeholder: "Search demand number, customer, SKU, title…", class: "ss-input" %>
+  <%= submit_tag "Filter", class: "ss-btn ss-btn-secondary" %>
+<% end %>
+
+<% if @demand_lines.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Demand</th>
+        <th>Intent</th>
+        <th>Customer</th>
+        <th>Item</th>
+        <th>Status</th>
+        <th>Qty</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @demand_lines.each do |line| %>
+        <tr>
+          <td><%= link_to line.demand_number, demand_demand_line_path(line) %></td>
+          <td><%= demand_capture_intent_label(line.capture_intent) %></td>
+          <td><%= line.display_customer_name.presence || "—" %></td>
+          <td><%= demand_item_label(line) %></td>
+          <td><span class="<%= demand_status_class(line.status) %>"><%= demand_status_label(line.status) %></span></td>
+          <td class="ss-num"><%= line.quantity_requested %></td>
+          <td><%= display_time(line.created_at) %></td>
+          <td><%= link_to "View", demand_demand_line_path(line) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="ss-muted">No demand lines match the current filters.</p>
+<% end %>

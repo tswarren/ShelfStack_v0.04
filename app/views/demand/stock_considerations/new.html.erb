@@ -1,0 +1,33 @@
+<h1>New stock consideration</h1>
+
+<%= form_with url: demand_stock_considerations_path, method: :post, class: "ss-form ss-form--standard" do %>
+  <div class="ss-field">
+    <%= label_tag :product_variant_id, "Variant ID", class: "ss-label" %>
+    <%= number_field_tag :product_variant_id, @stock_consideration.product_variant_id, class: "ss-input" %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :provisional_title, "Provisional title", class: "ss-label" %>
+    <%= text_field_tag :provisional_title, @stock_consideration.provisional_title, class: "ss-input" %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :reason, "Reason", class: "ss-label" %>
+    <%= text_area_tag :reason, @stock_consideration.reason, rows: 2, class: "ss-input" %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :quantity_suggested, "Suggested quantity", class: "ss-label" %>
+    <%= number_field_tag :quantity_suggested, @stock_consideration.quantity_suggested, min: 1, class: "ss-input" %>
+  </div>
+  <div class="ss-field">
+    <%= label_tag :notes, "Notes", class: "ss-label" %>
+    <%= text_area_tag :notes, @stock_consideration.notes, rows: 2, class: "ss-input" %>
+  </div>
+
+  <% if @stock_consideration.errors.any? %>
+    <div class="ss-form-errors"><%= @stock_consideration.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <footer class="ss-form-actions">
+    <%= submit_tag "Create", class: "ss-btn" %>
+    <%= link_to "Cancel", demand_stock_considerations_path, class: "ss-btn ss-btn-secondary" %>
+  </footer>
+<% end %>

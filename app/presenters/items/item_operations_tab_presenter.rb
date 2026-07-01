@@ -32,7 +32,7 @@ module Items
     def customer_demand_visible?
       return false unless store.present? && user.present?
 
-      Authorization.allowed?(user: user, permission_key: "customer_requests.access", store: store)
+      Authorization.allowed?(user: user, permission_key: "demand.access", store: store)
     end
 
     def open_customer_request_lines

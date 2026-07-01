@@ -8,13 +8,14 @@ class ItemsVariantOperationsDrawerIntegrationTest < ActionDispatch::IntegrationT
   include Phase7aTestHelper
 
   setup do
-    Seeds::Phase7aPermissions.seed!
+    Seeds::V0046Permissions.seed!
     @store = create_store!
     @workstation = create_workstation!(store: @store)
     @user = create_user!(pin: "1234")
     grant_permission!(@user, "items.access", store: @store)
     grant_permission!(@user, "items.catalog_items.view", store: @store)
-    grant_permission!(@user, "customer_requests.access", store: @store)
+    grant_permission!(@user, "demand.access", store: @store)
+    grant_permission!(@user, "demand.create", store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
     login_user!(@user, workstation: @workstation)

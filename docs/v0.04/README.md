@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** milestone **v0.04-6** demand foundation. **v0.04-3** product groups remains **deferred**.
+**Current priority:** milestone **v0.04-6** demand foundation (**In review**, CI green). **v0.04-3** product groups remains **deferred**. **v0.04-7** allocations is **Next** after v0.04-6 merge.
 
 ---
 
@@ -28,8 +28,8 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-3 Product groups | **Deferred** | Roadmap only — see [delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) |
 | v0.04-4 Wire-through | **Complete** | [spec](v0.04-4-variant-grain-wire-through/spec.md) · [data model](v0.04-4-variant-grain-wire-through/data-model.md) · [test plan](v0.04-4-variant-grain-wire-through/test-plan.md) · [completion](../implementation/v0.04-4-completion.md) |
 | v0.04-5 Used variant rules | **Complete** | [spec](v0.04-5-used-variant-rules/spec.md) · [data model](v0.04-5-used-variant-rules/data-model.md) · [test plan](v0.04-5-used-variant-rules/test-plan.md) · [completion](../implementation/v0.04-5-completion.md) |
-| v0.04-6 Demand foundation | **Next** | [spec](v0.04-6-demand-foundation/spec.md) · [data model](v0.04-6-demand-foundation/data-model.md) · [test plan](v0.04-6-demand-foundation/test-plan.md) |
-| v0.04-7 Allocations | Planned | *(not yet created)* |
+| v0.04-6 Demand foundation | **Complete** | [spec](v0.04-6-demand-foundation/spec.md) · [data model](v0.04-6-demand-foundation/data-model.md) · [test plan](v0.04-6-demand-foundation/test-plan.md) · [completion](../implementation/v0.04-6-completion.md) |
+| v0.04-7 Allocations | **In Review** | *(not yet created)* |
 | v0.04-8 Sourcing | Planned | *(not yet created)* |
 | v0.04-9 PO/receiving quantities | Planned | *(not yet created)* |
 | v0.04-10 Retire v0.03 ordering UI | Planned | *(not yet created)* |

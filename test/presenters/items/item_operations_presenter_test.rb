@@ -6,13 +6,11 @@ class ItemOperationsPresenterTest < ActiveSupport::TestCase
   include Phase7aTestHelper
 
   setup do
-    Seeds::Phase7aPermissions.seed!
+    Seeds::V0046Permissions.seed!
     @store = create_store!
     @user = create_user!
-    grant_permission!(@user, "customer_requests.access", store: @store)
-    grant_permission!(@user, "customer_requests.create", store: @store)
-    grant_permission!(@user, "inventory_reservations.create", store: @store)
-    grant_permission!(@user, "special_orders.create", store: @store)
+    grant_permission!(@user, "demand.access", store: @store)
+    grant_permission!(@user, "demand.create", store: @store)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
     post_inventory_adjustment!(
       create_inventory_adjustment!(
@@ -50,6 +48,7 @@ class ItemOperationsPresenterTest < ActiveSupport::TestCase
     assert row.demand_actions.map(&:drawer_key).include?("hold")
     assert row.demand_actions.map(&:drawer_key).include?("notify")
     assert row.demand_actions.map(&:drawer_key).include?("special_order")
+    assert row.demand_actions.map(&:drawer_key).include?("manual_tbo")
   end
 
   test "ready_for_pickup_qty uses reservation remaining quantity" do

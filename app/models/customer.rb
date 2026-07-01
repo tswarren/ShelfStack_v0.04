@@ -10,6 +10,7 @@ class Customer < ApplicationRecord
   belongs_to :merged_into_customer, class_name: "Customer", optional: true
 
   has_many :customer_requests, dependent: :restrict_with_error
+  has_many :demand_lines, dependent: :restrict_with_error
   has_many :special_orders, dependent: :restrict_with_error
   has_many :inventory_reservations, dependent: :restrict_with_error
   has_many :customer_contact_events, dependent: :restrict_with_error
