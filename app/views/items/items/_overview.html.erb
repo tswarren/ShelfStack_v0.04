@@ -51,8 +51,10 @@
               <dd><%= item_publication_status_badge(item.publication_status_label) %></dd>
             <% end %>
           </dl>
-        <% elsif item.catalog_item.blank? %>
-          <p class="ss-muted ss-item-no-catalog">This item has no catalog metadata.</p>
+        <% elsif item.product.blank? && item.display_metadata.blank? %>
+          <p class="ss-muted ss-item-no-catalog">This item has no product metadata yet. Create a product for operational use.</p>
+        <% elsif item.product.blank? %>
+          <p class="ss-muted ss-item-no-catalog">Bibliographic metadata exists, but no product has been created for operational use.</p>
         <% end %>
       </div>
 

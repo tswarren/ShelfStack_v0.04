@@ -19,18 +19,17 @@ module Buybacks
       raise Error, "Session is not editable." unless session.editable?
       raise Error, "Line does not belong to session." unless line.buyback_session_id == session.id
 
-      catalog_item = variant.product.catalog_item
+      product = variant.product
 
       line.update!(
         product_variant: variant,
-        product: variant.product,
-        catalog_item: catalog_item,
+        product: product,
         product_condition: variant.condition,
         sub_department: variant.sub_department,
-        title_snapshot: catalog_item&.title || variant.product.name,
+        title_snapshot: product.display_title,
         variant_sku_snapshot: variant.sku,
         condition_snapshot: variant.condition&.name,
-        list_price_cents: variant.product.list_price_cents,
+        list_price_cents: product.list_price_cents,
         status: "resolved"
       )
       PricingFieldSync.refresh!(line: line.reload)

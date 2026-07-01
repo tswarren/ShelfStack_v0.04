@@ -2,13 +2,13 @@
 
 class SkuGenerator
   def self.product_sku(product)
-    if product.catalog_item.present?
-      primary = product.catalog_item.primary_identifier
-      raise ArgumentError, "Catalog item has no primary identifier" if primary.blank?
-
+    primary = product.primary_identifier
+    if primary.present?
       primary.normalized_identifier
-    else
+    elsif product.sku.present?
       product.sku
+    else
+      raise ArgumentError, "Product has no primary identifier"
     end
   end
 

@@ -177,7 +177,7 @@ module Items
             variation_type: "conditional"
           )
         )
-        saved, sku_validation = save_product!(@product)
+        saved, sku_validation, identifier_result = save_product!(@product)
         created = saved
       end
       return unless saved
@@ -189,7 +189,7 @@ module Items
       record_audit!(created ? "product.created" : "product.updated", @product)
       apply_bisac_sync_notice!(bisac_result)
       apply_store_category_sync_notice!(store_category_result)
-      apply_transitional_identifier_notice!(sku_validation&.validation_message)
+      apply_initial_identifier_notice!(identifier_result, sku_validation)
       draft_attrs = {
         "product_id" => @product.id,
         "external_lookup_result_id" => nil,
@@ -298,6 +298,7 @@ module Items
 
     def save_product!(product)
       sku_validation = nil
+      identifier_result = nil
       saved = false
       lookup_result = external_lookup_result
       begin
@@ -309,8 +310,15 @@ module Items
 
           saved = product.sku.present?
           raise ActiveRecord::Rollback unless saved
+
+          if product.product_identifiers.active_records.none?
+            identifier_result = persist_initial_product_identifier!(product, lookup_result: lookup_result)
+          end
         end
       rescue AddItem::TransitionalSkuAssigner::ConflictError => e
+        product.errors.add(:base, e.message)
+        saved = false
+      rescue ProductIdentifierService::IdentifierError => e
         product.errors.add(:base, e.message)
         saved = false
       rescue ActiveRecord::RecordInvalid => e
@@ -320,7 +328,7 @@ module Items
 
       render_item_details_errors(product) unless saved
 
-      [ saved, sku_validation ]
+      [ saved, sku_validation, identifier_result ]
     end
 
     def persist_product_updates!(product)
@@ -596,6 +604,39 @@ module Items
 
     def identifier_value_param
       product_metadata_params_source[:initial_identifier_value].to_s.strip
+    end
+
+    def persist_initial_product_identifier!(product, lookup_result: nil)
+      type = identifier_type_param
+      value = identifier_value_param
+      if value.blank? && lookup_result.present?
+        value = lookup_result.isbn13.presence || lookup_result.isbn10.presence
+        type = lookup_result.isbn13.present? ? "isbn13" : "isbn10"
+      end
+
+      Items::PersistInitialProductIdentifier.call(
+        product: product,
+        identifier_type: type,
+        identifier_value: value,
+        actor: current_user,
+        source: "add_item_wizard"
+      )
+    end
+
+    def apply_initial_identifier_notice!(identifier_result, sku_validation)
+      if identifier_result&.identifier.present?
+        apply_identifier_validation_notice!(identifier_result.identifier)
+      else
+        apply_transitional_identifier_notice!(sku_validation&.validation_message)
+      end
+    end
+
+    def apply_identifier_validation_notice!(record)
+      identifier = record.is_a?(ProductIdentifier) ? record : record.reload.primary_identifier
+      return if identifier.blank? || identifier.validation_message.blank?
+
+      message = "Identifier saved with warning: #{identifier.validation_message}"
+      flash[:warning] = [ flash[:warning], message ].compact.join(" ")
     end
 
     def render_item_details_errors(product)

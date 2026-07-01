@@ -49,6 +49,7 @@ module Items
         action_type: action_type,
         actor: current_user,
         format_id: params[:format_id],
+        product_id: params[:product_id],
         catalog_item_id: params[:catalog_item_id]
       )
 

@@ -35,6 +35,32 @@ class ItemsCatalogItemsControllerTest < ActionDispatch::IntegrationTest
     assert AuditEvent.exists?(event_name: "catalog_item.created", auditable: item)
   end
 
+  test "create catalog item with initial identifier bootstraps product and product identifier" do
+    grant_permission!(@admin, "items.products.create")
+
+    assert_difference [ -> { CatalogItem.count }, -> { Product.count } ], 1 do
+      post items_catalog_items_path, params: {
+        catalog_item: {
+          catalog_item_type: "book",
+          title: "ISBN Bootstrap Book",
+          format_id: @format.id,
+          publication_status: "active",
+          active: true,
+          initial_identifier_type: "isbn13",
+          initial_identifier_value: "9780306406157"
+        }
+      }
+    end
+
+    item = CatalogItem.find_by!(title: "ISBN Bootstrap Book")
+    product = item.products.active_records.order(:id).first
+    assert_not_nil product
+    assert_equal "9780306406157", product.sku
+    assert_equal "9780306406157", product.primary_identifier.normalized_identifier
+    assert_redirected_to items_item_path(product_id: product.id, tab: "item_setup")
+    assert AuditEvent.exists?(event_name: "product.created", auditable: product)
+  end
+
   test "update identifier from item catalog tab returns to item catalog tab" do
     item = create_catalog_item!(title: "Identifier Edit Book")
     product = create_legacy_catalog_linked_product!(catalog_item: item, skip_product_identifier: true)

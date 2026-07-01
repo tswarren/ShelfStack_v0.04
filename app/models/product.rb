@@ -91,7 +91,7 @@ class Product < ApplicationRecord
       Products::CopyCatalogMetadata.to_product(self, catalog_item) unless metadata_fused?
       self.name = ProductNameRenderer.product_name(self) if name.blank?
       if sku.blank?
-        self.sku = if catalog_item.primary_identifier.present?
+        self.sku = if product_identifiers.active_records.exists? || primary_identifier.present?
           SkuGenerator.product_sku(self)
         else
           AddItem::ProductSkuGenerator.generate!

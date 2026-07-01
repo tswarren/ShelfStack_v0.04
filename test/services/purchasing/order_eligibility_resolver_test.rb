@@ -42,16 +42,8 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
     assert tbo_result.eligible
   end
 
-  test "discontinued catalog item warns on draft and blocks submit" do
-    format = Format.first || Format.create!(format_key: "book", name: "Book", active: true)
-    catalog_item = CatalogItem.create!(
-      title: "Discontinued Book",
-      format: format,
-      catalog_item_type: "book",
-      publication_status: "discontinued",
-      active: true
-    )
-    @variant.product.update!(catalog_item: catalog_item)
+  test "discontinued product warns on draft and blocks submit" do
+    @variant.product.update!(publication_status: "discontinued")
 
     draft = Purchasing::OrderEligibilityResolver.call(
       product_variant: @variant.reload,
@@ -65,7 +57,7 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
     )
 
     assert draft.eligible
-    assert_includes draft.warnings.map(&:code), :discontinued_catalog_item
+    assert_includes draft.warnings.map(&:code), :discontinued_product
     assert submit.submit_blocked?
   end
 

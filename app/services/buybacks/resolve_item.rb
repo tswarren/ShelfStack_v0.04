@@ -2,7 +2,7 @@
 
 module Buybacks
   class ResolveItem
-    Result = Data.define(:catalog_item, :product, :variants, :warnings)
+    Result = Data.define(:product, :variants, :warnings)
 
     def self.call(store:, identifier: nil, title: nil)
       new(store:, identifier:, title:).call
@@ -17,7 +17,7 @@ module Buybacks
     def call
       product = find_by_identifier
       product ||= find_by_title if title.present?
-      return Result.new(catalog_item: nil, product: nil, variants: [], warnings: []) if product.blank?
+      return Result.new(product: nil, variants: [], warnings: []) if product.blank?
 
       variants = product.product_variants.active_records.includes(:condition) || []
       eligible = variants.select { |v| variant_eligible?(v) }
@@ -25,7 +25,7 @@ module Buybacks
         "#{v.name} — not eligible for buyback"
       end
 
-      Result.new(catalog_item: product.catalog_item, product:, variants: eligible, warnings:)
+      Result.new(product:, variants: eligible, warnings:)
     end
 
     private

@@ -85,7 +85,7 @@ module Purchasing
     def filtered_lines
       scope = PurchaseRequestLine
         .buildable_for_store(store)
-        .includes(product_variant: [ :sub_department, { product: :catalog_item } ], purchase_request: :store)
+        .includes(product_variant: [ :sub_department, { product: :format } ], purchase_request: :store)
         .order("purchase_requests.created_at DESC, purchase_request_lines.line_number ASC")
 
       if department_id.present?
@@ -94,8 +94,8 @@ module Purchasing
       end
 
       if format_id.present?
-        scope = scope.joins(product_variant: { product: :catalog_item })
-          .where(catalog_items: { format_id: format_id })
+        scope = scope.joins(product_variant: :product)
+          .where(products: { format_id: format_id })
       end
 
       scope.to_a

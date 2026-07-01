@@ -158,7 +158,6 @@ module Buybacks
       raise Error, "Product linkage is required before pricing." if product.blank?
 
       line.product = product
-      line.catalog_item ||= product.catalog_item
 
       variant = FindOrCreateGradedUsedVariant.call!(
         product: product,

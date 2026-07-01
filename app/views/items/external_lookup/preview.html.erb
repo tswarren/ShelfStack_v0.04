@@ -21,7 +21,7 @@
   <div class="ss-notice ss-notice--info">
     <p>
       <strong>Local duplicate:</strong>
-      <%= link_to @preview.duplicate.catalog_item.title, items_catalog_item_path(@preview.duplicate.catalog_item) %>
+      <%= link_to @preview.duplicate.product.display_title, items_item_path(product_id: @preview.duplicate.product.id) %>
       (<%= @preview.duplicate.matched_type.upcase %> <%= @preview.duplicate.matched_isbn %>)
     </p>
   </div>
@@ -96,14 +96,14 @@
   <% end %>
 
   <% if @preview.duplicate.duplicate? %>
-    <%= hidden_field_tag :catalog_item_id, @preview.duplicate.catalog_item.id %>
+    <%= hidden_field_tag :product_id, @preview.duplicate.product.id %>
   <% end %>
 
   <footer class="ss-form-actions">
     <% action_labels = {
       "create_catalog_item" => "Review and edit item details",
-      "link_existing_catalog_item" => "Link existing catalog item",
-      "fill_blank_existing_catalog_item" => "Fill blank fields",
+      "link_existing_catalog_item" => "Link existing product",
+      "fill_blank_existing_catalog_item" => "Fill blank product fields",
       "skip" => "Skip"
     } %>
     <% @preview.allowed_actions.each do |action| %>

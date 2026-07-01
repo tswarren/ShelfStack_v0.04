@@ -15,26 +15,35 @@ module ExternalCatalog
         action_type: "create_catalog_item",
         actor: actor,
         format_id: nil,
-        catalog_item_id: nil
+        product_id: resolved_product.id
       ).finalize_create!(resolved_product)
     end
 
     def self.call(lookup_result:, action_type:, actor:, format_id: nil, catalog_item_id: nil, product_id: nil)
+      resolved_product_id = resolve_boundary_product_id(product_id:, catalog_item_id:)
       new(
         lookup_result:,
         action_type:,
         actor:,
         format_id:,
-        catalog_item_id: catalog_item_id || product_id
+        product_id: resolved_product_id
       ).call
     end
 
-    def initialize(lookup_result:, action_type:, actor:, format_id:, catalog_item_id:)
+    def self.resolve_boundary_product_id(product_id:, catalog_item_id:)
+      return product_id if product_id.present?
+      return if catalog_item_id.blank?
+
+      Product.find_by(id: catalog_item_id)&.id ||
+        CatalogItem.find_by(id: catalog_item_id)&.products&.active_records&.order(:id)&.first&.id
+    end
+
+    def initialize(lookup_result:, action_type:, actor:, format_id:, product_id:)
       @lookup_result = lookup_result
       @action_type = action_type.to_s
       @actor = actor
       @format_id = format_id
-      @catalog_item_id = catalog_item_id
+      @product_id = product_id
       @source = @lookup_result.external_lookup_request.external_data_source
     end
 
@@ -131,9 +140,8 @@ module ExternalCatalog
     end
 
     def find_target_product!(duplicate:)
-      product = if @catalog_item_id.present?
-                  Product.find_by(id: @catalog_item_id) ||
-                    CatalogItem.find_by(id: @catalog_item_id)&.products&.active_records&.order(:id)&.first
+      product = if @product_id.present?
+                  Product.find_by(id: @product_id)
       else
                   duplicate.product
       end

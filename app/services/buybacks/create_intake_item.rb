@@ -4,7 +4,7 @@ module Buybacks
   class CreateIntakeItem
     class Error < StandardError; end
 
-    Result = Data.define(:catalog_item, :product, :product_variant, :created_new_catalog)
+    Result = Data.define(:product, :product_variant, :created_new_product)
 
     def self.call!(session:, actor:, line:, title:, sub_department:, condition: nil, identifier: nil, list_price_cents: nil)
       new(session:, actor:, line:, title:, sub_department:, condition:, identifier:, list_price_cents:).call!
@@ -54,29 +54,9 @@ module Buybacks
       resolve.product
     end
 
-    def create_product_for_legacy_catalog!(catalog_item)
-      Product.create!(
-        catalog_item: catalog_item,
-        title: catalog_item.title,
-        catalog_item_type: catalog_item.catalog_item_type,
-        publication_status: catalog_item.publication_status,
-        format: catalog_item.format,
-        product_type: "physical",
-        variation_type: "conditional",
-        list_price_cents: list_price_cents.to_i,
-        default_sub_department: sub_department,
-        source: "buyback_intake",
-        needs_review: true,
-        created_from_buyback_session: session,
-        active: true,
-        sku: SkuGenerator.product_sku(Product.new(catalog_item: catalog_item))
-      )
-    end
-
     def link_existing_product!(product)
-      CatalogItem.transaction do
+      Product.transaction do
         line.update!(
-          catalog_item: product.catalog_item,
           product: product,
           product_condition: condition,
           sub_department: sub_department,
@@ -95,7 +75,7 @@ module Buybacks
         details: { "product_id" => product.id }
       )
 
-      Result.new(catalog_item: product.catalog_item, product:, product_variant: nil, created_new_catalog: false)
+      Result.new(product:, product_variant: nil, created_new_product: false)
     end
 
     def create_full_intake!
@@ -125,7 +105,6 @@ module Buybacks
         product.save!
 
         line.update!(
-          catalog_item: product.catalog_item,
           product: product,
           created_product: product,
           product_condition: condition,
@@ -138,7 +117,7 @@ module Buybacks
       end
 
       AuditEvents.record!(actor: actor, event_name: "buyback.intake.created", auditable: product, source: session)
-      Result.new(catalog_item: product.catalog_item, product:, product_variant: nil, created_new_catalog: true)
+      Result.new(product:, product_variant: nil, created_new_product: true)
     end
 
     def assign_transitional_sku!(product)

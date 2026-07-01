@@ -2,25 +2,29 @@
 <% catalog_item = item.catalog_item %>
 <% setup_product = product || catalog_item&.products&.active_records&.first %>
 <% setup_catalog_item = catalog_item || product&.catalog_item %>
+<% metadata_source = product.presence || setup_catalog_item %>
 <% item_flow = { return_to: "item" } %>
 
-<% if setup_catalog_item.present? %>
-  <% if setup_catalog_item.primary_thumbnail.attached? %>
+<% if metadata_source.present? %>
+  <% thumbnail = product.cover_image if product&.cover_image&.attached? %>
+  <% thumbnail ||= setup_catalog_item.primary_thumbnail if setup_catalog_item&.primary_thumbnail&.attached? %>
+  <% if thumbnail&.attached? %>
     <div class="ss-item-cover-preview">
-      <%= product_cover_image_tag(setup_catalog_item.primary_thumbnail, size: :hero, alt: "Catalog thumbnail") %>
+      <%= product_cover_image_tag(thumbnail, size: :hero, alt: "Item thumbnail") %>
     </div>
   <% end %>
   <dl class="ss-summary">
-    <dt>Type</dt><dd><%= humanize_controlled_value(setup_catalog_item.catalog_item_type) %></dd>
-    <dt>Format</dt><dd><%= setup_catalog_item.format.name %></dd>
-    <dt>Publisher</dt><dd><%= setup_catalog_item.publisher || "—" %></dd>
-    <dt>Creators</dt><dd><%= setup_catalog_item.creators || "—" %></dd>
-    <dt>Publication status</dt><dd><%= humanize_controlled_value(setup_catalog_item.publication_status) %></dd>
+    <dt>Type</dt><dd><%= humanize_controlled_value(metadata_source.catalog_item_type) %></dd>
+    <dt>Format</dt><dd><%= metadata_source.format&.name || "—" %></dd>
+    <dt>Publisher</dt><dd><%= metadata_source.publisher || "—" %></dd>
+    <dt>Creators</dt><dd><%= metadata_source.creators || "—" %></dd>
+    <dt>Publication status</dt><dd><%= humanize_controlled_value(metadata_source.publication_status) %></dd>
   </dl>
-<% elsif product.present? %>
-  <p>This is a product-first item without a linked catalog metadata shell.</p>
+  <% if setup_product.blank? %>
+    <p class="ss-muted">Create a product to enable operational use (sellable SKUs, inventory, and POS).</p>
+  <% end %>
 <% else %>
-  <p>This item has no catalog metadata.</p>
+  <p class="ss-muted">Create a product to enable operational use (sellable SKUs, inventory, and POS).</p>
 <% end %>
 
 <% if setup_product.present? || setup_catalog_item.present? %>
@@ -78,9 +82,10 @@
   </table>
 
   <div class="ss-catalog-actions">
-    <% if setup_catalog_item.present? %>
-      <%= link_to "Edit catalog details", edit_items_catalog_item_path(setup_catalog_item, item_flow), class: "ss-btn" %>
-      <% if external_catalog_import.present? && Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.access", store: current_store) %>
+    <% bibliographic_edit_path = item.edit_bibliographic_metadata_path %>
+    <% if bibliographic_edit_path.present? %>
+      <%= link_to "Edit bibliographic details", bibliographic_edit_path, class: "ss-btn" %>
+      <% if setup_catalog_item.present? && external_catalog_import.present? && Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.access", store: current_store) %>
         <%= link_to "View original metadata",
                     items_item_external_metadata_path(catalog_item_id: setup_catalog_item.id),
                     class: "ss-btn ss-btn-secondary" %>

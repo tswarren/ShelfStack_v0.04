@@ -147,7 +147,7 @@ module Buybacks
         identifier: params[:identifier] || @line.identifier_entered,
         list_price_cents: params[:list_price_cents]
       )
-      notice = result.created_new_catalog ? "Intake item created." : "Catalog item linked."
+      notice = result.created_new_product ? "Intake product created." : "Existing product linked."
       respond_to_buyback_session_update(line: @line.reload, notice: notice)
     rescue Buybacks::CreateIntakeItem::Error, Buybacks::FindOrCreateGradedUsedVariant::Error => e
       respond_to_buyback_session_update(alert: e.message, line: @line)

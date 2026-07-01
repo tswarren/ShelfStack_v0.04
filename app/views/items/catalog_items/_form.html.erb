@@ -5,13 +5,17 @@
 <%= render layout: "shared/forms/section", locals: { title: "Catalog Image" } do %>
   <%= render "items/catalog_items/primary_thumbnail", f: f, catalog_item: catalog_item %>
 <% end %>
+<% elsif catalog_item.is_a?(Product) %>
+<%= render layout: "shared/forms/section", locals: { title: "Cover Image" } do %>
+  <%= render "items/shared/product_forms/cover_image", f: f, product: catalog_item %>
+<% end %>
 <% end %>
 
 <%= render layout: "shared/forms/section", locals: { title: "Basic Details" } do %>
   <div class="ss-form-grid ss-form-grid--2">
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :catalog_item_type, label: "Type", required: true } do %>
       <%= f.select :catalog_item_type,
-            CatalogItem::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] },
+            ProductMetadata::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] },
             {},
             data: { catalog_item_form_target: "typeSelect" } %>
     <% end %>
@@ -22,7 +26,7 @@
       <%= f.collection_select :format_id, formats, :id, :name %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publication_status } do %>
-      <%= f.select :publication_status, CatalogItem::PUBLICATION_STATUSES.map { |s| [humanize_controlled_value(s), s] } %>
+      <%= f.select :publication_status, ProductMetadata::PUBLICATION_STATUSES.map { |s| [humanize_controlled_value(s), s] } %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publisher } do %>
       <%= f.text_field :publisher %>
@@ -64,7 +68,7 @@
   <%= render layout: "shared/forms/section", locals: { title: "Periodical" } do %>
     <div class="ss-form-grid ss-form-grid--2">
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :publication_frequency } do %>
-        <%= f.select :publication_frequency, CatalogItem::PUBLICATION_FREQUENCIES.map { |v| [humanize_controlled_value(v), v] }, include_blank: true %>
+        <%= f.select :publication_frequency, ProductMetadata::PUBLICATION_FREQUENCIES.map { |v| [humanize_controlled_value(v), v] }, include_blank: true %>
       <% end %>
     </div>
   <% end %>
@@ -93,13 +97,13 @@
         <%= f.number_field :depth, step: 0.01 %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :dimension_units } do %>
-        <%= f.select :dimension_units, CatalogItem::DIMENSION_UNITS, include_blank: true %>
+        <%= f.select :dimension_units, ProductMetadata::DIMENSION_UNITS, include_blank: true %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :weight } do %>
         <%= f.number_field :weight, step: 0.01 %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :weight_units } do %>
-        <%= f.select :weight_units, CatalogItem::WEIGHT_UNITS, include_blank: true %>
+        <%= f.select :weight_units, ProductMetadata::WEIGHT_UNITS, include_blank: true %>
       <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: catalog_item, field: :page_count } do %>
         <%= f.number_field :page_count %>

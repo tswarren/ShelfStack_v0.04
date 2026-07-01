@@ -321,10 +321,33 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
       commit: "Create Selling Setup"
     }
 
+    product = Product.find_by!(title: "Invalid ISBN Book")
+    assert_equal "9780123456780", product.sku
+    assert_equal "9780123456780", product.primary_identifier.normalized_identifier
+
     follow_redirect!
     assert_response :success
     assert_includes response.body, "Identifier saved with warning"
     assert_includes response.body, "Check digit is invalid"
+  end
+
+  test "catalog linked item details persists primary product identifier" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        title: "Valid ISBN Book",
+        catalog_item_type: "book",
+        format_id: @format.id,
+        initial_identifier_type: "isbn13",
+        initial_identifier_value: "9780306406157"
+      },
+      commit: "Create Selling Setup"
+    }
+
+    product = Product.find_by!(title: "Valid ISBN Book")
+    assert_equal "9780306406157", product.sku
+    assert_equal "9780306406157", product.primary_identifier.normalized_identifier
+    assert_redirected_to items_add_item_path(step: "selling_setup")
   end
 
   test "duplicate primary identifier re-renders item details with warning and preserved fields" do

@@ -5,11 +5,11 @@ require "test_helper"
 class ItemLifecycleStatusTest < ActiveSupport::TestCase
   include Phase3TestHelper
 
-  test "catalog only when catalog item has no product" do
+  test "needs product when catalog shell has no product" do
     item = create_catalog_item!
     presenter = Items::ItemPresenter.from_catalog_item(item)
 
-    assert_includes ItemLifecycleStatus.basic(presenter), "catalog_only"
+    assert_includes ItemLifecycleStatus.basic(presenter), "needs_product"
   end
 
   test "product created when product exists without variants" do

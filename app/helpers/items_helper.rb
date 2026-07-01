@@ -4,7 +4,7 @@ module ItemsHelper
   include SetupFormatHelper
 
   USER_FACING_LABELS = {
-    "catalog_items" => "Item Details",
+    "catalog_items" => "Item metadata",
     "products" => "Selling Setup",
     "product_variants" => "Sellable SKUs",
     "product_identifiers" => "Barcodes and Identifiers",
@@ -52,7 +52,7 @@ module ItemsHelper
   def item_lifecycle_status_badge(status)
     css_class = case status.to_s
     when "sellable" then "status-active"
-    when "catalog_only", "product_created", "no_active_variant" then "status-inactive"
+    when "needs_product", "product_created", "no_active_variant" then "status-inactive"
     when "invalid_identifier_warning", "missing_sub_department", "missing_store_category", "missing_price", "inactive_setup_reference" then "status-warning"
     else "status-inactive"
     end
@@ -118,14 +118,14 @@ module ItemsHelper
   end
 
   def catalog_item_placeholder_image_path(item)
-    catalog_item_type = item&.catalog_item&.catalog_item_type
+    catalog_item_type = item&.product&.catalog_item_type || item&.catalog_item&.catalog_item_type
     filename = CATALOG_ITEM_PLACEHOLDER_IMAGES.fetch(catalog_item_type, "other.png")
 
     "placeholders/catalog/#{filename}"
   end
 
   def catalog_item_placeholder_alt(item)
-    catalog_item_type = item&.catalog_item&.catalog_item_type
+    catalog_item_type = item&.product&.catalog_item_type || item&.catalog_item&.catalog_item_type
 
     if catalog_item_type.present?
       "#{catalog_item_type.humanize} placeholder image"

@@ -107,8 +107,7 @@ module CustomerRequests
         requested_quantity: quantity,
         status: "matched",
         product_variant_id: variant.id,
-        product_id: variant.product_id,
-        catalog_item_id: variant.product&.catalog_item_id
+        product_id: variant.product_id
       }
     end
 

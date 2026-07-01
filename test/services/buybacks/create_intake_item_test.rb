@@ -36,7 +36,7 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
     )
   end
 
-  test "links existing catalog item and product without creating variant" do
+  test "links existing product without creating variant or catalog item" do
     result = Buybacks::CreateIntakeItem.call!(
       session: @session,
       actor: @user,
@@ -47,11 +47,12 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
       identifier: "9780740747467"
     )
 
-    assert_not result.created_new_catalog
-    assert_equal @catalog_item.id, result.catalog_item.id
+    assert_not result.created_new_product
     assert_equal @product.id, result.product.id
     assert_nil result.product_variant
     @line.reload
+    assert_equal @product.id, @line.product_id
+    assert_nil @line.created_catalog_item_id
     assert_equal "priced", @line.status
     assert @line.suggested_resale_price_cents.to_i.positive?
     assert @line.suggested_cash_offer_cents.to_i.positive?
@@ -90,12 +91,12 @@ class Buybacks::CreateIntakeItemTest < ActiveSupport::TestCase
       identifier: "9780316769174"
     )
 
-    assert_equal catalog_only.id, result.catalog_item.id
     assert_equal inactive_product.id, result.product.id
     assert_not result.product.active?
     assert_equal "manual", result.product.source
-    assert_not result.created_new_catalog
+    assert_not result.created_new_product
     assert_nil result.product_variant
-    assert_equal "priced", line.reload.status
+    assert_nil line.reload.created_catalog_item_id
+    assert_equal "priced", line.status
   end
 end

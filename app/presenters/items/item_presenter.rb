@@ -31,9 +31,6 @@ module Items
         from_product(hit[:record])
       when "product_variant"
         from_product_variant(hit[:record])
-      when "catalog_item_identifier"
-        product = hit[:record].catalog_item&.products&.active_records&.order(:id)&.first
-        product ? from_product(product) : from_catalog_item(hit[:record].catalog_item)
       else
         raise ArgumentError, "Unknown search hit type: #{hit[:record_type]}"
       end
@@ -247,15 +244,16 @@ module Items
 
     def overview_actions(helper: self)
       actions = []
+      if path = edit_bibliographic_metadata_path(helper: helper)
+        actions << {
+          label: "Edit bibliographic details",
+          url: path
+        }
+      end
       if product
         actions << {
           label: "Edit Product",
           url: helper.edit_items_product_path(product, item_return_params)
-        }
-      elsif catalog_item
-        actions << {
-          label: "Edit Catalog Item",
-          url: helper.edit_items_catalog_item_path(catalog_item, item_return_params)
         }
       end
       actions
@@ -315,9 +313,15 @@ module Items
     end
 
     def edit_catalog_path(helper: self)
-      return unless catalog_item
+      edit_bibliographic_metadata_path(helper: helper)
+    end
 
-      helper.edit_items_catalog_item_path(catalog_item, item_return_params)
+    def edit_bibliographic_metadata_path(helper: self)
+      if catalog_item.present?
+        helper.edit_items_catalog_item_path(catalog_item, item_return_params)
+      elsif product&.metadata_fused?
+        helper.edit_metadata_items_product_path(product, item_return_params)
+      end
     end
 
     def cover_image_attached?
@@ -391,11 +395,11 @@ module Items
         product&.id == other.product&.id
     end
 
-    private
-
     def display_metadata
       product.presence || catalog_item
     end
+
+    private
 
     def catalog_only_presenter?
       product.blank? && catalog_item.present?
@@ -406,9 +410,10 @@ module Items
     end
 
     def edit_catalog_action(helper: self)
-      return unless catalog_item
+      path = edit_bibliographic_metadata_path(helper: helper)
+      return unless path
 
-      { label: "Edit Catalog", url: helper.edit_items_catalog_item_path(catalog_item, item_return_params) }
+      { label: "Edit bibliographic details", url: path }
     end
 
     def sell_new_action(helper: self)
