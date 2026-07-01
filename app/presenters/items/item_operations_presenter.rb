@@ -148,6 +148,7 @@ module Items
     def variant_customer_demand_actions(variant)
       return [] unless customer_demand_visible?
 
+      policy = ProductVariants::OperationalPolicy.for(variant)
       actions = []
       if allowed?("customer_requests.create") && allowed?("inventory_reservations.create")
         actions << CustomerDemandAction.new(
@@ -156,7 +157,8 @@ module Items
           permission_key: "inventory_reservations.create"
         )
       end
-      if allowed?("customer_requests.create") && allowed?("special_orders.create")
+      if allowed?("customer_requests.create") && allowed?("special_orders.create") &&
+          policy.customer_request_block_reason(request_type: "special_order").blank?
         actions << CustomerDemandAction.new(
           label: "Special order",
           drawer_key: "special_order",
@@ -174,15 +176,16 @@ module Items
     end
 
     def variant_actions(variant)
+      policy = ProductVariants::OperationalPolicy.for(variant)
       actions = []
-      if inventory_eligible?(variant) && allowed?("orders.purchase_requests.create")
+      if inventory_eligible?(variant) && policy.vendor_orderable? && allowed?("orders.purchase_requests.create")
         actions << Action.new(
           label: "TBO",
           url: new_orders_purchase_request_path(product_variant_id: variant.id),
           permission_key: "orders.purchase_requests.create"
         )
       end
-      if inventory_eligible?(variant) && allowed?("orders.purchase_orders.create")
+      if inventory_eligible?(variant) && policy.vendor_orderable? && allowed?("orders.purchase_orders.create")
         vendor_id = suggested_vendor_id(variant)
         actions << Action.new(
           label: "Order",

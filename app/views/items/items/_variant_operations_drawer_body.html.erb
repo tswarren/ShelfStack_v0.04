@@ -9,6 +9,12 @@
   <dl class="ss-summary">
     <dt>SKU</dt><dd><%= variant.sku %></dd>
     <dt>Name</dt><dd><%= variant.name %></dd>
+    <dt>Status</dt>
+    <dd>
+      <% ProductVariants::OperationalPolicy.for(variant).operational_badges.each do |badge| %>
+        <span class="ss-badge ss-badge--muted"><%= badge.label %></span>
+      <% end %>
+    </dd>
     <% if row.present? %>
       <dt>Available</dt><dd class="ss-num"><%= row.available.nil? ? "—" : row.available %></dd>
       <dt>On hand</dt><dd class="ss-num"><%= row.on_hand.nil? ? "—" : row.on_hand %></dd>

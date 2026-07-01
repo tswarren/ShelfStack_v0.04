@@ -2,7 +2,7 @@
 
 ## Status
 
-**Draft** — implementation milestone after [v0.04-4](../v0.04-4-variant-grain-wire-through/spec.md) variant-grain wire-through.
+**Complete** — see [v0.04-5-completion.md](../../implementation/v0.04-5-completion.md).
 
 ## Job
 

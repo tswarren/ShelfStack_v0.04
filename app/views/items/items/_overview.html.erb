@@ -99,6 +99,7 @@
               <tr>
                 <th>Variant</th>
                 <th>SKU</th>
+                <th>Status</th>
                 <th class="ss-num">Price</th>
                 <th>Subdepartment</th>
                 <th>Tax category</th>
@@ -126,6 +127,11 @@
                 <tr>
                   <td><%= variant.list_label %></td>
                   <td><%= variant.sku %></td>
+                  <td>
+                    <% ProductVariants::OperationalPolicy.for(variant).operational_badges.each do |badge| %>
+                      <span class="ss-badge ss-badge--muted"><%= badge.label %></span>
+                    <% end %>
+                  </td>
                   <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
                   <td><%= row.sub_department_name || "—" %></td>
                   <td><%= row.tax_category_name || "—" %></td>

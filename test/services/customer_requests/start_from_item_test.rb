@@ -57,6 +57,25 @@ class CustomerRequestsStartFromItemTest < ActiveSupport::TestCase
     assert_nil result.special_order
   end
 
+  test "rejects special order for used-like variant" do
+    used = ProductCondition.find_by(condition_key: "used_good") ||
+      create_product_condition!(condition_key: "used_good_cr", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
+    @variant.update!(condition: used, orderable: false)
+
+    error = assert_raises(CustomerRequests::StartFromItem::StartError) do
+      CustomerRequests::StartFromItem.call!(
+        store: @store,
+        variant: @variant.reload,
+        actor: @user,
+        request_type: "special_order",
+        quantity: 1,
+        customer: @customer
+      )
+    end
+
+    assert_match(/used-like/i, error.message)
+  end
+
   test "creates special order for linked customer" do
     result = CustomerRequests::StartFromItem.call!(
       store: @store,

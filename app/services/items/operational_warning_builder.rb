@@ -135,6 +135,20 @@ module Items
     attr_reader :product_variant, :item, :store, :user, :contexts, :vendor, :snapshot, :row, :eligibility_result
 
     def ordering_warnings(variant, vendor)
+      policy = ProductVariants::OperationalPolicy.for(variant)
+      if policy.used_like?
+        return [
+          build_warning(
+            severity: :info,
+            category: :ordering,
+            code: :used_not_vendor_orderable,
+            message: policy.used_not_vendor_orderable_info,
+            variant_id: variant.id,
+            source: :operational_policy
+          )
+        ]
+      end
+
       result = eligibility_result || Purchasing::OrderEligibilityResolver.call(
         product_variant: variant,
         vendor: vendor || snapshot&.suggested_vendors&.dig(variant.id)&.vendor,

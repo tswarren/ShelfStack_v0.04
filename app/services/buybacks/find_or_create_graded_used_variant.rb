@@ -42,7 +42,6 @@ module Buybacks
         active: true
       )
       variant.name = ProductNameRenderer.variant_name(variant)
-      variant.sku = SkuGenerator.variant_sku(variant)
       variant.save!
 
       AuditEvents.record!(

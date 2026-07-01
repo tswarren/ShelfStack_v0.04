@@ -259,7 +259,7 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
 
     refute warnings.any? { |warning| warning.code == :missing_preferred_vendor }
     refute warnings.any? { |warning| warning.code == :missing_vendor_source }
-    assert warnings.any? { |warning| warning.code == :used_variant }
+    assert warnings.any? { |warning| warning.code == :used_not_vendor_orderable }
   end
 
   test "financial product type skips selling warnings" do

@@ -35,4 +35,18 @@ class PurchaseRequests::CreateSingleLineTest < ActiveSupport::TestCase
       )
     end
   end
+
+  test "blocks used-like variant for tbo" do
+    used = ProductCondition.find_by(condition_key: "used_good") ||
+      create_product_condition!(condition_key: "used_good_tbo", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
+    @variant.update!(condition: used, orderable: false)
+
+    assert_raises(PurchaseRequests::CreateSingleLine::CreateError) do
+      PurchaseRequests::CreateSingleLine.call!(
+        store: @store,
+        product_variant: @variant.reload,
+        created_by_user: @user
+      )
+    end
+  end
 end
