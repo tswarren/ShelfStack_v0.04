@@ -175,6 +175,34 @@ class ExternalCatalogImportFlowTest < ActiveSupport::TestCase
     assert_equal "Scribner", existing.publisher
   end
 
+  test "resolve_boundary_product_id resolves through catalog item when product id collides" do
+    catalog_item = create_catalog_item!(title: "Linked Catalog Shell")
+    linked_product = create_legacy_catalog_linked_product!(catalog_item: catalog_item, skip_product_identifier: true)
+    stray_product = create_product!(skip_product_identifier: true, title: "Unrelated Product")
+
+    Product.where(id: stray_product.id).update_all(id: catalog_item.id)
+    stray_product = Product.find(catalog_item.id)
+    refute_equal linked_product.id, stray_product.id
+
+    resolved = ExternalCatalog::ImportCandidate.resolve_boundary_product_id(
+      product_id: nil,
+      catalog_item_id: catalog_item.id
+    )
+
+    assert_equal linked_product.id, resolved
+  end
+
+  test "resolve_boundary_product_id returns nil when catalog item id does not exist" do
+    stray_product = create_product!(skip_product_identifier: true)
+
+    resolved = ExternalCatalog::ImportCandidate.resolve_boundary_product_id(
+      product_id: nil,
+      catalog_item_id: stray_product.id
+    )
+
+    assert_nil resolved
+  end
+
   private
 
   def persist_lookup_result_from_fixture!(name)

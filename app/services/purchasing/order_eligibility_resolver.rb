@@ -219,7 +219,7 @@ module Purchasing
       missing_vendor_source: "No vendor sourcing record exists for this item and vendor.",
       missing_preferred_vendor: "No preferred vendor is configured.",
       missing_cost: "Expected unit cost could not be determined.",
-      missing_identifier: "No active catalog identifier is on file."
+      missing_identifier: "No active product identifier is on file."
     }.freeze
     private_constant :REASON_MESSAGES
   end

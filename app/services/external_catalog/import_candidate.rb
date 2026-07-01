@@ -34,8 +34,12 @@ module ExternalCatalog
       return product_id if product_id.present?
       return if catalog_item_id.blank?
 
-      Product.find_by(id: catalog_item_id)&.id ||
-        CatalogItem.find_by(id: catalog_item_id)&.products&.active_records&.order(:id)&.first&.id
+      CatalogItem.find_by(id: catalog_item_id)
+        &.products
+        &.active_records
+        &.order(:id)
+        &.first
+        &.id
     end
 
     def initialize(lookup_result:, action_type:, actor:, format_id:, product_id:)
