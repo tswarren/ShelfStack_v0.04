@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — implementation on branch `v0.04-6-demand-foundation`; CI green. See [v0.04-6 completion](../../implementation/v0.04-6-completion.md) for reviewer checklist and verification commands. Mark **Complete** after merge to `main`.
+**Complete** — implementation on branch `v0.04-6-demand-foundation`; CI green. See [v0.04-6 completion](../../implementation/v0.04-6-completion.md) for reviewer checklist and verification commands. Mark **Complete** after merge to `main`.
 
 ## Job
 
