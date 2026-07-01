@@ -17,6 +17,8 @@
 
 Used by `DemandLines::NumberAllocator` to assign immutable `{store_number}-D{sequence:06d}`.
 
+**Concurrency:** allocator must `with_lock` the sequence row while incrementing `last_sequence` inside the same transaction as demand line insert.
+
 ### `demand_lines`
 
 **Grain:** one row = one identified need. No separate demand header table.
@@ -35,6 +37,7 @@ Used by `DemandLines::NumberAllocator` to assign immutable `{store_number}-D{seq
 | `customer_name_snapshot` | string | yes | walk-in |
 | `customer_email_snapshot` | string | yes | |
 | `customer_phone_snapshot` | string | yes | |
+| `preferred_contact_method` | string | yes | e.g. email, phone, sms, in_person; optional |
 | `quantity_requested` | integer | no | > 0 |
 | `needed_by_date` | date | yes | |
 | `expires_at` | datetime | yes | |
@@ -90,12 +93,16 @@ Do **not** add `filled_quantity`, `cancelled_quantity`, `quantity_open`, `quanti
 | `quantity_suggested` | integer | yes | |
 | `notes` | text | yes | |
 | `created_by_user_id` | FK users | no | |
-| `reviewed_by_user_id` | FK users | yes | |
-| `converted_demand_line_id` | FK demand_lines | yes | |
+| `reviewed_by_user_id` | FK users | yes | actor who moved out of `open`/`reviewing` |
+| `reviewed_at` | datetime | yes | |
+| `converted_by_user_id` | FK users | yes | when status `converted_to_demand` |
+| `converted_at` | datetime | yes | |
 | `dismissed_by_user_id` | FK users | yes | |
 | `dismissed_at` | datetime | yes | |
 | `dismiss_reason` | text | yes | |
 | timestamps | | | |
+
+**Provenance link (one direction only):** `demand_lines.stock_consideration_id` → `stock_considerations`. Do **not** add `stock_considerations.converted_demand_line_id` — use `has_one :converted_demand_line, foreign_key: :stock_consideration_id` on `StockConsideration`.
 
 Optional `consideration_number` + sequence table if buyer queue needs human-readable IDs — defer unless UI requires in slice 1.
 
@@ -143,6 +150,26 @@ expired
 ```
 
 Add `partially_allocated`, `allocated`, `fulfilled` in v0.04-7.
+
+**Enum combinations:** services must reject invalid `source` + `purpose` + `capture_intent` triples per [spec eligibility matrix](spec.md#eligibility-matrix).
+
+---
+
+## Associations
+
+```ruby
+class DemandLine
+  belongs_to :stock_consideration, optional: true
+end
+
+class StockConsideration
+  has_one :converted_demand_line,
+    class_name: "DemandLine",
+    foreign_key: :stock_consideration_id
+end
+```
+
+Single FK on `demand_lines` preserves provenance without reciprocal sync.
 
 ---
 

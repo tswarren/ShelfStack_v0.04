@@ -111,6 +111,15 @@ Drives `DemandLines::EligibilityResolver`, `DemandLines::StartFromItem`, and tes
 
 **Used wanted:** customer-facing by default — requires customer record or contact snapshot. Store-level used interest without a customer is **out of scope** for v0.04-6 unless explicitly added later.
 
+**Enum combinations:** `source`, `purpose`, and `capture_intent` must match the matrix — not merely valid individual enum values. Reject invalid triples in `DemandLines::EligibilityResolver` (or a small mapping object). Examples:
+
+```text
+capture_intent: manual_tbo       → source: manual_tbo, purpose: shelf_replenishment
+capture_intent: used_wanted     → source: used_wanted_request, purpose: used_wanted
+capture_intent: special_order    → source: customer_order, purpose: customer_fulfillment
+capture_intent: buyer_replenishment → source: buyer_decision, purpose: shelf_replenishment
+```
+
 ---
 
 ## Demand taxonomy (v0.04-6 representable paths)
@@ -119,7 +128,7 @@ Each bookseller action must map to a creatable `demand_line` (or `stock_consider
 
 | Bookseller action | v0.04-6 record | Notes |
 | ----------------- | -------------- | ----- |
-| Reserve on-hand copy | `demand_line` (`hold`) | Status `open`; allocation deferred |
+| Reserve on-hand copy | `demand_line` (`hold`) | **Hold intent only** — no stock reservation until v0.04-7 |
 | Notify when available | `demand_line` (`notify`) | Queue semantics in v0.04-7 |
 | Customer special order (new item) | `demand_line` (`special_order`) | Vendor-orderable variant |
 | Wait for used copy | `demand_line` (`used_wanted`) | No vendor path |
@@ -189,6 +198,8 @@ Examples: `001-D000001`, `002-D000001`.
 * Distinct from legacy customer request numbering.
 * Assigned at create time via `DemandLines::NumberAllocator` + `demand_line_sequences`.
 * Identifies the v0.04 canonical demand record.
+* **`store_number` in the formatted value is the store’s number at creation time** — demand numbers are immutable even if store metadata changes later.
+* **Concurrency:** `DemandLines::NumberAllocator` must increment the store sequence **inside a transaction with row lock** on `demand_line_sequences` (e.g. `sequence.with_lock { sequence.increment!(:last_sequence) }`).
 
 ---
 
@@ -205,7 +216,7 @@ Examples: `001-D000001`, `002-D000001`.
 | `DemandLines::Expire` | **Manual/staff expiry only** in v0.04-6 |
 | `DemandLines::EligibilityResolver` | Eligibility matrix + `OperationalPolicy` |
 | `StockConsiderations::Create` | Non-committing buyer note |
-| `StockConsiderations::ConvertToDemand` | Creates linked `demand_line` |
+| `StockConsiderations::ConvertToDemand` | Creates `demand_line` with `stock_consideration_id` set; one linked demand per consideration |
 | `StockConsiderations::Dismiss` | Terminal dismiss |
 
 ---
@@ -220,6 +231,19 @@ Examples: `001-D000001`, `002-D000001`.
 | `/demand/:id` | Summary, cancel, **manual expire** |
 | Manual create | Writes `demand_lines` only |
 | Item variant drawer | **v0.04 demand actions only** — no legacy customer-request actions |
+
+**Hold UX (v0.04-6):** In v0.04-6, hold actions record **hold intent only**. They do **not** reserve inventory until v0.04-7 allocations. Staff-facing drawer label: **“Record hold request”** (not “Hold” alone) to avoid implying stock is set aside.
+
+Suggested drawer actions:
+
+```text
+Record hold request
+Notify customer
+Special order
+Used wanted
+Manual TBO / replenishment
+Buyer demand
+```
 | Customer workspace | Customer's `demand_lines`; legacy request area may remain separately if still present |
 | Stock considerations | Minimal buyer queue: create, convert, dismiss |
 
@@ -299,3 +323,4 @@ Rake: `shelfstack:v0046_verify_demand_foundation` (alias `shelfstack:v0046:verif
 ## Next milestone
 
 **v0.04-7 — Allocations and reservations** (`demand_allocations`, reservation bridge, nightly expiry job). **v0.04-3 — Product groups** remains deferred.
+docs/v0.04

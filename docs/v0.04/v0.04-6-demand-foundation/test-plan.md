@@ -25,6 +25,7 @@ One test per row in [spec eligibility matrix](spec.md#eligibility-matrix):
 
 * Allowed paths create `demand_line` with expected source/purpose/capture_intent
 * Blocked paths raise with clear message (vendor-orderable, customer required, used-like rules)
+* Invalid `source` / `purpose` / `capture_intent` **combinations** rejected (e.g. `manual_tbo` intent with `customer_order` source)
 * **No** `CustomerRequestLine`, `SpecialOrder`, or `PurchaseRequestLine` created in any case
 
 ---
@@ -45,7 +46,8 @@ One test per row in [spec eligibility matrix](spec.md#eligibility-matrix):
 
 * Valid open row
 * Terminal statuses require appropriate actor/timestamp/reason fields
-* `converted_demand_line_id` only when `converted_to_demand`
+* `converted_to_demand` requires `converted_by_user_id` and `converted_at`
+* Exactly one `DemandLine` with matching `stock_consideration_id` after convert (no reciprocal FK on consideration)
 
 ---
 
@@ -56,6 +58,7 @@ One test per row in [spec eligibility matrix](spec.md#eligibility-matrix):
 * Sequential per store
 * Immutable after assign
 * Format `{store_number}-D{sequence:06d}`
+* **Concurrency-safe:** parallel allocate calls produce unique numbers (row lock on sequence)
 
 ### `DemandLines::Create`
 
@@ -75,6 +78,7 @@ One test per row in [spec eligibility matrix](spec.md#eligibility-matrix):
 ### `DemandLines::StartFromItem`
 
 * Each capture_intent from matrix — demand only, **no legacy rows**
+* `hold` intent creates demand only — **no** `InventoryReservation`
 * Drawer-equivalent test: does not call `CustomerRequests::Create`
 * used_wanted requires customer or snapshot
 * used-like + special_order / manual_tbo rejected
@@ -100,7 +104,8 @@ One test per row in [spec eligibility matrix](spec.md#eligibility-matrix):
 
 ### `StockConsiderations::ConvertToDemand`
 
-* Creates demand_line; links consideration
+* Creates exactly one `demand_line` with `stock_consideration_id` set
+* Sets consideration `converted_to_demand` with `converted_by_user_id` / `converted_at`
 * **Inventory unchanged**
 
 ### `StockConsiderations::Dismiss`
@@ -112,14 +117,15 @@ One test per row in [spec eligibility matrix](spec.md#eligibility-matrix):
 
 ## Inventory non-side-effect harness
 
-For each mutating service above, assert:
+For each mutating service above, assert **no inventory posting side effects**:
 
 ```text
-inventory_ledger_entries count unchanged
-inventory_balances quantity_on_hand / quantity_reserved unchanged
+No new inventory ledger entries created for the variant/store under test.
+The authoritative inventory balance record for that variant/store is unchanged
+(on_hand, reserved, and any cached quantity fields the balance model exposes).
 ```
 
-Use shared test helper or transactional fixture around variant with existing balance.
+Use a shared helper around a variant with existing `InventoryBalance` (or equivalent authoritative balance row) so assertions stay aligned with the current schema.
 
 ---
 
@@ -156,7 +162,7 @@ Use shared test helper or transactional fixture around variant with existing bal
 
 ## Manual smoke
 
-1. Item drawer: Hold → `demand_line` on `/demand`; no legacy request created.
+1. Item drawer: **Record hold request** → `demand_line` on `/demand`; no reservation; no legacy request.
 2. Used wanted for used variant + customer — no PO/TBO linkage.
 3. Manual TBO demand appears on `/demand` only — not legacy TBO build PO screen.
 4. Stock consideration convert/dismiss — no inventory change.
