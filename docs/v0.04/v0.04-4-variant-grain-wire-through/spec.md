@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — implementation 2026-06-30. Merge after v0.04-2. See [v0.04-4-completion.md](../../implementation/v0.04-4-completion.md).
+**Complete** — 2026-06-30. See [v0.04-4-completion.md](../../implementation/v0.04-4-completion.md).
 
 ## Job
 

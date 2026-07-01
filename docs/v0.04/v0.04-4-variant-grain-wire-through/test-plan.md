@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — executable; verified 2026-06-30.
+**Complete** — executable; verified 2026-06-30.
 
 ---
 

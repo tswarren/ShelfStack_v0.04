@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — companion to [spec.md](spec.md). No schema changes in this milestone.
+**Complete** — companion to [spec.md](spec.md). No schema changes in this milestone.
 
 ---
 
