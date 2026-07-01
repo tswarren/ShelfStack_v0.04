@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — companion to [spec.md](spec.md). Core tests implemented; see [v0.04-6 completion](../../implementation/v0.04-6-completion.md) for verification commands.
+**Complete** — companion to [spec.md](spec.md). See [v0.04-6 completion](../../implementation/v0.04-6-completion.md) for verification commands.
 
 ---
 

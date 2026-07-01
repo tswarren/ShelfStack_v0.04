@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — companion to [spec.md](spec.md). Implementation matches this model on branch `v0.04-6-demand-foundation`.
+**Complete** — companion to [spec.md](spec.md). Implemented on `main` (PR #11).
 
 ---
 
