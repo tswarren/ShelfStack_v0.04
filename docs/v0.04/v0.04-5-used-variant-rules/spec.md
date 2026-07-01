@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — see [v0.04-5-completion.md](../../implementation/v0.04-5-completion.md). *(Mark **Complete** after merge to `main`.)*
+**Complete** — see [v0.04-5-completion.md](../../implementation/v0.04-5-completion.md).
 
 ## Job
 
@@ -670,4 +670,4 @@ Unless explicitly changed during implementation:
 
 ## Next milestone
 
-**v0.04-6 — Demand foundation** after v0.04-5 merge. **v0.04-3 — Product groups** remains deferred.
+**v0.04-6 — Demand foundation.** **v0.04-3 — Product groups** remains deferred.
