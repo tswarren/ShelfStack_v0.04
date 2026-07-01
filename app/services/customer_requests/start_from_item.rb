@@ -86,6 +86,9 @@ module CustomerRequests
       raise StartError, "Variant must be active" unless variant.active?
       raise StartError, "Customer or walk-in name is required" if customer.blank? && customer_name_snapshot.blank?
       raise StartError, "Customer record is required for special orders" if request_type == "special_order" && customer.blank?
+
+      block_reason = ProductVariants::OperationalPolicy.for(variant).customer_request_block_reason(request_type:)
+      raise StartError, block_reason if block_reason.present?
     end
 
     def request_attributes

@@ -21,8 +21,8 @@
 ./dev/rails-docker bin/rails shelfstack:seeds:validate
 ./dev/rails-docker bin/rails shelfstack:v0042:verify_product_identifiers
 ./dev/rails-docker bin/rails shelfstack:v0044:verify_wire_through
-./dev/rails-docker bin/rails shelfstack:v0045:verify_used_variant_rules
-STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0045:verify_used_variant_rules
+./dev/rails-docker bin/rake shelfstack:v0045_verify_used_variant_rules
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rake shelfstack:v0045_verify_used_variant_rules
 ```
 
 ---

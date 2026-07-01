@@ -20,7 +20,7 @@ module ProductVariants
     def resolve
       return false if variant.blank?
       return false if NON_ORDERABLE_PRODUCT_TYPES.include?(variant.product&.product_type)
-      return false if used_condition?
+      return false if ProductVariants::OperationalPolicy.for(variant).used_like?
       return false if non_inventory_without_explicit_orderable?
 
       true
@@ -29,10 +29,6 @@ module ProductVariants
     private
 
     attr_reader :variant
-
-    def used_condition?
-      variant.condition.present? && !variant.condition.new_condition?
-    end
 
     def non_inventory_without_explicit_orderable?
       variant.product&.product_type == "non_inventory"

@@ -26,6 +26,7 @@
     <thead>
       <tr>
         <th>SKU</th>
+        <th>Status</th>
         <th class="ss-num">Available</th>
         <th class="ss-num">Reserved</th>
         <th class="ss-num">On hand</th>
@@ -46,6 +47,11 @@
       <% operations.variant_rows.each do |row| %>
         <tr class="<%= "ss-table-row--highlight" if operations_tab&.highlight_variant&.id == row.variant.id %>">
           <td><%= row.variant.sku %></td>
+          <td>
+            <% ProductVariants::OperationalPolicy.for(row.variant).operational_badges.each do |badge| %>
+              <span class="ss-badge ss-badge--muted"><%= badge.label %></span>
+            <% end %>
+          </td>
           <td class="ss-num"><%= row.available.nil? ? "—" : row.available %></td>
           <td class="ss-num"><%= row.reserved.nil? ? "—" : row.reserved %></td>
           <td class="ss-num"><%= row.on_hand.nil? ? "—" : row.on_hand %></td>

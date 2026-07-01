@@ -29,15 +29,7 @@ module Purchasing
     end
 
     def self.vendor_sourcing_warnings_applicable?(product_variant:)
-      return false if product_variant.blank?
-
-      condition = product_variant.condition
-      used = condition.present? && !condition.new_condition?
-      return false if used
-      return false if BLOCKING_PRODUCT_TYPES.include?(product_variant.product&.product_type)
-      return false unless product_variant.orderable?
-
-      true
+      ProductVariants::OperationalPolicy.for(product_variant).vendor_sourcing_applicable?
     end
 
     def self.for_variants(store:, variants:, context: :item_page, vendors_by_variant_id: nil, sourcing_by_variant_id: nil, suggested_vendors_by_variant_id: nil)
@@ -101,6 +93,9 @@ module Purchasing
 
       if context == :tbo
         blocking << reason(:gift_card_or_non_merchandise, :blocking) if non_merchandise_product_type?
+        blocking << reason(:used_variant, :blocking) if used_variant?
+        blocking << reason(:not_orderable, :blocking) unless product_variant.orderable?
+        blocking << reason(:non_inventory_not_orderable, :blocking) if non_inventory_blocked?
         return
       end
 
@@ -159,7 +154,7 @@ module Purchasing
     end
 
     def used_variant?
-      product_variant.condition.present? && !product_variant.condition.new_condition?
+      ProductVariants::OperationalPolicy.for(product_variant).used_like?
     end
 
     def non_merchandise_product_type?

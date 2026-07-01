@@ -29,7 +29,7 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
     assert_not result.submit_blocked?
   end
 
-  test "blocks used variant for purchase order but allows tbo" do
+  test "blocks used variant for purchase order and tbo" do
     used = ProductCondition.find_by(condition_key: "used_good") ||
       create_product_condition!(condition_key: "used_good_po", name: "Used Good", short_name: "Used", new_condition: false, buyback_eligible: true)
     @variant.update!(condition: used, orderable: false)
@@ -39,7 +39,8 @@ class Purchasing::OrderEligibilityResolverTest < ActiveSupport::TestCase
 
     assert po_result.blocking?
     assert_includes po_result.blocking_reasons.map(&:code), :used_variant
-    assert tbo_result.eligible
+    assert tbo_result.blocking?
+    assert_includes tbo_result.blocking_reasons.map(&:code), :used_variant
   end
 
   test "discontinued product warns on draft and blocks submit" do

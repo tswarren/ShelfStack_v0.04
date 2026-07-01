@@ -408,11 +408,13 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-2 (product identifiers):** **Complete** — [spec bundle](docs/v0.04/v0.04-2-product-identifiers/spec.md) · [completion](docs/implementation/v0.04-2-completion.md).
 
-**v0.04-3 (product groups):** **Deferred** — roadmap retained; not scheduled before v0.04-5.
+**v0.04-3 (product groups):** **Deferred** — roadmap retained; not scheduled before v0.04-6.
 
 **v0.04-4 (variant-grain wire-through):** **Complete** — [spec bundle](docs/v0.04/v0.04-4-variant-grain-wire-through/spec.md) · [completion](docs/implementation/v0.04-4-completion.md).
 
-**Current priority:** **v0.04-5** used variant rules.
+**v0.04-5 (used variant rules):** **Complete** — [spec bundle](docs/v0.04/v0.04-5-used-variant-rules/spec.md) · [completion](docs/implementation/v0.04-5-completion.md).
+
+**Current priority:** **v0.04-6** demand foundation.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 
