@@ -54,6 +54,8 @@ class DemandLine < ApplicationRecord
   belongs_to :stock_consideration, optional: true
 
   has_many :demand_allocations, dependent: :restrict_with_error
+  has_many :sourcing_runs, dependent: :restrict_with_error
+  has_many :sourcing_attempts, dependent: :restrict_with_error
 
   validates :demand_number, presence: true, uniqueness: { scope: :store_id }
   validates :source, presence: true, inclusion: { in: SOURCES }

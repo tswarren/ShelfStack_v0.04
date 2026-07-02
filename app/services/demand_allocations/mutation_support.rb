@@ -35,5 +35,9 @@ module DemandAllocations
     def finalize_inbound_mutation!(demand_line:, actor:)
       DemandLines::RecalculateAllocationStatus.call!(demand_line: demand_line.reload, actor: actor)
     end
+
+    def finalize_vendor_backorder_mutation!(demand_line:, actor:)
+      DemandLines::RecalculateAllocationStatus.call!(demand_line: demand_line.reload, actor: actor)
+    end
   end
 end

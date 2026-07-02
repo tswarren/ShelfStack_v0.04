@@ -30,6 +30,7 @@ require_relative "seeds/phase852_tax_exception_reasons"
 require_relative "seeds/v0042_internal_ean_sequences"
 require_relative "seeds/v0046_permissions"
 require_relative "seeds/v0047_permissions"
+require_relative "seeds/v0048_permissions"
 
 puts "Seeding Phase 1 foundation..."
 
@@ -48,6 +49,7 @@ Seeds::Phase85Permissions.seed!
 Seeds::Phase852Permissions.seed!
 Seeds::V0046Permissions.seed!
 Seeds::V0047Permissions.seed!
+Seeds::V0048Permissions.seed!
 Seeds::Phase6Roles.seed!
 
 system_user = User.find_or_initialize_by(username: ShelfStack::SYSTEM_USERNAME)

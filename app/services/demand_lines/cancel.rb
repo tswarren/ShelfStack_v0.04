@@ -21,6 +21,12 @@ module DemandLines
         locked = DemandLine.lock.find(demand_line.id)
         raise CancelError, "Demand line is already terminal" if locked.terminal?
 
+        Sourcing::CancelActiveForDemand.call!(
+          demand_line: locked,
+          actor: actor,
+          reason: cancel_reason.presence || "Demand canceled"
+        )
+
         locked.demand_allocations.active_allocations.find_each do |allocation|
           DemandAllocations::Cancel.call!(
             allocation: allocation,

@@ -22,6 +22,12 @@ module DemandLines
       DemandLine.transaction do
         locked = DemandLine.lock.find(demand_line.id)
 
+        Sourcing::CancelActiveForDemand.call!(
+          demand_line: locked,
+          actor: actor,
+          reason: "Demand expired"
+        )
+
         locked.demand_allocations.active_allocations.find_each do |allocation|
           DemandAllocations::Expire.call!(allocation: allocation, actor: actor)
         end
