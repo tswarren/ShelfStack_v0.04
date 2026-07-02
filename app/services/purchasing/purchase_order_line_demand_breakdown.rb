@@ -5,19 +5,17 @@ module Purchasing
     AllocationRow = Data.define(
       :allocation,
       :customer_name,
-      :request_number,
-      :request_id,
-      :special_order_id,
+      :demand_number,
+      :demand_line_id,
       :quantity_allocated,
-      :quantity_received,
       :quantity_open,
+      :allocation_kind,
       :status
     )
 
     LineBreakdown = Data.define(
       :line,
-      :customer_allocated_quantity,
-      :internal_tbo_quantity,
+      :demand_allocated_quantity,
       :stock_quantity,
       :allocation_rows
     )
@@ -43,51 +41,33 @@ module Purchasing
     attr_reader :purchase_order
 
     def breakdown_for(line)
-      customer_allocated = open_customer_allocated_quantity(line)
-      tbo_qty = internal_tbo_quantity(line)
-      stock_qty = [ line.quantity_ordered - customer_allocated - tbo_qty, 0 ].max
+      rows = allocation_rows_for(line)
+      demand_allocated = rows.sum(&:quantity_open)
 
       LineBreakdown.new(
         line: line,
-        customer_allocated_quantity: customer_allocated,
-        internal_tbo_quantity: tbo_qty,
-        stock_quantity: stock_qty,
-        allocation_rows: allocation_rows_for(line)
+        demand_allocated_quantity: demand_allocated,
+        stock_quantity: [ line.quantity_ordered - demand_allocated, 0 ].max,
+        allocation_rows: rows
       )
     end
 
-    def open_customer_allocated_quantity(line)
-      line.purchase_order_line_allocations.sum do |allocation|
-        next 0 unless %w[active partially_received].include?(allocation.status)
-
-        allocation.quantity_allocated - allocation.quantity_received
-      end
-    end
-
-    def internal_tbo_quantity(line)
-      return 0 if line.purchase_request_line_id.blank?
-
-      line.quantity_ordered
-    end
-
     def allocation_rows_for(line)
-      line.purchase_order_line_allocations.order(:created_at).filter_map do |allocation|
-        next if allocation.status == "cancelled"
-
-        special_order = allocation.special_order
-        request_line = allocation.customer_request_line
-        request = request_line&.customer_request
-        customer = special_order&.customer
+      DemandAllocation.active_allocations
+                      .where(purchase_order_line: line)
+                      .includes(demand_line: :customer)
+                      .order(:allocated_at)
+                      .map do |allocation|
+        demand_line = allocation.demand_line
 
         AllocationRow.new(
           allocation: allocation,
-          customer_name: customer&.display_name || "—",
-          request_number: request&.request_number,
-          request_id: request&.id,
-          special_order_id: special_order&.id,
+          customer_name: demand_line.display_customer_name,
+          demand_number: demand_line.demand_number,
+          demand_line_id: demand_line.id,
           quantity_allocated: allocation.quantity_allocated,
-          quantity_received: allocation.quantity_received,
-          quantity_open: [ allocation.quantity_allocated - allocation.quantity_received, 0 ].max,
+          quantity_open: allocation.quantity_allocated,
+          allocation_kind: allocation.allocation_kind,
           status: allocation.status
         )
       end

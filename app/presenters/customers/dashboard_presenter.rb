@@ -2,29 +2,29 @@
 
 module Customers
   class DashboardPresenter
-    PreviewRow = Data.define(:request_number, :customer_name, :primary_item, :next_action_label, :request_path, :urgency_label)
+    PreviewRow = Data.define(:demand_number, :customer_name, :primary_item, :next_action_label, :demand_path, :urgency_label)
     QueueCard = Data.define(:key, :label, :count, :path, :preview_rows)
 
     def initialize(store:)
       @store = store
-      @queue_counts = CustomerRequests::QueueScope.counts_for(store: store)
+      @queue_counts = show_counts
     end
 
     attr_reader :queue_counts
 
-    def open_request_count
-      CustomerRequest.where(store: store).open_requests.count
+    def open_demand_count
+      DemandLine.where(store: store).where.not(status: DemandLine::TERMINAL_STATUSES).count
     end
 
     def metrics
-      [ { label: "Open requests", value: open_request_count } ]
+      [ { label: "Open demand", value: open_demand_count } ]
     end
 
     def queue_cards
-      CustomerRequests::QueueScope::OPERATIONAL_QUEUE_KEYS.map do |queue_key|
+      DemandLines::QueueScope::OPERATIONAL_QUEUE_KEYS.map do |queue_key|
         QueueCard.new(
           key: queue_key,
-          label: CustomersHelper::QUEUE_LABELS.fetch(queue_key),
+          label: customers_demand_queue_label(queue_key),
           count: queue_counts.fetch(queue_key, 0),
           path: queue_path(queue_key),
           preview_rows: preview_rows_for(queue_key)
@@ -36,114 +36,104 @@ module Customers
 
     attr_reader :store
 
+    def show_counts
+      DemandLines::QueueScope::OPERATIONAL_QUEUE_KEYS.index_with do |key|
+        DemandLines::QueueScope.count(store: store, queue_key: key)
+      end
+    end
+
+    def customers_demand_queue_label(queue_key)
+      CustomersHelper::DEMAND_QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize)
+    end
+
     def queue_path(queue_key)
-      Rails.application.routes.url_helpers.customers_customer_requests_path(queue: queue_key)
+      Rails.application.routes.url_helpers.demand_demand_lines_path(queue: queue_key)
     end
 
     def preview_rows_for(queue_key)
-      requests = preview_requests_for(queue_key)
-      context = request_context(requests)
+      demand_lines = preview_demand_lines_for(queue_key)
 
-      requests.map do |request|
-        action = CustomerRequests::NextActionResolver.for_request(
-          request,
-          store: store,
-          active_reservations_by_line: context[:active_reservations_by_line],
-          availability_by_variant: context[:availability_by_variant]
-        )
+      demand_lines.map do |demand_line|
         PreviewRow.new(
-          request_number: request.request_number,
-          customer_name: request.display_customer_name,
-          primary_item: primary_item_summary(request),
-          next_action_label: action.label,
-          request_path: action.path,
-          urgency_label: urgency_label_for(request, queue_key)
+          demand_number: demand_line.demand_number,
+          customer_name: demand_line.display_customer_name,
+          primary_item: primary_item_summary(demand_line),
+          next_action_label: next_action_label_for(demand_line, queue_key),
+          demand_path: Rails.application.routes.url_helpers.demand_demand_line_path(demand_line),
+          urgency_label: urgency_label_for(demand_line, queue_key)
         )
       end
     end
 
-    def preview_requests_for(queue_key)
-      relation = CustomerRequests::QueueScope.apply(
-        CustomerRequest.where(store: store),
+    def preview_demand_lines_for(queue_key)
+      relation = DemandLines::QueueScope.apply(
+        DemandLine.where(store: store),
         queue_key,
         store: store
       )
 
-      includes = [
-        :customer,
-        customer_request_lines: [ :product_variant, :special_order, { inventory_reservations: [] } ]
-      ]
+      includes = [ :customer, :product_variant, { demand_allocations: [] } ]
 
       if queue_key == "expiring_holds"
-        request_ids = CustomerRequest.where(store: store)
-                                     .joins(customer_request_lines: :inventory_reservations)
-                                     .where(
-                                       inventory_reservations: {
-                                         reservation_type: "on_hand_hold",
-                                         status: %w[active ready]
-                                       }
-                                     )
-                                     .where(inventory_reservations: { expires_at: ..CustomerRequests::QueueScope::EXPIRING_HOLD_WINDOW.from_now })
-                                     .group("customer_requests.id")
-                                     .order(Arel.sql("MIN(inventory_reservations.expires_at) ASC"))
-                                     .limit(3)
-                                     .pluck(:id)
-        requests_by_id = CustomerRequest.where(id: request_ids).includes(includes).index_by(&:id)
-        return request_ids.filter_map { |id| requests_by_id[id] }
+        lines = relation.includes(includes).distinct.limit(20).to_a
+        return lines.sort_by { |demand_line| earliest_allocation_expiry(demand_line) || 100.years.from_now }.first(3)
       end
 
       relation.includes(includes)
-              .order(Arel.sql("customer_requests.needed_by_date ASC NULLS LAST"), "customer_requests.created_at ASC")
+              .order(Arel.sql("demand_lines.needed_by_date ASC NULLS LAST"), "demand_lines.created_at ASC")
               .distinct
               .limit(3)
               .to_a
     end
 
-    def request_context(requests)
-      line_ids = requests.flat_map { |request| request.customer_request_lines.map(&:id) }
-      variant_ids = requests.flat_map { |request| request.customer_request_lines.filter_map(&:product_variant_id) }.uniq
-
-      active_reservations = if line_ids.any?
-        CustomerRequests::ReservationLookup.active_by_line_id(line_ids)
+    def primary_item_summary(demand_line)
+      if demand_line.product_variant.present?
+        demand_line.product_variant.name.presence || demand_line.product_variant.sku
       else
-        {}
-      end
-
-      availability_by_variant = variant_ids.index_with do |variant_id|
-        variant = ProductVariant.find(variant_id)
-        Inventory::Availability.available(store: store, variant: variant)
-      end
-
-      { active_reservations_by_line: active_reservations, availability_by_variant: availability_by_variant }
-    end
-
-    def primary_item_summary(request)
-      line = request.customer_request_lines.min_by(&:line_number)
-      return "—" if line.blank?
-
-      if line.product_variant.present?
-        line.product_variant.name.presence || line.product_variant.sku
-      else
-        line.provisional_title.presence || line.provisional_identifier.presence || "—"
+        demand_line.provisional_title.presence || demand_line.provisional_identifier.presence || "—"
       end
     end
 
-    def urgency_label_for(request, queue_key)
+    def next_action_label_for(demand_line, queue_key)
+      case queue_key
+      when "ready_for_pickup", "expiring_holds"
+        "POS pickup"
+      when "notify_customer"
+        "Contact customer"
+      when "needs_research"
+        "Match variant"
+      when "approved_to_order"
+        "Start sourcing"
+      when "on_order", "vendor_backorder"
+        "View demand"
+      when "awaiting_response"
+        "Review sourcing"
+      else
+        "View demand"
+      end
+    end
+
+    def earliest_allocation_expiry(demand_line)
+      demand_line.demand_allocations
+                 .select { |allocation| allocation.on_hand? && allocation.active? && allocation.expires_at.present? }
+                 .min_by(&:expires_at)
+                 &.expires_at
+    end
+
+    def urgency_label_for(demand_line, queue_key)
       if queue_key == "expiring_holds"
-        hold = request.customer_request_lines.flat_map(&:inventory_reservations)
-                      .select { |reservation|
-                        reservation.reservation_type == "on_hand_hold" &&
-                          %w[active ready].include?(reservation.status) &&
-                          reservation.expires_at.present?
-                      }
-                      .min_by(&:expires_at)
+        hold = demand_line.demand_allocations
+                          .select { |allocation|
+                            allocation.on_hand? && allocation.active? && allocation.expires_at.present?
+                          }
+                          .min_by(&:expires_at)
         return "Expires #{I18n.l(hold.expires_at.to_date)}" if hold.present?
       end
 
-      if request.needed_by_date.present?
-        "Needed by #{I18n.l(request.needed_by_date)}"
+      if demand_line.needed_by_date.present?
+        "Needed by #{I18n.l(demand_line.needed_by_date)}"
       else
-        "#{((Time.current - request.created_at) / 1.day).floor}d old"
+        "#{((Time.current - demand_line.created_at) / 1.day).floor}d old"
       end
     end
   end

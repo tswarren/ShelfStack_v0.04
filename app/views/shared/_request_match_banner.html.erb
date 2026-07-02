@@ -3,9 +3,9 @@
 <% if label.present? %>
   <div class="ss-notice ss-notice--info">
     <p><%= label %></p>
-    <% if context.respond_to?(:request_record) && context.request_record.present? %>
-      <%= link_to "Return to request",
-            customers_customer_request_path(context.request_record, anchor: "line-#{context.line_id}"),
+    <% if context.respond_to?(:demand_line) && context.demand_line.present? %>
+      <%= link_to "Return to demand",
+            context.return_path,
             class: "ss-btn ss-btn-small ss-btn-secondary" %>
     <% elsif context.respond_to?(:session_record) && context.session_record.present? %>
       <%= link_to "Return to buyback",

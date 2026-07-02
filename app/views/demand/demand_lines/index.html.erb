@@ -1,4 +1,7 @@
 <h1>Demand
+  <% if @active_queue.present? %>
+    <span class="ss-muted">· <%= customers_queue_label(@active_queue) %></span>
+  <% end %>
   <% if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
     <%= link_to "New", new_demand_demand_line_path, class: "ss-btn" %>
   <% end %>
@@ -7,7 +10,15 @@
   <% end %>
 </h1>
 
+<div class="ss-filter-bar">
+  <%= link_to customers_queue_link_label(nil), demand_root_path, class: customers_queue_link_class(nil) %>
+  <% DemandLines::QueueScope::OPERATIONAL_QUEUE_KEYS.each do |queue_key| %>
+    <%= link_to customers_queue_link_label(queue_key), demand_demand_lines_path(queue: queue_key), class: customers_queue_link_class(queue_key) %>
+  <% end %>
+</div>
+
 <%= form_with url: demand_root_path, method: :get, class: "ss-filter-bar ss-form" do %>
+  <%= hidden_field_tag :queue, params[:queue] if params[:queue].present? %>
   <%= select_tag :status,
         options_for_select([["All statuses", ""]] + DemandLine::STATUSES.map { |s| [demand_status_label(s), s] }, params[:status]),
         class: "ss-input" %>

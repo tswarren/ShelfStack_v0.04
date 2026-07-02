@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -377,8 +377,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.string "contact_method", null: false
     t.datetime "created_at", null: false
     t.bigint "customer_id"
-    t.bigint "customer_request_id"
-    t.bigint "customer_request_line_id"
     t.string "direction", null: false
     t.datetime "occurred_at", null: false
     t.bigint "recorded_by_user_id", null: false
@@ -386,83 +384,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.text "summary", null: false
     t.datetime "updated_at", null: false
     t.index ["customer_id"], name: "index_customer_contact_events_on_customer_id"
-    t.index ["customer_request_id"], name: "index_customer_contact_events_on_customer_request_id"
-    t.index ["customer_request_line_id"], name: "index_customer_contact_events_on_customer_request_line_id"
     t.index ["occurred_at"], name: "index_customer_contact_events_on_occurred_at"
     t.index ["recorded_by_user_id"], name: "index_customer_contact_events_on_recorded_by_user_id"
-  end
-
-  create_table "customer_request_lines", force: :cascade do |t|
-    t.integer "approved_quantity", default: 0, null: false
-    t.integer "cancelled_quantity", default: 0, null: false
-    t.bigint "catalog_item_id"
-    t.datetime "created_at", null: false
-    t.bigint "customer_request_id", null: false
-    t.integer "filled_quantity", default: 0, null: false
-    t.integer "line_number", null: false
-    t.integer "max_customer_price_cents"
-    t.text "notes"
-    t.integer "ordered_quantity", default: 0, null: false
-    t.bigint "product_id"
-    t.bigint "product_variant_id"
-    t.string "provisional_creator"
-    t.string "provisional_format"
-    t.string "provisional_identifier"
-    t.string "provisional_title"
-    t.integer "quoted_price_cents"
-    t.string "request_type", null: false
-    t.integer "requested_quantity", default: 1, null: false
-    t.string "status", default: "new", null: false
-    t.datetime "updated_at", null: false
-    t.index ["catalog_item_id"], name: "index_customer_request_lines_on_catalog_item_id"
-    t.index ["customer_request_id", "line_number"], name: "idx_customer_request_lines_request_line_number", unique: true
-    t.index ["customer_request_id"], name: "index_customer_request_lines_on_customer_request_id"
-    t.index ["product_id"], name: "index_customer_request_lines_on_product_id"
-    t.index ["product_variant_id"], name: "index_customer_request_lines_on_product_variant_id"
-    t.index ["status", "request_type"], name: "index_customer_request_lines_on_status_and_request_type"
-    t.check_constraint "approved_quantity >= 0", name: "chk_customer_request_lines_approved_quantity"
-    t.check_constraint "cancelled_quantity >= 0", name: "chk_customer_request_lines_cancelled_quantity"
-    t.check_constraint "filled_quantity >= 0", name: "chk_customer_request_lines_filled_quantity"
-    t.check_constraint "ordered_quantity >= 0", name: "chk_customer_request_lines_ordered_quantity"
-    t.check_constraint "requested_quantity > 0", name: "chk_customer_request_lines_requested_quantity"
-  end
-
-  create_table "customer_request_sequences", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "last_sequence", default: 0, null: false
-    t.bigint "store_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["store_id"], name: "index_customer_request_sequences_on_store_id", unique: true
-  end
-
-  create_table "customer_requests", force: :cascade do |t|
-    t.bigint "assigned_to_user_id"
-    t.text "cancellation_reason"
-    t.datetime "cancelled_at"
-    t.datetime "completed_at"
-    t.datetime "created_at", null: false
-    t.bigint "created_by_user_id", null: false
-    t.string "customer_email_snapshot"
-    t.bigint "customer_id"
-    t.string "customer_name_snapshot"
-    t.string "customer_phone_snapshot"
-    t.datetime "expires_at"
-    t.datetime "last_contacted_at"
-    t.date "needed_by_date"
-    t.text "notes"
-    t.string "preferred_contact_method"
-    t.string "request_number", null: false
-    t.string "source", default: "in_store", null: false
-    t.string "status", default: "new", null: false
-    t.bigint "store_id", null: false
-    t.text "unfillable_reason"
-    t.datetime "updated_at", null: false
-    t.index ["assigned_to_user_id"], name: "index_customer_requests_on_assigned_to_user_id"
-    t.index ["created_by_user_id"], name: "index_customer_requests_on_created_by_user_id"
-    t.index ["customer_id"], name: "index_customer_requests_on_customer_id"
-    t.index ["store_id", "request_number"], name: "index_customer_requests_on_store_id_and_request_number", unique: true
-    t.index ["store_id", "status"], name: "index_customer_requests_on_store_id_and_status"
-    t.index ["store_id"], name: "index_customer_requests_on_store_id"
   end
 
   create_table "customers", force: :cascade do |t|
@@ -932,53 +855,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.index ["reason_key"], name: "index_inventory_reason_codes_on_reason_key", unique: true
   end
 
-  create_table "inventory_reservations", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "customer_id"
-    t.bigint "customer_request_line_id"
-    t.datetime "expires_at"
-    t.datetime "fulfilled_at"
-    t.text "notes"
-    t.boolean "over_reserved", default: false, null: false
-    t.datetime "override_authorized_at"
-    t.bigint "override_authorized_by_user_id"
-    t.text "override_reason"
-    t.bigint "pos_transaction_line_id"
-    t.bigint "product_variant_id", null: false
-    t.bigint "purchase_order_line_id"
-    t.integer "quantity_fulfilled", default: 0, null: false
-    t.integer "quantity_released", default: 0, null: false
-    t.integer "quantity_reserved", null: false
-    t.datetime "ready_at"
-    t.bigint "receipt_line_id"
-    t.string "release_reason"
-    t.datetime "released_at"
-    t.string "reservation_type", null: false
-    t.datetime "reserved_at", null: false
-    t.bigint "reserved_by_user_id", null: false
-    t.bigint "special_order_id"
-    t.string "status", default: "active", null: false
-    t.bigint "store_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["customer_id"], name: "index_inventory_reservations_on_customer_id"
-    t.index ["customer_request_line_id"], name: "index_inventory_reservations_on_customer_request_line_id"
-    t.index ["expires_at"], name: "index_inventory_reservations_on_expires_at"
-    t.index ["override_authorized_by_user_id"], name: "index_inventory_reservations_on_override_authorized_by_user_id"
-    t.index ["pos_transaction_line_id"], name: "index_inventory_reservations_on_pos_transaction_line_id"
-    t.index ["product_variant_id"], name: "index_inventory_reservations_on_product_variant_id"
-    t.index ["purchase_order_line_id"], name: "index_inventory_reservations_on_purchase_order_line_id"
-    t.index ["receipt_line_id"], name: "index_inventory_reservations_on_receipt_line_id"
-    t.index ["reserved_by_user_id"], name: "index_inventory_reservations_on_reserved_by_user_id"
-    t.index ["special_order_id"], name: "index_inventory_reservations_on_special_order_id"
-    t.index ["store_id", "product_variant_id", "status"], name: "idx_inventory_reservations_store_variant_status"
-    t.index ["store_id", "status", "reservation_type"], name: "idx_inventory_reservations_store_status_type"
-    t.index ["store_id"], name: "index_inventory_reservations_on_store_id"
-    t.check_constraint "(quantity_fulfilled + quantity_released) <= quantity_reserved", name: "chk_inventory_reservations_quantity_balance"
-    t.check_constraint "quantity_fulfilled >= 0", name: "chk_inventory_reservations_quantity_fulfilled"
-    t.check_constraint "quantity_released >= 0", name: "chk_inventory_reservations_quantity_released"
-    t.check_constraint "quantity_reserved > 0", name: "chk_inventory_reservations_quantity_reserved"
-  end
-
   create_table "permissions", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -1225,11 +1101,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.string "cogs_source"
     t.string "costing_method_snapshot"
     t.datetime "created_at", null: false
-    t.bigint "customer_request_line_id"
+    t.bigint "demand_allocation_id"
     t.integer "extended_price_cents", default: 0, null: false
     t.boolean "generate_stored_value_identifier", default: false, null: false
     t.string "inventory_behavior_snapshot"
-    t.bigint "inventory_reservation_id"
     t.string "inventory_tracking_snapshot"
     t.integer "line_discount_cents", default: 0, null: false
     t.integer "line_number", null: false
@@ -1252,7 +1127,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.integer "source_sold_quantity_snapshot"
     t.bigint "source_transaction_id"
     t.bigint "source_transaction_line_id"
-    t.bigint "special_order_id"
     t.bigint "store_tax_rate_id"
     t.string "store_tax_rate_short_name_snapshot"
     t.bigint "stored_value_account_id"
@@ -1270,8 +1144,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.datetime "updated_at", null: false
     t.string "variant_name_snapshot"
     t.string "variant_sku_snapshot"
-    t.index ["customer_request_line_id"], name: "index_pos_transaction_lines_on_customer_request_line_id"
-    t.index ["inventory_reservation_id"], name: "index_pos_transaction_lines_on_inventory_reservation_id"
+    t.index ["demand_allocation_id"], name: "index_pos_transaction_lines_on_demand_allocation_id"
     t.index ["normal_store_tax_rate_id"], name: "index_pos_transaction_lines_on_normal_store_tax_rate_id"
     t.index ["normal_tax_category_id"], name: "index_pos_transaction_lines_on_normal_tax_category_id"
     t.index ["pos_transaction_id", "line_number"], name: "index_pos_transaction_lines_on_transaction_and_line_number", unique: true
@@ -1280,7 +1153,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.index ["product_variant_id"], name: "index_pos_transaction_lines_on_product_variant_id"
     t.index ["source_transaction_id"], name: "index_pos_transaction_lines_on_source_transaction_id"
     t.index ["source_transaction_line_id"], name: "index_pos_transaction_lines_on_source_transaction_line_id"
-    t.index ["special_order_id"], name: "index_pos_transaction_lines_on_special_order_id"
     t.index ["store_tax_rate_id"], name: "index_pos_transaction_lines_on_store_tax_rate_id"
     t.index ["stored_value_account_id"], name: "index_pos_transaction_lines_on_stored_value_account_id"
     t.index ["stored_value_identifier_id"], name: "index_pos_transaction_lines_on_stored_value_identifier_id"
@@ -1584,22 +1456,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.check_constraint "year IS NULL OR year::text ~ '^[0-9]{4}$'::text", name: "chk_products_year_format"
   end
 
-  create_table "purchase_order_line_allocations", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "customer_request_line_id"
-    t.bigint "purchase_order_line_id", null: false
-    t.integer "quantity_allocated", null: false
-    t.integer "quantity_received", default: 0, null: false
-    t.bigint "special_order_id", null: false
-    t.string "status", default: "active", null: false
-    t.datetime "updated_at", null: false
-    t.index ["customer_request_line_id"], name: "idx_on_customer_request_line_id_c8c0d5c051"
-    t.index ["purchase_order_line_id"], name: "idx_on_purchase_order_line_id_01da129fdd"
-    t.index ["special_order_id"], name: "index_purchase_order_line_allocations_on_special_order_id"
-    t.check_constraint "quantity_allocated > 0", name: "chk_po_line_allocations_quantity_allocated"
-    t.check_constraint "quantity_received >= 0", name: "chk_po_line_allocations_quantity_received"
-  end
-
   create_table "purchase_order_lines", force: :cascade do |t|
     t.string "cost_source", default: "unknown", null: false
     t.datetime "created_at", null: false
@@ -1616,7 +1472,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.bigint "product_variant_id", null: false
     t.bigint "product_variant_vendor_id"
     t.bigint "purchase_order_id", null: false
-    t.bigint "purchase_request_line_id"
     t.integer "quantity_backordered_by_vendor", default: 0, null: false
     t.integer "quantity_canceled_by_vendor", default: 0, null: false
     t.integer "quantity_closed_short", default: 0, null: false
@@ -1643,7 +1498,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.index ["product_variant_vendor_id"], name: "index_purchase_order_lines_on_product_variant_vendor_id"
     t.index ["purchase_order_id", "line_number"], name: "idx_purchase_order_lines_order_line_number", unique: true
     t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
-    t.index ["purchase_request_line_id"], name: "index_purchase_order_lines_on_purchase_request_line_id"
     t.index ["vendor_id"], name: "index_purchase_order_lines_on_vendor_id"
     t.index ["vendor_quantity_state"], name: "index_purchase_order_lines_on_vendor_quantity_state"
     t.check_constraint "cost_source::text = ANY (ARRAY['vendor_source'::character varying::text, 'manual'::character varying::text, 'import'::character varying::text, 'default'::character varying::text, 'unknown'::character varying::text])", name: "purchase_order_lines_cost_source_chk"
@@ -1667,48 +1521,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.index ["submitted_by_user_id"], name: "index_purchase_orders_on_submitted_by_user_id"
     t.index ["vendor_id", "status"], name: "index_purchase_orders_on_vendor_id_and_status"
     t.index ["vendor_id"], name: "index_purchase_orders_on_vendor_id"
-  end
-
-  create_table "purchase_request_lines", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "line_number", null: false
-    t.bigint "product_variant_id", null: false
-    t.bigint "purchase_request_id", null: false
-    t.string "request_reason"
-    t.integer "requested_quantity", null: false
-    t.string "status", default: "open", null: false
-    t.datetime "updated_at", null: false
-    t.index ["product_variant_id"], name: "index_purchase_request_lines_on_product_variant_id"
-    t.index ["purchase_request_id", "line_number"], name: "idx_purchase_request_lines_request_line_number", unique: true
-    t.index ["purchase_request_id"], name: "index_purchase_request_lines_on_purchase_request_id"
-    t.check_constraint "requested_quantity > 0", name: "chk_purchase_request_lines_requested_quantity"
-  end
-
-  create_table "purchase_requests", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.text "notes"
-    t.string "status", default: "open", null: false
-    t.bigint "store_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["store_id", "status"], name: "index_purchase_requests_on_store_id_and_status"
-    t.index ["store_id"], name: "index_purchase_requests_on_store_id"
-  end
-
-  create_table "receipt_line_allocations", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "customer_request_line_id"
-    t.bigint "inventory_reservation_id"
-    t.bigint "purchase_order_line_allocation_id"
-    t.integer "quantity_allocated", null: false
-    t.bigint "receipt_line_id", null: false
-    t.bigint "special_order_id"
-    t.datetime "updated_at", null: false
-    t.index ["customer_request_line_id"], name: "index_receipt_line_allocations_on_customer_request_line_id"
-    t.index ["inventory_reservation_id"], name: "index_receipt_line_allocations_on_inventory_reservation_id"
-    t.index ["purchase_order_line_allocation_id"], name: "idx_on_purchase_order_line_allocation_id_cadeef4f00"
-    t.index ["receipt_line_id"], name: "index_receipt_line_allocations_on_receipt_line_id"
-    t.index ["special_order_id"], name: "index_receipt_line_allocations_on_special_order_id"
-    t.check_constraint "quantity_allocated > 0", name: "chk_receipt_line_allocations_quantity_allocated"
   end
 
   create_table "receipt_lines", force: :cascade do |t|
@@ -2033,38 +1845,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
     t.index ["store_id", "status", "started_at"], name: "index_sourcing_runs_on_store_id_and_status_and_started_at"
     t.index ["store_id"], name: "index_sourcing_runs_on_store_id"
     t.check_constraint "quantity_requested > 0", name: "sourcing_runs_quantity_positive"
-  end
-
-  create_table "special_orders", force: :cascade do |t|
-    t.datetime "approved_at"
-    t.datetime "cancelled_at"
-    t.datetime "completed_at"
-    t.datetime "created_at", null: false
-    t.bigint "created_by_user_id", null: false
-    t.bigint "customer_id", null: false
-    t.bigint "customer_request_line_id", null: false
-    t.text "notes"
-    t.datetime "ordered_at"
-    t.bigint "product_variant_id"
-    t.integer "quantity_cancelled", default: 0, null: false
-    t.integer "quantity_committed", null: false
-    t.integer "quantity_completed", default: 0, null: false
-    t.integer "quantity_ordered", default: 0, null: false
-    t.integer "quantity_ready", default: 0, null: false
-    t.integer "quantity_received", default: 0, null: false
-    t.datetime "ready_at"
-    t.string "status", default: "pending_match", null: false
-    t.bigint "store_id", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "vendor_id"
-    t.index ["created_by_user_id"], name: "index_special_orders_on_created_by_user_id"
-    t.index ["customer_id"], name: "index_special_orders_on_customer_id"
-    t.index ["customer_request_line_id"], name: "index_special_orders_on_customer_request_line_id", unique: true
-    t.index ["product_variant_id"], name: "index_special_orders_on_product_variant_id"
-    t.index ["store_id", "status"], name: "index_special_orders_on_store_id_and_status"
-    t.index ["store_id"], name: "index_special_orders_on_store_id"
-    t.index ["vendor_id"], name: "index_special_orders_on_vendor_id"
-    t.check_constraint "quantity_committed > 0", name: "chk_special_orders_quantity_committed"
   end
 
   create_table "stock_considerations", force: :cascade do |t|
@@ -2522,19 +2302,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
   add_foreign_key "category_nodes", "category_schemes"
   add_foreign_key "category_nodes", "display_locations", column: "default_display_location_id"
   add_foreign_key "category_nodes", "sub_departments", column: "default_sub_department_id"
-  add_foreign_key "customer_contact_events", "customer_request_lines"
-  add_foreign_key "customer_contact_events", "customer_requests"
   add_foreign_key "customer_contact_events", "customers"
   add_foreign_key "customer_contact_events", "users", column: "recorded_by_user_id"
-  add_foreign_key "customer_request_lines", "catalog_items"
-  add_foreign_key "customer_request_lines", "customer_requests"
-  add_foreign_key "customer_request_lines", "product_variants"
-  add_foreign_key "customer_request_lines", "products"
-  add_foreign_key "customer_request_sequences", "stores"
-  add_foreign_key "customer_requests", "customers"
-  add_foreign_key "customer_requests", "stores"
-  add_foreign_key "customer_requests", "users", column: "assigned_to_user_id"
-  add_foreign_key "customer_requests", "users", column: "created_by_user_id"
   add_foreign_key "customers", "customers", column: "merged_into_customer_id"
   add_foreign_key "customers", "stores", column: "home_store_id"
   add_foreign_key "customers", "users", column: "created_by_user_id"
@@ -2601,16 +2370,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
   add_foreign_key "inventory_postings", "stores"
   add_foreign_key "inventory_postings", "users", column: "posted_by_user_id"
   add_foreign_key "inventory_postings", "workstations"
-  add_foreign_key "inventory_reservations", "customer_request_lines"
-  add_foreign_key "inventory_reservations", "customers"
-  add_foreign_key "inventory_reservations", "pos_transaction_lines"
-  add_foreign_key "inventory_reservations", "product_variants"
-  add_foreign_key "inventory_reservations", "purchase_order_lines"
-  add_foreign_key "inventory_reservations", "receipt_lines"
-  add_foreign_key "inventory_reservations", "special_orders"
-  add_foreign_key "inventory_reservations", "stores"
-  add_foreign_key "inventory_reservations", "users", column: "override_authorized_by_user_id"
-  add_foreign_key "inventory_reservations", "users", column: "reserved_by_user_id"
   add_foreign_key "pos_authorizations", "pos_register_sessions"
   add_foreign_key "pos_authorizations", "pos_transactions"
   add_foreign_key "pos_authorizations", "stores"
@@ -2656,14 +2415,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
   add_foreign_key "pos_tenders", "pos_transactions"
   add_foreign_key "pos_tenders", "stored_value_accounts"
   add_foreign_key "pos_tenders", "stored_value_identifiers"
-  add_foreign_key "pos_transaction_lines", "customer_request_lines"
-  add_foreign_key "pos_transaction_lines", "inventory_reservations"
+  add_foreign_key "pos_transaction_lines", "demand_allocations"
   add_foreign_key "pos_transaction_lines", "pos_transaction_lines", column: "source_transaction_line_id"
   add_foreign_key "pos_transaction_lines", "pos_transactions"
   add_foreign_key "pos_transaction_lines", "pos_transactions", column: "source_transaction_id"
   add_foreign_key "pos_transaction_lines", "product_variants"
   add_foreign_key "pos_transaction_lines", "products"
-  add_foreign_key "pos_transaction_lines", "special_orders"
   add_foreign_key "pos_transaction_lines", "store_tax_rates"
   add_foreign_key "pos_transaction_lines", "store_tax_rates", column: "normal_store_tax_rate_id"
   add_foreign_key "pos_transaction_lines", "stored_value_accounts"
@@ -2704,25 +2461,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
   add_foreign_key "products", "formats"
   add_foreign_key "products", "sub_departments", column: "default_sub_department_id"
   add_foreign_key "products", "vendors", column: "preferred_vendor_id"
-  add_foreign_key "purchase_order_line_allocations", "customer_request_lines"
-  add_foreign_key "purchase_order_line_allocations", "purchase_order_lines"
-  add_foreign_key "purchase_order_line_allocations", "special_orders"
   add_foreign_key "purchase_order_lines", "product_variant_vendors"
   add_foreign_key "purchase_order_lines", "product_variants"
   add_foreign_key "purchase_order_lines", "purchase_orders"
-  add_foreign_key "purchase_order_lines", "purchase_request_lines"
   add_foreign_key "purchase_order_lines", "vendors"
   add_foreign_key "purchase_orders", "stores"
   add_foreign_key "purchase_orders", "users", column: "submitted_by_user_id"
   add_foreign_key "purchase_orders", "vendors"
-  add_foreign_key "purchase_request_lines", "product_variants"
-  add_foreign_key "purchase_request_lines", "purchase_requests"
-  add_foreign_key "purchase_requests", "stores"
-  add_foreign_key "receipt_line_allocations", "customer_request_lines"
-  add_foreign_key "receipt_line_allocations", "inventory_reservations"
-  add_foreign_key "receipt_line_allocations", "purchase_order_line_allocations"
-  add_foreign_key "receipt_line_allocations", "receipt_lines"
-  add_foreign_key "receipt_line_allocations", "special_orders"
   add_foreign_key "receipt_lines", "product_variants"
   add_foreign_key "receipt_lines", "purchase_order_lines"
   add_foreign_key "receipt_lines", "receipts"
@@ -2766,12 +2511,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
   add_foreign_key "sourcing_runs", "users", column: "canceled_by_user_id"
   add_foreign_key "sourcing_runs", "users", column: "closed_by_user_id"
   add_foreign_key "sourcing_runs", "users", column: "started_by_user_id"
-  add_foreign_key "special_orders", "customer_request_lines"
-  add_foreign_key "special_orders", "customers"
-  add_foreign_key "special_orders", "product_variants"
-  add_foreign_key "special_orders", "stores"
-  add_foreign_key "special_orders", "users", column: "created_by_user_id"
-  add_foreign_key "special_orders", "vendors"
   add_foreign_key "stock_considerations", "product_variants"
   add_foreign_key "stock_considerations", "products"
   add_foreign_key "stock_considerations", "stores"

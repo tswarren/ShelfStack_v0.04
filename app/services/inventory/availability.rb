@@ -20,9 +20,10 @@ module Inventory
     end
 
     def self.reserved_incoming(store:, variant:)
-      InventoryReservation.active_incoming
-                          .where(store: store, product_variant: variant)
-                          .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+      DemandAllocation.active_allocations
+                      .inbound_kind
+                      .where(store: store, product_variant: variant)
+                      .sum(:quantity_allocated)
     end
 
     def self.on_order_available(store:, variant:)

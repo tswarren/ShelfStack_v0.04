@@ -7,7 +7,7 @@ module DemandLines
     StartResult = Data.define(:demand_line, :allocation_result)
 
     CAPTURE_INTENTS = DemandLine::CAPTURE_INTENTS.freeze
-    DEFAULT_HOLD_EXPIRY_DAYS = InventoryReservations::ReserveOnHand::DEFAULT_EXPIRY_DAYS
+    DEFAULT_HOLD_EXPIRY_DAYS = 14
 
     def self.call!(store:, variant:, actor:, capture_intent:, quantity: 1, customer: nil,
                    customer_name_snapshot: nil, customer_email_snapshot: nil, customer_phone_snapshot: nil,

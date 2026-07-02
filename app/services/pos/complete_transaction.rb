@@ -66,7 +66,7 @@ module Pos
         transaction.save!
 
         PostInventory.call(transaction:, posted_by_user: completed_by_user)
-        CompleteReservationFulfillment.call!(transaction:, fulfilled_by_user: completed_by_user)
+        CompleteDemandAllocationFulfillment.call!(transaction:, fulfilled_by_user: completed_by_user)
 
         PosReceipt.create!(
           pos_transaction: transaction,
@@ -115,7 +115,8 @@ module Pos
       transaction.pos_transaction_lines.any? do |line|
         next false unless line.variant_line?
         next false if line.product_variant.blank?
-        next false if line.inventory_reservation_id.present?
+        next false if line.demand_allocation_id.present?
+        next false if line.demand_allocation_id.present?
 
         variant = line.product_variant
         reserved = Inventory::Availability.reserved(store: transaction.store, variant: variant)

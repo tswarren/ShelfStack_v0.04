@@ -1,7 +1,7 @@
 <%# locals: row %>
 <tr>
   <td>
-    <strong><%= link_to row.request_number, row.request_path %></strong><br>
+    <strong><%= link_to row.demand_number, row.demand_path %></strong><br>
     <span class="ss-muted"><%= row.customer_name %></span>
   </td>
   <td>
@@ -9,6 +9,6 @@
     <span class="ss-muted"><%= row.urgency_label %></span>
   </td>
   <td class="ss-num">
-    <%= link_to row.next_action_label, row.request_path, class: "ss-btn ss-btn-small ss-btn-secondary" %>
+    <%= link_to row.next_action_label, row.demand_path, class: "ss-btn ss-btn-small ss-btn-secondary" %>
   </td>
 </tr>

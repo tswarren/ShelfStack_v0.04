@@ -243,7 +243,7 @@ module ItemsHelper
   end
 
   def request_match_context
-    @request_match_context ||= Customers::RequestMatchContext.from_params(params, store: current_store)
+    @request_match_context ||= DemandLines::MatchContext.from_params(params, store: current_store)
   end
 
   def request_match_path_options

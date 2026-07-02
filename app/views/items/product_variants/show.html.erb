@@ -39,8 +39,8 @@
   <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store) %>
     <%= link_to "Inventory Ledger", inventory_variant_path(@product_variant), class: "ss-btn ss-btn-secondary" %>
   <% end %>
-  <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
-    <%= link_to "Mark TBO", new_orders_purchase_request_path(product_variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
+  <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
+    <%= link_to "Manual TBO", new_demand_demand_line_path(product_variant_id: @product_variant.id, capture_intent: "manual_tbo"), class: "ss-btn ss-btn-secondary" %>
   <% end %>
   <%= link_to "Edit", edit_items_product_variant_path(@product_variant, item_flow), class: "ss-btn" %>
   <%= button_to "Regenerate Name", regenerate_name_items_product_variant_path(@product_variant, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>

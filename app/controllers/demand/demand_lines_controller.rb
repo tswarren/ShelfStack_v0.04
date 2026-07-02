@@ -17,6 +17,7 @@ module Demand
       @demand_lines = @demand_lines.where(purpose: params[:purpose]) if params[:purpose].present?
       @demand_lines = @demand_lines.where(capture_intent: params[:capture_intent]) if params[:capture_intent].present?
       apply_allocation_filters!
+      apply_queue_filter!
       if params[:customer_id].present?
         @demand_lines = @demand_lines.where(customer_id: params[:customer_id])
       end
@@ -145,6 +146,13 @@ module Demand
       return nil if params[:expires_at].blank?
 
       Time.zone.parse(params[:expires_at].to_s)
+    end
+
+    def apply_queue_filter!
+      return if params[:queue].blank?
+
+      @demand_lines = DemandLines::QueueScope.apply(@demand_lines, params[:queue], store: demand_store)
+      @active_queue = params[:queue].to_s
     end
 
     def apply_allocation_filters!

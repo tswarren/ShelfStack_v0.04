@@ -28,7 +28,7 @@ module Pos
       on_hand = balance&.quantity_on_hand || 0
       available = Inventory::Availability.available(store: store, variant: variant) || 0
       reserved = Inventory::Availability.reserved(store: store, variant: variant)
-      ready_reservations = ready_reservations_for(variant)
+      ready_allocations = ready_allocations_for(variant)
 
       {
         id: variant.id,
@@ -44,26 +44,29 @@ module Pos
         quantity_on_hand: on_hand,
         quantity_available: available,
         quantity_reserved: reserved,
-        ready_reservations: ready_reservations
+        ready_allocations: ready_allocations
       }
     end
 
-    def ready_reservations_for(variant)
-      InventoryReservation
-        .where(store: store, product_variant: variant, status: %w[active ready],
-               reservation_type: %w[on_hand_hold special_order_reserve])
-        .includes(:customer, customer_request_line: { customer_request: :customer })
-        .limit(10)
-        .map do |reservation|
-          request = reservation.customer_request_line&.customer_request
-          {
-            id: reservation.id,
-            customer_name: CustomerDemand::DisplayName.for_reservation(reservation),
-            request_number: request&.request_number,
-            expires_at: reservation.expires_at&.iso8601,
-            quantity: reservation.remaining_quantity
-          }
-        end
+    def ready_allocations_for(variant)
+      DemandAllocation.active_allocations
+                      .on_hand_kind
+                      .where(store: store, product_variant: variant)
+                      .where("demand_allocations.expires_at IS NULL OR demand_allocations.expires_at > ?", Time.current)
+                      .joins(:demand_line)
+                      .merge(DemandLine.where.not(status: DemandLine::TERMINAL_STATUSES))
+                      .includes(demand_line: :customer)
+                      .limit(10)
+                      .map do |allocation|
+        demand_line = allocation.demand_line
+        {
+          id: allocation.id,
+          customer_name: CustomerDemand::DisplayName.for_demand_line(demand_line),
+          demand_number: demand_line.demand_number,
+          expires_at: allocation.expires_at&.iso8601,
+          quantity: allocation.quantity_allocated
+        }
+      end
     end
   end
 end

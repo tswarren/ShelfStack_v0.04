@@ -18,11 +18,10 @@ module Orders
     end
 
     def metadata_lines
-      lines = [
+      [
         "Vendor: #{receipt.vendor.name}",
         "Type: #{receipt.receipt_type.humanize}"
       ]
-      lines
     end
 
     def metrics
@@ -74,7 +73,7 @@ module Orders
     end
 
     def show_customer_allocations?
-      receipt.draft? ? projected_allocation_rows.any? : receipt.receipt_lines.any? { |line| line.receipt_line_allocations.any? }
+      customer_allocation_rows.any?
     end
 
     def stock_quantity_label
@@ -84,26 +83,19 @@ module Orders
     def pre_post_allocation_message
       return nil unless receipt.draft?
 
-      count = projected_special_order_count
+      count = projected_demand_line_count
       return nil if count.zero?
 
-      "Will auto-allocate to #{count} special #{'order'.pluralize(count)} on post"
+      "Will convert inbound demand for #{count} #{'line'.pluralize(count)} on post"
     end
 
     def customer_allocation_rows
-      return posted_customer_allocation_rows unless receipt.draft?
-
-      projected_allocation_rows
+      receipt.draft? ? projected_allocation_rows : posted_customer_allocation_rows
     end
 
     def allocation_summary_rows
       receipt.receipt_lines.map do |line|
-        po_line = line.purchase_order_line
-        customer_qty = if receipt.draft?
-          projected_customer_qty_for(line)
-        else
-          line.receipt_line_allocations.sum(:quantity_allocated)
-        end
+        customer_qty = customer_quantity_for(line)
         stock_qty = [ line.quantity_accepted.to_i - customer_qty, 0 ].max
 
         {
@@ -113,7 +105,7 @@ module Orders
           customer_quantity: customer_qty,
           stock_quantity: stock_qty,
           stock_label: stock_quantity_label,
-          po_allocations: po_allocation_details(po_line)
+          po_allocations: po_allocation_details(line.purchase_order_line)
         }
       end
     end
@@ -145,21 +137,16 @@ module Orders
     attr_reader :receipt, :document_hub
 
     def posted_customer_allocation_rows
-      @posted_customer_allocation_rows ||= compute_posted_customer_allocation_rows
-    end
-
-    def compute_posted_customer_allocation_rows
-      receipt.receipt_lines.flat_map do |line|
-        line.receipt_line_allocations.map do |allocation|
-          request = allocation.customer_request_line&.customer_request
+      @posted_customer_allocation_rows ||= receipt.receipt_lines.flat_map do |line|
+        demand_allocations_for_receipt_line(line).map do |allocation|
+          demand_line = allocation.demand_line
           {
             receipt_line_number: line.line_number,
             variant: line.product_variant,
-            customer_name: allocation.special_order&.customer&.display_name || request&.customer&.display_name,
-            request_number: request&.request_number,
-            request_id: request&.id,
+            customer_name: demand_line.display_customer_name,
+            demand_number: demand_line.demand_number,
+            demand_line_id: demand_line.id,
             quantity: allocation.quantity_allocated,
-            special_order_id: allocation.special_order_id,
             state: "actual"
           }
         end
@@ -167,32 +154,26 @@ module Orders
     end
 
     def projected_allocation_rows
-      @projected_allocation_rows ||= compute_projected_allocation_rows
-    end
-
-    def compute_projected_allocation_rows
-      receipt.receipt_lines.flat_map do |line|
-        po_line = line.purchase_order_line
-        next [] if po_line.blank?
+      @projected_allocation_rows ||= receipt.receipt_lines.flat_map do |line|
+        next [] if line.purchase_order_line.blank?
 
         remaining_accept = line.quantity_accepted.to_i
         rows = []
-        po_line.purchase_order_line_allocations.open_allocations.order(:created_at).each do |allocation|
+        inbound_allocations_for(line.purchase_order_line).each do |allocation|
           break if remaining_accept.zero?
 
-          qty = [ allocation.quantity_allocated - allocation.quantity_received, remaining_accept ].min
+          qty = [ allocation.quantity_allocated, remaining_accept ].min
           next if qty.zero?
 
           remaining_accept -= qty
-          request = allocation.customer_request_line&.customer_request
+          demand_line = allocation.demand_line
           rows << {
             receipt_line_number: line.line_number,
             variant: line.product_variant,
-            customer_name: allocation.special_order&.customer&.display_name || request&.customer&.display_name,
-            request_number: request&.request_number,
-            request_id: request&.id,
+            customer_name: demand_line.display_customer_name,
+            demand_number: demand_line.demand_number,
+            demand_line_id: demand_line.id,
             quantity: qty,
-            special_order_id: allocation.special_order_id,
             state: "projected"
           }
         end
@@ -200,26 +181,45 @@ module Orders
       end
     end
 
-    def projected_special_order_count
-      projected_allocation_rows.map { |row| row[:special_order_id] }.compact.uniq.size
+    def projected_demand_line_count
+      projected_allocation_rows.map { |row| row[:demand_line_id] }.uniq.size
     end
 
-    def projected_customer_qty_for(line)
-      projected_allocation_rows
-        .select { |row| row[:receipt_line_number] == line.line_number }
-        .sum { |row| row[:quantity] }
+    def customer_quantity_for(line)
+      if receipt.draft?
+        projected_allocation_rows
+          .select { |row| row[:receipt_line_number] == line.line_number }
+          .sum { |row| row[:quantity] }
+      else
+        demand_allocations_for_receipt_line(line).sum(:quantity_allocated)
+      end
+    end
+
+    def demand_allocations_for_receipt_line(line)
+      DemandAllocation.where(conversion_receipt_line_id: line.id)
+                      .where(allocation_kind: "on_hand")
+    end
+
+    def inbound_allocations_for(po_line)
+      DemandAllocation.active_allocations
+                      .inbound_kind
+                      .where(purchase_order_line_id: po_line.id)
+                      .includes(:demand_line)
+                      .order(:allocated_at, :id)
     end
 
     def po_allocation_details(po_line)
       return [] if po_line.blank?
 
-      po_line.purchase_order_line_allocations.open_allocations.map do |allocation|
+      inbound_allocations_for(po_line).map do |allocation|
+        demand_line = allocation.demand_line
         {
-          special_order_id: allocation.special_order_id,
-          customer_name: allocation.special_order&.customer&.display_name,
+          demand_line_id: demand_line.id,
+          demand_number: demand_line.demand_number,
+          customer_name: demand_line.display_customer_name,
           quantity_allocated: allocation.quantity_allocated,
-          quantity_received: allocation.quantity_received,
-          quantity_remaining: allocation.quantity_allocated - allocation.quantity_received
+          quantity_received: 0,
+          quantity_remaining: allocation.quantity_allocated
         }
       end
     end

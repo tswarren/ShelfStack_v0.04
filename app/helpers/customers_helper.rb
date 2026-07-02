@@ -17,6 +17,20 @@ module CustomersHelper
     "unfillable" => "Unfillable"
   }.freeze
 
+  DEMAND_QUEUE_LABELS = {
+    "ready_for_pickup" => "Ready for pickup",
+    "expiring_holds" => "Expiring holds",
+    "notify_customer" => "Notify customer",
+    "needs_research" => "Needs research",
+    "awaiting_response" => "Awaiting response",
+    "approved_to_order" => "Approved to order",
+    "on_order" => "On order",
+    "vendor_backorder" => "Vendor backorder",
+    "completed" => "Completed",
+    "cancelled" => "Cancelled",
+    "expired" => "Expired"
+  }.freeze
+
   def customers_status_badge(status)
     css_class = customers_status_badge_class(status)
     tag.span(status.to_s.tr("_", " ").titleize, class: "ss-status-badge #{css_class}")
@@ -42,7 +56,7 @@ module CustomersHelper
   end
 
   def customers_queue_label(queue_key)
-    QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize)
+    DEMAND_QUEUE_LABELS.fetch(queue_key) { QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize) }
   end
 
   def customers_queue_link_label(queue_key, counts = nil)
@@ -69,6 +83,25 @@ module CustomersHelper
     base = "ss-btn ss-btn-small"
     active = queue_key.nil? ? params[:queue].blank? : customers_queue_active?(queue_key)
     active ? base : "#{base} ss-btn-secondary"
+  end
+
+  def customers_demand_match_context
+    @customers_demand_match_context ||= DemandLines::MatchContext.from_params(
+      params,
+      store: current_store
+    )
+  end
+
+  def customers_demand_match_params(context = customers_demand_match_context)
+    context.valid? ? context.param_hash : {}
+  end
+
+  def customers_demand_match_path_options(context = customers_demand_match_context)
+    customers_demand_match_params(context)
+  end
+
+  def customers_demand_match_banner_label(context = customers_demand_match_context)
+    context.banner_label if context.valid?
   end
 
   def customers_request_match_context

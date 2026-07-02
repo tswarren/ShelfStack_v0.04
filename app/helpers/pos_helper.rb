@@ -158,37 +158,42 @@ module PosHelper
   PickupLineContext = Data.define(:customer_name, :request_number, :label)
 
   def pos_transaction_pickup_summary(transaction)
-    pickup_lines = transaction.pos_transaction_lines.select { |line| line.inventory_reservation_id.present? }
+    pickup_lines = transaction.pos_transaction_lines.select { |line| pickup_line?(line) }
     return nil if pickup_lines.empty?
 
-    customer_names = pickup_lines.filter_map do |line|
-      line.inventory_reservation&.customer&.display_name ||
-        line.customer_request_line&.customer_request&.customer&.display_name
-    end.uniq
-
-    request_numbers = pickup_lines.filter_map do |line|
-      line.customer_request_line&.customer_request&.request_number
-    end.uniq
+    customer_names = pickup_lines.filter_map { |line| pickup_customer_name(line) }.uniq
+    demand_numbers = pickup_lines.filter_map { |line| pickup_demand_number(line) }.uniq
 
     PickupSummary.new(
       customer_name: customer_names.one? ? customer_names.first : customer_names.join(", "),
-      request_numbers: request_numbers,
+      request_numbers: demand_numbers,
       line_count: pickup_lines.size
     )
   end
 
   def pos_line_pickup_context(line)
-    return nil unless line.inventory_reservation_id.present?
+    return nil unless pickup_line?(line)
 
-    customer_name = line.inventory_reservation&.customer&.display_name ||
-      line.customer_request_line&.customer_request&.customer&.display_name
-    request_number = line.customer_request_line&.customer_request&.request_number
+    customer_name = pickup_customer_name(line)
+    demand_number = pickup_demand_number(line)
 
     PickupLineContext.new(
       customer_name: customer_name,
-      request_number: request_number,
-      label: [ customer_name, request_number ].compact.join(" · ")
+      request_number: demand_number,
+      label: [ customer_name, demand_number ].compact.join(" · ")
     )
+  end
+
+  def pickup_line?(line)
+    line.demand_allocation_id.present?
+  end
+
+  def pickup_customer_name(line)
+    CustomerDemand::DisplayName.for_demand_line(line.demand_allocation.demand_line)
+  end
+
+  def pickup_demand_number(line)
+    line.demand_allocation.demand_line.demand_number
   end
 
   def pos_line_pickup_label(line)

@@ -3,8 +3,8 @@
         class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :dashboard)].compact.join(" ") %>
   <%= link_to "Customers", customers_customers_path,
         class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :customers)].compact.join(" ") %>
-  <%= link_to "Customer requests", customers_customer_requests_path,
-        class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :requests)].compact.join(" ") %>
+  <%= link_to "Demand", demand_root_path,
+        class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :demand)].compact.join(" ") %>
   <%= link_to "Stored value", customers_stored_value_accounts_path,
         class: ["ss-btn", "ss-btn-small", ("ss-btn-secondary" unless local_assigns[:active] == :stored_value_accounts)].compact.join(" ") %>
 </div>

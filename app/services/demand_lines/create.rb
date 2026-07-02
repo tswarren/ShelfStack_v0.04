@@ -4,7 +4,7 @@ module DemandLines
   class Create
     class CreateError < StandardError; end
 
-    DEFAULT_HOLD_EXPIRY_DAYS = InventoryReservations::ReserveOnHand::DEFAULT_EXPIRY_DAYS
+    DEFAULT_HOLD_EXPIRY_DAYS = 14
 
     def self.call!(store:, actor:, capture_intent:, quantity: 1, variant: nil, customer: nil,
                    customer_name_snapshot: nil, customer_email_snapshot: nil, customer_phone_snapshot: nil,

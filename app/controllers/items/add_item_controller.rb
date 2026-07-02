@@ -282,8 +282,8 @@ module Items
         if add_another_commit?
           redirect_to items_add_item_path(step: "sellable_sku"),
                       notice: "Sellable SKU created. Add another or cancel to finish."
-        elsif customer_request_match_draft.present?
-          match_customer_request_line!(@variant)
+        elsif demand_line_match_draft.present?
+          match_demand_line!(@variant)
         elsif buyback_line_match_draft.present?
           match_buyback_line!(@variant)
         else
@@ -668,13 +668,12 @@ module Items
         return
       end
 
-      return unless params[:return_to].to_s == Customers::RequestMatchContext::RETURN_TO
-      return if params[:customer_request_id].blank? || params[:line_id].blank?
+      return unless params[:return_to].to_s == DemandLines::MatchContext::RETURN_TO
+      return if params[:demand_line_id].blank?
 
       save_draft!(
         "return_to" => params[:return_to],
-        "customer_request_id" => params[:customer_request_id],
-        "customer_request_line_id" => params[:line_id]
+        "demand_line_id" => params[:demand_line_id]
       )
     end
 
@@ -694,6 +693,23 @@ module Items
       redirect_to buybacks_session_path(session, open_line: line.id, anchor: "line-#{line.id}"),
                   notice: "Item added and matched to buyback line."
     rescue Buybacks::SelectVariant::Error => e
+      reset_draft!
+      redirect_to ItemPresenter.from_product(@product).show_path, alert: e.message
+    end
+
+    def demand_line_match_draft
+      return nil unless @draft["return_to"] == DemandLines::MatchContext::RETURN_TO
+      return nil if @draft["demand_line_id"].blank?
+
+      @draft
+    end
+
+    def match_demand_line!(variant)
+      demand_line = DemandLine.find(demand_line_match_draft["demand_line_id"])
+      DemandLines::MatchVariant.call!(demand_line: demand_line, variant: variant, actor: current_user)
+      reset_draft!
+      redirect_to demand_demand_line_path(demand_line), notice: "Item added and matched to demand line."
+    rescue DemandLines::MatchVariant::MatchError => e
       reset_draft!
       redirect_to ItemPresenter.from_product(@product).show_path, alert: e.message
     end
