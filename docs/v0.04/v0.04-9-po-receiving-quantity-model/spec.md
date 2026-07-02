@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — depends on [v0.04-8 completion](../../implementation/v0.04-8-completion.md) (merged).
+**Complete** — depends on [v0.04-8 completion](../../implementation/v0.04-8-completion.md) (merged). See [v0.04-9 completion](../../implementation/v0.04-9-completion.md).
 
 Companion documents: [data-model.md](data-model.md), [test-plan.md](test-plan.md).
 

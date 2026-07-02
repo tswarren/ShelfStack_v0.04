@@ -43,12 +43,12 @@ class PurchaseOrder < ApplicationRecord
   def open_lines_for_receiving
     purchase_order_lines.select do |line|
       OPEN_FOR_RECEIVE_LINE_STATUSES.include?(line.status) &&
-        line.quantity_ordered - line.quantity_received > 0
+        Purchasing::PoLineQuantitySummary.for(line).open_to_receive_quantity.positive?
     end
   end
 
   def open_quantity_for_line(line)
-    [ line.quantity_ordered - line.quantity_received, 0 ].max
+    Purchasing::PoLineQuantitySummary.for(line).open_to_receive_quantity
   end
 
   private

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_002003) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_002006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -508,6 +508,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002003) do
     t.text "cancel_reason"
     t.datetime "canceled_at"
     t.bigint "canceled_by_user_id"
+    t.bigint "conversion_purchase_order_line_id"
+    t.string "conversion_reason"
+    t.bigint "conversion_receipt_line_id"
+    t.datetime "converted_at"
+    t.bigint "converted_by_user_id"
+    t.bigint "converted_from_allocation_id"
+    t.bigint "converted_to_allocation_id"
     t.datetime "created_at", null: false
     t.bigint "demand_line_id", null: false
     t.datetime "expired_at"
@@ -536,6 +543,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002003) do
     t.bigint "vendor_response_id"
     t.index ["allocated_by_user_id"], name: "index_demand_allocations_on_allocated_by_user_id"
     t.index ["canceled_by_user_id"], name: "index_demand_allocations_on_canceled_by_user_id"
+    t.index ["conversion_purchase_order_line_id"], name: "index_demand_allocations_on_conversion_purchase_order_line_id"
+    t.index ["conversion_receipt_line_id"], name: "index_demand_allocations_on_conversion_receipt_line_id"
+    t.index ["converted_from_allocation_id"], name: "index_demand_allocations_on_converted_from_allocation_id"
     t.index ["demand_line_id", "status"], name: "index_demand_allocations_on_demand_line_id_and_status"
     t.index ["demand_line_id"], name: "index_demand_allocations_on_demand_line_id"
     t.index ["expired_by_user_id"], name: "index_demand_allocations_on_expired_by_user_id"
@@ -1607,8 +1617,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002003) do
     t.bigint "product_variant_vendor_id"
     t.bigint "purchase_order_id", null: false
     t.bigint "purchase_request_line_id"
+    t.integer "quantity_backordered_by_vendor", default: 0, null: false
+    t.integer "quantity_canceled_by_vendor", default: 0, null: false
+    t.integer "quantity_closed_short", default: 0, null: false
+    t.integer "quantity_confirmed_by_vendor", default: 0, null: false
     t.integer "quantity_ordered", null: false
     t.integer "quantity_received", default: 0, null: false
+    t.integer "quantity_rejected_on_line", default: 0, null: false
     t.string "returnability_status_snapshot"
     t.jsonb "source_snapshot", default: {}
     t.string "status", default: "open", null: false
@@ -1620,12 +1635,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002003) do
     t.string "variant_sku_snapshot"
     t.bigint "vendor_id", null: false
     t.string "vendor_item_number_snapshot"
+    t.datetime "vendor_quantities_recorded_at"
+    t.bigint "vendor_quantities_source_id"
+    t.string "vendor_quantities_source_type"
+    t.string "vendor_quantity_state", default: "unconfirmed", null: false
     t.index ["product_variant_id"], name: "index_purchase_order_lines_on_product_variant_id"
     t.index ["product_variant_vendor_id"], name: "index_purchase_order_lines_on_product_variant_vendor_id"
     t.index ["purchase_order_id", "line_number"], name: "idx_purchase_order_lines_order_line_number", unique: true
     t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
     t.index ["purchase_request_line_id"], name: "index_purchase_order_lines_on_purchase_request_line_id"
     t.index ["vendor_id"], name: "index_purchase_order_lines_on_vendor_id"
+    t.index ["vendor_quantity_state"], name: "index_purchase_order_lines_on_vendor_quantity_state"
     t.check_constraint "cost_source::text = ANY (ARRAY['vendor_source'::character varying::text, 'manual'::character varying::text, 'import'::character varying::text, 'default'::character varying::text, 'unknown'::character varying::text])", name: "purchase_order_lines_cost_source_chk"
     t.check_constraint "price_source::text = ANY (ARRAY['variant'::character varying::text, 'vendor_source'::character varying::text, 'manual'::character varying::text, 'import'::character varying::text, 'unknown'::character varying::text])", name: "purchase_order_lines_price_source_chk"
     t.check_constraint "quantity_ordered > 0", name: "chk_purchase_order_lines_quantity_ordered"
@@ -2519,14 +2539,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002003) do
   add_foreign_key "customers", "stores", column: "home_store_id"
   add_foreign_key "customers", "users", column: "created_by_user_id"
   add_foreign_key "customers", "users", column: "updated_by_user_id"
+  add_foreign_key "demand_allocations", "demand_allocations", column: "converted_from_allocation_id"
+  add_foreign_key "demand_allocations", "demand_allocations", column: "converted_to_allocation_id"
   add_foreign_key "demand_allocations", "demand_lines"
   add_foreign_key "demand_allocations", "product_variants"
   add_foreign_key "demand_allocations", "products"
   add_foreign_key "demand_allocations", "purchase_order_lines"
+  add_foreign_key "demand_allocations", "purchase_order_lines", column: "conversion_purchase_order_line_id"
+  add_foreign_key "demand_allocations", "receipt_lines", column: "conversion_receipt_line_id"
   add_foreign_key "demand_allocations", "sourcing_attempts"
   add_foreign_key "demand_allocations", "stores"
   add_foreign_key "demand_allocations", "users", column: "allocated_by_user_id"
   add_foreign_key "demand_allocations", "users", column: "canceled_by_user_id"
+  add_foreign_key "demand_allocations", "users", column: "converted_by_user_id"
   add_foreign_key "demand_allocations", "users", column: "expired_by_user_id"
   add_foreign_key "demand_allocations", "users", column: "fulfilled_by_user_id"
   add_foreign_key "demand_allocations", "users", column: "override_authorized_by_user_id"

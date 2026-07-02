@@ -30,7 +30,7 @@ module Purchasing
         )
 
         open_lines_for_receiving.each do |po_line|
-          remainder = po_line.quantity_ordered - po_line.quantity_received
+          remainder = Purchasing::PoLineQuantitySummary.for(po_line).open_to_receive_quantity
           next if remainder <= 0
 
           receipt.receipt_lines.create!(

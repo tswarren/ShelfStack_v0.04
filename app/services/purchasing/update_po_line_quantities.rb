@@ -34,10 +34,15 @@ module Purchasing
     attr_reader :receipt
 
     def line_status_for(po_line)
+      summary = Purchasing::PoLineQuantitySummary.for(po_line)
       if po_line.quantity_received >= po_line.quantity_ordered
         "received"
       elsif po_line.quantity_received.positive?
         "partially_received"
+      elsif summary.vendor_quantities_recorded? && po_line.quantity_backordered_by_vendor.positive?
+        "backordered"
+      elsif summary.vendor_quantities_recorded? && po_line.quantity_canceled_by_vendor >= po_line.quantity_ordered
+        "cancelled"
       else
         po_line.status
       end

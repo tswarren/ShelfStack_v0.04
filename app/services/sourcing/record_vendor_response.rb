@@ -86,6 +86,14 @@ module Sourcing
 
           apply_final_response_effects!(locked_attempt, response)
 
+          po_line_for_sync = purchase_order_line || locked_attempt.purchase_order_line || response.purchase_order_line
+          if po_line_for_sync.present?
+            Purchasing::SyncPoLineVendorQuantitiesFromSourcing.call!(
+              purchase_order_line: po_line_for_sync,
+              source_response: response
+            )
+          end
+
           if buyer_review_required?(po_line: purchase_order_line || locked_attempt.purchase_order_line)
             locked_attempt.update!(buyer_review_required: true)
           end

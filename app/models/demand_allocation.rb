@@ -2,9 +2,9 @@
 
 class DemandAllocation < ApplicationRecord
   ALLOCATION_KINDS = %w[on_hand inbound_purchase_order vendor_backorder].freeze
-  STATUSES = %w[active fulfilled released expired canceled].freeze
+  STATUSES = %w[active fulfilled released expired canceled converted].freeze
   ACTIVE_STATUS = "active".freeze
-  TERMINAL_STATUSES = %w[fulfilled released expired canceled].freeze
+  TERMINAL_STATUSES = %w[fulfilled released expired canceled converted].freeze
 
   belongs_to :store
   belongs_to :demand_line
@@ -19,6 +19,11 @@ class DemandAllocation < ApplicationRecord
   belongs_to :expired_by_user, class_name: "User", optional: true
   belongs_to :fulfilled_by_user, class_name: "User", optional: true
   belongs_to :override_authorized_by_user, class_name: "User", optional: true
+  belongs_to :converted_from_allocation, class_name: "DemandAllocation", optional: true
+  belongs_to :converted_to_allocation, class_name: "DemandAllocation", optional: true
+  belongs_to :conversion_receipt_line, class_name: "ReceiptLine", optional: true
+  belongs_to :conversion_purchase_order_line, class_name: "PurchaseOrderLine", optional: true
+  belongs_to :converted_by_user, class_name: "User", optional: true
 
   validates :allocation_kind, presence: true, inclusion: { in: ALLOCATION_KINDS }
   validates :status, presence: true, inclusion: { in: STATUSES }
@@ -115,6 +120,11 @@ class DemandAllocation < ApplicationRecord
       if fulfilled_by_user_id.blank? && fulfillment_reference_type.blank?
         errors.add(:base, "fulfilled_by_user or fulfillment reference is required")
       end
+    when "converted"
+      errors.add(:converted_at, "is required") if converted_at.blank?
+      errors.add(:converted_by_user, "is required") if converted_by_user_id.blank?
+      errors.add(:conversion_receipt_line, "is required") if conversion_receipt_line_id.blank?
+      errors.add(:converted_to_allocation, "is required") if converted_to_allocation_id.blank?
     end
   end
 end

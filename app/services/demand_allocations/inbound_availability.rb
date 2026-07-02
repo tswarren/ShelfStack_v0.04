@@ -14,7 +14,8 @@ module DemandAllocations
     end
 
     def available_for
-      open_qty = purchase_order_line.purchase_order.open_quantity_for_line(purchase_order_line)
+      summary = Purchasing::PoLineQuantitySummary.for(purchase_order_line)
+      open_qty = summary.open_supply_before_allocation_claims
       legacy_claimed = purchase_order_line.purchase_order_line_allocations
                                           .where(status: LEGACY_OPEN_ALLOCATION_STATUSES)
                                           .sum(:quantity_allocated)

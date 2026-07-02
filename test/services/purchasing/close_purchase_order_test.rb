@@ -36,13 +36,15 @@ class Purchasing::ClosePurchaseOrderTest < ActiveSupport::TestCase
     assert AuditEvent.exists?(event_name: "purchase_order.closed", auditable: @order)
   end
 
-  test "marks partially received lines closed short" do
+  test "marks partially received lines closed short and sets quantity_closed_short" do
     @line.update_columns(quantity_received: 2, status: "partially_received")
     @order.update_column(:status, "partially_received")
 
     Purchasing::ClosePurchaseOrder.call(purchase_order: @order, closed_by_user: @user)
 
-    assert_equal "closed_short", @line.reload.status
+    @line.reload
+    assert_equal "closed_short", @line.status
+    assert_equal 3, @line.quantity_closed_short
     assert_equal "closed", @order.reload.status
   end
 

@@ -99,7 +99,7 @@ module Shelfstack
         po_line = PurchaseOrderLine.find_by(id: po_line_id)
         next true if po_line.blank?
 
-        open_qty = po_line.purchase_order.open_quantity_for_line(po_line)
+        open_qty = Purchasing::PoLineQuantitySummary.for(po_line).open_supply_before_allocation_claims
         legacy_claimed = po_line.purchase_order_line_allocations
                                 .where(status: DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES)
                                 .sum(:quantity_allocated)
