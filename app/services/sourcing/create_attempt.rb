@@ -41,7 +41,7 @@ module Sourcing
       end
 
       if purchase_order_line.present?
-        ValidatePoLineLink.call!(
+        validate_po_line_link!(
           demand_line: sourcing_run.demand_line,
           purchase_order_line: purchase_order_line
         )
@@ -129,6 +129,16 @@ module Sourcing
       else
         Purchasing::SuggestedVendorResolver.for_variant(variant)
       end
+    end
+
+    def validate_po_line_link!(demand_line:, purchase_order_line:, quantity: nil)
+      ValidatePoLineLink.call!(
+        demand_line: demand_line,
+        purchase_order_line: purchase_order_line,
+        quantity: quantity
+      )
+    rescue ValidatePoLineLink::ValidationError => e
+      raise CreateAttemptError, e.message
     end
   end
 end

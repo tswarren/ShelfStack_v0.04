@@ -85,7 +85,7 @@ class SourcingCreateSubmitAttemptTest < ActiveSupport::TestCase
     po.update!(status: "submitted")
     po_line = po.purchase_order_lines.first
 
-    assert_raises(Sourcing::ValidatePoLineLink::ValidationError) do
+    assert_raises(Sourcing::CreateAttempt::CreateAttemptError) do
       Sourcing::CreateAttempt.call!(
         sourcing_run: @run,
         actor: @user,
@@ -104,7 +104,7 @@ class SourcingCreateSubmitAttemptTest < ActiveSupport::TestCase
     )
     po_line = po.purchase_order_lines.first
 
-    assert_raises(Sourcing::ValidatePoLineLink::ValidationError) do
+    assert_raises(Sourcing::CreateAttempt::CreateAttemptError) do
       Sourcing::CreateAttempt.call!(
         sourcing_run: @run,
         actor: @user,

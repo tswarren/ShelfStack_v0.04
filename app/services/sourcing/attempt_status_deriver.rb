@@ -2,30 +2,48 @@
 
 module Sourcing
   module AttemptStatusDeriver
+    QUANTITY_BUCKETS = VendorResponse::QUANTITY_FIELDS
+
     module_function
 
     def from_final_response(vendor_response)
       attempt = vendor_response.sourcing_attempt
-      total = vendor_response.quantity_total
       requested = attempt.quantity_requested
+      return nil unless vendor_response.quantity_total == requested
 
-      return "failed" if vendor_response.quantity_failed == requested
-      return "backordered" if vendor_response.quantity_backordered == requested && total == requested
-      return "confirmed" if vendor_response.quantity_confirmed == requested && total == requested
-      return "partially_confirmed" if total == requested
+      q = vendor_response
 
-      nil
+      return "confirmed" if q.quantity_confirmed == requested
+      return "backordered" if q.quantity_backordered == requested
+      return "canceled" if q.quantity_canceled == requested
+      return "failed" if q.quantity_failed == requested
+      return "failed" if q.quantity_unavailable == requested
+      return "failed" if q.quantity_substitute_offered == requested
+
+      return "partially_confirmed" if q.quantity_confirmed.positive?
+
+      "failed"
     end
 
     def response_status_from_quantities(vendor_response)
       q = vendor_response
-      return "failed" if q.quantity_failed.positive? && q.quantity_total == q.sourcing_attempt.quantity_requested && q.quantity_failed == q.quantity_total
-      return "backordered" if q.quantity_backordered == q.sourcing_attempt.quantity_requested
-      return "confirmed" if q.quantity_confirmed == q.sourcing_attempt.quantity_requested
-      return "substitute_offered" if q.quantity_substitute_offered.positive? && q.quantity_total == q.quantity_substitute_offered
-      return "mixed" if [ q.quantity_confirmed, q.quantity_backordered, q.quantity_unavailable, q.quantity_canceled, q.quantity_failed, q.quantity_substitute_offered ].count(&:positive?) > 1
+      requested = q.sourcing_attempt.quantity_requested
 
-      "partially_confirmed"
+      return "confirmed" if q.quantity_confirmed == requested
+      return "backordered" if q.quantity_backordered == requested
+      return "unavailable" if q.quantity_unavailable == requested
+      return "canceled" if q.quantity_canceled == requested
+      return "failed" if q.quantity_failed == requested
+      return "substitute_offered" if q.quantity_substitute_offered == requested
+
+      return "partially_confirmed" if q.quantity_confirmed.positive?
+      return "mixed" if quantity_bucket_count(q) > 1
+
+      "mixed"
+    end
+
+    def quantity_bucket_count(vendor_response)
+      QUANTITY_BUCKETS.count { |field| vendor_response.public_send(field).to_i.positive? }
     end
   end
 end

@@ -124,7 +124,7 @@ module Sourcing
 
       if quantity_confirmed.positive?
         if po_line.present?
-          ValidatePoLineLink.call!(
+          validate_po_line_link!(
             demand_line: locked_attempt.demand_line,
             purchase_order_line: po_line,
             quantity: quantity_confirmed
@@ -162,6 +162,16 @@ module Sourcing
       return true if quantity_confirmed.positive? && po_line.blank?
 
       false
+    end
+
+    def validate_po_line_link!(demand_line:, purchase_order_line:, quantity: nil)
+      ValidatePoLineLink.call!(
+        demand_line: demand_line,
+        purchase_order_line: purchase_order_line,
+        quantity: quantity
+      )
+    rescue ValidatePoLineLink::ValidationError => e
+      raise RecordResponseError, e.message
     end
 
     def build_preview(attempt)

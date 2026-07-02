@@ -206,4 +206,44 @@ class SourcingRecordVendorResponseTest < ActiveSupport::TestCase
     assert_equal @attempt.id, new_allocation.sourcing_attempt_id
     assert_equal response.id, new_allocation.vendor_response_id
   end
+
+  test "final all unavailable derives unavailable response and failed attempt" do
+    response = Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_unavailable: 3,
+      final_response: true
+    )
+
+    assert_equal "unavailable", response.response_status
+    assert_equal "failed", @attempt.reload.status
+    assert @attempt.buyer_review_required?
+    assert_equal "needs_review", @run.reload.status
+  end
+
+  test "final all canceled derives canceled response and attempt status" do
+    response = Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_canceled: 3,
+      final_response: true
+    )
+
+    assert_equal "canceled", response.response_status
+    assert_equal "canceled", @attempt.reload.status
+    assert @attempt.buyer_review_required?
+  end
+
+  test "final substitute offered only derives substitute_offered response and failed attempt" do
+    response = Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_substitute_offered: 3,
+      final_response: true
+    )
+
+    assert_equal "substitute_offered", response.response_status
+    assert_equal "failed", @attempt.reload.status
+    assert_not_equal "partially_confirmed", @attempt.status
+  end
 end
