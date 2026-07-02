@@ -60,12 +60,11 @@ module Shelfstack
 
     def cache_consistency_valid?(sample_limit: 25)
       InventoryBalance.limit(sample_limit).find_each.all? do |balance|
-        legacy = legacy_on_hand_reserved(balance)
         v0047 = DemandAllocations::AllocationQuantities.active_on_hand_for(
           store: balance.store,
           variant: balance.product_variant
         )
-        expected_reserved = legacy + v0047
+        expected_reserved = legacy_on_hand_reserved(balance) + v0047
         balance.quantity_reserved == expected_reserved &&
           balance.quantity_available == balance.quantity_on_hand - balance.quantity_reserved
       end
@@ -100,9 +99,7 @@ module Shelfstack
         next true if po_line.blank?
 
         open_qty = Purchasing::PoLineQuantitySummary.for(po_line).open_supply_before_allocation_claims
-        legacy_claimed = po_line.purchase_order_line_allocations
-                                .where(status: DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES)
-                                .sum(:quantity_allocated)
+        legacy_claimed = legacy_inbound_claimed_quantity(po_line)
         v0047_claimed = DemandAllocation.active_allocations.inbound_kind
                                         .where(purchase_order_line: po_line)
                                         .sum(:quantity_allocated)
@@ -124,9 +121,43 @@ module Shelfstack
     end
 
     def legacy_on_hand_reserved(balance)
-      InventoryReservation.active_on_hand
-                          .where(store: balance.store, product_variant: balance.product_variant)
-                          .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+      return 0 unless legacy_inventory_reservations_table?
+
+      ActiveRecord::Base.connection.select_value(
+        ActiveRecord::Base.sanitize_sql_array([
+          <<~SQL.squish,
+            SELECT COALESCE(SUM(quantity_reserved - quantity_fulfilled - quantity_released), 0)
+            FROM inventory_reservations
+            WHERE store_id = ? AND product_variant_id = ? AND status = 'active' AND reservation_type = 'on_hand_hold'
+          SQL
+          balance.store_id,
+          balance.product_variant_id
+        ])
+      ).to_i
+    end
+
+    def legacy_inbound_claimed_quantity(po_line)
+      return 0 unless legacy_po_line_allocations_table?
+
+      ActiveRecord::Base.connection.select_value(
+        ActiveRecord::Base.sanitize_sql_array([
+          <<~SQL.squish,
+            SELECT COALESCE(SUM(quantity_allocated), 0)
+            FROM purchase_order_line_allocations
+            WHERE purchase_order_line_id = ? AND status IN (?)
+          SQL
+          po_line.id,
+          DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES
+        ])
+      ).to_i
+    end
+
+    def legacy_inventory_reservations_table?
+      ActiveRecord::Base.connection.table_exists?(:inventory_reservations)
+    end
+
+    def legacy_po_line_allocations_table?
+      ActiveRecord::Base.connection.table_exists?(:purchase_order_line_allocations)
     end
 
     def report(strict: false)

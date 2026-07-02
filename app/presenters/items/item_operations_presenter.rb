@@ -73,18 +73,18 @@ module Items
       end
       inventory_eligible_variant = item.variants.find { |variant| inventory_eligible?(variant) }
 
-      if vendor_orderable_variant && allowed?("orders.purchase_requests.create")
+      if vendor_orderable_variant && allowed?("demand.create")
         actions << Action.new(
-          label: "Mark TBO",
-          url: new_orders_purchase_request_path(product_variant_id: vendor_orderable_variant.id),
-          permission_key: "orders.purchase_requests.create"
+          label: "Manual TBO",
+          url: new_demand_demand_line_path(product_variant_id: vendor_orderable_variant.id, capture_intent: "manual_tbo"),
+          permission_key: "demand.create"
         )
       end
 
       if vendor_orderable_variant && allowed?("orders.purchase_orders.create")
         actions << Action.new(
-          label: "Add to PO",
-          url: from_tbo_orders_purchase_orders_path,
+          label: "New PO",
+          url: new_orders_purchase_order_path,
           permission_key: "orders.purchase_orders.create"
         )
       end
@@ -201,24 +201,23 @@ module Items
     end
 
     def variant_drawer_actions(variant)
-      variant_actions(variant).reject { |action| %w[TBO Order].include?(action.label) }
+      variant_actions(variant).reject { |action| action.label == "Order" }
     end
 
     def variant_actions(variant)
       policy = ProductVariants::OperationalPolicy.for(variant)
       actions = []
-      if inventory_eligible?(variant) && policy.vendor_orderable? && allowed?("orders.purchase_requests.create")
+      if inventory_eligible?(variant) && policy.vendor_orderable? && allowed?("demand.create")
         actions << Action.new(
-          label: "TBO",
-          url: new_orders_purchase_request_path(product_variant_id: variant.id),
-          permission_key: "orders.purchase_requests.create"
+          label: "Manual TBO",
+          url: new_demand_demand_line_path(product_variant_id: variant.id, capture_intent: "manual_tbo"),
+          permission_key: "demand.create"
         )
       end
       if inventory_eligible?(variant) && policy.vendor_orderable? && allowed?("orders.purchase_orders.create")
-        vendor_id = suggested_vendor_id(variant)
         actions << Action.new(
-          label: "Order",
-          url: from_tbo_orders_purchase_orders_path(vendor_id.present? ? { vendor_id: vendor_id } : {}),
+          label: "New PO",
+          url: new_orders_purchase_order_path,
           permission_key: "orders.purchase_orders.create"
         )
       end

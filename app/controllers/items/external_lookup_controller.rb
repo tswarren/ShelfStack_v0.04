@@ -109,11 +109,10 @@ module Items
       draft = session[:add_item_draft] || {}
       if draft["return_to"] == Buybacks::LineMatchContext::RETURN_TO
         @match_context = Buybacks::LineMatchContext.from_draft(draft, store: current_store)
-      elsif draft["return_to"] == Customers::RequestMatchContext::RETURN_TO
-        @match_context = Customers::RequestMatchContext.new(
+      elsif draft["return_to"] == DemandLines::MatchContext::RETURN_TO
+        @match_context = DemandLines::MatchContext.new(
           return_to: draft["return_to"],
-          customer_request_id: draft["customer_request_id"],
-          line_id: draft["customer_request_line_id"],
+          demand_line_id: draft["demand_line_id"],
           store: current_store
         )
       end

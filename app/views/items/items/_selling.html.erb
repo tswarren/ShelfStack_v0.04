@@ -54,8 +54,8 @@
                 </button>
               <% end %>
               <%= link_to "Edit", edit_items_product_variant_path(variant, item_flow) %>
-              <% if Inventory::Eligibility.eligible?(variant) && Authorization.allowed?(user: current_user, permission_key: "orders.purchase_requests.create", store: current_store) %>
-                | <%= link_to "Mark TBO", new_orders_purchase_request_path(product_variant_id: variant.id) %>
+              <% if Inventory::Eligibility.eligible?(variant) && Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
+                | <%= link_to "Manual TBO", new_demand_demand_line_path(product_variant_id: variant.id, capture_intent: "manual_tbo") %>
               <% end %>
             </td>
           </tr>

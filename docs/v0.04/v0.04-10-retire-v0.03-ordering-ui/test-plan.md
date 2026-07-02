@@ -2,7 +2,9 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md).
+**In review** — implemented on branch `v04.10-retire-v0.03-ordering-ui-and-reports`. Mark **Complete** after merge to main.
+
+Companion to [spec.md](spec.md).
 
 ---
 

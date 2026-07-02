@@ -45,7 +45,7 @@ class PosCustomerWorkspaceTest < ActionDispatch::IntegrationTest
     assert_redirected_to pos_locked_out_path
   end
 
-  test "customers customer lookup still requires customer_requests.access" do
+  test "customers customer lookup requires customers or demand permission" do
     get customers_customer_lookup_path, params: { q: "POS Attach", mode: "search" }, as: :json
 
     assert_redirected_to customers_locked_out_path

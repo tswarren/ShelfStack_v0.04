@@ -2,7 +2,9 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`), v0.04-7 (`demand_allocations`), v0.04-8 (`sourcing_*`), v0.04-9 (PO/receipt quantity + conversion).
+**In review** — implemented on branch `v04.10-retire-v0.03-ordering-ui-and-reports` (G1 quarantine and G2 destructive drop delivered together on that branch). Mark **Complete** after merge to main.
+
+Depends on [v0.04-9 completion](../../implementation/v0.04-9-completion.md) (merged).
 
 ---
 
@@ -16,11 +18,17 @@
 | ----- | ------ | ---- | ----- |
 | `pos_transaction_lines` | `demand_allocation_id` | `bigint` FK → `demand_allocations`, nullable, indexed | Pickup line references active on_hand allocation |
 
-**Retain through G1**
+**Retain through G1 (branch delivers G1 + G2 together)**
 
 | Table | Column | Notes |
 | ----- | ------ | ----- |
-| `pos_transaction_lines` | `inventory_reservation_id` | Legacy pickup FK; staff paths retired G1; column dropped G2 if reservations dropped |
+| `pos_transaction_lines` | `inventory_reservation_id` | Legacy pickup FK; staff paths retired in G1; column dropped in G2 migration on this branch |
+
+**Dropped in G2 (same branch as G1)**
+
+| Table | Notes |
+| ----- | ----- |
+| `inventory_reservations` | Legacy reservation model; dropped with G2 migration — not retained post-merge on this branch |
 
 No change to `demand_allocations` — `fulfillment_reference_type` / `fulfillment_reference_id` already exist (v0.04-7).
 
@@ -34,7 +42,7 @@ customer_request_lines
 special_orders
 purchase_requests
 purchase_request_lines
-inventory_reservations          # conditional — see spec hard gate
+inventory_reservations          # dropped G2 on branch v04.10 (with G1)
 purchase_order_line_allocations
 receipt_line_allocations
 ```

@@ -4,13 +4,16 @@ require "test_helper"
 
 class Orders::ReceiptShowPresenterTest < ActiveSupport::TestCase
   include Phase7aTestHelper
+  include V0047TestHelper
 
   setup do
     Seeds::Phase7aPermissions.seed!
+    seed_v0047_permissions!
     seed_phase3_reference_data!
     seed_phase4_reference_data!
     @store = create_store!
     @user = create_user!
+    grant_v0047_allocation_permissions!(@user, store: @store)
     @vendor = create_vendor!
     @variant = create_product_variant!
     @customer = create_customer!
@@ -31,26 +34,25 @@ class Orders::ReceiptShowPresenterTest < ActiveSupport::TestCase
       ]
     )
     @po_line = @draft_po.purchase_order_lines.first
-    @customer_request = create_customer_request!(
+    @demand_line = DemandLines::Create.call!(
       store: @store,
-      created_by_user: @user,
+      actor: @user,
+      capture_intent: "special_order",
+      variant: @variant,
       customer: @customer,
-      lines: [ { request_type: "special_order" } ]
+      quantity: 1
     )
-    @cr_line = @customer_request.customer_request_lines.first
-    match_request_line!(line: @cr_line, variant: @variant, actor: @user)
-    @special_order = SpecialOrders::CreateFromRequestLine.call!(line: @cr_line, created_by_user: @user)
-    SpecialOrders::Approve.call!(special_order: @special_order, approved_by_user: @user)
-    SpecialOrders::AttachToPurchaseOrderLine.call!(
-      special_order: @special_order,
+    Purchasing::SubmitPurchaseOrder.call(purchase_order: @draft_po, submitted_by_user: @user)
+    DemandAllocations::AllocateInboundPurchaseOrder.call!(
+      demand_line: @demand_line,
       purchase_order_line: @po_line,
-      quantity: 1,
-      attached_by_user: @user
+      actor: @user,
+      quantity: 1
     )
     @receipt = Receipt.create!(
       store: @store,
       vendor: @vendor,
-      purchase_order: @draft_po,
+      purchase_order: @draft_po.reload,
       receipt_type: "po_backed",
       status: "draft",
       receipt_lines: [
@@ -111,21 +113,19 @@ class Orders::ReceiptShowPresenterTest < ActiveSupport::TestCase
 
   test "projected allocation rows omit nil entries when accepted qty is less than allocations" do
     customer_two = create_customer!
-    customer_request_two = create_customer_request!(
+    demand_line_two = DemandLines::Create.call!(
       store: @store,
-      created_by_user: @user,
+      actor: @user,
+      capture_intent: "special_order",
+      variant: @variant,
       customer: customer_two,
-      lines: [ { request_type: "special_order" } ]
+      quantity: 1
     )
-    cr_line_two = customer_request_two.customer_request_lines.first
-    match_request_line!(line: cr_line_two, variant: @variant, actor: @user)
-    special_order_two = SpecialOrders::CreateFromRequestLine.call!(line: cr_line_two, created_by_user: @user)
-    SpecialOrders::Approve.call!(special_order: special_order_two, approved_by_user: @user)
-    SpecialOrders::AttachToPurchaseOrderLine.call!(
-      special_order: special_order_two,
+    DemandAllocations::AllocateInboundPurchaseOrder.call!(
+      demand_line: demand_line_two,
       purchase_order_line: @po_line,
-      quantity: 1,
-      attached_by_user: @user
+      actor: @user,
+      quantity: 1
     )
     @receipt.receipt_lines.first.update!(quantity_accepted: 1)
 

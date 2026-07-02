@@ -17,6 +17,8 @@ module CustomersHelper
     "unfillable" => "Unfillable"
   }.freeze
 
+  DEMAND_QUEUE_LABELS = DemandLines::QueueScope::QUEUE_LABELS
+
   def customers_status_badge(status)
     css_class = customers_status_badge_class(status)
     tag.span(status.to_s.tr("_", " ").titleize, class: "ss-status-badge #{css_class}")
@@ -42,7 +44,7 @@ module CustomersHelper
   end
 
   def customers_queue_label(queue_key)
-    QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize)
+    DEMAND_QUEUE_LABELS.fetch(queue_key) { QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize) }
   end
 
   def customers_queue_link_label(queue_key, counts = nil)
@@ -71,30 +73,29 @@ module CustomersHelper
     active ? base : "#{base} ss-btn-secondary"
   end
 
-  def customers_request_match_context
-    @customers_request_match_context ||= Customers::RequestMatchContext.from_params(
+  def customers_demand_match_context
+    @customers_demand_match_context ||= DemandLines::MatchContext.from_params(
       params,
       store: current_store
     )
   end
 
-  def customers_request_match_params(context = customers_request_match_context)
+  def customers_demand_match_params(context = customers_demand_match_context)
     context.valid? ? context.param_hash : {}
   end
 
-  def customers_request_match_path_options(context = customers_request_match_context)
-    customers_request_match_params(context)
+  def customers_demand_match_path_options(context = customers_demand_match_context)
+    customers_demand_match_params(context)
   end
 
-  def customers_request_match_banner_label(context = customers_request_match_context)
+  def customers_demand_match_banner_label(context = customers_demand_match_context)
     context.banner_label if context.valid?
   end
 
-  def customers_request_match_link_params(customer_request:, line:, query: nil)
+  def customers_demand_match_link_params(demand_line:, query: nil)
     {
-      return_to: Customers::RequestMatchContext::RETURN_TO,
-      customer_request_id: customer_request.id,
-      line_id: line.id,
+      return_to: DemandLines::MatchContext::RETURN_TO,
+      demand_line_id: demand_line.id,
       q: query
     }.compact
   end

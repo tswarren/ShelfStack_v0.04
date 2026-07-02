@@ -3,8 +3,8 @@
 module Orders
   class PurchaseOrdersController < BaseController
     before_action :set_purchase_order, only: %i[show edit update submit cancel close receive]
-    before_action -> { authorize!("orders.purchase_orders.view") }, only: %i[index show from_tbo]
-    before_action -> { authorize!("orders.purchase_orders.create") }, only: %i[new create edit update from_tbo create_from_tbo]
+    before_action -> { authorize!("orders.purchase_orders.view") }, only: %i[index show]
+    before_action -> { authorize!("orders.purchase_orders.create") }, only: %i[new create edit update]
     before_action -> { authorize!("orders.purchase_orders.submit") }, only: :submit
     before_action -> { authorize!("orders.purchase_orders.cancel") }, only: :cancel
     before_action -> { authorize!("orders.purchase_orders.close") }, only: :close
@@ -120,67 +120,6 @@ module Orders
       redirect_to orders_purchase_order_path(@purchase_order), alert: e.message
     end
 
-    def from_tbo
-      load_form_collections
-      load_tbo_filter_collections
-      @view_mode = params[:view].presence_in(%w[vendor suggested]) || "vendor"
-      @vendor = Vendor.active_records.find_by(id: params[:vendor_id])
-      @sourced_only = ActiveModel::Type::Boolean.new.cast(params[:sourced_only])
-      @department_id = params[:department_id].presence
-      @format_id = params[:format_id].presence
-      @from_tbo_filters = tbo_filter_params
-
-      @tbo_rows = Purchasing::TboQueueRowBuilder.call(
-        store: orders_store,
-        vendor: @vendor,
-        sourced_only: @sourced_only,
-        department_id: @department_id,
-        format_id: @format_id
-      )
-
-      @tbo_groups = if @view_mode == "suggested"
-        @tbo_rows.group_by { |row| row.suggested_vendor.vendor&.id || :unassigned }
-      else
-        {}
-      end
-    end
-
-    def create_from_tbo
-      vendor = Vendor.active_records.find_by(id: params[:vendor_id])
-      if vendor.blank?
-        redirect_to from_tbo_orders_purchase_orders_path(tbo_filter_params), alert: "Vendor is required."
-        return
-      end
-
-      line_ids = Array(params[:purchase_request_line_ids]).map(&:to_i).uniq
-      request_lines = PurchaseRequestLine
-        .buildable_for_store(orders_store)
-        .where(id: line_ids)
-        .includes(:product_variant, :purchase_request)
-
-      if request_lines.empty?
-        redirect_to from_tbo_orders_purchase_orders_path(tbo_filter_params.merge(vendor_id: vendor.id)),
-          alert: "Select at least one TBO line."
-        return
-      end
-
-      purchase_order = Purchasing::BuildPurchaseOrder.call(
-        store: orders_store,
-        vendor: vendor,
-        created_by_user: current_user,
-        purchase_request_lines: request_lines,
-        notes: params[:notes].presence,
-        line_quantities: params.fetch(:line_quantities, {}).to_unsafe_h
-      )
-      PurchaseRequest.refresh_statuses_for_lines!(request_lines)
-
-      redirect_to orders_purchase_order_path(purchase_order),
-        notice: "Draft purchase order created from #{request_lines.size} TBO #{"line".pluralize(request_lines.size)}."
-    rescue Purchasing::BuildPurchaseOrder::BuildError => e
-      redirect_to from_tbo_orders_purchase_orders_path(tbo_filter_params.merge(vendor_id: params[:vendor_id])),
-        alert: e.message
-    end
-
     private
 
     def set_purchase_order
@@ -190,12 +129,8 @@ module Orders
           :receipts,
           purchase_order_lines: [
             :product_variant,
-            :purchase_request_line,
-            { receipt_lines: [ :receipt, :receiving_discrepancies ] },
-            { purchase_order_line_allocations: {
-              special_order: :customer,
-              customer_request_line: { customer_request: :customer }
-            } }
+            :demand_allocations,
+            { receipt_lines: [ :receipt, :receiving_discrepancies ] }
           ]
         )
       end
@@ -204,21 +139,6 @@ module Orders
 
     def load_form_collections
       @vendors = Vendor.active_records.order(:name)
-    end
-
-    def load_tbo_filter_collections
-      @departments = Department.active_records.order(:name)
-      @formats = Format.active_records.order(:name)
-    end
-
-    def tbo_filter_params
-      {
-        view: params[:view].presence_in(%w[vendor suggested]),
-        vendor_id: params[:vendor_id].presence,
-        sourced_only: params[:sourced_only].presence,
-        department_id: params[:department_id].presence,
-        format_id: params[:format_id].presence
-      }.compact
     end
 
     def assign_purchase_order_line_defaults(purchase_order)

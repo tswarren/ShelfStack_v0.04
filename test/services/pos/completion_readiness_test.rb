@@ -3,7 +3,9 @@
 require "test_helper"
 
 class Pos::CompletionReadinessTest < ActiveSupport::TestCase
+  include V0047TestHelper
   setup do
+    seed_v0047_permissions!
     @store = create_store!
     @workstation = create_workstation!(store: @store)
     @user = create_user!
@@ -272,5 +274,120 @@ class Pos::CompletionReadinessTest < ActiveSupport::TestCase
     )
 
     assert result.tender_ready?
+  end
+
+  test "blocks completion when linked demand allocation is stale" do
+    grant_v0047_allocation_permissions!(@user, store: @store)
+    demand_line = DemandLines::StartFromItem.call!(
+      store: @store,
+      variant: @variant,
+      actor: @user,
+      capture_intent: "hold",
+      quantity: 1,
+      customer: create_customer!
+    ).demand_line
+    allocation = demand_line.demand_allocations.active_allocations.on_hand_kind.first
+
+    pickup_transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        {
+          product_variant: @variant,
+          quantity: 1,
+          unit_price_cents: 1000,
+          extended_price_cents: 1000,
+          demand_allocation_id: allocation.id
+        }
+      ]
+    )
+    Pos::RecalculateTransaction.call!(pickup_transaction, business_date: @session.business_date)
+    DemandAllocations::Fulfill.call!(
+      allocation: allocation,
+      actor: @user,
+      fulfillment_reference: pickup_transaction.pos_transaction_lines.first
+    )
+
+    result = Pos::CompletionReadiness.check(
+      transaction: pickup_transaction.reload,
+      register_session: @session
+    )
+
+    assert result.blockers.any? { |check| check.key == :demand_allocation }
+  end
+
+  test "demand pickup line does not bypass reserved-stock checks when allocation is stale" do
+    grant_v0047_allocation_permissions!(@user, store: @store)
+    grant_permission!(@user, "pos.authorizations.grant", store: @store)
+
+    variant = create_product_variant!(
+      inventory_behavior: "standard_physical",
+      selling_price_cents: 1000,
+      sub_department: @variant.sub_department
+    )
+    receive_inventory!(store: @store, vendor: create_vendor!, variant: variant, user: @user, quantity: 2)
+
+    holding_demand = DemandLines::StartFromItem.call!(
+      store: @store,
+      variant: variant,
+      actor: @user,
+      capture_intent: "hold",
+      quantity: 1,
+      customer: create_customer!
+    ).demand_line
+    holding_allocation = holding_demand.demand_allocations.active_allocations.on_hand_kind.first
+
+    fulfilled_demand = DemandLines::StartFromItem.call!(
+      store: @store,
+      variant: variant,
+      actor: @user,
+      capture_intent: "hold",
+      quantity: 1,
+      customer: create_customer!
+    ).demand_line
+    stale_allocation = fulfilled_demand.demand_allocations.active_allocations.on_hand_kind.first
+    stale_line = PosTransaction.create!(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @user,
+      status: "completed"
+    ).pos_transaction_lines.create!(
+      line_number: 1,
+      line_type: "variant",
+      product_variant: variant,
+      quantity: 1,
+      unit_price_cents: variant.selling_price_cents,
+      demand_allocation: stale_allocation
+    )
+    DemandAllocations::Fulfill.call!(
+      allocation: stale_allocation,
+      actor: @user,
+      fulfillment_reference: stale_line
+    )
+
+    sale_transaction = create_pos_transaction!(
+      store: @store,
+      workstation: @workstation,
+      user: @user,
+      lines: [
+        {
+          product_variant: variant,
+          quantity: 2,
+          unit_price_cents: 1000,
+          extended_price_cents: 2000,
+          demand_allocation_id: stale_allocation.id
+        }
+      ]
+    )
+    Pos::RecalculateTransaction.call!(sale_transaction, business_date: @session.business_date)
+
+    result = Pos::CompletionReadiness.check(
+      transaction: sale_transaction.reload,
+      register_session: @session
+    )
+
+    assert holding_allocation.reload.active?
+    assert result.blockers.any? { |check| check.key == :reserved_stock_auth }
   end
 end

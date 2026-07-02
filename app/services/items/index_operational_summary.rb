@@ -62,18 +62,24 @@ module Items
         Action.new(label: "View", url: presenter.show_path, permission_key: nil)
       ]
 
-      eligible_variant = presenter.variants.find { |variant| Inventory::Eligibility.eligible?(variant) }
-      if eligible_variant && allowed?("orders.purchase_requests.create")
+      vendor_orderable_variant = presenter.variants.find do |variant|
+        Inventory::Eligibility.eligible?(variant) && ProductVariants::OperationalPolicy.for(variant).vendor_orderable?
+      end
+
+      if vendor_orderable_variant && allowed?("demand.create")
         actions << Action.new(
           label: "TBO",
-          url: Rails.application.routes.url_helpers.new_orders_purchase_request_path(product_variant_id: eligible_variant.id),
-          permission_key: "orders.purchase_requests.create"
+          url: Rails.application.routes.url_helpers.new_demand_demand_line_path(
+            product_variant_id: vendor_orderable_variant.id,
+            capture_intent: "manual_tbo"
+          ),
+          permission_key: "demand.create"
         )
       end
-      if eligible_variant && allowed?("orders.purchase_orders.create")
+      if vendor_orderable_variant && allowed?("orders.purchase_orders.create")
         actions << Action.new(
           label: "Order",
-          url: Rails.application.routes.url_helpers.from_tbo_orders_purchase_orders_path,
+          url: Rails.application.routes.url_helpers.new_orders_purchase_order_path,
           permission_key: "orders.purchase_orders.create"
         )
       end

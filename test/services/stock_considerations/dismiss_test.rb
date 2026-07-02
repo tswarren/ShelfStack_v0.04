@@ -55,8 +55,8 @@ class StockConsiderationsDismissTest < ActiveSupport::TestCase
     end
   end
 
-  test "dismiss does not create demand or legacy rows" do
-    assert_no_difference [ -> { DemandLine.count }, -> { CustomerRequest.count } ] do
+  test "dismiss does not create demand rows" do
+    assert_no_difference -> { DemandLine.count } do
       StockConsiderations::Dismiss.call!(
         consideration: @consideration,
         actor: @user,

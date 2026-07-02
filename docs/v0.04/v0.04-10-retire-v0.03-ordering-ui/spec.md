@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — scoping complete. Depends on [v0.04-9 completion](../../implementation/v0.04-9-completion.md) (merged).
+**In review** — implemented on branch `v04.10-retire-v0.03-ordering-ui-and-reports`. Mark **Complete** after merge to main.
 
 Companion documents: [data-model.md](data-model.md), [test-plan.md](test-plan.md).
 

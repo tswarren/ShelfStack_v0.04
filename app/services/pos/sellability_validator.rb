@@ -68,7 +68,7 @@ module Pos
     end
 
     def check_reserved_stock!(line, variant)
-      return if line.inventory_reservation_id.present?
+      return if line.demand_allocation_id.present?
       return if reserved_stock_override_granted?
 
       reserved = Inventory::Availability.reserved(store: transaction.store, variant: variant)

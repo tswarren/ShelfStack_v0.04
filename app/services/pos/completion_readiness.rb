@@ -7,6 +7,7 @@ module Pos
     STRUCTURAL_KEYS = %i[
       register_session
       lines
+      demand_allocation
       discount_auth
       no_receipt_return
       cash_refund_auth
@@ -93,6 +94,7 @@ module Pos
       checks = [
         register_session_check,
         lines_check,
+        demand_allocation_check,
         inactive_check,
         reserved_stock_authorization_check,
         discount_authorization_check,
@@ -142,6 +144,24 @@ module Pos
       end
     end
 
+    def demand_allocation_check
+      stale_line = transaction.pos_transaction_lines.find do |line|
+        next false if line.demand_allocation_id.blank?
+
+        !AddDemandAllocationLine.pickup_ready?(line.demand_allocation)
+      end
+
+      return if stale_line.blank?
+
+      Check.new(
+        key: :demand_allocation,
+        status: :block,
+        message: "Demand pickup on line #{stale_line.line_number} is no longer valid; remove the line or refresh pickup",
+        action_key: nil,
+        action_label: nil
+      )
+    end
+
     def inactive_check
       warnings = SellabilityValidator.warnings_for(transaction)
       if warnings.empty?
@@ -179,7 +199,7 @@ module Pos
       transaction.pos_transaction_lines.any? do |line|
         next false unless line.variant_line?
         next false if line.product_variant.blank?
-        next false if line.inventory_reservation_id.present?
+        next false if AddDemandAllocationLine.pickup_ready?(line.demand_allocation)
 
         variant = line.product_variant
         reserved = Inventory::Availability.reserved(store: transaction.store, variant: variant)

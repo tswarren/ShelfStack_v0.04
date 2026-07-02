@@ -3,8 +3,6 @@
 module DemandAllocations
   class InboundAvailability
     ELIGIBLE_PO_LINE_STATUSES = PurchaseOrderLine::STATUSES.reject { |s| %w[received cancelled closed_short closed].include?(s) }.freeze
-    LEGACY_OPEN_ALLOCATION_STATUSES = %w[active partially_received].freeze
-
     def self.available_for(purchase_order_line:)
       new(purchase_order_line:).available_for
     end
@@ -19,18 +17,11 @@ module DemandAllocations
 
     def raw_open_for_inbound_allocation
       summary = Purchasing::PoLineQuantitySummary.for(purchase_order_line)
-      open_qty = summary.open_supply_before_allocation_claims
-      open_qty - legacy_claimed_quantity - v0047_inbound_claimed_quantity
+      summary.open_supply_before_allocation_claims - v0047_inbound_claimed_quantity
     end
 
     def overclaimed_quantity
       [ -raw_open_for_inbound_allocation, 0 ].max
-    end
-
-    def legacy_claimed_quantity
-      purchase_order_line.purchase_order_line_allocations
-                         .where(status: LEGACY_OPEN_ALLOCATION_STATUSES)
-                         .sum(:quantity_allocated)
     end
 
     def v0047_inbound_claimed_quantity

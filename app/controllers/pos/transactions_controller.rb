@@ -9,7 +9,7 @@ module Pos
     before_action :authorize_no_receipt_return_line!, only: %i[add_line add_open_ring_line]
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.lines.update") }, only: %i[update_line]
-    before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
+    before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_demand_allocation_line
     before_action -> { authorize_pos!("pos.gift_cards.issue") }, only: %i[add_gift_card_sale_line update_gift_card_sale_line]
     before_action -> { authorize_pos!("pos.discounts.line.apply") }, only: :apply_line_discount
     before_action -> { authorize_pos!("pos.discounts.transaction.apply") }, only: :apply_transaction_discount
@@ -26,18 +26,18 @@ module Pos
     before_action -> { authorize_pos!("pos.transactions.void") }, only: %i[void]
     before_action -> { authorize_pos!("pos.transactions.cancel") }, only: %i[cancel]
     before_action :set_transaction, only: %i[
-      show edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
+      show edit update add_line add_demand_allocation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount void_discount_application
       apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override attach_customer detach_customer
       sync_tenders complete completed suspend resume void cancel readiness_preview route_command
     ]
     before_action :ensure_editable, only: %i[
-      edit update add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
+      edit update add_line add_demand_allocation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line apply_line_discount apply_transaction_discount
       void_discount_application apply_tax_exemption void_tax_exemption apply_line_tax_override void_line_tax_override sync_tenders route_command attach_customer detach_customer
     ]
     before_action :load_edit_context, only: %i[
-      edit add_line add_reservation_line add_open_ring_line add_gift_card_sale_line add_return_line
+      edit add_line add_demand_allocation_line add_open_ring_line add_gift_card_sale_line add_return_line
       update_line update_gift_card_sale_line remove_line sync_tenders route_command
     ]
 
@@ -166,19 +166,17 @@ module Pos
       respond_to_workspace(notice: "Line added.")
     end
 
-    def add_reservation_line
-      reservation = InventoryReservation.find(params[:inventory_reservation_id])
-      quantity = params[:quantity].presence&.to_i
-      quantity = 1 if quantity.nil? || quantity <= 0
+    def add_demand_allocation_line
+      allocation = DemandAllocation.find(params[:demand_allocation_id])
 
-      Pos::AddReservationLine.call!(
+      Pos::AddDemandAllocationLine.call!(
         transaction: @transaction,
-        reservation: reservation,
+        allocation: allocation,
         added_by_user: current_user,
-        quantity: quantity
+        quantity: params[:quantity]
       )
       respond_to_workspace(notice: "Pickup line added.")
-    rescue Pos::AddReservationLine::Error => e
+    rescue Pos::AddDemandAllocationLine::Error => e
       respond_to_workspace(alert: e.message)
     end
 

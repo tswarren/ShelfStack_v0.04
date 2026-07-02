@@ -19,16 +19,14 @@ class DemandLinesStartFromItemTest < ActiveSupport::TestCase
 
   test "start from item creates demand line only for notify" do
     assert_difference -> { DemandLine.count }, 1 do
-      assert_no_difference [ -> { CustomerRequest.count }, -> { SpecialOrder.count } ] do
-        result = DemandLines::StartFromItem.call!(
-          store: @store,
-          variant: @variant,
-          actor: @user,
-          capture_intent: "notify",
-          customer: @customer
-        )
-        assert_nil result.allocation_result
-      end
+      result = DemandLines::StartFromItem.call!(
+        store: @store,
+        variant: @variant,
+        actor: @user,
+        capture_intent: "notify",
+        customer: @customer
+      )
+      assert_nil result.allocation_result
     end
   end
 

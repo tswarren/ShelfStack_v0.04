@@ -52,34 +52,7 @@ module Purchasing
     end
 
     def purchase_requests
-      requests_by_id = {}
-
-      purchase_order.purchase_order_lines.each do |line|
-        request_line = line.purchase_request_line
-        next if request_line.blank?
-
-        request = request_line.purchase_request
-        requests_by_id[request.id] ||= { request: request, count: 0 }
-        requests_by_id[request.id][:count] += 1
-      end
-
-      if requests_by_id.empty?
-        legacy_request_line_ids(purchase_order).each do |request_line_id|
-          request_line = PurchaseRequestLine.includes(:purchase_request).find_by(id: request_line_id)
-          next if request_line.blank?
-
-          request = request_line.purchase_request
-          requests_by_id[request.id] ||= { request: request, count: 0 }
-          requests_by_id[request.id][:count] += 1
-        end
-      end
-
-      requests_by_id.values
-        .sort_by { |entry| entry[:request].created_at }
-        .reverse
-        .map do |entry|
-          PurchaseRequestLink.new(purchase_request: entry[:request], line_count: entry[:count])
-        end
+      []
     end
 
     def legacy_request_line_ids(purchase_order)

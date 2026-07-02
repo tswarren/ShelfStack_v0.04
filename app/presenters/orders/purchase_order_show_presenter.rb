@@ -67,8 +67,8 @@ module Orders
       end
       flags << "Discrepancy" if discrepancy_line_ids.include?(line.id)
       breakdown = line_demand_breakdown(line)
-      if breakdown&.customer_allocated_quantity.to_i.positive?
-        qty = breakdown.customer_allocated_quantity
+      if breakdown&.demand_allocated_quantity.to_i.positive?
+        qty = breakdown.demand_allocated_quantity
         flags << "#{qty} for #{'customer'.pluralize(qty)}"
       end
       flags
@@ -79,7 +79,7 @@ module Orders
     end
 
     def customer_allocations_present?
-      line_demand_breakdowns.values.any? { |entry| entry.customer_allocated_quantity.positive? || entry.allocation_rows.any? }
+      line_demand_breakdowns.values.any? { |entry| entry.demand_allocated_quantity.positive? || entry.allocation_rows.any? }
     end
 
     def show_line_activity?

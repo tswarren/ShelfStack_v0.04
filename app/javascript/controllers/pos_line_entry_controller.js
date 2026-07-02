@@ -17,7 +17,7 @@ export default class extends Controller {
   static values = {
     url: String,
     addUrl: String,
-    addReservationUrl: String,
+    addDemandAllocationUrl: String,
     returnMode: { type: Boolean, default: false },
     mode: { type: String, default: "sale" },
     autoAdd: { type: Boolean, default: true },
@@ -114,18 +114,16 @@ export default class extends Controller {
   renderChoices(variants) {
     this.choicesTarget.innerHTML = ""
     variants.forEach((variant) => {
-      if (variant.ready_reservations?.length && !this.returnModeValue) {
-        variant.ready_reservations.forEach((reservation) => {
+      if (variant.ready_allocations?.length && !this.returnModeValue) {
+        variant.ready_allocations.forEach((allocation) => {
           const card = document.createElement("div")
           card.className = "ss-pos-choice-card ss-pos-pickup-card"
-          card.dataset.reservationId = reservation.id
-          card.innerHTML = this.pickupChoiceCardHtml(variant, reservation)
-          const addButton = card.querySelector("[data-add-reservation]")
+          card.dataset.allocationId = allocation.id
+          card.innerHTML = this.pickupChoiceCardHtml(variant, allocation)
+          const addButton = card.querySelector("[data-add-allocation]")
           addButton?.addEventListener("click", (event) => {
             event.preventDefault()
-            const qtyInput = card.querySelector("[data-pickup-qty]")
-            const quantity = parseInt(qtyInput?.value, 10) || 1
-            this.addReservation(reservation.id, quantity)
+            this.addDemandAllocation(allocation.id)
           })
           this.choicesTarget.appendChild(card)
         })
@@ -139,7 +137,7 @@ export default class extends Controller {
         card.innerHTML = this.choiceCardHtml(variant)
         card.addEventListener("click", () => this.selectVariant(variant, { autoAdd: true }))
         this.choicesTarget.appendChild(card)
-      } else if (!variant.ready_reservations?.length) {
+      } else if (!variant.ready_allocations?.length) {
         const card = document.createElement("button")
         card.type = "button"
         card.className = "ss-pos-choice-card"
@@ -150,20 +148,16 @@ export default class extends Controller {
     })
   }
 
-  pickupChoiceCardHtml(variant, reservation) {
+  pickupChoiceCardHtml(variant, allocation) {
     const price = `$${(variant.selling_price_cents / 100).toFixed(2)}`
-    const maxQty = reservation.quantity || 1
+    const qty = allocation.quantity || 1
     return `
       <strong class="ss-pos-choice-card__sku">${variant.sku}</strong>
       <span class="ss-pos-choice-card__name">${variant.name}</span>
-      <span class="ss-pos-choice-card__meta">Pickup for ${reservation.customer_name || "customer"} · Up to ${maxQty} · ${price}</span>
-      ${reservation.request_number ? `<span class="ss-pos-choice-card__meta">Request ${reservation.request_number}</span>` : ""}
+      <span class="ss-pos-choice-card__meta">Pickup for ${allocation.customer_name || "customer"} · Qty ${qty} · ${price}</span>
+      ${allocation.demand_number ? `<span class="ss-pos-choice-card__meta">Demand ${allocation.demand_number}</span>` : ""}
       <div class="ss-pos-pickup-card__actions">
-        <label class="ss-pos-pickup-card__qty">
-          <span class="visually-hidden">Pickup quantity</span>
-          <input type="number" min="1" max="${maxQty}" value="1" data-pickup-qty class="ss-input ss-input--small" />
-        </label>
-        <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-add-reservation data-reservation-id="${reservation.id}">
+        <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-add-allocation data-allocation-id="${allocation.id}">
           Add pickup
         </button>
       </div>
@@ -272,14 +266,13 @@ export default class extends Controller {
       .catch(() => this.showMessage("Unable to add line."))
   }
 
-  addReservation(reservationId, quantity = 1) {
-    if (!this.hasAddReservationUrlValue) return
+  addDemandAllocation(allocationId) {
+    if (!this.hasAddDemandAllocationUrlValue) return
 
     const body = new FormData()
-    body.append("inventory_reservation_id", reservationId)
-    body.append("quantity", quantity)
+    body.append("demand_allocation_id", allocationId)
 
-    fetch(this.addReservationUrlValue, {
+    fetch(this.addDemandAllocationUrlValue, {
       method: "POST",
       headers: {
         "X-CSRF-Token": this.csrfToken,

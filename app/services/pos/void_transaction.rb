@@ -48,7 +48,6 @@ module Pos
         transaction.update!(status: "voided", voided_at: pos_void.voided_at)
 
         PostVoidInventory.call(pos_void:, posted_by_user: voided_by_user)
-        ReverseReservationFulfillment.call!(transaction:, reversed_by_user: voided_by_user)
         reverse_tenders!(pos_void)
         ReverseStoredValueLedger.call!(
           transaction:,

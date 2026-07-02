@@ -3,10 +3,15 @@
 require "test_helper"
 
 class Purchasing::LineLookupPresenterTest < ActiveSupport::TestCase
+  include V0047TestHelper
+
   setup do
     seed_phase3_reference_data!
     seed_phase4_reference_data!
+    seed_v0047_permissions!
     @store = create_store!
+    @user = create_user!
+    grant_v0047_allocation_permissions!(@user, store: @store)
     @vendor = create_vendor!(default_supplier_discount_bps: 4000)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
     @variant.product.update!(list_price_cents: 2000)
@@ -18,11 +23,12 @@ class Purchasing::LineLookupPresenterTest < ActiveSupport::TestCase
       returnability_status: "returnable",
       active: true
     )
-    @request = PurchaseRequest.create!(store: @store, status: "open")
-    @request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 4,
-      status: "open"
+    @demand_line = DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "manual_tbo",
+      quantity: 4,
+      variant: @variant
     )
   end
 
@@ -42,18 +48,18 @@ class Purchasing::LineLookupPresenterTest < ActiveSupport::TestCase
     assert_equal 1200, row[:unit_cost_cents]
   end
 
-  test "open tbo quantity uses remaining quantity after partial order" do
-    create_purchase_order!(
+  test "open tbo quantity uses remaining quantity after partial inbound allocation" do
+    order = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      lines: [
-        create_purchase_order_line_attrs(
-          variant: @variant,
-          vendor: @vendor,
-          quantity_ordered: 1,
-          purchase_request_line: @request.purchase_request_lines.first
-        )
-      ]
+      attrs: { status: "submitted" },
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 1) ]
+    )
+    DemandAllocations::AllocateInboundPurchaseOrder.call!(
+      demand_line: @demand_line,
+      purchase_order_line: order.purchase_order_lines.first,
+      actor: @user,
+      quantity: 1
     )
 
     match = Purchasing::LineLookup::Match.new(variant: @variant, purchase_order_line: nil)
@@ -70,8 +76,6 @@ class Purchasing::LineLookupPresenterTest < ActiveSupport::TestCase
       lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 6) ]
     )
     po_line = order.purchase_order_lines.first
-    po_line.update_columns(quantity_received: 2, status: "partially_received")
-
     match = Purchasing::LineLookup::Match.new(variant: @variant, purchase_order_line: po_line)
     result = Purchasing::LineLookup::Result.new(status: :found, matches: [ match ], message: nil)
 
@@ -79,6 +83,6 @@ class Purchasing::LineLookupPresenterTest < ActiveSupport::TestCase
     row = json[:matches].first
 
     assert_equal po_line.id, row[:purchase_order_line_id]
-    assert_equal 4, row[:quantity_expected]
+    assert_equal 6, row[:quantity_expected]
   end
 end

@@ -85,14 +85,11 @@ module Inventory
     end
 
     def check_reserved_and_available!(balance, mismatches)
-      legacy_reserved = InventoryReservation.active_on_hand
-                                            .where(store: balance.store, product_variant: balance.product_variant)
-                                            .sum("quantity_reserved - quantity_fulfilled - quantity_released")
       v0047_reserved = DemandAllocations::AllocationQuantities.active_on_hand_for(
         store: balance.store,
         variant: balance.product_variant
       )
-      expected_reserved = legacy_reserved + v0047_reserved
+      expected_reserved = v0047_reserved
       if balance.quantity_reserved != expected_reserved
         mismatches << Mismatch.new(
           store_id: balance.store_id,

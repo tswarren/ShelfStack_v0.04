@@ -105,12 +105,12 @@ module Reports
         description: "Buyback sessions, payouts, and activity."
       ),
       ReportDefinition.new(
-        key: :customer_requests,
-        name: "Customer Request Queue",
+        key: :demand_queue,
+        name: "Demand Queue",
         group: "Customers",
-        path: :reports_customer_requests_path,
-        permission_key: "customer_requests.access",
-        description: "Open demand, special orders, and pickup readiness."
+        path: :reports_demand_queue_path,
+        permission_key: "demand.access",
+        description: "Operational demand queues for pickup, sourcing, and fulfillment."
       ),
       ReportDefinition.new(
         key: :stored_value,

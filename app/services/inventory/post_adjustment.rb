@@ -84,7 +84,7 @@ module Inventory
       adjustment.inventory_adjustment_lines.each do |line|
         next unless line.quantity_delta.positive?
 
-        CustomerRequests::SurfaceNotifyLines.for_variant(
+        DemandLines::SurfaceNotifyLines.for_variant(
           store: adjustment.store,
           variant: line.product_variant,
           actor: posted_by_user

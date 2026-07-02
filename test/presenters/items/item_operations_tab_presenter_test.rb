@@ -3,31 +3,30 @@
 require "test_helper"
 
 class Items::ItemOperationsTabPresenterTest < ActiveSupport::TestCase
+  include Phase7aTestHelper
+
   setup do
     seed_phase5_reference_data!
+    Seeds::V0046Permissions.seed!
     @store = create_store!
     @user = create_user!
-    @vendor = create_vendor!
+    grant_permission!(@user, "demand.access", store: @store)
     @product = create_product!
     @variant = create_product_variant!(product: @product)
     @item = Items::ItemPresenter.from_product(@product)
-    @request = PurchaseRequest.create!(store: @store, status: "open")
-    @request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 3,
-      status: "open"
-    )
+    create_manual_tbo_demand!(store: @store, actor: @user, variant: @variant, quantity: 3)
   end
 
-  test "lists open purchase request lines for item variants" do
+  test "metrics include open manual tbo count for item variants" do
     presenter = Items::ItemOperationsTabPresenter.new(
       item: @item,
       store: @store,
       user: @user
     )
 
-    assert_equal 1, presenter.open_purchase_request_lines.size
-    assert_equal @variant.id, presenter.open_purchase_request_lines.first.product_variant_id
+    tbo_metric = presenter.metrics.find { |metric| metric[:label] == "Open TBO" }
+    assert_equal 1, tbo_metric[:value]
+    assert_empty presenter.open_purchase_request_lines
   end
 
   test "sales history rows require pos transaction view permission" do

@@ -54,15 +54,12 @@
         <% end %>
         <td class="ss-search-action-cell">
           <% if local_assigns[:match_context]&.valid? &&
-                Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
+                Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
             <% if active_variants.size == 1 %>
-              <%= button_to "Match to request",
-                    match_variant_customers_customer_request_path(match_context.request_record),
+              <%= button_to "Match to demand",
+                    match_variant_demand_demand_line_path(match_context.demand_line),
                     method: :post,
-                    params: {
-                      line_id: match_context.line_id,
-                      product_variant_id: active_variants.first.id
-                    },
+                    params: { product_variant_id: active_variants.first.id },
                     class: "ss-btn ss-btn-small" %>
             <% elsif active_variants.any? %>
               <%= link_to "Pick variant",

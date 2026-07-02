@@ -31,9 +31,10 @@ Rails.application.routes.draw do
     get "stored_value", to: "stored_value#show"
     get "inventory_value", to: "inventory_value#show"
     get "purchasing_summary", to: "purchasing_summary#show"
-    get "customer_requests", to: "customer_requests#show"
+    get "demand_queue", to: "demand_queue#show"
+    get "legacy_customer_requests", to: redirect("/reports/demand_queue")
     get "shells/reconciliation", to: redirect("/reports/tax_collected")
-    get "shells/queue", to: redirect("/reports/customer_requests")
+    get "shells/queue", to: redirect("/reports/demand_queue")
   end
 
   namespace :items do
@@ -363,21 +364,7 @@ Rails.application.routes.draw do
       end
       resources :contact_events, only: %i[create]
     end
-    resources :customer_requests do
-      member do
-        patch :cancel
-        patch :mark_unfillable
-        post :match_variant
-        patch :update_line_type
-        post :mark_awaiting_response
-        post :create_special_order
-        post :create_hold
-        post :release_hold
-        post :attach_special_order
-        post :build_purchase_order_from_special_order
-        post :record_contact
-      end
-    end
+    get "requests", to: redirect("/demand"), as: :customers_customer_requests
     resources :stored_value_accounts do
       collection do
         get :lookup
@@ -444,18 +431,8 @@ Rails.application.routes.draw do
     get "locked_out", to: "home#locked_out"
     resource :variant_lookup, only: %i[show]
     resource :line_lookup, only: %i[show]
-    resources :purchase_requests do
-      member do
-        patch :cancel
-        get :build_purchase_order
-        post :create_purchase_order
-      end
-    end
+    get "manual_tbo", to: redirect("/demand?capture_intent=manual_tbo"), as: :orders_purchase_requests
     resources :purchase_orders do
-      collection do
-        get :from_tbo
-        post :create_from_tbo
-      end
       member do
         patch :submit
         patch :cancel
@@ -484,7 +461,7 @@ Rails.application.routes.draw do
     post "workspace/add_return_line", to: "workspace_lines#add_return_line"
     post "workspace/add_no_receipt_line", to: "workspace_lines#add_no_receipt_line"
     post "workspace/add_open_ring_line", to: "workspace_lines#add_open_ring_line"
-    post "workspace/add_reservation_line", to: "workspace_lines#add_reservation_line"
+    post "workspace/add_demand_allocation_line", to: "workspace_lines#add_demand_allocation_line"
     get "locked_out", to: "home#locked_out"
     resource :line_lookup, only: %i[show]
     resource :return_lookup, only: %i[show]
@@ -509,7 +486,7 @@ Rails.application.routes.draw do
         patch :void
         patch :cancel
         post :add_line
-        post :add_reservation_line
+        post :add_demand_allocation_line
         post :add_return_line
         post :add_open_ring_line
         post :add_gift_card_sale_line

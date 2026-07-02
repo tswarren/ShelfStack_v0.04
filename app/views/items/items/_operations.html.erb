@@ -83,14 +83,11 @@
               Details
             </button>
             <% if request_match_context.valid? &&
-                  Authorization.allowed?(user: current_user, permission_key: "customer_requests.update", store: current_store) %>
+                  Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
               <%= button_to "Match",
-                    match_variant_customers_customer_request_path(request_match_context.request_record),
+                    match_variant_demand_demand_line_path(request_match_context.demand_line),
                     method: :post,
-                    params: {
-                      line_id: request_match_context.line_id,
-                      product_variant_id: row.variant.id
-                    },
+                    params: { product_variant_id: row.variant.id },
                     class: "ss-btn ss-btn-small" %>
             <% end %>
           </td>

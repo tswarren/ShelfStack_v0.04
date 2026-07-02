@@ -25,9 +25,7 @@ class PosTransactionLine < ApplicationRecord
   belongs_to :normal_store_tax_rate, class_name: "StoreTaxRate", optional: true
   belongs_to :source_transaction, class_name: "PosTransaction", optional: true
   belongs_to :source_transaction_line, class_name: "PosTransactionLine", optional: true
-  belongs_to :customer_request_line, optional: true
-  belongs_to :special_order, optional: true
-  belongs_to :inventory_reservation, optional: true
+  belongs_to :demand_allocation, optional: true
   belongs_to :stored_value_account, optional: true
   belongs_to :stored_value_identifier, optional: true
 

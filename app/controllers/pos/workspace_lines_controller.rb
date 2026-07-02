@@ -7,7 +7,7 @@ module Pos
     before_action -> { authorize_pos!("pos.lines.add") }, only: :add_no_receipt_line
     before_action :authorize_no_receipt_return_line!, only: :add_open_ring_line
     before_action -> { authorize_pos!("pos.lines.add.open_ring") }, only: :add_open_ring_line
-    before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_reservation_line
+    before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }, only: :add_demand_allocation_line
 
     def add_return_line
       transaction = ensure_workspace_draft!
@@ -57,24 +57,22 @@ module Pos
       redirect_to pos_root_path, alert: e.message
     end
 
-    def add_reservation_line
+    def add_demand_allocation_line
       transaction = ensure_workspace_draft!
       return if performed?
 
-      reservation = InventoryReservation.find(params[:inventory_reservation_id])
-      quantity = params[:quantity].presence&.to_i
-      quantity = 1 if quantity.nil? || quantity <= 0
+      allocation = DemandAllocation.find(params[:demand_allocation_id])
 
-      Pos::AddReservationLine.call!(
+      Pos::AddDemandAllocationLine.call!(
         transaction: transaction,
-        reservation: reservation,
+        allocation: allocation,
         added_by_user: current_user,
-        quantity: quantity
+        quantity: params[:quantity]
       )
       redirect_to edit_pos_transaction_path(transaction, mode: "sale"), notice: "Pickup line added."
     rescue ActiveRecord::RecordNotFound
-      redirect_to pos_root_path, alert: "Reservation not found."
-    rescue Pos::AddReservationLine::Error => e
+      redirect_to pos_root_path, alert: "Demand allocation not found."
+    rescue Pos::AddDemandAllocationLine::Error => e
       redirect_to pos_root_path, alert: e.message
     end
 

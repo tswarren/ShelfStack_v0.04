@@ -25,21 +25,4 @@ class Purchasing::DocumentAttentionTest < ActiveSupport::TestCase
 
     assert items.any? { |item| item.message.include?("still open to receive") }
   end
-
-  test "flags buildable purchase request lines" do
-    request = PurchaseRequest.create!(store: @store, status: "open")
-    request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 2,
-      status: "open"
-    )
-    hub = Purchasing::PurchaseRequestDocumentHub.call(request)
-
-    items = Purchasing::DocumentAttention.for_purchase_request(
-      purchase_request: request,
-      document_hub: hub
-    )
-
-    assert items.any? { |item| item.message.include?("buildable") }
-  end
 end

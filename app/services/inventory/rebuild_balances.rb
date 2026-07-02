@@ -44,7 +44,7 @@ module Inventory
         rebuilt += 1
       end
 
-      InventoryReservations::RebuildReservedQuantities.call!
+      Inventory::RebuildAvailabilityCache.for_all!
 
       AuditEvents.record!(
         actor: actor || User.find_by!(username: ShelfStack::SYSTEM_USERNAME),

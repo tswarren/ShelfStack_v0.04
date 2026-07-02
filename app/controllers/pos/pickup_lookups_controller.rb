@@ -5,10 +5,10 @@ module Pos
     before_action -> { authorize_pos!("pos.fulfill_customer_reservation") }
 
     def create
-      rows = CustomerPickupLookup.ready_for_store(
+      rows = DemandPickupLookup.ready_for_store(
         store: pos_store,
         query: params[:query],
-        request_number: params[:request_number]
+        demand_number: params[:demand_number].presence || params[:request_number]
       )
 
       render json: { pickups: PickupLookupPresenter.as_json(rows) }

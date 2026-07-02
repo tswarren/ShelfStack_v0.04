@@ -3,6 +3,8 @@
 require "test_helper"
 
 class OrdersPurchasingWorkflowIntegrationTest < ActionDispatch::IntegrationTest
+  include Phase7aTestHelper
+
   setup do
     seed_phase3_reference_data!
     seed_phase4_reference_data!
@@ -26,21 +28,14 @@ class OrdersPurchasingWorkflowIntegrationTest < ActionDispatch::IntegrationTest
     Current.store = @store
   end
 
-  test "tbo through receive and return to vendor workflow" do
-    request = PurchaseRequest.create!(store: @store, status: "open")
-    request_line = request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 8,
-      request_reason: "tbo",
-      status: "open"
-    )
+  test "manual tbo through receive and return to vendor workflow" do
+    create_manual_tbo_demand!(store: @store, actor: @user, variant: @variant, quantity: 8)
     assert_equal 0, InventoryBalance.where(store: @store, product_variant: @variant).count
 
-    order = Purchasing::BuildPurchaseOrder.call(
+    order = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      created_by_user: @user,
-      purchase_request_lines: [ request_line ]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 8) ]
     )
     Purchasing::SubmitPurchaseOrder.call(purchase_order: order, submitted_by_user: @user)
     po_line = order.purchase_order_lines.first
@@ -67,7 +62,6 @@ class OrdersPurchasingWorkflowIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal 8, balance.quantity_on_hand
     assert_equal 1200, balance.moving_average_unit_cost_cents
     assert_equal "received", order.reload.status
-    assert_equal "added_to_po", request_line.reload.status
 
     rtv = create_return_to_vendor!(
       store: @store,

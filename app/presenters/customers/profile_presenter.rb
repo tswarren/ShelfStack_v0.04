@@ -19,24 +19,23 @@ module Customers
     attr_reader :customer, :store, :user
 
     def open_request_count
-      @open_request_count ||= customer.customer_requests
-                                      .where(store: store)
-                                      .merge(CustomerRequest.open_requests)
-                                      .count
+      @open_request_count ||= DemandLine.where(store: store, customer: customer)
+                                        .where.not(status: DemandLine::TERMINAL_STATUSES)
+                                        .count
     end
 
     def active_hold_count
-      @active_hold_count ||= InventoryReservation.active_on_hand
-                                                 .where(store: store, customer: customer, reservation_type: "on_hand_hold")
-                                                 .count
+      @active_hold_count ||= DemandAllocation.active_allocations
+                                             .on_hand_kind
+                                             .joins(:demand_line)
+                                             .where(store: store, demand_lines: { customer_id: customer.id, capture_intent: "hold" })
+                                             .count
     end
 
     def ready_for_pickup_line_count
-      @ready_for_pickup_line_count ||= CustomerRequestLine.open_lines
-                                                          .joins(:customer_request)
-                                                          .where(customer_requests: { store_id: store.id, customer_id: customer.id })
-                                                          .where(status: "ready_for_pickup")
-                                                          .count
+      @ready_for_pickup_line_count ||= DemandLines::QueueScope.ready_for_pickup_relation(
+        DemandLine.where(store: store, customer: customer)
+      ).count
     end
 
     def can_create_demand?
@@ -44,35 +43,33 @@ module Customers
     end
 
     def can_create_request?
-      return false if can_create_demand?
-
-      Authorization.allowed?(user: user, permission_key: "customer_requests.create", store: store)
+      false
     end
 
     def can_record_contact?
-      Authorization.allowed?(user: user, permission_key: "customer_requests.contact", store: store)
+      Authorization.allowed?(user: user, permission_key: "customers.update", store: store)
     end
 
     def can_view_requests?
-      Authorization.allowed?(user: user, permission_key: "customer_requests.access", store: store)
+      Authorization.allowed?(user: user, permission_key: "demand.access", store: store)
     end
 
     def ready_pickups_path
-      Rails.application.routes.url_helpers.customers_customer_requests_path(
+      Rails.application.routes.url_helpers.demand_demand_lines_path(
         queue: "ready_for_pickup",
         q: customer.display_name
       )
     end
 
     def active_holds_path
-      Rails.application.routes.url_helpers.customers_customer_requests_path(
+      Rails.application.routes.url_helpers.demand_demand_lines_path(
         queue: "expiring_holds",
         q: customer.display_name
       )
     end
 
     def new_request_path
-      Rails.application.routes.url_helpers.new_customers_customer_request_path(customer_id: customer.id)
+      new_demand_path
     end
 
     def new_demand_path

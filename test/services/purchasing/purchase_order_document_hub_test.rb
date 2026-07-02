@@ -23,42 +23,6 @@ class Purchasing::PurchaseOrderDocumentHubTest < ActiveSupport::TestCase
     assert_equal 2, hub.receive_progress.open
   end
 
-  test "links purchase requests via purchase_request_line_id" do
-    request = PurchaseRequest.create!(store: @store, status: "open")
-    request_line = request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 4,
-      status: "open"
-    )
-    @purchase_order.purchase_order_lines.first.update!(purchase_request_line: request_line)
-
-    hub = Purchasing::PurchaseOrderDocumentHub.call(@purchase_order.reload)
-
-    assert_equal 1, hub.purchase_requests.size
-    assert_equal request.id, hub.purchase_requests.first.purchase_request.id
-    assert_equal 1, hub.purchase_requests.first.line_count
-  end
-
-  test "falls back to audit event for legacy purchase request links" do
-    request = PurchaseRequest.create!(store: @store, status: "open")
-    request_line = request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 4,
-      status: "added_to_po"
-    )
-    AuditEvents.record!(
-      actor: @user,
-      event_name: "purchase_order.created",
-      auditable: @purchase_order,
-      details: { "from_purchase_request_lines" => [ request_line.id ] }
-    )
-
-    hub = Purchasing::PurchaseOrderDocumentHub.call(@purchase_order)
-
-    assert_equal 1, hub.purchase_requests.size
-    assert_equal request.id, hub.purchase_requests.first.purchase_request.id
-  end
-
   test "aggregates receipt summaries and discrepancies" do
     receipt = create_receipt!(
       store: @store,

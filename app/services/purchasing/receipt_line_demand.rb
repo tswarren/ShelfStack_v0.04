@@ -5,9 +5,10 @@ module Purchasing
     def self.customer_reserved_open(purchase_order_line)
       return 0 if purchase_order_line.blank?
 
-      purchase_order_line.purchase_order_line_allocations.open_allocations.sum do |allocation|
-        allocation.quantity_allocated - allocation.quantity_received
-      end
+      DemandAllocation.active_allocations
+                      .inbound_kind
+                      .where(purchase_order_line: purchase_order_line)
+                      .sum(:quantity_allocated)
     end
   end
 end

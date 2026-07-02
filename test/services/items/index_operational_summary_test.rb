@@ -3,10 +3,14 @@
 require "test_helper"
 
 class Items::IndexOperationalSummaryTest < ActiveSupport::TestCase
+  include V0047TestHelper
+
   setup do
     seed_phase5_reference_data!
+    seed_v0047_permissions!
     @store = create_store!
     @user = create_user!
+    grant_v0047_allocation_permissions!(@user, store: @store)
     @product = create_product!
     @variant = create_product_variant!(product: @product)
     @item = Items::ItemPresenter.from_product(@product)
@@ -58,5 +62,21 @@ class Items::IndexOperationalSummaryTest < ActiveSupport::TestCase
     end
 
     assert_equal 1, snapshot_calls
+  end
+
+  test "includes manual tbo action for vendor-orderable variants" do
+    InventoryBalance.create!(store: @store, product_variant: @variant, quantity_on_hand: 1, quantity_available: 1, quantity_reserved: 0)
+    grant_permission!(@user, "demand.create", store: @store)
+
+    summaries = Items::IndexOperationalSummary.for(
+      store: @store,
+      user: @user,
+      results: [ @result ],
+      warning_summaries: {}
+    )
+
+    tbo_action = summaries.fetch(@item).actions.find { |action| action.label == "TBO" }
+    assert_includes tbo_action.url, "capture_intent=manual_tbo"
+    assert_includes tbo_action.url, "product_variant_id=#{@variant.id}"
   end
 end

@@ -63,10 +63,11 @@ module Purchasing
     end
 
     def apply_incoming_reserves!(results)
-      incoming = InventoryReservation.active_incoming
-                                       .where(store: store, product_variant_id: variant_ids)
-                                       .group(:product_variant_id)
-                                       .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+      incoming = DemandAllocation.active_allocations
+                                 .inbound_kind
+                                 .where(store: store, product_variant_id: variant_ids)
+                                 .group(:product_variant_id)
+                                 .sum(:quantity_allocated)
 
       results.each do |variant_id, bucket|
         reserved = incoming[variant_id] || 0

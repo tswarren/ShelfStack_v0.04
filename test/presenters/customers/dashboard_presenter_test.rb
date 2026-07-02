@@ -3,62 +3,46 @@
 require "test_helper"
 
 class CustomersDashboardPresenterTest < ActiveSupport::TestCase
-  include Phase7aTestHelper
+  include Phase4TestHelper
+  include V0047TestHelper
 
   setup do
-    Seeds::Phase7aPermissions.seed!
+    seed_v0047_permissions!
     @store = create_store!
     @user = create_user!
+    grant_v0047_allocation_permissions!(@user, store: @store)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
-    post_inventory_adjustment!(
-      create_inventory_adjustment!(
-        store: @store,
-        lines: [ { product_variant: @variant, quantity_delta: 1, line_number: 1 } ]
-      ),
-      user: @user
-    )
-    @customer = create_customer!
-    @request = create_customer_request!(
-      store: @store,
-      created_by_user: @user,
-      customer: @customer,
-      lines: [ { request_type: "hold" } ]
-    )
-    @line = @request.customer_request_lines.first
-    match_request_line!(line: @line, variant: @variant, actor: @user)
-  end
-
-  test "expiring holds urgency label ignores released holds" do
-    InventoryReservation.create!(
-      store: @store,
-      customer: @customer,
-      customer_request_line: @line,
-      product_variant: @variant,
-      reservation_type: "on_hand_hold",
-      status: "released",
-      quantity_reserved: 1,
-      reserved_by_user: @user,
-      reserved_at: 1.week.ago,
-      expires_at: 1.day.from_now,
-      release_reason: "staff_release"
-    )
-    active_hold = InventoryReservations::ReserveOnHand.call!(
+    receive_inventory!(store: @store, vendor: create_vendor!, variant: @variant, user: @user, quantity: 3)
+    @demand_line = DemandLines::StartFromItem.call!(
       store: @store,
       variant: @variant,
+      actor: @user,
+      capture_intent: "hold",
       quantity: 1,
-      reserved_by_user: @user,
-      customer: @customer,
-      customer_request_line: @line,
-      expires_at: 2.days.from_now
-    )
-    active_hold.update!(status: "ready")
+      customer: create_customer!
+    ).demand_line
+    @allocation = @demand_line.demand_allocations.active_allocations.on_hand_kind.first
+  end
+
+  test "ready_for_pickup card includes demand preview" do
+    presenter = Customers::DashboardPresenter.new(store: @store)
+    card = presenter.queue_cards.find { |queue_card| queue_card.key == "ready_for_pickup" }
+
+    assert card.count.positive?
+    row = card.preview_rows.find { |preview_row| preview_row.demand_number == @demand_line.demand_number }
+
+    assert_not_nil row
+    assert_equal "POS pickup", row.next_action_label
+  end
+
+  test "expiring holds urgency label uses active allocation expiry" do
+    @allocation.update!(expires_at: 2.days.from_now)
 
     presenter = Customers::DashboardPresenter.new(store: @store)
     card = presenter.queue_cards.find { |queue_card| queue_card.key == "expiring_holds" }
-    row = card.preview_rows.find { |preview_row| preview_row.request_number == @request.request_number }
+    row = card.preview_rows.find { |preview_row| preview_row.demand_number == @demand_line.demand_number }
 
-    assert_not_nil row, "Expected request in expiring_holds preview"
-    assert_includes row.urgency_label, I18n.l(active_hold.expires_at.to_date)
-    refute_includes row.urgency_label, I18n.l(1.day.from_now.to_date)
+    assert_not_nil row
+    assert_includes row.urgency_label, I18n.l(@allocation.expires_at.to_date)
   end
 end
