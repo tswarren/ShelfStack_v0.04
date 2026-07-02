@@ -219,28 +219,42 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     seed_phase5_reference_data!
     grant_all_phase5_permissions!(@user, store: @store)
     grant_permission!(@user, "inventory.ledger.view", store: @store)
-    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 1,
-      status: "open"
+    vendor = create_vendor!
+    PurchaseOrder.create!(
+      store: @store,
+      vendor: vendor,
+      status: "draft",
+      purchase_order_lines: [
+        PurchaseOrderLine.new(
+          line_number: 1,
+          product_variant: @variant,
+          vendor: vendor,
+          quantity_ordered: 1,
+          quantity_received: 0,
+          status: "open"
+        )
+      ]
     )
 
     get item_path(tab: "activity")
     assert_response :success
-    assert_match "TBO #", response.body
+    assert_match "PO #", response.body
     assert_match "Audit timeline", response.body
     assert_match "ss-collapsible-panel", response.body
   end
 
   test "overview shows attention panel when open tbo exists" do
     seed_phase5_reference_data!
+    Seeds::V0046Permissions.seed!
     grant_all_phase5_permissions!(@user, store: @store)
     grant_permission!(@user, "inventory.access", store: @store)
     grant_permission!(@user, "inventory.balances.view", store: @store)
-    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 2,
-      status: "open"
+    DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "manual_tbo",
+      variant: @variant,
+      quantity: 2
     )
 
     get item_path(tab: "overview")

@@ -92,30 +92,10 @@ module CustomersHelper
     context.banner_label if context.valid?
   end
 
-  def customers_request_match_context
-    @customers_request_match_context ||= Customers::RequestMatchContext.from_params(
-      params,
-      store: current_store
-    )
-  end
-
-  def customers_request_match_params(context = customers_request_match_context)
-    context.valid? ? context.param_hash : {}
-  end
-
-  def customers_request_match_path_options(context = customers_request_match_context)
-    customers_request_match_params(context)
-  end
-
-  def customers_request_match_banner_label(context = customers_request_match_context)
-    context.banner_label if context.valid?
-  end
-
-  def customers_request_match_link_params(customer_request:, line:, query: nil)
+  def customers_demand_match_link_params(demand_line:, query: nil)
     {
-      return_to: Customers::RequestMatchContext::RETURN_TO,
-      customer_request_id: customer_request.id,
-      line_id: line.id,
+      return_to: DemandLines::MatchContext::RETURN_TO,
+      demand_line_id: demand_line.id,
       q: query
     }.compact
   end

@@ -22,16 +22,11 @@ class CustomersCustomerLookupsControllerTest < ActionDispatch::IntegrationTest
     assert(body["customers"].any? { |row| row["id"] == @customer.id })
   end
 
-  test "create customer returns to request form with customer selected" do
-    return_to = new_customers_customer_request_path
-
+  test "create customer redirects to customer profile by default" do
     post customers_customers_path, params: {
-      return_to: return_to,
       customer: { display_name: "Return Flow Customer", email: "return@example.com" }
     }
 
-    assert_redirected_to "#{return_to}?customer_id=#{Customer.last.id}"
-    follow_redirect!
-    assert_response :success
+    assert_redirected_to customers_customer_path(Customer.last)
   end
 end

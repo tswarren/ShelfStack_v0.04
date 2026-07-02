@@ -7,12 +7,16 @@ class PosHelperPickupSummaryTest < ActionView::TestCase
   include Phase2TestHelper
   include Phase6TestHelper
   include Phase7aTestHelper
+  include V0047TestHelper
 
   setup do
     Seeds::Phase7aPermissions.seed!
+    seed_v0047_permissions!
     @store = create_store!
     @workstation = create_workstation!(store: @store)
     @user = create_user!
+    grant_v0047_allocation_permissions!(@user, store: @store)
+    grant_all_phase6_permissions!(@user, store: @store)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
     create_store_tax_category_rate!(store: @store, tax_category: @variant.sub_department.default_tax_category)
     post_inventory_adjustment!(
@@ -23,48 +27,33 @@ class PosHelperPickupSummaryTest < ActionView::TestCase
       user: @user
     )
     @customer = create_customer!(display_name: "Banner Pat")
-    @customer_request = create_customer_request!(
-      store: @store,
-      created_by_user: @user,
-      customer: @customer,
-      lines: [ { request_type: "hold" } ]
-    )
-    @line = @customer_request.customer_request_lines.first
-    match_request_line!(line: @line, variant: @variant, actor: @user)
-    @reservation = InventoryReservations::ReserveOnHand.call!(
+    @demand_line = DemandLines::StartFromItem.call!(
       store: @store,
       variant: @variant,
+      actor: @user,
+      capture_intent: "hold",
       quantity: 1,
-      reserved_by_user: @user,
-      customer: @customer,
-      customer_request_line: @line
-    )
+      customer: @customer
+    ).demand_line
+    @allocation = @demand_line.demand_allocations.active_allocations.on_hand_kind.first
     @transaction = PosTransaction.create!(
       store: @store,
       workstation: @workstation,
       cashier_user: @user,
       status: "draft"
     )
-    @transaction.pos_transaction_lines.create!(
-      line_number: 1,
-      line_type: "variant",
-      product_variant: @variant,
-      product: @variant.product,
-      quantity: 1,
-      unit_price_cents: @variant.selling_price_cents,
-      line_discount_cents: 0,
-      extended_price_cents: 0,
-      tax_cents: 0,
-      inventory_reservation: @reservation,
-      customer_request_line: @line
+    Pos::AddDemandAllocationLine.call!(
+      transaction: @transaction,
+      allocation: @allocation,
+      added_by_user: @user
     )
   end
 
-  test "pos_transaction_pickup_summary returns customer and request" do
+  test "pos_transaction_pickup_summary returns customer and demand number" do
     summary = pos_transaction_pickup_summary(@transaction)
 
     assert_equal "Banner Pat", summary.customer_name
-    assert_includes summary.request_numbers, @customer_request.request_number
+    assert_includes summary.request_numbers, @demand_line.demand_number
     assert_equal 1, summary.line_count
   end
 
@@ -73,6 +62,6 @@ class PosHelperPickupSummaryTest < ActionView::TestCase
     context = pos_line_pickup_context(line)
 
     assert_equal "Banner Pat", context.customer_name
-    assert_equal @customer_request.request_number, context.request_number
+    assert_equal @demand_line.demand_number, context.request_number
   end
 end

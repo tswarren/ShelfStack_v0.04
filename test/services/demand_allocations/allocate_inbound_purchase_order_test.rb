@@ -36,9 +36,7 @@ class DemandAllocationsAllocateInboundPurchaseOrderTest < ActiveSupport::TestCas
     assert_equal @qty_before, @po_line.quantity_ordered
     assert_equal "inbound_purchase_order", allocation.allocation_kind
     assert_equal "allocated", @demand_line.reload.status
-    assert_no_difference -> { PurchaseOrderLineAllocation.count } do
-      assert PurchaseOrderLineAllocation.none?
-    end
+    assert_equal 1, DemandAllocation.where(allocation_kind: "inbound_purchase_order", demand_line: @demand_line).count
   end
 
   test "rejects inbound allocation beyond unallocated demand quantity" do

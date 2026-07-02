@@ -20,8 +20,8 @@ class CustomerContactEvent < ApplicationRecord
   private
 
   def context_present
-    return if customer_id.present? || customer_request_id.present?
+    return if customer_id.present?
 
-    errors.add(:base, "Customer or customer request is required")
+    errors.add(:base, "Customer is required")
   end
 end

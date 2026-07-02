@@ -26,10 +26,10 @@ class StockConsiderationsCreateTest < ActiveSupport::TestCase
     assert AuditEvent.exists?(event_name: "stock_consideration.created", auditable: consideration)
   end
 
-  test "create does not change inventory or legacy demand" do
+  test "create does not change inventory or demand" do
     ledger_before = InventoryLedgerEntry.count
 
-    assert_no_difference [ -> { CustomerRequest.count }, -> { DemandLine.count } ] do
+    assert_no_difference -> { DemandLine.count } do
       StockConsiderations::Create.call!(
         store: @store,
         actor: @user,

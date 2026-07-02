@@ -36,7 +36,7 @@ class DemandLinesCreateTest < ActiveSupport::TestCase
   end
 
   test "create does not write legacy demand rows" do
-    assert_no_difference [ -> { CustomerRequest.count }, -> { SpecialOrder.count }, -> { PurchaseRequestLine.count } ] do
+    assert_difference -> { DemandLine.count }, 1 do
       DemandLines::Create.call!(
         store: @store,
         actor: @user,

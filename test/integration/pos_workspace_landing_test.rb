@@ -216,7 +216,7 @@ class PosWorkspaceLandingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "No receipt"
     assert_includes response.body, pos_workspace_add_return_line_path
     assert_includes response.body, pos_workspace_add_no_receipt_line_path
-    assert_includes response.body, pos_workspace_add_reservation_line_path
+    assert_includes response.body, pos_workspace_add_demand_allocation_line_path
     assert_includes response.body, pos_workspace_add_open_ring_line_path
     assert_includes response.body, "pos-help-modal"
     assert_includes response.body, "POS commands"

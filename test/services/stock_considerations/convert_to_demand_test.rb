@@ -39,8 +39,8 @@ class StockConsiderationsConvertToDemandTest < ActiveSupport::TestCase
     assert_equal @ledger_before, InventoryLedgerEntry.count
   end
 
-  test "convert does not create legacy demand rows" do
-    assert_no_difference [ -> { CustomerRequest.count }, -> { SpecialOrder.count }, -> { PurchaseRequestLine.count } ] do
+  test "convert does not create duplicate demand rows" do
+    assert_difference -> { DemandLine.count }, 1 do
       StockConsiderations::ConvertToDemand.call!(consideration: @consideration, actor: @user)
     end
   end

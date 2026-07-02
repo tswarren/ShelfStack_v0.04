@@ -72,6 +72,7 @@ module Customers
         store: store
       )
 
+      relation = relation.except(:distinct, :order)
       includes = [ :customer, :product_variant, { demand_allocations: [] } ]
 
       if queue_key == "expiring_holds"
@@ -85,9 +86,10 @@ module Customers
                 Arel.sql("demand_lines.needed_by_date ASC"),
                 Arel.sql("demand_lines.created_at ASC")
               )
-              .distinct
-              .limit(3)
+              .limit(20)
               .to_a
+              .uniq
+              .first(3)
     end
 
     def primary_item_summary(demand_line)

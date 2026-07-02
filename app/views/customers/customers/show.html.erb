@@ -58,34 +58,6 @@
   </p>
 <% end %>
 
-<h2>Open requests</h2>
-<% if @customer_requests.any? %>
-  <table class="ss-table">
-    <thead>
-      <tr>
-        <th>Request</th>
-        <th>Status</th>
-        <th>Lines</th>
-        <th>Created</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @customer_requests.each do |request| %>
-        <tr>
-          <td><%= request.request_number %></td>
-          <td><%= render "customers/shared/status_badge", status: request.status %></td>
-          <td class="ss-num"><%= request.customer_request_lines.size %></td>
-          <td><%= display_time(request.created_at) %></td>
-          <td><%= link_to "View", customers_customer_request_path(request) %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-<% else %>
-  <p class="ss-muted">No requests yet.</p>
-<% end %>
-
 <h2>Demand lines</h2>
 <% if @demand_lines.any? %>
   <table class="ss-table">

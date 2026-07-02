@@ -42,15 +42,13 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
 
   test "create hold from item operations creates demand line" do
     assert_difference -> { DemandLine.count }, 1 do
-      assert_no_difference -> { CustomerRequest.count } do
-        post items_demand_path, params: {
-          capture_intent: "hold",
-          product_variant_id: @variant.id,
-          customer_id: @customer.id,
-          quantity: 1,
-          expires_at: 14.days.from_now.to_date
-        }
-      end
+      post items_demand_path, params: {
+        capture_intent: "hold",
+        product_variant_id: @variant.id,
+        customer_id: @customer.id,
+        quantity: 1,
+        expires_at: 14.days.from_now.to_date
+      }
     end
 
     demand_line = DemandLine.order(:id).last
@@ -61,14 +59,12 @@ class ItemsCustomerDemandDrawerIntegrationTest < ActionDispatch::IntegrationTest
 
   test "create special order from item operations creates demand line only" do
     assert_difference -> { DemandLine.count }, 1 do
-      assert_no_difference [ -> { CustomerRequest.count }, -> { SpecialOrder.count } ] do
-        post items_demand_path, params: {
-          capture_intent: "special_order",
-          product_variant_id: @variant.id,
-          customer_id: @customer.id,
-          quantity: 1
-        }
-      end
+      post items_demand_path, params: {
+        capture_intent: "special_order",
+        product_variant_id: @variant.id,
+        customer_id: @customer.id,
+        quantity: 1
+      }
     end
 
     demand_line = DemandLine.order(:id).last

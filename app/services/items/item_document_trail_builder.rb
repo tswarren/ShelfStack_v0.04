@@ -20,7 +20,6 @@ module Items
       return [] if variant_ids.empty?
 
       events = []
-      events.concat(purchase_request_events(variant_ids))
       events.concat(purchase_order_events(variant_ids))
       events.concat(receipt_events(variant_ids))
       events.concat(rtv_events(variant_ids))
@@ -32,18 +31,7 @@ module Items
     attr_reader :item, :store
 
     def purchase_request_events(variant_ids)
-      PurchaseRequestLine
-        .joins(:purchase_request)
-        .includes(:purchase_request, :product_variant)
-        .where(product_variant_id: variant_ids, purchase_requests: { store_id: store.id })
-        .map do |line|
-          TrailNode.new(
-            label: "TBO ##{line.purchase_request.id} line #{line.line_number}",
-            href: orders_purchase_request_path(line.purchase_request),
-            meta: "#{line.product_variant.sku}, qty #{line.requested_quantity}, #{line.status}",
-            occurred_at: line.purchase_request.created_at
-          )
-        end
+      []
     end
 
     def purchase_order_events(variant_ids)

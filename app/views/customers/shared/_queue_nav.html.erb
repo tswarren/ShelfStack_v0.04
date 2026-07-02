@@ -1,10 +1,10 @@
 <div class="ss-detail-actions">
   <%= link_to customers_queue_link_label(nil, @queue_counts),
-        customers_customer_requests_path,
+        demand_root_path,
         class: customers_queue_link_class(nil) %>
-  <% CustomerRequests::QueueScope::QUEUE_KEYS.each do |queue| %>
+  <% DemandLines::QueueScope::OPERATIONAL_QUEUE_KEYS.each do |queue| %>
     <%= link_to customers_queue_link_label(queue, @queue_counts),
-          customers_customer_requests_path(queue: queue),
+          demand_demand_lines_path(queue: queue),
           class: customers_queue_link_class(queue) %>
   <% end %>
 </div>

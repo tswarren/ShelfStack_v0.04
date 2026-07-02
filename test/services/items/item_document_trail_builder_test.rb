@@ -10,18 +10,27 @@ class Items::ItemDocumentTrailBuilderTest < ActiveSupport::TestCase
     @user = create_user!
     @variant = create_product_variant!
     @item = Items::ItemPresenter.from_product(@variant.product)
-    @request = PurchaseRequest.create!(store: @store, status: "open")
-    @request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 2,
-      status: "open"
+    @purchase_order = PurchaseOrder.create!(
+      store: @store,
+      vendor: @vendor,
+      status: "draft",
+      purchase_order_lines: [
+        PurchaseOrderLine.new(
+          line_number: 1,
+          product_variant: @variant,
+          vendor: @vendor,
+          quantity_ordered: 2,
+          quantity_received: 0,
+          status: "open"
+        )
+      ]
     )
   end
 
   test "builds trail nodes for item variants" do
     nodes = Items::ItemDocumentTrailBuilder.for(item: @item, store: @store)
 
-    assert nodes.any? { |node| node.label.start_with?("TBO #") }
+    assert nodes.any? { |node| node.label.start_with?("PO #") }
     assert nodes.all?(&:occurred_at)
   end
 end

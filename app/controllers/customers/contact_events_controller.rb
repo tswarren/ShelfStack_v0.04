@@ -6,17 +6,18 @@ module Customers
     before_action -> { authorize!("customer_requests.contact") }, only: :create
 
     def create
-      CustomerRequests::RecordContact.call!(
-        actor: current_user,
+      CustomerContactEvent.create!(
         customer: @customer,
+        recorded_by_user: current_user,
         contact_method: params[:contact_method],
         direction: params[:direction] || "outbound",
         status: params[:status] || "attempted",
-        summary: params[:summary]
+        summary: params[:summary],
+        occurred_at: Time.current
       )
       redirect_to customers_customer_path(@customer), notice: "Contact recorded."
-    rescue CustomerRequests::RecordContact::RecordError => e
-      redirect_to customers_customer_path(@customer), alert: e.message
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to customers_customer_path(@customer), alert: e.record.errors.full_messages.to_sentence
     end
 
     private

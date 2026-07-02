@@ -14,17 +14,17 @@ class OrdersDocumentHubIntegrationTest < ActionDispatch::IntegrationTest
 
     @vendor = create_vendor!
     @variant = create_product_variant!
-    @purchase_request = PurchaseRequest.create!(store: @store, status: "open")
-    @request_line = @purchase_request.purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 4,
-      status: "open"
-    )
     @purchase_order = Purchasing::BuildPurchaseOrder.call(
       store: @store,
       vendor: @vendor,
       created_by_user: @user,
-      purchase_request_lines: [ @request_line ]
+      manual_lines: [
+        {
+          product_variant_id: @variant.id,
+          quantity_ordered: 4,
+          line_number: 1
+        }
+      ]
     )
     @purchase_order.purchase_order_lines.first.update!(
       quantity_received: 2,
@@ -84,20 +84,6 @@ class OrdersDocumentHubIntegrationTest < ActionDispatch::IntegrationTest
     assert_match "PO line alignment", response.body
     assert_match "Receiving discrepancies", response.body
     assert_match @variant.name, response.body
-    assert_lines_before_collapsible_audit
-  end
-
-  test "purchase request show uses progressive disclosure layout" do
-    get orders_purchase_request_path(@purchase_request)
-
-    assert_response :success
-    assert_select ".ss-metric-strip"
-    assert_select ".ss-document-layout"
-    assert_match "Buildable", response.body
-    assert_match "Open demand", response.body
-    assert_match "Related documents (detail)", response.body
-    assert_match @variant.name, response.body
-    assert_match "PO ##{@purchase_order.id}", response.body
     assert_lines_before_collapsible_audit
   end
 

@@ -12,22 +12,27 @@ class CustomersProfilePresenterTest < ActiveSupport::TestCase
     @customer = create_customer!
   end
 
-  test "counts open requests and exposes legacy action paths when demand.create absent" do
+  test "counts open demand lines and exposes demand path when demand.create granted" do
     user = create_user!
-    grant_permission!(user, "customer_requests.create", store: @store)
-    grant_permission!(user, "customer_requests.access", store: @store)
+    grant_permission!(user, "demand.create", store: @store)
+    grant_permission!(user, "demand.access", store: @store)
 
-    create_customer_request!(store: @store, created_by_user: user, customer: @customer)
+    DemandLines::CreateFromProvisional.call!(
+      store: @store,
+      actor: user,
+      customer: @customer,
+      provisional_title: "Open request"
+    )
 
     presenter = Customers::ProfilePresenter.build(customer: @customer, store: @store, user: user)
 
     assert_equal 1, presenter.open_request_count
-    assert presenter.can_create_request?
-    refute presenter.can_create_demand?
-    assert_includes presenter.new_request_path, "customer_id=#{@customer.id}"
+    refute presenter.can_create_request?
+    assert presenter.can_create_demand?
+    assert_includes presenter.new_demand_path, "customer_id=#{@customer.id}"
   end
 
-  test "demand-capable users get new demand path instead of legacy request" do
+  test "demand-capable users get new demand path" do
     user = create_user!
     grant_permission!(user, "demand.create", store: @store)
 

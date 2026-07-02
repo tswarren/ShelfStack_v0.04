@@ -3,36 +3,34 @@
 require "test_helper"
 
 class CustomersWorkspaceIntegrationTest < ActionDispatch::IntegrationTest
+  include Phase7aTestHelper
+
   setup do
     Seeds::Phase7aPermissions.seed!
+    Seeds::V0046Permissions.seed!
     @store = create_store!
     @workstation = create_workstation!(store: @store)
     @user = create_user!
     grant_all_phase7a_permissions!(@user, store: @store)
+    grant_permission!(@user, "demand.create", store: @store)
+    grant_permission!(@user, "demand.access", store: @store)
     login_user!(@user, workstation: @workstation)
   end
 
-  test "creates customer and customer request" do
+  test "creates customer and demand line" do
     post customers_customers_path, params: {
       customer: { display_name: "Jane Reader", email: "jane@example.com" }
     }
     assert_redirected_to customers_customer_path(Customer.last)
 
-    post customers_customer_requests_path, params: {
-      customer_request: {
-        customer_id: Customer.last.id,
-        source: "in_store",
-        customer_request_lines_attributes: {
-          "0" => {
-            request_type: "research",
-            requested_quantity: 1,
-            provisional_title: "Rare Book"
-          }
-        }
-      }
+    post demand_demand_lines_path, params: {
+      customer_id: Customer.last.id,
+      capture_intent: "research",
+      provisional_title: "Rare Book",
+      quantity: 1
     }
-    assert_redirected_to customers_customer_request_path(CustomerRequest.last)
-    assert CustomerRequest.last.request_number.present?
+    assert_redirected_to demand_demand_line_path(DemandLine.last)
+    assert DemandLine.last.demand_number.present?
   end
 
   test "denies access without permission" do

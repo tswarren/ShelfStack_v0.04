@@ -4,13 +4,16 @@ require "test_helper"
 
 class ItemOperationsPresenterTest < ActiveSupport::TestCase
   include Phase7aTestHelper
+  include V0047TestHelper
 
   setup do
     Seeds::V0046Permissions.seed!
+    seed_v0047_permissions!
     @store = create_store!
     @user = create_user!
     grant_permission!(@user, "demand.access", store: @store)
     grant_permission!(@user, "demand.create", store: @store)
+    grant_v0047_allocation_permissions!(@user, store: @store)
     @variant = create_product_variant!(inventory_behavior: "standard_physical")
     post_inventory_adjustment!(
       create_inventory_adjustment!(
@@ -20,21 +23,7 @@ class ItemOperationsPresenterTest < ActiveSupport::TestCase
       user: @user
     )
     @product = @variant.product
-    @customer_request = create_customer_request!(
-      store: @store,
-      created_by_user: @user,
-      lines: [ { request_type: "hold", provisional_title: "Ops hold" } ]
-    )
-    @line = @customer_request.customer_request_lines.first
-    match_request_line!(line: @line, variant: @variant, actor: @user)
-    @reservation = InventoryReservations::ReserveOnHand.call!(
-      store: @store,
-      variant: @variant,
-      quantity: 2,
-      reserved_by_user: @user,
-      customer_request_line: @line
-    )
-    @reservation.update!(status: "ready", quantity_fulfilled: 1)
+    create_hold_with_on_hand_allocation!(store: @store, actor: @user, variant: @variant, quantity: 2)
   end
 
   test "variant row includes customer demand actions" do
@@ -51,7 +40,7 @@ class ItemOperationsPresenterTest < ActiveSupport::TestCase
     assert row.demand_actions.map(&:drawer_key).include?("manual_tbo")
   end
 
-  test "ready_for_pickup_qty uses reservation remaining quantity" do
+  test "ready_for_pickup_qty uses active on-hand allocation quantity" do
     presenter = Items::ItemOperationsPresenter.new(
       item: Items::ItemPresenter.from_product(@product),
       store: @store,
@@ -59,7 +48,7 @@ class ItemOperationsPresenterTest < ActiveSupport::TestCase
     )
     row = presenter.variant_rows.find { |candidate| candidate.variant.id == @variant.id }
 
-    assert_equal 1, row.ready_for_pickup_qty
+    assert_equal 2, row.ready_for_pickup_qty
   end
 
   test "non-inventory variant omits order action" do
