@@ -70,11 +70,9 @@ module Purchasing
     end
 
     def resolved_closed_status(line)
-      if line.quantity_received.positive? && line.quantity_received < line.quantity_ordered
-        "closed_short"
-      else
-        "closed"
-      end
+      return "closed_short" if line.quantity_closed_short.to_i.positive?
+
+      "closed"
     end
   end
 end

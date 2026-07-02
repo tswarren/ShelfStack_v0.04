@@ -33,7 +33,7 @@ class PurchasingPoLineQuantitySummaryTest < ActiveSupport::TestCase
     summary = Purchasing::PoLineQuantitySummary.for(@po_line)
 
     assert_equal 0, summary.effective_inbound_supply
-    assert_equal "unconfirmed", summary.derive_vendor_quantity_state
+    assert_equal "canceled", summary.derive_vendor_quantity_state
   end
 
   test "recorded confirmed supply subtracts accepted and closed short" do

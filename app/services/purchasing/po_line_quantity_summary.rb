@@ -58,6 +58,7 @@ module Purchasing
       return "backordered" if backordered.positive?
       return "confirmed" if confirmed == ordered
       return "partially_confirmed" if confirmed.positive?
+      return "canceled" if ordered.positive?
 
       "unconfirmed"
     end

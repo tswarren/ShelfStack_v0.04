@@ -20,7 +20,7 @@ class PurchasingSyncPoLineVendorQuantitiesFromSourcingTest < ActiveSupport::Test
     @order = create_purchase_order!(
       store: @store,
       vendor: @vendor,
-      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5) ]
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 10) ]
     )
     Purchasing::SubmitPurchaseOrder.call(purchase_order: @order, submitted_by_user: @user)
     @po_line = @order.purchase_order_lines.first
@@ -52,6 +52,35 @@ class PurchasingSyncPoLineVendorQuantitiesFromSourcingTest < ActiveSupport::Test
     @po_line.reload
     assert_equal 3, @po_line.quantity_confirmed_by_vendor
     assert_equal 2, @po_line.quantity_backordered_by_vendor
+  end
+
+  test "final response sync releases inbound claims above confirmed supply" do
+    demand_b = create_open_demand_line!(store: @store, actor: @user, variant: @variant, quantity: 5)
+    DemandAllocations::AllocateInboundPurchaseOrder.call!(
+      demand_line: @demand_line, purchase_order_line: @po_line, actor: @user, quantity: 3
+    )
+    DemandAllocations::AllocateInboundPurchaseOrder.call!(
+      demand_line: demand_b, purchase_order_line: @po_line, actor: @user, quantity: 3
+    )
+    assert_equal 6, DemandAllocation.active_allocations.inbound_kind.where(purchase_order_line: @po_line).sum(:quantity_allocated)
+
+    demand_c = create_open_demand_line!(store: @store, actor: @user, variant: @variant, quantity: 10)
+    run = Sourcing::StartRun.call!(demand_line: demand_c, actor: @user, quantity: 10)
+    attempt = Sourcing::CreateAttempt.call!(sourcing_run: run, actor: @user, vendor: @vendor, quantity: 10)
+    Sourcing::SubmitAttempt.call!(sourcing_attempt: attempt, actor: @user)
+
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: attempt,
+      actor: @user,
+      purchase_order_line: @po_line,
+      quantity_confirmed: 2,
+      quantity_unavailable: 8,
+      final_response: true
+    )
+
+    @po_line.reload
+    assert_equal 2, @po_line.quantity_confirmed_by_vendor
+    assert_equal 2, DemandAllocation.active_allocations.inbound_kind.where(purchase_order_line: @po_line).sum(:quantity_allocated)
   end
 
   test "non-final response does not sync via record vendor response hook" do

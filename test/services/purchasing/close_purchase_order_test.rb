@@ -32,7 +32,7 @@ class Purchasing::ClosePurchaseOrderTest < ActiveSupport::TestCase
     @order.reload
     @line.reload
     assert_equal "closed", @order.status
-    assert_equal "closed", @line.status
+    assert_equal "closed_short", @line.status
     assert AuditEvent.exists?(event_name: "purchase_order.closed", auditable: @order)
   end
 
@@ -48,7 +48,18 @@ class Purchasing::ClosePurchaseOrderTest < ActiveSupport::TestCase
     assert_equal "closed", @order.reload.status
   end
 
-  test "closes fully received purchase order without open lines" do
+  test "closes unreceived open line as closed_short" do
+    assert_equal "open", @line.status
+    assert_equal 0, @line.quantity_received
+
+    Purchasing::ClosePurchaseOrder.call(purchase_order: @order, closed_by_user: @user)
+
+    @line.reload
+    assert_equal "closed_short", @line.status
+    assert_equal 5, @line.quantity_closed_short
+  end
+
+  test "closes fully received line as closed not closed_short" do
     @line.update_columns(quantity_received: 5, status: "received")
     @order.update_column(:status, "received")
 
@@ -58,6 +69,7 @@ class Purchasing::ClosePurchaseOrderTest < ActiveSupport::TestCase
     Purchasing::ClosePurchaseOrder.call(purchase_order: @order, closed_by_user: @user)
 
     assert_equal "received", @line.reload.status
+    assert_equal 0, @line.quantity_closed_short
     assert_equal "closed", @order.reload.status
   end
 

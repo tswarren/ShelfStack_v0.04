@@ -35,17 +35,14 @@ module Purchasing
 
     def line_status_for(po_line)
       summary = Purchasing::PoLineQuantitySummary.for(po_line)
-      if po_line.quantity_received >= po_line.quantity_ordered
-        "received"
-      elsif po_line.quantity_received.positive?
-        "partially_received"
-      elsif summary.vendor_quantities_recorded? && po_line.quantity_backordered_by_vendor.positive?
-        "backordered"
-      elsif summary.vendor_quantities_recorded? && po_line.quantity_canceled_by_vendor >= po_line.quantity_ordered
-        "cancelled"
-      else
-        po_line.status
-      end
+
+      return "closed_short" if po_line.quantity_closed_short.positive?
+      return "received" if summary.open_to_receive_quantity.zero? && po_line.quantity_received.positive?
+      return "partially_received" if po_line.quantity_received.positive?
+      return "backordered" if summary.vendor_quantities_recorded? && po_line.quantity_backordered_by_vendor.positive?
+      return "cancelled" if summary.vendor_quantities_recorded? && po_line.quantity_canceled_by_vendor >= po_line.quantity_ordered
+
+      po_line.status
     end
 
     def header_status_for(purchase_order)

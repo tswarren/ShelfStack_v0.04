@@ -88,9 +88,14 @@ module Sourcing
 
           po_line_for_sync = purchase_order_line || locked_attempt.purchase_order_line || response.purchase_order_line
           if po_line_for_sync.present?
-            Purchasing::SyncPoLineVendorQuantitiesFromSourcing.call!(
+            synced_po_line = Purchasing::SyncPoLineVendorQuantitiesFromSourcing.call!(
               purchase_order_line: po_line_for_sync,
               source_response: response
+            )
+            DemandAllocations::ReleaseUncoveredInbound.call!(
+              purchase_order_line: synced_po_line,
+              actor: actor,
+              release_reason: "vendor_canceled"
             )
           end
 
