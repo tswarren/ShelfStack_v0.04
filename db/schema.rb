@@ -1271,7 +1271,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.boolean "valid_check_digit"
     t.string "validation_family", null: false
     t.string "validation_message"
-    t.index ["normalized_identifier"], name: "index_product_identifiers_unique_active_gtin_house", unique: true, where: "((active = true) AND ((validation_family)::text = ANY ((ARRAY['gtin'::character varying, 'house'::character varying])::text[])))"
+    t.index ["normalized_identifier"], name: "index_product_identifiers_unique_active_gtin_house", unique: true, where: "((active = true) AND ((validation_family)::text = ANY (ARRAY[('gtin'::character varying)::text, ('house'::character varying)::text])))"
     t.index ["product_id", "validation_family", "freeform_scope", "normalized_identifier"], name: "index_product_identifiers_unique_active_freeform_per_product", unique: true, where: "((active = true) AND ((validation_family)::text = 'freeform'::text))"
     t.index ["product_id"], name: "index_product_identifiers_on_product_id"
     t.index ["product_id"], name: "index_product_identifiers_one_active_primary_per_product", unique: true, where: "((active = true) AND (primary_identifier = true))"
@@ -1837,7 +1837,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.index ["closed_by_user_id"], name: "index_sourcing_runs_on_closed_by_user_id"
     t.index ["demand_line_id", "status"], name: "index_sourcing_runs_on_demand_line_id_and_status"
     t.index ["demand_line_id"], name: "index_sourcing_runs_on_demand_line_id"
-    t.index ["demand_line_id"], name: "index_sourcing_runs_one_active_per_demand_line", unique: true, where: "((status)::text = ANY ((ARRAY['open'::character varying, 'partially_resolved'::character varying, 'needs_review'::character varying])::text[]))"
+    t.index ["demand_line_id"], name: "index_sourcing_runs_one_active_per_demand_line", unique: true, where: "((status)::text = ANY (ARRAY[('open'::character varying)::text, ('partially_resolved'::character varying)::text, ('needs_review'::character varying)::text]))"
     t.index ["product_id"], name: "index_sourcing_runs_on_product_id"
     t.index ["product_variant_id"], name: "index_sourcing_runs_on_product_variant_id"
     t.index ["started_by_user_id"], name: "index_sourcing_runs_on_started_by_user_id"
