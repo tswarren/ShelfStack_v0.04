@@ -21,6 +21,11 @@
   <% else %>
     <span class="disabled">Demand</span>
   <% end %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.access", store: current_store) %>
+    <%= link_to "Sourcing", sourcing_root_path, class: (request.path.start_with?("/sourcing") ? "active" : nil) %>
+  <% else %>
+    <span class="disabled">Sourcing</span>
+  <% end %>
   <% if Authorization.allowed?(user: current_user, permission_key: "customers.access", store: current_store) %>
     <%= link_to "Customers", customers_root_path, class: (request.path.start_with?("/customers") ? "active" : nil) %>
   <% else %>

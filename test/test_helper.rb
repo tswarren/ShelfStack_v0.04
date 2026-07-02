@@ -17,6 +17,7 @@ require_relative "../db/seeds/phase7c_buyback"
 require_relative "../db/seeds/phase852_permissions"
 require_relative "../db/seeds/v0046_permissions"
 require_relative "../db/seeds/v0047_permissions"
+require_relative "../db/seeds/v0048_permissions"
 require_relative "../db/seeds/phase4_inventory"
 require_relative "../db/seeds/phase5_inventory"
 require_relative "support/phase1_test_helper"
@@ -32,6 +33,7 @@ require_relative "support/phase7b_test_helper"
 require_relative "support/phase7c_test_helper"
 require_relative "support/v0042_test_helper"
 require_relative "support/v0047_test_helper"
+require_relative "support/v0048_test_helper"
 require_relative "support/pos_system_test_helper"
 
 module ActiveSupport
@@ -49,6 +51,7 @@ module ActiveSupport
     include Phase7cTestHelper
     include V0042TestHelper
     include V0047TestHelper
+    include V0048TestHelper
 
     parallelize(workers: 1)
 
@@ -71,4 +74,5 @@ class ActionDispatch::IntegrationTest
   include Phase7bTestHelper
   include Phase7cTestHelper
   include V0047TestHelper
+  include V0048TestHelper
 end

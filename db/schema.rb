@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_002003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -529,9 +529,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
     t.text "release_reason"
     t.datetime "released_at"
     t.bigint "released_by_user_id"
+    t.bigint "sourcing_attempt_id"
     t.string "status", default: "active", null: false
     t.bigint "store_id", null: false
     t.datetime "updated_at", null: false
+    t.bigint "vendor_response_id"
     t.index ["allocated_by_user_id"], name: "index_demand_allocations_on_allocated_by_user_id"
     t.index ["canceled_by_user_id"], name: "index_demand_allocations_on_canceled_by_user_id"
     t.index ["demand_line_id", "status"], name: "index_demand_allocations_on_demand_line_id_and_status"
@@ -544,10 +546,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
     t.index ["purchase_order_line_id", "status"], name: "index_demand_allocations_on_purchase_order_line_id_and_status"
     t.index ["purchase_order_line_id"], name: "index_demand_allocations_on_purchase_order_line_id"
     t.index ["released_by_user_id"], name: "index_demand_allocations_on_released_by_user_id"
+    t.index ["sourcing_attempt_id"], name: "index_demand_allocations_on_sourcing_attempt_id"
     t.index ["status", "expires_at"], name: "index_demand_allocations_on_status_and_expires_at"
     t.index ["store_id", "product_variant_id", "allocation_kind", "status"], name: "index_demand_allocations_on_store_variant_kind_status"
     t.index ["store_id", "status", "expires_at"], name: "index_demand_allocations_on_store_id_and_status_and_expires_at"
     t.index ["store_id"], name: "index_demand_allocations_on_store_id"
+    t.index ["vendor_response_id"], name: "index_demand_allocations_on_vendor_response_id"
     t.check_constraint "quantity_allocated > 0", name: "demand_allocations_quantity_positive"
   end
 
@@ -1923,6 +1927,94 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "sourcing_attempts", force: :cascade do |t|
+    t.boolean "buyer_review_required", default: false, null: false
+    t.text "cancel_reason"
+    t.datetime "canceled_at"
+    t.bigint "canceled_by_user_id"
+    t.string "cascade_reason"
+    t.datetime "created_at", null: false
+    t.bigint "demand_line_id", null: false
+    t.integer "estimated_unit_cost_cents_snapshot"
+    t.text "manual_override_reason"
+    t.boolean "manual_vendor_override", default: false, null: false
+    t.text "notes"
+    t.datetime "override_authorized_at"
+    t.bigint "override_authorized_by_user_id"
+    t.bigint "previous_sourcing_attempt_id"
+    t.bigint "product_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "product_variant_vendor_id"
+    t.bigint "product_vendor_id"
+    t.bigint "purchase_order_line_id"
+    t.integer "quantity_requested", null: false
+    t.datetime "response_due_at"
+    t.string "returnability_snapshot"
+    t.integer "sequence_number", null: false
+    t.string "source_level_snapshot"
+    t.bigint "source_record_id"
+    t.string "source_record_type"
+    t.bigint "sourcing_run_id", null: false
+    t.string "status", default: "pending", null: false
+    t.bigint "store_id", null: false
+    t.datetime "submitted_at"
+    t.bigint "submitted_by_user_id"
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.string "vendor_item_number_snapshot"
+    t.string "vendor_name_snapshot"
+    t.integer "vendor_priority_snapshot"
+    t.index ["canceled_by_user_id"], name: "index_sourcing_attempts_on_canceled_by_user_id"
+    t.index ["demand_line_id", "status"], name: "index_sourcing_attempts_on_demand_line_id_and_status"
+    t.index ["demand_line_id"], name: "index_sourcing_attempts_on_demand_line_id"
+    t.index ["override_authorized_by_user_id"], name: "index_sourcing_attempts_on_override_authorized_by_user_id"
+    t.index ["previous_sourcing_attempt_id"], name: "index_sourcing_attempts_on_previous_sourcing_attempt_id"
+    t.index ["product_id"], name: "index_sourcing_attempts_on_product_id"
+    t.index ["product_variant_id"], name: "index_sourcing_attempts_on_product_variant_id"
+    t.index ["product_variant_vendor_id"], name: "index_sourcing_attempts_on_product_variant_vendor_id"
+    t.index ["product_vendor_id"], name: "index_sourcing_attempts_on_product_vendor_id"
+    t.index ["purchase_order_line_id"], name: "index_sourcing_attempts_on_purchase_order_line_id"
+    t.index ["sourcing_run_id", "sequence_number"], name: "index_sourcing_attempts_on_run_and_sequence", unique: true
+    t.index ["sourcing_run_id"], name: "index_sourcing_attempts_on_sourcing_run_id"
+    t.index ["store_id", "vendor_id", "status"], name: "index_sourcing_attempts_on_store_id_and_vendor_id_and_status"
+    t.index ["store_id"], name: "index_sourcing_attempts_on_store_id"
+    t.index ["submitted_by_user_id"], name: "index_sourcing_attempts_on_submitted_by_user_id"
+    t.index ["vendor_id"], name: "index_sourcing_attempts_on_vendor_id"
+    t.check_constraint "quantity_requested > 0", name: "sourcing_attempts_quantity_positive"
+  end
+
+  create_table "sourcing_runs", force: :cascade do |t|
+    t.text "cancel_reason"
+    t.datetime "canceled_at"
+    t.bigint "canceled_by_user_id"
+    t.text "close_reason"
+    t.datetime "closed_at"
+    t.bigint "closed_by_user_id"
+    t.datetime "created_at", null: false
+    t.bigint "demand_line_id", null: false
+    t.text "notes"
+    t.bigint "product_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity_requested", null: false
+    t.datetime "started_at", null: false
+    t.bigint "started_by_user_id", null: false
+    t.string "status", default: "open", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["canceled_by_user_id"], name: "index_sourcing_runs_on_canceled_by_user_id"
+    t.index ["closed_by_user_id"], name: "index_sourcing_runs_on_closed_by_user_id"
+    t.index ["demand_line_id", "status"], name: "index_sourcing_runs_on_demand_line_id_and_status"
+    t.index ["demand_line_id"], name: "index_sourcing_runs_on_demand_line_id"
+    t.index ["demand_line_id"], name: "index_sourcing_runs_one_active_per_demand_line", unique: true, where: "((status)::text = ANY ((ARRAY['open'::character varying, 'partially_resolved'::character varying, 'needs_review'::character varying])::text[]))"
+    t.index ["product_id"], name: "index_sourcing_runs_on_product_id"
+    t.index ["product_variant_id"], name: "index_sourcing_runs_on_product_variant_id"
+    t.index ["started_by_user_id"], name: "index_sourcing_runs_on_started_by_user_id"
+    t.index ["store_id", "product_variant_id", "status"], name: "idx_on_store_id_product_variant_id_status_5135344dfe"
+    t.index ["store_id", "status", "started_at"], name: "index_sourcing_runs_on_store_id_and_status_and_started_at"
+    t.index ["store_id"], name: "index_sourcing_runs_on_store_id"
+    t.check_constraint "quantity_requested > 0", name: "sourcing_runs_quantity_positive"
+  end
+
   create_table "special_orders", force: :cascade do |t|
     t.datetime "approved_at"
     t.datetime "cancelled_at"
@@ -2268,6 +2360,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  create_table "vendor_responses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "expected_arrival_date"
+    t.date "expected_ship_date"
+    t.boolean "final_response", default: false, null: false
+    t.text "message"
+    t.text "notes"
+    t.bigint "purchase_order_line_id"
+    t.integer "quantity_backordered", default: 0, null: false
+    t.integer "quantity_canceled", default: 0, null: false
+    t.integer "quantity_confirmed", default: 0, null: false
+    t.integer "quantity_failed", default: 0, null: false
+    t.integer "quantity_substitute_offered", default: 0, null: false
+    t.integer "quantity_unavailable", default: 0, null: false
+    t.jsonb "raw_payload"
+    t.datetime "responded_at", null: false
+    t.bigint "responded_by_user_id", null: false
+    t.string "response_method", default: "manual", null: false
+    t.string "response_status", null: false
+    t.bigint "sourcing_attempt_id", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.string "vendor_reference"
+    t.index ["purchase_order_line_id"], name: "index_vendor_responses_on_purchase_order_line_id"
+    t.index ["responded_by_user_id"], name: "index_vendor_responses_on_responded_by_user_id"
+    t.index ["sourcing_attempt_id", "responded_at"], name: "index_vendor_responses_on_sourcing_attempt_id_and_responded_at"
+    t.index ["sourcing_attempt_id"], name: "index_vendor_responses_on_sourcing_attempt_id"
+    t.index ["store_id", "vendor_id", "responded_at"], name: "idx_on_store_id_vendor_id_responded_at_d295b2679e"
+    t.index ["store_id"], name: "index_vendor_responses_on_store_id"
+    t.index ["vendor_id"], name: "index_vendor_responses_on_vendor_id"
+  end
+
   create_table "vendor_terms", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -2398,6 +2523,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
   add_foreign_key "demand_allocations", "product_variants"
   add_foreign_key "demand_allocations", "products"
   add_foreign_key "demand_allocations", "purchase_order_lines"
+  add_foreign_key "demand_allocations", "sourcing_attempts"
   add_foreign_key "demand_allocations", "stores"
   add_foreign_key "demand_allocations", "users", column: "allocated_by_user_id"
   add_foreign_key "demand_allocations", "users", column: "canceled_by_user_id"
@@ -2405,6 +2531,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
   add_foreign_key "demand_allocations", "users", column: "fulfilled_by_user_id"
   add_foreign_key "demand_allocations", "users", column: "override_authorized_by_user_id"
   add_foreign_key "demand_allocations", "users", column: "released_by_user_id"
+  add_foreign_key "demand_allocations", "vendor_responses"
   add_foreign_key "demand_line_sequences", "stores"
   add_foreign_key "demand_lines", "customers"
   add_foreign_key "demand_lines", "product_variants"
@@ -2594,6 +2721,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "sourcing_attempts", "demand_lines"
+  add_foreign_key "sourcing_attempts", "product_variant_vendors"
+  add_foreign_key "sourcing_attempts", "product_variants"
+  add_foreign_key "sourcing_attempts", "product_vendors"
+  add_foreign_key "sourcing_attempts", "products"
+  add_foreign_key "sourcing_attempts", "purchase_order_lines"
+  add_foreign_key "sourcing_attempts", "sourcing_attempts", column: "previous_sourcing_attempt_id"
+  add_foreign_key "sourcing_attempts", "sourcing_runs"
+  add_foreign_key "sourcing_attempts", "stores"
+  add_foreign_key "sourcing_attempts", "users", column: "canceled_by_user_id"
+  add_foreign_key "sourcing_attempts", "users", column: "override_authorized_by_user_id"
+  add_foreign_key "sourcing_attempts", "users", column: "submitted_by_user_id"
+  add_foreign_key "sourcing_attempts", "vendors"
+  add_foreign_key "sourcing_runs", "demand_lines"
+  add_foreign_key "sourcing_runs", "product_variants"
+  add_foreign_key "sourcing_runs", "products"
+  add_foreign_key "sourcing_runs", "stores"
+  add_foreign_key "sourcing_runs", "users", column: "canceled_by_user_id"
+  add_foreign_key "sourcing_runs", "users", column: "closed_by_user_id"
+  add_foreign_key "sourcing_runs", "users", column: "started_by_user_id"
   add_foreign_key "special_orders", "customer_request_lines"
   add_foreign_key "special_orders", "customers"
   add_foreign_key "special_orders", "product_variants"
@@ -2639,6 +2786,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_103000) do
   add_foreign_key "user_sessions", "users", column: "ended_by_user_id"
   add_foreign_key "user_sessions", "workstations"
   add_foreign_key "users", "stores", column: "default_store_id"
+  add_foreign_key "vendor_responses", "purchase_order_lines"
+  add_foreign_key "vendor_responses", "sourcing_attempts"
+  add_foreign_key "vendor_responses", "stores"
+  add_foreign_key "vendor_responses", "users", column: "responded_by_user_id"
+  add_foreign_key "vendor_responses", "vendors"
   add_foreign_key "vendor_terms", "vendors"
   add_foreign_key "vendors", "vendors", column: "parent_vendor_id"
   add_foreign_key "workstation_assignments", "users", column: "assigned_by_user_id"

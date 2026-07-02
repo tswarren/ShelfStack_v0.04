@@ -1,0 +1,167 @@
+<%= render "setup/shared/back_link", path: sourcing_root_path, label: "Sourcing" %>
+
+<h1>Sourcing run #<%= @sourcing_run.id %></h1>
+
+<dl class="ss-summary">
+  <dt>Status</dt>
+  <dd><span class="<%= sourcing_run_status_class(@sourcing_run.status) %>"><%= sourcing_run_status_label(@sourcing_run.status) %></span></dd>
+  <dt>Demand</dt>
+  <dd><%= link_to @demand_line.demand_number, demand_demand_line_path(@demand_line) %></dd>
+  <dt>Item</dt>
+  <dd><%= demand_item_label(@demand_line) %></dd>
+  <dt>Run quantity</dt>
+  <dd class="ss-num"><%= @sourcing_run.quantity_requested %></dd>
+  <dt>Unresolved for sourcing</dt>
+  <dd class="ss-num"><%= @unresolved_for_sourcing %></dd>
+  <dt>Run uncommitted</dt>
+  <dd class="ss-num"><%= @run_unresolved %></dd>
+  <dt>Started</dt>
+  <dd><%= display_time(@sourcing_run.started_at) %> by <%= @sourcing_run.started_by_user.display_name %></dd>
+</dl>
+
+<% if @sourcing_run.active? %>
+  <div class="ss-detail-actions">
+    <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.runs.close", store: current_store) %>
+      <%= form_with url: close_sourcing_run_path(@sourcing_run), method: :patch, class: "ss-form ss-form--inline" do %>
+        <%= text_field_tag :close_reason, nil, placeholder: "Close reason (required if unresolved)", class: "ss-input" %>
+        <%= submit_tag "Close run", class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.cancel", store: current_store) %>
+      <%= form_with url: cancel_sourcing_run_path(@sourcing_run), method: :patch, class: "ss-form ss-form--inline" do %>
+        <%= text_field_tag :cancel_reason, nil, placeholder: "Cancel reason", class: "ss-input" %>
+        <%= submit_tag "Cancel run", class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    <% end %>
+    <% if @sourcing_run.status == "needs_review" && Authorization.allowed?(user: current_user, permission_key: "stock_considerations.create", store: current_store) %>
+      <%= link_to "Stock consideration",
+            new_demand_stock_consideration_path(product_variant_id: @demand_line.product_variant_id),
+            class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @sourcing_run.active? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.create", store: current_store) %>
+  <h2>Create attempt</h2>
+  <% suggestion = @suggested_vendor %>
+  <%= form_with url: sourcing_run_attempts_path(@sourcing_run), method: :post, class: "ss-form" do %>
+    <div class="ss-field">
+      <%= label_tag :vendor_id, "Vendor", class: "ss-label" %>
+      <%= number_field_tag :vendor_id, suggestion&.vendor&.id, class: "ss-input", required: true %>
+      <% if suggestion&.vendor.present? %>
+        <p class="ss-muted">Suggested: <%= suggestion.vendor.name %> (<%= suggestion.source_level %>)</p>
+      <% end %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :quantity, "Quantity", class: "ss-label" %>
+      <%= number_field_tag :quantity, [@run_unresolved, 1].max, min: 1, class: "ss-input", required: true %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :purchase_order_line_id, "PO line ID (optional link)", class: "ss-label" %>
+      <%= number_field_tag :purchase_order_line_id, nil, class: "ss-input" %>
+    </div>
+    <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.vendor_override", store: current_store) %>
+      <div class="ss-field">
+        <%= label_tag :manual_vendor_override, class: "ss-label" do %>
+          <%= check_box_tag :manual_vendor_override, "1", false %> Manual vendor override
+        <% end %>
+      </div>
+      <%= text_field_tag :override_reason, nil, placeholder: "Override reason", class: "ss-input" %>
+    <% end %>
+    <%= submit_tag "Create pending attempt", class: "ss-btn" %>
+  <% end %>
+<% end %>
+
+<h2>Attempts</h2>
+<% if @attempts.any? %>
+  <% @attempts.each do |attempt| %>
+    <section class="ss-card">
+      <h3>Attempt #<%= attempt.sequence_number %> — <%= attempt.vendor.name %></h3>
+      <p>
+        Status: <strong><%= sourcing_attempt_status_label(attempt.status) %></strong>
+        · Qty: <span class="ss-num"><%= attempt.quantity_requested %></span>
+        <% if attempt.submitted_at.present? %>
+          · Submitted <%= display_time(attempt.submitted_at) %>
+        <% end %>
+      </p>
+      <% if attempt.vendor_item_number_snapshot.present? %>
+        <p class="ss-muted">Vendor item: <%= attempt.vendor_item_number_snapshot %></p>
+      <% end %>
+
+      <% if attempt.pending? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.submit", store: current_store) %>
+        <%= button_to "Submit attempt", submit_sourcing_attempt_path(attempt), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+      <% end %>
+
+      <% if attempt.in_flight? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.cancel", store: current_store) %>
+        <%= button_to "Cancel attempt", cancel_sourcing_attempt_path(attempt), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm", params: { cancel_reason: "Staff canceled" } %>
+      <% end %>
+
+      <% if attempt.vendor_responses.any? %>
+        <h4>Vendor responses</h4>
+        <ul>
+          <% attempt.vendor_responses.order(:responded_at).each do |response| %>
+            <li>
+              <%= display_time(response.responded_at) %> —
+              confirmed <%= response.quantity_confirmed %>,
+              backordered <%= response.quantity_backordered %>,
+              unavailable <%= response.quantity_unavailable %>
+              <% if response.final_response? %>(final)<% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <% if attempt.status == "submitted" && Authorization.allowed?(user: current_user, permission_key: "sourcing.responses.record", store: current_store) %>
+        <h4>Record vendor response</h4>
+        <%= form_with url: sourcing_attempt_vendor_responses_path(attempt), method: :post, class: "ss-form" do %>
+          <div class="ss-field-row">
+            <%= number_field_tag :quantity_confirmed, 0, min: 0, class: "ss-input", placeholder: "Confirmed" %>
+            <%= number_field_tag :quantity_backordered, 0, min: 0, class: "ss-input", placeholder: "Backordered" %>
+            <%= number_field_tag :quantity_unavailable, 0, min: 0, class: "ss-input", placeholder: "Unavailable" %>
+            <%= number_field_tag :quantity_canceled, 0, min: 0, class: "ss-input", placeholder: "Canceled" %>
+            <%= number_field_tag :quantity_failed, 0, min: 0, class: "ss-input", placeholder: "Failed" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :purchase_order_line_id, "PO line ID (for confirmed inbound alloc)", class: "ss-label" %>
+            <%= number_field_tag :purchase_order_line_id, attempt.purchase_order_line_id, class: "ss-input" %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :accept_backorder, class: "ss-label" do %>
+              <%= check_box_tag :accept_backorder, "1", false %> Accept backorder allocation
+            <% end %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag :final_response, class: "ss-label" do %>
+              <%= check_box_tag :final_response, "1", true %> Final response
+            <% end %>
+          </div>
+          <%= submit_tag "Record response", class: "ss-btn" %>
+        <% end %>
+      <% end %>
+
+      <% cascade_eligible = Sourcing::CascadeEligibleQuantity.for_attempt(attempt) %>
+      <% if cascade_eligible.positive? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.cascade", store: current_store) %>
+        <h4>Cascade (<%= cascade_eligible %> eligible)</h4>
+        <%= form_with url: cascade_sourcing_attempt_path(attempt), method: :post, class: "ss-form" do %>
+          <%= number_field_tag :vendor_id, attempt.vendor_id, class: "ss-input", required: true %>
+          <%= number_field_tag :quantity, cascade_eligible, min: 1, class: "ss-input", required: true %>
+          <%= text_field_tag :cascade_reason, "unavailable", class: "ss-input", required: true %>
+          <%= submit_tag "Create cascade attempt (pending)", class: "ss-btn ss-btn-secondary" %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+<% else %>
+  <p class="ss-muted">No attempts yet.</p>
+<% end %>
+
+<h2>Audit</h2>
+<% if @audit_events.any? %>
+  <ul class="ss-audit-list">
+    <% @audit_events.each do |event| %>
+      <li><%= event.event_name %> — <%= display_time(event.occurred_at) %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="ss-muted">No audit events yet.</p>
+<% end %>

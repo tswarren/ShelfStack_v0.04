@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DemandAllocation < ApplicationRecord
-  ALLOCATION_KINDS = %w[on_hand inbound_purchase_order].freeze
+  ALLOCATION_KINDS = %w[on_hand inbound_purchase_order vendor_backorder].freeze
   STATUSES = %w[active fulfilled released expired canceled].freeze
   ACTIVE_STATUS = "active".freeze
   TERMINAL_STATUSES = %w[fulfilled released expired canceled].freeze
@@ -11,6 +11,8 @@ class DemandAllocation < ApplicationRecord
   belongs_to :product
   belongs_to :product_variant
   belongs_to :purchase_order_line, optional: true
+  belongs_to :sourcing_attempt, optional: true
+  belongs_to :vendor_response, optional: true
   belongs_to :allocated_by_user, class_name: "User"
   belongs_to :released_by_user, class_name: "User", optional: true
   belongs_to :canceled_by_user, class_name: "User", optional: true
@@ -30,6 +32,7 @@ class DemandAllocation < ApplicationRecord
   scope :active_allocations, -> { where(status: ACTIVE_STATUS) }
   scope :on_hand_kind, -> { where(allocation_kind: "on_hand") }
   scope :inbound_kind, -> { where(allocation_kind: "inbound_purchase_order") }
+  scope :vendor_backorder_kind, -> { where(allocation_kind: "vendor_backorder") }
 
   def active?
     status == ACTIVE_STATUS
@@ -41,6 +44,10 @@ class DemandAllocation < ApplicationRecord
 
   def on_hand?
     allocation_kind == "on_hand"
+  end
+
+  def vendor_backorder?
+    allocation_kind == "vendor_backorder"
   end
 
   private
@@ -66,10 +73,16 @@ class DemandAllocation < ApplicationRecord
   end
 
   def purchase_order_line_consistency
-    if allocation_kind == "inbound_purchase_order"
+    case allocation_kind
+    when "inbound_purchase_order"
       errors.add(:purchase_order_line, "is required for inbound allocation") if purchase_order_line_id.blank?
-    elsif purchase_order_line_id.present?
-      errors.add(:purchase_order_line, "must be blank for on-hand allocation")
+    when "vendor_backorder"
+      errors.add(:purchase_order_line, "must be blank for vendor backorder allocation") if purchase_order_line_id.present?
+      if sourcing_attempt_id.blank? && vendor_response_id.blank?
+        errors.add(:base, "vendor backorder allocation requires sourcing attempt or vendor response")
+      end
+    when "on_hand"
+      errors.add(:purchase_order_line, "must be blank for on-hand allocation") if purchase_order_line_id.present?
     end
   end
 

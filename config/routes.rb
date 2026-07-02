@@ -304,6 +304,26 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :sourcing do
+    root to: "runs#index"
+    get "locked_out", to: "locked_out#show"
+    resources :runs, only: %i[index show create] do
+      member do
+        patch :close
+        patch :cancel
+      end
+      resources :attempts, only: %i[create]
+    end
+    resources :attempts, only: [] do
+      member do
+        patch :submit
+        patch :cancel
+        post :cascade
+      end
+      resources :vendor_responses, only: %i[create]
+    end
+  end
+
   namespace :demand do
     root to: "demand_lines#index"
     get "locked_out", to: "locked_out#show"

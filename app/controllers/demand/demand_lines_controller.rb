@@ -35,6 +35,7 @@ module Demand
       @audit_events = AuditEvent.for_auditable(@demand_line).limit(50)
       @allocations = @demand_line.demand_allocations.order(allocated_at: :desc)
       @allocation_quantities = DemandAllocations::AllocationQuantities.for_demand_line(@demand_line)
+      load_sourcing_context!
       if @demand_line.product_variant.present?
         @available_for_allocation = DemandAllocations::Availability.available_for_allocation(
           store: demand_store,
@@ -177,6 +178,16 @@ module Demand
       raise ActiveRecord::RecordNotFound, "Customer is required" if required && id.blank?
 
       Customer.find(id)
+    end
+
+    def load_sourcing_context!
+      @sourcing_unresolved = Sourcing::UnresolvedQuantity.for_demand_line(@demand_line)
+      @sourcing_eligibility = Sourcing::Eligibility.for_demand_line(@demand_line)
+      @active_sourcing_run = SourcingRun.active_runs.find_by(demand_line_id: @demand_line.id)
+      @latest_vendor_response = VendorResponse.joins(sourcing_attempt: :sourcing_run)
+                                              .where(sourcing_runs: { demand_line_id: @demand_line.id })
+                                              .order(responded_at: :desc)
+                                              .first
     end
   end
 end

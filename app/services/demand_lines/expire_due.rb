@@ -31,6 +31,12 @@ module DemandLines
           next if DemandLine::TERMINAL_STATUSES.include?(locked.status)
           next if locked.expires_at.blank? || locked.expires_at > now
 
+          Sourcing::CancelActiveForDemand.call!(
+            demand_line: locked,
+            actor: system_actor,
+            reason: "Demand expired due"
+          )
+
           locked.demand_allocations.active_allocations.find_each do |allocation|
             DemandAllocations::Expire.call!(allocation: allocation, actor: nil, expired_at: now)
             expired_allocation_count += 1
