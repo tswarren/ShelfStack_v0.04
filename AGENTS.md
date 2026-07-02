@@ -418,9 +418,9 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-7 (allocations and reservations):** **Complete** — [spec bundle](docs/v0.04/v0.04-7-allocations-and-reservations/spec.md) · [completion](docs/implementation/v0.04-7-completion.md).
 
-**v0.04-8 (sourcing and vendor responses):** **In review** — [spec bundle](docs/v0.04/v0.04-8-sourcing-and-vendor-responses/spec.md) · [completion](docs/implementation/v0.04-8-completion.md). CI passing; merge pending.
+**v0.04-8 (sourcing and vendor responses):** **Complete** — [spec bundle](docs/v0.04/v0.04-8-sourcing-and-vendor-responses/spec.md) · [completion](docs/implementation/v0.04-8-completion.md).
 
-**Current priority:** **v0.04-8** merge, then **v0.04-9** PO/receiving quantity model.
+**Current priority:** **v0.04-9** PO/receiving quantity model.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 

@@ -31,9 +31,8 @@ Implementation happens through ordered v0.04 milestones inside the existing Rail
 **Current priority:**
 
 ```text
-Complete: v0.04-0 through v0.04-5
-Current:  v0.04-6 — Demand Foundation
-Next:     v0.04-7 — Allocations and reservations
+Complete: v0.04-0 through v0.04-8
+Current:  v0.04-9 — PO and receiving quantity model
 ```
 
 See [docs/v0.04/README.md](docs/v0.04/README.md) and [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md).
@@ -316,10 +315,10 @@ Historical v0.03 phase specs remain useful for code not yet migrated. New work f
 | v0.04-3 | Product groups | **Deferred** |
 | v0.04-4 | Variant-grain wire-through | **Complete** |
 | v0.04-5 | Used variant rules | **Complete** |
-| v0.04-6 | Demand foundation | **Next** |
-| v0.04-7 | Allocations and reservations | Planned |
-| v0.04-8 | Sourcing and vendor responses | Planned |
-| v0.04-9 | PO and receiving quantity model | Planned |
+| v0.04-6 | Demand foundation | **Complete** |
+| v0.04-7 | Allocations and reservations | **Complete** |
+| v0.04-8 | Sourcing and vendor responses | **Complete** |
+| v0.04-9 | PO and receiving quantity model | **Next** |
 | v0.04-10 | Retire v0.03 ordering UI and reports | Planned |
 | v0.04-11 | Documentation and schema cleanup | Planned |
 
