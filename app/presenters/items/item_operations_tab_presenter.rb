@@ -15,7 +15,7 @@ module Items
 
     def metrics
       base = [
-        { label: "Open TBO", value: open_purchase_request_lines.size },
+        { label: "Open TBO", value: open_manual_tbo_count },
         { label: "Open PO lines", value: open_purchase_order_lines.size },
         { label: "Recent receipts", value: recent_receipt_lines.size },
         { label: "RTV lines", value: recent_rtv_lines.size }
@@ -23,9 +23,9 @@ module Items
       return base unless customer_demand_visible?
 
       base + [
-        { label: "Open requests", value: open_customer_request_lines.size },
-        { label: "Active holds", value: active_holds.size },
-        { label: "Special orders", value: open_special_orders.size }
+        { label: "Open demand", value: open_demand_count },
+        { label: "Active holds", value: active_on_hand_allocation_count },
+        { label: "Special orders", value: open_special_order_count }
       ]
     end
 
@@ -36,64 +36,45 @@ module Items
     end
 
     def open_customer_request_lines
-      @open_customer_request_lines ||= CustomerRequestLine.open_lines
-                                                          .includes(:customer_request, :product_variant)
-                                                          .joins(:customer_request)
-                                                          .where(product_variant_id: variant_ids, customer_requests: { store_id: store.id })
-                                                          .order("customer_requests.created_at DESC")
-                                                          .to_a
+      []
     end
 
     def active_holds
-      @active_holds ||= InventoryReservation.active_on_hand
-                                              .includes(:customer, :product_variant, customer_request_line: :customer_request)
-                                              .where(store: store, product_variant_id: variant_ids)
-                                              .order(reserved_at: :desc)
-                                              .to_a
+      []
     end
 
     def incoming_reserves
-      @incoming_reserves ||= InventoryReservation.active_incoming
-                                                   .includes(:customer, :product_variant, :special_order, customer_request_line: :customer_request)
-                                                   .where(store: store, product_variant_id: variant_ids)
-                                                   .order(reserved_at: :desc)
-                                                   .to_a
+      []
     end
 
     def open_special_orders
-      @open_special_orders ||= SpecialOrder.open_orders
-                                           .includes(:customer, :product_variant, :customer_request_line)
-                                           .where(store: store, product_variant_id: variant_ids)
-                                           .order(created_at: :desc)
-                                           .to_a
+      []
     end
 
     def variant_scoped_customer_request_lines
-      return open_customer_request_lines if highlight_variant.blank?
-
-      open_customer_request_lines.select { |line| line.product_variant_id == highlight_variant.id }
+      []
     end
 
     def variant_scoped_active_holds
       return active_holds if highlight_variant.blank?
 
-      active_holds.select { |reservation| reservation.product_variant_id == highlight_variant.id }
+      active_holds.select { |allocation| allocation.product_variant_id == highlight_variant.id }
     end
 
     def variant_scoped_incoming_reserves
       return incoming_reserves if highlight_variant.blank?
 
-      incoming_reserves.select { |reservation| reservation.product_variant_id == highlight_variant.id }
+      incoming_reserves.select { |allocation| allocation.product_variant_id == highlight_variant.id }
     end
 
     def variant_scoped_special_orders
       return open_special_orders if highlight_variant.blank?
 
-      open_special_orders.select { |order| order.product_variant_id == highlight_variant.id }
+      open_special_orders.select { |line| line.product_variant_id == highlight_variant.id }
     end
 
     def open_purchase_request_lines
-      @open_purchase_request_lines ||= scoped_purchase_request_lines.to_a
+      []
     end
 
     def open_purchase_order_lines
@@ -175,14 +156,29 @@ module Items
       @variant_ids ||= item.variants.map(&:id)
     end
 
-    def scoped_purchase_request_lines
-      return PurchaseRequestLine.none if variant_ids.empty?
+    def open_demand_count
+      @open_demand_count ||= DemandLine.where(store: store, product_variant_id: variant_ids)
+                                       .where.not(status: DemandLine::TERMINAL_STATUSES)
+                                       .count
+    end
 
-      PurchaseRequestLine
-        .buildable_for_store(store)
-        .includes(:purchase_request, :product_variant)
-        .where(product_variant_id: variant_ids)
-        .order("purchase_requests.created_at DESC, purchase_request_lines.line_number ASC")
+    def open_manual_tbo_count
+      @open_manual_tbo_count ||= DemandLine.where(store: store, product_variant_id: variant_ids, capture_intent: "manual_tbo")
+                                           .where.not(status: DemandLine::TERMINAL_STATUSES)
+                                           .count
+    end
+
+    def open_special_order_count
+      @open_special_order_count ||= DemandLine.where(store: store, product_variant_id: variant_ids, capture_intent: "special_order")
+                                              .where.not(status: DemandLine::TERMINAL_STATUSES)
+                                              .count
+    end
+
+    def active_on_hand_allocation_count
+      @active_on_hand_allocation_count ||= DemandAllocation.active_allocations
+                                                           .on_hand_kind
+                                                           .where(store: store, product_variant_id: variant_ids)
+                                                           .count
     end
   end
 end

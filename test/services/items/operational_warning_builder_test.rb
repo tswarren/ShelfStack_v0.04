@@ -4,12 +4,15 @@ require "test_helper"
 
 class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
   include Phase3TestHelper
+  include V0047TestHelper
 
   setup do
     seed_phase3_reference_data!
     seed_phase5_reference_data!
+    seed_v0047_permissions!
     @store = create_store!
     @user = create_user!
+    grant_v0047_allocation_permissions!(@user, store: @store)
     @product = create_product!
     @variant = create_product_variant!(product: @product, inventory_behavior: "standard_physical", selling_price_cents: 0)
     @item = Items::ItemPresenter.from_product(@product)
@@ -26,10 +29,12 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
   end
 
   test "for_item includes selling and open tbo warnings" do
-    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 2,
-      status: "open"
+    DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "manual_tbo",
+      quantity: 2,
+      variant: @variant
     )
 
     warnings = Items::OperationalWarningBuilder.for_item(item: @item, store: @store, user: @user).fetch(@item, [])
@@ -90,10 +95,12 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
     )
     item_without_tbo = Items::ItemPresenter.from_product(product_without_tbo)
 
-    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 2,
-      status: "open"
+    DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "manual_tbo",
+      quantity: 2,
+      variant: @variant
     )
 
     warnings_by_item = Items::OperationalWarningBuilder.for_items(
@@ -108,10 +115,12 @@ class Items::OperationalWarningBuilderTest < ActiveSupport::TestCase
   end
 
   test "data quality context excludes open tbo warnings" do
-    PurchaseRequest.create!(store: @store, status: "open").purchase_request_lines.create!(
-      product_variant: @variant,
-      requested_quantity: 2,
-      status: "open"
+    DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "manual_tbo",
+      quantity: 2,
+      variant: @variant
     )
 
     warnings = Items::OperationalWarningBuilder.for_item(

@@ -69,7 +69,7 @@ module Purchasing
     end
 
     def open_tbo_quantity(variant)
-      PurchaseRequestLine.open_remaining_quantities_for(store: store, variant_ids: [ variant.id ]).fetch(variant.id, 0)
+      DemandLines::OpenManualTboQuantities.for_variants(store: store, variant_ids: [ variant.id ]).fetch(variant.id, 0)
     end
 
     def last_received_cost_cents(variant)

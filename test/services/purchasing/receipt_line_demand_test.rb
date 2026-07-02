@@ -3,14 +3,23 @@
 require "test_helper"
 
 class PurchasingReceiptLineDemandTest < ActiveSupport::TestCase
-  include Phase7aTestHelper
+  include V0047TestHelper
 
   setup do
-    Seeds::Phase7aPermissions.seed!
+    seed_v0047_permissions!
     @store = create_store!
     @user = create_user!
-    @vendor = Vendor.first || Vendor.create!(name: "Vendor", active: true)
+    grant_v0047_allocation_permissions!(@user, store: @store)
+    @vendor = create_vendor!
     @variant = create_product_variant!
+    @demand_line = DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "special_order",
+      quantity: 2,
+      variant: @variant,
+      customer: create_customer!
+    )
     @po_line = PurchaseOrderLine.new(
       line_number: 1,
       product_variant: @variant,
@@ -22,33 +31,15 @@ class PurchasingReceiptLineDemandTest < ActiveSupport::TestCase
       variant_name_snapshot: @variant.name
     )
     @purchase_order = PurchaseOrder.create!(store: @store, vendor: @vendor, status: "submitted", purchase_order_lines: [ @po_line ])
-    PurchaseOrderLineAllocation.create!(
+    DemandAllocations::AllocateInboundPurchaseOrder.call!(
+      demand_line: @demand_line,
       purchase_order_line: @po_line,
-      special_order: create_special_order_with_allocation!,
-      quantity_allocated: 2,
-      quantity_received: 0,
-      status: "active"
+      actor: @user,
+      quantity: 2
     )
   end
 
-  test "customer_reserved_open sums open allocation quantity" do
+  test "customer_reserved_open sums open inbound allocation quantity" do
     assert_equal 2, Purchasing::ReceiptLineDemand.customer_reserved_open(@po_line)
-  end
-
-  private
-
-  def create_special_order_with_allocation!
-    customer = create_customer!
-    request = create_customer_request!(
-      store: @store,
-      created_by_user: @user,
-      customer: customer,
-      lines: [ { request_type: "special_order" } ]
-    )
-    line = request.customer_request_lines.first
-    match_request_line!(line: line, variant: @variant, actor: @user)
-    special_order = SpecialOrders::CreateFromRequestLine.call!(line: line, created_by_user: @user)
-    SpecialOrders::Approve.call!(special_order: special_order, approved_by_user: @user)
-    special_order
   end
 end
