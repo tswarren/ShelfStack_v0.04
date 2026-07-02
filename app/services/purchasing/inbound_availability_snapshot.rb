@@ -26,9 +26,7 @@ module Purchasing
 
     def build
       summary = PoLineQuantitySummary.for(purchase_order_line)
-      legacy_claimed = purchase_order_line.purchase_order_line_allocations
-                                          .where(status: DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES)
-                                          .sum(:quantity_allocated)
+      legacy_claimed = legacy_claimed_quantity
       v0047_claimed = DemandAllocation.active_allocations
                                       .inbound_kind
                                       .where(purchase_order_line: purchase_order_line)
@@ -54,5 +52,21 @@ module Purchasing
     private
 
     attr_reader :purchase_order_line
+
+    def legacy_claimed_quantity
+      return 0 unless ActiveRecord::Base.connection.table_exists?(:purchase_order_line_allocations)
+
+      ActiveRecord::Base.connection.select_value(
+        ActiveRecord::Base.sanitize_sql_array([
+          <<~SQL.squish,
+            SELECT COALESCE(SUM(quantity_allocated), 0)
+            FROM purchase_order_line_allocations
+            WHERE purchase_order_line_id = ? AND status IN (?)
+          SQL
+          purchase_order_line.id,
+          DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES
+        ])
+      ).to_i
+    end
   end
 end

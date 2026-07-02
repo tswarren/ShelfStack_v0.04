@@ -119,10 +119,10 @@ module Shelfstack
     end
 
     def mixed_legacy_v0047_claims_on_same_po_line?
+      return false unless legacy_po_line_allocations_table?
+
       PurchaseOrderLine.find_each.any? do |po_line|
-        legacy = po_line.purchase_order_line_allocations
-                        .where(status: DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES)
-                        .exists?
+        legacy = legacy_inbound_claimed_quantity(po_line).positive?
         v0047 = DemandAllocation.active_allocations.inbound_kind.where(purchase_order_line: po_line).exists?
         legacy && v0047
       end
@@ -135,14 +135,32 @@ module Shelfstack
         next true if po_line.blank?
 
         supply = Purchasing::PoLineQuantitySummary.for(po_line).open_supply_before_allocation_claims
-        legacy_claimed = po_line.purchase_order_line_allocations
-                                .where(status: DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES)
-                                .sum(:quantity_allocated)
+        legacy_claimed = legacy_inbound_claimed_quantity(po_line)
         v0047_claimed = DemandAllocation.active_allocations.inbound_kind
                                         .where(purchase_order_line: po_line)
                                         .sum(:quantity_allocated)
         v0047_claimed <= supply - legacy_claimed
       end
+    end
+
+    def legacy_inbound_claimed_quantity(po_line)
+      return 0 unless legacy_po_line_allocations_table?
+
+      ActiveRecord::Base.connection.select_value(
+        ActiveRecord::Base.sanitize_sql_array([
+          <<~SQL.squish,
+            SELECT COALESCE(SUM(quantity_allocated), 0)
+            FROM purchase_order_line_allocations
+            WHERE purchase_order_line_id = ? AND status IN (?)
+          SQL
+          po_line.id,
+          DemandAllocations::InboundAvailability::LEGACY_OPEN_ALLOCATION_STATUSES
+        ])
+      ).to_i
+    end
+
+    def legacy_po_line_allocations_table?
+      ActiveRecord::Base.connection.table_exists?(:purchase_order_line_allocations)
     end
 
     def report(strict: false)

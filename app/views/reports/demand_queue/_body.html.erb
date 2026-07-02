@@ -9,7 +9,7 @@
       <%= label_tag :queue, "Queue" %>
       <%= select_tag :queue,
                      options_for_select(
-                       ::DemandLines::QueueScope::OPERATIONAL_QUEUE_KEYS.map { |k| [ CustomersHelper::DEMAND_QUEUE_LABELS.fetch(k), k ] },
+                       ::DemandLines::QueueScope::OPERATIONAL_QUEUE_KEYS.map { |k| [ ::DemandLines::QueueScope::QUEUE_LABELS.fetch(k), k ] },
                        params[:queue]
                      ),
                      include_blank: "All queues" %>

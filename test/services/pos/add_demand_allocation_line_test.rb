@@ -56,4 +56,54 @@ class PosAddDemandAllocationLineTest < ActiveSupport::TestCase
       )
     end
   end
+
+  test "same demand allocation cannot be added to two draft transactions" do
+    other_transaction = PosTransaction.create!(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @user,
+      status: "draft"
+    )
+
+    Pos::AddDemandAllocationLine.call!(
+      transaction: @transaction,
+      allocation: @allocation,
+      added_by_user: @user
+    )
+
+    assert_raises(Pos::AddDemandAllocationLine::Error, match: /another open transaction/) do
+      Pos::AddDemandAllocationLine.call!(
+        transaction: other_transaction,
+        allocation: @allocation,
+        added_by_user: @user
+      )
+    end
+  end
+
+  test "void removing line before completion leaves allocation active and reusable" do
+    line = Pos::AddDemandAllocationLine.call!(
+      transaction: @transaction,
+      allocation: @allocation,
+      added_by_user: @user
+    )
+
+    line.destroy!
+
+    other_transaction = PosTransaction.create!(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @user,
+      status: "draft"
+    )
+
+    assert_equal "active", @allocation.reload.status
+
+    reused_line = Pos::AddDemandAllocationLine.call!(
+      transaction: other_transaction,
+      allocation: @allocation,
+      added_by_user: @user
+    )
+
+    assert_equal @allocation.id, reused_line.demand_allocation_id
+  end
 end

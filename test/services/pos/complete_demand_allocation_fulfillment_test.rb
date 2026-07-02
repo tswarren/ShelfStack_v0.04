@@ -60,7 +60,7 @@ class PosCompleteDemandAllocationFulfillmentTest < ActiveSupport::TestCase
       cashier_user: @user,
       status: "draft"
     )
-    draft_line = draft_transaction.pos_transaction_lines.create!(
+    draft_transaction.pos_transaction_lines.create!(
       line_number: 1,
       line_type: "variant",
       product_variant: @variant,
@@ -76,6 +76,20 @@ class PosCompleteDemandAllocationFulfillmentTest < ActiveSupport::TestCase
     end
 
     assert_equal "active", @allocation.reload.status
-    assert_nil draft_line.demand_allocation_id
+  end
+
+  test "completion fails if linked demand allocation is no longer active" do
+    DemandAllocations::Fulfill.call!(
+      allocation: @allocation,
+      actor: @user,
+      fulfillment_reference: @line
+    )
+
+    assert_raises(Pos::CompleteDemandAllocationFulfillment::Error, match: /no longer active/) do
+      Pos::CompleteDemandAllocationFulfillment.call!(
+        transaction: @transaction,
+        fulfilled_by_user: @user
+      )
+    end
   end
 end

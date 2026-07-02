@@ -31,6 +31,20 @@ module DemandLines
 
     QUEUE_KEYS = QUEUE_FILTERS.keys.freeze
 
+    QUEUE_LABELS = {
+      "ready_for_pickup" => "Ready for pickup",
+      "expiring_holds" => "Expiring holds",
+      "notify_customer" => "Notify customer",
+      "needs_research" => "Needs research",
+      "awaiting_response" => "Awaiting response",
+      "approved_to_order" => "Approved to order",
+      "on_order" => "On order",
+      "vendor_backorder" => "Vendor backorder",
+      "completed" => "Completed",
+      "cancelled" => "Cancelled",
+      "expired" => "Expired"
+    }.freeze
+
     AWAITING_ATTEMPT_STATUSES = SourcingAttempt::STATUSES - %w[canceled cascaded]
 
     def self.apply(relation, queue_key, store:)

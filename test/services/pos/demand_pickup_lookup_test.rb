@@ -47,4 +47,27 @@ class PosDemandPickupLookupTest < ActiveSupport::TestCase
 
     assert_empty rows
   end
+
+  test "pickup lookup filters by customer display name" do
+    rows = Pos::DemandPickupLookup.ready_for_store(store: @store, query: "pickup pat")
+
+    assert_equal 1, rows.size
+    assert_equal @allocation.id, rows.first.demand_allocation_id
+  end
+
+  test "pickup lookup filters by customer email snapshot" do
+    @demand_line.update!(customer_email_snapshot: "pickup.pat@example.com")
+
+    rows = Pos::DemandPickupLookup.ready_for_store(store: @store, query: "pickup.pat@")
+
+    assert_equal 1, rows.size
+  end
+
+  test "pickup lookup filters by customer phone snapshot" do
+    @demand_line.update!(customer_phone_snapshot: "555-0100")
+
+    rows = Pos::DemandPickupLookup.ready_for_store(store: @store, query: "555-0100")
+
+    assert_equal 1, rows.size
+  end
 end

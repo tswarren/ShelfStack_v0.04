@@ -41,7 +41,7 @@ module Reports
         end
 
         Result.new(
-          scope_label: @queue.present? ? CustomersHelper::DEMAND_QUEUE_LABELS.fetch(@queue, @queue.humanize) : "All demand",
+          scope_label: @queue.present? ? ::DemandLines::QueueScope::QUEUE_LABELS.fetch(@queue, @queue.humanize) : "All demand",
           rows: rows,
           metrics: [
             { label: "Demand lines", value: matching_count },

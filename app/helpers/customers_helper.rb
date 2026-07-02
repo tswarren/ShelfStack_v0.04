@@ -17,19 +17,7 @@ module CustomersHelper
     "unfillable" => "Unfillable"
   }.freeze
 
-  DEMAND_QUEUE_LABELS = {
-    "ready_for_pickup" => "Ready for pickup",
-    "expiring_holds" => "Expiring holds",
-    "notify_customer" => "Notify customer",
-    "needs_research" => "Needs research",
-    "awaiting_response" => "Awaiting response",
-    "approved_to_order" => "Approved to order",
-    "on_order" => "On order",
-    "vendor_backorder" => "Vendor backorder",
-    "completed" => "Completed",
-    "cancelled" => "Cancelled",
-    "expired" => "Expired"
-  }.freeze
+  DEMAND_QUEUE_LABELS = DemandLines::QueueScope::QUEUE_LABELS
 
   def customers_status_badge(status)
     css_class = customers_status_badge_class(status)

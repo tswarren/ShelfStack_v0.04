@@ -43,7 +43,7 @@ module Customers
     end
 
     def customers_demand_queue_label(queue_key)
-      CustomersHelper::DEMAND_QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize)
+      ::DemandLines::QueueScope::QUEUE_LABELS.fetch(queue_key, queue_key.to_s.humanize)
     end
 
     def queue_path(queue_key)

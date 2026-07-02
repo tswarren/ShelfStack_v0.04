@@ -4,6 +4,25 @@ module Pos
   class AddDemandAllocationLine
     Error = Class.new(StandardError)
 
+    OPEN_TRANSACTION_STATUSES = %w[draft suspended].freeze
+
+    def self.pickup_ready?(allocation, at: Time.current)
+      return false if allocation.blank?
+
+      allocation.active? &&
+        allocation.on_hand? &&
+        (allocation.expires_at.blank? || allocation.expires_at > at) &&
+        !DemandLine::TERMINAL_STATUSES.include?(allocation.demand_line.status)
+    end
+
+    def self.claimed_on_other_open_transaction?(allocation, transaction:)
+      PosTransactionLine.joins(:pos_transaction)
+                        .where(demand_allocation_id: allocation.id)
+                        .where(pos_transactions: { status: OPEN_TRANSACTION_STATUSES })
+                        .where.not(pos_transaction_id: transaction.id)
+                        .exists?
+    end
+
     def self.call!(transaction:, allocation:, added_by_user:, quantity: nil)
       new(transaction:, allocation:, added_by_user:, quantity:).call!
     end
@@ -16,14 +35,15 @@ module Pos
     end
 
     def call!
-      raise Error, "Allocation must be active" unless allocation.active?
-      raise Error, "Allocation must be on-hand" unless allocation.on_hand?
+      raise Error, "Allocation is not ready for pickup" unless self.class.pickup_ready?(allocation)
       raise Error, "Store mismatch" if allocation.store_id != transaction.store_id
-      raise Error, "Allocation is expired" if allocation.expires_at.present? && allocation.expires_at <= Time.current
-      raise Error, "Demand line is terminal" if DemandLine::TERMINAL_STATUSES.include?(allocation.demand_line.status)
 
       if transaction.pos_transaction_lines.exists?(demand_allocation_id: allocation.id)
         raise Error, "Allocation is already on this transaction"
+      end
+
+      if self.class.claimed_on_other_open_transaction?(allocation, transaction: transaction)
+        raise Error, "Allocation is already on another open transaction"
       end
 
       if quantity != allocation.quantity_allocated

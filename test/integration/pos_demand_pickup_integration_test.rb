@@ -64,4 +64,27 @@ class PosDemandPickupIntegrationTest < ActiveSupport::TestCase
     assert_equal "active", @allocation.reload.status
     assert_equal "allocated", @demand_line.reload.status
   end
+
+  test "same demand allocation cannot complete on two transactions" do
+    other_transaction = PosTransaction.create!(
+      store: @store,
+      workstation: @workstation,
+      cashier_user: @user,
+      status: "draft"
+    )
+
+    Pos::AddDemandAllocationLine.call!(
+      transaction: @transaction,
+      allocation: @allocation,
+      added_by_user: @user
+    )
+
+    assert_raises(Pos::AddDemandAllocationLine::Error) do
+      Pos::AddDemandAllocationLine.call!(
+        transaction: other_transaction,
+        allocation: @allocation,
+        added_by_user: @user
+      )
+    end
+  end
 end

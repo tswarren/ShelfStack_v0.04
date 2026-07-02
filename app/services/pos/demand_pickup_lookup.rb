@@ -48,16 +48,22 @@ module Pos
     end
 
     def filter_by_query(scope)
+      pattern = like_pattern(query)
       customer_ids = Customer.active_records
-                             .where("display_name ILIKE :q OR email ILIKE :q OR phone ILIKE :q", q: "%#{query}%")
+                             .where(
+                               "LOWER(customers.display_name) LIKE :q OR " \
+                               "LOWER(customers.email) LIKE :q OR " \
+                               "LOWER(customers.phone) LIKE :q",
+                               q: pattern
+                             )
                              .limit(25)
                              .pluck(:id)
       snapshot_scope = scope.joins(:demand_line)
                             .where(
-                              "demand_lines.customer_name_snapshot ILIKE :q OR " \
-                              "demand_lines.customer_email_snapshot ILIKE :q OR " \
-                              "demand_lines.customer_phone_snapshot ILIKE :q",
-                              q: "%#{query}%"
+                              "LOWER(demand_lines.customer_name_snapshot) LIKE :q OR " \
+                              "LOWER(demand_lines.customer_email_snapshot) LIKE :q OR " \
+                              "LOWER(demand_lines.customer_phone_snapshot) LIKE :q",
+                              q: pattern
                             )
 
       scope.where(demand_lines: { customer_id: customer_ids }).or(snapshot_scope)
@@ -65,7 +71,11 @@ module Pos
 
     def filter_by_demand_number(scope)
       scope.joins(:demand_line)
-           .where("demand_lines.demand_number ILIKE ?", "%#{demand_number}%")
+           .where("LOWER(demand_lines.demand_number) LIKE ?", like_pattern(demand_number))
+    end
+
+    def like_pattern(value)
+      "%#{ActiveRecord::Base.sanitize_sql_like(value.to_s.downcase)}%"
     end
 
     def row_for(allocation)
