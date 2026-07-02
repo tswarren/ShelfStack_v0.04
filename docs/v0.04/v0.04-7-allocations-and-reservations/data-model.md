@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md). Depends on v0.04-6 schema (`demand_lines`, etc.).
+**Complete** — companion to [spec.md](spec.md). Depends on v0.04-6 schema (`demand_lines`, etc.).
 
 ---
 

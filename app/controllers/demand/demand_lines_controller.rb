@@ -16,6 +16,7 @@ module Demand
       @demand_lines = @demand_lines.where(source: params[:source]) if params[:source].present?
       @demand_lines = @demand_lines.where(purpose: params[:purpose]) if params[:purpose].present?
       @demand_lines = @demand_lines.where(capture_intent: params[:capture_intent]) if params[:capture_intent].present?
+      apply_allocation_filters!
       if params[:customer_id].present?
         @demand_lines = @demand_lines.where(customer_id: params[:customer_id])
       end
@@ -32,6 +33,14 @@ module Demand
 
     def show
       @audit_events = AuditEvent.for_auditable(@demand_line).limit(50)
+      @allocations = @demand_line.demand_allocations.order(allocated_at: :desc)
+      @allocation_quantities = DemandAllocations::AllocationQuantities.for_demand_line(@demand_line)
+      if @demand_line.product_variant.present?
+        @available_for_allocation = DemandAllocations::Availability.available_for_allocation(
+          store: demand_store,
+          variant: @demand_line.product_variant
+        )
+      end
     end
 
     def new
@@ -135,6 +144,25 @@ module Demand
       return nil if params[:expires_at].blank?
 
       Time.zone.parse(params[:expires_at].to_s)
+    end
+
+    def apply_allocation_filters!
+      case params[:allocation_state].presence
+      when "unallocated"
+        @demand_lines = @demand_lines.where(status: "open")
+      when "partially_allocated"
+        @demand_lines = @demand_lines.where(status: "partially_allocated")
+      when "allocated"
+        @demand_lines = @demand_lines.where(status: "allocated")
+      when "fulfilled"
+        @demand_lines = @demand_lines.where(status: "fulfilled")
+      end
+
+      return if params[:allocation_kind].blank?
+
+      @demand_lines = @demand_lines.joins(:demand_allocations)
+                                   .merge(DemandAllocation.active_allocations.where(allocation_kind: params[:allocation_kind]))
+                                   .distinct
     end
 
     def resolve_variant(id:, required:)

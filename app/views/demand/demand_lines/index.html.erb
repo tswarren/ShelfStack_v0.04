@@ -14,6 +14,28 @@
   <%= select_tag :capture_intent,
         options_for_select([["All intents", ""]] + DemandLine::CAPTURE_INTENTS.map { |i| [demand_capture_intent_label(i), i] }, params[:capture_intent]),
         class: "ss-input" %>
+  <%= select_tag :allocation_state,
+        options_for_select(
+          [
+            ["All allocation states", ""],
+            ["Unallocated", "unallocated"],
+            ["Partially allocated", "partially_allocated"],
+            ["Allocated", "allocated"],
+            ["Fulfilled", "fulfilled"]
+          ],
+          params[:allocation_state]
+        ),
+        class: "ss-input" %>
+  <%= select_tag :allocation_kind,
+        options_for_select(
+          [
+            ["All allocation kinds", ""],
+            ["On hand", "on_hand"],
+            ["Inbound PO", "inbound_purchase_order"]
+          ],
+          params[:allocation_kind]
+        ),
+        class: "ss-input" %>
   <%= text_field_tag :q, params[:q], placeholder: "Search demand number, customer, SKU, title…", class: "ss-input" %>
   <%= submit_tag "Filter", class: "ss-btn ss-btn-secondary" %>
 <% end %>
@@ -27,6 +49,7 @@
         <th>Customer</th>
         <th>Item</th>
         <th>Status</th>
+        <th>Allocation</th>
         <th>Qty</th>
         <th>Created</th>
         <th></th>
@@ -40,6 +63,7 @@
           <td><%= line.display_customer_name.presence || "—" %></td>
           <td><%= demand_item_label(line) %></td>
           <td><span class="<%= demand_status_class(line.status) %>"><%= demand_status_label(line.status) %></span></td>
+          <td><%= demand_allocation_state_label(line) %></td>
           <td class="ss-num"><%= line.quantity_requested %></td>
           <td><%= display_time(line.created_at) %></td>
           <td><%= link_to "View", demand_demand_line_path(line) %></td>

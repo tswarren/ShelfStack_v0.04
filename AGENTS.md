@@ -416,9 +416,9 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-6 (demand foundation):** **Complete** — [spec bundle](docs/v0.04/v0.04-6-demand-foundation/spec.md) · [completion](docs/implementation/v0.04-6-completion.md).
 
-**v0.04-7 (allocations and reservations):** **Planned** — [spec bundle](docs/v0.04/v0.04-7-allocations-and-reservations/spec.md).
+**v0.04-7 (allocations and reservations):** **Complete** — [spec bundle](docs/v0.04/v0.04-7-allocations-and-reservations/spec.md) · [completion](docs/implementation/v0.04-7-completion.md).
 
-**Current priority:** **v0.04-7** allocations and reservations.
+**Current priority:** **v0.04-8** sourcing and vendor responses.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 

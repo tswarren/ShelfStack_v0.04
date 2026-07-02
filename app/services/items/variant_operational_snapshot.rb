@@ -7,6 +7,8 @@ module Items
       :on_hand,
       :available,
       :reserved,
+      :legacy_on_hand_reserved,
+      :v0047_on_hand_reserved,
       :on_order_available,
       :ready_for_pickup_qty,
       :open_tbo,
@@ -68,6 +70,8 @@ module Items
       return {} if store.blank? || variant_ids.empty?
 
       balances = InventoryBalance.where(store: store, product_variant_id: variant_ids).index_by(&:product_variant_id)
+      legacy_on_hand_reserved = legacy_on_hand_reserved_by_variant
+      v0047_on_hand_reserved = v0047_on_hand_reserved_by_variant
       order_quantities = Purchasing::OrderQuantityLookup.for_variants(store: store, variant_ids: variant_ids)
       open_tbo = PurchaseRequestLine.open_remaining_quantities_for(store: store, variant_ids: variant_ids)
       ready_for_pickup = ready_for_pickup_quantities_for
@@ -90,6 +94,8 @@ module Items
           on_hand: eligible ? (balance&.quantity_on_hand || 0) : nil,
           available: eligible ? (balance&.quantity_available || 0) : nil,
           reserved: eligible ? (balance&.quantity_reserved || 0) : nil,
+          legacy_on_hand_reserved: eligible ? legacy_on_hand_reserved.fetch(variant.id, 0) : nil,
+          v0047_on_hand_reserved: eligible ? v0047_on_hand_reserved.fetch(variant.id, 0) : nil,
           on_order_available: eligible ? [ order_qty.on_order - reserved_incoming_qty, 0 ].max : nil,
           ready_for_pickup_qty: ready_for_pickup.fetch(variant.id, 0),
           open_tbo: open_tbo.fetch(variant.id, 0),
@@ -133,6 +139,21 @@ module Items
                           .where(store: store, product_variant_id: variant_ids)
                           .group(:product_variant_id)
                           .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+    end
+
+    def legacy_on_hand_reserved_by_variant
+      InventoryReservation.active_on_hand
+                          .where(store: store, product_variant_id: variant_ids)
+                          .group(:product_variant_id)
+                          .sum("quantity_reserved - quantity_fulfilled - quantity_released")
+    end
+
+    def v0047_on_hand_reserved_by_variant
+      DemandAllocation.active_allocations
+                      .on_hand_kind
+                      .where(store: store, product_variant_id: variant_ids)
+                      .group(:product_variant_id)
+                      .sum(:quantity_allocated)
     end
   end
 end

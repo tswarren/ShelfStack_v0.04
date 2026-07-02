@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md) and [data-model.md](data-model.md).
+**Complete** — companion to [spec.md](spec.md) and [data-model.md](data-model.md).
 
 ---
 

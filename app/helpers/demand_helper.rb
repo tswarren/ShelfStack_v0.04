@@ -14,6 +14,9 @@ module DemandHelper
   STATUS_LABELS = {
     "captured" => "Captured",
     "open" => "Open",
+    "partially_allocated" => "Partially allocated",
+    "allocated" => "Allocated",
+    "fulfilled" => "Fulfilled",
     "canceled" => "Canceled",
     "expired" => "Expired"
   }.freeze
@@ -29,10 +32,34 @@ module DemandHelper
   def demand_status_class(status)
     case status.to_s
     when "open" then "ss-status ss-status--active"
+    when "partially_allocated", "allocated" then "ss-status ss-status--pending"
     when "captured" then "ss-status ss-status--pending"
+    when "fulfilled" then "ss-status ss-status--active"
     when "canceled", "expired" then "ss-status ss-status--inactive"
     else "ss-status"
     end
+  end
+
+  def demand_allocation_summary(demand_line)
+    DemandAllocations::AllocationQuantities.for_demand_line(demand_line)
+  end
+
+  def demand_allocation_state_label(demand_line)
+    quantities = demand_allocation_summary(demand_line)
+    if quantities[:fulfilled_quantity] >= demand_line.quantity_requested
+      "Fulfilled"
+    elsif quantities[:active_allocated_quantity].positive?
+      "#{quantities[:active_allocated_quantity]} of #{demand_line.quantity_requested} allocated"
+    else
+      "Unallocated"
+    end
+  end
+
+  def demand_allocation_kind_label(kind)
+    {
+      "on_hand" => "On hand",
+      "inbound_purchase_order" => "Inbound PO"
+    }.fetch(kind.to_s, kind.to_s.humanize)
   end
 
   def demand_item_label(demand_line)

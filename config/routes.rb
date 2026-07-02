@@ -313,6 +313,15 @@ Rails.application.routes.draw do
         patch :expire
         post :match_variant
       end
+      resources :allocations, only: %i[create], controller: "allocations"
+    end
+    resources :allocations, only: [] do
+      member do
+        patch :release
+        patch :cancel
+        patch :expire
+        patch :fulfill
+      end
     end
     resources :stock_considerations, only: %i[index show new create] do
       member do

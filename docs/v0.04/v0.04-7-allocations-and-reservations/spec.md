@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — next active milestone after v0.04-6 Demand Foundation. Depends on [v0.04-6 completion](../../implementation/v0.04-6-completion.md) (merged).
+**Complete** — delivered in v0.04-7. Depends on [v0.04-6 completion](../../implementation/v0.04-6-completion.md) (merged).
 
 Companion documents: [data-model.md](data-model.md), [test-plan.md](test-plan.md).
 
