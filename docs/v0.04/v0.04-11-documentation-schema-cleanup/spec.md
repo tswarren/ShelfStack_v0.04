@@ -13,6 +13,110 @@ Completion note (created in Slice F): `docs/implementation/v0.04-11-completion.m
 
 ---
 
+## Resolved decisions (2026-07-02)
+
+These decisions are settled before implementation. Record outcomes in [data-model.md](data-model.md) as work proceeds.
+
+### 1. `catalog_items` retention policy
+
+**Decision:** Retain `catalog_items` during v0.04-11 and document it as a **retain-temporary** legacy bibliographic/admin surface.
+
+**Reason:** Broad app references remain (external lookup, ISBNdb/Ingram import, buyback intake, catalog CRUD, permissions, routes, `products.catalog_item_id`). Dropping in v0.04-11 would become a catalog/import cutover, not documentation cleanup.
+
+**v0.04-11 treatment:**
+
+* `Product` remains the canonical v0.04 commercial item; `ProductVariant` remains the operational grain.
+* `catalog_items` may remain in schema and code only as a quarantined bibliographic admin surface.
+* Active docs must **not** describe `CatalogItem` as the canonical domain model or as required before product creation.
+* Schema docs must mark `catalog_items` as **retained-temporary** when listed.
+
+**Remains in code (document, do not drop):**
+
+```text
+/items/catalog_items routes and CRUD
+items.catalog_items.* permissions
+products.catalog_item_id
+buyback_lines.catalog_item_id / created_catalog_item_id
+external_catalog_imports.catalog_item_id
+external_lookup_results.local_catalog_item_id
+CatalogItem model and related services
+```
+
+**Future owner:** Later catalog/import cleanup milestone (tentatively v0.04-12+) decides removal, import dependency replacement, and `products.catalog_item_id` drop.
+
+### 2. Legacy redirect aliases
+
+**Decision:** **Keep** redirect aliases through v0.04-11.
+
+**Allowed compatibility aliases (302 redirects only — no legacy controllers):**
+
+```text
+customers_customer_requests → /demand
+orders_purchase_requests → demand manual TBO entry (/demand?capture_intent=manual_tbo)
+```
+
+v00411 allowlists these exact route aliases. New staff-facing legacy routes are not allowed.
+
+### 3. `from_tbo` return-path params
+
+**Decision:** **Keep** existing `from_tbo` parameter names as **deprecated compatibility** parameters in v0.04-11.
+
+Renaming to demand-native params is deferred to a future route/view consistency pass.
+
+**v0.04-11 treatment:**
+
+* Document `from_tbo` as deprecated; it must not point to the removed PO TBO builder.
+* Return behavior must land on manual TBO / demand or sourcing flows.
+* Slice G documents and verifies behavior; does not rename params.
+
+### 4. v00411 verifier scope
+
+**Decision:** v00411 scans **active docs and active app paths**.
+
+**Included paths:**
+
+```text
+AGENTS.md
+README.md
+docs/README.md
+docs/overview.md
+docs/domain-model.md
+docs/glossary.md
+docs/schema-reference.md
+docs/architecture.md
+docs/testing.md
+docs/implementation/v0.04-*-completion.md
+docs/v0.04/
+app/
+config/routes.rb
+```
+
+**Historical docs:** `docs/specifications/phase-*` and `docs/roadmap/phase-*` are **not rewritten**. They are excluded from strict stale-reference checks **or** must begin with the standard historical banner (see [test-plan.md](test-plan.md)).
+
+**Standard historical banner (first lines of file):**
+
+```text
+Historical v0.03 implementation reference. This document is retained for project history and is not current domain guidance. For current behavior, see the v0.04 domain, schema, and workflow docs.
+```
+
+**Navigation exception:** If an active README or nav page links to a phase spec as *current* guidance, update the link to v0.04 docs (Slice A).
+
+### 5. Schema reference depth
+
+**Decision:** **Curated** schema reference — not a generated full dump of `db/schema.rb`.
+
+`docs/schema-reference.md` explains the v0.04 operational model and tables developers need. Required coverage includes v0.04 demand/sourcing/PO/inventory/POS tables plus a **Retained temporary (legacy admin)** section for `catalog_items` when still present. Use `inventory_balances` and `inventory_ledger_entries` (actual table names).
+
+Optional: lightweight v00411 check that active schema docs do not list v0.04-10 dropped ordering tables as current.
+
+### 6. Historical phase docs
+
+**Decision:** **Banner only** — do not rewrite historical phase specs in v0.04-11.
+
+Active docs must be correct; historical docs must be clearly labeled. See banner text in decision #4.
+
+---
+
 ## Job
 
 v0.04-11 is a **stabilization, documentation, and cleanup milestone**.
@@ -303,6 +407,14 @@ pos_transactions
 pos_transaction_lines  (including demand_allocation_id)
 ```
 
+**Retained temporary (legacy admin)** — document when still present:
+
+```text
+catalog_items
+catalog_item_identifiers (if present)
+products.catalog_item_id
+```
+
 Update [data-model.md](data-model.md) decision rows as schema doc edits land.
 
 ### Done when
@@ -331,27 +443,17 @@ See [test-plan.md](test-plan.md) for check list and test coverage.
 
 ## Slice E — Catalog artifact audit (required)
 
-**Not optional.** v0.04-1 fused catalog metadata onto `products`, but `catalog_items` and related FKs may still exist.
+Per [resolved decision #1](#1-catalog_items-retention-policy): **retain-temporary**, not drop.
 
-Audit and record every row in [data-model.md](data-model.md):
+Audit and record every row in [data-model.md](data-model.md). Confirm each artifact is either documented as retained-temporary or (if audit finds unused orphan) flagged for Slice G removal only.
 
-* `catalog_items` table
-* `products.catalog_item_id`
-* buyback / external lookup / import FK paths
-* `CatalogItem` model and remaining app references
-
-Outcomes: **already removed**, **drop in v0.04-11**, **retain with documented reason**, **test-only — rewrite tests then drop**.
-
-Rules:
-
-* Do not remove artifacts still required by product identifier or buyback flows without a replacement path.
-* Prefer reseed over row migration (pre-production).
-* Any drop requires migration + schema doc + v00411 verifier update in same slice.
+**No destructive catalog migration in v0.04-11** unless a future decision explicitly rescopes this milestone.
 
 ### Done when
 
-* Every catalog artifact has a recorded decision and owner slice.
-* Drops (if any) are migrated, tested, and documented.
+* Every catalog artifact row in [data-model.md](data-model.md) has decision `retain-temporary` or `doc-only` with verification note.
+* Active docs and schema reference mark `catalog_items` as legacy admin, not canonical model.
+* Full test suite still passes (no schema change expected for retain path).
 
 ---
 
@@ -371,17 +473,21 @@ Rules:
 
 ## Slice G — Active code reference cleanup
 
-Thin cleanup pass for **identifiers and comments only** (no workflow changes):
+Thin cleanup pass — **document and verify** deprecated compat; rename only where zero-behavior-change and low risk.
 
-* Route redirect aliases (`customers_customer_requests`, `orders_purchase_requests`) — remove or document retain in completion note.
-* Presenter/hub field names (`purchase_requests`, `open_special_orders`, `PurchaseRequestLink`) — rename to demand-native labels where staff-facing or grep-noisy.
-* Comments referencing dropped models.
+* Route redirect aliases — **keep** (see [decision #2](#2-legacy-redirect-aliases))
+* `from_tbo` params — **keep deprecated** (see [decision #3](#3-from_tbo-return-path-params))
+* Presenter/hub stub names (`PurchaseRequestLink`, `open_special_orders`, etc.) — rename to demand-native labels where staff-facing or grep-noisy
+* Orphan views for removed flows (e.g. `from_tbo` PO builder) — delete if unreferenced
+* Comments referencing dropped models — update or remove
 
-May extend v00411 to scan `app/` for forbidden **model class names** (similar to v00410 staff-permission scan).
+May extend v00411 to scan `app/` for forbidden **dropped** model class names (not `CatalogItem` while retain-temporary).
 
 ### Done when
 
-* Stale legacy model names absent from active app paths verifiers scan, or explicitly allowlisted with reason.
+* Stale legacy **ordering** model names absent from active app paths verifiers scan.
+* Deprecated compat (`from_tbo`, redirect aliases) documented in glossary or AGENTS.md.
+* Orphan dead views removed or allowlisted with reason.
 
 ---
 
@@ -415,7 +521,7 @@ v0.04-11 is complete when:
 1. Active domain docs describe v0.04 as canonical.
 2. Active schema docs match `db/schema.rb`.
 3. No active docs present dropped ordering tables or legacy workflow models as current.
-4. Catalog artifact audit in [data-model.md](data-model.md) is closed (drop or retain documented).
+4. Catalog artifact audit in [data-model.md](data-model.md) is closed (**retain-temporary** documented; no unplanned drops).
 5. `AGENTS.md` gives correct v0.04 implementation guidance.
 6. v00411 verifier passes; v0046–v00410 verifiers pass.
 7. Full test suite passes.

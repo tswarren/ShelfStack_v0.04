@@ -2,146 +2,140 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md). This document is **not** a new domain model design.
-
-Purpose:
-
-* Record **audit decisions** for schema and code artifacts that may still reference v0.03.
-* Track **retain vs drop** outcomes with owner slice and verification notes.
-* Stay synchronized with `docs/schema-reference.md` during Slice C/E.
-
-Update this log as decisions are made. Do not spec new tables or business rules here — use [VERSION_0.04.md](../../design/VERSION_0.04.md) and milestone v0.04-6–10 specs for domain design.
+**Planned** — companion to [spec.md](spec.md). This file is an **audit decision log**, not a new domain model design.
 
 ---
 
-## How to use this log
+## Resolved decisions summary (2026-07-02)
 
-For each artifact, fill one row in the decision table:
-
-| Column | Meaning |
-| ------ | ------- |
-| **Artifact** | Table, column, model, route alias, or doc section |
-| **Location** | `db/schema.rb`, model path, route, doc path |
-| **Pre-audit state** | Present / absent / redirect-only / doc-only |
-| **Decision** | `drop` · `retain` · `retain-temporary` · `doc-only` · `already-removed` |
-| **Owner slice** | A–G from spec |
-| **Blockers** | Flows/tests still referencing artifact |
-| **Verified** | Date + command (migrate/test/verifier) |
-
-Close the milestone when every **required** row has a decision and verification note.
+| Topic | Decision | v0.04-11 action |
+| ----- | -------- | --------------- |
+| `catalog_items` | **retain-temporary** | Document in schema reference + active docs; no drop migration |
+| Redirect aliases | **keep** | Allowlist in v00411; document in glossary/AGENTS |
+| `from_tbo` params | **keep deprecated** | Document; verify return paths; no rename |
+| Schema reference | **curated** | Rewrite active sections; retained-temporary section for catalog |
+| Phase specs | **banner only** | No rewrite; fix active nav links only |
+| Verifier scope | **active docs + app + routes** | See [test-plan.md](test-plan.md) |
 
 ---
 
-## Ordering domain (v0.04-10 — reference baseline)
+## Purpose
 
-These were targeted for removal in v0.04-10 G2. Confirm absent on `main` before v0.04-11 schema doc work.
+Record every schema artifact, FK, route alias, and code identifier that v0.04-11 must classify as:
 
-| Artifact | Expected state post-v0.04-10 | Decision | Verified |
-| -------- | ---------------------------- | -------- | -------- |
-| `customer_requests` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `customer_request_lines` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `special_orders` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `purchase_requests` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `purchase_request_lines` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `inventory_reservations` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `purchase_order_line_allocations` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `receipt_line_allocations` | Dropped | `already-removed` (v0.04-10) | v00410 G2 |
-| `pos_transaction_lines.inventory_reservation_id` | Dropped | _confirm in schema audit_ | |
-| `pos_transaction_lines.demand_allocation_id` | Active FK | `retain` (v0.04-10) | v00410 G1 |
+* **already removed** (v0.04-10 or earlier)
+* **retain-temporary** (legacy admin; documented quarantine)
+* **doc-only** (no schema change; update docs/comments)
+* **drop in v0.04-11** (not expected for catalog per resolved decisions)
+* **defer** (future milestone owner)
+
+Fill **Decision** and **Verification** columns as slices complete. Leave `_pending_` only for items discovered during audit.
 
 ---
 
-## Catalog artifacts (Slice E — required audit)
+## v0.04-10 dropped ordering artifacts (reference — do not reintroduce)
 
-v0.04-1 fused metadata onto `products`; v0.04-2 added `product_identifiers`. **`catalog_items` may still exist** — audit before any drop.
+These were removed in v0.04-10 G2. Active docs and schema reference must not list them as current.
 
-### Pre-audit inventory (2026-07-02)
-
-Known references to verify during Slice E:
-
-| Artifact | Known location | Pre-audit state | Decision | Owner | Blockers | Verified |
-| -------- | -------------- | --------------- | -------- | ----- | -------- | -------- |
-| `catalog_items` table | `db/schema.rb` | Present | _TBD_ | E | buyback, external lookup, `products.catalog_item_id` | |
-| `CatalogItem` model | `app/models/catalog_item.rb` | Present | _TBD_ | E | app routes/controllers/views/tests | |
-| `products.catalog_item_id` | `db/schema.rb` | Present (nullable FK) | _TBD_ | E | product create/migration paths | |
-| `buyback_lines.catalog_item_id` | `db/schema.rb` | Present | _TBD_ | E | buyback intake/match flows | |
-| `buyback_lines.created_catalog_item_id` | `db/schema.rb` | Present | _TBD_ | E | graded item create from buyback | |
-| `external_catalog_imports.catalog_item_id` | `db/schema.rb` | Present | _TBD_ | E | ISBNdb import path | |
-| `external_lookup_results.local_catalog_item_id` | `db/schema.rb` | Present | _TBD_ | E | add-item / external lookup | |
-| Items routes `catalog_item` legacy paths | `config/routes.rb` | _audit_ | _TBD_ | E/G | redirects vs active | |
-| `catalog_item_identifiers` (if any) | _audit_ | _TBD_ | _TBD_ | E | superseded by `product_identifiers`? | |
-
-### Slice E decision rules
-
-| Outcome | When to use |
-| ------- | ----------- |
-| **drop** | No production path requires artifact; tests rewritten; migration + reseed documented |
-| **retain-temporary** | Still referenced; document replacement milestone (e.g. external lookup cutover) |
-| **retain** | Intentional bridge (document why and who owns removal) |
-| **doc-only** | Name appears only in historical docs — update docs, no schema change |
+| Artifact | Decision | Verification |
+| -------- | -------- | ------------ |
+| `customer_requests` table | already removed | v00410 G2 verifier |
+| `customer_request_lines` table | already removed | v00410 G2 verifier |
+| `purchase_requests` table | already removed | v00410 G2 verifier |
+| `purchase_request_lines` table | already removed | v00410 G2 verifier |
+| `special_orders` table | already removed | v00410 G2 verifier |
+| `inventory_reservations` table | already removed | v00410 G2 verifier |
+| `purchase_order_line_allocations` table | already removed | v00410 G2 verifier |
+| `receipt_line_allocations` table | already removed | v00410 G2 verifier |
+| `CustomerRequest` model | already removed | grep `app/` |
+| `PurchaseRequest` model | already removed | grep `app/` |
+| `InventoryReservation` model | already removed | grep `app/` |
+| `customer_requests.*` permissions | already removed | v00410 legacy_staff_permissions_absent |
 
 ---
 
-## Route and permission aliases (Slice G)
+## Catalog artifacts (Slice E)
 
-v0.04-10 retained compatibility redirects. Audit whether v0.04-11 removes or documents them.
+Per spec resolved decision #1: **retain-temporary** for v0.04-11.
 
-| Artifact | Location | Pre-audit state | Decision | Owner | Notes |
-| -------- | -------- | --------------- | -------- | ----- | ----- |
-| `customers_customer_requests` route alias → `/demand` | `config/routes.rb` | Redirect | _TBD_ | G | v0.04-10 deferred |
-| `orders_purchase_requests` → manual TBO demand | `config/routes.rb` | Redirect | _TBD_ | G | v0.04-10 deferred |
-| Legacy Phase 7A permission keys in seeds | `db/seeds` | May exist unused | _TBD_ | G | v00410 scans app, not seeds |
+| Artifact | Decision | Owner | Verification |
+| -------- | -------- | ----- | ------------ |
+| `catalog_items` table | retain-temporary | Slice E (doc) | Listed under "Retained temporary" in schema-reference; not in canonical domain chain |
+| `catalog_item_identifiers` table (if present) | retain-temporary | Slice E (doc) | Same section as catalog_items |
+| `products.catalog_item_id` | retain-temporary | Slice E (doc) | schema-reference notes optional legacy FK |
+| `buyback_lines.catalog_item_id` | retain-temporary | Slice E (doc) | buyback spec / data-model cross-ref |
+| `buyback_lines.created_catalog_item_id` | retain-temporary | Slice E (doc) | same |
+| `external_catalog_imports.catalog_item_id` | retain-temporary | Slice E (doc) | import flow docs |
+| `external_lookup_results.local_catalog_item_id` | retain-temporary | Slice E (doc) | lookup flow docs |
+| `CatalogItem` model | retain-temporary | Slice E (doc) | AGENTS.md: not canonical; bibliographic admin only |
+| `/items/catalog_items` routes | retain-temporary | Slice G (doc) | routes.rb comment or glossary |
+| `items.catalog_items.*` permissions | retain-temporary | Slice E (doc) | permission seeds unchanged |
 
----
+**Future owner:** v0.04-12+ catalog/import cleanup (tentative) — removal, import dependency replacement, `products.catalog_item_id` drop.
 
-## Active code identifiers (Slice G)
-
-Rename-only cleanup candidates (no behavior change):
-
-| Identifier | Location | Pre-audit state | Decision | Owner |
-| ------------ | -------- | --------------- | -------- | ----- |
-| `PurchaseRequestLink` | `PurchaseOrderDocumentHub` | Present | _TBD_ | G |
-| `open_special_orders` | item operations presenters | Empty/stub | _TBD_ | G |
-| `open_purchase_request_lines` | item operations tab presenter | Returns `[]` | _TBD_ | G |
-| `from_tbo` return path | `Items::ReturnPath` | Redirect to manual TBO | _TBD_ | G |
+**No drop migration in v0.04-11** unless milestone is explicitly rescoped.
 
 ---
 
-## Documentation artifacts (Slice A–C)
+## Route and param compatibility (Slice G)
 
-Track major active doc sections that required rewrite (fill during implementation):
+| Artifact | Decision | Owner | Verification |
+| -------- | -------- | ----- | ------------ |
+| `customers_customer_requests` redirect → `/demand` | keep | Slice G | v00411 allowlist; glossary "Retired routes" |
+| `orders_purchase_requests` redirect → manual TBO | keep | Slice G | v00411 allowlist |
+| `from_tbo` query/route params | keep deprecated | Slice G | Document deprecated; grep confirms no PO TBO builder target |
+| `from_tbo` PO builder views/controllers | already removed | v0.04-10 | grep + orphan view delete in Slice G if any remain |
 
-| Doc path | Issue (pre-audit) | Decision | Owner | Verified |
-| -------- | ----------------- | -------- | ----- | -------- |
-| `docs/domain-model.md` | Customer Request entity described as active | _TBD_ | B | |
-| `docs/overview.md` | “customer requests” in reporting list | _TBD_ | B | |
-| `docs/schema-reference.md` | May list dropped / catalog tables | _TBD_ | C | |
-| `docs/glossary.md` | Missing retired-term section | _TBD_ | B | |
-| `docs/v0.04/README.md` v0.03 reference blurb | Says “until milestones replace” — update tone | _TBD_ | F | |
+---
+
+## Code identifier cleanup (Slice G)
+
+| Identifier / path | Decision | Owner | Verification |
+| ----------------- | -------- | ----- | ------------ |
+| `PurchaseRequestLink` (presenter/hub) | doc-only rename if staff-facing | Slice G | grep after rename |
+| `open_special_orders` | doc-only rename if staff-facing | Slice G | grep after rename |
+| `open_purchase_request_lines` | doc-only rename if staff-facing | Slice G | grep after rename |
+| Comments referencing `CustomerRequest` etc. | doc-only | Slice G | v00411 app scan (dropped models only) |
+
+**Note:** `CatalogItem` references in `app/` are **allowed** while retain-temporary; v00411 must not fail on `CatalogItem` / `catalog_items` in app paths unless active docs present them as canonical.
+
+---
+
+## Active documentation files (Slice A–B)
+
+| File | Decision | Owner | Verification |
+| ---- | -------- | ----- | ------------ |
+| `docs/domain-model.md` | rewrite v0.04 chain | Slice B | v00411 structural grep |
+| `docs/overview.md` | rewrite reporting/workspaces | Slice B | manual review |
+| `docs/glossary.md` | add retired terms + compat aliases | Slice B | v00411 glossary check |
+| `docs/schema-reference.md` | curated rewrite | Slice C | v00411 dropped-table check |
+| `AGENTS.md` | align v0.04 priority + verifiers | Slice B | v00411 agents check |
+| `README.md` | align milestone status | Slice F | v00411 README alignment |
+| `docs/README.md` | fix nav links to v0.04 docs | Slice A | manual link check |
+| `docs/specifications/phase-*` | banner only (no rewrite) | Slice A optional | banner present or excluded from scan |
 
 ---
 
 ## Schema doc consistency checklist (Slice C)
 
-After edits, confirm alignment between `db/schema.rb` and `docs/schema-reference.md` for:
+Manual verification after `docs/schema-reference.md` rewrite:
 
-- [ ] Demand tables (`demand_lines`, `demand_allocations`)
-- [ ] Sourcing tables (`sourcing_runs`, `sourcing_attempts`, `vendor_responses`)
-- [ ] PO line vendor quantity columns (v0.04-9)
-- [ ] POS `demand_allocation_id` (v0.04-10)
-- [ ] Inventory ledger / balances naming
-- [ ] Absence of dropped ordering tables in **active** schema reference sections
+- [ ] Every table in **Active v0.04 operational** sections exists in `db/schema.rb`
+- [ ] Dropped ordering tables (§ above) not listed as active
+- [ ] Demand chain documented: `demand_lines`, `demand_allocations`, sourcing, PO, receipt, inventory, POS pickup FK
+- [ ] Inventory tables use `inventory_balances` and `inventory_ledger_entries` (not legacy names)
+- [ ] `catalog_items` only under **Retained temporary (legacy admin)** if still in DB
+- [ ] `pos_transaction_lines.demand_allocation_id` documented
 
-Record pass/fail in v0.04-11 completion note.
+Optional rake task: `shelfstack:v00411:audit_schema_docs` — document in completion note if implemented.
 
 ---
 
-## Audit closure
+## Sign-off
 
-| Gate | Status |
-| ---- | ------ |
-| All ordering artifacts confirmed removed or documented | _open_ |
-| All catalog artifact rows decided | _open_ |
-| Schema reference matches `db/schema.rb` | _open_ |
-| v00411 verifier passes | _open_ |
-| Completion note links this log | _open_ |
+| Slice | Auditor | Date | Notes |
+| ----- | ------- | ---- | ----- |
+| E — catalog audit | _pending_ | | retain-temporary documented |
+| C — schema reference | _pending_ | | |
+| G — code cleanup | _pending_ | | |
+| F — completion | _pending_ | | |

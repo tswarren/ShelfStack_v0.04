@@ -24,7 +24,7 @@ This milestone does **not** add staff workflow or domain behavior tests.
 | **Verifier unit** | `test/lib/shelfstack/v00411_verify_test.rb` |
 | **Schema audit** | Manual/rake comparison checklist (see [data-model.md](data-model.md)) |
 | **Regression** | `bin/rails test` after doc-only and schema-drop slices |
-| **Seeds** | Optional `shelfstack:seeds:validate` after catalog artifact drop |
+| **Seeds** | Optional `shelfstack:seeds:validate` after catalog doc updates (no drop expected) |
 
 ---
 
@@ -70,9 +70,12 @@ Implement `Shelfstack::V00411Verify` + `shelfstack:v00411:verify_documentation_s
 | `glossary_has_retired_section` | `docs/glossary.md` contains retired-term guidance |
 | `agents_md_references_v004_verifiers` | `AGENTS.md` lists v0046–v00411 verification commands |
 | `v004_milestone_statuses_aligned` | `docs/v0.04/README.md` shows v0.04-10 Complete and v0.04-11 in progress/complete appropriately |
+| `redirect_aliases_allowlisted` | Known legacy redirects present in routes.rb and documented (not flagged as errors) |
 | `prior_verifiers_pass` | Delegate or document that v0046–v00410 are run in merge gate (optional inline re-run) |
 
 ### Active doc scan paths (minimum)
+
+Per [spec.md resolved decision #4](spec.md#4-v00411-verifier-scope):
 
 ```text
 AGENTS.md
@@ -82,10 +85,38 @@ docs/overview.md
 docs/domain-model.md
 docs/glossary.md
 docs/schema-reference.md
-docs/v0.04/README.md
+docs/architecture.md
+docs/testing.md
+docs/implementation/v0.04-*-completion.md
+docs/v0.04/
+app/
+config/routes.rb
 ```
 
-Exclude from forbidden-term failure (allowlist contexts):
+**Excluded from strict forbidden-term checks** (historical — banner optional):
+
+```text
+docs/specifications/phase-*
+docs/roadmap/phase-*
+docs/implementation/phase-*-completion.md  (historical phase completion notes)
+```
+
+**Standard historical banner** (required if a phase spec is linked from active nav; otherwise exclusion is sufficient):
+
+```text
+Historical v0.03 implementation reference. This document is retained for project history and is not current domain guidance. For current behavior, see the v0.04 domain, schema, and workflow docs.
+```
+
+### Route redirect allowlist (must exist in `config/routes.rb`)
+
+```text
+customers_customer_requests
+orders_purchase_requests
+```
+
+These are **not** failures when documented as legacy redirects.
+
+Prose allowlist contexts (forbidden-term scanner):
 
 ```text
 Retired
@@ -94,11 +125,17 @@ v0.03 implementation reference
 Archived
 Migration history
 Already-removed (v0.04-10)
+Retained temporary
+legacy admin
+deprecated compatibility
+from_tbo (deprecated)
+customers_customer_requests (redirect)
+orders_purchase_requests (redirect)
 ```
 
 ### Forbidden patterns (active docs — unqualified)
 
-Scanner should fail if these appear outside allowlisted contexts:
+Scanner should fail if these appear outside allowlisted contexts in **active doc paths** (not `app/` — see app scan below):
 
 ```text
 CustomerRequest
@@ -107,28 +144,45 @@ PurchaseRequest
 PurchaseRequestLine
 SpecialOrder
 InventoryReservation
-catalog_items          (as active table)
-catalog_item_id        (as canonical FK guidance)
 purchase_order_line_allocations
 receipt_line_allocations
-customer_requests      (as active workflow)
-purchase_requests      (as active workflow)
-inventory_reservations (as active workflow)
+customer_requests      (as active workflow/table)
+purchase_requests      (as active workflow/table)
+inventory_reservations (as active workflow/table)
 ```
+
+**Active docs only** — also fail if `catalog_items` or `catalog_item_id` appear as **canonical** domain guidance (without "retained-temporary", "legacy admin", or "Retired" context).
+
+**Allowed in active docs:**
+
+* `catalog_items` under explicit **Retained temporary (legacy admin)** section
+* `from_tbo` marked deprecated compatibility
+* Redirect alias names in glossary or AGENTS compatibility section
 
 **Allowed examples:**
 
 * “special order” as capture intent in glossary with clarification
 * “Retired: customer request → use DemandLine”
-* Historical phase spec paths under `docs/specifications/` (excluded from scan)
+* Historical phase spec paths under `docs/specifications/` (excluded from scan or bannered)
 
-### Optional Slice G extension
+### App scan (Slice G — required per spec decision #4)
 
-If implemented, add:
+Scan `app/` for **dropped ordering model class names** only:
+
+```text
+CustomerRequest
+CustomerRequestLine
+PurchaseRequest
+PurchaseRequestLine
+SpecialOrder
+InventoryReservation
+```
+
+**Do not fail** on `CatalogItem`, `catalog_item`, or `/catalog_items` paths while retain-temporary policy is in effect.
 
 | Key | Description |
 | --- | ----------- |
-| `app_no_forbidden_legacy_model_constants` | `app/` has no unqualified references to dropped model class names (mirror v00410 permission scan) |
+| `app_no_dropped_ordering_model_constants` | `app/` has no unqualified references to v0.04-10 dropped model class names |
 
 ---
 
@@ -175,7 +229,7 @@ Document in completion note if implemented.
 | **B** | v00411 unit + STRICT v00411 after doc rewrites |
 | **C** | v00411 schema-reference check |
 | **D** | Add v00411 verify test file; full verifier suite |
-| **E** | Full `bin/rails test` after any migration; v0046–v00411; seeds validate if catalog touched |
+| **E** | Full `bin/rails test` (no migration expected); v0046–v00411; seeds validate optional |
 | **F** | Final merge gate recorded in completion note |
 | **G** | Full test suite if app identifiers renamed; extend v00411 if app scan added |
 
@@ -199,7 +253,7 @@ After classification, spot-check these user-facing doc paths render no dead link
 | ------------------------- | ------------- |
 | Active docs v0.04 canonical | v00411 `active_docs_*` + manual review |
 | Schema docs match DB | data-model checklist + v00411 schema check |
-| Catalog audit closed | data-model.md rows filled + migrate/test if drop |
+| Catalog audit closed | data-model.md rows filled (retain-temporary); no unplanned drops |
 | Verifiers pass | Merge gate commands |
 | Full suite green | `bin/rails test` output in completion note |
 
