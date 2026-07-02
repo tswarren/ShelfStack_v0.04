@@ -58,7 +58,8 @@ module DemandHelper
   def demand_allocation_kind_label(kind)
     {
       "on_hand" => "On hand",
-      "inbound_purchase_order" => "Inbound PO"
+      "inbound_purchase_order" => "Inbound PO",
+      "vendor_backorder" => "Vendor backorder"
     }.fetch(kind.to_s, kind.to_s.humanize)
   end
 

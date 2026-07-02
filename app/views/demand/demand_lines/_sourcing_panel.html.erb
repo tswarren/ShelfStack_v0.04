@@ -1,0 +1,35 @@
+<h2>Sourcing</h2>
+
+<dl class="ss-summary">
+  <dt>Unresolved for sourcing</dt>
+  <dd class="ss-num"><%= @sourcing_unresolved %></dd>
+  <dt>Active run</dt>
+  <dd>
+    <% if @active_sourcing_run.present? %>
+      <%= link_to "Run ##{@active_sourcing_run.id} (#{sourcing_run_status_label(@active_sourcing_run.status)})",
+            sourcing_run_path(@active_sourcing_run) %>
+    <% else %>
+      —
+    <% end %>
+  </dd>
+  <% if @latest_vendor_response.present? %>
+    <dt>Latest response</dt>
+    <dd>
+      <%= display_time(@latest_vendor_response.responded_at) %> —
+      confirmed <%= @latest_vendor_response.quantity_confirmed %>,
+      backordered <%= @latest_vendor_response.quantity_backordered %>
+    </dd>
+  <% end %>
+</dl>
+
+<% if @sourcing_eligibility&.eligible && Authorization.allowed?(user: current_user, permission_key: "sourcing.runs.create", store: current_store) %>
+  <%= form_with url: sourcing_runs_path, method: :post, class: "ss-form" do %>
+    <%= hidden_field_tag :demand_line_id, @demand_line.id %>
+    <%= number_field_tag :quantity, @sourcing_unresolved, min: 1, class: "ss-input" %>
+    <%= submit_tag "Start sourcing run", class: "ss-btn ss-btn-secondary" %>
+  <% end %>
+<% elsif @sourcing_eligibility.present? && !@sourcing_eligibility.eligible %>
+  <p class="ss-muted"><%= @sourcing_eligibility.reason %></p>
+<% end %>
+
+<p><%= link_to "Open sourcing workspace", sourcing_root_path, class: "ss-link" %></p>

@@ -9,6 +9,7 @@ module V0048TestHelper
 
   def grant_v0048_sourcing_permissions!(user, store: nil)
     %w[
+      demand.access
       sourcing.access
       sourcing.runs.create
       sourcing.attempts.create

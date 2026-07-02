@@ -71,7 +71,14 @@ module Shelfstack
         defined?(Sourcing::CreateAttempt) &&
         defined?(Sourcing::SubmitAttempt) &&
         defined?(Sourcing::RecordVendorResponse) &&
+        defined?(Sourcing::Cascade) &&
+        defined?(Sourcing::CloseRun) &&
         defined?(DemandAllocations::AllocateVendorBackorder)
+    end
+
+    def cascade_creates_pending_attempt?
+      File.read(Rails.root.join("app/services/sourcing/cascade.rb")).include?('status: "pending"') ||
+        !File.read(Rails.root.join("app/services/sourcing/cascade.rb")).match?(/SubmitAttempt/)
     end
 
     def vendor_backorder_excluded_from_cache_rebuild?
@@ -93,7 +100,8 @@ module Shelfstack
         v0048_services_avoid_legacy_writes: sourcing_services_avoid_legacy_writes?,
         used_wanted_sourcing_attempt_count_zero: used_wanted_sourcing_attempt_count_zero?,
         vendor_backorder_excluded_from_cache_rebuild: vendor_backorder_excluded_from_cache_rebuild?,
-        demand_cancel_expires_sourcing: demand_cancel_expires_sourcing?
+        demand_cancel_expires_sourcing: demand_cancel_expires_sourcing?,
+        cascade_creates_pending_attempt: cascade_creates_pending_attempt?
       }
 
       failures = checks.reject { |_key, ok| ok }.keys
