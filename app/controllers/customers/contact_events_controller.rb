@@ -3,7 +3,7 @@
 module Customers
   class ContactEventsController < BaseController
     before_action :set_customer
-    before_action -> { authorize!("customer_requests.contact") }, only: :create
+    before_action -> { authorize!("customers.update") }, only: :create
 
     def create
       CustomerContactEvent.create!(

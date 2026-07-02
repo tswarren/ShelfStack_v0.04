@@ -4,8 +4,8 @@
   <% if Authorization.allowed?(user: current_user, permission_key: "customers.create", store: current_store) %>
     <%= link_to "New", new_customers_customer_path, class: "ss-btn" %>
   <% end %>
-  <% if Authorization.allowed?(user: current_user, permission_key: "customer_requests.create", store: current_store) %>
-    <%= link_to "New request", new_customers_customer_request_path, class: "ss-btn ss-btn-secondary" %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
+    <%= link_to "New demand", new_demand_demand_line_path, class: "ss-btn ss-btn-secondary" %>
   <% end %>
 </h1>
 

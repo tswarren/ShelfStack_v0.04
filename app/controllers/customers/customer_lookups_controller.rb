@@ -16,7 +16,7 @@ module Customers
     private
 
     def authorize_lookup!
-      keys = %w[customers.access customer_requests.access demand.create]
+      keys = %w[customers.access demand.create]
       return if keys.any? { |key| Authorization.allowed?(user: current_user, permission_key: key, store: current_store) }
 
       redirect_back fallback_location: customers_root_path, alert: "You are not authorized for this action."

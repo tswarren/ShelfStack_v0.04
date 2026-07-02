@@ -17,6 +17,7 @@ class ShelfstackV00410VerifyTest < ActiveSupport::TestCase
 
       assert_equal "g2", result[:phase]
       assert_includes result[:checks].keys, :legacy_tables_absent
+      assert_includes result[:checks].keys, :legacy_staff_permissions_absent
     end
   end
 

@@ -47,7 +47,7 @@ module Customers
     end
 
     def can_record_contact?
-      Authorization.allowed?(user: user, permission_key: "demand.access", store: store)
+      Authorization.allowed?(user: user, permission_key: "customers.update", store: store)
     end
 
     def can_view_requests?

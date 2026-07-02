@@ -22,6 +22,13 @@ module Shelfstack
       /customer_requests#show/
     ].freeze
 
+    LEGACY_STAFF_PERMISSION_PREFIXES = %w[
+      customer_requests.
+      special_orders.
+      purchase_requests.
+      inventory_reservations.
+    ].freeze
+
     def phase
       ENV.fetch("V00410_PHASE", "g1").downcase
     end
@@ -83,6 +90,17 @@ module Shelfstack
       defined?(Reports::DemandQueue::Query)
     end
 
+    def legacy_staff_permissions_absent?
+      app_root = Rails.root.join("app")
+      paths = Dir.glob(app_root.join("**/*.{rb,erb}"))
+      paths.none? do |path|
+        content = File.read(path)
+        LEGACY_STAFF_PERMISSION_PREFIXES.any? do |prefix|
+          content.include?("\"#{prefix}") || content.include?("'#{prefix}")
+        end
+      end
+    end
+
     def g1_checks
       {
         pos_demand_allocation_column_present: pos_demand_allocation_column_present?,
@@ -100,7 +118,8 @@ module Shelfstack
         legacy_tables_absent: legacy_tables_absent?,
         legacy_routes_absent: legacy_routes_absent?,
         legacy_models_absent: legacy_models_absent?,
-        inbound_availability_without_legacy_claims: inbound_availability_without_legacy_claims?
+        inbound_availability_without_legacy_claims: inbound_availability_without_legacy_claims?,
+        legacy_staff_permissions_absent: legacy_staff_permissions_absent?
       )
     end
 

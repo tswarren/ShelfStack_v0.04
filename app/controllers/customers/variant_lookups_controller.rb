@@ -2,7 +2,7 @@
 
 module Customers
   class VariantLookupsController < BaseController
-    before_action -> { authorize!("customer_requests.access") }
+    before_action -> { authorize!("demand.access") }
 
     def show
       result = Inventory::VariantLookup.call(
