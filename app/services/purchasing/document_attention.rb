@@ -67,7 +67,7 @@ module Purchasing
       end
 
       customer_alloc_qty = purchase_order.purchase_order_lines.sum do |line|
-        Purchasing::PurchaseOrderLineDemandBreakdown.new(purchase_order).for_line(line).customer_allocated_quantity
+        Purchasing::PurchaseOrderLineDemandBreakdown.new(purchase_order).for_line(line).demand_allocated_quantity
       end
       if customer_alloc_qty.positive? && %w[submitted partially_received].include?(purchase_order.status)
         items << AttentionItem.new(

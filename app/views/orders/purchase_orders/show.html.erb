@@ -57,7 +57,7 @@
           <td class="ss-num"><%= line.quantity_ordered %></td>
           <td class="ss-num"><%= line.quantity_received %></td>
           <td class="ss-num"><%= @purchase_order.open_quantity_for_line(line) %></td>
-          <td class="ss-num"><%= breakdown&.customer_allocated_quantity || 0 %></td>
+          <td class="ss-num"><%= breakdown&.demand_allocated_quantity || 0 %></td>
           <td class="ss-num"><%= breakdown&.stock_quantity || line.quantity_ordered %></td>
           <td class="ss-num"><%= line.unit_cost_cents ? format_cents(line.unit_cost_cents) : "—" %></td>
           <td><%= render "orders/shared/status_badge", status: line.status %></td>

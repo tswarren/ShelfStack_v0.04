@@ -320,7 +320,7 @@ class OrdersPurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to orders_purchase_order_path(@purchase_order)
     assert_equal "closed", @purchase_order.reload.status
-    assert_equal "closed", @purchase_order.purchase_order_lines.first.status
+    assert_equal "closed_short", @purchase_order.purchase_order_lines.first.status
   end
 
   test "show displays metric strip and variant names" do
