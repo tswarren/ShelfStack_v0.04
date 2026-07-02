@@ -10,165 +10,192 @@
 
 ### `purchase_order_lines` — extend
 
-**Grain unchanged:** one row = one variant line on one PO.
-
 | Column | Type | Null | Notes |
 | ------ | ---- | ---- | ----- |
-| `quantity_confirmed_by_vendor` | integer | no | default 0; vendor acknowledged shippable |
+| `vendor_quantity_state` | string | no | default `unconfirmed`; see spec enum |
+| `quantity_confirmed_by_vendor` | integer | no | default 0 |
 | `quantity_backordered_by_vendor` | integer | no | default 0 |
 | `quantity_canceled_by_vendor` | integer | no | default 0 |
-| `quantity_cascaded` | integer | no | default 0; moved to alternate source |
-| `quantity_rejected_on_line` | integer | no | default 0; cumulative rejected at receipt (optional name: `quantity_rejected`) |
-| `quantity_closed_short` | integer | no | default 0; closed without full receipt |
-| `vendor_confirmed_at` | datetime | yes | when vendor qty last synced/recorded |
-| `vendor_confirmation_source` | string | yes | `manual`, `sourcing_response`, `import`, `api` |
+| `quantity_rejected_on_line` | integer | no | default 0; cumulative rejected at receipt |
+| `quantity_closed_short` | integer | no | default 0 |
+| `vendor_quantities_recorded_at` | datetime | yes | nil = unconfirmed fallback allowed |
+| `vendor_quantities_source_type` | string | yes | `manual`, `sourcing_response`, `import`, `api` |
+| `vendor_quantities_source_id` | bigint | yes | optional source row id |
 
-**Retained columns (semantic clarification, not rename in v0.04-9):**
+**Deferred from v0.04-9 baseline:** `quantity_cascaded` on PO line (cascade stays on `sourcing_attempts`).
+
+**Retained columns (semantic clarification):**
 
 | Column | v0.04-9 meaning |
 | ------ | --------------- |
-| `quantity_ordered` | Store-requested qty at submit (= design doc `quantity_requested`) |
-| `quantity_received` | Cumulative **accepted-to-stock** from posted receipts |
-| `status` | Derived from vendor + receiving state |
+| `quantity_ordered` | Store-requested qty at submit |
+| `quantity_received` | Cumulative **accepted-to-stock** on PO line (not physical receipt count) |
+| `status` | Existing enum; spelling **`cancelled`** (matches `PurchaseOrderLine::STATUSES`) |
+
+**`vendor_quantity_state` values:**
+
+```text
+unconfirmed
+partially_confirmed
+confirmed
+backordered
+canceled          -- line-level vendor cancel state (PO status enum uses cancelled)
+mixed
+```
 
 **Check constraints (conceptual):**
 
 ```text
-all vendor qty columns >= 0
-quantity_confirmed + backordered + canceled + cascaded <= quantity_ordered
-quantity_received <= effective_confirmed_or_ordered ceiling
-quantity_closed_short >= 0
+vendor bucket columns >= 0
+when vendor_quantities_recorded_at present:
+  confirmed + backordered + canceled <= quantity_ordered
+quantity_received + quantity_closed_short <= ceiling per effective supply rules
 ```
 
-**Backfill (migration):**
+**Backfill:**
 
 ```text
-quantity_confirmed_by_vendor = 0 for historical rows
+vendor_quantity_state = unconfirmed
+vendor_quantities_recorded_at = nil
+vendor bucket columns = 0
 quantity_received unchanged
-For open lines with no vendor confirmation, inbound math falls back to quantity_ordered - quantity_received (v0.04-7 behavior)
 ```
-
-**Indexes:** no new indexes required beyond existing PO line indexes unless query patterns demand `[purchase_order_id, status]` vendor-qty filters.
 
 ---
 
-### `receipt_lines` — extend (optional columns)
+### `demand_allocations` — extend (conversion traceability)
+
+Add status **`converted`** to `STATUSES` (terminal), or use `released` + `release_reason = converted_to_on_hand` if enum extension deferred — **prefer `converted`**.
+
+| Column | Type | Null | Notes |
+| ------ | ---- | ---- | ----- |
+| `converted_from_allocation_id` | FK demand_allocations | yes | on new on_hand row |
+| `converted_to_allocation_id` | FK demand_allocations | yes | on inbound row being terminalized |
+| `conversion_receipt_line_id` | FK receipt_lines | yes | |
+| `converted_at` | datetime | yes | |
+| `converted_by_user_id` | FK users | yes | |
+| `conversion_reason` | string | yes | default `receipt_post` |
+| `release_reason` | string | yes | for non-convert releases: `receipt_short`, `po_closed_short`, `vendor_canceled`, `not_replaceable`, etc. |
+
+**Rules:**
+
+* Do **not** mutate `allocation_kind` on inbound row.
+* New `on_hand` row points to inbound via `converted_from_allocation_id`.
+* Terminal inbound row points to on_hand via `converted_to_allocation_id`.
+
+---
+
+### `receipt_lines` — extend (optional)
 
 | Column | Type | Null | Notes |
 | ------ | ---- | ---- | ----- |
 | `quantity_damaged` | integer | no | default 0 |
 | `quantity_wrong_item` | integer | no | default 0 |
 | `quantity_substituted` | integer | no | default 0 |
-| `quantity_short` | integer | no | default 0; derived or stored when `quantity_received < quantity_expected` |
-| `line_disposition` | string | yes | summary: `accepted`, `rejected`, `mixed`, `short` (derived ok) |
-| `invoice_cost_cents` | integer | yes | deferred optional — AP out of scope |
+| `quantity_short` | integer | no | default 0 |
+| `rejected_not_replaceable` | boolean | no | default false; staff flag for demand release |
+| `invoice_cost_cents` | integer | yes | optional; AP out of scope |
 
-Existing columns remain authoritative for post:
-
-```text
-quantity_expected
-quantity_received
-quantity_accepted
-quantity_rejected
-exception_reason
-unit_cost_cents
-```
-
-Validation (model):
-
-```text
-quantity_accepted + quantity_rejected <= quantity_received (when enforcing at post)
-quantity_* breakdown sums <= quantity_received when breakdown columns populated
-```
+**Receipt-line `quantity_received`** = physically counted on this receipt (unchanged).
 
 ---
 
-### No new tables required (baseline)
-
-v0.04-9 reuses:
-
-```text
-purchase_orders
-purchase_order_lines
-receipts
-receipt_lines
-receiving_discrepancies
-demand_lines
-demand_allocations
-sourcing_attempts
-vendor_responses
-```
-
-Optional future table (not v0.04-9 baseline):
-
-```text
-purchase_order_line_quantity_events  -- append-only vendor qty audit; defer unless needed
-```
-
----
-
-## Quantity helpers (conceptual services)
+## Quantity helpers
 
 ### `Purchasing::PoLineQuantitySummary`
 
-Methods (names illustrative):
+```text
+vendor_quantities_recorded?(po_line)
+effective_inbound_supply(po_line)
+open_to_receive_quantity(po_line)        # same as effective_inbound_supply when defined this way
+open_for_inbound_allocation(po_line)     # effective_inbound_supply minus claims
+derive_vendor_quantity_state(po_line)    # from buckets + ordered
+```
+
+**Normative math:**
 
 ```text
-effective_confirmed_quantity(po_line)
-open_to_receive_quantity(po_line)
-open_for_inbound_allocation(po_line)
-vendor_buckets_total(po_line)
+if vendor_quantities_recorded_at.present?:
+  base = quantity_confirmed_by_vendor
+else:
+  base = quantity_ordered
+
+effective_inbound_supply =
+  max(base - quantity_received - quantity_closed_short, 0)
+
+open_for_inbound_allocation =
+  effective_inbound_supply
+  - legacy_po_line_allocation_claims
+  - v0047_active_inbound_claims
+```
+
+### `Purchasing::SyncPoLineVendorQuantitiesFromSourcing`
+
+```text
+Inputs: purchase_order_line_id
+Source: vendor_responses WHERE final_response = true AND purchase_order_line_id = ?
+Aggregate quantity_confirmed, quantity_backordered, quantity_unavailable+canceled buckets per spec mapping
+Write totals (not increment)
+Set vendor_quantities_recorded_at, source_type/id, vendor_quantity_state
 ```
 
 ### `DemandAllocations::InboundAvailability` (update)
 
-Replace open qty source:
-
-```text
-open_qty = Purchasing::PoLineQuantitySummary.open_for_inbound_allocation(po_line)
-legacy_claimed = SUM purchase_order_line_allocations (open statuses)
-v0047_claimed = SUM demand_allocations inbound active
-available = open_qty - legacy_claimed - v0047_claimed
-```
-
-Eligibility rules unchanged: receivable PO header + eligible line status.
+Uses `PoLineQuantitySummary.open_for_inbound_allocation` — eligibility rules unchanged from v0.04-7.
 
 ---
 
-## Demand allocation conversion
+## Demand allocation conversion (normative)
 
-No new allocation **kind** required for baseline conversion.
-
-Pattern (recommended):
+Service: `DemandAllocations::ConvertInboundFromReceipt` (or per-allocation `ConvertInboundToOnHand`)
 
 ```text
-1. DemandAllocations::ConvertInboundToOnHand.call!(
-     demand_allocation: inbound_row,
-     actor:,
-     quantity: n,
-     source_receipt_line:,
-     notes:
-   )
-2. Inbound row: reduce quantity or move to released/fulfilled terminal with partial semantics
-3. Create new on_hand allocation row OR increment existing active on_hand on same demand line (prefer single active on_hand per demand line if v0.04-7 already enforces — confirm at implementation)
-4. Audit + RecalculateAllocationStatus + RebuildAvailabilityCache
+1. Lock inbound allocation row
+2. Create new on_hand demand_allocation:
+     quantity_allocated = convert_qty
+     converted_from_allocation_id = inbound.id
+     conversion_receipt_line_id = receipt_line.id
+     purchase_order_line_id = optional copy for traceability
+3. Terminalize inbound row:
+     status = converted
+     converted_to_allocation_id = new_on_hand.id
+     converted_at, converted_by_user_id
+4. Audit both rows
+5. RecalculateAllocationStatus + RebuildAvailabilityCache
 ```
 
-Alternative (if simpler): mutate `allocation_kind` with audit event — **only if** audit trail remains clear; spec prefers explicit convert service.
+**Ordering:** FIFO by `allocated_at` for conversion.
+
+**Release (slice C):** `DemandAllocations::ReleaseUncoveredInbound` — reverse-FIFO by `allocated_at`.
 
 ---
 
-## Relationships (unchanged grains)
+## `Purchasing::PostReceipt` transaction boundary
+
+Single `Receipt.transaction` (existing) must include:
 
 ```text
-PurchaseOrderLine has_many receipt_lines
-PurchaseOrderLine has_many demand_allocations (inbound kind)
-ReceiptLine belongs_to purchase_order_line (optional)
-DemandAllocation belongs_to purchase_order_line (optional, inbound only)
-VendorResponse belongs_to purchase_order_line (optional, v0.04-8)
+Inventory::Post (accepted lines)
+UpdatePoLineQuantities
+DemandAllocations::ConvertInboundFromReceipt (v0.04 path)
+Legacy Receiving::AllocateCustomerDemandFromReceipt (unchanged)
+receipt.status = posted
+Audit
 ```
 
-No reciprocal FK from PO lines to demand beyond existing optional `purchase_order_line_id` on allocations.
+Rollback all on any failure after lock.
+
+---
+
+## Status spelling reference
+
+| Model | Cancel spelling | Notes |
+| ----- | --------------- | ----- |
+| `PurchaseOrder` / `PurchaseOrderLine` | `cancelled` | **Keep existing** |
+| `DemandAllocation` | `canceled` | **Keep existing** |
+| `vendor_quantity_state` on PO line | `canceled` | State name; distinct from PO line status enum |
+
+Do not normalize PO enums to single-L in v0.04-9.
 
 ---
 
@@ -176,83 +203,30 @@ No reciprocal FK from PO lines to demand beyond existing optional `purchase_orde
 
 | Table | v0.04-9 |
 | ----- | ------- |
-| `purchase_order_line_allocations` | Read in inbound availability only |
+| `purchase_order_line_allocations` | Read in inbound math only |
 | `receipt_line_allocations` | Legacy PostReceipt path only |
 | `inventory_reservations` | Legacy incoming convert only |
-
----
-
-## Status derivation notes
-
-### `purchase_order_lines.status`
-
-Inputs: vendor buckets, `quantity_received`, `quantity_closed_short`, line cancellation.
-
-Illustrative priority:
-
-```text
-cancelled when explicitly canceled
-closed_short when close-short qty accounts for remainder
-received when quantity_received >= effective_confirmed
-partially_received when quantity_received > 0 and not received
-backordered when vendor backorder bucket covers unresolved confirmed supply (coordinate with existing backordered status)
-open otherwise
-```
-
-Confirm against existing `PurchaseOrderLine::STATUSES` at implementation — do not introduce statuses outside enum without migration.
-
-### Receipt posted state
-
-Unchanged: `receipts.status = posted` with `inventory_posting_id` when at least one accepted line posts.
-
----
-
-## Audit events
-
-Store context on all mutations:
-
-```text
-actor
-store_id
-demand_line_id (when applicable)
-purchase_order_line_id
-receipt_line_id
-quantity deltas
-source (receipt_post, sourcing_sync, manual_po_edit)
-```
-
----
-
-## Seeds
-
-No new reference seeds required unless new permissions added.
-
-If permissions added, use stable keys in `db/seeds/v0049_permissions.rb` (name TBD) and wire in `db/seeds.rb` + test helper.
 
 ---
 
 ## Explicitly not in v0.04-9
 
 ```text
-New PO header fields beyond existing notes/status
+quantity_cascaded on purchase_order_lines
 purchase_order_line_allocations schema changes
 receipt_line_allocations schema changes
 pos_transaction_lines.demand_allocation_id
-Full GL / invoice tables
-Automatic PO creation from demand
-Retiring customer_requests tables
+posted receipt reversal workflow
+automatic PO creation from demand
 ```
 
 ---
 
 ## Migration ordering
 
-Suggested filenames (timestamps assigned at implementation):
-
 ```text
 db/migrate/*_add_v0049_po_line_vendor_quantities.rb
+db/migrate/*_add_v0049_demand_allocation_conversion_fields.rb
 db/migrate/*_add_v0049_receipt_line_breakdown.rb (optional)
-db/migrate/*_backfill_v0049_po_line_vendor_quantities.rb
+db/migrate/*_backfill_v0049_po_line_unconfirmed.rb
 ```
-
-Run after v0.04-8 migrations (`sourcing_*`, demand_allocations vendor_backorder columns).
