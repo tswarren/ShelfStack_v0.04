@@ -4,6 +4,8 @@ class PurchaseOrderLine < ApplicationRecord
   include NestedLineNumberUniqueness
 
   STATUSES = %w[open partially_received received backordered cancelled closed_short closed].freeze
+  VENDOR_QUANTITY_STATES = Purchasing::PoLineQuantitySummary::VENDOR_QUANTITY_STATES
+  VENDOR_QUANTITIES_SOURCE_TYPES = %w[manual sourcing_response import api].freeze
   COST_SOURCES = %w[vendor_source manual import default unknown].freeze
   PRICE_SOURCES = %w[variant vendor_source manual import unknown].freeze
 
@@ -21,6 +23,14 @@ class PurchaseOrderLine < ApplicationRecord
   validates_nested_line_number_uniqueness :purchase_order, foreign_key: :purchase_order_id
   validates :quantity_ordered, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :quantity_received, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :vendor_quantity_state, presence: true, inclusion: { in: VENDOR_QUANTITY_STATES }
+  validates :quantity_confirmed_by_vendor,
+            :quantity_backordered_by_vendor,
+            :quantity_canceled_by_vendor,
+            :quantity_rejected_on_line,
+            :quantity_closed_short,
+            numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :vendor_quantities_source_type, inclusion: { in: VENDOR_QUANTITIES_SOURCE_TYPES }, allow_nil: true
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :supplier_discount_bps,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 10_000 },
@@ -35,11 +45,12 @@ class PurchaseOrderLine < ApplicationRecord
   validate :vendor_must_be_active
   validate :order_eligibility_for_draft, on: %i[create update], if: :draft_purchase_order_line?
   validate :quantity_received_cannot_exceed_ordered
+  validate :vendor_bucket_totals_when_recorded
 
   before_validation :assign_line_number, on: :create
   before_validation :apply_price_defaults, if: :draft_purchase_order_line?
 
-  attr_accessor :receiving_update, :closure_update
+  attr_accessor :receiving_update, :closure_update, :vendor_quantity_sync_update
 
   def receiving_update?
     receiving_update == true
@@ -49,8 +60,12 @@ class PurchaseOrderLine < ApplicationRecord
     closure_update == true
   end
 
+  def vendor_quantity_sync_update?
+    vendor_quantity_sync_update == true
+  end
+
   def operational_line_update?
-    receiving_update? || closure_update?
+    receiving_update? || closure_update? || vendor_quantity_sync_update?
   end
 
   private
@@ -98,6 +113,17 @@ class PurchaseOrderLine < ApplicationRecord
     return if quantity_received <= quantity_ordered
 
     errors.add(:quantity_received, "cannot exceed quantity ordered")
+  end
+
+  def vendor_bucket_totals_when_recorded
+    return if vendor_quantities_recorded_at.blank?
+
+    total = quantity_confirmed_by_vendor.to_i +
+      quantity_backordered_by_vendor.to_i +
+      quantity_canceled_by_vendor.to_i
+    return if total <= quantity_ordered.to_i
+
+    errors.add(:base, "vendor quantity buckets cannot exceed quantity ordered")
   end
 
   def order_eligibility_for_draft

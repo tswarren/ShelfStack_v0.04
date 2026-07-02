@@ -20,7 +20,7 @@ module Purchasing
           po_line = receipt_line.purchase_order_line
           po_line.receiving_update = true
           po_line.quantity_received += receipt_line.quantity_accepted
-          po_line.status = line_status_for(po_line)
+          po_line.status = PoLineStatusDeriver.derive(po_line)
           po_line.save!
         end
 
@@ -32,16 +32,6 @@ module Purchasing
     private
 
     attr_reader :receipt
-
-    def line_status_for(po_line)
-      if po_line.quantity_received >= po_line.quantity_ordered
-        "received"
-      elsif po_line.quantity_received.positive?
-        "partially_received"
-      else
-        po_line.status
-      end
-    end
 
     def header_status_for(purchase_order)
       lines = purchase_order.purchase_order_lines.reload

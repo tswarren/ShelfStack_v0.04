@@ -53,8 +53,16 @@ module Purchasing
       return unless line_closable?(line)
 
       line.closure_update = true
+      remainder = Purchasing::PoLineQuantitySummary.for(line).open_supply_before_allocation_claims
+      line.quantity_closed_short = remainder if remainder.positive?
       line.status = resolved_closed_status(line)
       line.save!
+
+      DemandAllocations::ReleaseUncoveredInbound.call!(
+        purchase_order_line: line,
+        actor: closed_by_user,
+        release_reason: "po_closed_short"
+      )
     end
 
     def line_closable?(line)
@@ -62,11 +70,9 @@ module Purchasing
     end
 
     def resolved_closed_status(line)
-      if line.quantity_received.positive? && line.quantity_received < line.quantity_ordered
-        "closed_short"
-      else
-        "closed"
-      end
+      return "closed_short" if line.quantity_closed_short.to_i.positive?
+
+      "closed"
     end
   end
 end

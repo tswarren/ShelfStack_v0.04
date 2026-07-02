@@ -32,9 +32,9 @@
         <th>#</th>
         <th>Item</th>
         <th>Vendor #</th>
-        <th class="ss-num">Ordered</th>
-        <th class="ss-num">Received</th>
-        <th class="ss-num">Open</th>
+        <th class="ss-num">Requested</th>
+        <th class="ss-num">Accepted to stock</th>
+        <th class="ss-num">Open to receive</th>
         <th class="ss-num">Customer</th>
         <th class="ss-num">Stock</th>
         <th class="ss-num">Cost</th>
@@ -63,6 +63,15 @@
           <td><%= render "orders/shared/status_badge", status: line.status %></td>
           <td>
             <% flags = presenter.line_flags(line) %>
+            <% summary = Purchasing::PoLineQuantitySummary.for(line) %>
+            <% if summary.vendor_quantities_recorded? %>
+              <% flags << "Vendor confirmed #{line.quantity_confirmed_by_vendor}" if line.quantity_confirmed_by_vendor.positive? %>
+              <% flags << "Backordered #{line.quantity_backordered_by_vendor}" if line.quantity_backordered_by_vendor.positive? %>
+              <% flags << "Canceled #{line.quantity_canceled_by_vendor}" if line.quantity_canceled_by_vendor.positive? %>
+              <% flags << "Closed short #{line.quantity_closed_short}" if line.quantity_closed_short.positive? %>
+            <% end %>
+            <% avail = DemandAllocations::InboundAvailability.new(purchase_order_line: line).available_for %>
+            <% flags << "Available for allocation #{avail}" if avail.positive? %>
             <%= flags.any? ? flags.join(" · ") : "—" %>
           </td>
         </tr>

@@ -34,6 +34,7 @@ require_relative "support/phase7c_test_helper"
 require_relative "support/v0042_test_helper"
 require_relative "support/v0047_test_helper"
 require_relative "support/v0048_test_helper"
+require_relative "support/v0049_test_helper"
 require_relative "support/pos_system_test_helper"
 
 module ActiveSupport

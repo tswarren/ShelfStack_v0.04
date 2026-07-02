@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — depends on [v0.04-8 completion](../../implementation/v0.04-8-completion.md) (merged).
+**In review** — branch `v0.04-9-po-receiving-quantity-model`. Depends on [v0.04-8 completion](../../implementation/v0.04-8-completion.md) (merged). Mark **Complete** after PR merge.
 
 Companion documents: [data-model.md](data-model.md), [test-plan.md](test-plan.md).
 

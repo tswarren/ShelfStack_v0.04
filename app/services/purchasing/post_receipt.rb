@@ -58,7 +58,9 @@ module Purchasing
         )
 
         UpdatePoLineQuantities.call(receipt: receipt)
+        ReceiptPostingGuards.assert_no_mixed_claims!(receipt)
         Receiving::AllocateCustomerDemandFromReceipt.call!(receipt: receipt, posted_by_user: posted_by_user)
+        DemandAllocations::ConvertInboundFromReceipt.call!(receipt: receipt, actor: posted_by_user)
 
         receipt.update!(
           status: "posted",
