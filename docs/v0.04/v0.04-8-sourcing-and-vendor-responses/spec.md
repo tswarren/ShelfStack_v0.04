@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — Slice A/B/C implemented on branch `v0.04-8-sourcing-and-vendor-responses`. Depends on [v0.04-7 completion](../../implementation/v0.04-7-completion.md) (merged).
+**In review** — Slice A/B/C implemented on branch `v0.04-8-sourcing-and-vendor-responses`. CI passing. Depends on [v0.04-7 completion](../../implementation/v0.04-7-completion.md) (merged).
 
 Companion documents: [data-model.md](data-model.md), [test-plan.md](test-plan.md).
 
