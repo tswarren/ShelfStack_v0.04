@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — implemented on branch `v04.10-retire-v0.03-ordering-ui-and-reports`. Mark **Complete** after merge to main.
+**Complete** — merged 2026-07-02. See [completion note](../../implementation/v0.04-10-completion.md).
 
 Companion to [spec.md](spec.md).
 

@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** milestone **v0.04-10** retire v0.03 ordering UI and reports. **v0.04-3** product groups remains **deferred**.
+**Current priority:** milestone **v0.04-11** documentation and schema cleanup. **v0.04-3** product groups remains **deferred**.
 
 ---
 
@@ -32,8 +32,8 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-7 Allocations | **Complete** | [spec](v0.04-7-allocations-and-reservations/spec.md) · [data model](v0.04-7-allocations-and-reservations/data-model.md) · [test plan](v0.04-7-allocations-and-reservations/test-plan.md) · [completion](../implementation/v0.04-7-completion.md) |
 | v0.04-8 Sourcing | **Complete** | [spec](v0.04-8-sourcing-and-vendor-responses/spec.md) · [data model](v0.04-8-sourcing-and-vendor-responses/data-model.md) · [test plan](v0.04-8-sourcing-and-vendor-responses/test-plan.md) · [completion](../implementation/v0.04-8-completion.md) |
 | v0.04-9 PO/receiving quantities | **Complete** | [spec](v0.04-9-po-receiving-quantity-model/spec.md) · [data model](v0.04-9-po-receiving-quantity-model/data-model.md) · [test plan](v0.04-9-po-receiving-quantity-model/test-plan.md) · [completion](../implementation/v0.04-9-completion.md) |
-| v0.04-10 Retire v0.03 ordering UI | **Next** | [spec](v0.04-10-retire-v0.03-ordering-ui/spec.md) · [data model](v0.04-10-retire-v0.03-ordering-ui/data-model.md) · [test plan](v0.04-10-retire-v0.03-ordering-ui/test-plan.md) |
-| v0.04-11 Doc and schema cleanup | Planned | *(not yet created)* |
+| v0.04-10 Retire v0.03 ordering UI | **Complete** | [spec](v0.04-10-retire-v0.03-ordering-ui/spec.md) · [data model](v0.04-10-retire-v0.03-ordering-ui/data-model.md) · [test plan](v0.04-10-retire-v0.03-ordering-ui/test-plan.md) · [completion](../implementation/v0.04-10-completion.md) |
+| v0.04-11 Doc and schema cleanup | **Next** | Roadmap only — see [delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) |
 
 ---
 

@@ -31,8 +31,8 @@ Implementation happens through ordered v0.04 milestones inside the existing Rail
 **Current priority:**
 
 ```text
-Complete: v0.04-0 through v0.04-9
-Current:  v0.04-10 — retire v0.03 ordering UI and reports
+Complete: v0.04-0 through v0.04-10
+Current:  v0.04-11 — documentation and schema cleanup
 ```
 
 See [docs/v0.04/README.md](docs/v0.04/README.md) and [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md).
@@ -45,9 +45,9 @@ Because ShelfStack is not yet in production, v0.04 may use destructive schema ch
 
 | Keep | Replace under v0.04 |
 | ---- | ------------------- |
-| Product variant as operational grain | `catalog_items` vs `products` separation |
-| `Inventory::Post`, ledger, balances | `customer_requests`, `special_orders`, `purchase_requests` / TBO |
-| POS, voids, tax/discount/tender, stored value | Fragmented reservation + PO/receipt allocation model |
+| Product variant as operational grain | `catalog_items` vs `products` separation (v0.04-1/2; table drop v0.04-11) |
+| `Inventory::Post`, ledger, balances | `customer_requests`, `special_orders`, `purchase_requests` / TBO (**retired v0.04-10**) |
+| POS, voids, tax/discount/tender, stored value | Fragmented reservation + PO/receipt allocation model (**retired v0.04-10**) |
 | Buybacks, classification/tax, foundation auth | `catalog_item_identifiers` → `product_identifiers` |
 | Phase 10-A/B/C/D interaction infrastructure, item cockpit, modals, drawers, POS workspace, and workflow polish patterns | Supplier availability assumed at order time |
 | Phase 6.5 external catalog lookup (ISBNdb) for Add Item | — |
@@ -319,8 +319,8 @@ Historical v0.03 phase specs remain useful for code not yet migrated. New work f
 | v0.04-7 | Allocations and reservations | **Complete** |
 | v0.04-8 | Sourcing and vendor responses | **Complete** |
 | v0.04-9 | PO and receiving quantity model | **Complete** |
-| v0.04-10 | Retire v0.03 ordering UI and reports | **Next** |
-| v0.04-11 | Documentation and schema cleanup | Planned |
+| v0.04-10 | Retire v0.03 ordering UI and reports | **Complete** |
+| v0.04-11 | Documentation and schema cleanup | **Next** |
 
 Suggested first implementation slice:
 

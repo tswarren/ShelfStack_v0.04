@@ -422,7 +422,9 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-9 (PO and receiving quantity model):** **Complete** — [spec bundle](docs/v0.04/v0.04-9-po-receiving-quantity-model/spec.md) · [completion](docs/implementation/v0.04-9-completion.md).
 
-**Current priority:** **v0.04-10** retire v0.03 ordering UI and reports.
+**v0.04-10 (retire v0.03 ordering UI and reports):** **Complete** — [spec bundle](docs/v0.04/v0.04-10-retire-v0.03-ordering-ui/spec.md) · [completion](docs/implementation/v0.04-10-completion.md).
+
+**Current priority:** **v0.04-11** documentation and schema cleanup.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 

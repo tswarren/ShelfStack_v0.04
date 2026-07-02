@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — implemented on branch `v04.10-retire-v0.03-ordering-ui-and-reports` (G1 quarantine and G2 destructive drop delivered together on that branch). Mark **Complete** after merge to main.
+**Complete** — merged 2026-07-02. See [completion note](../../implementation/v0.04-10-completion.md).
 
 Depends on [v0.04-9 completion](../../implementation/v0.04-9-completion.md) (merged).
 

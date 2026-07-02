@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — implemented on branch `v04.10-retire-v0.03-ordering-ui-and-reports`. Mark **Complete** after merge to main.
+**Complete** — merged to `main` on 2026-07-02 via [PR #15](https://github.com/tswarren/ShelfStack_v0.04/pull/15). See [completion note](../../implementation/v0.04-10-completion.md).
 
 Companion documents: [data-model.md](data-model.md), [test-plan.md](test-plan.md).
 
