@@ -2,7 +2,7 @@
 
 ## Status
 
-**In review** — companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`), v0.04-7 (`demand_allocations`), v0.04-8 (`sourcing_*`).
+**Complete** — companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`), v0.04-7 (`demand_allocations`), v0.04-8 (`sourcing_*`).
 
 ---
 
