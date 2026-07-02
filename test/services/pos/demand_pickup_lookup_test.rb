@@ -70,4 +70,25 @@ class PosDemandPickupLookupTest < ActiveSupport::TestCase
 
     assert_equal 1, rows.size
   end
+
+  test "pickup lookup orders expiring allocations before non-expiring holds" do
+    @allocation.update!(expires_at: nil)
+
+    expiring_demand = DemandLines::StartFromItem.call!(
+      store: @store,
+      variant: @variant,
+      actor: @user,
+      capture_intent: "hold",
+      quantity: 1,
+      customer: create_customer!(display_name: "Soon Pickup")
+    ).demand_line
+    expiring_allocation = expiring_demand.demand_allocations.active_allocations.on_hand_kind.first
+    expiring_allocation.update!(expires_at: 1.day.from_now)
+
+    rows = Pos::DemandPickupLookup.ready_for_store(store: @store)
+
+    assert_equal 2, rows.size
+    assert_equal expiring_allocation.id, rows.first.demand_allocation_id
+    assert_equal @allocation.id, rows.second.demand_allocation_id
+  end
 end

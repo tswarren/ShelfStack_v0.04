@@ -80,7 +80,11 @@ module Customers
       end
 
       relation.includes(includes)
-              .order(Arel.sql("demand_lines.needed_by_date ASC NULLS LAST"), "demand_lines.created_at ASC")
+              .order(
+                Arel.sql("CASE WHEN demand_lines.needed_by_date IS NULL THEN 1 ELSE 0 END ASC"),
+                Arel.sql("demand_lines.needed_by_date ASC"),
+                Arel.sql("demand_lines.created_at ASC")
+              )
               .distinct
               .limit(3)
               .to_a

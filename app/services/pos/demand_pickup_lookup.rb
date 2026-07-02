@@ -44,7 +44,11 @@ module Pos
                       .joins(:demand_line)
                       .merge(DemandLine.where.not(status: DemandLine::TERMINAL_STATUSES))
                       .includes(:product_variant, demand_line: :customer)
-                      .order(Arel.sql("demand_allocations.expires_at ASC NULLS LAST"), "demand_allocations.allocated_at")
+                      .order(
+                        Arel.sql("CASE WHEN demand_allocations.expires_at IS NULL THEN 1 ELSE 0 END ASC"),
+                        Arel.sql("demand_allocations.expires_at ASC"),
+                        Arel.sql("demand_allocations.allocated_at ASC")
+                      )
     end
 
     def filter_by_query(scope)
