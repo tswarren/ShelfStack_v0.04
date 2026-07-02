@@ -43,6 +43,7 @@ class PurchasingSyncPoLineVendorQuantitiesFromSourcingTest < ActiveSupport::Test
     assert_equal 3, @po_line.quantity_confirmed_by_vendor
     assert_equal 2, @po_line.quantity_backordered_by_vendor
     assert_equal 0, @po_line.quantity_canceled_by_vendor
+    assert_equal "backordered", @po_line.status
     assert @po_line.vendor_quantities_recorded_at.present?
     assert_equal "mixed", @po_line.vendor_quantity_state
     assert_equal "sourcing_response", @po_line.vendor_quantities_source_type
@@ -81,6 +82,38 @@ class PurchasingSyncPoLineVendorQuantitiesFromSourcingTest < ActiveSupport::Test
     @po_line.reload
     assert_equal 2, @po_line.quantity_confirmed_by_vendor
     assert_equal 2, DemandAllocation.active_allocations.inbound_kind.where(purchase_order_line: @po_line).sum(:quantity_allocated)
+  end
+
+  test "final all-backordered response sync sets line status to backordered" do
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      purchase_order_line: @po_line,
+      quantity_backordered: 5,
+      final_response: true
+    )
+
+    assert_equal "backordered", @po_line.reload.status
+  end
+
+  test "final all-canceled response sync sets line status to cancelled" do
+    canceled_order = create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5) ]
+    )
+    Purchasing::SubmitPurchaseOrder.call(purchase_order: canceled_order, submitted_by_user: @user)
+    canceled_line = canceled_order.purchase_order_lines.first
+
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      purchase_order_line: canceled_line,
+      quantity_unavailable: 5,
+      final_response: true
+    )
+
+    assert_equal "cancelled", canceled_line.reload.status
   end
 
   test "non-final response does not sync via record vendor response hook" do

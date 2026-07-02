@@ -34,6 +34,7 @@ module Purchasing
           vendor_quantities_source_id: source_response&.id || responses.order(:id).last&.id
         )
         locked_line.vendor_quantity_state = PoLineQuantitySummary.for(locked_line).derive_vendor_quantity_state
+        locked_line.status = PoLineStatusDeriver.derive(locked_line)
         locked_line.save!
         locked_line
       end
