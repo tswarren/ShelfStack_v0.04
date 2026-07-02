@@ -34,8 +34,17 @@ module Sourcing
 
       variant = sourcing_run.product_variant
       policy = ProductVariants::OperationalPolicy.for(variant)
-      unless policy.vendor_sourcing_applicable?
-        raise CreateAttemptError, policy.vendor_sourcing_not_applicable_message || "Variant is not vendor-orderable"
+      unless policy.vendor_orderable?
+        raise CreateAttemptError, policy.vendor_sourcing_not_applicable_message ||
+                                  policy.purchasing_block_reason(context: :purchase_order) ||
+                                  "Variant is not vendor-orderable"
+      end
+
+      if purchase_order_line.present?
+        ValidatePoLineLink.call!(
+          demand_line: sourcing_run.demand_line,
+          purchase_order_line: purchase_order_line
+        )
       end
 
       if manual_vendor_override && override_authorized_by_user.blank?

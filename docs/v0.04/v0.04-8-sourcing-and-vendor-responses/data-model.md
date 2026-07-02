@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`) and v0.04-7 (`demand_allocations`).
+**In review** — companion to [spec.md](spec.md). Implemented on branch `v0.04-8-sourcing-and-vendor-responses`. Depends on v0.04-6 (`demand_lines`) and v0.04-7 (`demand_allocations`).
 
 ---
 

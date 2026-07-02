@@ -31,6 +31,10 @@ module Sourcing
         return "needs_review"
       end
 
+      if sourcing_run.sourcing_attempts.where(status: "failed").exists?
+        return "needs_review"
+      end
+
       if fully_resolved?
         "resolved"
       elsif any_terminal_attempt_outcome?
@@ -41,9 +45,12 @@ module Sourcing
     end
 
     def fully_resolved?
-      sourcing_run.sourcing_attempts.in_flight.none? &&
-        sourcing_run.sourcing_attempts.where(status: %w[pending submitted]).none? &&
-        !sourcing_run.sourcing_attempts.where(buyer_review_required: true).exists?
+      return false if sourcing_run.sourcing_attempts.in_flight.exists?
+      return false if sourcing_run.sourcing_attempts.where(status: %w[pending submitted]).exists?
+      return false if sourcing_run.sourcing_attempts.where(buyer_review_required: true).exists?
+      return false if sourcing_run.sourcing_attempts.where(status: "failed").exists?
+
+      true
     end
 
     def any_terminal_attempt_outcome?

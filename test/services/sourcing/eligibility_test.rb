@@ -52,4 +52,22 @@ class SourcingEligibilityTest < ActiveSupport::TestCase
     assert_not result.eligible
     assert_match(/active sourcing run/i, result.reason)
   end
+
+  test "inactive variant is not sourcing eligible" do
+    demand = create_special_order_demand!(store: @store, actor: @user, variant: @variant)
+    @variant.update!(active: false)
+
+    result = Sourcing::Eligibility.for_demand_line(demand.reload)
+
+    assert_not result.eligible
+  end
+
+  test "inactive product is not sourcing eligible" do
+    demand = create_special_order_demand!(store: @store, actor: @user, variant: @variant)
+    @variant.product.update!(active: false)
+
+    result = Sourcing::Eligibility.for_demand_line(demand.reload)
+
+    assert_not result.eligible
+  end
 end

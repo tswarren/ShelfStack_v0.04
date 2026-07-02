@@ -26,6 +26,14 @@ module Sourcing
         locked_run = SourcingRun.lock.find(sourcing_run.id)
         raise CloseRunError, "Sourcing run is already terminal" if locked_run.terminal?
 
+        locked_run.sourcing_attempts.where(status: Sourcing::CancelAttempt::CANCELABLE_STATUSES).find_each do |attempt|
+          Sourcing::CancelAttempt.call!(
+            sourcing_attempt: attempt,
+            actor: actor,
+            cancel_reason: close_reason.presence || "Sourcing run closed"
+          )
+        end
+
         now = Time.current
         locked_run.update!(
           status: "resolved",

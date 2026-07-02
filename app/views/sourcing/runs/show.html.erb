@@ -156,10 +156,9 @@
 <% end %>
 
 <h2>Audit</h2>
-<% events = AuditEvent.for_auditable(@sourcing_run).limit(25) %>
-<% if events.any? %>
+<% if @audit_events.any? %>
   <ul class="ss-audit-list">
-    <% events.each do |event| %>
+    <% @audit_events.each do |event| %>
       <li><%= event.event_name %> — <%= display_time(event.occurred_at) %></li>
     <% end %>
   </ul>

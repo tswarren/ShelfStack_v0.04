@@ -25,8 +25,10 @@ module Sourcing
 
       variant = demand_line.product_variant
       policy = ProductVariants::OperationalPolicy.for(variant)
-      unless policy.vendor_sourcing_applicable?
-        message = policy.vendor_sourcing_not_applicable_message || "Variant is not vendor-orderable"
+      unless policy.vendor_orderable?
+        message = policy.vendor_sourcing_not_applicable_message ||
+                  policy.purchasing_block_reason(context: :purchase_order) ||
+                  "Variant is not vendor-orderable"
         return Result.new(eligible: false, reason: message)
       end
 

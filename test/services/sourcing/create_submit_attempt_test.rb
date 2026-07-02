@@ -4,6 +4,7 @@ require "test_helper"
 
 class SourcingCreateSubmitAttemptTest < ActiveSupport::TestCase
   include Phase3TestHelper
+  include Phase5TestHelper
   include V0048TestHelper
 
   setup do
@@ -71,5 +72,46 @@ class SourcingCreateSubmitAttemptTest < ActiveSupport::TestCase
 
     assert attempt.manual_vendor_override?
     assert AuditEvent.exists?(event_name: "sourcing.manual_vendor_override", auditable: attempt)
+  end
+
+  test "create attempt rejects wrong-variant purchase order line" do
+    other_variant = create_product_variant!(inventory_behavior: "standard_physical")
+    other_vendor = create_vendor_for_variant!(other_variant)
+    po = create_purchase_order!(
+      store: @store,
+      vendor: other_vendor,
+      lines: [ create_purchase_order_line_attrs(variant: other_variant, vendor: other_vendor, quantity_ordered: 5) ]
+    )
+    po.update!(status: "submitted")
+    po_line = po.purchase_order_lines.first
+
+    assert_raises(Sourcing::ValidatePoLineLink::ValidationError) do
+      Sourcing::CreateAttempt.call!(
+        sourcing_run: @run,
+        actor: @user,
+        vendor: @vendor,
+        quantity: 1,
+        purchase_order_line: po_line
+      )
+    end
+  end
+
+  test "create attempt rejects ineligible purchase order line" do
+    po = create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5) ]
+    )
+    po_line = po.purchase_order_lines.first
+
+    assert_raises(Sourcing::ValidatePoLineLink::ValidationError) do
+      Sourcing::CreateAttempt.call!(
+        sourcing_run: @run,
+        actor: @user,
+        vendor: @vendor,
+        quantity: 1,
+        purchase_order_line: po_line
+      )
+    end
   end
 end

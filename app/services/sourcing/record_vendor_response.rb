@@ -80,50 +80,16 @@ module Sourcing
           notes: notes
         )
 
-        buyer_review = false
-
         if final_response
           attempt_status = AttemptStatusDeriver.from_final_response(response)
           locked_attempt.update!(status: attempt_status) if attempt_status.present?
-        end
 
-        po_line = purchase_order_line || locked_attempt.purchase_order_line
+          apply_final_response_effects!(locked_attempt, response)
 
-        if quantity_confirmed.positive?
-          if po_line.present?
-            DemandAllocations::AllocateInboundPurchaseOrder.call!(
-              demand_line: locked_attempt.demand_line,
-              purchase_order_line: po_line,
-              actor: actor,
-              quantity: quantity_confirmed,
-              notes: notes
-            )
-            link_inbound_allocation!(response: response, sourcing_attempt: locked_attempt, quantity: quantity_confirmed)
-          else
-            buyer_review = true
+          if buyer_review_required?(po_line: purchase_order_line || locked_attempt.purchase_order_line)
+            locked_attempt.update!(buyer_review_required: true)
           end
         end
-
-        if quantity_backordered.positive? && accept_backorder
-          DemandAllocations::AllocateVendorBackorder.call!(
-            demand_line: locked_attempt.demand_line,
-            actor: actor,
-            quantity: quantity_backordered,
-            sourcing_attempt: locked_attempt,
-            vendor_response: response,
-            notes: notes
-          )
-        end
-
-        if quantity_unavailable.positive? || quantity_canceled.positive? || quantity_substitute_offered.positive?
-          buyer_review = true
-        end
-
-        if quantity_confirmed.positive? && po_line.blank?
-          buyer_review = true
-        end
-
-        locked_attempt.update!(buyer_review_required: true) if buyer_review
 
         AuditEvents.record!(
           actor: actor,
@@ -153,6 +119,51 @@ module Sourcing
                 :final_response, :accept_backorder, :purchase_order_line,
                 :vendor_reference, :message, :expected_ship_date, :expected_arrival_date, :notes
 
+    def apply_final_response_effects!(locked_attempt, response)
+      po_line = purchase_order_line || locked_attempt.purchase_order_line
+
+      if quantity_confirmed.positive?
+        if po_line.present?
+          ValidatePoLineLink.call!(
+            demand_line: locked_attempt.demand_line,
+            purchase_order_line: po_line,
+            quantity: quantity_confirmed
+          )
+          allocation = DemandAllocations::AllocateInboundPurchaseOrder.call!(
+            demand_line: locked_attempt.demand_line,
+            purchase_order_line: po_line,
+            actor: actor,
+            quantity: quantity_confirmed,
+            notes: notes
+          )
+          allocation.update!(
+            sourcing_attempt: locked_attempt,
+            vendor_response: response
+          )
+        end
+      end
+
+      if quantity_backordered.positive? && accept_backorder
+        DemandAllocations::AllocateVendorBackorder.call!(
+          demand_line: locked_attempt.demand_line,
+          actor: actor,
+          quantity: quantity_backordered,
+          sourcing_attempt: locked_attempt,
+          vendor_response: response,
+          notes: notes
+        )
+      end
+    end
+
+    def buyer_review_required?(po_line:)
+      return true if quantity_failed.positive?
+      return true if quantity_unavailable.positive? || quantity_canceled.positive? || quantity_substitute_offered.positive?
+      return true if quantity_backordered.positive? && !accept_backorder
+      return true if quantity_confirmed.positive? && po_line.blank?
+
+      false
+    end
+
     def build_preview(attempt)
       VendorResponse.new(
         sourcing_attempt: attempt,
@@ -178,19 +189,6 @@ module Sourcing
         "quantity_failed" => response.quantity_failed,
         "final_response" => response.final_response
       }
-    end
-
-    def link_inbound_allocation!(response:, sourcing_attempt:, quantity:)
-      allocation = DemandAllocation.active_allocations.inbound_kind
-                                   .where(demand_line: sourcing_attempt.demand_line)
-                                   .order(allocated_at: :desc)
-                                   .first
-      return if allocation.blank?
-
-      allocation.update!(
-        sourcing_attempt: sourcing_attempt,
-        vendor_response: response
-      )
     end
   end
 end

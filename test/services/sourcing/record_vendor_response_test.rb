@@ -94,4 +94,116 @@ class SourcingRecordVendorResponseTest < ActiveSupport::TestCase
     assert_equal before[:available], after[:available]
     assert_equal "allocated", @demand.reload.status
   end
+
+  test "non-final confirmed response does not create inbound allocation" do
+    po = create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 5) ]
+    )
+    po_line = po.purchase_order_lines.first
+    po.update!(status: "submitted")
+
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_confirmed: 3,
+      final_response: false,
+      purchase_order_line: po_line
+    )
+
+    assert_equal "submitted", @attempt.reload.status
+    assert_equal 0, @demand.demand_allocations.active_allocations.inbound_kind.count
+  end
+
+  test "non-final backorder response does not create vendor_backorder allocation" do
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_backordered: 3,
+      final_response: false,
+      accept_backorder: true
+    )
+
+    assert_equal "submitted", @attempt.reload.status
+    assert_equal 0, @demand.demand_allocations.active_allocations.vendor_backorder_kind.count
+  end
+
+  test "whole failure final response marks run needs_review" do
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_failed: 3,
+      final_response: true
+    )
+
+    assert_equal "failed", @attempt.reload.status
+    assert @attempt.buyer_review_required?
+    assert_equal "needs_review", @run.reload.status
+    assert_equal 0, @demand.demand_allocations.active_allocations.count
+  end
+
+  test "backorder final response with accept_backorder false marks needs_review without vendor_backorder allocation" do
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_backordered: 3,
+      final_response: true,
+      accept_backorder: false
+    )
+
+    assert_equal "backordered", @attempt.reload.status
+    assert @attempt.buyer_review_required?
+    assert_equal "needs_review", @run.reload.status
+    assert_equal 0, @demand.demand_allocations.active_allocations.vendor_backorder_kind.count
+  end
+
+  test "backorder final response with accept_backorder true creates vendor_backorder allocation" do
+    Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_backordered: 3,
+      final_response: true,
+      accept_backorder: true
+    )
+
+    assert_equal "backordered", @attempt.reload.status
+    assert_not @attempt.reload.buyer_review_required?
+    assert_equal 3, @demand.demand_allocations.active_allocations.vendor_backorder_kind.sum(:quantity_allocated)
+    assert_equal "resolved", @run.reload.status
+  end
+
+  test "confirmed response links only the allocation just created" do
+    po = create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      lines: [ create_purchase_order_line_attrs(variant: @variant, vendor: @vendor, quantity_ordered: 10) ]
+    )
+    po_line = po.purchase_order_lines.first
+    po.update!(status: "submitted")
+
+    existing = DemandAllocations::AllocateInboundPurchaseOrder.call!(
+      demand_line: @demand,
+      purchase_order_line: po_line,
+      actor: @user,
+      quantity: 1
+    )
+
+    response = Sourcing::RecordVendorResponse.call!(
+      sourcing_attempt: @attempt,
+      actor: @user,
+      quantity_confirmed: 2,
+      quantity_unavailable: 1,
+      final_response: true,
+      purchase_order_line: po_line
+    )
+
+    existing.reload
+    new_allocation = @demand.demand_allocations.active_allocations.inbound_kind.find_by!(sourcing_attempt: @attempt)
+
+    assert_nil existing.sourcing_attempt_id
+    assert_nil existing.vendor_response_id
+    assert_equal @attempt.id, new_allocation.sourcing_attempt_id
+    assert_equal response.id, new_allocation.vendor_response_id
+  end
 end
