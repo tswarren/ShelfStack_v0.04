@@ -37,7 +37,7 @@ class ItemsProductVariantVendorsControllerTest < ActionDispatch::IntegrationTest
     assert AuditEvent.exists?(event_name: "product_variant_vendor.created", auditable: variant_vendor)
   end
 
-  test "create variant vendor returns to from tbo when requested" do
+  test "create variant vendor returns to manual tbo entry when from_tbo requested" do
     post items_product_variant_product_variant_vendors_path(@variant), params: {
       return_to: "from_tbo",
       from_tbo_vendor_id: @vendor.id,
@@ -53,8 +53,7 @@ class ItemsProductVariantVendorsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :redirect
-    assert_includes response.location, "/orders/purchase_orders/from_tbo"
-    assert_includes response.location, "vendor_id=#{@vendor.id}"
+    assert_includes response.location, "/orders/manual_tbo"
   end
 
   test "new variant vendor form requires setup permission" do
