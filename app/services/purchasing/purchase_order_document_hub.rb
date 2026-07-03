@@ -3,7 +3,7 @@
 module Purchasing
   class PurchaseOrderDocumentHub
     ReceiveProgress = Data.define(:ordered, :received, :open)
-    PurchaseRequestLink = Data.define(:purchase_request, :line_count)
+    ManualTboDemandLink = Data.define(:demand_line, :line_count)
     ReceiptSummary = Data.define(:receipt, :line_count, :accepted_quantity)
     DiscrepancyRow = Data.define(:receipt, :purchase_order_line, :sku, :discrepancy_type, :quantity_delta)
     ReceiptLineActivity = Data.define(:receipt, :quantity_expected, :quantity_received, :quantity_accepted)

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md). This file is an **audit decision log**, not a new domain model design.
+**Complete (pending merge)** — companion to [spec.md](spec.md).
 
 ---
 
@@ -92,9 +92,9 @@ Per spec resolved decision #1: **retain-temporary** for v0.04-11.
 
 | Identifier / path | Decision | Owner | Verification |
 | ----------------- | -------- | ----- | ------------ |
-| `PurchaseRequestLink` (presenter/hub) | doc-only rename if staff-facing | Slice G | grep after rename |
-| `open_special_orders` | doc-only rename if staff-facing | Slice G | grep after rename |
-| `open_purchase_request_lines` | doc-only rename if staff-facing | Slice G | grep after rename |
+| `PurchaseRequestLink` (presenter/hub) | renamed ManualTboDemandLink | Slice G | grep after rename |
+| `open_special_orders` | aliased to demand queries | Slice G | drawer uses demand_lines partial |
+| `open_purchase_request_lines` | aliased to demand queries | Slice G | drawer uses demand_lines partial |
 | Comments referencing `CustomerRequest` etc. | doc-only | Slice G | v00411 app scan (dropped models only) |
 
 **Note:** `CatalogItem` references in `app/` are **allowed** while retain-temporary; v00411 must not fail on `CatalogItem` / `catalog_items` in app paths unless active docs present them as canonical.
@@ -111,7 +111,7 @@ Per spec resolved decision #1: **retain-temporary** for v0.04-11.
 | `docs/schema-reference.md` | curated rewrite | Slice C | v00411 dropped-table check |
 | `AGENTS.md` | align v0.04 priority + verifiers | Slice B | v00411 agents check |
 | `README.md` | align milestone status | Slice F | v00411 README alignment |
-| `docs/README.md` | fix nav links to v0.04 docs | Slice A | manual link check |
+| `docs/README.md` | rewrite nav + priority | Slice B | v00411 stale nav check |
 | `docs/specifications/phase-*` | banner only (no rewrite) | Slice A optional | banner present or excluded from scan |
 
 ---
@@ -120,12 +120,12 @@ Per spec resolved decision #1: **retain-temporary** for v0.04-11.
 
 Manual verification after `docs/schema-reference.md` rewrite:
 
-- [ ] Every table in **Active v0.04 operational** sections exists in `db/schema.rb`
-- [ ] Dropped ordering tables (§ above) not listed as active
-- [ ] Demand chain documented: `demand_lines`, `demand_allocations`, sourcing, PO, receipt, inventory, POS pickup FK
-- [ ] Inventory tables use `inventory_balances` and `inventory_ledger_entries` (not legacy names)
-- [ ] `catalog_items` only under **Retained temporary (legacy admin)** if still in DB
-- [ ] `pos_transaction_lines.demand_allocation_id` documented
+- [x] Every table in **Active v0.04 operational** sections exists in `db/schema.rb`
+- [x] Dropped ordering tables (§ above) not listed as active
+- [x] Demand chain documented: `demand_lines`, `demand_allocations`, sourcing, PO, receipt, inventory, POS pickup FK
+- [x] Inventory tables use `inventory_balances` and `inventory_ledger_entries` (not legacy names)
+- [x] `catalog_items` only under **Retained temporary (legacy admin)** if still in DB
+- [x] `pos_transaction_lines.demand_allocation_id` documented
 
 Optional rake task: `shelfstack:v00411:audit_schema_docs` — document in completion note if implemented.
 
@@ -135,7 +135,7 @@ Optional rake task: `shelfstack:v00411:audit_schema_docs` — document in comple
 
 | Slice | Auditor | Date | Notes |
 | ----- | ------- | ---- | ----- |
-| E — catalog audit | _pending_ | | retain-temporary documented |
-| C — schema reference | _pending_ | | |
-| G — code cleanup | _pending_ | | |
-| F — completion | _pending_ | | |
+| E — catalog audit | v0.04-11 | 2026-07-02 | retain-temporary documented |
+| C — schema reference | v0.04-11 | 2026-07-02 | curated rewrite complete |
+| G — code cleanup | v0.04-11 | 2026-07-02 | demand drawer lists wired |
+| F — completion | v0.04-11 | 2026-07-02 | ready for PR |

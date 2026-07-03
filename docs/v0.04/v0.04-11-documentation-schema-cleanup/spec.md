@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — begins on `main` after [v0.04-10 completion](../../implementation/v0.04-10-completion.md) (merged 2026-07-02, PR #15).
+**In progress** — branch `v04.11-documentation-schema-cleanup`.
 
 Companion documents:
 

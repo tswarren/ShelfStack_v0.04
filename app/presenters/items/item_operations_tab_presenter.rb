@@ -39,20 +39,36 @@ module Items
       []
     end
 
-    def active_holds
+    def variant_scoped_customer_request_lines
       []
+    end
+
+    def active_holds
+      @active_holds ||= demand_allocations_scope.on_hand_kind.to_a
     end
 
     def incoming_reserves
-      []
+      @incoming_reserves ||= demand_allocations_scope.inbound_kind.to_a
     end
 
-    def open_special_orders
-      []
+    def open_manual_tbo_demand_lines
+      @open_manual_tbo_demand_lines ||= open_demand_lines_for("manual_tbo")
     end
 
-    def variant_scoped_customer_request_lines
-      []
+    def open_special_order_demand_lines
+      @open_special_order_demand_lines ||= open_demand_lines_for("special_order")
+    end
+
+    def variant_scoped_manual_tbo_demand_lines
+      return open_manual_tbo_demand_lines if highlight_variant.blank?
+
+      open_manual_tbo_demand_lines.select { |line| line.product_variant_id == highlight_variant.id }
+    end
+
+    def variant_scoped_special_order_demand_lines
+      return open_special_order_demand_lines if highlight_variant.blank?
+
+      open_special_order_demand_lines.select { |line| line.product_variant_id == highlight_variant.id }
     end
 
     def variant_scoped_active_holds
@@ -67,15 +83,11 @@ module Items
       incoming_reserves.select { |allocation| allocation.product_variant_id == highlight_variant.id }
     end
 
-    def variant_scoped_special_orders
-      return open_special_orders if highlight_variant.blank?
-
-      open_special_orders.select { |line| line.product_variant_id == highlight_variant.id }
-    end
-
-    def open_purchase_request_lines
-      []
-    end
+    # Legacy aliases for callers not yet renamed.
+    alias_method :open_purchase_request_lines, :open_manual_tbo_demand_lines
+    alias_method :open_special_orders, :open_special_order_demand_lines
+    alias_method :variant_scoped_purchase_request_lines, :variant_scoped_manual_tbo_demand_lines
+    alias_method :variant_scoped_special_orders, :variant_scoped_special_order_demand_lines
 
     def open_purchase_order_lines
       @open_purchase_order_lines ||= PurchaseOrderLine
@@ -108,12 +120,6 @@ module Items
         .order("returns_to_vendor.created_at DESC, return_to_vendor_lines.line_number ASC")
         .limit(20)
         .to_a
-    end
-
-    def variant_scoped_purchase_request_lines
-      return open_purchase_request_lines if highlight_variant.blank?
-
-      open_purchase_request_lines.select { |line| line.product_variant_id == highlight_variant.id }
     end
 
     def variant_scoped_purchase_order_lines
@@ -175,10 +181,24 @@ module Items
     end
 
     def active_on_hand_allocation_count
-      @active_on_hand_allocation_count ||= DemandAllocation.active_allocations
-                                                           .on_hand_kind
-                                                           .where(store: store, product_variant_id: variant_ids)
-                                                           .count
+      @active_on_hand_allocation_count ||= demand_allocations_scope.on_hand_kind.count
+    end
+
+    def open_demand_lines_for(capture_intent)
+      DemandLine.includes(:customer)
+                .where(store: store, product_variant_id: variant_ids, capture_intent: capture_intent)
+                .where.not(status: DemandLine::TERMINAL_STATUSES)
+                .order(created_at: :desc)
+                .limit(20)
+                .to_a
+    end
+
+    def demand_allocations_scope
+      DemandAllocation.active_allocations
+                      .includes(demand_line: :customer)
+                      .where(store: store, product_variant_id: variant_ids)
+                      .order(allocated_at: :desc)
+                      .limit(20)
     end
   end
 end

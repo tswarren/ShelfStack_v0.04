@@ -36,22 +36,26 @@ Examples of simpler/non-catalog items:
 * Gift cards
 * Event tickets
 
-ShelfStack v0.04 collapses catalog metadata into products and rebuilds the demand-to-fulfillment pipeline. The **v0.03 codebase** still reflects the older stack until v0.04 milestones migrate it.
+ShelfStack v0.04 is the **canonical domain model** for the application. Milestones v0.04-0 through v0.04-10 migrated ordering, demand, sourcing, and POS pickup to the v0.04 chain. **`catalog_items`** remains the main **retain-temporary** legacy bibliographic admin surface (external lookup, import, buyback).
 
-**v0.04 target (canonical going forward):**
+**v0.04 operational chain (canonical):**
 
 ```text
 Optional product_group
   → Product (+ product_identifiers)
     → Product Variant (system-assigned SKU)
-      → Demand → Allocation → Sourcing → PO/Receiving → Inventory::Post → Fulfillment
+      → DemandLine → DemandAllocation → Sourcing → PO/Receiving → Inventory::Post → Fulfillment
 ```
 
-**v0.03 codebase (current until migrated):**
+**Retired v0.03 ordering stack (v0.04-10):** `customer_requests`, `special_orders`, `purchase_requests`, `inventory_reservations`, PO/receipt line allocation tables — do not reintroduce.
+
+**Legacy v0.03 vocabulary (historical reference only):**
 
 ```text
 Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
 ```
+
+Use only when reading historical phase specs — not for new implementation.
 
 ---
 
@@ -59,7 +63,7 @@ Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
 
 Before implementing or changing major behavior, review the relevant documents.
 
-**Start with the v0.04 core docs first.** General docs below still describe parts of the **v0.03 implementation** and should be treated as implementation reference until v0.04-11 updates them.
+**Start with the v0.04 core docs first.** General docs (`overview.md`, `domain-model.md`, `schema-reference.md`, `glossary.md`) describe the **v0.04 canonical model** as of v0.04-11. Phase specs under `docs/specifications/` remain historical v0.03 implementation reference unless bannered.
 
 ## ShelfStack v0.04 core (active)
 
@@ -71,31 +75,35 @@ docs/v0.04/README.md
 docs/roadmap/README.md
 ```
 
-v0.04 is the **core domain model**, not Phase 11. v0.03 specs under `docs/specifications/` are historical reference for code not yet migrated (catalog items, customer requests, TBO).
+v0.04 is the **core domain model**, not Phase 11. Phase specs under `docs/specifications/` are **historical v0.03 implementation reference** only. v0.04-10 retired customer-request, purchase-request, special-order, and inventory-reservation tables.
 
 For **invariants**, legacy replacement map, demand taxonomy, and milestone boundaries, see [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md). Because ShelfStack is not yet in production, prefer **destructive schema changes** over long-lived compatibility shims when implementing v0.04 milestones.
 
-Do **not** extend v0.03 `catalog_items`, customer-request, special-order, or TBO patterns for new work.
+Do **not** extend legacy v0.03 patterns for new work: `catalog_items` (except retain-temporary admin), customer-request, special-order, or TBO tables/routes.
 
-## General Documents (v0.03 implementation reference)
+## Active v0.04 guidance documents
 
 ```text
+README.md
 docs/README.md
 docs/overview.md
 docs/domain-model.md
-docs/architecture.md
-docs/roadmap.md
-docs/implementation-guide.md
 docs/glossary.md
 docs/schema-reference.md
+docs/design/VERSION_0.04.md
+docs/roadmap/v0.04-delivery-roadmap.md
+docs/v0.04/README.md
+docs/architecture.md
+docs/testing.md
+docs/implementation-guide.md
 docs/specifications/seed-data-spec.md
 docs/implementation/csv-seeds.md
 docs/specifications/cross-cutting/README.md
 ```
 
-Several general docs (`overview.md`, `domain-model.md`, parts of `schema-reference.md`) still use v0.03 vocabulary until v0.04-11.
+Phase specs under `docs/specifications/phase-*` are **historical v0.03 implementation reference** — not current domain guidance.
 
-## Phase 1 Documents
+## Historical phase documents (v0.03 implementation reference)
 
 ```text
 docs/roadmap/phase-1-foundation.md
@@ -359,7 +367,7 @@ Branch `phase-8.5-operational-cleanup` implements structured POS discounts. See 
 Branch `phase-8.5-3-order-readiness` extends Phase 5/7A ordering paths. See [docs/implementation/phase-8.5-3a-completion.md](docs/implementation/phase-8.5-3a-completion.md).
 
 - **8.5-3a:** preferred vendor, `orderable`, extended `SuggestedVendorResolver`, `OrderEligibilityResolver`, `LineEconomicsCalculator`, submit gate, operational warnings
-- **8.5-3b:** single-line TBO via `PurchaseRequests::CreateSingleLine`; PO eligibility on `from_tbo`
+- **8.5-3b:** manual TBO via `DemandLine` (`capture_intent = manual_tbo`); legacy `PurchaseRequests::CreateSingleLine` **retired v0.04-10**
 - **8.5-3c:** receipt allocation visibility (projected vs actual, PO allocation context); no FIFO behavior change — see [phase-8.5-3c-completion.md](docs/implementation/phase-8.5-3c-completion.md)
 - Do **not** introduce `PurchaseDemand` or merge TBO-backed PO lines with customer allocations
 
@@ -424,7 +432,20 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-10 (retire v0.03 ordering UI and reports):** **Complete** — [spec bundle](docs/v0.04/v0.04-10-retire-v0.03-ordering-ui/spec.md) · [completion](docs/implementation/v0.04-10-completion.md).
 
-**Current priority:** **v0.04-11** documentation and schema cleanup.
+**Current priority:** **v0.04-11** documentation and schema cleanup — [spec bundle](docs/v0.04/v0.04-11-documentation-schema-cleanup/spec.md).
+
+**v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
+
+```bash
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0046:verify_demand_foundation
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0047:verify_allocations
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0048:verify_sourcing
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0049:verify_po_receiving
+./dev/rails-docker env V00410_PHASE=g2 STRICT=1 bin/rails shelfstack:v00410:verify_legacy_ordering_retired
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v00411:verify_documentation_schema_cleanup
+```
+
+**v0.04-11 notes:** `catalog_items` is **retain-temporary** (legacy bibliographic admin). Legacy redirect aliases `customers_customer_requests` and `orders_purchase_requests` remain. `from_tbo` params are deprecated compatibility only.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 
@@ -586,7 +607,12 @@ Items::VariantOperationalSnapshot
 Items::IndexWarningSummary
 Items::SalesHistoryLookup
 Items::ReceivingHistoryLookup
-PurchaseRequests::CreateSingleLine
+DemandLines::Create
+DemandLines::QueueScope
+DemandAllocations::Fulfill
+Pos::DemandPickupLookup
+Pos::AddDemandAllocationLine
+Pos::CompleteDemandAllocationFulfillment
 Purchasing::SubmitPurchaseOrder
 Purchasing::PostReceipt
 Purchasing::PostReturnToVendor
@@ -782,11 +808,11 @@ product_variants.product_id → products.id
 product_variants.sub_department_id → sub_departments.id
 ```
 
-v0.03 only (removed or replaced under v0.04):
+v0.03 only (removed or replaced under v0.04; legacy FK retained-temporary):
 
 ```text
-catalog_items.format_id → formats.id
-products.catalog_item_id → catalog_items.id
+catalog_items.format_id → formats.id  (table may remain — legacy admin)
+products.catalog_item_id → catalog_items.id  (optional legacy FK)
 ```
 
 ---
@@ -933,16 +959,18 @@ These rules describe the **current codebase** and Phase 3 specs. For new v0.04 w
 * `Pos::TenderTypePolicy` + `Pos::TenderValidator` enforce stored value tender permissions and account linkage; legacy Phase 6 allowlist remains as base types only.
 * Gift-card and store-credit **ledgers** use `stored_value_*` tables; POS posts via `Pos::PostStoredValueLedger`.
 
-## Phase 7A Rules
+## Phase 7A Rules (historical v0.03 — superseded by v0.04-6–10)
+
+Rules below describe the **retired** v0.03 customer-request/reservation model. Current behavior uses `DemandLine`, `DemandAllocation`, `/demand` queues, and POS pickup via `CompleteDemandAllocationFulfillment`. See [v0.04 domain rules](#v004-domain-rules-active-for-new-work).
 
 * `notify` request lines surface in Notify Customer queue on stock arrival; **no auto-hold**.
-* Default hold expiry: 14 days (`expires_at`); staff may override; nightly `InventoryReservations::Expire`.
-* Over-reserve on-hand uses reservation override columns + `inventory_reservations.override`; POS reserved-stock override uses `pos_authorizations`.
-* PO customer allocations require `special_order_id`; auto-merge same variant + vendor on draft PO lines; TBO FK path unchanged.
+* Default hold expiry: 14 days (`expires_at`); staff may override; nightly `DemandLines::ExpireDue`.
+* Over-reserve on-hand uses allocation override columns; POS reserved-stock override uses `pos_authorizations`.
+* PO customer allocations require demand linkage; auto-merge same variant + vendor on draft PO lines.
 * Receipt customer allocation is atomic with `PostReceipt`; failure rolls back entire receipt.
-* Pickup POS lines require `inventory_reservation_id`; validate consistent demand chain FKs.
+* Pickup POS lines require `demand_allocation_id`; validate consistent demand chain FKs.
 * Partial receipt: FIFO allocation to PO line allocations; partial pickup/void/cancel per spec.
-* Header status derived via `CustomerRequests::HeaderStatusResolver`; manual override limited to terminal statuses.
+* Header status derived from demand line state (retired: customer request header resolver).
 
 ## Phase 7B Rules
 

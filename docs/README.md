@@ -6,17 +6,37 @@ Navigation hub for ShelfStack docs.
 
 ## ShelfStack v0.04 core (active)
 
-**v0.04 is the core domain model** — not another numbered phase. The v0.03 Phases 1–10 built the current codebase; v0.04 is the canonical architecture going forward.
+**v0.04 is the core domain model** — not another numbered phase. Phases 1–10 built the Rails codebase; v0.04 is the canonical architecture for products, demand, sourcing, and fulfillment.
 
 | Start here | Purpose |
 | ---------- | ------- |
 | [design/VERSION_0.04.md](design/VERSION_0.04.md) | Core domain model (products, identifiers, demand, …) |
 | [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) | Implementation milestones v0.04-0 … v0.04-11 |
-| [v0.04/README.md](v0.04/README.md) | Milestone spec bundles (added as work is scoped) |
+| [v0.04/README.md](v0.04/README.md) | Milestone spec bundles and completion status |
 
-**Current priority:** milestone v0.04-0 baseline → v0.04-1 product fusion → v0.04-2 identifiers.
+**Current priority:**
 
-Phase 10-E (consistency sweep) is **paused** until the v0.04 core stabilizes.
+```text
+Complete: v0.04-0 through v0.04-10
+Current:  v0.04-11 — documentation and schema cleanup
+```
+
+Phase 10-E (consistency sweep) is **paused** until v0.04-11 completes.
+
+---
+
+## Active v0.04 guidance (canonical)
+
+These documents describe the **current** implemented domain:
+
+| Document | Purpose |
+| -------- | ------- |
+| [overview.md](overview.md) | Product overview and major domains |
+| [domain-model.md](domain-model.md) | Entities, relationships, and v0.04 operational chain |
+| [glossary.md](glossary.md) | Term definitions and retired v0.03 vocabulary |
+| [schema-reference.md](schema-reference.md) | Curated schema index (authoritative detail: `db/schema.rb`) |
+| [design/VERSION_0.04.md](design/VERSION_0.04.md) | Authoritative v0.04 design |
+| [v0.04/README.md](v0.04/README.md) | Milestone specs and status |
 
 ---
 
@@ -24,27 +44,29 @@ Phase 10-E (consistency sweep) is **paused** until the v0.04 core stabilizes.
 
 ### New to the project
 
-1. [overview.md](overview.md) — what ShelfStack is *(updates during v0.04-11)*
+1. [overview.md](overview.md) — what ShelfStack is
 2. [design/VERSION_0.04.md](design/VERSION_0.04.md) — **core domain model**
-3. [domain-model.md](domain-model.md) — v0.03 concepts *(historical until updated)*
+3. [domain-model.md](domain-model.md) — entities and relationships
 4. [glossary.md](glossary.md) — domain terms
 
 ### Implementing v0.04 core
 
 1. [design/VERSION_0.04.md](design/VERSION_0.04.md)
 2. [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md)
-3. Milestone bundle under [v0.04/](v0.04/) when created
+3. Milestone bundle under [v0.04/](v0.04/)
 4. [implementation-guide.md](implementation-guide.md) — conventions
 
 ### Working on v0.03 code (historical)
 
 1. [roadmap/README.md](roadmap/README.md) — Phases 1–10 index
-2. [specifications/phase-*-{spec,data-model,test-plan}.md](specifications/)
+2. [specifications/phase-*-{spec,data-model,test-plan}.md](specifications/) — **historical v0.03 implementation reference**
 3. [implementation/phase-*-completion.md](implementation/)
+
+Do not extend v0.03 customer-request, purchase-request, or inventory-reservation patterns. v0.04-10 retired those tables.
 
 ### AI coding agents
 
-Read [../AGENTS.md](../AGENTS.md) first, then v0.04 core docs for new work.
+Read [../AGENTS.md](../AGENTS.md) first, then v0.04 core docs above.
 
 ---
 
@@ -54,7 +76,7 @@ Read [../AGENTS.md](../AGENTS.md) first, then v0.04 core docs for new work.
 docs/
   README.md                 ← you are here
   design/                   ← v0.04 core domain model
-  v0.04/                    ← milestone specs (v0.04-1, v0.04-2, …)
+  v0.04/                    ← milestone specs (v0.04-1 … v0.04-11)
   roadmap/                  ← v0.04 delivery roadmap + v0.03 phase roadmaps
   specifications/           ← v0.03 phase specs (historical reference)
   implementation/           ← completion records
@@ -73,9 +95,11 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | | **v0.04 core** | **v0.03 phases (1–10)** |
 | --- | --- | --- |
 | **What** | Canonical domain architecture | How the current codebase was built |
-| **Docs** | `design/`, `v0.04/`, `v0.04-delivery-roadmap.md` | `specifications/`, `roadmap/phase-*.md` |
+| **Docs** | `design/`, `v0.04/`, active docs above | `specifications/`, `roadmap/phase-*.md` |
 | **Status** | Active — all new domain work | Complete — historical reference |
-| **Extend?** | Yes | No (for catalog item, customer requests, TBO) |
+| **Extend?** | Yes | No (ordering/request/reservation stack retired v0.04-10) |
+
+`catalog_items` remains **retain-temporary** legacy bibliographic admin until a future catalog cleanup milestone.
 
 ---
 
@@ -84,12 +108,13 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | Type | Location |
 | ---- | -------- |
 | **Core domain** | [design/VERSION_0.04.md](design/VERSION_0.04.md) |
+| **Active domain docs** | overview, domain-model, glossary, schema-reference |
 | **Delivery milestones** | [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) |
 | **Milestone specs** | [v0.04/](v0.04/) |
-| **v0.03 phase specs** | [specifications/](specifications/) |
+| **v0.03 phase specs** | [specifications/](specifications/) — historical |
 | **Cross-cutting** | [specifications/cross-cutting/README.md](specifications/cross-cutting/README.md) |
 | **Completion records** | [implementation/](implementation/) |
-| **Guides** | overview, architecture, testing, security, … |
+| **Guides** | architecture, testing, security, … |
 
 ---
 
@@ -98,10 +123,10 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | Workstream | Status |
 | ---------- | ------ |
 | v0.03 Phases 1–10-D | Complete |
-| **ShelfStack v0.04 core** | **Active** (milestone v0.04-1) |
-| v0.04-0 Baseline | **Complete** — [v0.04-0-completion.md](implementation/v0.04-0-completion.md) |
+| **ShelfStack v0.04 core** | **v0.04-0 through v0.04-10 Complete** |
+| **v0.04-11** doc/schema cleanup | **In progress** |
 | Phase 9c GL layer | Deferred |
-| Phase 10-E consistency sweep | Paused |
+| Phase 10-E consistency sweep | Paused (after v0.04-11) |
 
 v0.03 phase links: [roadmap/README.md](roadmap/README.md)
 
@@ -111,15 +136,15 @@ v0.03 phase links: [roadmap/README.md](roadmap/README.md)
 
 | Document | Purpose |
 | -------- | ------- |
-| [overview.md](overview.md) | Product overview |
-| [domain-model.md](domain-model.md) | Entities and relationships (v0.03; updates in v0.04-11) |
+| [overview.md](overview.md) | Product overview (v0.04 canonical) |
+| [domain-model.md](domain-model.md) | Entities and relationships (v0.04 canonical) |
 | [architecture.md](architecture.md) | Services and layering |
 | [architecture-map.md](architecture-map.md) | Domain → tables → services |
 | [roadmap.md](roadmap.md) | Full development history summary |
 | [security.md](security.md) | Auth, permissions, audit |
 | [testing.md](testing.md) | Test strategy |
 | [implementation-guide.md](implementation-guide.md) | Developer conventions |
-| [schema-reference.md](schema-reference.md) | Schema index |
+| [schema-reference.md](schema-reference.md) | Curated schema index |
 | [glossary.md](glossary.md) | Term definitions |
 
 ---
@@ -138,6 +163,8 @@ v0.03 phase links: [roadmap/README.md](roadmap/README.md)
 
 ```text
 design/VERSION_0.04.md          ← core domain (authoritative for new work)
+        ↓
+overview / domain-model / glossary / schema-reference  ← active v0.04 guidance
         ↓
 roadmap/v0.04-delivery-roadmap  ← milestones
         ↓

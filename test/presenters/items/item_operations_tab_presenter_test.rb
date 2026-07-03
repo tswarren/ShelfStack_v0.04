@@ -26,7 +26,8 @@ class Items::ItemOperationsTabPresenterTest < ActiveSupport::TestCase
 
     tbo_metric = presenter.metrics.find { |metric| metric[:label] == "Open TBO" }
     assert_equal 1, tbo_metric[:value]
-    assert_empty presenter.open_purchase_request_lines
+    assert_equal 1, presenter.open_manual_tbo_demand_lines.size
+    assert_equal presenter.open_manual_tbo_demand_lines, presenter.open_purchase_request_lines
   end
 
   test "sales history rows require pos transaction view permission" do
