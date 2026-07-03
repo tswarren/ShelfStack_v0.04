@@ -19,7 +19,17 @@ module Sourcing
       @attempts = @sourcing_run.sourcing_attempts.includes(:vendor, :vendor_responses).order(:sequence_number)
       @unresolved_for_sourcing = Sourcing::UnresolvedQuantity.for_demand_line(@demand_line)
       @run_unresolved = Sourcing::UnresolvedQuantity.for_sourcing_run(@sourcing_run)
-      @suggested_vendor = Sourcing::SuggestVendors.call!(variant: @sourcing_run.product_variant).first
+      @suggested_vendors = Sourcing::SuggestVendors.call!(variant: @sourcing_run.product_variant)
+      @eligible_po_lines = if @demand_line.product_variant.present?
+        PurchaseOrderLine.joins(:purchase_order)
+                         .includes(:purchase_order, :vendor)
+                         .where(purchase_orders: { store_id: sourcing_store.id, status: %w[draft submitted partially_received] })
+                         .where(product_variant_id: @demand_line.product_variant_id)
+                         .where.not(status: %w[received cancelled closed_short closed])
+                         .order("purchase_orders.created_at DESC")
+      else
+        []
+      end
       @audit_events = AuditEvent.where(auditable: [@sourcing_run] + @attempts.to_a)
                                 .or(AuditEvent.where(auditable: @attempts.flat_map(&:vendor_responses)))
                                 .order(occurred_at: :desc)

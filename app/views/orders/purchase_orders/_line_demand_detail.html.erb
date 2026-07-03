@@ -3,16 +3,14 @@
     <li>
       <%= row.quantity_open %> open / <%= row.quantity_allocated %> allocated for
       <%= row.customer_name %>
-      <% if row.request_number.present? %>
-        · <%= link_to "Request #{row.request_number}", customers_customer_request_path(row.request_id) %>
+      <% if row.demand_number.present? && row.demand_line_id.present? %>
+        · <%= link_to "Demand #{row.demand_number}", demand_demand_line_path(row.demand_line_id) %>
       <% end %>
-      <% if row.special_order_id.present? %>
-        · Special order #<%= row.special_order_id %>
-      <% end %>
+      · <%= demand_allocation_kind_label(row.allocation_kind) %>
       · <%= row.status.humanize %>
     </li>
   <% end %>
   <% if breakdown.internal_tbo_quantity.positive? %>
-    <li><%= breakdown.internal_tbo_quantity %> for internal TBO</li>
+    <li><%= breakdown.internal_tbo_quantity %> for store replenishment</li>
   <% end %>
 </ul>

@@ -5,7 +5,14 @@ export default class extends Controller {
   static values = {
     url: String,
     addPickupUrl: String,
-    redirectOnSuccess: { type: Boolean, default: false }
+    redirectOnSuccess: { type: Boolean, default: false },
+    autoSearch: { type: Boolean, default: false }
+  }
+
+  connect() {
+    if (this.autoSearchValue && this.hasDemandNumberTarget && this.demandNumberTarget.value.trim()) {
+      this.fetchPickups()
+    }
   }
 
   search(event) {

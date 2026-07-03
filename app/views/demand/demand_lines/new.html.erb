@@ -4,24 +4,60 @@
   <div class="ss-field">
     <%= label_tag :capture_intent, "Capture intent", class: "ss-label" %>
     <%= select_tag :capture_intent,
-          options_for_select(@capture_intents.map { |i| [demand_capture_intent_label(i), i] }),
+          options_for_select(@capture_intents.map { |i| [demand_capture_intent_label(i), i] }, @demand_line.capture_intent),
           class: "ss-input", required: true %>
   </div>
 
-  <div class="ss-field">
-    <%= label_tag :product_variant_id, "Variant ID", class: "ss-label" %>
-    <%= number_field_tag :product_variant_id, @demand_line.product_variant_id, class: "ss-input" %>
-    <p class="ss-hint">Required for matched demand. Leave blank for research/provisional.</p>
+  <div data-controller="inventory-variant-lookup"
+       data-inventory-variant-lookup-url-value="<%= customers_variant_lookup_path %>"
+       data-inventory-variant-lookup-require-eligible-value="false"
+       <% if @selected_variant.present? %>
+         data-inventory-variant-lookup-initial-sku-value="<%= @selected_variant.sku %>"
+         data-inventory-variant-lookup-initial-variant-id-value="<%= @selected_variant.id %>"
+         data-inventory-variant-lookup-initial-label-value="<%= @selected_variant.name %>"
+       <% end %>>
+    <div class="ss-field">
+      <%= label_tag :variant_lookup, "Item / SKU / ISBN", class: "ss-label" %>
+      <%= text_field_tag :variant_lookup, @selected_variant&.sku,
+            class: "ss-input",
+            placeholder: "Scan or search variant…",
+            autocomplete: "off",
+            data: {
+              inventory_variant_lookup_target: "lookupInput",
+              action: "keydown->inventory-variant-lookup#lookupExact input->inventory-variant-lookup#search"
+            } %>
+      <%= hidden_field_tag :product_variant_id, @selected_variant&.id, data: { inventory_variant_lookup_target: "variantId" } %>
+      <p class="ss-hint" data-inventory-variant-lookup-target="preview"></p>
+      <p class="ss-hint" data-inventory-variant-lookup-target="message"></p>
+      <div class="ss-pos-choices" data-inventory-variant-lookup-target="choices"></div>
+      <p class="ss-hint">Leave blank for research/provisional demand only.</p>
+    </div>
   </div>
 
-  <div class="ss-form-grid ss-form-grid--2">
-    <div class="ss-field">
-      <%= label_tag :customer_id, "Customer ID", class: "ss-label" %>
-      <%= number_field_tag :customer_id, @selected_customer&.id, class: "ss-input" %>
-    </div>
-    <div class="ss-field">
-      <%= label_tag :customer_name_snapshot, "Walk-in name", class: "ss-label" %>
-      <%= text_field_tag :customer_name_snapshot, @demand_line.customer_name_snapshot, class: "ss-input" %>
+  <% if @supply_preview.present? %>
+    <%= render "supply_preview", supply_summary: @supply_preview %>
+  <% end %>
+
+  <div data-controller="customer-lookup"
+       data-customer-lookup-url-value="<%= customers_customer_lookup_path %>">
+    <div class="ss-form-grid ss-form-grid--2">
+      <div class="ss-field">
+        <%= label_tag :customer_lookup, "Customer", class: "ss-label" %>
+        <%= text_field_tag :customer_lookup, @selected_customer&.display_name,
+              class: "ss-input",
+              placeholder: "Search by name, email, or phone…",
+              autocomplete: "off",
+              data: {
+                customer_lookup_target: "lookupInput",
+                action: "keydown->customer-lookup#lookupExact input->customer-lookup#search"
+              } %>
+        <%= hidden_field_tag :customer_id, @selected_customer&.id, data: { customer_lookup_target: "customerId" } %>
+        <div class="ss-pos-choices" data-customer-lookup-target="choices"></div>
+      </div>
+      <div class="ss-field">
+        <%= label_tag :customer_name_snapshot, "Walk-in name", class: "ss-label" %>
+        <%= text_field_tag :customer_name_snapshot, @demand_line.customer_name_snapshot, class: "ss-input" %>
+      </div>
     </div>
   </div>
 

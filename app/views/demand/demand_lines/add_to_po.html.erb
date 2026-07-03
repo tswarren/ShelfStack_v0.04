@@ -1,0 +1,17 @@
+<%= render "setup/shared/back_link", path: demand_demand_line_path(@demand_line), label: @demand_line.demand_number %>
+
+<h1>Add demand to existing draft PO</h1>
+
+<% if @eligible_purchase_orders.any? %>
+  <%= form_with url: submit_add_to_po_demand_demand_line_path(@demand_line), method: :post, class: "ss-form" do %>
+    <div class="ss-field">
+      <%= label_tag :purchase_order_id, "Draft purchase order", class: "ss-label" %>
+      <%= select_tag :purchase_order_id,
+            options_from_collection_for_select(@eligible_purchase_orders, :id) { |po| "PO ##{po.id} — #{po.vendor.name}" },
+            class: "ss-input", required: true %>
+    </div>
+    <%= submit_tag "Add to PO", class: "ss-btn" %>
+  <% end %>
+<% else %>
+  <p class="ss-muted">No eligible draft purchase orders for this demand's vendor. <%= link_to "Create a new draft PO", create_po_demand_demand_line_path(@demand_line) %> instead.</p>
+<% end %>

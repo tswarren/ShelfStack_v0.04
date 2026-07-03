@@ -132,6 +132,19 @@ module Orders
       allocation_summary_rows.any? { |row| row[:customer_quantity].positive? || row[:po_allocations].any? }
     end
 
+    def post_confirmation_message
+      rows = allocation_summary_rows
+      customer_qty = rows.sum { |row| row[:customer_quantity] }
+      stock_qty = rows.sum { |row| row[:stock_quantity] }
+      accepted_qty = rows.sum { |row| row[:quantity_accepted] }
+      ready_count = customer_allocation_rows.map { |row| row[:demand_line_id] }.uniq.size
+
+      parts = [ "Receipt posted. Inventory increased by #{accepted_qty}." ]
+      parts << "#{ready_count} customer #{'demand'.pluralize(ready_count)} #{'is'.pluralize(ready_count)} now ready for pickup (#{customer_qty} #{'copy'.pluralize(customer_qty)})." if customer_qty.positive?
+      parts << "#{stock_qty} #{'copy'.pluralize(stock_qty)} added to available stock." if stock_qty.positive?
+      parts.join(" ")
+    end
+
     private
 
     attr_reader :receipt, :document_hub

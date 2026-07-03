@@ -72,7 +72,10 @@ module Orders
 
     def post
       Purchasing::PostReceipt.call(receipt: @receipt, posted_by_user: current_user)
-      redirect_to orders_receipt_path(@receipt), notice: "Receipt posted."
+      @receipt.reload
+      document_hub = Purchasing::ReceiptDocumentHub.call(@receipt)
+      presenter = Orders::ReceiptShowPresenter.new(receipt: @receipt, document_hub: document_hub)
+      redirect_to orders_receipt_path(@receipt), notice: presenter.post_confirmation_message
     rescue Purchasing::PostReceipt::PostingError => e
       redirect_to orders_receipt_path(@receipt), alert: e.message
     end

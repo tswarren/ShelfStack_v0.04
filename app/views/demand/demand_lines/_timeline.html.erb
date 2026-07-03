@@ -1,0 +1,19 @@
+<%# locals: workflow %>
+<section class="ss-panel">
+  <h2>Timeline</h2>
+  <% if workflow.timeline_events.any? %>
+    <ul class="ss-timeline">
+      <% workflow.timeline_events.each do |event| %>
+        <li>
+          <strong><%= event.label %></strong>
+          — <%= display_time(event.occurred_at) %>
+          <% if event.detail.present? %>
+            <span class="ss-muted">(<%= event.detail %>)</span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="ss-muted">No timeline events yet.</p>
+  <% end %>
+</section>

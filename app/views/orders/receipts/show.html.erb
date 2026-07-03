@@ -131,8 +131,8 @@
             <td><%= render "orders/shared/variant_identity", variant: row[:variant] %></td>
             <td><%= row[:customer_name] || "—" %></td>
             <td>
-              <% if row[:request_id].present? %>
-                <%= link_to row[:request_number], customers_customer_request_path(row[:request_id]) %>
+              <% if row[:demand_line_id].present? %>
+                <%= link_to row[:demand_number], demand_demand_line_path(row[:demand_line_id]) %>
               <% else %>
                 —
               <% end %>

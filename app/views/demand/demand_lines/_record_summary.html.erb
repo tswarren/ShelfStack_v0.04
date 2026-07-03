@@ -1,0 +1,36 @@
+<%# locals: demand_line, supply_summary %>
+<section class="ss-panel">
+  <h2>Record summary</h2>
+  <dl class="ss-summary">
+    <dt>Status</dt>
+    <dd><span class="<%= demand_status_class(demand_line.status) %>"><%= demand_status_label(demand_line.status) %></span></dd>
+    <dt>Supply state</dt>
+    <dd><%= demand_supply_state_label(supply_summary.primary_supply_state) %></dd>
+    <dt>Capture intent</dt>
+    <dd><%= demand_capture_intent_label(demand_line.capture_intent) %></dd>
+    <dt>Customer</dt>
+    <dd>
+      <% if demand_line.customer.present? %>
+        <%= link_to demand_line.display_customer_name, customers_customer_path(demand_line.customer) %>
+      <% else %>
+        <%= demand_line.display_customer_name.presence || "—" %>
+      <% end %>
+    </dd>
+    <dt>Item</dt>
+    <dd>
+      <% if demand_line.product_variant.present? %>
+        <%= link_to demand_item_label(demand_line), items_item_path(product_id: demand_line.product_id) %>
+      <% else %>
+        <%= demand_item_label(demand_line) %>
+      <% end %>
+    </dd>
+    <dt>Quantity</dt>
+    <dd class="ss-num"><%= demand_line.quantity_requested %></dd>
+    <dt>Needed by</dt>
+    <dd><%= demand_line.needed_by_date&.strftime("%Y-%m-%d") || "—" %></dd>
+    <dt>Expires</dt>
+    <dd><%= demand_line.expires_at.present? ? display_time(demand_line.expires_at) : "—" %></dd>
+    <dt>Notes</dt>
+    <dd><%= simple_format(demand_line.notes.presence || "—") %></dd>
+  </dl>
+</section>

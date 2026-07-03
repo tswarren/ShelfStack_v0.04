@@ -11,17 +11,17 @@ Navigation hub for ShelfStack docs.
 | Start here | Purpose |
 | ---------- | ------- |
 | [design/VERSION_0.04.md](design/VERSION_0.04.md) | Core domain model (products, identifiers, demand, …) |
-| [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) | Implementation milestones v0.04-0 … v0.04-11 |
+| [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) | Implementation milestones v0.04-0 … v0.04-12 |
 | [v0.04/README.md](v0.04/README.md) | Milestone spec bundles and completion status |
 
 **Current priority:**
 
 ```text
-Complete: v0.04-0 through v0.04-10
-Current:  v0.04-11 — documentation and schema cleanup
+Complete: v0.04-0 through v0.04-11
+Current:  v0.04-12 — demand ordering UX **complete on branch** (merge pending)
 ```
 
-Phase 10-E (consistency sweep) is **paused** until v0.04-11 completes.
+Phase 10-E (consistency sweep) is **paused** until v0.04-12 stabilizes.
 
 ---
 
@@ -76,7 +76,7 @@ Read [../AGENTS.md](../AGENTS.md) first, then v0.04 core docs above.
 docs/
   README.md                 ← you are here
   design/                   ← v0.04 core domain model
-  v0.04/                    ← milestone specs (v0.04-1 … v0.04-11)
+  v0.04/                    ← milestone specs (v0.04-1 … v0.04-12)
   roadmap/                  ← v0.04 delivery roadmap + v0.03 phase roadmaps
   specifications/           ← v0.03 phase specs (historical reference)
   implementation/           ← completion records
@@ -124,9 +124,10 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | ---------- | ------ |
 | v0.03 Phases 1–10-D | Complete |
 | **ShelfStack v0.04 core** | **v0.04-0 through v0.04-10 Complete** |
-| **v0.04-11** doc/schema cleanup | **In progress** |
+| **v0.04-11** doc/schema cleanup | **Complete** |
+| **v0.04-12** demand ordering UX | **Complete** (branch) |
 | Phase 9c GL layer | Deferred |
-| Phase 10-E consistency sweep | Paused (after v0.04-11) |
+| Phase 10-E consistency sweep | Paused (after v0.04-12) |
 
 v0.03 phase links: [roadmap/README.md](roadmap/README.md)
 

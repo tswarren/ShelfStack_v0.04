@@ -1,0 +1,55 @@
+<%# locals: allocations %>
+<section class="ss-panel">
+  <h2>Allocation history</h2>
+  <% if allocations.any? %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Kind</th>
+          <th>Status</th>
+          <th>Qty</th>
+          <th>PO / receipt</th>
+          <th>Override</th>
+          <th>Allocated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% allocations.each do |allocation| %>
+          <tr>
+            <td><%= demand_allocation_kind_label(allocation.allocation_kind) %></td>
+            <td><%= allocation.status.humanize %></td>
+            <td class="ss-num"><%= allocation.quantity_allocated %></td>
+            <td>
+              <% if allocation.purchase_order_line.present? %>
+                <%= link_to "PO ##{allocation.purchase_order_line.purchase_order.id}",
+                      orders_purchase_order_path(allocation.purchase_order_line.purchase_order) %>
+              <% elsif allocation.conversion_receipt_line_id.present? %>
+                Receipt line #<%= allocation.conversion_receipt_line_id %>
+              <% else %>
+                —
+              <% end %>
+            </td>
+            <td><%= allocation.override_availability? ? "Yes" : "—" %></td>
+            <td><%= display_time(allocation.allocated_at) %></td>
+            <td class="ss-table-actions">
+              <% if allocation.active? %>
+                <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.release", store: current_store) %>
+                  <%= button_to "Release", release_demand_allocation_path(allocation), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+                <% end %>
+                <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.fulfill", store: current_store) %>
+                  <%= button_to "Fulfill", fulfill_demand_allocation_path(allocation), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+                <% end %>
+                <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.cancel", store: current_store) %>
+                  <%= button_to "Cancel", cancel_demand_allocation_path(allocation), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm", params: { cancel_reason: "Staff canceled" } %>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="ss-muted">No allocations yet.</p>
+  <% end %>
+</section>

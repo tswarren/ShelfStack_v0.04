@@ -42,34 +42,10 @@
 <% end %>
 
 <% if @sourcing_run.active? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.create", store: current_store) %>
-  <h2>Create attempt</h2>
-  <% suggestion = @suggested_vendor %>
-  <%= form_with url: sourcing_run_attempts_path(@sourcing_run), method: :post, class: "ss-form" do %>
-    <div class="ss-field">
-      <%= label_tag :vendor_id, "Vendor", class: "ss-label" %>
-      <%= number_field_tag :vendor_id, suggestion&.vendor&.id, class: "ss-input", required: true %>
-      <% if suggestion&.vendor.present? %>
-        <p class="ss-muted">Suggested: <%= suggestion.vendor.name %> (<%= suggestion.source_level %>)</p>
-      <% end %>
-    </div>
-    <div class="ss-field">
-      <%= label_tag :quantity, "Quantity", class: "ss-label" %>
-      <%= number_field_tag :quantity, [@run_unresolved, 1].max, min: 1, class: "ss-input", required: true %>
-    </div>
-    <div class="ss-field">
-      <%= label_tag :purchase_order_line_id, "PO line ID (optional link)", class: "ss-label" %>
-      <%= number_field_tag :purchase_order_line_id, nil, class: "ss-input" %>
-    </div>
-    <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.vendor_override", store: current_store) %>
-      <div class="ss-field">
-        <%= label_tag :manual_vendor_override, class: "ss-label" do %>
-          <%= check_box_tag :manual_vendor_override, "1", false %> Manual vendor override
-        <% end %>
-      </div>
-      <%= text_field_tag :override_reason, nil, placeholder: "Override reason", class: "ss-input" %>
-    <% end %>
-    <%= submit_tag "Create pending attempt", class: "ss-btn" %>
-  <% end %>
+  <%= render "suggested_vendor_cards",
+        suggested_vendors: @suggested_vendors,
+        run_unresolved: @run_unresolved,
+        sourcing_run: @sourcing_run %>
 <% end %>
 
 <h2>Attempts</h2>
@@ -89,7 +65,7 @@
       <% end %>
 
       <% if attempt.pending? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.submit", store: current_store) %>
-        <%= button_to "Submit attempt", submit_sourcing_attempt_path(attempt), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+        <%= button_to "Mark as submitted to vendor", submit_sourcing_attempt_path(attempt), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm" %>
       <% end %>
 
       <% if attempt.in_flight? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.cancel", store: current_store) %>
@@ -114,17 +90,33 @@
       <% if attempt.status == "submitted" && Authorization.allowed?(user: current_user, permission_key: "sourcing.responses.record", store: current_store) %>
         <h4>Record vendor response</h4>
         <%= form_with url: sourcing_attempt_vendor_responses_path(attempt), method: :post, class: "ss-form" do %>
+          <p class="ss-muted">Requested: <%= attempt.quantity_requested %></p>
           <div class="ss-field-row">
-            <%= number_field_tag :quantity_confirmed, 0, min: 0, class: "ss-input", placeholder: "Confirmed" %>
-            <%= number_field_tag :quantity_backordered, 0, min: 0, class: "ss-input", placeholder: "Backordered" %>
-            <%= number_field_tag :quantity_unavailable, 0, min: 0, class: "ss-input", placeholder: "Unavailable" %>
-            <%= number_field_tag :quantity_canceled, 0, min: 0, class: "ss-input", placeholder: "Canceled" %>
-            <%= number_field_tag :quantity_failed, 0, min: 0, class: "ss-input", placeholder: "Failed" %>
+            <%= label_tag :quantity_confirmed, "Confirmed", class: "ss-label" %>
+            <%= number_field_tag :quantity_confirmed, 0, min: 0, class: "ss-input" %>
+            <%= label_tag :quantity_backordered, "Backordered", class: "ss-label" %>
+            <%= number_field_tag :quantity_backordered, 0, min: 0, class: "ss-input" %>
+            <%= label_tag :quantity_unavailable, "Unavailable", class: "ss-label" %>
+            <%= number_field_tag :quantity_unavailable, 0, min: 0, class: "ss-input" %>
+            <%= label_tag :quantity_canceled, "Canceled", class: "ss-label" %>
+            <%= number_field_tag :quantity_canceled, 0, min: 0, class: "ss-input" %>
+            <%= label_tag :quantity_failed, "Failed", class: "ss-label" %>
+            <%= number_field_tag :quantity_failed, 0, min: 0, class: "ss-input" %>
           </div>
-          <div class="ss-field">
-            <%= label_tag :purchase_order_line_id, "PO line ID (for confirmed inbound alloc)", class: "ss-label" %>
-            <%= number_field_tag :purchase_order_line_id, attempt.purchase_order_line_id, class: "ss-input" %>
-          </div>
+          <% if @eligible_po_lines.any? %>
+            <div class="ss-field">
+              <%= label_tag :purchase_order_line_id, "Link PO line (optional)", class: "ss-label" %>
+              <%= select_tag :purchase_order_line_id,
+                    options_for_select(
+                      @eligible_po_lines.map { |line|
+                        ["PO ##{line.purchase_order.id} line #{line.line_number} — #{line.vendor.name}", line.id]
+                      },
+                      attempt.purchase_order_line_id
+                    ),
+                    include_blank: "None",
+                    class: "ss-input" %>
+            </div>
+          <% end %>
           <div class="ss-field">
             <%= label_tag :accept_backorder, class: "ss-label" do %>
               <%= check_box_tag :accept_backorder, "1", false %> Accept backorder allocation
@@ -141,12 +133,24 @@
 
       <% cascade_eligible = Sourcing::CascadeEligibleQuantity.for_attempt(attempt) %>
       <% if cascade_eligible.positive? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.cascade", store: current_store) %>
-        <h4>Cascade (<%= cascade_eligible %> eligible)</h4>
+        <h4>Cascade unresolved quantity</h4>
+        <p class="ss-muted"><%= cascade_eligible %> copies still unresolved.</p>
+        <% next_vendor = @suggested_vendors.first %>
+        <% if next_vendor.present? %>
+          <p class="ss-muted">Suggested next vendor: <%= next_vendor.vendor.name %>.</p>
+        <% end %>
         <%= form_with url: cascade_sourcing_attempt_path(attempt), method: :post, class: "ss-form" do %>
-          <%= number_field_tag :vendor_id, attempt.vendor_id, class: "ss-input", required: true %>
-          <%= number_field_tag :quantity, cascade_eligible, min: 1, class: "ss-input", required: true %>
-          <%= text_field_tag :cascade_reason, "unavailable", class: "ss-input", required: true %>
-          <%= submit_tag "Create cascade attempt (pending)", class: "ss-btn ss-btn-secondary" %>
+          <% if next_vendor.present? %>
+            <%= hidden_field_tag :vendor_id, next_vendor.vendor.id %>
+          <% else %>
+            <div class="ss-field">
+              <%= label_tag :vendor_id, "Vendor", class: "ss-label" %>
+              <%= select_tag :vendor_id, options_from_collection_for_select(Vendor.active_records.order(:name), :id, :name), class: "ss-input", required: true %>
+            </div>
+          <% end %>
+          <%= hidden_field_tag :quantity, cascade_eligible %>
+          <%= text_field_tag :cascade_reason, "unavailable", class: "ss-input", required: true, placeholder: "Cascade reason" %>
+          <%= submit_tag "Create cascade attempt", class: "ss-btn ss-btn-secondary" %>
         <% end %>
       <% end %>
     </section>

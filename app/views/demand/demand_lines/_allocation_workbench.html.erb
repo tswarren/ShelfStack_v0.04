@@ -1,0 +1,88 @@
+<%# locals: demand_line, supply_summary, eligible_inbound_lines, available_for_allocation %>
+<section class="ss-panel" id="demand-allocation-workbench">
+  <h2>Allocation workbench</h2>
+
+  <h3>Supply summary</h3>
+  <dl class="ss-summary">
+    <% supply_summary.rows.each do |row| %>
+      <dt><%= row.label %></dt>
+      <dd class="ss-num"><%= row.value %></dd>
+    <% end %>
+  </dl>
+
+  <% if demand_line.product_variant.present? && !demand_line.terminal? && Authorization.allowed?(user: current_user, permission_key: "demand.allocations.create", store: current_store) %>
+    <div id="demand-on-hand-allocation">
+      <h3>Eligible on hand</h3>
+      <p class="ss-muted">Available on hand: <span class="ss-num"><%= supply_summary.on_hand_available %></span></p>
+      <% if supply_summary.on_hand_available.positive? && supply_summary.unallocated_quantity.positive? %>
+        <%= form_with url: demand_demand_line_allocations_path(demand_line), method: :post, class: "ss-form ss-form--inline" do %>
+          <%= hidden_field_tag :allocation_kind, "on_hand" %>
+          <% allocate_qty = [supply_summary.unallocated_quantity, supply_summary.on_hand_available, 1].sort[1] %>
+          <%= hidden_field_tag :quantity, allocate_qty %>
+          <%= submit_tag "Allocate #{allocate_qty}", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+        <% end %>
+        <% if supply_summary.on_hand_available > 1 && supply_summary.unallocated_quantity > 1 %>
+          <%= form_with url: demand_demand_line_allocations_path(demand_line), method: :post, class: "ss-form ss-form--inline" do %>
+            <%= hidden_field_tag :allocation_kind, "on_hand" %>
+            <% all_qty = [supply_summary.unallocated_quantity, supply_summary.on_hand_available].min %>
+            <%= hidden_field_tag :quantity, all_qty %>
+            <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.override_availability", store: current_store) %>
+              <%= hidden_field_tag :override_availability, "1" %>
+              <%= hidden_field_tag :override_reason, "Allocate all available from workbench" %>
+              <%= submit_tag "Allocate all available (#{all_qty})", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+            <% else %>
+              <%= submit_tag "Allocate all available (#{all_qty})", class: "ss-btn ss-btn-secondary ss-btn--sm", disabled: true, title: "Override permission required when allocating all" %>
+            <% end %>
+          <% end %>
+        <% end %>
+        <%= render "on_hand_allocation_form", demand_line: demand_line, available_for_allocation: available_for_allocation %>
+      <% end %>
+    </div>
+
+    <div id="demand-inbound-allocation">
+      <h3>Eligible inbound</h3>
+      <% if eligible_inbound_lines.any? %>
+        <table class="ss-table">
+          <thead>
+            <tr>
+              <th>PO</th>
+              <th>Vendor</th>
+              <th>Status</th>
+              <th class="ss-num">Ordered</th>
+              <th class="ss-num">Received</th>
+              <th class="ss-num">Open to receive</th>
+              <th class="ss-num">Allocated</th>
+              <th class="ss-num">Available</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% eligible_inbound_lines.each do |option| %>
+              <tr>
+                <td><%= link_to "PO ##{option.purchase_order.id}", orders_purchase_order_path(option.purchase_order) %></td>
+                <td><%= option.vendor.name %></td>
+                <td><%= option.purchase_order.status.humanize %></td>
+                <td class="ss-num"><%= option.quantity_ordered %></td>
+                <td class="ss-num"><%= option.quantity_received %></td>
+                <td class="ss-num"><%= option.open_to_receive %></td>
+                <td class="ss-num"><%= option.already_allocated %></td>
+                <td class="ss-num"><%= option.available_to_allocate %></td>
+                <td>
+                  <%= form_with url: demand_demand_line_allocations_path(demand_line), method: :post, class: "ss-form ss-form--inline" do %>
+                    <%= hidden_field_tag :allocation_kind, "inbound_purchase_order" %>
+                    <%= hidden_field_tag :purchase_order_line_id, option.purchase_order_line.id %>
+                    <% qty = [supply_summary.unallocated_quantity, option.available_to_allocate, 1].sort[1] %>
+                    <%= hidden_field_tag :quantity, qty %>
+                    <%= submit_tag "Allocate #{qty}", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="ss-muted">No eligible inbound PO lines with available supply.</p>
+      <% end %>
+    </div>
+  <% end %>
+</section>

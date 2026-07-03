@@ -16,8 +16,10 @@ module Pos
       )
 
       if @landing.status == :active_draft
-        return redirect_to edit_pos_transaction_path(@landing.draft, mode: "sale")
+        return redirect_to edit_pos_transaction_path(@landing.draft, mode: "sale", pickup: params[:pickup])
       end
+
+      @open_pickup_panel = params[:pickup].present? || params[:mode] == "pickup"
 
       @sub_departments = SubDepartment.active_records.order(:name) if @register_session&.open?
 

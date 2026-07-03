@@ -2,23 +2,12 @@
 
 <h1><%= @demand_line.demand_number %></h1>
 
-<dl class="ss-summary">
-  <dt>Status</dt>
-  <dd><span class="<%= demand_status_class(@demand_line.status) %>"><%= demand_status_label(@demand_line.status) %></span></dd>
-  <dt>Allocation</dt>
-  <dd><%= demand_allocation_state_label(@demand_line) %></dd>
-  <dt>Capture intent</dt><dd><%= demand_capture_intent_label(@demand_line.capture_intent) %></dd>
-  <dt>Source / purpose</dt><dd><%= @demand_line.source %> / <%= @demand_line.purpose %></dd>
-  <dt>Customer</dt><dd><%= @demand_line.display_customer_name.presence || "—" %></dd>
-  <dt>Item</dt><dd><%= demand_item_label(@demand_line) %></dd>
-  <dt>Quantity</dt><dd class="ss-num"><%= @demand_line.quantity_requested %></dd>
-  <dt>Active allocated</dt><dd class="ss-num"><%= @allocation_quantities[:active_allocated_quantity] %></dd>
-  <dt>Fulfilled</dt><dd class="ss-num"><%= @allocation_quantities[:fulfilled_quantity] %></dd>
-  <dt>Needed by</dt><dd><%= @demand_line.needed_by_date&.strftime("%Y-%m-%d") || "—" %></dd>
-  <dt>Expires</dt><dd><%= @demand_line.expires_at.present? ? display_time(@demand_line.expires_at) : "—" %></dd>
-  <dt>Notes</dt><dd><%= simple_format(@demand_line.notes.presence || "—") %></dd>
-  <dt>Created</dt><dd><%= display_time(@demand_line.created_at) %> by <%= @demand_line.created_by_user.display_name %></dd>
-</dl>
+<%= render "next_action_panel", workflow: @workflow %>
+
+<div class="ss-detail-layout ss-detail-layout--2col">
+  <%= render "record_summary", demand_line: @demand_line, supply_summary: @supply_summary %>
+  <%= render "timeline", workflow: @workflow %>
+</div>
 
 <div class="ss-detail-actions">
   <% if DemandLine::ALLOCATION_ACTIVE_STATUSES.include?(@demand_line.status) && Authorization.allowed?(user: current_user, permission_key: "demand.expire", store: current_store) %>
@@ -34,94 +23,24 @@
   <% end %>
 </div>
 
-<% if @demand_line.product_variant.present? && !@demand_line.terminal? && Authorization.allowed?(user: current_user, permission_key: "demand.allocations.create", store: current_store) %>
-  <h2>Allocate on hand</h2>
-  <p class="ss-muted">Available for allocation: <span class="ss-num"><%= @available_for_allocation %></span></p>
-  <%= form_with url: demand_demand_line_allocations_path(@demand_line), method: :post, class: "ss-form" do %>
-    <%= hidden_field_tag :allocation_kind, "on_hand" %>
-    <div class="ss-field">
-      <%= label_tag :quantity, "Quantity", class: "ss-label" %>
-      <%= number_field_tag :quantity, 1, min: 1, class: "ss-input", required: true %>
-    </div>
-    <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.override_availability", store: current_store) %>
-      <div class="ss-field">
-        <%= label_tag :override_availability, class: "ss-label" do %>
-          <%= check_box_tag :override_availability, "1", false %> Override availability
-        <% end %>
-      </div>
-      <div class="ss-field">
-        <%= label_tag :override_reason, "Override reason", class: "ss-label" %>
-        <%= text_field_tag :override_reason, nil, class: "ss-input" %>
-      </div>
-    <% end %>
-    <%= submit_tag "Allocate on hand", class: "ss-btn" %>
-  <% end %>
-<% end %>
+<%= render "allocation_workbench",
+      demand_line: @demand_line,
+      supply_summary: @supply_summary,
+      eligible_inbound_lines: @eligible_inbound_lines,
+      available_for_allocation: @available_for_allocation %>
 
-<%= render "sourcing_panel" %>
+<%= render "allocations_history", allocations: @allocations %>
 
-<h2>Allocations</h2>
-<% if @allocations.any? %>
-  <table class="ss-table">
-    <thead>
-      <tr>
-        <th>Kind</th>
-        <th>Status</th>
-        <th>Qty</th>
-        <th>PO line</th>
-        <th>Override</th>
-        <th>Allocated</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @allocations.each do |allocation| %>
-        <tr>
-          <td><%= demand_allocation_kind_label(allocation.allocation_kind) %></td>
-          <td><%= allocation.status.humanize %></td>
-          <td class="ss-num"><%= allocation.quantity_allocated %></td>
-          <td><%= allocation.purchase_order_line_id || "—" %></td>
-          <td><%= allocation.override_availability? ? "Yes" : "—" %></td>
-          <td><%= display_time(allocation.allocated_at) %></td>
-          <td class="ss-table-actions">
-            <% if allocation.active? %>
-              <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.release", store: current_store) %>
-                <%= button_to "Release", release_demand_allocation_path(allocation), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm" %>
-              <% end %>
-              <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.fulfill", store: current_store) %>
-                <%= button_to "Fulfill", fulfill_demand_allocation_path(allocation), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm" %>
-              <% end %>
-              <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.cancel", store: current_store) %>
-                <%= button_to "Cancel", cancel_demand_allocation_path(allocation), method: :patch, class: "ss-btn ss-btn-secondary ss-btn--sm", params: { cancel_reason: "Staff canceled" } %>
-              <% end %>
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-<% else %>
-  <p class="ss-muted">No allocations yet.</p>
-<% end %>
+<section id="demand-sourcing-panel">
+  <%= render "sourcing_panel" %>
+</section>
 
 <% if @demand_line.status == "captured" && Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
-  <h2>Match variant</h2>
-  <%= form_with url: match_variant_demand_demand_line_path(@demand_line), method: :post, class: "ss-form" do %>
-    <div class="ss-field">
-      <%= label_tag :product_variant_id, "Variant ID", class: "ss-label" %>
-      <%= number_field_tag :product_variant_id, nil, class: "ss-input", required: true %>
-    </div>
-    <%= submit_tag "Match variant", class: "ss-btn" %>
-  <% end %>
-<% end %>
-
-<h2>Audit</h2>
-<% if @audit_events.any? %>
-  <ul class="ss-audit-list">
-    <% @audit_events.each do |event| %>
-      <li><%= event.event_name %> — <%= display_time(event.occurred_at) %></li>
-    <% end %>
-  </ul>
-<% else %>
-  <p class="ss-muted">No audit events yet.</p>
+  <section id="demand-match-variant">
+    <h2>Match variant</h2>
+    <p class="ss-muted">Search items or scan an ISBN to match this research demand.</p>
+    <%= link_to "Search items to match",
+          items_path(demand_lines_match_context: DemandLines::MatchContext.encode(demand_line_id: @demand_line.id)),
+          class: "ss-btn ss-btn-secondary" %>
+  </section>
 <% end %>

@@ -1,0 +1,24 @@
+<%# locals: suggested_vendors, run_unresolved, sourcing_run %>
+<h2>Suggested vendors</h2>
+<div class="ss-card-grid">
+  <% suggested_vendors.each do |candidate| %>
+    <article class="ss-card">
+      <h3><%= candidate.vendor.name %></h3>
+      <p class="ss-muted">Source: <%= candidate.source_level.to_s.humanize %></p>
+      <% if candidate.warnings.any? %>
+        <ul class="ss-hint ss-hint-warning">
+          <% candidate.warnings.each do |warning| %>
+            <li><%= warning %></li>
+          <% end %>
+        </ul>
+      <% end %>
+      <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.create", store: current_store) && sourcing_run.active? %>
+        <%= form_with url: sourcing_run_attempts_path(sourcing_run), method: :post, class: "ss-form" do %>
+          <%= hidden_field_tag :vendor_id, candidate.vendor.id %>
+          <%= hidden_field_tag :quantity, [run_unresolved, 1].max %>
+          <%= submit_tag "Create attempt", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+        <% end %>
+      <% end %>
+    </article>
+  <% end %>
+</div>

@@ -6,7 +6,8 @@ module Demand
     before_action -> { authorize_demand!("demand.cancel") }, only: :cancel
     before_action -> { authorize_demand!("demand.expire") }, only: :expire
     before_action -> { authorize_demand!("demand.match_variant") }, only: :match_variant
-    before_action :set_demand_line, only: %i[show cancel expire match_variant]
+    before_action -> { authorize_demand!("orders.purchase_orders.create") }, only: %i[create_po submit_create_po add_to_po submit_add_to_po]
+    before_action :set_demand_line, only: %i[show cancel expire match_variant create_po submit_create_po add_to_po submit_add_to_po]
 
     def index
       @demand_lines = DemandLine.includes(:customer, :product_variant, :created_by_user)
@@ -34,20 +35,37 @@ module Demand
 
     def show
       @audit_events = AuditEvent.for_auditable(@demand_line).limit(50)
-      @allocations = @demand_line.demand_allocations.order(allocated_at: :desc)
+      @allocations = @demand_line.demand_allocations.includes(:purchase_order_line).order(allocated_at: :desc)
       @allocation_quantities = DemandAllocations::AllocationQuantities.for_demand_line(@demand_line)
       load_sourcing_context!
+      @supply_summary = DemandLines::SupplySummary.for(demand_line: @demand_line, store: demand_store)
+      @eligible_inbound_lines = DemandAllocations::EligibleInboundLines.for(demand_line: @demand_line, store: demand_store)
       if @demand_line.product_variant.present?
         @available_for_allocation = DemandAllocations::Availability.available_for_allocation(
           store: demand_store,
           variant: @demand_line.product_variant
         )
       end
+      @workflow = Demand::DemandLineWorkflowPresenter.new(
+        demand_line: @demand_line,
+        store: demand_store,
+        active_sourcing_run: @active_sourcing_run,
+        latest_vendor_response: @latest_vendor_response,
+        sourcing_unresolved: @sourcing_unresolved,
+        sourcing_eligibility: @sourcing_eligibility
+      )
     end
 
     def new
-      @demand_line = DemandLine.new(store: demand_store, quantity_requested: 1)
+      @demand_line = DemandLine.new(
+        store: demand_store,
+        quantity_requested: 1,
+        capture_intent: params[:capture_intent],
+        product_variant_id: params[:product_variant_id]
+      )
       @selected_customer = resolve_customer(id: params[:customer_id], required: false)
+      @selected_variant = resolve_variant(id: params[:product_variant_id], required: false) if params[:product_variant_id].present?
+      @supply_preview = supply_preview_for(@selected_variant) if @selected_variant.present?
       load_form_collections
     end
 
@@ -90,7 +108,8 @@ module Demand
         )
       end
 
-      redirect_to demand_demand_line_path(@demand_line), notice: "Demand line created."
+      redirect_to demand_demand_line_path(@demand_line),
+                  notice: DemandLines::CreateConfirmationMessage.for(demand_line: @demand_line)
     rescue DemandLines::Create::CreateError,
            DemandLines::CreateFromProvisional::CreateError => e
       @demand_line = DemandLine.new(demand_line_form_params)
@@ -128,7 +147,55 @@ module Demand
       redirect_to demand_demand_line_path(@demand_line), alert: e.message
     end
 
+    def create_po
+      @plan = Purchasing::DemandCoveragePlanner.call(demand_lines: [@demand_line], store: demand_store)
+      @vendors = Vendor.active_records.order(:name)
+    end
+
+    def submit_create_po
+      purchase_order = Purchasing::BuildPurchaseOrderFromDemand.call!(
+        store: demand_store,
+        vendor: Vendor.find(params[:vendor_id]),
+        created_by_user: current_user,
+        demand_line_ids: [@demand_line.id],
+        notes: params[:notes]
+      )
+      redirect_to orders_purchase_order_path(purchase_order),
+                  notice: "Draft PO ##{purchase_order.id} created with planned demand coverage."
+    rescue Purchasing::BuildPurchaseOrderFromDemand::BuildError, ActiveRecord::RecordNotFound => e
+      redirect_to create_po_demand_demand_line_path(@demand_line), alert: e.message
+    end
+
+    def add_to_po
+      @eligible_purchase_orders = PurchaseOrder.drafts.where(store: demand_store, vendor_id: eligible_vendor_ids)
+                                               .includes(:vendor)
+                                               .order(updated_at: :desc)
+    end
+
+    def submit_add_to_po
+      purchase_order = PurchaseOrder.drafts.where(store: demand_store).find(params[:purchase_order_id])
+      Purchasing::AddDemandToPurchaseOrder.call!(
+        purchase_order: purchase_order,
+        created_by_user: current_user,
+        demand_line_ids: [@demand_line.id]
+      )
+      redirect_to orders_purchase_order_path(purchase_order),
+                  notice: "Demand added to draft PO ##{purchase_order.id}."
+    rescue Purchasing::AddDemandToPurchaseOrder::AddError, ActiveRecord::RecordNotFound => e
+      redirect_to add_to_po_demand_demand_line_path(@demand_line), alert: e.message
+    end
+
     private
+
+    def eligible_vendor_ids
+      suggestion = @demand_line.product_variant.present? ? Sourcing::SuggestVendors.call!(variant: @demand_line.product_variant).first : nil
+      ids = [ suggestion&.vendor&.id ].compact
+      ids.presence || Vendor.active_records.pluck(:id)
+    end
+
+    def supply_preview_for(variant)
+      DemandLines::SupplySummary.for(demand_line: DemandLine.new(store: demand_store, product_variant: variant, quantity_requested: 1), store: demand_store)
+    end
 
     def load_form_collections
       @capture_intents = DemandLine::CAPTURE_INTENTS
