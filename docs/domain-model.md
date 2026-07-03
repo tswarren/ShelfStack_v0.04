@@ -6,6 +6,8 @@ This document explains the major business concepts in ShelfStack and how they re
 
 It is intended to help developers, contributors, and future maintainers understand the product domain before reading the detailed data model and phase specifications.
 
+> **v0.04 canonical model (active).** Descriptive metadata lives on **`Product`** (`product_identifiers`). **`ProductVariant`** is the operational grain for inventory, POS, purchasing, receiving, demand, and fulfillment. Customer need is captured as **`DemandLine`** with supply claims via **`DemandAllocation`**. The canonical chain is documented in [VERSION_0.04.md](design/VERSION_0.04.md) and milestone specs under [docs/v0.04/](v0.04/README.md).
+
 ---
 
 # 1. Foundation Domain
@@ -67,7 +69,7 @@ The classification domain defines how sellable items are grouped for reporting, 
 ```text
 Department → SubDepartment
 SubDepartment → Default Tax Category
-Catalog Item → Store Category (CategoryNode in store_categories scheme)
+Product → Store Category (CategoryNode in store_categories scheme, optional)
 Product Variant → SubDepartment (required)
 Store → Store Tax Rate
 Store + Tax Category + Date → Store Tax Category Rate → Store Tax Rate
@@ -103,59 +105,63 @@ Phase 2 originally introduced a `categories` table combining merchandise behavio
 
 ---
 
-# 3. Catalog Domain
+# 3. Product and Identifiers Domain (v0.04)
 
-The catalog domain describes the metadata associated with books, periodicals, media, sidelines, gifts, games, and other items.
+The product domain describes the commercial item and its external identifiers. v0.04-1 fused v0.03 catalog metadata onto **`products`**; **`product_identifiers`** is the canonical identifier table (v0.04-2).
 
 ## Core Concepts
 
-| Concept                 | Meaning                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| Format                  | Controlled format record, such as hardcover, paperback, DVD, calendar, or eBook. |
-| Catalog Item            | Descriptive metadata record.                                                     |
-| Catalog Item Identifier | ISBN, UPC, EAN, GTIN, publisher number, or local identifier.                     |
-| Creator Details         | Structured JSONB metadata for creators and roles.                                |
-| Subject Details         | Structured JSONB metadata for subject headings, schemes, and codes.              |
+| Concept | Meaning |
+| --- | --- |
+| Format | Controlled format record (hardcover, paperback, DVD, etc.). |
+| Product | Specific commercial item — book edition, media release, sideline, service, etc. |
+| Product Identifier | ISBN, UPC, GTIN, house identifier, or freeform identifier on `product_identifiers`. |
+| Product Group | Optional non-operational grouping (`product_groups`; deferred UI in v0.04-3). |
+| Creator / Subject Details | Structured JSONB metadata on the product where applicable. |
+
+## Retained temporary: legacy catalog admin
+
+`catalog_items` and related bibliographic admin routes remain for external lookup, ISBNdb import, and buyback intake. They are **not** the canonical v0.04 domain model. New item work uses **`Product`** + **`product_identifiers`**. See [v0.04-11 audit log](v0.04/v0.04-11-documentation-schema-cleanup/data-model.md).
 
 ## Key Relationships
 
 ```text
-Catalog Item → Format
-Catalog Item → Catalog Item Identifier
-Catalog Item → Product
+Product → Format
+Product → Product Identifier(s)
+Product → Product Variant(s)
+Optional Product Group → Product
 ```
 
 ## Important Rules
 
-* Every catalog item must have at least one active identifier.
-* Every catalog item must have exactly one active primary identifier.
-* ISBN-10 identifiers are saved as non-primary and converted to ISBN-13 primary identifiers.
-* Invalid standard identifiers may be saved, but users are warned.
-* Publisher numbers preserve display value and store a normalized searchable value.
-* Catalog item type controls UI field display, not hard database validity.
+* Every product should have at least one active identifier (v0.04-2 validation families: `gtin`, `isbn`, `freeform`, `house`).
+* ISBN-10 entry converts to ISBN-13 primary where applicable.
+* House EAN-13 (prefix 200–229) is a **product identifier**, not a variant SKU.
+* Variant SKUs are **system-assigned** at variant creation (segment `211`), not derived from product identifiers.
+* `product_type` controls metadata fields shown in UI.
 
 ---
 
-# 4. Product Domain
+# 4. Product Variant Domain
 
-The product domain defines how the store sells cataloged and non-cataloged items.
+Product variants are the **operational grain** for POS, inventory, purchasing, receiving, demand, allocations, buyback, and fulfillment.
 
 ## Core Concepts
 
-| Concept                | Meaning                                             |
-| ---------------------- | --------------------------------------------------- |
-| Product                | Store-facing product grouping.                      |
-| Product Variant        | Actual sellable SKU.                                |
-| Product Condition      | New, signed, used, remainder, or special condition. |
-| Display Location       | Merchandising/display placement.                    |
-| Store Display Location | Store-specific activation of a display location.    |
-| Vendor                 | Supplier or source organization.                    |
+| Concept | Meaning |
+| --- | --- |
+| Product | Descriptive commercial item (see §3). |
+| Product Variant | Sellable SKU with price, condition, classification, and operational flags. |
+| Product Condition | New, signed, used, remainder, or special condition. |
+| Display Location | Merchandising/display placement. |
+| Store Display Location | Store-specific activation of a display location. |
+| Vendor | Supplier or source organization. |
 
 ## Key Relationships
 
 ```text
-Catalog Item → Product → Product Variant
-Product Variant → SubDepartment
+Product → Product Variant
+Product Variant → SubDepartment (required)
 Product Variant → Product Condition
 Product Variant → Display Location
 Product → Default Display Location
@@ -164,16 +170,12 @@ Store → Store Display Location → Display Location
 
 ## Important Rules
 
-* Products may be catalog-linked or non-catalog-linked.
-* Product SKU is the base SKU for variants.
-* Product variants are the actual sellable SKUs.
+* **ProductVariant** is the grain for inventory balances, PO lines, receipt lines, POS lines, and demand.
+* Variant SKU is required, unique, and system-assigned (v0.04-2).
 * A product is not sellable until it has at least one active variant.
-* Catalog-linked product names default from catalog item titles.
-* Catalog-linked product SKUs default from catalog item primary identifiers.
-* Variant SKUs are generated from product SKU plus condition or attribute components.
-* New variants do not add a SKU suffix.
-* Variant names are generated from product name plus condition and/or attributes.
-* Product and variant names may be overridden.
+* Used variants follow v0.04-5 operational policy (customer-reservable, not vendor-orderable).
+* Variant names may be generated from product name plus condition/attributes and may be overridden.
+* `ProductVariants::OperationalPolicy` gates vendor orderability and used-wanted demand.
 
 ---
 
@@ -222,9 +224,9 @@ Phase 4 defers POS, transfers, holds, location balances, and full accounting bey
 
 ---
 
-# 6. Purchasing Domain (Phase 5)
+# 6. Purchasing Domain (Phase 5 + v0.04)
 
-Phase 5 implements vendor sourcing, purchase requests (TBO), purchase orders, receiving, and returns to vendor at the product variant grain.
+Purchasing operates at **product variant** grain: vendor sourcing, purchase orders, receiving, and returns to vendor. Store demand for replenishment flows through **demand lines** and **sourcing** (v0.04-6–8), not legacy purchase-request tables.
 
 ## Core Concepts
 
@@ -232,7 +234,8 @@ Phase 5 implements vendor sourcing, purchase requests (TBO), purchase orders, re
 | --- | --- |
 | Product Vendor | Product-level vendor sourcing defaults (item number, discount, returnability). |
 | Product Variant Vendor | Variant-level vendor overrides; highest precedence for returnability. |
-| Purchase Request (TBO) | Store demand signal; does not affect inventory. |
+| DemandLine (manual TBO) | Buyer/store replenishment intent with `capture_intent = manual_tbo`; does not post inventory. |
+| SourcingRun / VendorResponse | Vendor inquiry and confirmed availability (v0.04-8). |
 | Purchase Order | Committed order to a vendor with line snapshots at submit time. |
 | Receipt | Posted receiving document; only `quantity_accepted` posts to inventory. |
 | Return to Vendor (RTV) | Posted vendor return; negative quantity via inventory ledger. |
@@ -247,11 +250,15 @@ product_variant_vendors → product_vendors → product_variants.returnability_s
 ## Design Direction
 
 ```text
-Purchase Request → Purchase Order → Receipt → Inventory::Post (receiving)
+DemandLine (manual_tbo / buyer_replenishment)
+  → SourcingRun / VendorResponse
+  → PurchaseOrder
+  → Receipt
+  → Inventory::Post (receiving)
 Return to Vendor → Inventory::Post (vendor_return)
 ```
 
-Purchasing documents are sources; inventory changes only through `Inventory::Post`.
+Purchasing documents are sources; inventory changes only through `Inventory::Post`. Legacy `purchase_requests` tables were removed in v0.04-10.
 
 ---
 
@@ -371,35 +378,47 @@ docs/specifications/phase-6-data-model.md
 
 ---
 
-# 8. Customer Demand Domain (Phase 7A)
+# 8. Demand and Allocation Domain (v0.04)
 
-Phase 7A links customer-facing demand to catalog, purchasing, inventory reservations, and POS pickup.
+v0.04-6 through v0.04-10 replaced v0.03 customer requests, special orders, purchase requests, and inventory reservations with a unified demand model.
 
 | Concept | Description |
 | --- | --- |
 | Customer | Lightweight customer profile (`customers`). |
-| Customer Request | Store-scoped multi-line demand document (`customer_requests`). |
-| Request Line | Provisional or matched line with type: research, notify, hold, special_order. |
-| Special Order | Customer-backed commitment at variant grain (`special_orders`). |
-| Inventory Reservation | On-hand hold, incoming reserve, or special-order reserve (`inventory_reservations`). |
-| PO Line Allocation | Customer quantity on a PO line (`purchase_order_line_allocations`). |
-| Receipt Line Allocation | Customer quantity from a posted receipt (`receipt_line_allocations`). |
+| DemandLine | Store-scoped need/intent at variant grain (`demand_lines`). Capture intents include hold, notify, special_order, used_wanted, manual_tbo, buyer_replenishment, research. |
+| DemandAllocation | Claim on supply: on-hand, inbound PO, or vendor backorder (`demand_allocations`). Does **not** post inventory. |
+| SourcingRun | Vendor inquiry workflow linked from replenishment demand (v0.04-8). |
+| POS Pickup | Fulfillment of active on-hand allocation via normal POS sale + `CompleteDemandAllocationFulfillment`. |
 
-Availability after Phase 7A:
+## Important Rules
+
+* **Demand does not mutate on-hand inventory.** Only `Inventory::Post` changes authoritative stock.
+* **Allocations do not post inventory.** They point demand at supply (on-hand or inbound).
+* Notify intent surfaces in staff queues on stock arrival; holds are staff-created allocations.
+* Used-wanted demand is customer-reservable and does not auto-create new-item PO lines (v0.04-5).
+* Receipt posts only `quantity_accepted`; demand conversion happens through allocation services, not legacy receipt-line allocation tables.
+
+Availability:
 
 ```text
 quantity_available = quantity_on_hand - quantity_reserved
-on_order_available = on_order - reserved_incoming
 ```
 
-Notify lines enter a staff queue on stock arrival; holds are created manually (no auto-hold).
+`quantity_reserved` is cached from active on-hand demand allocations.
+
+Staff workspace: `/demand` with queue filters (`DemandLines::QueueScope`).
+
+## Retired v0.03 (do not reintroduce)
+
+`customer_requests`, `special_orders`, `purchase_requests`, `inventory_reservations`, `purchase_order_line_allocations`, `receipt_line_allocations` — removed v0.04-10. See [v0.04-10 completion](implementation/v0.04-10-completion.md).
 
 ## Related Documents
 
 ```text
-docs/roadmap/phase-7a-customer-demand.md
-docs/specifications/phase-7a-customer-demand-spec.md
-docs/specifications/phase-7a-data-model.md
+docs/v0.04/v0.04-6-demand-foundation/spec.md
+docs/v0.04/v0.04-7-allocations-and-reservations/spec.md
+docs/v0.04/v0.04-10-retire-v0.03-ordering-ui/spec.md
+docs/specifications/phase-7a-customer-demand-spec.md  (historical v0.03 reference)
 ```
 
 ---
@@ -528,28 +547,30 @@ docs/specifications/keyboard-and-focus.md
 
 ---
 
-# 16. Conceptual Flow
+# 16. Conceptual Flow (v0.04)
 
-ShelfStack’s core data flow can be summarized as:
+ShelfStack’s canonical operational flow:
 
 ```text
-Foundation
+Foundation (users, stores, workstations, permissions)
   ↓
 Departments / Subdepartments / Taxes
   ↓
-Catalog Items
+Product (+ product_identifiers)
   ↓
-Products
+Product Variant  ← operational grain
   ↓
-Product Variants
+DemandLine → DemandAllocation → Sourcing → PO / Receipt
   ↓
-Inventory / Purchasing / POS / Stored Value / Demand / Buyback
+Inventory::Post (sole authoritative stock mutation)
   ↓
-Operational Reporting
+POS sale / pickup fulfillment / buyback / stored value
+  ↓
+Operational Reporting (/reports)
   ↓
 Interaction system (Phase 10)
   ↓
 Deferred: GL / financial export (Phase 9c)
 ```
 
-Each layer builds on the prior layer.
+Legacy `catalog_items` admin may exist for bibliographic import and buyback intake but is not part of this chain.

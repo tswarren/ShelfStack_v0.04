@@ -6,6 +6,75 @@ This document is a **schema index and maintenance guide**, not a complete table-
 
 The full schema details live in phase-specific data model documents. **Authoritative runtime schema:** `db/schema.rb`.
 
+> **v0.04 active model.** Operational tables below reflect post–v0.04-10 `db/schema.rb`. v0.03 ordering tables were **removed in v0.04-10** — do not reintroduce.
+
+---
+
+# v0.04 Operational Tables (curated)
+
+Canonical chain tables developers need most often:
+
+```text
+products
+product_identifiers
+product_variants
+demand_lines
+demand_allocations
+demand_line_sequences
+sourcing_runs
+sourcing_attempts
+vendor_responses
+purchase_orders
+purchase_order_lines
+receipts
+receipt_lines
+inventory_postings
+inventory_ledger_entries
+inventory_balances
+pos_transactions
+pos_transaction_lines   (includes demand_allocation_id for pickup)
+customers
+stored_value_*          (Phase 7B)
+buyback_*               (Phase 7C)
+```
+
+Detail: [VERSION_0.04.md](design/VERSION_0.04.md), [domain-model.md](domain-model.md), milestone data models under [docs/v0.04/](v0.04/README.md).
+
+---
+
+# Retired v0.03 Ordering Tables (v0.04-10 — do not reintroduce)
+
+Removed in migration `20260703002008_drop_v00410_legacy_ordering`:
+
+```text
+customer_requests
+customer_request_lines
+special_orders
+purchase_requests
+purchase_request_lines
+inventory_reservations
+purchase_order_line_allocations
+receipt_line_allocations
+```
+
+Also removed: `customer_request_sequences` (if present), legacy FKs on POS lines for `inventory_reservation_id`.
+
+Verify: `./dev/rails-docker env V00410_PHASE=g2 STRICT=1 bin/rails shelfstack:v00410:verify_legacy_ordering_retired`
+
+---
+
+# Retained Temporary (legacy admin)
+
+Quarantined bibliographic surface — **not canonical v0.04 model**:
+
+```text
+catalog_items
+catalog_item_identifiers
+products.catalog_item_id   (optional legacy FK)
+```
+
+New item work uses `products` + `product_identifiers`. Future catalog cleanup milestone may drop these.
+
 ---
 
 # Source Documents
@@ -127,15 +196,16 @@ Phase 3 introduces catalog and sellable-item foundation tables.
 
 ```text
 formats
-catalog_items
-catalog_item_identifiers
 display_locations
 store_display_locations
 products
+product_identifiers
 product_conditions
 product_variants
 vendors
 ```
+
+**Retained temporary (legacy admin):** `catalog_items`, `catalog_item_identifiers` — see [Retained Temporary](#retained-temporary-legacy-admin) above. Not required for v0.04 product create paths.
 
 ## Phase 3 Focus
 
@@ -376,21 +446,38 @@ stored_value_transfers
 
 Phase 7B also extends `pos_tenders` with settlement columns (7B-1) and stored-value linkage columns (`stored_value_account_id`, `stored_value_identifier_id`, `generate_stored_value_identifier`, 7B-3). See [phase-7b-data-model.md](specifications/phase-7b-data-model.md).
 
-Phase 7A tables (implemented):
+Phase 5 tables (implemented):
+
+```text
+product_vendors
+product_variant_vendors
+vendor_terms
+purchase_orders
+purchase_order_lines
+receipts
+receipt_lines
+receiving_discrepancies
+returns_to_vendor
+return_to_vendor_lines
+inventory_balances.moving_average_unit_cost_cents
+product_variants.returnability_status
+```
+
+**Retired v0.03:** `purchase_requests` / `purchase_request_lines` — removed v0.04-10. Manual TBO uses `demand_lines`.
+
+Phase 7A / v0.04 demand tables (implemented):
 
 ```text
 customers
-customer_request_sequences
-customer_requests
-customer_request_lines
-special_orders
-inventory_reservations
-purchase_order_line_allocations
-receipt_line_allocations
+demand_lines
+demand_allocations
+demand_line_sequences
 customer_contact_events
 ```
 
-Phase 7A extends `inventory_balances.quantity_reserved` and `pos_transaction_lines` / `pos_transactions` with customer demand FKs.
+**Retired v0.03 Phase 7A tables** — see [Retired v0.03 Ordering Tables](#retired-v03-ordering-tables-v004-10--do-not-reintroduce).
+
+Phase 7A extends `inventory_balances.quantity_reserved` and `pos_transaction_lines.demand_allocation_id` for pickup fulfillment.
 
 Phase 6 tables (implemented):
 
@@ -417,25 +504,5 @@ Phase 8.5-1 extends `departments`, `sub_departments`, `products`, and `product_v
 
 Phase 6 extends `inventory_postings.posting_type` with `pos_transaction` and `pos_void`.
 
-Phase 5 tables (implemented):
-
-```text
-product_vendors
-product_variant_vendors
-vendor_terms
-purchase_requests
-purchase_request_lines
-purchase_orders
-purchase_order_lines
-receipts
-receipt_lines
-receiving_discrepancies
-returns_to_vendor
-return_to_vendor_lines
-inventory_balances.moving_average_unit_cost_cents
-product_variants.returnability_status
-```
-
-These should not be added until their workflows are defined.
-
 See phase data model documents in the index above for table-level detail. [architecture-map.md](architecture-map.md) maps domains to key tables.
+

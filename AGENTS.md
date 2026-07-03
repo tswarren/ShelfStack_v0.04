@@ -59,7 +59,7 @@ Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
 
 Before implementing or changing major behavior, review the relevant documents.
 
-**Start with the v0.04 core docs first.** General docs below still describe parts of the **v0.03 implementation** and should be treated as implementation reference until v0.04-11 updates them.
+**Start with the v0.04 core docs first.** General docs (`overview.md`, `domain-model.md`, `schema-reference.md`, `glossary.md`) describe the **v0.04 canonical model** as of v0.04-11. Phase specs under `docs/specifications/` remain historical v0.03 implementation reference unless bannered.
 
 ## ShelfStack v0.04 core (active)
 
@@ -75,7 +75,7 @@ v0.04 is the **core domain model**, not Phase 11. v0.03 specs under `docs/specif
 
 For **invariants**, legacy replacement map, demand taxonomy, and milestone boundaries, see [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md). Because ShelfStack is not yet in production, prefer **destructive schema changes** over long-lived compatibility shims when implementing v0.04 milestones.
 
-Do **not** extend v0.03 `catalog_items`, customer-request, special-order, or TBO patterns for new work.
+Do **not** extend legacy v0.03 patterns for new work: `catalog_items` (except retain-temporary admin), customer-request, special-order, or TBO tables/routes.
 
 ## General Documents (v0.03 implementation reference)
 
@@ -93,7 +93,7 @@ docs/implementation/csv-seeds.md
 docs/specifications/cross-cutting/README.md
 ```
 
-Several general docs (`overview.md`, `domain-model.md`, parts of `schema-reference.md`) still use v0.03 vocabulary until v0.04-11.
+Phase specs under `docs/specifications/` are **historical v0.03 implementation reference**. Active domain guidance: [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/domain-model.md](docs/domain-model.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 
 ## Phase 1 Documents
 
@@ -424,7 +424,20 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-10 (retire v0.03 ordering UI and reports):** **Complete** — [spec bundle](docs/v0.04/v0.04-10-retire-v0.03-ordering-ui/spec.md) · [completion](docs/implementation/v0.04-10-completion.md).
 
-**Current priority:** **v0.04-11** documentation and schema cleanup.
+**Current priority:** **v0.04-11** documentation and schema cleanup — [spec bundle](docs/v0.04/v0.04-11-documentation-schema-cleanup/spec.md).
+
+**v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
+
+```bash
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0046:verify_demand_foundation
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0047:verify_allocations
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0048:verify_sourcing
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0049:verify_po_receiving
+./dev/rails-docker env V00410_PHASE=g2 STRICT=1 bin/rails shelfstack:v00410:verify_legacy_ordering_retired
+STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v00411:verify_documentation_schema_cleanup
+```
+
+**v0.04-11 notes:** `catalog_items` is **retain-temporary** (legacy bibliographic admin). Legacy redirect aliases `customers_customer_requests` and `orders_purchase_requests` remain. `from_tbo` params are deprecated compatibility only.
 
 See [docs/design/VERSION_0.04.md](docs/design/VERSION_0.04.md), [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md), [docs/v0.04/README.md](docs/v0.04/README.md).
 
@@ -782,11 +795,11 @@ product_variants.product_id → products.id
 product_variants.sub_department_id → sub_departments.id
 ```
 
-v0.03 only (removed or replaced under v0.04):
+v0.03 only (removed or replaced under v0.04; legacy FK retained-temporary):
 
 ```text
-catalog_items.format_id → formats.id
-products.catalog_item_id → catalog_items.id
+catalog_items.format_id → formats.id  (table may remain — legacy admin)
+products.catalog_item_id → catalog_items.id  (optional legacy FK)
 ```
 
 ---

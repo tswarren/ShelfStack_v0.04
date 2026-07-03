@@ -106,10 +106,10 @@
       </section>
     <% end %>
 
-    <% if tab.variant_scoped_purchase_request_lines.any? %>
+    <% if tab.variant_scoped_manual_tbo_demand_lines.any? %>
       <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Open purchase requests</h4>
-        <%= render "items/items/variant_operations_drawer/purchase_request_lines", lines: tab.variant_scoped_purchase_request_lines %>
+        <h4 class="ss-drawer-subsection-title">Open manual TBO demand</h4>
+        <%= render "items/items/variant_operations_drawer/purchase_request_lines", lines: tab.variant_scoped_manual_tbo_demand_lines %>
       </section>
     <% end %>
   </details>

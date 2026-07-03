@@ -4,125 +4,105 @@
 
 ShelfStack is a bookstore-focused inventory, catalog, stock, and point-of-sale management application.
 
-It is designed for independent bookstores and similar retailers that sell a mix of metadata-heavy products, such as books, periodicals, recorded music, videos, calendars, and audiobooks, alongside simpler non-bibliographic items such as sidelines, gifts, food and beverage items, services, donations, and gift cards.
+It is designed for independent bookstores and similar retailers that sell metadata-heavy products (books, periodicals, recorded music, videos, calendars, audiobooks) alongside simpler retail merchandise (sidelines, gifts, food and beverage, services, donations, gift cards).
 
-ShelfStack separates descriptive catalog metadata from store-facing products and sellable SKUs. This allows the application to support detailed bibliographic records where needed while still remaining practical for ordinary retail merchandise.
+**ShelfStack v0.04** is the canonical domain model: descriptive metadata on **`Product`**, operational behavior on **`ProductVariant`**, customer need on **`DemandLine`**, supply claims on **`DemandAllocation`**, and authoritative stock changes only through **`Inventory::Post`**.
+
+See [VERSION_0.04.md](design/VERSION_0.04.md) and [v0.04 delivery roadmap](roadmap/v0.04-delivery-roadmap.md).
 
 ---
 
 ## Core Purpose
 
-ShelfStack exists to help stores answer four operational questions:
+ShelfStack helps stores answer four operational questions:
 
-1. **What is this item?**
-   Catalog metadata, identifiers, formats, creators, publishers, subjects, and descriptions.
+1. **What is this item?**  
+   Product metadata, identifiers (ISBN/UPC), formats, creators, publishers, subjects.
 
-2. **How does the store sell it?**
-   Products, product variants, SKUs, prices, conditions, categories, display locations, and inventory behavior.
+2. **How does the store sell it?**  
+   Product variants (SKUs), prices, conditions, classification, display locations, inventory tracking.
 
-3. **Where is it and what is its stock status?**
-   Future inventory ledger, stock balances, receiving, transfers, and adjustments.
+3. **Where is it and what is its stock status?**  
+   Inventory ledger, `inventory_balances`, receiving, adjustments, demand allocations.
 
-4. **How should it be handled at POS and in reporting?**
-   Departments, categories, tax categories, store tax rates, product variants, and transaction records.
+4. **How is it handled at POS and in reporting?**  
+   Register sessions, transactions, tax/discount snapshots, demand pickup, operational reports at `/reports`.
 
 ---
 
 ## Intended Users
 
-ShelfStack is intended for:
-
-* Independent bookstores
-* Used and new bookstores
-* Bookstores with sidelines or gift departments
-* Stores selling books plus media, calendars, magazines, games, gifts, and cafe/service items
-* Multi-store booksellers that need store-specific tax, workstation, and inventory behavior
+* Independent and used/new bookstores
+* Stores with sidelines, gifts, or café/service items
+* Multi-store booksellers needing store-scoped tax, workstations, and inventory
 
 ---
 
 ## Major Product Areas
 
-ShelfStack is organized around these major domains:
-
-| Domain         | Purpose                                                                            |
-| -------------- | ---------------------------------------------------------------------------------- |
-| Foundation     | Users, roles, permissions, stores, workstations, sessions, and audit events.       |
-| Classification | Departments, categories, tax categories, store tax rates, and tax mappings.        |
-| Catalog        | Metadata records for books, media, sidelines, and other cataloged items.           |
-| Products       | Store-facing product records and product variants/SKUs.                            |
-| Inventory      | Stock ledger, store balances, adjustments, and valuation snapshots.                 |
-| Purchasing     | Vendors, purchase orders, receiving, returns to vendor, and supplier terms.       |
-| POS            | Register sessions, transactions, tax/tender snapshots, voids, and receipts.       |
-| Reporting      | Operational reports at `/reports` (Phase 9a/9b complete): sales, tax, discounts, cash, buybacks, inventory value, purchasing, stored value, customer requests. GL export deferred (Phase 9c). |
+| Domain | Purpose |
+| ------ | ------- |
+| Foundation | Users, roles, permissions, stores, workstations, sessions, audit events. |
+| Classification | Departments, subdepartments, tax categories, store tax rates, category schemes. |
+| Products & identifiers | v0.04 products, product identifiers, variants, conditions, vendors. |
+| Demand & allocation | Demand lines, allocations, queues at `/demand`, POS pickup fulfillment. |
+| Sourcing & purchasing | Sourcing runs, vendor responses, POs, receiving, RTV. |
+| Inventory | Ledger, balances, adjustments; only `Inventory::Post` mutates on-hand. |
+| POS | Register sessions, transactions, tax/discount/tender, voids, demand pickup. |
+| Stored value & buyback | Gift cards, store/trade credit, staged buyback workflow. |
+| Reporting | Operational reports at `/reports` (Phase 9a/9b). GL export deferred (Phase 9c). |
 
 ---
 
-## Design Philosophy
-
-ShelfStack favors a layered model:
+## Design Philosophy (v0.04)
 
 ```text
-Catalog Item → Product → Product Variant/SKU → Inventory/POS Activity
+Product (+ product_identifiers)
+  → Product Variant  (operational grain)
+  → DemandLine → DemandAllocation → Sourcing → PO / Receipt
+  → Inventory::Post
+  → POS fulfillment / reporting
 ```
 
-This keeps descriptive metadata separate from sellable behavior.
+### Key principles
 
-For example:
+1. **ProductVariant is the sellable and stock grain** — POS, inventory, PO, receipt, and demand all reference variants.
 
-* A catalog item may describe a book title, ISBN, publisher, contributors, format, and subjects.
-* A product represents how the store offers that catalog item.
-* A product variant represents the actual sellable SKU, such as New, Signed, Used - Like New, or Used - Good.
+2. **Demand does not post inventory** — allocations claim supply; receiving and POS post through `Inventory::Post`.
 
-This structure allows the same catalog item to support multiple sellable variants while preserving clean catalog metadata.
+3. **Store context matters** — tax, permissions, workstations, and balances are store-scoped.
 
----
+4. **Setup is auditable** — security, catalog, product, variant, and tax changes create audit events.
 
-## Key Principles
+5. **Practical data entry** — structured metadata where useful; semicolon-separated creator/subject parsing where appropriate.
 
-### 1. Catalog metadata and sellable SKUs are separate
+6. **Legacy compatibility is explicit** — v0.03 ordering tables were retired in v0.04-10; redirect aliases and deprecated params are documented, not hidden.
 
-A catalog item describes what something is.
-A product variant describes what the store actually sells.
+### Retained temporary
 
-### 2. Product variants are the sellable unit
-
-Future POS, inventory, receiving, and purchasing workflows should operate at the product variant/SKU level.
-
-### 3. Store context matters
-
-ShelfStack supports multiple stores. Store context affects time zones, workstations, tax rates, permissions, and later inventory behavior.
-
-### 4. Setup records are auditable
-
-Changes to users, roles, departments, categories, taxes, catalog records, products, and variants should create audit events.
-
-### 5. Data entry should be practical
-
-ShelfStack should support structured data where useful, but not force excessive complexity on frontline users. For example, creator and subject metadata can be entered as semicolon-separated text and parsed into JSONB.
-
-### 6. Defaults should be useful but overrideable
-
-Categories, vendors, product conditions, and catalog metadata can provide defaults. Product and variant records should allow overrides when store practice requires it.
+`catalog_items` remains as a **legacy bibliographic admin** surface (external lookup, import, buyback). It is not the canonical v0.04 model. New work uses `Product` + `product_identifiers`.
 
 ---
 
 ## Current Roadmap Summary
 
-| Phase         | Focus                                                                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 1       | Foundation: users, roles, stores, workstations, sessions, permissions, and audit events.                                              |
-| Phase 2       | Classification and tax setup: departments, categories, tax categories, store tax rates, and effective-dated tax mappings.             |
-| Phase 3       | Catalog, products, and product variants: metadata, identifiers, products, SKUs, variants, display locations, conditions, and vendors. |
-| Phase 4–8.5   | Inventory, purchasing, POS, customer demand, buyback, and operational polish — see [roadmap.md](roadmap.md). |
-| Phase 9a/9b   | Report UX foundation and operational reports (`/reports`). **Complete.** |
-| Next          | Phase 10 comprehensive UX expansion; Phase 9c GL layer **deferred**. |
+| Track | Focus |
+| ----- | ----- |
+| **v0.04 core** | Product fusion, identifiers, demand, allocations, sourcing, PO/receiving, retire v0.03 ordering — **v0.04-0 through v0.04-10 complete**. |
+| **v0.04-11** | Documentation and schema cleanup — **in progress**. |
+| **Phase 10** | Comprehensive UX expansion (10-E consistency sweep after v0.04-11). |
+| **Phase 9c** | GL-shaped financial layer — **deferred**. |
+
+Historical Phase 1–10 specs under `docs/specifications/` are **v0.03 implementation reference** unless marked otherwise.
 
 ---
 
-## What ShelfStack Is Not
+## Related Documents
 
-ShelfStack is not intended to be only a bibliographic database.
-
-It is also not intended to be only a generic retail POS.
-
-Its purpose is to combine bookstore-specific catalog and inventory needs with practical retail operations.
+```text
+docs/design/VERSION_0.04.md
+docs/domain-model.md
+docs/roadmap/v0.04-delivery-roadmap.md
+docs/v0.04/README.md
+AGENTS.md
+```

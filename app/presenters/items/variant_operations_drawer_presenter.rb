@@ -54,8 +54,8 @@ module Items
       tab.variant_scoped_customer_request_lines.any? ||
         tab.variant_scoped_active_holds.any? ||
         tab.variant_scoped_incoming_reserves.any? ||
-        tab.variant_scoped_special_orders.any? ||
-        tab.variant_scoped_purchase_request_lines.any?
+        tab.variant_scoped_special_order_demand_lines.any? ||
+        tab.variant_scoped_manual_tbo_demand_lines.any?
     end
 
     def availability_context

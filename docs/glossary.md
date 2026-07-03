@@ -103,25 +103,9 @@ Ruby-side registry (`Pos::CommandRegistry`) defining canonical POS commands, ali
 
 ---
 
-## Catalog Item
+## Catalog Item (retained temporary — legacy admin)
 
-A descriptive metadata record.
-
-Examples:
-
-* Book title
-* Calendar
-* Periodical
-* Recorded music item
-* DVD/video
-* Audiobook
-* eBook
-* Map
-* Game
-* Gift item
-* Sideline item
-
-A catalog item is not the sellable SKU. Products and product variants are used for store-facing sales behavior.
+Legacy bibliographic metadata record in `catalog_items`. **Not the canonical v0.04 model** — use **`Product`** + **`product_identifiers`** for new work. Retained for external lookup, ISBNdb import, buyback intake, and admin CRUD until a future catalog cleanup milestone. See [v0.04-11 audit log](v0.04/v0.04-11-documentation-schema-cleanup/data-model.md).
 
 ---
 
@@ -137,15 +121,15 @@ POS fulfillment of customer demand; Phase 10-C uses a drawer workflow with draft
 
 ---
 
-## Customer Request
+## Demand Allocation
 
-A store-scoped document capturing one or more customer demand lines (research, notify, hold, or special order) with optional provisional metadata before variant matching.
+A claim linking a `DemandLine` to supply: on-hand stock, inbound purchase order quantity, or vendor backorder. Allocations do **not** post inventory. Active on-hand allocations reduce `quantity_available`. Fulfillment completes through POS pickup or operational services.
 
 ---
 
-## Customer Request Line
+## Demand Line
 
-A single line on a customer request. May start provisional and later link to catalog/product/variant.
+Store-scoped customer or buyer need at **product variant** grain (`demand_lines`). `capture_intent` distinguishes hold, notify, special_order, used_wanted, manual_tbo, buyer_replenishment, and research. Staff workspace: `/demand`.
 
 ---
 
@@ -355,9 +339,7 @@ POS landing state when register is open and no active draft exists. Command fiel
 
 ## Inventory Reservation
 
-A quantity commitment against on-hand or incoming stock for customer demand.
-
-Types: `on_hand_hold`, `incoming_reserve`, `special_order_reserve`. Active on-hand reservations reduce `quantity_available`.
+**Retired v0.03.** Replaced by **`DemandAllocation`** (on-hand and inbound kinds). Do not use `inventory_reservations` — table removed v0.04-10.
 
 ---
 
@@ -529,7 +511,7 @@ A committed order to a vendor with line-level snapshots at submit time.
 
 ## Purchase Request (TBO)
 
-Store-level “to be ordered” demand signal. Does not affect inventory until received through a receipt.
+**Retired v0.03 table.** Replenishment intent is captured as a **`DemandLine`** with `capture_intent = manual_tbo` or `buyer_replenishment`, then sourced and converted to PO lines. Legacy route alias `orders_purchase_requests` redirects to `/demand?capture_intent=manual_tbo`.
 
 ---
 
@@ -774,4 +756,28 @@ A secure browser-to-workstation assignment.
 
 The browser stores a raw token.
 ShelfStack stores a digest and resolves store/workstation context server-side.
+
+---
+
+# Retired terms (v0.03 → v0.04)
+
+These names appear in historical phase specs only. Active code and docs use the v0.04 replacements.
+
+| Retired term | v0.04 replacement |
+| ------------ | ----------------- |
+| Customer request / `customer_requests` | `DemandLine` / `/demand` |
+| Customer request line | `DemandLine` (single-line model) |
+| Special order table / `special_orders` | `DemandLine` with `capture_intent = special_order` |
+| Purchase request / TBO table | `DemandLine` with `capture_intent = manual_tbo` |
+| Inventory reservation | `DemandAllocation` |
+| PO line allocation / receipt line allocation | `DemandAllocation` + receipt conversion services |
+| `CatalogItem` as canonical model | `Product` + `product_identifiers` |
+| `from_tbo` PO builder | Manual TBO demand + sourcing (param name retained deprecated) |
+
+**Compatibility redirects (302 only):**
+
+* `customers_customer_requests` → `/demand`
+* `orders_purchase_requests` → `/demand?capture_intent=manual_tbo`
+
+See [v0.04-10 completion](implementation/v0.04-10-completion.md) and [domain-model.md](domain-model.md) §8.
 

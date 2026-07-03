@@ -39,6 +39,10 @@ module Items
       []
     end
 
+    def variant_scoped_customer_request_lines
+      []
+    end
+
     def active_holds
       []
     end
@@ -47,12 +51,24 @@ module Items
       []
     end
 
-    def open_special_orders
+    def open_manual_tbo_demand_lines
       []
     end
 
-    def variant_scoped_customer_request_lines
+    def open_special_order_demand_lines
       []
+    end
+
+    def variant_scoped_manual_tbo_demand_lines
+      return open_manual_tbo_demand_lines if highlight_variant.blank?
+
+      open_manual_tbo_demand_lines.select { |line| line.product_variant_id == highlight_variant.id }
+    end
+
+    def variant_scoped_special_order_demand_lines
+      return open_special_order_demand_lines if highlight_variant.blank?
+
+      open_special_order_demand_lines.select { |line| line.product_variant_id == highlight_variant.id }
     end
 
     def variant_scoped_active_holds
@@ -67,15 +83,11 @@ module Items
       incoming_reserves.select { |allocation| allocation.product_variant_id == highlight_variant.id }
     end
 
-    def variant_scoped_special_orders
-      return open_special_orders if highlight_variant.blank?
-
-      open_special_orders.select { |line| line.product_variant_id == highlight_variant.id }
-    end
-
-    def open_purchase_request_lines
-      []
-    end
+    # Legacy empty stubs — demand lists wire through DemandLine queries in future slices.
+    alias_method :open_purchase_request_lines, :open_manual_tbo_demand_lines
+    alias_method :open_special_orders, :open_special_order_demand_lines
+    alias_method :variant_scoped_purchase_request_lines, :variant_scoped_manual_tbo_demand_lines
+    alias_method :variant_scoped_special_orders, :variant_scoped_special_order_demand_lines
 
     def open_purchase_order_lines
       @open_purchase_order_lines ||= PurchaseOrderLine
@@ -108,12 +120,6 @@ module Items
         .order("returns_to_vendor.created_at DESC, return_to_vendor_lines.line_number ASC")
         .limit(20)
         .to_a
-    end
-
-    def variant_scoped_purchase_request_lines
-      return open_purchase_request_lines if highlight_variant.blank?
-
-      open_purchase_request_lines.select { |line| line.product_variant_id == highlight_variant.id }
     end
 
     def variant_scoped_purchase_order_lines

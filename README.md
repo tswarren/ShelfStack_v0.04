@@ -45,7 +45,7 @@ Because ShelfStack is not yet in production, v0.04 may use destructive schema ch
 
 | Keep | Replace under v0.04 |
 | ---- | ------------------- |
-| Product variant as operational grain | `catalog_items` vs `products` separation (v0.04-1/2; table drop v0.04-11) |
+| Product variant as operational grain | `catalog_items` vs `products` separation (v0.04-1/2; `catalog_items` retain-temporary legacy admin) |
 | `Inventory::Post`, ledger, balances | `customer_requests`, `special_orders`, `purchase_requests` / TBO (**retired v0.04-10**) |
 | POS, voids, tax/discount/tender, stored value | Fragmented reservation + PO/receipt allocation model (**retired v0.04-10**) |
 | Buybacks, classification/tax, foundation auth | `catalog_item_identifiers` → `product_identifiers` |
@@ -55,7 +55,7 @@ Because ShelfStack is not yet in production, v0.04 may use destructive schema ch
 Identity migration in brief:
 
 ```text
-catalog_items + catalog_item_identifiers  →  products + product_identifiers
+catalog_items + catalog_item_identifiers  →  products + product_identifiers  (legacy catalog admin retained temporarily)
 ```
 
 See [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md) for the full legacy replacement map, invariants, and acceptance scenarios.
@@ -91,7 +91,7 @@ Examples:
 * A specific gift or sideline item
 * A defined café item or service
 
-In v0.04, product metadata and commercial identity move onto `products`. The older `catalog_items` separation is being retired.
+In v0.04, product metadata and commercial identity live on `products`. The older `catalog_items` table is retained-temporary legacy admin only.
 
 ### Product Group
 
