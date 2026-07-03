@@ -1,0 +1,24 @@
+<%# locals: workflow %>
+<% action = workflow.next_action %>
+<section class="ss-panel ss-demand-next-action" id="demand-next-action-panel">
+  <h2 class="ss-demand-next-action__title"><%= action.title %></h2>
+  <% if action.body.present? %>
+    <p class="ss-muted"><%= action.body %></p>
+  <% end %>
+
+  <% case action.kind %>
+  <% when :anchor %>
+    <% if action.primary_label.present? %>
+      <%= link_to action.primary_label, "##{action.anchor}", class: "ss-btn" %>
+    <% end %>
+  <% when :link %>
+    <% if action.primary_path.present? && action.primary_label.present? %>
+      <%= link_to action.primary_label, action.primary_path, class: "ss-btn" %>
+    <% end %>
+    <% if action.secondary_path.present? && action.secondary_label.present? %>
+      <%= link_to action.secondary_label, action.secondary_path, class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  <% when :info %>
+    <%# body only %>
+  <% end %>
+</section>

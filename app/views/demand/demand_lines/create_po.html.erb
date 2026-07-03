@@ -1,0 +1,46 @@
+<%= render "setup/shared/back_link", path: demand_demand_line_path(@demand_line), label: @demand_line.demand_number %>
+
+<h1>Create PO from demand</h1>
+
+<p class="ss-muted">Draft PO creation records planned demand coverage. Active inbound allocations are created only after the PO is submitted and lines are eligible.</p>
+
+<%= form_with url: submit_create_po_demand_demand_line_path(@demand_line), method: :post, class: "ss-form" do %>
+  <div class="ss-field">
+    <%= label_tag :vendor_id, "Vendor", class: "ss-label" %>
+    <%= select_tag :vendor_id,
+          options_from_collection_for_select(@vendors, :id, :name, @plan.vendor_plans.first&.vendor&.id),
+          class: "ss-input", required: true %>
+  </div>
+
+  <% if @plan.line_plans.any? %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Demand</th>
+          <th>Variant</th>
+          <th class="ss-num">Customer qty</th>
+          <th class="ss-num">Store qty</th>
+          <th class="ss-num">PO qty</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @plan.line_plans.each do |plan| %>
+          <tr>
+            <td><%= plan.demand_line.demand_number %></td>
+            <td><%= plan.product_variant.sku %></td>
+            <td class="ss-num"><%= plan.customer_quantity %></td>
+            <td class="ss-num"><%= plan.store_quantity %></td>
+            <td class="ss-num"><%= plan.total_quantity %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <div class="ss-field">
+    <%= label_tag :notes, "PO notes", class: "ss-label" %>
+    <%= text_area_tag :notes, nil, rows: 2, class: "ss-input" %>
+  </div>
+
+  <%= submit_tag "Create draft PO", class: "ss-btn" %>
+<% end %>

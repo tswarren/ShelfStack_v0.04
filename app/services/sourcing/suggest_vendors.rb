@@ -32,10 +32,6 @@ module Sourcing
       vendor = suggestion.vendor
       warnings = []
       warnings << "Vendor is inactive" unless vendor.active?
-      pvv = suggestion.product_variant_vendor
-      pv = suggestion.product_vendor
-      vendor_item_number = pvv&.vendor_item_number || pv&.vendor_item_number
-      warnings << "Missing vendor item number" if vendor_item_number.blank?
 
       source_level = VendorSourceSnapshot.map_source_level(suggestion.source)
       Candidate.new(

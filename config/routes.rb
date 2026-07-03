@@ -333,6 +333,10 @@ Rails.application.routes.draw do
         patch :cancel
         patch :expire
         post :match_variant
+        get :create_po
+        post :submit_create_po
+        get :add_to_po
+        post :submit_add_to_po
       end
       resources :allocations, only: %i[create], controller: "allocations"
     end

@@ -432,7 +432,7 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-10 (retire v0.03 ordering UI and reports):** **Complete** — [spec bundle](docs/v0.04/v0.04-10-retire-v0.03-ordering-ui/spec.md) · [completion](docs/implementation/v0.04-10-completion.md).
 
-**Current priority:** **v0.04-11** documentation and schema cleanup — [spec bundle](docs/v0.04/v0.04-11-documentation-schema-cleanup/spec.md).
+**Current priority:** **v0.04-12 complete on branch** — merge gate below; next milestone TBD (v0.04-3 product groups deferred). [Completion note](docs/implementation/v0.04-12-completion.md).
 
 **v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
 
@@ -443,6 +443,7 @@ STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0048:verify_sourc
 STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0049:verify_po_receiving
 ./dev/rails-docker env V00410_PHASE=g2 STRICT=1 bin/rails shelfstack:v00410:verify_legacy_ordering_retired
 STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v00411:verify_documentation_schema_cleanup
+V00412_SLICE=final STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v00412:verify_demand_ordering_ux
 ```
 
 **v0.04-11 notes:** `catalog_items` is **retain-temporary** (legacy bibliographic admin). Legacy redirect aliases `customers_customer_requests` and `orders_purchase_requests` remain. `from_tbo` params are deprecated compatibility only.

@@ -21,6 +21,7 @@ export default class extends Controller {
     requestAnimationFrame(() => {
       this.applyLegacyModeDrawerFromUrl()
       this.applyCarryForwardFromUrl()
+      this.applyPickupParamFromUrl()
     })
   }
 
@@ -857,6 +858,25 @@ export default class extends Controller {
     if (event.detail.success) {
       this.closeOpenRingPanel()
     }
+  }
+
+  applyPickupParamFromUrl() {
+    const params = new URLSearchParams(window.location.search)
+    const pickup = params.get("pickup")
+    if (!pickup) return
+
+    this.showPickupDrawerPanel()
+    const demandInput = this.pickupPanelTarget?.querySelector("[data-pos-pickup-panel-target='demandNumber']")
+    if (demandInput) {
+      demandInput.value = pickup
+      demandInput.dispatchEvent(new Event("change", { bubbles: true }))
+    }
+    this.pickupPanelTarget?.querySelector("[data-action*='pos-pickup-panel#search']")?.click()
+
+    params.delete("pickup")
+    const query = params.toString()
+    const cleanUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname
+    window.history.replaceState({}, "", cleanUrl)
   }
 
   applyLegacyModeDrawerFromUrl() {

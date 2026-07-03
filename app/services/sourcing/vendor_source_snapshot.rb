@@ -33,7 +33,11 @@ module Sourcing
 
       Snapshot.new(
         vendor_name_snapshot: vendor.name,
-        vendor_item_number_snapshot: pvv&.vendor_item_number || pv&.vendor_item_number,
+        vendor_item_number_snapshot: Purchasing::SourcingLookup.resolve_vendor_item_number(
+          variant: variant,
+          variant_vendor: pvv,
+          product_vendor: pv
+        ),
         source_level_snapshot: source_level,
         source_record_type: source_record&.class&.name,
         source_record_id: source_record&.id,
@@ -45,7 +49,7 @@ module Sourcing
       )
     end
 
-    def map_source_level(source, manual_override:)
+    def map_source_level(source, manual_override: false)
       return "manual" if manual_override
 
       case source.to_s

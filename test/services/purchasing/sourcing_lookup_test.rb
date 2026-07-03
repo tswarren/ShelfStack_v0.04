@@ -59,6 +59,24 @@ class Purchasing::SourcingLookupTest < ActiveSupport::TestCase
     assert_equal "OTHER-1", results[other_variant.id].vendor_item_number
   end
 
+  test "falls back to primary product identifier when vendor item number is blank" do
+    variant_only_product = create_product_variant!(
+      sub_department: @sub_department,
+      inventory_behavior: "standard_physical"
+    )
+    ProductVendor.create!(
+      product: variant_only_product.product,
+      vendor: @vendor,
+      vendor_item_number: nil,
+      supplier_discount_bps: 3500,
+      active: true
+    )
+
+    result = Purchasing::SourcingLookup.for(variant: variant_only_product, vendor: @vendor)
+    assert_equal variant_only_product.product.primary_identifier.normalized_identifier, result.vendor_item_number
+    assert_equal 3500, result.supplier_discount_bps
+  end
+
   test "falls back to product vendor then vendor default" do
     variant_only_product = create_product_variant!(
       sub_department: @sub_department,
@@ -77,7 +95,7 @@ class Purchasing::SourcingLookupTest < ActiveSupport::TestCase
     assert_equal 3500, result.supplier_discount_bps
 
     result = Purchasing::SourcingLookup.for(variant: variant_only_product, vendor: @other_vendor)
-    assert_nil result.vendor_item_number
+    assert_equal variant_only_product.product.primary_identifier.normalized_identifier, result.vendor_item_number
     assert_equal 5000, result.supplier_discount_bps
     assert_not result.sourcing_record_present
   end

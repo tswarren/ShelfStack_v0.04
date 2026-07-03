@@ -58,7 +58,7 @@ module Customers
           demand_number: demand_line.demand_number,
           customer_name: demand_line.display_customer_name,
           primary_item: primary_item_summary(demand_line),
-          next_action_label: next_action_label_for(demand_line, queue_key),
+          next_action_label: Demand::DemandLineWorkflowPresenter.next_action_label_for(demand_line, queue_key: queue_key, store: store),
           demand_path: Rails.application.routes.url_helpers.demand_demand_line_path(demand_line),
           urgency_label: urgency_label_for(demand_line, queue_key)
         )
@@ -101,22 +101,7 @@ module Customers
     end
 
     def next_action_label_for(demand_line, queue_key)
-      case queue_key
-      when "ready_for_pickup", "expiring_holds"
-        "POS pickup"
-      when "notify_customer"
-        "Contact customer"
-      when "needs_research"
-        "Match variant"
-      when "approved_to_order"
-        "Start sourcing"
-      when "on_order", "vendor_backorder"
-        "View demand"
-      when "awaiting_response"
-        "Review sourcing"
-      else
-        "View demand"
-      end
+      Demand::DemandLineWorkflowPresenter.next_action_label_for(demand_line, queue_key: queue_key, store: store)
     end
 
     def earliest_allocation_expiry(demand_line)

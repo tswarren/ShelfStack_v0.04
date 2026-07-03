@@ -59,7 +59,7 @@ class DemandAllocationsConvertInboundFromReceiptTest < ActiveSupport::TestCase
   end
 
   test "partial conversion within one inbound allocation creates remainder inbound row" do
-    [@inbound_a, @inbound_b].each do |allocation|
+    [ @inbound_a, @inbound_b ].each do |allocation|
       allocation.update!(
         status: "released",
         released_at: Time.current,

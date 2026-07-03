@@ -63,6 +63,14 @@ module DemandHelper
     }.fetch(kind.to_s, kind.to_s.humanize)
   end
 
+  def demand_supply_state_label(state)
+    DemandLines::SupplySummary::SUPPLY_STATES.fetch(state.to_sym, state.to_s.humanize)
+  end
+
+  def demand_supply_summary(demand_line, store:)
+    DemandLines::SupplySummary.for(demand_line:, store:)
+  end
+
   def demand_item_label(demand_line)
     if demand_line.product_variant.present?
       "#{demand_line.product_variant.sku} — #{demand_line.product_variant.name}"

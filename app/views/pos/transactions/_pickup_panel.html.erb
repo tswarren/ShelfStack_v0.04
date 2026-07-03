@@ -24,7 +24,7 @@
     </div>
     <div class="ss-field">
       <%= label_tag :pos_pickup_demand_number, "Demand number" %>
-      <%= text_field_tag :pos_pickup_demand_number, nil,
+      <%= text_field_tag :pos_pickup_demand_number, params[:pickup],
             class: "ss-input",
             data: { pos_pickup_panel_target: "demandNumber", action: "keydown.enter->pos-pickup-panel#search" } %>
     </div>

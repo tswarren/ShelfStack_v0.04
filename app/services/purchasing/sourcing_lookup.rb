@@ -37,7 +37,7 @@ module Purchasing
 
         variant_vendor = variant_vendors_by_key[[ variant.id, vendor.id ]]
         product_vendor = product_vendors_by_key[[ variant.product_id, vendor.id ]]
-        results[variant.id] = build_result(variant_vendor:, product_vendor:, vendor:)
+        results[variant.id] = build_result(variant:, variant_vendor:, product_vendor:, vendor:)
       end
     end
 
@@ -50,18 +50,32 @@ module Purchasing
       variant_vendor = ProductVariantVendor.active_records.find_by(product_variant: variant, vendor: vendor)
       product_vendor = ProductVendor.active_records.find_by(product: variant.product, vendor: vendor)
 
-      self.class.build_result(variant_vendor:, product_vendor:, vendor:)
+      self.class.build_result(variant:, variant_vendor:, product_vendor:, vendor:)
     end
 
-    def self.build_result(variant_vendor:, product_vendor:, vendor:)
+    def self.build_result(variant:, variant_vendor:, product_vendor:, vendor:)
       Result.new(
         product_variant_vendor: variant_vendor,
         product_vendor: product_vendor,
-        vendor_item_number: variant_vendor&.vendor_item_number || product_vendor&.vendor_item_number,
+        vendor_item_number: resolve_vendor_item_number(
+          variant: variant,
+          variant_vendor: variant_vendor,
+          product_vendor: product_vendor
+        ),
         supplier_discount_bps: resolved_discount_bps(variant_vendor, product_vendor, vendor),
         preferred: variant_vendor&.preferred || product_vendor&.preferred || false,
         sourcing_record_present: variant_vendor.present? || product_vendor.present?
       )
+    end
+
+    def self.resolve_vendor_item_number(variant:, variant_vendor: nil, product_vendor: nil)
+      variant_vendor&.vendor_item_number.presence ||
+        product_vendor&.vendor_item_number.presence ||
+        primary_identifier_value(variant.product)
+    end
+
+    def self.primary_identifier_value(product)
+      product.primary_identifier&.normalized_identifier.presence
     end
 
     def self.resolved_discount_bps(variant_vendor, product_vendor, vendor)

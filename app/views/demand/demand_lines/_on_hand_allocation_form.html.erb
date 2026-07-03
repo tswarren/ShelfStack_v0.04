@@ -1,0 +1,20 @@
+<%# locals: demand_line, available_for_allocation %>
+<%= form_with url: demand_demand_line_allocations_path(demand_line), method: :post, class: "ss-form" do %>
+  <%= hidden_field_tag :allocation_kind, "on_hand" %>
+  <div class="ss-field ss-field--inline">
+    <%= label_tag :quantity, "Custom quantity", class: "ss-label" %>
+    <%= number_field_tag :quantity, 1, min: 1, max: [demand_line.quantity_requested, available_for_allocation.to_i].min, class: "ss-input", required: true %>
+    <%= submit_tag "Allocate on hand", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+  </div>
+  <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.override_availability", store: current_store) %>
+    <div class="ss-field">
+      <%= label_tag :override_availability, class: "ss-label" do %>
+        <%= check_box_tag :override_availability, "1", false %> Override availability
+      <% end %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :override_reason, "Override reason", class: "ss-label" %>
+      <%= text_field_tag :override_reason, nil, class: "ss-input" %>
+    </div>
+  <% end %>
+<% end %>
