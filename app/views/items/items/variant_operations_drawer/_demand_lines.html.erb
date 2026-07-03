@@ -1,0 +1,22 @@
+<table class="ss-table ss-table--compact">
+  <thead>
+    <tr>
+      <th>Demand #</th>
+      <th>Customer</th>
+      <th class="ss-num">Qty</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% lines.each do |line| %>
+      <tr>
+        <td><%= line.demand_number %></td>
+        <td><%= line.display_customer_name || "—" %></td>
+        <td class="ss-num"><%= line.quantity_requested %></td>
+        <td><%= line.status.tr("_", " ").titleize %></td>
+        <td><%= link_to "View", demand_demand_line_path(line), class: "ss-btn-link" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

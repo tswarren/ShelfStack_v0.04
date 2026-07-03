@@ -30,6 +30,14 @@ class ShelfstackV00411VerifyTest < ActiveSupport::TestCase
     refute Shelfstack::V00411Verify.line_allowlisted?("CustomerRequest is the active demand document.")
   end
 
+  test "stale navigation scanner flags outdated priority text" do
+    refute Shelfstack::V00411Verify.line_allowlisted?("Current priority: v0.04-0 baseline → v0.04-1 product fusion")
+  end
+
+  test "module pattern scanner flags removed service namespace" do
+    refute Shelfstack::V00411Verify.line_allowlisted?("Use PurchaseRequests::CreateSingleLine for TBO.")
+  end
+
   test "report passes on current repo after v0.04-11 docs" do
     result = Shelfstack::V00411Verify.report(strict: true)
 

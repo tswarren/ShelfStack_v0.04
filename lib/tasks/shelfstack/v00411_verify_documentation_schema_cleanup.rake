@@ -17,7 +17,7 @@ namespace :shelfstack do
         puts "  #{ok ? '✓' : '✗'} #{key}"
       end
 
-      %i[forbidden_doc_hits schema_reference_dropped_table_hits app_dropped_model_hits].each do |detail_key|
+      %i[forbidden_doc_hits stale_navigation_hits schema_reference_dropped_table_hits app_dropped_model_hits].each do |detail_key|
         values = result.dig(:details, detail_key)
         next if values.blank?
 

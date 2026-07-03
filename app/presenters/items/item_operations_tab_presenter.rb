@@ -44,19 +44,19 @@ module Items
     end
 
     def active_holds
-      []
+      @active_holds ||= demand_allocations_scope.on_hand_kind.to_a
     end
 
     def incoming_reserves
-      []
+      @incoming_reserves ||= demand_allocations_scope.inbound_kind.to_a
     end
 
     def open_manual_tbo_demand_lines
-      []
+      @open_manual_tbo_demand_lines ||= open_demand_lines_for("manual_tbo")
     end
 
     def open_special_order_demand_lines
-      []
+      @open_special_order_demand_lines ||= open_demand_lines_for("special_order")
     end
 
     def variant_scoped_manual_tbo_demand_lines
@@ -83,7 +83,7 @@ module Items
       incoming_reserves.select { |allocation| allocation.product_variant_id == highlight_variant.id }
     end
 
-    # Legacy empty stubs — demand lists wire through DemandLine queries in future slices.
+    # Legacy aliases for callers not yet renamed.
     alias_method :open_purchase_request_lines, :open_manual_tbo_demand_lines
     alias_method :open_special_orders, :open_special_order_demand_lines
     alias_method :variant_scoped_purchase_request_lines, :variant_scoped_manual_tbo_demand_lines
@@ -181,10 +181,24 @@ module Items
     end
 
     def active_on_hand_allocation_count
-      @active_on_hand_allocation_count ||= DemandAllocation.active_allocations
-                                                           .on_hand_kind
-                                                           .where(store: store, product_variant_id: variant_ids)
-                                                           .count
+      @active_on_hand_allocation_count ||= demand_allocations_scope.on_hand_kind.count
+    end
+
+    def open_demand_lines_for(capture_intent)
+      DemandLine.includes(:customer)
+                .where(store: store, product_variant_id: variant_ids, capture_intent: capture_intent)
+                .where.not(status: DemandLine::TERMINAL_STATUSES)
+                .order(created_at: :desc)
+                .limit(20)
+                .to_a
+    end
+
+    def demand_allocations_scope
+      DemandAllocation.active_allocations
+                      .includes(demand_line: :customer)
+                      .where(store: store, product_variant_id: variant_ids)
+                      .order(allocated_at: :desc)
+                      .limit(20)
     end
   end
 end

@@ -47,15 +47,20 @@ module Items
       operations_presenter.variant_customer_demand_actions(variant)
     end
 
-    def legacy_activity_present?
-      tab = operations_tab
+    def v004_demand_activity_present?
       return false unless customer_demand_visible?
 
-      tab.variant_scoped_customer_request_lines.any? ||
-        tab.variant_scoped_active_holds.any? ||
+      tab = operations_tab
+      tab.variant_scoped_active_holds.any? ||
         tab.variant_scoped_incoming_reserves.any? ||
         tab.variant_scoped_special_order_demand_lines.any? ||
         tab.variant_scoped_manual_tbo_demand_lines.any?
+    end
+
+    def legacy_activity_present?
+      return false unless customer_demand_visible?
+
+      operations_tab.variant_scoped_customer_request_lines.any?
     end
 
     def availability_context

@@ -60,7 +60,7 @@ Deferred: GL-shaped financial export (Phase 9c)
 | Purchasing | `Purchasing::PostReceipt`, `Purchasing::MovingAverageCost` | `/orders` |
 | POS | `Pos::CompleteTransaction`, `Pos::TaxRecalculator`, `Pos::DiscountRecalculator` | `/pos` |
 | Stored value | `StoredValue::Post`, `Pos::PostStoredValueLedger` | `/pos`, `/customers` |
-| Demand | `CustomerRequests::*`, `InventoryReservations::*` | `/customers` |
+| Demand | `DemandLines::*`, `DemandAllocations::*`, `Pos::DemandPickupLookup` | `/demand` |
 | Buyback | `Buybacks::CompleteSession`, `Buybacks::VoidSession` | `/buybacks` |
 | Reports | `Reports::*` query objects | `/reports` |
 | Interaction | Shared modal/drawer shells, `Pos::CommandRegistry` (10-C) | All |
@@ -136,7 +136,7 @@ Balances must not be mutated outside `Inventory::Post` / `Inventory::BalanceUpda
 
 ### Purchasing, demand, buyback, reports
 
-See phase specs for `Purchasing::*`, `CustomerRequests::*`, `Buybacks::*`, and `Reports::*` service lists in [AGENTS.md](../AGENTS.md).
+See phase specs for `Purchasing::*`, `DemandLines::*`, `DemandAllocations::*`, `Buybacks::*`, and `Reports::*` service lists in [AGENTS.md](../AGENTS.md).
 
 Request context: `app/models/current.rb` (`CurrentAttributes`).
 

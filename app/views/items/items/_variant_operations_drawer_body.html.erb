@@ -73,43 +73,49 @@
 
 <% tab = drawer.operations_tab %>
 
-<% if drawer.legacy_activity_present? %>
-  <details class="ss-drawer-section ss-collapsible">
-    <summary class="ss-drawer-section-title">Legacy activity</summary>
-    <p class="ss-hint">Historical v0.03 demand and TBO records. New demand uses the actions above.</p>
+<% if drawer.customer_demand_visible? && drawer.v004_demand_activity_present? %>
+  <section class="ss-drawer-section">
+    <h3 class="ss-drawer-section-title">Open demand</h3>
 
-    <% if drawer.customer_demand_visible? && tab.variant_scoped_customer_request_lines.any? %>
+    <% if tab.variant_scoped_active_holds.any? %>
       <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Open customer requests</h4>
-        <%= render "items/items/variant_operations_drawer/customer_request_lines", lines: tab.variant_scoped_customer_request_lines %>
+        <h4 class="ss-drawer-subsection-title">Active on-hand allocations</h4>
+        <%= render "items/items/variant_operations_drawer/demand_allocations", allocations: tab.variant_scoped_active_holds %>
       </section>
     <% end %>
 
-    <% if drawer.customer_demand_visible? && tab.variant_scoped_active_holds.any? %>
+    <% if tab.variant_scoped_incoming_reserves.any? %>
       <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Active holds</h4>
-        <%= render "items/items/variant_operations_drawer/active_holds", holds: tab.variant_scoped_active_holds %>
+        <h4 class="ss-drawer-subsection-title">Inbound allocations</h4>
+        <%= render "items/items/variant_operations_drawer/demand_allocations", allocations: tab.variant_scoped_incoming_reserves %>
       </section>
     <% end %>
 
-    <% if drawer.customer_demand_visible? && tab.variant_scoped_incoming_reserves.any? %>
-      <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Incoming reserves</h4>
-        <%= render "items/items/variant_operations_drawer/incoming_reserves", reserves: tab.variant_scoped_incoming_reserves %>
-      </section>
-    <% end %>
-
-    <% if drawer.customer_demand_visible? && tab.variant_scoped_special_orders.any? %>
+    <% if tab.variant_scoped_special_order_demand_lines.any? %>
       <section class="ss-drawer-subsection">
         <h4 class="ss-drawer-subsection-title">Special orders</h4>
-        <%= render "items/items/variant_operations_drawer/special_orders", orders: tab.variant_scoped_special_orders %>
+        <%= render "items/items/variant_operations_drawer/demand_lines", lines: tab.variant_scoped_special_order_demand_lines %>
       </section>
     <% end %>
 
     <% if tab.variant_scoped_manual_tbo_demand_lines.any? %>
       <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Open manual TBO demand</h4>
-        <%= render "items/items/variant_operations_drawer/purchase_request_lines", lines: tab.variant_scoped_manual_tbo_demand_lines %>
+        <h4 class="ss-drawer-subsection-title">Manual TBO</h4>
+        <%= render "items/items/variant_operations_drawer/demand_lines", lines: tab.variant_scoped_manual_tbo_demand_lines %>
+      </section>
+    <% end %>
+  </section>
+<% end %>
+
+<% if drawer.legacy_activity_present? %>
+  <details class="ss-drawer-section ss-collapsible">
+    <summary class="ss-drawer-section-title">Legacy activity</summary>
+    <p class="ss-hint">Historical v0.03 customer request records only. New demand uses the section above.</p>
+
+    <% if tab.variant_scoped_customer_request_lines.any? %>
+      <section class="ss-drawer-subsection">
+        <h4 class="ss-drawer-subsection-title">Open customer requests</h4>
+        <%= render "items/items/variant_operations_drawer/customer_request_lines", lines: tab.variant_scoped_customer_request_lines %>
       </section>
     <% end %>
   </details>

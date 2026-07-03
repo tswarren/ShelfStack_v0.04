@@ -6,13 +6,30 @@ module Shelfstack
 
     DROPPED_ORDERING_TABLES = Shelfstack::V00410Verify::LEGACY_TABLES.freeze
 
+    DROPPED_MODULE_PATTERNS = [
+      /\bCustomerRequests::/,
+      /\bPurchaseRequests::/,
+      /\bSpecialOrders::/,
+      /\bInventoryReservations::/
+    ].freeze
+
     DROPPED_MODEL_PATTERNS = [
       /\bCustomerRequest\b/,
       /\bCustomerRequestLine\b/,
       /\bSpecialOrder\b/,
       /\bPurchaseRequest\b/,
       /\bPurchaseRequestLine\b/,
-      /\bInventoryReservation\b/
+      /\bInventoryReservation\b/,
+      *DROPPED_MODULE_PATTERNS
+    ].freeze
+
+    STALE_NAV_PATTERNS = [
+      /v0\.04-0 baseline → v0\.04-1/,
+      /historical until updated/i,
+      /milestone v0\.04-1\)/,
+      /v0\.03; updates in v0\.04-11/,
+      /v0\.03 codebase.*still reflects/i,
+      /current until migrated/i
     ].freeze
 
     CANONICAL_GUIDANCE_GLOBS = [
@@ -110,6 +127,23 @@ module Shelfstack
       !line.match?(
         /retain-temporary|Retained temporary|\blegacy\b|legacy admin|legacy bibliographic|Retired|retired|being retired|older vocabulary|not the canonical|do not reintroduce|v0\.04-3|v0\.04-1|table drop|quarantined|superseded|Do not extend/i
       )
+    end
+
+    def stale_navigation_hits
+      hits = []
+      %w[docs/README.md AGENTS.md].each do |rel|
+        path = Rails.root.join(rel)
+        next unless path.exist?
+
+        File.readlines(path, chomp: true).each_with_index do |line, index|
+          next if line_allowlisted?(line)
+
+          STALE_NAV_PATTERNS.each do |pattern|
+            hits << "#{rel}:#{index + 1}:#{pattern.source}" if line.match?(pattern)
+          end
+        end
+      end
+      hits.uniq
     end
 
     def forbidden_doc_hits
@@ -214,7 +248,7 @@ module Shelfstack
     def checks
       {
         v00410_completion_marked_complete: v00410_completion_marked_complete?,
-        active_docs_no_forbidden_legacy_models: forbidden_doc_hits.empty?,
+        active_docs_no_forbidden_legacy_models: forbidden_doc_hits.empty? && stale_navigation_hits.empty?,
         schema_reference_no_dropped_ordering_tables: schema_reference_dropped_table_hits.empty?,
         domain_model_describes_v004_chain: domain_model_describes_v004_chain?,
         glossary_has_retired_section: glossary_has_retired_section?,
@@ -248,6 +282,7 @@ module Shelfstack
       failures = check_results.reject { |_key, ok| ok }.keys
       details = {
         forbidden_doc_hits: forbidden_doc_hits.first(20),
+        stale_navigation_hits: stale_navigation_hits.first(20),
         schema_reference_dropped_table_hits: schema_reference_dropped_table_hits.first(20),
         app_dropped_model_hits: app_dropped_model_hits.first(20)
       }

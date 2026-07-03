@@ -40,6 +40,12 @@ Stored on audit events as `actor_user_id`.
 
 # B
 
+## Buyer Replenishment
+
+A **[capture intent](#capture-intent)** on **`DemandLine`** (`buyer_replenishment`) for buyer-driven shelf or frontlist replenishment. Vendor-orderable variants only. May flow into **sourcing** and purchase orders; does not post inventory by itself.
+
+---
+
 ## Buyback Session
 
 Staged used-buyback workflow document (intake through completion) with workstation-scoped buyback number, single payout mode, and inventory posting at completion only.
@@ -103,6 +109,24 @@ Ruby-side registry (`Pos::CommandRegistry`) defining canonical POS commands, ali
 
 ---
 
+## Capture Intent
+
+Controlled field on **`DemandLine`** describing why the line was captured. Valid values:
+
+```text
+hold              — reserve on-hand stock for a customer
+notify            — alert staff when stock arrives (no auto-hold)
+special_order     — customer-backed order for a variant
+used_wanted       — customer wants a used copy (not vendor-orderable)
+manual_tbo        — staff/buyer manual replenishment (To Be Ordered)
+buyer_replenishment — buyer-driven shelf/frontlist replenishment
+research          — provisional lookup before variant match
+```
+
+Use these as **intent labels**, not legacy table names. Staff workspace: `/demand`.
+
+---
+
 ## Catalog Item (retained temporary — legacy admin)
 
 Legacy bibliographic metadata record in `catalog_items`. **Not the canonical v0.04 model** — use **`Product`** + **`product_identifiers`** for new work. Retained for external lookup, ISBNdb import, buyback intake, and admin CRUD until a future catalog cleanup milestone. See [v0.04-11 audit log](v0.04/v0.04-11-documentation-schema-cleanup/data-model.md).
@@ -117,37 +141,15 @@ A lightweight store customer profile used for requests, holds, special orders, a
 
 ## Customer Pickup
 
-POS fulfillment of customer demand; Phase 10-C uses a drawer workflow with draft created on line fulfillment.
+POS fulfillment of an active on-hand **`DemandAllocation`**. Phase 10-C uses a drawer workflow; completed sale lines carry `demand_allocation_id` and fulfillment runs via `Pos::CompleteDemandAllocationFulfillment` after normal inventory posting.
 
 ---
 
-## Demand Allocation
+## Catalog Item Identifier (retained temporary — legacy admin)
 
-A claim linking a `DemandLine` to supply: on-hand stock, inbound purchase order quantity, or vendor backorder. Allocations do **not** post inventory. Active on-hand allocations reduce `quantity_available`. Fulfillment completes through POS pickup or operational services.
+An identifier on a legacy **`catalog_items`** record. **Superseded by [Product Identifier](#product-identifier)** on `product_identifiers` for v0.04 work. Retained for bibliographic admin, external lookup, and import paths only.
 
----
-
-## Demand Line
-
-Store-scoped customer or buyer need at **product variant** grain (`demand_lines`). `capture_intent` distinguishes hold, notify, special_order, used_wanted, manual_tbo, buyer_replenishment, and research. Staff workspace: `/demand`.
-
----
-
-## Catalog Item Identifier
-
-An identifier associated with a catalog item.
-
-Examples:
-
-* ISBN-10
-* ISBN-13
-* EAN
-* UPC
-* GTIN
-* Publisher number
-* ShelfStack local identifier
-
-A catalog item must have at least one active identifier and exactly one active primary identifier.
+Examples: ISBN-10, ISBN-13, EAN, UPC, GTIN, publisher number, local identifier.
 
 ---
 
@@ -253,6 +255,30 @@ Current.time_zone
 
 # D
 
+## Demand Allocation
+
+A claim linking a **`DemandLine`** to supply at variant grain (`demand_allocations`). Allocations do **not** post inventory — only **`Inventory::Post`** mutates on-hand quantity.
+
+**Allocation kinds:**
+
+```text
+on_hand                 — claims current store stock (hold)
+inbound_purchase_order  — claims expected inbound PO quantity
+vendor_backorder        — claims vendor-confirmed backorder quantity
+```
+
+Active on-hand allocations reduce `quantity_available`. **Fulfillment** completes through POS pickup or `DemandAllocations::Fulfill`.
+
+---
+
+## Demand Line
+
+Store-scoped customer or buyer need at **product variant** grain (`demand_lines`). See **[Capture Intent](#capture-intent)** for intent values. Staff workspace: `/demand`.
+
+Demand records need; it does not change on-hand inventory until receiving or POS posts stock.
+
+---
+
 ## Department
 
 Top-level operational merchandise and reporting bucket (Phase 2). Departments carry GL account codes and, after Phase 8.5-1, a `discountable` flag.
@@ -309,6 +335,18 @@ Examples:
 
 ---
 
+## Fulfillment
+
+Completing an active **`DemandAllocation`** so the linked **`DemandLine`** moves toward `fulfilled` status. Customer-facing path: normal POS sale with `demand_allocation_id` on the line, then `Pos::CompleteDemandAllocationFulfillment`. Does not replace **`Inventory::Post`** — sale posting and fulfillment are separate steps.
+
+---
+
+## `from_tbo` (deprecated compatibility)
+
+Legacy query/route parameter retained for return-path compatibility. Must **not** open the removed v0.03 PO TBO builder. Lands on manual TBO / **`DemandLine`** / sourcing flows. Future rename to demand-native params deferred.
+
+---
+
 # G
 
 ## Gift Card Issue / Reload
@@ -326,6 +364,18 @@ Applying stored-value gift card balance as a POS tender via `/giftredeem` or `/g
 ## Global Role Assignment
 
 A role assignment that applies across all stores.
+
+---
+
+## Hold
+
+A **[capture intent](#capture-intent)** on **`DemandLine`** (`hold`) paired with an on-hand **`DemandAllocation`**. Reserves available stock for a customer until expiry, release, or fulfillment.
+
+---
+
+## House Identifier
+
+A **product identifier** using ShelfStack's internal EAN-13 segment (prefix **200–229** on `product_identifiers` with `identifier_family = house`). Assigned sequentially — not derived from variant SKU. Distinct from variant SKUs (segment **211**).
 
 ---
 
@@ -390,9 +440,17 @@ Ledger entries capture signed `quantity_delta`, movement type, cost and retail s
 
 ## Inventory Posting
 
-The atomic posted inventory event. One posting may contain one or many ledger entries.
+The atomic posted inventory event record (`inventory_postings`). One posting may contain one or many ledger entries. Postings are immutable once created.
 
-Postings are immutable once created.
+Distinct from the **`Inventory::Post`** service, which creates postings and ledger entries.
+
+---
+
+## Inventory::Post
+
+The sole authoritative service for mutating on-hand inventory. All stock changes — receiving, POS sale/return, adjustments, buyback, vendor return — flow through this service into **`Inventory Posting`** and **`Inventory Ledger Entry`** records, then update **`Inventory Balance`**.
+
+Demand and allocations never call **`Inventory::Post`** directly.
 
 ---
 
@@ -415,6 +473,22 @@ Example:
 ```text
 L000000001
 ```
+
+---
+
+# M
+
+## Manual TBO
+
+“To Be Ordered” — a **[capture intent](#capture-intent)** on **`DemandLine`** (`manual_tbo`) for staff-initiated replenishment of a specific variant. Does not post inventory. Typically flows through **sourcing** into a purchase order. Legacy route alias `orders_purchase_requests` redirects to `/demand?capture_intent=manual_tbo`.
+
+---
+
+# N
+
+## Notify
+
+A **[capture intent](#capture-intent)** on **`DemandLine`** (`notify`). Staff are alerted when stock arrives; **no auto-hold** is created. May convert to hold or special order manually.
 
 ---
 
@@ -442,30 +516,19 @@ Permissions are assigned to roles through role permissions.
 
 ## Primary Identifier
 
-The main active identifier for a catalog item.
+The main active **product identifier** for a product (`product_identifiers.primary_identifier = true`). Used for scan/lookup and bibliographic identity — **not** for variant SKU assignment in v0.04.
 
-A catalog item may have many identifiers but must have exactly one active primary identifier.
-
-The primary identifier is used as the default SKU source for catalog-linked products.
+Legacy `catalog_item_identifiers.primary_identifier` remains on retained-temporary catalog admin records only.
 
 ---
 
 ## Product
 
-A store-facing product grouping.
+The descriptive **commercial item** in v0.04 — one edition, release, or manufactured item (book ISBN, UPC, sideline, service, etc.). Metadata lives on `products`; sellable behavior lives on **`Product Variant`**.
 
-A product may be linked to a catalog item, but does not have to be.
+Examples: a specific hardcover ISBN, a gift card product, a café item, an event ticket.
 
-Examples:
-
-* A book title as sold by the store
-* A gift card
-* A latte
-* An event ticket
-* A donation
-* A sideline item
-
-A product is not sellable until it has at least one active product variant.
+A product is not sellable until it has at least one active variant. Optional legacy link: `products.catalog_item_id` (retain-temporary admin only).
 
 ---
 
@@ -481,23 +544,42 @@ Examples:
 * Used - Good
 * Remainder
 
-Product conditions can affect variant SKU generation and default pricing.
+Product conditions affect default pricing and used-variant rules; they do **not** suffix variant SKUs in v0.04.
 
 ---
 
-## Product SKU
+## Product Group
 
-The base SKU for a product.
+Optional non-operational grouping of related products (`product_groups`; v0.04-3 deferred). Types include work, series cluster, release family, and merchandise family. **Not** the operational grain for POS, inventory, or purchasing.
 
-For catalog-linked products, the product SKU defaults from the catalog item’s primary identifier.
+---
 
-For non-catalog products, the SKU is manually entered or generated by ShelfStack.
+## Product Identifier
+
+External or house identifier on a **product** (`product_identifiers`). Validation families:
+
+```text
+gtin     — EAN/UPC/GTIN (including book EAN-13)
+isbn     — ISBN-10/ISBN-13 (ISBN-10 converts to ISBN-13 primary where applicable)
+freeform — staff-entered non-standard codes
+house    — ShelfStack-assigned EAN-13 (prefix 200–229)
+```
+
+Scan and lookup resolve product identity here; POS/inventory operate on **`Product Variant`**. See also **[House Identifier](#house-identifier)**.
+
+---
+
+## Product SKU (legacy field)
+
+Historical product-level SKU column on `products`. In v0.04, **variant SKUs are system-assigned** and authoritative for operational workflows. Do not derive new variant SKUs from product identifiers or this field.
 
 ---
 
 ## Product Variant
 
-The actual sellable SKU. POS, receiving, purchasing, inventory, and buyback workflows operate at the product variant level.
+The **operational grain** for ShelfStack: sellable SKU with price, condition, classification, and tracking flags. POS, inventory, purchasing, receiving, demand, allocations, buyback, and fulfillment all reference **`product_variants`**.
+
+Variant SKUs are **system-assigned at creation** (internal EAN-13 segment **211**), unique, and not suffix-derived from condition or product identifiers.
 
 Examples: new copy, signed copy, used condition, size/color variant.
 
@@ -506,6 +588,12 @@ Examples: new copy, signed copy, used condition, size/color variant.
 ## Purchase Order (PO)
 
 A committed order to a vendor with line-level snapshots at submit time.
+
+---
+
+## Purchase Order Line
+
+One variant line on a purchase order (`purchase_order_lines`). Snapshots SKU, name, vendor item number, costs, and returnability at PO submit. Open quantity drives receiving; may link to inbound **demand allocations**.
 
 ---
 
@@ -519,7 +607,13 @@ A committed order to a vendor with line-level snapshots at submit time.
 
 ## Receipt
 
-A receiving document; only `quantity_accepted` posts to inventory via `Inventory::Post`.
+A receiving document; only `quantity_accepted` on each **receipt line** posts to inventory via **`Inventory::Post`**.
+
+---
+
+## Receipt Line
+
+One variant line on a receipt (`receipt_lines`). Tracks expected, received, and **accepted** quantity. Only accepted quantity posts to **`Inventory Balance`**. May trigger demand allocation conversion on post.
 
 ---
 
@@ -576,7 +670,25 @@ Redemption token linked to a stored value account; masked in UI; full reveal may
 
 ## Special Order
 
-A customer-backed commitment record linking a matched request line to downstream PO allocation, receiving, and pickup fulfillment.
+A **[capture intent](#capture-intent)** on **`DemandLine`** (`special_order`) — customer-backed order for a specific variant. **Not** the retired v0.03 `special_orders` table. May pair with inbound **demand allocations** and PO/receiving before **fulfillment** / POS pickup.
+
+---
+
+## Sourcing Attempt
+
+One vendor inquiry within a **sourcing run** (`sourcing_attempts`). Tracks which vendor was contacted and links to **vendor responses**.
+
+---
+
+## Sourcing Run
+
+A vendor inquiry workflow (`sourcing_runs`) initiated from replenishment **demand** or buyer **stock considerations**. Groups one or more **sourcing attempts** before PO creation.
+
+---
+
+## Stock Consideration
+
+Buyer or system replenishment signal (`stock_considerations`) that may spawn **demand lines** or feed sourcing. Distinct from customer-facing capture intents (hold, notify, special order).
 
 ---
 
@@ -598,12 +710,7 @@ Every product variant requires a `sub_department_id`. GL posting resolves via `s
 
 ## SKU
 
-Stock keeping unit.
-
-ShelfStack uses:
-
-* Product SKU as the base SKU
-* Product variant SKU as the actual sellable SKU
+Stock keeping unit. In v0.04 the authoritative sellable SKU is on **`Product Variant`**, system-assigned (segment **211**). Product-level SKU and identifier-derived suffix patterns are legacy.
 
 ---
 
@@ -694,6 +801,12 @@ Tax categories do not directly define rates. Store tax category rates map tax ca
 
 # U
 
+## Used Wanted
+
+A **[capture intent](#capture-intent)** on **`DemandLine`** (`used_wanted`) when a customer wants a **used** copy of a title. Customer-reservable via allocations; **not vendor-orderable** for new-item PO lines (v0.04-5).
+
+---
+
 ## User
 
 Application user or system actor.
@@ -731,6 +844,12 @@ Supplier or source organization. Phase 5 adds product and variant vendor sourcin
 ## Vendor Item Number
 
 The supplier's catalog or stock number for a product or variant, stored on sourcing records and snapshotted on purchase order and receipt lines.
+
+---
+
+## Vendor Response
+
+A vendor's answer to a **sourcing attempt** (`vendor_responses`): confirmed, declined, or backorder quantity and related metadata. Informs PO line quantities; does not post inventory until receipt.
 
 ---
 
