@@ -12,9 +12,9 @@ module Orders
         actor: current_user,
         matches: match_params
       )
-      redirect_to orders_receipt_path(@receipt), notice: "Receipt line matches confirmed."
+      redirect_to after_match_path, notice: "Receipt line matches confirmed."
     rescue Receiving::ApplyReceiptLineMatches::ApplyError => e
-      redirect_to orders_receipt_path(@receipt), alert: e.message
+      redirect_to after_match_path, alert: e.message
     end
 
     def apply_suggestions
@@ -29,14 +29,14 @@ module Orders
       end
 
       if matches.empty?
-        redirect_to orders_receipt_path(@receipt), alert: "No PO line matches were suggested."
+        redirect_to after_match_path, alert: "No PO line matches were suggested."
         return
       end
 
       Receiving::ApplyReceiptLineMatches.call!(receipt: @receipt, actor: current_user, matches: matches)
-      redirect_to orders_receipt_path(@receipt), notice: "Suggested PO line matches applied."
+      redirect_to after_match_path, notice: "Suggested PO line matches applied."
     rescue Receiving::ApplyReceiptLineMatches::ApplyError => e
-      redirect_to orders_receipt_path(@receipt), alert: e.message
+      redirect_to after_match_path, alert: e.message
     end
 
     def destroy
@@ -48,10 +48,14 @@ module Orders
         release_reason: params[:release_reason].presence || "Released by staff"
       )
       record_audit!("receipt_line_match.released", match)
-      redirect_to orders_receipt_path(@receipt), notice: "Receipt line match released."
+      redirect_to after_match_path, notice: "Receipt line match released."
     end
 
     private
+
+    def after_match_path
+      params[:return_to] == "edit" ? edit_orders_receipt_path(@receipt) : orders_receipt_path(@receipt)
+    end
 
     def set_receipt
       @receipt = Receipt.where(store: orders_store).find(params[:receipt_id])

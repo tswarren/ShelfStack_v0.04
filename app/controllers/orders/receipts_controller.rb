@@ -71,6 +71,7 @@ module Orders
       redirect_to orders_receipt_path(@receipt), alert: "Posted receipts cannot be edited." unless @receipt.draft?
       load_form_collections
       load_allocation_preview!
+      load_match_workpad!
     end
 
     def update
@@ -85,6 +86,7 @@ module Orders
       else
         load_form_collections
         load_allocation_preview!
+        load_match_workpad!
         render :edit, status: :unprocessable_entity
       end
     end
@@ -126,11 +128,14 @@ module Orders
           ],
           receipt_line_matches: [ :receipt_line, :purchase_order_line, :purchase_order ]
         )
-      elsif %w[edit new].include?(action_name)
+      elsif %w[edit update].include?(action_name)
         relation = relation.includes(
-          receipt_lines: {
-            purchase_order_line: :demand_allocations
-          }
+          receipt_lines: [
+            :product_variant,
+            :purchase_order_line,
+            { purchase_order_line: :demand_allocations },
+          ],
+          receipt_line_matches: [ :receipt_line, :purchase_order_line, :purchase_order ]
         )
       end
       @receipt = relation.find(params[:id])
@@ -161,10 +166,29 @@ module Orders
     end
 
     def load_allocation_preview!
-      return unless @receipt.draft? && @receipt.po_backed?
+      return unless @receipt.draft?
+      return unless previewable_receipt?
 
       document_hub = Purchasing::ReceiptDocumentHub.call(@receipt)
       @allocation_preview = Orders::ReceiptShowPresenter.new(receipt: @receipt, document_hub: document_hub)
+    end
+
+    def load_match_workpad!
+      return unless @receipt.draft?
+      return if @receipt.po_backed? && @receipt.purchase_order_id.present?
+
+      @receipt_line_matches = @receipt.receipt_line_matches.order(:id)
+      @match_candidates_by_line = @receipt.receipt_lines.each_with_object({}) do |line, hash|
+        next if line.quantity_accepted.to_i.zero?
+
+        hash[line.id] = Receiving::PoLineMatchCandidates.call(receipt_line: line)
+      end
+    end
+
+    def previewable_receipt?
+      (@receipt.po_backed? && @receipt.purchase_order_id.present?) ||
+        @receipt.receiving_mode == "vendor_shipment" ||
+        @receipt.receipt_line_matches.confirmed_matches.exists?
     end
 
     def receipt_params

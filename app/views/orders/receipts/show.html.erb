@@ -86,10 +86,13 @@
         <tr>
           <th>Receipt line</th>
           <th>Item</th>
+          <th>PO</th>
           <th>PO line</th>
+          <th class="ss-num">Matched</th>
           <th class="ss-num">Ordered</th>
           <th class="ss-num">Received on PO</th>
           <th class="ss-num">Open on PO</th>
+          <th>Match</th>
         </tr>
       </thead>
       <tbody>
@@ -97,10 +100,22 @@
           <tr>
             <td><%= match.receipt_line.line_number %></td>
             <td><%= render "orders/shared/variant_identity", variant: match.receipt_line.product_variant %></td>
+            <td><%= match.purchase_order ? "##{match.purchase_order.id}" : "—" %></td>
             <td><%= match.purchase_order_line ? "##{match.purchase_order_line.line_number}" : "—" %></td>
+            <td class="ss-num"><%= match.quantity_matched || "—" %></td>
             <td class="ss-num"><%= match.ordered || "—" %></td>
             <td class="ss-num"><%= match.received_on_po || "—" %></td>
             <td class="ss-num"><%= match.open_on_po || "—" %></td>
+            <td>
+              <% if match.match_status.present? %>
+                <%= match.match_status.humanize %>
+                <% if match.match_source.present? %>
+                  <span class="ss-muted">(<%= match.match_source.humanize %>)</span>
+                <% end %>
+              <% else %>
+                —
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>

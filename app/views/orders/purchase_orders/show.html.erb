@@ -35,8 +35,8 @@
         <th class="ss-num">Requested</th>
         <th class="ss-num">Accepted to stock</th>
         <th class="ss-num">Open to receive</th>
-        <th class="ss-num">Customer</th>
-        <th class="ss-num">Stock</th>
+        <th class="ss-num"><%= @purchase_order.draft? ? "Planned customer" : "Customer" %></th>
+        <th class="ss-num"><%= @purchase_order.draft? ? "Planned stock" : "Stock" %></th>
         <th class="ss-num">Cost</th>
         <th>Status</th>
         <th>Flags</th>
