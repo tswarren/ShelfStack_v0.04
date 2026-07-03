@@ -17,6 +17,10 @@
   <dd class="ss-num"><%= @run_unresolved %></dd>
   <dt>Started</dt>
   <dd><%= display_time(@sourcing_run.started_at) %> by <%= @sourcing_run.started_by_user.display_name %></dd>
+  <% if @next_action.present? %>
+    <dt>Next action</dt>
+    <dd><strong><%= @next_action.next_action_label %></strong> — <%= @next_action.next_action_description %></dd>
+  <% end %>
 </dl>
 
 <% if @sourcing_run.active? %>

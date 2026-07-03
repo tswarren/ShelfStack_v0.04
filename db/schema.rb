@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_130005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -1456,6 +1456,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.check_constraint "year IS NULL OR year::text ~ '^[0-9]{4}$'::text", name: "chk_products_year_format"
   end
 
+  create_table "purchase_order_line_demand_plans", force: :cascade do |t|
+    t.datetime "converted_at"
+    t.bigint "converted_by_user_id"
+    t.bigint "converted_to_demand_allocation_id"
+    t.string "coverage_kind", default: "other", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_user_id", null: false
+    t.bigint "demand_line_id", null: false
+    t.string "fulfillment_route", default: "inbound_to_store", null: false
+    t.string "idempotency_key"
+    t.text "notes"
+    t.bigint "product_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "purchase_order_id", null: false
+    t.bigint "purchase_order_line_id", null: false
+    t.integer "quantity_planned", null: false
+    t.text "release_reason"
+    t.datetime "released_at"
+    t.bigint "released_by_user_id"
+    t.string "status", default: "planned", null: false
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["converted_by_user_id"], name: "index_purchase_order_line_demand_plans_on_converted_by_user_id"
+    t.index ["converted_to_demand_allocation_id"], name: "idx_on_converted_to_demand_allocation_id_df6d8844dc"
+    t.index ["created_by_user_id"], name: "index_purchase_order_line_demand_plans_on_created_by_user_id"
+    t.index ["demand_line_id", "status"], name: "idx_on_demand_line_id_status_e6454c31f8"
+    t.index ["demand_line_id"], name: "index_purchase_order_line_demand_plans_on_demand_line_id"
+    t.index ["product_id"], name: "index_purchase_order_line_demand_plans_on_product_id"
+    t.index ["product_variant_id"], name: "index_purchase_order_line_demand_plans_on_product_variant_id"
+    t.index ["purchase_order_id"], name: "index_purchase_order_line_demand_plans_on_purchase_order_id"
+    t.index ["purchase_order_line_id", "demand_line_id", "status"], name: "idx_po_line_demand_plans_line_demand_status"
+    t.index ["purchase_order_line_id"], name: "idx_on_purchase_order_line_id_d3af70b633"
+    t.index ["released_by_user_id"], name: "index_purchase_order_line_demand_plans_on_released_by_user_id"
+    t.index ["store_id", "idempotency_key"], name: "idx_po_line_demand_plans_store_idempotency", unique: true, where: "(idempotency_key IS NOT NULL)"
+    t.index ["store_id", "purchase_order_id"], name: "idx_on_store_id_purchase_order_id_1993b19d59"
+    t.index ["store_id"], name: "index_purchase_order_line_demand_plans_on_store_id"
+  end
+
   create_table "purchase_order_lines", force: :cascade do |t|
     t.string "cost_source", default: "unknown", null: false
     t.datetime "created_at", null: false
@@ -1510,6 +1548,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
   create_table "purchase_orders", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "notes"
+    t.string "order_purpose", default: "stock_order", null: false
+    t.jsonb "ship_to_snapshot"
+    t.string "ship_to_type", default: "store", null: false
     t.string "status", default: "draft", null: false
     t.bigint "store_id", null: false
     t.datetime "submitted_at"
@@ -1523,10 +1564,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.index ["vendor_id"], name: "index_purchase_orders_on_vendor_id"
   end
 
+  create_table "receipt_line_matches", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "idempotency_key"
+    t.string "match_source", default: "auto", null: false
+    t.string "match_status", default: "proposed", null: false
+    t.datetime "matched_at"
+    t.bigint "matched_by_user_id"
+    t.text "notes"
+    t.bigint "product_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "purchase_order_id", null: false
+    t.bigint "purchase_order_line_id", null: false
+    t.integer "quantity_matched", null: false
+    t.bigint "receipt_id", null: false
+    t.bigint "receipt_line_id", null: false
+    t.text "release_reason"
+    t.datetime "released_at"
+    t.bigint "released_by_user_id"
+    t.bigint "store_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["matched_by_user_id"], name: "index_receipt_line_matches_on_matched_by_user_id"
+    t.index ["product_id"], name: "index_receipt_line_matches_on_product_id"
+    t.index ["product_variant_id"], name: "index_receipt_line_matches_on_product_variant_id"
+    t.index ["purchase_order_id"], name: "index_receipt_line_matches_on_purchase_order_id"
+    t.index ["purchase_order_line_id"], name: "index_receipt_line_matches_on_purchase_order_line_id"
+    t.index ["receipt_id", "match_status"], name: "index_receipt_line_matches_on_receipt_id_and_match_status"
+    t.index ["receipt_id"], name: "index_receipt_line_matches_on_receipt_id"
+    t.index ["receipt_line_id", "purchase_order_line_id", "match_status"], name: "idx_receipt_line_matches_line_po_status"
+    t.index ["receipt_line_id"], name: "index_receipt_line_matches_on_receipt_line_id"
+    t.index ["released_by_user_id"], name: "index_receipt_line_matches_on_released_by_user_id"
+    t.index ["store_id", "idempotency_key"], name: "idx_receipt_line_matches_store_idempotency", unique: true, where: "(idempotency_key IS NOT NULL)"
+    t.index ["store_id"], name: "index_receipt_line_matches_on_store_id"
+  end
+
   create_table "receipt_lines", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "exception_reason"
+    t.string "external_line_reference"
     t.integer "line_number", null: false
+    t.string "origin_method"
     t.bigint "product_variant_id", null: false
     t.bigint "purchase_order_line_id"
     t.integer "quantity_accepted", default: 0, null: false
@@ -1534,10 +1611,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.integer "quantity_received", default: 0, null: false
     t.integer "quantity_rejected", default: 0, null: false
     t.bigint "receipt_id", null: false
+    t.integer "shipment_notice_quantity"
     t.integer "supplier_discount_bps"
     t.integer "unit_cost_cents"
     t.integer "unit_list_price_cents"
     t.datetime "updated_at", null: false
+    t.string "vendor_line_reference"
     t.index ["product_variant_id"], name: "index_receipt_lines_on_product_variant_id"
     t.index ["purchase_order_line_id"], name: "index_receipt_lines_on_purchase_order_line_id"
     t.index ["receipt_id", "line_number"], name: "idx_receipt_lines_receipt_line_number", unique: true
@@ -1552,14 +1631,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
   create_table "receipts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "inventory_posting_id"
+    t.string "origin_method", default: "manual", null: false
     t.datetime "posted_at"
     t.bigint "posted_by_user_id"
     t.bigint "purchase_order_id"
     t.string "receipt_type", null: false
+    t.datetime "received_at"
+    t.string "receiving_mode", default: "vendor_shipment", null: false
     t.string "status", default: "draft", null: false
     t.bigint "store_id", null: false
+    t.string "tracking_number"
     t.datetime "updated_at", null: false
     t.bigint "vendor_id", null: false
+    t.string "vendor_invoice_number"
+    t.string "vendor_packing_slip_number"
+    t.string "vendor_shipment_destination", default: "store", null: false
+    t.string "vendor_shipment_reference"
     t.index ["inventory_posting_id"], name: "index_receipts_on_inventory_posting_id"
     t.index ["posted_by_user_id"], name: "index_receipts_on_posted_by_user_id"
     t.index ["purchase_order_id"], name: "index_receipts_on_purchase_order_id"
@@ -1760,6 +1847,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
   end
 
   create_table "sourcing_attempts", force: :cascade do |t|
+    t.string "acknowledgment_method_snapshot"
+    t.string "availability_source_snapshot"
+    t.string "availability_workflow_snapshot"
     t.boolean "buyer_review_required", default: false, null: false
     t.text "cancel_reason"
     t.datetime "canceled_at"
@@ -1768,9 +1858,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.datetime "created_at", null: false
     t.bigint "demand_line_id", null: false
     t.integer "estimated_unit_cost_cents_snapshot"
+    t.jsonb "fulfillment_methods_supported_snapshot"
+    t.string "invoice_method_snapshot"
     t.text "manual_override_reason"
     t.boolean "manual_vendor_override", default: false, null: false
     t.text "notes"
+    t.string "order_submission_method_snapshot"
     t.datetime "override_authorized_at"
     t.bigint "override_authorized_by_user_id"
     t.bigint "previous_sourcing_attempt_id"
@@ -1783,6 +1876,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.datetime "response_due_at"
     t.string "returnability_snapshot"
     t.integer "sequence_number", null: false
+    t.string "shipment_notice_method_snapshot"
     t.string "source_level_snapshot"
     t.bigint "source_record_id"
     t.string "source_record_type"
@@ -1791,7 +1885,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
     t.bigint "store_id", null: false
     t.datetime "submitted_at"
     t.bigint "submitted_by_user_id"
+    t.string "technical_acknowledgment_method_snapshot"
     t.datetime "updated_at", null: false
+    t.string "vendor_capability_source_snapshot"
     t.bigint "vendor_id", null: false
     t.string "vendor_item_number_snapshot"
     t.string "vendor_name_snapshot"
@@ -2207,11 +2303,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
   end
 
   create_table "vendors", force: :cascade do |t|
+    t.string "acknowledgment_method", default: "manual", null: false
     t.boolean "active", default: true, null: false
+    t.string "availability_source", default: "manual", null: false
+    t.string "availability_workflow", default: "manual_review", null: false
     t.datetime "created_at", null: false
     t.integer "default_supplier_discount_bps"
+    t.jsonb "fulfillment_methods_supported", default: ["ship_to_store"], null: false
+    t.string "invoice_method", default: "manual", null: false
     t.string "name", null: false
+    t.string "order_submission_method", default: "manual", null: false
     t.bigint "parent_vendor_id"
+    t.string "shipment_notice_method", default: "none", null: false
+    t.string "technical_acknowledgment_method", default: "none", null: false
     t.datetime "updated_at", null: false
     t.index ["active"], name: "index_vendors_on_active"
     t.index ["name"], name: "index_vendors_on_name"
@@ -2461,6 +2565,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
   add_foreign_key "products", "formats"
   add_foreign_key "products", "sub_departments", column: "default_sub_department_id"
   add_foreign_key "products", "vendors", column: "preferred_vendor_id"
+  add_foreign_key "purchase_order_line_demand_plans", "demand_allocations", column: "converted_to_demand_allocation_id"
+  add_foreign_key "purchase_order_line_demand_plans", "demand_lines"
+  add_foreign_key "purchase_order_line_demand_plans", "product_variants"
+  add_foreign_key "purchase_order_line_demand_plans", "products"
+  add_foreign_key "purchase_order_line_demand_plans", "purchase_order_lines"
+  add_foreign_key "purchase_order_line_demand_plans", "purchase_orders"
+  add_foreign_key "purchase_order_line_demand_plans", "stores"
+  add_foreign_key "purchase_order_line_demand_plans", "users", column: "converted_by_user_id"
+  add_foreign_key "purchase_order_line_demand_plans", "users", column: "created_by_user_id"
+  add_foreign_key "purchase_order_line_demand_plans", "users", column: "released_by_user_id"
   add_foreign_key "purchase_order_lines", "product_variant_vendors"
   add_foreign_key "purchase_order_lines", "product_variants"
   add_foreign_key "purchase_order_lines", "purchase_orders"
@@ -2468,6 +2582,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_002008) do
   add_foreign_key "purchase_orders", "stores"
   add_foreign_key "purchase_orders", "users", column: "submitted_by_user_id"
   add_foreign_key "purchase_orders", "vendors"
+  add_foreign_key "receipt_line_matches", "product_variants"
+  add_foreign_key "receipt_line_matches", "products"
+  add_foreign_key "receipt_line_matches", "purchase_order_lines"
+  add_foreign_key "receipt_line_matches", "purchase_orders"
+  add_foreign_key "receipt_line_matches", "receipt_lines"
+  add_foreign_key "receipt_line_matches", "receipts"
+  add_foreign_key "receipt_line_matches", "stores"
+  add_foreign_key "receipt_line_matches", "users", column: "matched_by_user_id"
+  add_foreign_key "receipt_line_matches", "users", column: "released_by_user_id"
   add_foreign_key "receipt_lines", "product_variants"
   add_foreign_key "receipt_lines", "purchase_order_lines"
   add_foreign_key "receipt_lines", "receipts"

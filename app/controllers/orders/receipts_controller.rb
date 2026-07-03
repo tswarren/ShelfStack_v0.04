@@ -25,10 +25,28 @@ module Orders
     end
 
     def new
+      if params[:receiving_mode] == "vendor_shipment"
+        @receipt = Receiving::CreateVendorShipmentReceipt.call!(
+          store: orders_store,
+          vendor: Vendor.find(params[:vendor_id]),
+          created_by_user: current_user,
+          attrs: {
+            vendor_shipment_reference: params[:vendor_shipment_reference],
+            tracking_number: params[:tracking_number]
+          }
+        )
+        record_audit!("receipt.created", @receipt)
+        redirect_to edit_orders_receipt_path(@receipt), notice: "Vendor shipment receipt created."
+        return
+      end
+
       @receipt = Receipt.new(
         store: orders_store,
         receipt_type: params[:receipt_type].presence || "direct",
-        status: "draft"
+        status: "draft",
+        origin_method: "manual",
+        receiving_mode: params[:receiving_mode].presence || "direct",
+        vendor_shipment_destination: "store"
       )
       build_initial_line
       load_form_collections
@@ -152,6 +170,14 @@ module Orders
         :vendor_id,
         :purchase_order_id,
         :receipt_type,
+        :origin_method,
+        :receiving_mode,
+        :vendor_shipment_destination,
+        :vendor_shipment_reference,
+        :vendor_packing_slip_number,
+        :vendor_invoice_number,
+        :tracking_number,
+        :received_at,
         receipt_lines_attributes: %i[
           id line_number product_variant_id purchase_order_line_id
           quantity_expected quantity_received quantity_accepted quantity_rejected exception_reason

@@ -40,8 +40,16 @@ module Setup
 
     def update
       @parent_vendors = Vendor.active_records.where.not(id: @vendor.id).order(:name)
+      capability_before = capability_snapshot(@vendor)
       if @vendor.update(vendor_params)
         record_audit!("vendor.updated", @vendor)
+        capability_after = capability_snapshot(@vendor)
+        if capability_before != capability_after
+          record_audit!("vendor.capability_updated", @vendor, details: {
+            "before" => capability_before,
+            "after" => capability_after
+          })
+        end
         redirect_to setup_vendor_path(@vendor), notice: "Vendor updated."
       else
         render :edit, status: :unprocessable_entity
@@ -78,8 +86,24 @@ module Setup
 
     def vendor_params
       params.require(:vendor).permit(
-        :name, :parent_vendor_id, :default_supplier_discount_bps, :active
+        :name, :parent_vendor_id, :default_supplier_discount_bps, :active,
+        :availability_workflow, :availability_source, :order_submission_method,
+        :acknowledgment_method, :shipment_notice_method, :invoice_method,
+        :technical_acknowledgment_method, fulfillment_methods_supported: []
       )
+    end
+
+    def capability_snapshot(vendor)
+      {
+        "availability_workflow" => vendor.availability_workflow,
+        "availability_source" => vendor.availability_source,
+        "order_submission_method" => vendor.order_submission_method,
+        "acknowledgment_method" => vendor.acknowledgment_method,
+        "shipment_notice_method" => vendor.shipment_notice_method,
+        "invoice_method" => vendor.invoice_method,
+        "technical_acknowledgment_method" => vendor.technical_acknowledgment_method,
+        "fulfillment_methods_supported" => Array(vendor.fulfillment_methods_supported)
+      }
     end
   end
 end

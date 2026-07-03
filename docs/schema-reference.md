@@ -26,8 +26,10 @@ sourcing_attempts
 vendor_responses
 purchase_orders
 purchase_order_lines
+purchase_order_line_demand_plans   # v0.04-13 planned coverage (draft PO)
 receipts
 receipt_lines
+receipt_line_matches               # v0.04-13 multi-PO shipment matching
 inventory_postings
 inventory_ledger_entries
 inventory_balances

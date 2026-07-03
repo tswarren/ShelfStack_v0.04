@@ -5,6 +5,9 @@ class Receipt < ApplicationRecord
 
   RECEIPT_TYPES = %w[po_backed direct].freeze
   STATUSES = %w[draft posted cancelled].freeze
+  ORIGIN_METHODS = %w[manual purchase_order vendor_shipment_notice file_import edi_x12 api].freeze
+  RECEIVING_MODES = %w[vendor_shipment single_po direct adjustment_review].freeze
+  VENDOR_SHIPMENT_DESTINATIONS = %w[store customer].freeze
 
   belongs_to :store
   belongs_to :vendor
@@ -13,6 +16,7 @@ class Receipt < ApplicationRecord
   belongs_to :inventory_posting, optional: true
 
   has_many :receipt_lines, -> { order(:line_number) }, dependent: :destroy, inverse_of: :receipt
+  has_many :receipt_line_matches, dependent: :restrict_with_error
 
   accepts_nested_attributes_for :receipt_lines, allow_destroy: true, reject_if: :reject_blank_receipt_line?
 
@@ -20,6 +24,9 @@ class Receipt < ApplicationRecord
 
   validates :receipt_type, presence: true, inclusion: { in: RECEIPT_TYPES }
   validates :status, presence: true, inclusion: { in: STATUSES }
+  validates :origin_method, presence: true, inclusion: { in: ORIGIN_METHODS }
+  validates :receiving_mode, presence: true, inclusion: { in: RECEIVING_MODES }
+  validates :vendor_shipment_destination, presence: true, inclusion: { in: VENDOR_SHIPMENT_DESTINATIONS }
   validate :store_must_be_active
   validate :vendor_must_be_active
   validate :purchase_order_must_match_vendor

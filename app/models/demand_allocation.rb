@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DemandAllocation < ApplicationRecord
-  ALLOCATION_KINDS = %w[on_hand inbound_purchase_order vendor_backorder].freeze
+  ALLOCATION_KINDS = %w[on_hand inbound_purchase_order vendor_backorder vendor_direct_fulfillment].freeze
   STATUSES = %w[active fulfilled released expired canceled converted].freeze
   ACTIVE_STATUS = "active".freeze
   TERMINAL_STATUSES = %w[fulfilled released expired canceled converted].freeze
@@ -88,6 +88,8 @@ class DemandAllocation < ApplicationRecord
       end
     when "on_hand"
       errors.add(:purchase_order_line, "must be blank for on-hand allocation") if purchase_order_line_id.present?
+    when "vendor_direct_fulfillment"
+      errors.add(:purchase_order_line, "is required for vendor-direct fulfillment") if purchase_order_line_id.blank?
     end
   end
 

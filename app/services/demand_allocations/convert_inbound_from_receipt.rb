@@ -14,10 +14,11 @@ module DemandAllocations
     end
 
     def call!
-      return unless receipt.po_backed?
-
-      receipt.receipt_lines.each do |receipt_line|
-        convert_receipt_line!(receipt_line)
+      views = Receiving::ReceiptPostingMatchAdapter.call(receipt: receipt)
+      if views.any?
+        views.each { |view| convert_adapter_view!(view) }
+      elsif receipt.po_backed?
+        receipt.receipt_lines.each { |receipt_line| convert_receipt_line!(receipt_line) }
       end
     end
 
@@ -25,35 +26,53 @@ module DemandAllocations
 
     attr_reader :receipt, :actor
 
-    def convert_receipt_line!(receipt_line)
-      return if receipt_line.quantity_accepted.zero?
-      return if receipt_line.purchase_order_line.blank?
-      return if already_converted?(receipt_line)
+    def convert_adapter_view!(view)
+      return if view.quantity_accepted.zero?
+      return if view.purchase_order_line.blank?
 
-      remaining = receipt_line.quantity_accepted
-      inbound_allocations_for(receipt_line).each do |inbound|
+      receipt_line = view.receipt_line
+      return if already_converted?(receipt_line, view.purchase_order_line)
+
+      remaining = view.quantity_accepted
+      inbound_allocations_for(view.purchase_order_line).each do |inbound|
         break if remaining.zero?
 
         convert_qty = [ remaining, inbound.quantity_allocated ].min
-        convert_allocation!(inbound, receipt_line:, convert_qty:)
+        convert_allocation!(inbound, receipt_line:, convert_qty:, po_line: view.purchase_order_line)
         remaining -= convert_qty
       end
     end
 
-    def already_converted?(receipt_line)
+    def convert_receipt_line!(receipt_line)
+      return if receipt_line.quantity_accepted.zero?
+      return if receipt_line.purchase_order_line.blank?
+      return if already_converted?(receipt_line, receipt_line.purchase_order_line)
+
+      remaining = receipt_line.quantity_accepted
+      inbound_allocations_for(receipt_line.purchase_order_line).each do |inbound|
+        break if remaining.zero?
+
+        convert_qty = [ remaining, inbound.quantity_allocated ].min
+        convert_allocation!(inbound, receipt_line:, convert_qty:, po_line: receipt_line.purchase_order_line)
+        remaining -= convert_qty
+      end
+    end
+
+    def already_converted?(receipt_line, purchase_order_line)
       DemandAllocation.where(conversion_receipt_line_id: receipt_line.id)
                       .where(allocation_kind: "on_hand")
+                      .where(conversion_purchase_order_line_id: purchase_order_line.id)
                       .exists?
     end
 
-    def inbound_allocations_for(receipt_line)
+    def inbound_allocations_for(purchase_order_line)
       DemandAllocation.active_allocations
                       .inbound_kind
-                      .where(purchase_order_line_id: receipt_line.purchase_order_line_id)
+                      .where(purchase_order_line_id: purchase_order_line.id)
                       .order(:allocated_at, :id)
     end
 
-    def convert_allocation!(inbound, receipt_line:, convert_qty:)
+    def convert_allocation!(inbound, receipt_line:, convert_qty:, po_line:)
       DemandLine.transaction do
         demand_line, locked_inbound = MutationSupport.lock_demand_and_allocation!(
           demand_line_id: inbound.demand_line_id,
@@ -63,7 +82,6 @@ module DemandAllocations
 
         now = Time.current
         remainder = locked_inbound.quantity_allocated - convert_qty
-        po_line = receipt_line.purchase_order_line
 
         on_hand = DemandAllocation.create!(
           store: locked_inbound.store,

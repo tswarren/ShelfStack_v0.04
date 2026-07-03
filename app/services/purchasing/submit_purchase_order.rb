@@ -36,6 +36,8 @@ module Purchasing
           auditable: purchase_order,
           details: { "line_count" => purchase_order.purchase_order_lines.size }
         )
+
+        ConvertDemandCoveragePlansToInbound.call!(purchase_order: purchase_order, actor: submitted_by_user)
       end
 
       purchase_order

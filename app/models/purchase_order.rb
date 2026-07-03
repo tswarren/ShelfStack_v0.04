@@ -4,12 +4,15 @@ class PurchaseOrder < ApplicationRecord
   include NestedLineRenumbering
 
   STATUSES = %w[draft submitted partially_received received cancelled closed].freeze
+  ORDER_PURPOSES = %w[stock_order customer_direct_fulfillment mixed].freeze
+  SHIP_TO_TYPES = %w[store customer third_party].freeze
 
   belongs_to :store
   belongs_to :vendor
   belongs_to :submitted_by_user, class_name: "User", optional: true
 
   has_many :purchase_order_lines, -> { order(:line_number) }, dependent: :destroy, inverse_of: :purchase_order
+  has_many :purchase_order_line_demand_plans, dependent: :restrict_with_error
   has_many :receipts, dependent: :restrict_with_error
 
   accepts_nested_attributes_for :purchase_order_lines, allow_destroy: true, reject_if: :reject_blank_purchase_order_line?
@@ -17,8 +20,11 @@ class PurchaseOrder < ApplicationRecord
   before_validation :normalize_line_numbers
 
   validates :status, presence: true, inclusion: { in: STATUSES }
+  validates :order_purpose, presence: true, inclusion: { in: ORDER_PURPOSES }
+  validates :ship_to_type, presence: true, inclusion: { in: SHIP_TO_TYPES }
   validate :store_must_be_active
   validate :vendor_must_be_active
+  validate :reject_mixed_order_purpose
   validate :submitted_fields_locked_when_submitted, on: :update
   validate :cannot_edit_lines_when_submitted, on: :update
 
@@ -37,7 +43,13 @@ class PurchaseOrder < ApplicationRecord
   end
 
   def receivable?
+    return false if customer_direct?
+
     RECEIVABLE_PO_STATUSES.include?(status) && open_lines_for_receiving.any?
+  end
+
+  def customer_direct?
+    ship_to_type == "customer" || order_purpose == "customer_direct_fulfillment"
   end
 
   def open_lines_for_receiving
@@ -52,6 +64,12 @@ class PurchaseOrder < ApplicationRecord
   end
 
   private
+
+  def reject_mixed_order_purpose
+    return unless order_purpose == "mixed"
+
+    errors.add(:order_purpose, "mixed purchase orders are not supported")
+  end
 
   def store_must_be_active
     return if store.blank? || store.active?

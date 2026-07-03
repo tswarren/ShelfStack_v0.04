@@ -57,6 +57,7 @@ module DemandLines
       on_hand_allocated = active_qty_for_kind("on_hand")
       inbound_allocated = active_qty_for_kind("inbound_purchase_order")
       vendor_backorder = active_qty_for_kind("vendor_backorder")
+      planned_on_draft_po = planned_on_draft_po_quantity
 
       Summary.new(
         requested_quantity: demand_line.quantity_requested,
@@ -69,12 +70,13 @@ module DemandLines
         inbound_available: inbound_available,
         inbound_allocated_to_demand: inbound_allocated,
         vendor_backorder_quantity: vendor_backorder,
-        planned_on_draft_po_quantity: 0,
+        planned_on_draft_po_quantity: planned_on_draft_po,
         primary_supply_state: primary_supply_state(
           quantities: quantities,
           on_hand_allocated: on_hand_allocated,
           inbound_allocated: inbound_allocated,
-          vendor_backorder: vendor_backorder
+          vendor_backorder: vendor_backorder,
+          planned_on_draft_po: planned_on_draft_po
         ),
         rows: build_rows(
           quantities: quantities,
@@ -82,7 +84,8 @@ module DemandLines
           balance: balance,
           inbound_available: inbound_available,
           inbound_allocated: inbound_allocated,
-          vendor_backorder: vendor_backorder
+          vendor_backorder: vendor_backorder,
+          planned_on_draft_po: planned_on_draft_po
         )
       )
     end
@@ -110,10 +113,19 @@ module DemandLines
                        .select { |line| DemandAllocations::InboundAvailability.new(purchase_order_line: line).eligible? }
     end
 
-    def primary_supply_state(quantities:, on_hand_allocated:, inbound_allocated:, vendor_backorder:)
+    def planned_on_draft_po_quantity
+      PurchaseOrderLineDemandPlan.active_plans
+                                 .where(demand_line: demand_line, store: store)
+                                 .joins(:purchase_order)
+                                 .where(purchase_orders: { status: "draft" })
+                                 .sum(:quantity_planned)
+    end
+
+    def primary_supply_state(quantities:, on_hand_allocated:, inbound_allocated:, vendor_backorder:, planned_on_draft_po: 0)
       return :fulfilled if quantities[:fulfilled_quantity] >= demand_line.quantity_requested
       return :allocated_on_hand if ready_for_pickup?
       return :vendor_backorder if vendor_backorder.positive? && quantities[:unallocated_quantity].positive?
+      return :planned_on_po_draft if planned_on_draft_po.positive? && quantities[:unallocated_quantity].positive?
       return :allocated_inbound if inbound_allocated.positive?
       return :allocated_on_hand if on_hand_allocated.positive?
 
@@ -126,12 +138,13 @@ module DemandLines
                  .exists?
     end
 
-    def build_rows(quantities:, on_hand_available:, balance:, inbound_available:, inbound_allocated:, vendor_backorder:)
+    def build_rows(quantities:, on_hand_available:, balance:, inbound_available:, inbound_allocated:, vendor_backorder:, planned_on_draft_po: 0)
       [
         Row.new(label: "Requested", value: quantities[:requested_quantity], kind: :quantity),
         Row.new(label: "Fulfilled", value: quantities[:fulfilled_quantity], kind: :quantity),
         Row.new(label: "Active allocated", value: quantities[:active_allocated_quantity], kind: :quantity),
         Row.new(label: "Unallocated", value: quantities[:unallocated_quantity], kind: :quantity),
+        Row.new(label: "Planned on draft PO", value: planned_on_draft_po, kind: :allocation),
         Row.new(label: "On hand available", value: on_hand_available, kind: :availability),
         Row.new(label: "On hand reserved (store)", value: balance&.quantity_reserved.to_i, kind: :availability),
         Row.new(label: "Inbound available", value: inbound_available, kind: :availability),

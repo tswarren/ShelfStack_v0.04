@@ -35,7 +35,11 @@ module Purchasing
       )
 
       record_demand_links!(purchase_order, demand_lines)
-      commit_inbound_allocations_if_eligible!(purchase_order, vendor_plan.line_plans)
+      CreateDemandCoveragePlans.call!(
+        purchase_order: purchase_order,
+        actor: created_by_user,
+        line_plans: vendor_plan.line_plans
+      )
 
       purchase_order
     rescue BuildPurchaseOrder::BuildError => e
@@ -75,32 +79,6 @@ module Purchasing
           "planned_coverage" => purchase_order.draft?
         }
       )
-    end
-
-    def commit_inbound_allocations_if_eligible!(purchase_order, line_plans)
-      return if purchase_order.draft?
-
-      purchase_order.purchase_order_lines.each do |po_line|
-        matching_plans = line_plans.select { |plan| plan.product_variant.id == po_line.product_variant_id }
-        next if matching_plans.empty?
-
-        matching_plans.each do |plan|
-          inbound = DemandAllocations::InboundAvailability.new(purchase_order_line: po_line)
-          next unless inbound.eligible?
-
-          qty = [ plan.total_quantity, inbound.available_for ].min
-          next if qty <= 0
-
-          DemandAllocations::AllocateInboundPurchaseOrder.call!(
-            demand_line: plan.demand_line,
-            actor: created_by_user,
-            purchase_order_line: po_line,
-            quantity: qty
-          )
-        rescue DemandAllocations::AllocateInboundPurchaseOrder::AllocateError
-          next
-        end
-      end
     end
   end
 end

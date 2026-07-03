@@ -83,10 +83,28 @@ module Orders
     def pre_post_allocation_message
       return nil unless receipt.draft?
 
+      preview = demand_impact_preview
+      return preview.message if preview&.message.present?
+
       count = projected_demand_line_count
       return nil if count.zero?
 
       "Will convert inbound demand for #{count} #{'line'.pluralize(count)} on post"
+    end
+
+    def demand_impact_preview
+      return nil unless receipt.draft?
+
+      @demand_impact_preview ||= begin
+        impact = Receiving::ReceiptDemandImpactPreview.call(receipt: receipt)
+        OpenStruct.new(
+          customer_ready: impact.total_customer_ready,
+          shelf: impact.total_shelf,
+          message: if impact.total_customer_ready.positive?
+                     "#{impact.total_customer_ready} #{'copy'.pluralize(impact.total_customer_ready)} customer-ready; #{impact.total_shelf} to shelf stock"
+                   end
+        )
+      end
     end
 
     def customer_allocation_rows

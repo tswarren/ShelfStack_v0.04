@@ -58,6 +58,12 @@ module Purchasing
             "demand_numbers" => demand_lines.map(&:demand_number)
           }
         )
+
+        CreateDemandCoveragePlans.call!(
+          purchase_order: purchase_order,
+          actor: created_by_user,
+          line_plans: vendor_plan.line_plans
+        )
       end
 
       purchase_order.reload

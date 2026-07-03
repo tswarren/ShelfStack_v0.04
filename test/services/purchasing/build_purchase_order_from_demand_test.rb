@@ -36,6 +36,7 @@ class PurchasingBuildPurchaseOrderFromDemandTest < ActiveSupport::TestCase
     assert_equal 1, purchase_order.purchase_order_lines.count
     assert_equal 2, purchase_order.purchase_order_lines.first.quantity_ordered
     assert_equal 0, DemandAllocation.active_allocations.inbound_kind.where(demand_line: @demand).count
+    assert_equal 1, purchase_order.purchase_order_line_demand_plans.active_plans.count
     assert AuditEvent.exists?(event_name: "purchase_order.created_from_demand", auditable: purchase_order)
   end
 
