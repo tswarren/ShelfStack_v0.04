@@ -31,13 +31,13 @@ Implementation happens through ordered v0.04 milestones inside the existing Rail
 **Current priority:**
 
 ```text
-Complete: v0.04-0 through v0.04-10
-Current:  v0.04-11 — documentation and schema cleanup
+Complete: v0.04-0 through v0.04-12
+Current:  Next milestone TBD (v0.04-3 product groups deferred; Phase 10-E or catalog cleanup candidates)
 ```
 
 See [docs/v0.04/README.md](docs/v0.04/README.md) and [docs/roadmap/v0.04-delivery-roadmap.md](docs/roadmap/v0.04-delivery-roadmap.md).
 
-**v0.03 status:** Phases 1–10 are mostly complete (including Phase 10-C POS keyboard workspace and 10-D workflow polish). **Phase 10-E** (app-wide consistency sweep) is **paused** until the v0.04 core stabilizes. Phase **9c** (GL-shaped financial layer) remains deferred.
+**v0.03 status:** Phases 1–10 are mostly complete (including Phase 10-C POS keyboard workspace and 10-D workflow polish). **Phase 10-E** (app-wide consistency sweep) is **eligible to resume** now that v0.04-12 is merged. Phase **9c** (GL-shaped financial layer) remains deferred.
 
 Because ShelfStack is not yet in production, v0.04 may use destructive schema changes where appropriate instead of long-lived compatibility shims.
 

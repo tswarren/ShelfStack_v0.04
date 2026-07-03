@@ -271,7 +271,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development priority is **ShelfStack v0.04 core** — the canonical domain model. The v0.03 phase work forms the **current implementation base**. Phase 10-E is paused until v0.04 stabilizes.
+Development priority is **ShelfStack v0.04 core** — the canonical domain model. The v0.03 phase work forms the **current implementation base**. v0.04-0 through v0.04-12 are **complete**; Phase 10-E is eligible to resume.
 
 Historical phase sections below are reference material for code not yet migrated. If their status labels (e.g. **In review** on some 8.5 branches) conflict with v0.04 priorities, follow the [v0.04 delivery roadmap](docs/roadmap/v0.04-delivery-roadmap.md) and [v0.04 domain rules](#v0.04-domain-rules-active-for-new-work).
 
@@ -404,9 +404,9 @@ See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-co
 
 See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-gl-shaped-financial-layer.md). Not scheduled for the current roadmap cycle. Operational reports in 9b remain authoritative for store reconciliation until 9c is resumed.
 
-## Phase 10: Comprehensive UI/UX Expansion — **Mostly complete** (10-E paused)
+## Phase 10: Comprehensive UI/UX Expansion — **Mostly complete** (10-E eligible to resume)
 
-See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). **10-E (consistency sweep) paused** for ShelfStack v0.04 core.
+See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). **10-E (consistency sweep) eligible to resume** now that v0.04-12 is merged.
 
 ## ShelfStack v0.04 Core — **Active**
 
@@ -432,7 +432,11 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-10 (retire v0.03 ordering UI and reports):** **Complete** — [spec bundle](docs/v0.04/v0.04-10-retire-v0.03-ordering-ui/spec.md) · [completion](docs/implementation/v0.04-10-completion.md).
 
-**Current priority:** **v0.04-12 complete on branch** — merge gate below; next milestone TBD (v0.04-3 product groups deferred). [Completion note](docs/implementation/v0.04-12-completion.md).
+**v0.04-11 (documentation and schema cleanup):** **Complete** — [spec bundle](docs/v0.04/v0.04-11-documentation-schema-cleanup/spec.md) · [completion](docs/implementation/v0.04-11-completion.md).
+
+**v0.04-12 (demand ordering UX):** **Complete** — [spec bundle](docs/v0.04/v0.04-12-demand-ordering-ux/spec.md) · [completion](docs/implementation/v0.04-12-completion.md).
+
+**Current priority:** **v0.04-0 through v0.04-12 complete** — next milestone TBD (v0.04-3 product groups deferred; Phase 10-E or catalog cleanup candidates).
 
 **v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
 

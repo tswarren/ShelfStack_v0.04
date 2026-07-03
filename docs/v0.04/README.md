@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** v0.04-12 **complete on branch** — merge and select next milestone (v0.04-3 product groups deferred).
+**Current priority:** v0.04-0 through v0.04-12 **complete** — select next milestone (v0.04-3 product groups deferred; Phase 10-E or catalog cleanup candidates).
 
 ---
 
@@ -34,7 +34,7 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-9 PO/receiving quantities | **Complete** | [spec](v0.04-9-po-receiving-quantity-model/spec.md) · [data model](v0.04-9-po-receiving-quantity-model/data-model.md) · [test plan](v0.04-9-po-receiving-quantity-model/test-plan.md) · [completion](../implementation/v0.04-9-completion.md) |
 | v0.04-10 Retire v0.03 ordering UI | **Complete** | [spec](v0.04-10-retire-v0.03-ordering-ui/spec.md) · [data model](v0.04-10-retire-v0.03-ordering-ui/data-model.md) · [test plan](v0.04-10-retire-v0.03-ordering-ui/test-plan.md) · [completion](../implementation/v0.04-10-completion.md) |
 | v0.04-11 Doc and schema cleanup | **Complete** | [spec](v0.04-11-documentation-schema-cleanup/spec.md) · [audit log](v0.04-11-documentation-schema-cleanup/data-model.md) · [test plan](v0.04-11-documentation-schema-cleanup/test-plan.md) · [completion](../implementation/v0.04-11-completion.md) |
-| v0.04-12 Demand ordering UX | **Complete** (branch) | [spec](v0.04-12-demand-ordering-ux/spec.md) · [completion](../implementation/v0.04-12-completion.md) |
+| v0.04-12 Demand ordering UX | **Complete** | [spec](v0.04-12-demand-ordering-ux/spec.md) · [data model](v0.04-12-demand-ordering-ux/data-model.md) · [test plan](v0.04-12-demand-ordering-ux/test-plan.md) · [completion](../implementation/v0.04-12-completion.md) |
 
 ---
 

@@ -17,11 +17,11 @@ Navigation hub for ShelfStack docs.
 **Current priority:**
 
 ```text
-Complete: v0.04-0 through v0.04-11
-Current:  v0.04-12 — demand ordering UX **complete on branch** (merge pending)
+Complete: v0.04-0 through v0.04-12
+Current:  Next milestone TBD (v0.04-3 product groups deferred; Phase 10-E or catalog cleanup candidates)
 ```
 
-Phase 10-E (consistency sweep) is **paused** until v0.04-12 stabilizes.
+Phase 10-E (consistency sweep) is **eligible to resume** now that v0.04-12 is merged.
 
 ---
 
@@ -123,11 +123,9 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | Workstream | Status |
 | ---------- | ------ |
 | v0.03 Phases 1–10-D | Complete |
-| **ShelfStack v0.04 core** | **v0.04-0 through v0.04-10 Complete** |
-| **v0.04-11** doc/schema cleanup | **Complete** |
-| **v0.04-12** demand ordering UX | **Complete** (branch) |
+| **ShelfStack v0.04 core** | **v0.04-0 through v0.04-12 Complete** |
 | Phase 9c GL layer | Deferred |
-| Phase 10-E consistency sweep | Paused (after v0.04-12) |
+| Phase 10-E consistency sweep | Eligible to resume |
 
 v0.03 phase links: [roadmap/README.md](roadmap/README.md)
 
