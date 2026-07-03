@@ -26,13 +26,7 @@
             <%= hidden_field_tag :allocation_kind, "on_hand" %>
             <% all_qty = [supply_summary.unallocated_quantity, supply_summary.on_hand_available].min %>
             <%= hidden_field_tag :quantity, all_qty %>
-            <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.override_availability", store: current_store) %>
-              <%= hidden_field_tag :override_availability, "1" %>
-              <%= hidden_field_tag :override_reason, "Allocate all available from workbench" %>
-              <%= submit_tag "Allocate all available (#{all_qty})", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
-            <% else %>
-              <%= submit_tag "Allocate all available (#{all_qty})", class: "ss-btn ss-btn-secondary ss-btn--sm", disabled: true, title: "Override permission required when allocating all" %>
-            <% end %>
+            <%= submit_tag "Allocate all available (#{all_qty})", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
           <% end %>
         <% end %>
         <%= render "on_hand_allocation_form", demand_line: demand_line, available_for_allocation: available_for_allocation %>

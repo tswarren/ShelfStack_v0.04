@@ -61,6 +61,8 @@ module Purchasing
       end
 
       purchase_order.reload
+    rescue ActiveRecord::RecordInvalid => e
+      raise AddError, e.record.errors.full_messages.to_sentence
     end
 
     private

@@ -57,7 +57,7 @@ module DemandLines
       on_hand_allocated = active_qty_for_kind("on_hand")
       inbound_allocated = active_qty_for_kind("inbound_purchase_order")
       vendor_backorder = active_qty_for_kind("vendor_backorder")
-      planned_draft = planned_draft_po_quantity(variant)
+      planned_draft = 0
 
       Summary.new(
         requested_quantity: demand_line.quantity_requested,
@@ -113,21 +113,10 @@ module DemandLines
                        .select { |line| DemandAllocations::InboundAvailability.new(purchase_order_line: line).eligible? }
     end
 
-    def planned_draft_po_quantity(variant)
-      return 0 if variant.blank?
-
-      PurchaseOrderLine.joins(:purchase_order)
-                       .where(purchase_orders: { store_id: store.id, status: "draft" })
-                       .where(product_variant_id: variant.id)
-                       .where.not(status: %w[received cancelled closed_short closed])
-                       .sum(:quantity_ordered)
-    end
-
-    def primary_supply_state(quantities:, on_hand_allocated:, inbound_allocated:, vendor_backorder:, planned_draft:)
+    def primary_supply_state(quantities:, on_hand_allocated:, inbound_allocated:, vendor_backorder:, planned_draft: _planned_draft)
       return :fulfilled if quantities[:fulfilled_quantity] >= demand_line.quantity_requested
       return :allocated_on_hand if ready_for_pickup?
       return :vendor_backorder if vendor_backorder.positive? && quantities[:unallocated_quantity].positive?
-      return :planned_on_po_draft if planned_draft.positive? && inbound_allocated.zero? && quantities[:unallocated_quantity].positive?
       return :allocated_inbound if inbound_allocated.positive?
       return :allocated_on_hand if on_hand_allocated.positive?
 
@@ -150,8 +139,7 @@ module DemandLines
         Row.new(label: "On hand reserved (store)", value: balance&.quantity_reserved.to_i, kind: :availability),
         Row.new(label: "Inbound available", value: inbound_available, kind: :availability),
         Row.new(label: "Inbound allocated", value: inbound_allocated, kind: :allocation),
-        Row.new(label: "Vendor backorder", value: vendor_backorder, kind: :allocation),
-        Row.new(label: "Planned on draft PO", value: planned_draft, kind: :planned)
+        Row.new(label: "Vendor backorder", value: vendor_backorder, kind: :allocation)
       ]
     end
   end

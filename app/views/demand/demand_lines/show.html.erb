@@ -40,7 +40,11 @@
     <h2>Match variant</h2>
     <p class="ss-muted">Search items or scan an ISBN to match this research demand.</p>
     <%= link_to "Search items to match",
-          items_path(demand_lines_match_context: DemandLines::MatchContext.encode(demand_line_id: @demand_line.id)),
+          items_root_path(
+            return_to: DemandLines::MatchContext::RETURN_TO,
+            demand_line_id: @demand_line.id,
+            q: @demand_line.provisional_identifier.presence || @demand_line.provisional_title
+          ),
           class: "ss-btn ss-btn-secondary" %>
   </section>
 <% end %>

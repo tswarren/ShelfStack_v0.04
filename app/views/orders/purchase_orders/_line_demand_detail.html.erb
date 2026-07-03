@@ -10,7 +10,7 @@
       · <%= row.status.humanize %>
     </li>
   <% end %>
-  <% if breakdown.internal_tbo_quantity.positive? %>
-    <li><%= breakdown.internal_tbo_quantity %> for store replenishment</li>
+  <% if breakdown.stock_quantity.positive? %>
+    <li><%= breakdown.stock_quantity %> for store replenishment</li>
   <% end %>
 </ul>

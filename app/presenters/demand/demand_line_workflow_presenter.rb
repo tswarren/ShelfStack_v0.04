@@ -82,12 +82,6 @@ module Demand
         return vendor_backorder_action
       end
 
-      if supply_summary.planned_on_draft_po_quantity.positive? &&
-         supply_summary.inbound_allocated_to_demand.zero? &&
-         supply_summary.unallocated_quantity.positive?
-        return planned_po_action
-      end
-
       if vendor_confirmed_needs_po?
         return create_po_action
       end
@@ -173,22 +167,6 @@ module Demand
         kind: :link,
         primary_label: "Review sourcing",
         primary_path: active_sourcing_run ? sourcing_run_path(active_sourcing_run) : sourcing_root_path,
-        primary_method: nil,
-        primary_params: nil,
-        secondary_label: nil,
-        secondary_path: nil,
-        anchor: nil
-      )
-    end
-
-    def planned_po_action
-      NextAction.new(
-        key: :planned_po,
-        title: "Next action: Planned on order",
-        body: "Draft purchase order covers this variant. Coverage is planned, not committed inbound supply until the PO is submitted.",
-        kind: :link,
-        primary_label: "View purchase orders",
-        primary_path: orders_root_path,
         primary_method: nil,
         primary_params: nil,
         secondary_label: nil,

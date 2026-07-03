@@ -30,7 +30,7 @@ module Sourcing
       else
         []
       end
-      @audit_events = AuditEvent.where(auditable: [@sourcing_run] + @attempts.to_a)
+      @audit_events = AuditEvent.where(auditable: [ @sourcing_run ] + @attempts.to_a)
                                 .or(AuditEvent.where(auditable: @attempts.flat_map(&:vendor_responses)))
                                 .order(occurred_at: :desc)
                                 .limit(50)

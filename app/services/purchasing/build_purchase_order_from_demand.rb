@@ -38,6 +38,10 @@ module Purchasing
       commit_inbound_allocations_if_eligible!(purchase_order, vendor_plan.line_plans)
 
       purchase_order
+    rescue BuildPurchaseOrder::BuildError => e
+      raise BuildError, e.message
+    rescue ActiveRecord::RecordInvalid => e
+      raise BuildError, e.record.errors.full_messages.to_sentence
     end
 
     private

@@ -148,7 +148,7 @@ module Demand
     end
 
     def create_po
-      @plan = Purchasing::DemandCoveragePlanner.call(demand_lines: [@demand_line], store: demand_store)
+      @plan = Purchasing::DemandCoveragePlanner.call(demand_lines: [ @demand_line ], store: demand_store)
       @vendors = Vendor.active_records.order(:name)
     end
 
@@ -157,7 +157,7 @@ module Demand
         store: demand_store,
         vendor: Vendor.find(params[:vendor_id]),
         created_by_user: current_user,
-        demand_line_ids: [@demand_line.id],
+        demand_line_ids: [ @demand_line.id ],
         notes: params[:notes]
       )
       redirect_to orders_purchase_order_path(purchase_order),
@@ -177,7 +177,7 @@ module Demand
       Purchasing::AddDemandToPurchaseOrder.call!(
         purchase_order: purchase_order,
         created_by_user: current_user,
-        demand_line_ids: [@demand_line.id]
+        demand_line_ids: [ @demand_line.id ]
       )
       redirect_to orders_purchase_order_path(purchase_order),
                   notice: "Demand added to draft PO ##{purchase_order.id}."

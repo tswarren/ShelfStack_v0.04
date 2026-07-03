@@ -67,12 +67,16 @@ export default class extends Controller {
     const expires = row.expires_at ? ` · Expires ${new Date(row.expires_at).toLocaleDateString()}` : ""
     const maxQty = row.quantity || 1
     const allocationId = row.demand_allocation_id
+    const sku = this.escapeHtml(row.variant_sku || "")
+    const name = this.escapeHtml(row.variant_name || "")
+    const customerName = this.escapeHtml(row.customer_name || "")
+    const demandNumber = this.escapeHtml(row.demand_number || "")
     return `
       <div class="ss-pos-choice-card ss-pos-pickup-card" data-allocation-id="${allocationId}">
-        <strong class="ss-pos-choice-card__sku">${row.variant_sku}</strong>
-        <span class="ss-pos-choice-card__name">${row.variant_name}</span>
-        <span class="ss-pos-choice-card__meta">Pickup for ${row.customer_name} · ${maxQty} allocated${expires}</span>
-        ${row.demand_number ? `<span class="ss-pos-choice-card__meta">Demand ${row.demand_number}</span>` : ""}
+        <strong class="ss-pos-choice-card__sku">${sku}</strong>
+        <span class="ss-pos-choice-card__name">${name}</span>
+        <span class="ss-pos-choice-card__meta">Pickup for ${customerName} · ${maxQty} allocated${expires}</span>
+        ${row.demand_number ? `<span class="ss-pos-choice-card__meta">Demand ${demandNumber}</span>` : ""}
         <div class="ss-pos-pickup-card__actions">
           <label class="ss-pos-pickup-card__qty">
             <span class="visually-hidden">Pickup quantity</span>
@@ -124,5 +128,14 @@ export default class extends Controller {
 
   get csrfToken() {
     return document.querySelector("meta[name='csrf-token']")?.content
+  }
+
+  escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll("\"", "&quot;")
+      .replaceAll("'", "&#39;")
   }
 }
