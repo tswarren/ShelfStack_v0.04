@@ -212,6 +212,8 @@
   <% end %>
 <% end %>
 
+<%= render "orders/receipts/line_matches" %>
+
 <%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
   <%= render "shared/audit_timeline", audit_events: @audit_events %>
 <% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_130005) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -1489,7 +1489,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_130005) do
     t.index ["purchase_order_line_id", "demand_line_id", "status"], name: "idx_po_line_demand_plans_line_demand_status"
     t.index ["purchase_order_line_id"], name: "idx_on_purchase_order_line_id_d3af70b633"
     t.index ["released_by_user_id"], name: "index_purchase_order_line_demand_plans_on_released_by_user_id"
-    t.index ["store_id", "idempotency_key"], name: "idx_po_line_demand_plans_store_idempotency", unique: true, where: "(idempotency_key IS NOT NULL)"
+    t.index ["store_id", "idempotency_key"], name: "idx_po_line_demand_plans_store_idempotency_active", unique: true, where: "((idempotency_key IS NOT NULL) AND ((status)::text = ANY ((ARRAY['planned'::character varying, 'partially_converted'::character varying])::text[])))"
     t.index ["store_id", "purchase_order_id"], name: "idx_on_store_id_purchase_order_id_1993b19d59"
     t.index ["store_id"], name: "index_purchase_order_line_demand_plans_on_store_id"
   end

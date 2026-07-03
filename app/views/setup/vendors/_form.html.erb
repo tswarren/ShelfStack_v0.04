@@ -34,6 +34,20 @@
       <%= f.select :shipment_notice_method, VendorCapabilities::SHIPMENT_NOTICE_METHODS.map { |v| [v.humanize, v] } %>
     <% end %>
   </div>
+  <details class="ss-form-advanced">
+    <summary>Advanced / future integration channels</summary>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :acknowledgment_method, label: "Acknowledgment method" } do %>
+        <%= f.select :acknowledgment_method, VendorCapabilities::ACKNOWLEDGMENT_METHODS.map { |v| [v.humanize, v] } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :invoice_method, label: "Invoice method" } do %>
+        <%= f.select :invoice_method, VendorCapabilities::INVOICE_METHODS.map { |v| [v.humanize, v] } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :technical_acknowledgment_method, label: "Technical acknowledgment" } do %>
+        <%= f.select :technical_acknowledgment_method, VendorCapabilities::TECHNICAL_ACKNOWLEDGMENT_METHODS.map { |v| [v.humanize, v] } %>
+      <% end %>
+    </div>
+  </details>
   <fieldset>
     <legend>Fulfillment methods supported</legend>
     <% VendorCapabilities::FULFILLMENT_METHODS.each do |method| %>

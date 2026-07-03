@@ -75,7 +75,7 @@
             <%= flags.any? ? flags.join(" · ") : "—" %>
           </td>
         </tr>
-        <% if breakdown&.allocation_rows&.any? %>
+        <% if breakdown&.plan_rows&.any? || breakdown&.allocation_rows&.any? %>
           <tr class="ss-table-detail">
             <td colspan="11">
               <%= render "orders/purchase_orders/line_demand_detail", breakdown: breakdown %>

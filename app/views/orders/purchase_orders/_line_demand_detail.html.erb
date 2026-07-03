@@ -1,16 +1,39 @@
 <ul class="ss-detail-list">
-  <% breakdown.allocation_rows.each do |row| %>
-    <li>
-      <%= row.quantity_open %> open / <%= row.quantity_allocated %> allocated for
-      <%= row.customer_name %>
-      <% if row.demand_number.present? && row.demand_line_id.present? %>
-        · <%= link_to "Demand #{row.demand_number}", demand_demand_line_path(row.demand_line_id) %>
+  <% if breakdown.coverage_mode == :planned %>
+    <% breakdown.plan_rows.each do |row| %>
+      <li>
+        <%= row.quantity_planned %> planned for
+        <%= row.customer_name %>
+        <% if row.demand_number.present? && row.demand_line_id.present? %>
+          · <%= link_to "Demand #{row.demand_number}", demand_demand_line_path(row.demand_line_id) %>
+        <% end %>
+        · <%= row.coverage_kind.humanize %>
+        · <%= row.status.humanize %>
+      </li>
+    <% end %>
+    <% if breakdown.stock_quantity.positive? && breakdown.plan_rows.none? { |row| row.coverage_kind == "shelf_replenishment" } %>
+      <li><%= breakdown.stock_quantity %> unassigned / store stock</li>
+    <% elsif breakdown.plan_rows.any? { |row| row.coverage_kind == "shelf_replenishment" } %>
+      <% shelf_only = breakdown.plan_rows.select { |row| row.coverage_kind == "shelf_replenishment" }.sum(&:quantity_planned) %>
+      <% unassigned = breakdown.stock_quantity - shelf_only %>
+      <% if unassigned.positive? %>
+        <li><%= unassigned %> unassigned / store stock</li>
       <% end %>
-      · <%= demand_allocation_kind_label(row.allocation_kind) %>
-      · <%= row.status.humanize %>
-    </li>
-  <% end %>
-  <% if breakdown.stock_quantity.positive? %>
-    <li><%= breakdown.stock_quantity %> for store replenishment</li>
+    <% end %>
+  <% else %>
+    <% breakdown.allocation_rows.each do |row| %>
+      <li>
+        <%= row.quantity_open %> open / <%= row.quantity_allocated %> allocated for
+        <%= row.customer_name %>
+        <% if row.demand_number.present? && row.demand_line_id.present? %>
+          · <%= link_to "Demand #{row.demand_number}", demand_demand_line_path(row.demand_line_id) %>
+        <% end %>
+        · <%= demand_allocation_kind_label(row.allocation_kind) %>
+        · <%= row.status.humanize %>
+      </li>
+    <% end %>
+    <% if breakdown.stock_quantity.positive? %>
+      <li><%= breakdown.stock_quantity %> for store replenishment</li>
+    <% end %>
   <% end %>
 </ul>

@@ -25,9 +25,11 @@ class PurchaseOrderLineDemandPlan < ApplicationRecord
   validates :coverage_kind, inclusion: { in: COVERAGE_KINDS }
   validates :status, inclusion: { in: STATUSES }
   validate :consistency_across_records
-  validate :draft_purchase_order_only, on: :create
+  validate :draft_purchase_order_only, on: :create, unless: :internal_split
 
   scope :active_plans, -> { where(status: ACTIVE_STATUSES) }
+
+  attr_accessor :internal_split
 
   def active?
     ACTIVE_STATUSES.include?(status)

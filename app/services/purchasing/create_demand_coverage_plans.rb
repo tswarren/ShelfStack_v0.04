@@ -24,9 +24,15 @@ module Purchasing
           qty = plan_quantity_for(plan)
           next if qty <= 0
 
-          idempotency_key = "po:#{purchase_order.id}:line:#{po_line.id}:demand:#{plan.demand_line.id}"
+          idempotency_key = idempotency_key_for(purchase_order, po_line, plan.demand_line)
           existing = PurchaseOrderLineDemandPlan.find_by(store: purchase_order.store, idempotency_key: idempotency_key)
           if existing&.active?
+            created << existing
+            next
+          end
+
+          if existing.present?
+            revive_plan!(existing, qty, plan, po_line)
             created << existing
             next
           end
@@ -45,18 +51,7 @@ module Purchasing
             created_by_user: actor,
             idempotency_key: idempotency_key
           )
-          AuditEvents.record!(
-            actor: actor,
-            event_name: "purchase_order_line_demand_plan.created",
-            auditable: record,
-            details: {
-              "purchase_order_id" => purchase_order.id,
-              "demand_line_id" => plan.demand_line.id,
-              "quantity_planned" => qty,
-              "coverage_kind" => record.coverage_kind,
-              "fulfillment_route" => record.fulfillment_route
-            }
-          )
+          audit_created!(record, qty)
           created << record
         end
       end
@@ -67,6 +62,45 @@ module Purchasing
     private
 
     attr_reader :purchase_order, :actor, :line_plans
+
+    def idempotency_key_for(purchase_order, po_line, demand_line)
+      "po:#{purchase_order.id}:line:#{po_line.id}:demand:#{demand_line.id}"
+    end
+
+    def revive_plan!(existing, qty, plan, po_line)
+      existing.update!(
+        purchase_order_line: po_line,
+        demand_line: plan.demand_line,
+        product: plan.demand_line.product,
+        product_variant: plan.product_variant,
+        quantity_planned: qty,
+        fulfillment_route: fulfillment_route_for(plan),
+        coverage_kind: coverage_kind_for(plan),
+        status: "planned",
+        released_at: nil,
+        released_by_user: nil,
+        release_reason: nil,
+        converted_at: nil,
+        converted_by_user: nil,
+        converted_to_demand_allocation_id: nil
+      )
+      audit_created!(existing, qty)
+    end
+
+    def audit_created!(record, qty)
+      AuditEvents.record!(
+        actor: actor,
+        event_name: "purchase_order_line_demand_plan.created",
+        auditable: record,
+        details: {
+          "purchase_order_id" => purchase_order.id,
+          "demand_line_id" => record.demand_line_id,
+          "quantity_planned" => qty,
+          "coverage_kind" => record.coverage_kind,
+          "fulfillment_route" => record.fulfillment_route
+        }
+      )
+    end
 
     def plan_quantity_for(plan)
       plan.total_quantity

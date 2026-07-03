@@ -23,9 +23,10 @@ module Shelfstack
       receipt_origin_fields: { from: "slice_f", check: :receipt_origin_fields_present? },
       shipment_first_receiving: { from: "slice_f", check: :shipment_first_receiving_present? },
       receipt_line_matches_table: { from: "slice_g", check: :receipt_line_matches_table_present? },
-      post_receipt_accepted_qty_only: { from: "slice_g", check: :post_receipt_accepted_qty_regression? },
+      post_receipt_accepted_qty_only: { from: "slice_g", check: :post_receipt_match_validation_present? },
       no_legacy_ordering_writes: { from: "slice_0", check: :no_legacy_ordering_reintroduced? },
       idempotency_services: { from: "slice_e", check: :idempotency_services_present? },
+      golden_path_test_present: { from: "final", check: :golden_path_test_present? },
       audit_events_registered: { from: "final", check: :mvp_audit_events_registered? }
     }.freeze
 
@@ -99,7 +100,8 @@ module Shelfstack
     def planned_coverage_services_present?
       defined?(Purchasing::CreateDemandCoveragePlans) &&
         defined?(Purchasing::ReleaseDemandCoveragePlan) &&
-        defined?(Purchasing::PurchaseOrderLineDemandPlanSummary)
+        defined?(Purchasing::PurchaseOrderLineDemandPlanSummary) &&
+        File.read(Rails.root.join("app/services/purchasing/purchase_order_line_demand_breakdown.rb")).include?("coverage_mode")
     end
 
     def po_destination_fields_present?
@@ -125,13 +127,22 @@ module Shelfstack
     end
 
     def shipment_first_receiving_present?
-      defined?(Receiving::CreateVendorShipmentReceipt) ||
-        defined?(Orders::ReceiptsController)
+      defined?(Receiving::CreateVendorShipmentReceipt) &&
+        defined?(Orders::ReceiptLineMatchesController)
     end
 
     def receipt_line_matches_table_present?
       ReceiptLineMatch.table_exists? &&
         defined?(Receiving::ReceiptPostingMatchAdapter)
+    end
+
+    def post_receipt_match_validation_present?
+      defined?(Receiving::ValidateReceiptLineMatches) &&
+        File.read(Rails.root.join("app/services/purchasing/post_receipt.rb")).include?("ValidateReceiptLineMatches.call!")
+    end
+
+    def golden_path_test_present?
+      File.exist?(Rails.root.join("test/integration/v00413_store_stock_ordering_workflow_test.rb"))
     end
 
     def post_receipt_accepted_qty_regression?

@@ -1,0 +1,42 @@
+<% if @receipt.draft? %>
+  <%= render "orders/shared/collapsible_panel", title: "PO line matches" do %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+      <div class="ss-detail-actions">
+        <%= button_to "Suggest matches", apply_suggested_matches_orders_receipt_path(@receipt), method: :post, class: "ss-btn ss-btn-secondary" %>
+      </div>
+    <% end %>
+
+    <% if @receipt_line_matches.any? %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Receipt line</th>
+            <th>PO line</th>
+            <th class="ss-num">Matched</th>
+            <th>Status</th>
+            <th>Source</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @receipt_line_matches.each do |match| %>
+            <tr>
+              <td><%= match.receipt_line.line_number %></td>
+              <td>#<%= match.purchase_order_line.line_number %> (PO <%= match.purchase_order_id %>)</td>
+              <td class="ss-num"><%= match.quantity_matched %></td>
+              <td><%= match.match_status.humanize %></td>
+              <td><%= match.match_source.humanize %></td>
+              <td>
+                <% if match.confirmed? && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+                  <%= button_to "Release", orders_receipt_receipt_line_match_path(@receipt, match), method: :delete, class: "ss-btn ss-btn-secondary" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="ss-hint">No PO line matches confirmed yet. Use suggest matches after entering accepted quantities.</p>
+    <% end %>
+  <% end %>
+<% end %>

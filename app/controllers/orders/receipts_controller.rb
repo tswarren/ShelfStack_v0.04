@@ -21,6 +21,7 @@ module Orders
         receipt: @receipt,
         document_hub: @document_hub
       )
+      @receipt_line_matches = @receipt.receipt_line_matches.includes(:receipt_line, :purchase_order_line, :purchase_order).order(:id)
       @audit_events = AuditEvent.for_auditable(@receipt).limit(50)
     end
 
@@ -122,7 +123,8 @@ module Orders
             :purchase_order_line,
             :receiving_discrepancies,
             { purchase_order_line: :demand_allocations }
-          ]
+          ],
+          receipt_line_matches: [ :receipt_line, :purchase_order_line, :purchase_order ]
         )
       elsif %w[edit new].include?(action_name)
         relation = relation.includes(

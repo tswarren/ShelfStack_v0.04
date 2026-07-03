@@ -72,7 +72,28 @@ module Sourcing
             "sourcing_run_id" => locked_attempt.sourcing_run_id,
             "sourcing_attempt_id" => locked_attempt.id,
             "vendor_id" => locked_attempt.vendor_id,
-            "quantity_requested" => locked_attempt.quantity_requested
+            "quantity_requested" => locked_attempt.quantity_requested,
+            "capability_snapshot" => {
+              "availability_workflow" => capability.availability_workflow,
+              "availability_source" => capability.availability_source,
+              "order_submission_method" => capability.order_submission_method,
+              "acknowledgment_method" => capability.acknowledgment_method,
+              "shipment_notice_method" => capability.shipment_notice_method,
+              "invoice_method" => capability.invoice_method,
+              "technical_acknowledgment_method" => capability.technical_acknowledgment_method,
+              "fulfillment_methods_supported" => capability.fulfillment_methods_supported,
+              "capability_source" => capability.capability_source
+            }
+          }
+        )
+
+        AuditEvents.record!(
+          actor: actor,
+          event_name: "sourcing_attempt.capability_snapshotted",
+          auditable: locked_attempt,
+          details: {
+            "vendor_id" => locked_attempt.vendor_id,
+            "capability_source" => capability.capability_source
           }
         )
       end

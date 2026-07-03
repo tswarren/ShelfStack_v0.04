@@ -448,7 +448,9 @@ Rails.application.routes.draw do
       member do
         patch :post, action: :post
         patch :cancel
+        post :apply_suggested_matches, to: "receipt_line_matches#apply_suggestions"
       end
+      resources :receipt_line_matches, only: %i[create destroy]
     end
     resources :returns_to_vendor do
       member do

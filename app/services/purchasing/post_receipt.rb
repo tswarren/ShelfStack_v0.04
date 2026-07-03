@@ -19,7 +19,11 @@ module Purchasing
       raise PostingError, "Receipt is not a draft" unless receipt.draft?
       raise PostingError, "Receipt has no lines" if receipt.receipt_lines.empty?
 
-      Purchasing::CustomerDirectPurchaseOrderGate.assert_postable_receipt!(receipt)
+      begin
+        Purchasing::CustomerDirectPurchaseOrderGate.assert_postable_receipt!(receipt)
+      rescue Purchasing::CustomerDirectPurchaseOrderGate::GateError => e
+        raise PostingError, e.message
+      end
 
       receipt.receipt_lines.each do |line|
         next if line.quantity_accepted.zero?
@@ -30,6 +34,7 @@ module Purchasing
       posting = nil
       Receipt.transaction do
         normalize_accepted_quantities!
+        Receiving::ValidateReceiptLineMatches.call!(receipt: receipt)
         record_discrepancies!
 
         postable_lines = receipt.receipt_lines.select { |line| line.quantity_accepted.positive? }
@@ -83,6 +88,8 @@ module Purchasing
       end
 
       posting
+    rescue Receiving::ValidateReceiptLineMatches::ValidationError => e
+      raise PostingError, e.message
     end
 
     private

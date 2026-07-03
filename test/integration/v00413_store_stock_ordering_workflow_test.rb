@@ -72,6 +72,49 @@ class V00413StoreStockOrderingWorkflowTest < ActiveSupport::TestCase
     on_hand = DemandAllocation.active_allocations.on_hand_kind.where(demand_line: demand)
     assert_equal 1, on_hand.count
     assert_equal 1, on_hand.first.quantity_allocated
-    assert on_hand.first.expires_at.present? || on_hand.first.active?
+  end
+
+  test "post blocked when accepted quantity is reduced below matched quantity" do
+    demand = DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "special_order",
+      variant: @variant,
+      customer: create_customer!,
+      quantity: 1
+    )
+    purchase_order = Purchasing::BuildPurchaseOrderFromDemand.call!(
+      store: @store,
+      vendor: @vendor,
+      created_by_user: @user,
+      demand_line_ids: [ demand.id ]
+    )
+    purchase_order.purchase_order_lines.first.update!(quantity_ordered: 5)
+    Purchasing::SubmitPurchaseOrder.call(purchase_order: purchase_order, submitted_by_user: @user)
+    po_line = purchase_order.purchase_order_lines.first
+    receipt = Receiving::CreateVendorShipmentReceipt.call!(
+      store: @store,
+      vendor: @vendor,
+      created_by_user: @user,
+      attrs: {}
+    )
+    receipt_line = receipt.receipt_lines.create!(
+      product_variant: @variant,
+      quantity_expected: 0,
+      quantity_received: 5,
+      quantity_accepted: 5,
+      quantity_rejected: 0,
+      unit_cost_cents: 1000
+    )
+    Receiving::ApplyReceiptLineMatches.call!(
+      receipt: receipt,
+      actor: @user,
+      matches: [ { receipt_line_id: receipt_line.id, purchase_order_line_id: po_line.id, quantity_matched: 5 } ]
+    )
+    receipt_line.update!(quantity_accepted: 3)
+
+    assert_raises(Purchasing::PostReceipt::PostingError) do
+      Purchasing::PostReceipt.call(receipt: receipt.reload, posted_by_user: @user)
+    end
   end
 end

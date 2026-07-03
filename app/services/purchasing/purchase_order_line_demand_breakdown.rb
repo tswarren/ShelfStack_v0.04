@@ -13,11 +13,24 @@ module Purchasing
       :status
     )
 
+    PlanRow = Data.define(
+      :plan,
+      :customer_name,
+      :demand_number,
+      :demand_line_id,
+      :quantity_planned,
+      :coverage_kind,
+      :fulfillment_route,
+      :status
+    )
+
     LineBreakdown = Data.define(
       :line,
       :demand_allocated_quantity,
       :stock_quantity,
-      :allocation_rows
+      :allocation_rows,
+      :plan_rows,
+      :coverage_mode
     )
 
     def self.for(purchase_order)
@@ -41,6 +54,32 @@ module Purchasing
     attr_reader :purchase_order
 
     def breakdown_for(line)
+      if purchase_order.draft?
+        planned_breakdown(line)
+      else
+        allocation_breakdown(line)
+      end
+    end
+
+    def planned_breakdown(line)
+      rows = plan_rows_for(line)
+      customer_qty = rows.select { |row| row.coverage_kind == "customer_fulfillment" }.sum(&:quantity_planned)
+      shelf_planned = rows.select { |row| row.coverage_kind == "shelf_replenishment" }.sum(&:quantity_planned)
+      other_planned = rows.reject { |row| %w[customer_fulfillment shelf_replenishment].include?(row.coverage_kind) }.sum(&:quantity_planned)
+      total_planned = customer_qty + shelf_planned + other_planned
+      unassigned = [ line.quantity_ordered - total_planned, 0 ].max
+
+      LineBreakdown.new(
+        line: line,
+        demand_allocated_quantity: customer_qty,
+        stock_quantity: shelf_planned + unassigned,
+        allocation_rows: [],
+        plan_rows: rows,
+        coverage_mode: :planned
+      )
+    end
+
+    def allocation_breakdown(line)
       rows = allocation_rows_for(line)
       demand_allocated = rows.sum(&:quantity_open)
 
@@ -48,8 +87,30 @@ module Purchasing
         line: line,
         demand_allocated_quantity: demand_allocated,
         stock_quantity: [ line.quantity_ordered - demand_allocated, 0 ].max,
-        allocation_rows: rows
+        allocation_rows: rows,
+        plan_rows: [],
+        coverage_mode: :allocated
       )
+    end
+
+    def plan_rows_for(line)
+      line.purchase_order_line_demand_plans
+          .active_plans
+          .includes(demand_line: :customer)
+          .order(:id)
+          .map do |plan|
+        demand_line = plan.demand_line
+        PlanRow.new(
+          plan: plan,
+          customer_name: demand_line.display_customer_name,
+          demand_number: demand_line.demand_number,
+          demand_line_id: demand_line.id,
+          quantity_planned: plan.quantity_planned,
+          coverage_kind: plan.coverage_kind,
+          fulfillment_route: plan.fulfillment_route,
+          status: plan.status
+        )
+      end
     end
 
     def allocation_rows_for(line)
