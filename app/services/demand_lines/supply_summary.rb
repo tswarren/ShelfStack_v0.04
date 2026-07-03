@@ -57,7 +57,6 @@ module DemandLines
       on_hand_allocated = active_qty_for_kind("on_hand")
       inbound_allocated = active_qty_for_kind("inbound_purchase_order")
       vendor_backorder = active_qty_for_kind("vendor_backorder")
-      planned_draft = 0
 
       Summary.new(
         requested_quantity: demand_line.quantity_requested,
@@ -70,13 +69,12 @@ module DemandLines
         inbound_available: inbound_available,
         inbound_allocated_to_demand: inbound_allocated,
         vendor_backorder_quantity: vendor_backorder,
-        planned_on_draft_po_quantity: planned_draft,
+        planned_on_draft_po_quantity: 0,
         primary_supply_state: primary_supply_state(
           quantities: quantities,
           on_hand_allocated: on_hand_allocated,
           inbound_allocated: inbound_allocated,
-          vendor_backorder: vendor_backorder,
-          planned_draft: planned_draft
+          vendor_backorder: vendor_backorder
         ),
         rows: build_rows(
           quantities: quantities,
@@ -84,8 +82,7 @@ module DemandLines
           balance: balance,
           inbound_available: inbound_available,
           inbound_allocated: inbound_allocated,
-          vendor_backorder: vendor_backorder,
-          planned_draft: planned_draft
+          vendor_backorder: vendor_backorder
         )
       )
     end
@@ -113,7 +110,7 @@ module DemandLines
                        .select { |line| DemandAllocations::InboundAvailability.new(purchase_order_line: line).eligible? }
     end
 
-    def primary_supply_state(quantities:, on_hand_allocated:, inbound_allocated:, vendor_backorder:, planned_draft: _planned_draft)
+    def primary_supply_state(quantities:, on_hand_allocated:, inbound_allocated:, vendor_backorder:)
       return :fulfilled if quantities[:fulfilled_quantity] >= demand_line.quantity_requested
       return :allocated_on_hand if ready_for_pickup?
       return :vendor_backorder if vendor_backorder.positive? && quantities[:unallocated_quantity].positive?
@@ -129,7 +126,7 @@ module DemandLines
                  .exists?
     end
 
-    def build_rows(quantities:, on_hand_available:, balance:, inbound_available:, inbound_allocated:, vendor_backorder:, planned_draft:)
+    def build_rows(quantities:, on_hand_available:, balance:, inbound_available:, inbound_allocated:, vendor_backorder:)
       [
         Row.new(label: "Requested", value: quantities[:requested_quantity], kind: :quantity),
         Row.new(label: "Fulfilled", value: quantities[:fulfilled_quantity], kind: :quantity),
