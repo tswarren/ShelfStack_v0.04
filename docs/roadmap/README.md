@@ -11,6 +11,7 @@
 | [../design/VERSION_0.04.md](../design/VERSION_0.04.md) | Core domain model |
 | [v0.04-delivery-roadmap.md](v0.04-delivery-roadmap.md) | Implementation milestones |
 | [v0.04-14-product-catalog-cleanup.md](v0.04-14-product-catalog-cleanup.md) | Proposed product-native item layout and legacy catalog quarantine |
+| [v0.04-14-product-catalog-wireframes.md](v0.04-14-product-catalog-wireframes.md) | Low-fidelity wireframes for the proposed product/catalog cleanup |
 | [../v0.04/README.md](../v0.04/README.md) | Milestone spec bundles |
 
 Phase 10-E is **paused** until the v0.04 core stabilizes.
@@ -65,6 +66,7 @@ Completion records: [../implementation/](../implementation/)
 | Item | Document |
 | ---- | -------- |
 | v0.04-14 Product/catalog cleanup planning | [v0.04-14-product-catalog-cleanup.md](v0.04-14-product-catalog-cleanup.md) |
+| v0.04-14 Product/catalog wireframes | [v0.04-14-product-catalog-wireframes.md](v0.04-14-product-catalog-wireframes.md) |
 | 9c GL-shaped financial layer | [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md) |
 | 10-E Consistency sweep | [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md) |
 
