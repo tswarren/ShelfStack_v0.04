@@ -77,4 +77,33 @@ class ReceivingValidateReceiptLineMatchesTest < ActiveSupport::TestCase
 
     assert_match(/exceeds accepted quantity/i, error.message)
   end
+
+  test "blocks post when match references PO from another vendor" do
+    other_vendor = create_vendor!(name: "Other Vendor")
+    other_po = create_purchase_order!(
+      store: @store,
+      vendor: other_vendor,
+      attrs: { status: "submitted", submitted_at: Time.current },
+      lines: [
+        create_purchase_order_line_attrs(
+          variant: @variant,
+          vendor: other_vendor,
+          quantity_ordered: 5,
+          quantity_received: 0
+        )
+      ]
+    )
+    match = @receipt.receipt_line_matches.confirmed_matches.first
+    other_po_line = other_po.purchase_order_lines.first
+    match.update_columns(
+      purchase_order_id: other_po.id,
+      purchase_order_line_id: other_po_line.id
+    )
+
+    error = assert_raises(Receiving::ValidateReceiptLineMatches::ValidationError) do
+      Receiving::ValidateReceiptLineMatches.call!(receipt: @receipt.reload)
+    end
+
+    assert_match(/same store and vendor/i, error.message)
+  end
 end

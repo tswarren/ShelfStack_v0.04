@@ -199,7 +199,7 @@ module Orders
     end
 
     def create_vendor_shipment!
-      vendor = Vendor.find(params[:vendor_id])
+      vendor = Vendor.active_records.find(params[:vendor_id])
       @receipt = Receiving::CreateVendorShipmentReceipt.call!(
         store: orders_store,
         vendor: vendor,

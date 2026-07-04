@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md) and [data-model.md](data-model.md).
+**Complete in PR 18** — MVP store-stock path implemented; readiness slices remain deferred. Companion to [spec.md](spec.md) and [data-model.md](data-model.md).
 
 ### Milestone tiers
 
@@ -74,7 +74,7 @@ Per-PR: run prior verifiers + `V00413_SLICE=<slice>` for current slice.
 7. Customer-direct PO / `vendor_direct_to_customer` plan **gated** — not receivable via store receipt; no inbound allocation; no inventory post
 8. `vendor_direct_fulfillment` present in allocation kind enum (schema gate)
 9. Receipt origin fields present
-10. Shipment-first receiving does not require header PO
+10. Shipment-first receiving does not require header PO (optional PO filter scopes candidates only)
 11. `receipt_line_matches` supports multi-PO shipment
 12. Receipt posting posts only accepted quantity (v0.04-9 regression)
 13. No writes to retired v0.03 ordering/allocation tables

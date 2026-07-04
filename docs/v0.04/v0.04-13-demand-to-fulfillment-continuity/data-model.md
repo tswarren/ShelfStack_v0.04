@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`), v0.04-7 (`demand_allocations`), v0.04-8 (sourcing), v0.04-9 (PO/receiving quantities), v0.04-12 (demand ordering UX).
+**Complete in PR 18** — MVP store-stock path implemented; readiness slices remain deferred. Companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`), v0.04-7 (`demand_allocations`), v0.04-8 (sourcing), v0.04-9 (PO/receiving quantities), v0.04-12 (demand ordering UX).
 
 ---
 
@@ -175,7 +175,7 @@ suppress_price_on_packing_slip
 * `[purchase_order_line_id, demand_line_id, status]` — active plan lookup
 * `[demand_line_id, status]`
 * `[store_id, purchase_order_id]`
-* unique partial: `[store_id, idempotency_key]` where `idempotency_key IS NOT NULL`
+* unique partial: `[store_id, idempotency_key]` where `idempotency_key IS NOT NULL AND status IN ('planned', 'partially_converted')` (active plans only; converted history may share lineage keys)
 
 **Rules:**
 
@@ -291,6 +291,13 @@ other
 | `vendor_invoice_number` | string | yes | |
 | `tracking_number` | string | yes | |
 | `received_at` | datetime | yes | |
+| `match_filter_purchase_order_id` | FK purchase_orders | yes | Optional candidate-scope filter for vendor-shipment receiving; not a header PO link |
+
+**`match_filter_purchase_order_id` rules:**
+
+* Must match receipt store and vendor.
+* Must reference a receivable PO (`PurchaseOrder::RECEIVABLE_PO_STATUSES`).
+* Does not set header `purchase_order_id` and does not make the receipt `po_backed`.
 
 **`origin_method`:** `manual`, `purchase_order`, `vendor_shipment_notice`, `file_import`, `edi_x12`, `api`
 
@@ -349,9 +356,9 @@ Validation: reject creating/posting store receipt when linked PO has `ship_to_ty
 
 **Indexes:**
 
-* `[receipt_line_id, match_status]`
-* `[purchase_order_line_id, match_status]`
-* `[receipt_id]`
+* `[receipt_line_id, purchase_order_line_id, match_status]`
+* `[receipt_id, match_status]`
+* unique partial: `[store_id, idempotency_key]` where `idempotency_key IS NOT NULL`
 
 Sum of `quantity_matched` for active matches on a receipt line must not exceed line `quantity_accepted` at post time.
 

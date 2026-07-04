@@ -19,6 +19,7 @@ class ReceiptLineMatch < ApplicationRecord
   validates :match_status, inclusion: { in: MATCH_STATUSES }
   validates :match_source, inclusion: { in: MATCH_SOURCES }
   validate :consistency_across_records
+  validate :purchase_order_matches_receipt_context
 
   scope :confirmed_matches, -> { where(match_status: CONFIRMED_STATUSES) }
 
@@ -36,5 +37,15 @@ class ReceiptLineMatch < ApplicationRecord
     if purchase_order_line.present? && product_variant_id != purchase_order_line.product_variant_id
       errors.add(:product_variant, "must match purchase order line variant")
     end
+  end
+
+  def purchase_order_matches_receipt_context
+    return if receipt.blank? || purchase_order_line.blank?
+
+    Receiving::ReceiptPoLineMatchConstraints.add_incompatibility_errors(
+      receipt: receipt,
+      po_line: purchase_order_line,
+      errors: errors
+    )
   end
 end

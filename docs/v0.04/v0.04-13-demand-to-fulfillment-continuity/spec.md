@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planned** — begins after v0.04-12 merge.
+**Complete in PR 18** — MVP store-stock path implemented; readiness slices remain deferred.
 
 Companion documents:
 
@@ -10,7 +10,7 @@ Companion documents:
 * [test-plan.md](test-plan.md) — slice acceptance, integration tests, merge gate
 * `docs/implementation/v0.04-13-completion.md` (created at milestone close)
 
-Source draft: [docs/drafts_temp/v0.04.13_draft.md](../../drafts_temp/v0.04.13_draft.md) (superseded by this bundle for implementation).
+Historical note: early design scratch lived in local `docs/drafts_temp/` (gitignored); this bundle is the authoritative spec.
 
 ---
 
@@ -597,7 +597,7 @@ receiving_mode:
   adjustment_review
 ```
 
-`vendor_shipment`: matching across multiple POs allowed; header PO optional.
+`vendor_shipment`: matching across multiple POs allowed; optional PO filter for candidate scoping (`match_filter_purchase_order_id`) — does not set `receipt.purchase_order_id` and does not make the receipt `po_backed`.
 
 `single_po`: preserve simple PO show → receive shortcut.
 
@@ -731,7 +731,7 @@ Customer-direct PO: ship-to snapshot form (**readiness**); no “Receive” acti
 Orders → Receipts → New vendor shipment
 ```
 
-Vendor, packing slip, invoice, shipment reference, received at, optional header PO, line scan/search, match panel with demand priority, unmatched qty, pre-post demand impact, post confirmation.
+Vendor, packing slip, invoice, shipment reference, received at, optional PO filter (candidate scoping only), line scan/search, match panel with demand priority, unmatched qty, pre-post demand impact, post confirmation.
 
 ---
 
@@ -894,7 +894,7 @@ v0.04-13 **MVP** is complete when:
 5. Planned coverage does not affect inventory or availability.
 6. `inbound_to_store` plans convert to inbound allocations only when eligible (Slice E).
 7. Customer-direct POs and plans are **gated** — no store receiving, no inbound allocation, no inventory post.
-8. Receiving starts from vendor shipment; header PO is optional.
+8. Receiving starts from vendor shipment; optional PO filter scopes match candidates only (not a header PO link).
 9. Consolidated shipments match across multiple POs via `receipt_line_matches`.
 10. Receiving suggestions prioritize customer demand.
 11. Demand impact preview shows customer-ready vs shelf stock.

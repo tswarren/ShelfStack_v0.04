@@ -25,12 +25,13 @@ module Receiving
 
           existing = ReceiptLineMatch.find_by(store: receipt.store, idempotency_key: idempotency_key)
           if existing&.confirmed?
+            assert_idempotency_key_matches!(existing, match_attrs)
             applied << existing
             next
           end
 
           receipt_line = receipt.receipt_lines.find(match_attrs[:receipt_line_id])
-          po_line = PurchaseOrderLine.find(match_attrs[:purchase_order_line_id])
+          po_line = scoped_po_line_for(match_attrs[:purchase_order_line_id])
           qty = match_attrs[:quantity_matched].to_i
           validate_match!(receipt_line, po_line, qty)
 
@@ -75,12 +76,35 @@ module Receiving
         raise ApplyError, "Variant mismatch between receipt line and PO line"
       end
 
+      ReceiptPoLineMatchConstraints.assert_compatible!(
+        receipt: receipt,
+        po_line: po_line,
+        error_class: ApplyError
+      )
+
       confirmed_total = ReceiptLineMatch.confirmed_matches.where(receipt_line: receipt_line).sum(:quantity_matched)
       if confirmed_total + qty > receipt_line.quantity_accepted
         raise ApplyError, "Matched quantity exceeds accepted quantity on receipt line"
       end
 
       Purchasing::CustomerDirectPurchaseOrderGate.assert_receivable!(po_line.purchase_order)
+    end
+
+    def scoped_po_line_for(purchase_order_line_id)
+      po_line = PurchaseOrderLine.joins(:purchase_order)
+                                 .where(purchase_orders: { store_id: receipt.store_id, vendor_id: receipt.vendor_id })
+                                 .find_by(id: purchase_order_line_id)
+      raise ApplyError, ReceiptPoLineMatchConstraints::STORE_VENDOR_MISMATCH unless po_line
+
+      po_line
+    end
+
+    def assert_idempotency_key_matches!(existing, match_attrs)
+      return if existing.receipt_id == receipt.id &&
+                existing.receipt_line_id.to_s == match_attrs[:receipt_line_id].to_s &&
+                existing.purchase_order_line_id.to_s == match_attrs[:purchase_order_line_id].to_s
+
+      raise ApplyError, "Idempotency key belongs to a different receipt match"
     end
 
     def reconfirm_match!(existing, receipt_line:, po_line:, qty:, match_attrs:, idempotency_key:)

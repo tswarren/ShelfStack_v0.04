@@ -91,4 +91,73 @@ class ReceivingApplyReceiptLineMatchesReconfirmTest < ActiveSupport::TestCase
       assert applied.first.confirmed?
     end
   end
+
+  test "rejects PO line from another vendor" do
+    other_vendor = create_vendor!(name: "Other Vendor")
+    other_po = create_purchase_order!(
+      store: @store,
+      vendor: other_vendor,
+      attrs: { status: "submitted", submitted_at: Time.current },
+      lines: [
+        create_purchase_order_line_attrs(
+          variant: @variant,
+          vendor: other_vendor,
+          quantity_ordered: 3,
+          quantity_received: 0
+        )
+      ]
+    )
+    other_po_line = other_po.purchase_order_lines.first
+
+    error = assert_raises(Receiving::ApplyReceiptLineMatches::ApplyError) do
+      Receiving::ApplyReceiptLineMatches.call!(
+        receipt: @receipt,
+        actor: @user,
+        matches: [
+          @match_attrs.merge(purchase_order_line_id: other_po_line.id)
+        ]
+      )
+    end
+
+    assert_match(/same store and vendor/i, error.message)
+  end
+
+  test "rejects custom idempotency key reused for a different receipt match" do
+    Receiving::ApplyReceiptLineMatches.call!(
+      receipt: @receipt,
+      actor: @user,
+      matches: [ @match_attrs.merge(idempotency_key: "custom-key-1") ]
+    )
+
+    other_po_line = create_purchase_order!(
+      store: @store,
+      vendor: @vendor,
+      attrs: { status: "submitted", submitted_at: Time.current },
+      lines: [
+        create_purchase_order_line_attrs(
+          variant: @variant,
+          vendor: @vendor,
+          quantity_ordered: 1,
+          quantity_received: 0
+        )
+      ]
+    ).purchase_order_lines.first
+
+    error = assert_raises(Receiving::ApplyReceiptLineMatches::ApplyError) do
+      Receiving::ApplyReceiptLineMatches.call!(
+        receipt: @receipt.reload,
+        actor: @user,
+        matches: [
+          {
+            receipt_line_id: @receipt_line.id,
+            purchase_order_line_id: other_po_line.id,
+            quantity_matched: 1,
+            idempotency_key: "custom-key-1"
+          }
+        ]
+      )
+    end
+
+    assert_match(/different receipt match/i, error.message)
+  end
 end

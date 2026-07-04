@@ -42,6 +42,12 @@ module Receiving
               "Line #{line.line_number}: match variant does not match receipt line variant"
       end
 
+      ReceiptPoLineMatchConstraints.assert_compatible!(
+        receipt: receipt,
+        po_line: match.purchase_order_line,
+        error_class: ValidationError
+      )
+
       Purchasing::CustomerDirectPurchaseOrderGate.assert_receivable!(match.purchase_order)
 
       po_line = match.purchase_order_line
@@ -71,6 +77,12 @@ module Receiving
           raise ValidationError,
                 "Line #{line.line_number}: PO line variant does not match receipt line variant"
         end
+
+        ReceiptPoLineMatchConstraints.assert_compatible!(
+          receipt: receipt,
+          po_line: po_line,
+          error_class: ValidationError
+        )
 
         Purchasing::CustomerDirectPurchaseOrderGate.assert_receivable!(po_line.purchase_order)
 

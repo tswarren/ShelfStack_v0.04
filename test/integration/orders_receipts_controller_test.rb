@@ -179,4 +179,18 @@ class OrdersReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_match "must belong to the same vendor", response.body
   end
+
+  test "vendor shipment rejects inactive vendor" do
+    @vendor.update_columns(active: false)
+
+    assert_no_difference -> { Receipt.count } do
+      post orders_receipts_path, params: {
+        receiving_mode: "vendor_shipment",
+        vendor_id: @vendor.id
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "Vendor not found", response.body
+  end
 end
