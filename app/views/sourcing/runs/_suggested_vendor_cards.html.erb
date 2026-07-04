@@ -1,22 +1,37 @@
-<%# locals: suggested_vendors, run_unresolved, sourcing_run %>
+<%# locals: suggested_vendors, run_unresolved, sourcing_run, eligible_po_lines, draft_purchase_orders_by_vendor %>
 <h2>Suggested vendors</h2>
 <div class="ss-card-grid">
   <% suggested_vendors.each do |candidate| %>
+    <% card = Sourcing::VendorCardPresenter.new(candidate: candidate, sourcing_run: sourcing_run, store: current_store, run_unresolved: run_unresolved) %>
     <article class="ss-card">
-      <h3><%= candidate.vendor.name %></h3>
-      <p class="ss-muted">Source: <%= candidate.source_level.to_s.humanize %></p>
-      <% if candidate.warnings.any? %>
+      <h3><%= card.vendor.name %></h3>
+      <dl class="ss-summary-compact">
+        <dt>Workflow</dt><dd><%= card.capability.availability_workflow.humanize %></dd>
+        <dt>Availability source</dt><dd><%= card.capability.availability_source.humanize %></dd>
+        <dt>Fulfillment</dt><dd><%= card.fulfillment_methods_label %></dd>
+        <dt>Default discount</dt><dd><%= card.discount_hint %></dd>
+        <dt>Source</dt><dd><%= card.source_record_hint %></dd>
+      </dl>
+      <% if card.warnings.any? %>
         <ul class="ss-hint ss-hint-warning">
-          <% candidate.warnings.each do |warning| %>
+          <% card.warnings.each do |warning| %>
             <li><%= warning %></li>
           <% end %>
         </ul>
       <% end %>
+      <% if card.draft_purchase_orders.any? %>
+        <p class="ss-muted">Open draft: <%= card.draft_purchase_orders.map { |po| link_to("PO ##{po.id}", orders_purchase_order_path(po)) }.join(", ").html_safe %></p>
+      <% end %>
       <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.create", store: current_store) && sourcing_run.active? %>
-        <%= form_with url: sourcing_run_attempts_path(sourcing_run), method: :post, class: "ss-form" do %>
-          <%= hidden_field_tag :vendor_id, candidate.vendor.id %>
+        <%= form_with url: sourcing_run_attempts_path(sourcing_run), method: :post, class: "ss-form ss-form--inline" do %>
+          <%= hidden_field_tag :vendor_id, card.vendor.id %>
           <%= hidden_field_tag :quantity, [run_unresolved, 1].max %>
           <%= submit_tag "Create attempt", class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+        <% end %>
+        <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) && card.draft_purchase_orders.any? %>
+          <%= link_to "Add to draft PO ##{card.draft_purchase_orders.first.id}",
+                orders_purchase_order_path(card.draft_purchase_orders.first),
+                class: "ss-btn-link" %>
         <% end %>
       <% end %>
     </article>

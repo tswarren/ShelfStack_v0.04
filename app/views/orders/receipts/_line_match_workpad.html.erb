@@ -1,0 +1,111 @@
+<% return unless receipt.draft? %>
+<% return if receipt.po_backed? && receipt.purchase_order_id.present? %>
+
+<%= render "orders/shared/collapsible_panel", title: "PO line matching" do %>
+  <p class="ss-hint">
+    Match each receipt line to open purchase order lines before posting.
+    Customer-planned PO lines are suggested first.
+  </p>
+
+  <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+    <div class="ss-detail-actions">
+      <%= button_to "Suggest matches",
+            apply_suggested_matches_orders_receipt_path(receipt, return_to: "edit"),
+            method: :post,
+            class: "ss-btn ss-btn-secondary" %>
+    </div>
+  <% end %>
+
+  <% receipt.receipt_lines.select { |line| line.quantity_accepted.to_i.positive? }.each do |line| %>
+    <% candidates = match_candidates_by_line[line.id] || [] %>
+    <% line_matches = receipt_line_matches.select { |match| match.receipt_line_id == line.id } %>
+    <h3>Line <%= line.line_number %> · <%= line.product_variant.sku %></h3>
+    <% confirmed_on_line = line_matches.select(&:confirmed?).sum(&:quantity_matched) %>
+    <% unmatched_accepted = [ line.quantity_accepted.to_i - confirmed_on_line, 0 ].max %>
+    <p class="ss-muted">
+      <%= line.quantity_accepted %> accepted ·
+      <%= confirmed_on_line %> matched ·
+      <strong><%= unmatched_accepted %> unmatched</strong>
+    </p>
+    <% if line_matches.any? %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>PO</th>
+            <th>PO line</th>
+            <th class="ss-num">Matched</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% line_matches.each do |match| %>
+            <tr>
+              <td>#<%= match.purchase_order_id %></td>
+              <td>#<%= match.purchase_order_line.line_number %></td>
+              <td class="ss-num"><%= match.quantity_matched %></td>
+              <td><%= match.match_status.humanize %></td>
+              <td>
+                <% if match.confirmed? && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+                  <%= button_to "Release",
+                        orders_receipt_receipt_line_match_path(receipt, match, return_to: "edit"),
+                        method: :delete,
+                        class: "ss-btn ss-btn-secondary" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+
+    <% if candidates.any? %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>PO</th>
+            <th>PO line</th>
+            <th class="ss-num">Open to receive</th>
+            <th class="ss-num">Customer planned</th>
+            <th class="ss-num">Shelf planned</th>
+            <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+              <th colspan="2">Confirm match</th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% confirmed_on_line = line_matches.select(&:confirmed?).sum(&:quantity_matched) %>
+          <% remaining_to_match = [ line.quantity_accepted.to_i - confirmed_on_line, 0 ].max %>
+          <% candidates.each do |candidate| %>
+            <% suggested_qty = [ candidate.open_to_receive_quantity, remaining_to_match ].min %>
+            <tr>
+              <td>#<%= candidate.purchase_order.id %></td>
+              <td>#<%= candidate.purchase_order_line.line_number %></td>
+              <td class="ss-num"><%= candidate.open_to_receive_quantity %></td>
+              <td class="ss-num"><%= candidate.customer_planned_quantity %></td>
+              <td class="ss-num"><%= candidate.shelf_planned_quantity %></td>
+              <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+                <td colspan="2">
+                  <% if suggested_qty.positive? %>
+                    <%= form_with url: orders_receipt_receipt_line_matches_path(receipt), method: :post, class: "ss-inline-form ss-form-inline-actions" do %>
+                      <%= hidden_field_tag "return_to", "edit" %>
+                      <%= hidden_field_tag "matches[][receipt_line_id]", line.id %>
+                      <%= hidden_field_tag "matches[][purchase_order_line_id]", candidate.purchase_order_line.id %>
+                      <%= hidden_field_tag "matches[][match_source]", "manual" %>
+                      <%= number_field_tag "matches[][quantity_matched]", suggested_qty, min: 1, max: suggested_qty, class: "ss-input ss-input--num" %>
+                      <%= submit_tag "Confirm match", class: "ss-btn ss-btn-secondary" %>
+                    <% end %>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% elsif line_matches.empty? %>
+      <p class="ss-hint">No open PO lines found for this variant. Save accepted quantities, then suggest matches.</p>
+    <% end %>
+  <% end %>
+<% end %>

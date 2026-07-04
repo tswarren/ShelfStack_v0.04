@@ -5,10 +5,14 @@ module Purchasing
     Totals = Data.define(:expected, :received, :accepted, :rejected)
     PoLineMatch = Data.define(
       :receipt_line,
+      :purchase_order,
       :purchase_order_line,
       :ordered,
       :received_on_po,
-      :open_on_po
+      :open_on_po,
+      :quantity_matched,
+      :match_status,
+      :match_source
     )
     DiscrepancyRow = Data.define(:receipt_line, :discrepancy_type, :quantity_delta, :sku)
 
@@ -58,22 +62,40 @@ module Purchasing
     end
 
     def po_line_matches
-      receipt.receipt_lines.map do |receipt_line|
-        po_line = receipt_line.purchase_order_line
-        ordered = po_line&.quantity_ordered
-        received_on_po = po_line&.quantity_received
-        open_on_po = if po_line.present? && receipt.purchase_order.present?
-          receipt.purchase_order.open_quantity_for_line(po_line)
-        end
+      receipt.receipt_lines.flat_map { |receipt_line| rows_for(receipt_line) }
+    end
 
-        PoLineMatch.new(
-          receipt_line: receipt_line,
-          purchase_order_line: po_line,
-          ordered: ordered,
-          received_on_po: received_on_po,
-          open_on_po: open_on_po
-        )
+    def rows_for(receipt_line)
+      confirmed = ReceiptLineMatch.confirmed_matches
+                                  .where(receipt_line: receipt_line)
+                                  .includes(purchase_order_line: :purchase_order, purchase_order: [])
+
+      if confirmed.any?
+        confirmed.map { |match| po_line_match_row(receipt_line, match.purchase_order_line, match) }
+      elsif receipt_line.purchase_order_line.present?
+        [ po_line_match_row(receipt_line, receipt_line.purchase_order_line, nil) ]
+      else
+        [ po_line_match_row(receipt_line, nil, nil) ]
       end
+    end
+
+    def po_line_match_row(receipt_line, po_line, match)
+      po = po_line&.purchase_order || match&.purchase_order
+      open_on_po = if po_line.present? && po.present?
+        po.open_quantity_for_line(po_line)
+      end
+
+      PoLineMatch.new(
+        receipt_line: receipt_line,
+        purchase_order: po,
+        purchase_order_line: po_line,
+        ordered: po_line&.quantity_ordered,
+        received_on_po: po_line&.quantity_received,
+        open_on_po: open_on_po,
+        quantity_matched: match&.quantity_matched,
+        match_status: match&.match_status,
+        match_source: match&.match_source
+      )
     end
 
     def discrepancies

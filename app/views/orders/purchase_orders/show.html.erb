@@ -24,6 +24,16 @@
 <%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
 <%= render "orders/shared/attention_panel", items: presenter.attention_items %>
 
+<% if presenter.show_submit_impact? %>
+  <%= render "orders/shared/collapsible_panel", title: "Submit impact", open: true do %>
+    <p class="ss-hint"><%= presenter.submit_impact_preview.message %></p>
+    <dl class="ss-summary-compact">
+      <dt>Customer inbound</dt><dd class="ss-num"><%= presenter.submit_impact_preview.customer_inbound_copies %></dd>
+      <dt>Shelf / remaining planned</dt><dd class="ss-num"><%= presenter.submit_impact_preview.shelf_inbound_copies + presenter.submit_impact_preview.remaining_planned_copies %></dd>
+    </dl>
+  <% end %>
+<% end %>
+
 <%= render layout: "orders/shared/document_layout" do %>
   <h2>Lines</h2>
   <table class="ss-table">
@@ -35,8 +45,8 @@
         <th class="ss-num">Requested</th>
         <th class="ss-num">Accepted to stock</th>
         <th class="ss-num">Open to receive</th>
-        <th class="ss-num">Customer</th>
-        <th class="ss-num">Stock</th>
+        <th class="ss-num"><%= @purchase_order.draft? ? "Planned customer" : "Customer" %></th>
+        <th class="ss-num"><%= @purchase_order.draft? ? "Planned stock" : "Stock" %></th>
         <th class="ss-num">Cost</th>
         <th>Status</th>
         <th>Flags</th>
@@ -75,7 +85,7 @@
             <%= flags.any? ? flags.join(" · ") : "—" %>
           </td>
         </tr>
-        <% if breakdown&.allocation_rows&.any? %>
+        <% if breakdown&.plan_rows&.any? || breakdown&.allocation_rows&.any? %>
           <tr class="ss-table-detail">
             <td colspan="11">
               <%= render "orders/purchase_orders/line_demand_detail", breakdown: breakdown %>

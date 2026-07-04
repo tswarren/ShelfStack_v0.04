@@ -11,27 +11,41 @@ module Purchasing
     end
 
     def call
-      return unless receipt.po_backed?
+      views = Receiving::ReceiptPostingMatchAdapter.call(receipt: receipt)
+      return if views.empty?
+      return unless po_backed_receipt?
 
       PurchaseOrder.transaction do
-        receipt.receipt_lines.each do |receipt_line|
-          next if receipt_line.purchase_order_line.blank?
+        views.each do |view|
+          next if view.purchase_order_line.blank?
 
-          po_line = receipt_line.purchase_order_line
+          po_line = view.purchase_order_line
           po_line.receiving_update = true
-          po_line.quantity_received += receipt_line.quantity_accepted
+          po_line.quantity_received += view.quantity_accepted
           po_line.status = PoLineStatusDeriver.derive(po_line)
           po_line.save!
         end
 
-        purchase_order = receipt.purchase_order
-        purchase_order.update!(status: header_status_for(purchase_order)) if purchase_order
+        purchase_orders_for(receipt).each do |purchase_order|
+          purchase_order.update!(status: header_status_for(purchase_order))
+        end
       end
     end
 
     private
 
     attr_reader :receipt
+
+    def po_backed_receipt?
+      receipt.po_backed? || Receiving::ReceiptPostingMatchAdapter.call(receipt: receipt).any?
+    end
+
+    def purchase_orders_for(receipt)
+      ids = Receiving::ReceiptPostingMatchAdapter.call(receipt: receipt)
+                                                   .filter_map { |view| view.purchase_order_line&.purchase_order_id }
+      ids << receipt.purchase_order_id if receipt.purchase_order_id.present?
+      PurchaseOrder.where(id: ids.compact.uniq)
+    end
 
     def header_status_for(purchase_order)
       lines = purchase_order.purchase_order_lines.reload

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Vendor < ApplicationRecord
+  include VendorCapabilities
+
   belongs_to :parent_vendor, class_name: "Vendor", optional: true
   has_many :child_vendors, class_name: "Vendor", foreign_key: :parent_vendor_id, dependent: :restrict_with_error,
            inverse_of: :parent_vendor

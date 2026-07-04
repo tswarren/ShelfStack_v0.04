@@ -101,4 +101,96 @@ class OrdersReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, @line.quantity_rejected
     assert_equal "damaged", @line.exception_reason
   end
+
+  test "vendor shipment receipt edit renders match workpad when line has accepted quantity" do
+    receipt = Receiving::CreateVendorShipmentReceipt.call!(
+      store: @store,
+      vendor: @vendor,
+      attrs: {}
+    )
+    receipt.receipt_lines.create!(
+      product_variant: @variant,
+      quantity_expected: 0,
+      quantity_received: 2,
+      quantity_accepted: 2,
+      quantity_rejected: 0
+    )
+
+    get edit_orders_receipt_path(receipt)
+
+    assert_response :success
+    assert_match "PO line matching", response.body
+    assert_match "2 accepted", response.body
+  end
+
+  test "vendor shipment optional PO filter scopes match candidates without header PO" do
+    purchase_order = PurchaseOrder.create!(
+      store: @store,
+      vendor: @vendor,
+      status: "submitted",
+      submitted_at: Time.current
+    )
+    purchase_order.purchase_order_lines.create!(
+      product_variant: @variant,
+      vendor: @vendor,
+      quantity_ordered: 5,
+      quantity_received: 0,
+      status: "open"
+    )
+    other_vendor = create_vendor!(name: "Other Vendor")
+    other_po = PurchaseOrder.create!(
+      store: @store,
+      vendor: other_vendor,
+      status: "submitted",
+      submitted_at: Time.current
+    )
+
+    post orders_receipts_path, params: {
+      receiving_mode: "vendor_shipment",
+      vendor_id: @vendor.id,
+      match_filter_purchase_order_id: purchase_order.id
+    }
+
+    receipt = Receipt.order(:id).last
+    assert_redirected_to edit_orders_receipt_path(receipt)
+    assert_equal "vendor_shipment", receipt.receiving_mode
+    assert_nil receipt.purchase_order_id
+    assert_equal purchase_order.id, receipt.match_filter_purchase_order_id
+    assert_not_equal other_po.id, receipt.match_filter_purchase_order_id
+  end
+
+  test "vendor shipment rejects PO filter from a different vendor" do
+    other_vendor = create_vendor!(name: "Other Vendor")
+    other_po = PurchaseOrder.create!(
+      store: @store,
+      vendor: other_vendor,
+      status: "submitted",
+      submitted_at: Time.current
+    )
+
+    assert_no_difference -> { Receipt.count } do
+      post orders_receipts_path, params: {
+        receiving_mode: "vendor_shipment",
+        vendor_id: @vendor.id,
+        match_filter_purchase_order_id: other_po.id
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "must belong to the same vendor", response.body
+  end
+
+  test "vendor shipment rejects inactive vendor" do
+    @vendor.update_columns(active: false)
+
+    assert_no_difference -> { Receipt.count } do
+      post orders_receipts_path, params: {
+        receiving_mode: "vendor_shipment",
+        vendor_id: @vendor.id
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "Vendor not found", response.body
+  end
 end

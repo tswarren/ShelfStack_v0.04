@@ -1,0 +1,97 @@
+<%= render "setup/shared/back_link", path: orders_buyer_workbench_path, label: "Buyer workbench" %>
+
+<h1>Create purchase orders from demand</h1>
+
+<p class="ss-muted">Draft PO creation records planned demand coverage. Inbound allocations are created only after submit.</p>
+
+<%= form_with url: orders_demand_po_builder_path, method: :post, class: "ss-form" do %>
+  <% @demand_lines.each do |demand_line| %>
+    <%= hidden_field_tag "demand_line_ids[]", demand_line.id %>
+  <% end %>
+
+  <h2>Selected demand</h2>
+  <table class="ss-table">
+    <thead>
+      <tr>
+        <th>Demand</th>
+        <th>Variant</th>
+        <th>Customer</th>
+        <th class="ss-num">Customer qty</th>
+        <th class="ss-num">Shelf qty</th>
+        <th class="ss-num">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @presenter.plan.line_plans.each do |plan| %>
+        <tr>
+          <td><%= plan.demand_line.demand_number %></td>
+          <td><%= plan.product_variant.sku %></td>
+          <td><%= plan.demand_line.display_customer_name %></td>
+          <td class="ss-num"><%= plan.customer_quantity %></td>
+          <td class="ss-num"><%= plan.store_quantity %></td>
+          <td class="ss-num"><%= plan.total_quantity %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <h2>Group by vendor</h2>
+  <% @presenter.vendor_groups.each do |group| %>
+    <% vendor = group.vendor_plan.vendor %>
+    <section class="ss-card">
+      <h3><%= vendor.name %></h3>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="ss-num">Customer</th>
+            <th class="ss-num">Shelf</th>
+            <th class="ss-num">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% group.vendor_plan.line_plans.each do |plan| %>
+            <tr>
+              <td><%= plan.product_variant.sku %></td>
+              <td class="ss-num"><%= plan.customer_quantity %></td>
+              <td class="ss-num"><%= plan.store_quantity %></td>
+              <td class="ss-num"><%= plan.total_quantity %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+      <fieldset>
+        <legend>Draft PO target</legend>
+        <label>
+          <%= radio_button_tag "vendor_groups[#{vendor.id}][mode]", "create_new", @presenter.mode != "add_existing", id: "vendor_#{vendor.id}_create_new" %>
+          Create new draft PO
+        </label>
+        <% if group.draft_purchase_orders.any? %>
+          <label>
+            <%= radio_button_tag "vendor_groups[#{vendor.id}][mode]", "add_existing", @presenter.mode == "add_existing", id: "vendor_#{vendor.id}_add_existing" %>
+            Add to existing draft PO
+          </label>
+          <%= select_tag "vendor_groups[#{vendor.id}][purchase_order_id]",
+                options_from_collection_for_select(group.draft_purchase_orders, :id, :id),
+                include_blank: "Select draft PO",
+                class: "ss-input" %>
+        <% end %>
+      </fieldset>
+    </section>
+  <% end %>
+
+  <h2>Review</h2>
+  <dl class="ss-summary-compact">
+    <dt>Planned customer coverage</dt><dd class="ss-num"><%= @presenter.total_customer_planned %></dd>
+    <dt>Planned shelf replenishment</dt><dd class="ss-num"><%= @presenter.total_shelf_planned %></dd>
+    <dt>Vendor groups</dt><dd class="ss-num"><%= @presenter.vendor_groups.size %></dd>
+  </dl>
+
+  <div class="ss-field">
+    <%= label_tag :notes, "PO notes (new POs only)", class: "ss-label" %>
+    <%= text_area_tag :notes, nil, rows: 2, class: "ss-input" %>
+  </div>
+
+  <%= submit_tag "Create / update draft POs", class: "ss-btn" %>
+<% end %>

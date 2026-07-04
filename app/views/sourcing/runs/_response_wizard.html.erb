@@ -1,0 +1,69 @@
+<%# locals: attempt, eligible_po_lines, draft_purchase_orders, suggested_vendors %>
+<details class="ss-panel" open>
+  <summary><h4 class="ss-inline-heading">Record vendor response</h4></summary>
+  <%= form_with url: sourcing_attempt_vendor_responses_path(attempt), method: :post, class: "ss-form" do %>
+    <p class="ss-muted">Requested: <%= attempt.quantity_requested %></p>
+    <div class="ss-field-row">
+      <%= label_tag :quantity_confirmed, "Confirmed", class: "ss-label" %>
+      <%= number_field_tag :quantity_confirmed, 0, min: 0, class: "ss-input" %>
+      <%= label_tag :quantity_backordered, "Backordered", class: "ss-label" %>
+      <%= number_field_tag :quantity_backordered, 0, min: 0, class: "ss-input" %>
+      <%= label_tag :quantity_unavailable, "Unavailable", class: "ss-label" %>
+      <%= number_field_tag :quantity_unavailable, 0, min: 0, class: "ss-input" %>
+      <%= label_tag :quantity_canceled, "Canceled", class: "ss-label" %>
+      <%= number_field_tag :quantity_canceled, 0, min: 0, class: "ss-input" %>
+    </div>
+
+    <fieldset>
+      <legend>PO link</legend>
+      <label>
+        <%= radio_button_tag :po_link_mode, "record_only", true %> Record only (no PO link)
+      </label>
+      <% if draft_purchase_orders.any? %>
+        <label>
+          <%= radio_button_tag :po_link_mode, "existing_draft" %> Link to existing draft PO line
+        </label>
+        <%= select_tag :purchase_order_line_id,
+              options_for_select(
+                eligible_po_lines.select { |line| draft_purchase_orders.map(&:id).include?(line.purchase_order_id) }
+                  .map { |line| ["PO ##{line.purchase_order.id} line #{line.line_number} — #{line.vendor.name}", line.id] }
+              ),
+              include_blank: "Select PO line",
+              class: "ss-input" %>
+      <% end %>
+      <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) %>
+        <label>
+          <%= radio_button_tag :po_link_mode, "create_draft" %> Create new draft PO (via demand builder after save)
+        </label>
+      <% end %>
+    </fieldset>
+
+    <div class="ss-field">
+      <%= label_tag :accept_backorder, class: "ss-label" do %>
+        <%= check_box_tag :accept_backorder, "1", false %> Accept backorder allocation
+      <% end %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :final_response, class: "ss-label" do %>
+        <%= check_box_tag :final_response, "1", true %> Final response
+      <% end %>
+    </div>
+
+    <div class="ss-detail-actions">
+      <%= submit_tag "Save response", class: "ss-btn" %>
+    </div>
+  <% end %>
+</details>
+<% cascade_eligible = Sourcing::CascadeEligibleQuantity.for_attempt(attempt) %>
+<% if cascade_eligible.positive? && Authorization.allowed?(user: current_user, permission_key: "sourcing.attempts.cascade", store: current_store) %>
+  <% next_vendor = suggested_vendors.first %>
+  <%= button_to "Save and cascade",
+        cascade_sourcing_attempt_path(attempt),
+        method: :post,
+        params: {
+          vendor_id: next_vendor&.vendor&.id,
+          quantity: cascade_eligible,
+          cascade_reason: "partial_response"
+        },
+        class: "ss-btn ss-btn-secondary" %>
+<% end %>

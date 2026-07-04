@@ -1,0 +1,74 @@
+<%# locals: post_result %>
+<section class="ss-panel" id="receipt-post-checklist">
+  <h2>Post summary</h2>
+  <p>Inventory increased by <strong class="ss-num"><%= post_result.inventory_increase %></strong>.</p>
+
+  <% if post_result.customer_ready_rows.any? %>
+    <h3>Customer-ready</h3>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Item</th>
+          <th>Demand</th>
+          <th>Needed by</th>
+          <th class="ss-num">Qty</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% post_result.customer_ready_rows.each do |row| %>
+          <tr>
+            <td><%= row[:customer_name] %></td>
+            <td><%= render "orders/shared/variant_identity", variant: row[:variant] %></td>
+            <td><%= link_to row[:demand_number], demand_demand_line_path(row[:demand_line]) %></td>
+            <td><%= row[:needed_by] || "—" %></td>
+            <td class="ss-num"><%= row[:quantity] %></td>
+            <td>
+              <% if row[:demand_line].customer.present? %>
+                <%= link_to "Open customer", customers_customer_path(row[:demand_line].customer), class: "ss-btn-link" %>
+              <% end %>
+              <button type="button" class="ss-btn ss-btn-secondary ss-btn--sm" disabled title="Hold slip printing deferred to v0.05">Hold slip</button>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <% if post_result.shelf_rows.any? %>
+    <h3>To shelf stock</h3>
+    <table class="ss-table">
+      <thead>
+        <tr><th>Item</th><th class="ss-num">Qty</th></tr>
+      </thead>
+      <tbody>
+        <% post_result.shelf_rows.each do |row| %>
+          <tr>
+            <td><%= render "orders/shared/variant_identity", variant: row[:variant] %></td>
+            <td class="ss-num"><%= row[:quantity] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <% if post_result.show_short_section? %>
+    <h3>Still short / backordered</h3>
+    <table class="ss-table">
+      <thead>
+        <tr><th>Demand</th><th>Item</th><th class="ss-num">Short</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <% post_result.short_rows.each do |row| %>
+          <tr>
+            <td><%= link_to row.demand_line.demand_number, demand_demand_line_path(row.demand_line) %></td>
+            <td><%= render "orders/shared/variant_identity", variant: row.variant %></td>
+            <td class="ss-num"><%= row.quantity %></td>
+            <td><%= row.reason %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</section>

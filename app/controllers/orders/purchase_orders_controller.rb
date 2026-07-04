@@ -111,12 +111,15 @@ module Orders
     end
 
     def receive
+      Purchasing::CustomerDirectPurchaseOrderGate.assert_receivable!(@purchase_order)
       receipt = Purchasing::BuildReceiptFromPurchaseOrder.call(
         purchase_order: @purchase_order,
         created_by_user: current_user
       )
       redirect_to edit_orders_receipt_path(receipt), notice: "Draft receipt created from purchase order."
     rescue Purchasing::BuildReceiptFromPurchaseOrder::BuildError => e
+      redirect_to orders_purchase_order_path(@purchase_order), alert: e.message
+    rescue Purchasing::CustomerDirectPurchaseOrderGate::GateError => e
       redirect_to orders_purchase_order_path(@purchase_order), alert: e.message
     end
 
@@ -130,6 +133,7 @@ module Orders
           purchase_order_lines: [
             :product_variant,
             :demand_allocations,
+            :purchase_order_line_demand_plans,
             { receipt_lines: [ :receipt, :receiving_discrepancies ] }
           ]
         )

@@ -28,6 +28,13 @@ module Sourcing
           suggestion: resolve_suggestion(locked_attempt),
           manual_override: locked_attempt.manual_vendor_override?
         )
+        capability = Vendors::CapabilityResolver.call(
+          vendor: locked_attempt.vendor,
+          product: locked_attempt.product,
+          product_variant: locked_attempt.product_variant,
+          product_vendor: snapshot.product_vendor_id ? ProductVendor.find_by(id: snapshot.product_vendor_id) : nil,
+          product_variant_vendor: snapshot.product_variant_vendor_id ? ProductVariantVendor.find_by(id: snapshot.product_variant_vendor_id) : nil
+        )
         now = Time.current
 
         locked_attempt.update!(
@@ -44,7 +51,16 @@ module Sourcing
           estimated_unit_cost_cents_snapshot: snapshot.estimated_unit_cost_cents_snapshot,
           returnability_snapshot: snapshot.returnability_snapshot,
           product_variant_vendor_id: snapshot.product_variant_vendor_id || locked_attempt.product_variant_vendor_id,
-          product_vendor_id: snapshot.product_vendor_id || locked_attempt.product_vendor_id
+          product_vendor_id: snapshot.product_vendor_id || locked_attempt.product_vendor_id,
+          availability_workflow_snapshot: capability.availability_workflow,
+          availability_source_snapshot: capability.availability_source,
+          order_submission_method_snapshot: capability.order_submission_method,
+          acknowledgment_method_snapshot: capability.acknowledgment_method,
+          shipment_notice_method_snapshot: capability.shipment_notice_method,
+          invoice_method_snapshot: capability.invoice_method,
+          technical_acknowledgment_method_snapshot: capability.technical_acknowledgment_method,
+          fulfillment_methods_supported_snapshot: capability.fulfillment_methods_supported,
+          vendor_capability_source_snapshot: capability.capability_source
         )
 
         AuditEvents.record!(
@@ -56,7 +72,28 @@ module Sourcing
             "sourcing_run_id" => locked_attempt.sourcing_run_id,
             "sourcing_attempt_id" => locked_attempt.id,
             "vendor_id" => locked_attempt.vendor_id,
-            "quantity_requested" => locked_attempt.quantity_requested
+            "quantity_requested" => locked_attempt.quantity_requested,
+            "capability_snapshot" => {
+              "availability_workflow" => capability.availability_workflow,
+              "availability_source" => capability.availability_source,
+              "order_submission_method" => capability.order_submission_method,
+              "acknowledgment_method" => capability.acknowledgment_method,
+              "shipment_notice_method" => capability.shipment_notice_method,
+              "invoice_method" => capability.invoice_method,
+              "technical_acknowledgment_method" => capability.technical_acknowledgment_method,
+              "fulfillment_methods_supported" => capability.fulfillment_methods_supported,
+              "capability_source" => capability.capability_source
+            }
+          }
+        )
+
+        AuditEvents.record!(
+          actor: actor,
+          event_name: "sourcing_attempt.capability_snapshotted",
+          auditable: locked_attempt,
+          details: {
+            "vendor_id" => locked_attempt.vendor_id,
+            "capability_source" => capability.capability_source
           }
         )
       end

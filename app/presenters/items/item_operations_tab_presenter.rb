@@ -195,7 +195,7 @@ module Items
 
     def demand_allocations_scope
       DemandAllocation.active_allocations
-                      .includes(demand_line: :customer)
+                      .includes(demand_line: :customer, purchase_order_line: :purchase_order)
                       .where(store: store, product_variant_id: variant_ids)
                       .order(allocated_at: :desc)
                       .limit(20)

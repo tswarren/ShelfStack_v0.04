@@ -1,1 +1,43 @@
 <%= render "form", receipt: @receipt, allocation_preview: @allocation_preview %>
+
+<% if @receipt.draft? && @demand_impact.present? %>
+  <section class="ss-panel" id="receipt-pre-post-impact">
+    <h2>Pre-post impact</h2>
+    <dl class="ss-summary-compact">
+      <dt>Customer-ready</dt><dd class="ss-num"><%= @demand_impact.total_customer_ready %></dd>
+      <dt>To shelf stock</dt><dd class="ss-num"><%= @demand_impact.total_shelf %></dd>
+    </dl>
+    <% if @demand_impact.customer_ready_rows.any? %>
+      <table class="ss-table">
+        <thead><tr><th>Demand</th><th class="ss-num">Qty</th></tr></thead>
+        <tbody>
+          <% @demand_impact.customer_ready_rows.each do |row| %>
+            <tr>
+              <td><%= row.demand_line&.demand_number || "Shelf stock" %></td>
+              <td class="ss-num"><%= row.quantity %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </section>
+<% end %>
+
+<% if @receipt.draft? && !(@receipt.po_backed? && @receipt.purchase_order_id.present?) %>
+  <%= render "orders/receipts/line_match_workpad",
+        receipt: @receipt,
+        receipt_line_matches: @receipt_line_matches,
+        match_candidates_by_line: @match_candidates_by_line %>
+<% end %>
+
+<div class="ss-detail-actions">
+  <% if @receipt.draft? %>
+    <%= link_to "Cancel", orders_receipt_path(@receipt), class: "ss-btn ss-btn-secondary" %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) && !(@receipt.po_backed? && @receipt.purchase_order_id.present?) %>
+      <%= button_to "Suggest matches", apply_suggested_matches_orders_receipt_path(@receipt, return_to: "edit"), method: :post, class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.post", store: current_store) %>
+      <%= button_to "Post", post_orders_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
+    <% end %>
+  <% end %>
+</div>

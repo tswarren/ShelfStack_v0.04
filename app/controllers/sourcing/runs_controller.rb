@@ -30,10 +30,19 @@ module Sourcing
       else
         []
       end
+      @draft_purchase_orders = PurchaseOrder.drafts.where(store: sourcing_store).includes(:vendor, :purchase_order_lines)
       @audit_events = AuditEvent.where(auditable: [ @sourcing_run ] + @attempts.to_a)
                                 .or(AuditEvent.where(auditable: @attempts.flat_map(&:vendor_responses)))
                                 .order(occurred_at: :desc)
                                 .limit(50)
+      latest_attempt = @attempts.reverse.find { |a| a.in_flight? || a.status != "pending" }
+      @next_action = Sourcing::NextActionPresenter.call(
+        demand_line: @demand_line,
+        sourcing_run: @sourcing_run,
+        sourcing_attempt: latest_attempt,
+        vendor: latest_attempt&.vendor,
+        unresolved_quantity: @run_unresolved
+      )
     end
 
     def create

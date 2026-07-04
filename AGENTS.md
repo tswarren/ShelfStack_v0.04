@@ -271,7 +271,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development priority is **ShelfStack v0.04 core** — the canonical domain model. The v0.03 phase work forms the **current implementation base**. v0.04-0 through v0.04-12 are **complete**; Phase 10-E is eligible to resume.
+Development priority is **ShelfStack v0.04 core** — the canonical domain model. The v0.03 phase work forms the **current implementation base**. v0.04-0 through v0.04-13 are **complete**; Phase 10-E is eligible to resume.
 
 Historical phase sections below are reference material for code not yet migrated. If their status labels (e.g. **In review** on some 8.5 branches) conflict with v0.04 priorities, follow the [v0.04 delivery roadmap](docs/roadmap/v0.04-delivery-roadmap.md) and [v0.04 domain rules](#v0.04-domain-rules-active-for-new-work).
 
@@ -436,7 +436,9 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-12 (demand ordering UX):** **Complete** — [spec bundle](docs/v0.04/v0.04-12-demand-ordering-ux/spec.md) · [completion](docs/implementation/v0.04-12-completion.md).
 
-**Current priority:** **v0.04-0 through v0.04-12 complete** — next milestone TBD (v0.04-3 product groups deferred; Phase 10-E or catalog cleanup candidates).
+**v0.04-13 (demand-to-fulfillment continuity):** **Complete** — [spec bundle](docs/v0.04/v0.04-13-demand-to-fulfillment-continuity/spec.md) · [completion](docs/implementation/v0.04-13-completion.md).
+
+**Current priority:** **v0.04-0 through v0.04-13 complete** — next milestone TBD (v0.04-3 product groups deferred; Phase 10-E or readiness slices).
 
 **v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
 
@@ -448,6 +450,7 @@ STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v0049:verify_po_re
 ./dev/rails-docker env V00410_PHASE=g2 STRICT=1 bin/rails shelfstack:v00410:verify_legacy_ordering_retired
 STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v00411:verify_documentation_schema_cleanup
 V00412_SLICE=final STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v00412:verify_demand_ordering_ux
+V00413_SLICE=final STRICT=1 ./dev/rails-docker env STRICT=1 bin/rails shelfstack:v00413:verify_demand_fulfillment_continuity
 ```
 
 **v0.04-11 notes:** `catalog_items` is **retain-temporary** (legacy bibliographic admin). Legacy redirect aliases `customers_customer_requests` and `orders_purchase_requests` remain. `from_tbo` params are deprecated compatibility only.

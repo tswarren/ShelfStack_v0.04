@@ -1,0 +1,26 @@
+<%# locals: supply_summary %>
+<section class="ss-panel" id="demand-supply-status">
+  <h2>Supply status</h2>
+  <div class="ss-metric-strip">
+    <div class="ss-metric">
+      <span class="ss-metric__label">On hand</span>
+      <span class="ss-metric__value ss-num"><%= supply_summary.on_hand_available %></span>
+    </div>
+    <div class="ss-metric">
+      <span class="ss-metric__label">Available</span>
+      <span class="ss-metric__value ss-num"><%= [supply_summary.on_hand_available - supply_summary.on_hand_allocated_to_demand, 0].max %></span>
+    </div>
+    <div class="ss-metric">
+      <span class="ss-metric__label">On order</span>
+      <span class="ss-metric__value ss-num"><%= supply_summary.inbound_allocated_to_demand %></span>
+    </div>
+    <div class="ss-metric">
+      <span class="ss-metric__label">Promised</span>
+      <span class="ss-metric__value ss-num"><%= supply_summary.planned_on_draft_po_quantity + supply_summary.inbound_allocated_to_demand %></span>
+    </div>
+    <div class="ss-metric">
+      <span class="ss-metric__label">Unresolved</span>
+      <span class="ss-metric__value ss-num"><%= supply_summary.unallocated_quantity %></span>
+    </div>
+  </div>
+</section>

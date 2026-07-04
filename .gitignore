@@ -4,6 +4,9 @@
 # belong in git's global ignore instead:
 # `$XDG_CONFIG_HOME/git/ignore` or `~/.config/git/ignore`
 
+.DS_Store
+**/.DS_Store
+
 # Ignore bundler config.
 /.bundle
 
@@ -32,4 +35,7 @@
 
 # Ignore key files for decrypting credentials and more.
 /config/*.key
+
+# Local design scratch (see docs/v0.04 bundles for authoritative specs).
+/docs/drafts_temp/
 

@@ -65,7 +65,7 @@ module Orders
     end
 
     def show_po_alignment?
-      document_hub.purchase_order.present? && document_hub.po_line_matches.any?
+      document_hub.po_line_matches.any? { |match| match.purchase_order_line.present? }
     end
 
     def show_discrepancies?
@@ -83,10 +83,28 @@ module Orders
     def pre_post_allocation_message
       return nil unless receipt.draft?
 
+      preview = demand_impact_preview
+      return preview.message if preview&.message.present?
+
       count = projected_demand_line_count
       return nil if count.zero?
 
       "Will convert inbound demand for #{count} #{'line'.pluralize(count)} on post"
+    end
+
+    def demand_impact_preview
+      return nil unless receipt.draft?
+
+      @demand_impact_preview ||= begin
+        impact = Receiving::ReceiptDemandImpactPreview.call(receipt: receipt)
+        OpenStruct.new(
+          customer_ready: impact.total_customer_ready,
+          shelf: impact.total_shelf,
+          message: if impact.total_customer_ready.positive?
+                     "#{impact.total_customer_ready} #{'copy'.pluralize(impact.total_customer_ready)} customer-ready; #{impact.total_shelf} to shelf stock"
+                   end
+        )
+      end
     end
 
     def customer_allocation_rows
@@ -97,6 +115,9 @@ module Orders
       receipt.receipt_lines.map do |line|
         customer_qty = customer_quantity_for(line)
         stock_qty = [ line.quantity_accepted.to_i - customer_qty, 0 ].max
+        po_details = adapter_views_for_line(line).flat_map do |view|
+          po_allocation_details(view.purchase_order_line)
+        end
 
         {
           receipt_line_number: line.line_number,
@@ -105,7 +126,7 @@ module Orders
           customer_quantity: customer_qty,
           stock_quantity: stock_qty,
           stock_label: stock_quantity_label,
-          po_allocations: po_allocation_details(line.purchase_order_line)
+          po_allocations: po_details
         }
       end
     end
@@ -115,14 +136,15 @@ module Orders
     end
 
     def po_allocation_rows
-      receipt.receipt_lines.flat_map do |line|
-        next [] if line.purchase_order_line.blank?
+      adapter_views.flat_map do |view|
+        next [] if view.purchase_order_line.blank?
 
-        po_allocation_details(line.purchase_order_line).map do |detail|
+        po_allocation_details(view.purchase_order_line).map do |detail|
           detail.merge(
-            receipt_line_number: line.line_number,
-            po_line_number: line.purchase_order_line.line_number,
-            variant: line.product_variant
+            receipt_line_number: view.receipt_line.line_number,
+            po_line_number: view.purchase_order_line.line_number,
+            purchase_order_id: view.purchase_order_line.purchase_order_id,
+            variant: view.receipt_line.product_variant
           )
         end
       end
@@ -149,6 +171,14 @@ module Orders
 
     attr_reader :receipt, :document_hub
 
+    def adapter_views
+      @adapter_views ||= Receiving::ReceiptPostingMatchAdapter.call(receipt: receipt)
+    end
+
+    def adapter_views_for_line(line)
+      adapter_views.select { |view| view.receipt_line.id == line.id }
+    end
+
     def posted_customer_allocation_rows
       @posted_customer_allocation_rows ||= receipt.receipt_lines.flat_map do |line|
         demand_allocations_for_receipt_line(line).map do |allocation|
@@ -167,12 +197,10 @@ module Orders
     end
 
     def projected_allocation_rows
-      @projected_allocation_rows ||= receipt.receipt_lines.flat_map do |line|
-        next [] if line.purchase_order_line.blank?
-
-        remaining_accept = line.quantity_accepted.to_i
+      @projected_allocation_rows ||= adapter_views.flat_map do |view|
+        remaining_accept = view.quantity_accepted
         rows = []
-        inbound_allocations_for(line.purchase_order_line).each do |allocation|
+        inbound_allocations_for(view.purchase_order_line).each do |allocation|
           break if remaining_accept.zero?
 
           qty = [ allocation.quantity_allocated, remaining_accept ].min
@@ -181,8 +209,8 @@ module Orders
           remaining_accept -= qty
           demand_line = allocation.demand_line
           rows << {
-            receipt_line_number: line.line_number,
-            variant: line.product_variant,
+            receipt_line_number: view.receipt_line.line_number,
+            variant: view.receipt_line.product_variant,
             customer_name: demand_line.display_customer_name,
             demand_number: demand_line.demand_number,
             demand_line_id: demand_line.id,

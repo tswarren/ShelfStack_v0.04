@@ -36,7 +36,17 @@ module Seeds
     end
 
     VENDORS = [
-      { name: "Ingram" },
+      {
+        name: "Ingram",
+        availability_workflow: "order_to_confirm",
+        availability_source: "data_services_web_service",
+        order_submission_method: "edi_x12",
+        acknowledgment_method: "edi_x12",
+        shipment_notice_method: "edi_x12",
+        invoice_method: "edi_x12",
+        technical_acknowledgment_method: "edi_x12",
+        fulfillment_methods_supported: VendorCapabilities::WHOLESALER_FULFILLMENT_METHODS
+      },
       { name: "Local Vendor" },
       { name: "Direct Publisher" }
     ].freeze

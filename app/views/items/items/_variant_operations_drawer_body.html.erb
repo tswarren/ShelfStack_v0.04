@@ -2,7 +2,23 @@
 <%= turbo_frame_tag "variant-ops-drawer-frame" do %>
 <% variant = drawer.variant %>
 <% row = drawer.variant_row %>
-<% availability = drawer.availability_context %>
+<% availability_context = drawer.availability_context %>
+<% availability_header = drawer.availability_header %>
+
+<section class="ss-drawer-section">
+  <h3 class="ss-drawer-section-title">Availability</h3>
+  <div class="ss-metric-strip ss-metric-strip--compact">
+    <div class="ss-metric"><span class="ss-metric__label">On hand</span><span class="ss-metric__value ss-num"><%= availability_header[:on_hand] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Reserved</span><span class="ss-metric__value ss-num"><%= availability_header[:reserved] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Available</span><span class="ss-metric__value ss-num"><%= availability_header[:available] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">On order</span><span class="ss-metric__value ss-num"><%= availability_header[:on_order] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Inbound allocated</span><span class="ss-metric__value ss-num"><%= availability_header[:inbound_allocated] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Inbound available</span><span class="ss-metric__value ss-num"><%= availability_header[:inbound_available] %></span></div>
+  </div>
+  <% if drawer.recent_activity_one_liner.present? %>
+    <p class="ss-muted"><%= drawer.recent_activity_one_liner %></p>
+  <% end %>
+</section>
 
 <section class="ss-drawer-section">
   <h3 class="ss-drawer-section-title">Variant summary</h3>
@@ -16,11 +32,6 @@
       <% end %>
     </dd>
     <% if row.present? %>
-      <dt>Available</dt><dd class="ss-num"><%= row.available.nil? ? "—" : row.available %></dd>
-      <dt>On hand</dt><dd class="ss-num"><%= row.on_hand.nil? ? "—" : row.on_hand %></dd>
-      <dt>Reserved</dt><dd class="ss-num"><%= row.reserved.nil? ? "—" : row.reserved %></dd>
-      <dt>Open TBO</dt><dd class="ss-num"><%= row.open_tbo %></dd>
-      <dt>Pending PO</dt><dd class="ss-num"><%= row.pending_po.nil? ? "—" : row.pending_po %></dd>
       <dt>Preferred vendor</dt><dd><%= row.preferred_vendor_name || "—" %></dd>
     <% end %>
   </dl>
@@ -53,8 +64,8 @@
                   data-action="item-variant-ops-drawer#prepareDemandAction"
                   data-drawer-key="<%= action.drawer_key %>"
                   data-variant-id="<%= variant.id %>"
-                  data-available="<%= availability&.available || 0 %>"
-                  data-on-hand="<%= availability&.on_hand || 0 %>">
+                  data-available="<%= availability_context&.available || 0 %>"
+                  data-on-hand="<%= availability_context&.on_hand || 0 %>">
             <%= action.label %>
           </button>
         <% end %>
@@ -73,13 +84,20 @@
 
 <% tab = drawer.operations_tab %>
 
-<% if drawer.customer_demand_visible? && drawer.v004_demand_activity_present? %>
+<% if drawer.customer_demand_visible? %>
   <section class="ss-drawer-section">
     <h3 class="ss-drawer-section-title">Open demand</h3>
+    <% if drawer.unified_open_demand_lines.any? %>
+      <%= render "items/items/variant_operations_drawer/unified_demand_lines",
+            lines: drawer.unified_open_demand_lines,
+            buyer_state_label: ->(line) { drawer.buyer_state_for(line) } %>
+    <% else %>
+      <p class="ss-muted">No open demand for this variant.</p>
+    <% end %>
 
     <% if tab.variant_scoped_active_holds.any? %>
       <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Active on-hand allocations</h4>
+        <h4 class="ss-drawer-subsection-title">Active holds</h4>
         <%= render "items/items/variant_operations_drawer/demand_allocations", allocations: tab.variant_scoped_active_holds %>
       </section>
     <% end %>
@@ -91,18 +109,8 @@
       </section>
     <% end %>
 
-    <% if tab.variant_scoped_special_order_demand_lines.any? %>
-      <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Special orders</h4>
-        <%= render "items/items/variant_operations_drawer/demand_lines", lines: tab.variant_scoped_special_order_demand_lines %>
-      </section>
-    <% end %>
-
-    <% if tab.variant_scoped_manual_tbo_demand_lines.any? %>
-      <section class="ss-drawer-subsection">
-        <h4 class="ss-drawer-subsection-title">Manual TBO</h4>
-        <%= render "items/items/variant_operations_drawer/demand_lines", lines: tab.variant_scoped_manual_tbo_demand_lines %>
-      </section>
+    <% if drawer.add_to_po_path.present? %>
+      <%= link_to "Add to PO", drawer.add_to_po_path, class: "ss-btn ss-btn-secondary ss-btn-small" %>
     <% end %>
   </section>
 <% end %>
@@ -122,17 +130,17 @@
 <% end %>
 
 <% if tab.variant_scoped_purchase_order_lines.any? %>
-  <section class="ss-drawer-section">
-    <h3 class="ss-drawer-section-title">Open purchase orders</h3>
+  <details class="ss-drawer-section ss-collapsible">
+    <summary class="ss-drawer-section-title">Open purchase orders</summary>
     <%= render "items/items/variant_operations_drawer/purchase_order_lines", lines: tab.variant_scoped_purchase_order_lines %>
-  </section>
+  </details>
 <% end %>
 
 <% if tab.variant_scoped_receipt_lines.any? %>
-  <section class="ss-drawer-section">
-    <h3 class="ss-drawer-section-title">Recent receipts</h3>
-    <%= render "items/items/variant_operations_drawer/receipt_lines", lines: tab.variant_scoped_receipt_lines %>
-  </section>
+  <details class="ss-drawer-section ss-collapsible">
+    <summary class="ss-drawer-section-title">Recent receipts</summary>
+    <%= render "items/items/variant_operations_drawer/receipt_lines", lines: tab.variant_scoped_receipt_lines.first(5) %>
+  </details>
 <% end %>
 
 <% if tab.variant_scoped_rtv_lines.any? %>

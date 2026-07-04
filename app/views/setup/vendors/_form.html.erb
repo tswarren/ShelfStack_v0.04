@@ -18,3 +18,45 @@
   <%= render "shared/forms/checkbox", f: f, record: vendor, field: :active,
              help: "Inactive vendors remain for history but cannot be selected for new sourcing." %>
 <% end %>
+
+<%= render layout: "shared/forms/section", locals: { title: "Capabilities", description: "How staff interact with this vendor for availability, ordering, and fulfillment." } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :availability_workflow, label: "Availability workflow" } do %>
+      <%= f.select :availability_workflow, VendorCapabilities::AVAILABILITY_WORKFLOWS.map { |v| [v.humanize, v] } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :availability_source, label: "Availability source" } do %>
+      <%= f.select :availability_source, VendorCapabilities::AVAILABILITY_SOURCES.map { |v| [v.humanize, v] } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :order_submission_method, label: "Order submission" } do %>
+      <%= f.select :order_submission_method, VendorCapabilities::ORDER_SUBMISSION_METHODS.map { |v| [v.humanize, v] } %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :shipment_notice_method, label: "Shipment notice" } do %>
+      <%= f.select :shipment_notice_method, VendorCapabilities::SHIPMENT_NOTICE_METHODS.map { |v| [v.humanize, v] } %>
+    <% end %>
+  </div>
+  <details class="ss-form-advanced">
+    <summary>Advanced / future integration channels</summary>
+    <div class="ss-form-grid ss-form-grid--2">
+      <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :acknowledgment_method, label: "Acknowledgment method" } do %>
+        <%= f.select :acknowledgment_method, VendorCapabilities::ACKNOWLEDGMENT_METHODS.map { |v| [v.humanize, v] } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :invoice_method, label: "Invoice method" } do %>
+        <%= f.select :invoice_method, VendorCapabilities::INVOICE_METHODS.map { |v| [v.humanize, v] } %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: vendor, field: :technical_acknowledgment_method, label: "Technical acknowledgment" } do %>
+        <%= f.select :technical_acknowledgment_method, VendorCapabilities::TECHNICAL_ACKNOWLEDGMENT_METHODS.map { |v| [v.humanize, v] } %>
+      <% end %>
+    </div>
+  </details>
+  <fieldset>
+    <legend>Fulfillment methods supported</legend>
+    <% VendorCapabilities::FULFILLMENT_METHODS.each do |method| %>
+      <label>
+        <%= check_box_tag "vendor[fulfillment_methods_supported][]", method,
+                          Array(vendor.fulfillment_methods_supported).include?(method),
+                          id: "vendor_fulfillment_methods_supported_#{method}" %>
+        <%= method.humanize %>
+      </label>
+    <% end %>
+  </fieldset>
+<% end %>

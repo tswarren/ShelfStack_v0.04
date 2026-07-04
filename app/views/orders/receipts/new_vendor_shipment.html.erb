@@ -1,0 +1,50 @@
+<%= render "setup/shared/back_link", path: orders_receipts_path, label: "Receipts" %>
+
+<h1>Start vendor shipment receiving</h1>
+<p class="ss-muted">Enter shipment details before scanning or entering receipt lines.</p>
+
+<%= form_with url: orders_receipts_path, method: :post, class: "ss-form" do %>
+  <%= hidden_field_tag :receiving_mode, "vendor_shipment" %>
+
+  <div class="ss-field">
+    <%= label_tag :vendor_id, "Vendor", class: "ss-label" %>
+    <%= select_tag :vendor_id,
+          options_from_collection_for_select(@vendors, :id, :name, @vendor_shipment.vendor_id),
+          include_blank: "Select vendor",
+          required: true,
+          class: "ss-input" %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :vendor_packing_slip_number, "Packing slip #", class: "ss-label" %>
+    <%= text_field_tag :vendor_packing_slip_number, @vendor_shipment.vendor_packing_slip_number, class: "ss-input" %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :vendor_invoice_number, "Invoice #", class: "ss-label" %>
+    <%= text_field_tag :vendor_invoice_number, @vendor_shipment.vendor_invoice_number, class: "ss-input" %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :tracking_number, "Tracking #", class: "ss-label" %>
+    <%= text_field_tag :tracking_number, @vendor_shipment.tracking_number, class: "ss-input" %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :received_at, "Received at", class: "ss-label" %>
+    <%= datetime_local_field_tag :received_at, @vendor_shipment.received_at&.strftime("%Y-%m-%dT%H:%M"), class: "ss-input" %>
+  </div>
+
+  <div class="ss-field">
+    <%= label_tag :match_filter_purchase_order_id, "Optional PO filter (scopes match candidates)", class: "ss-label" %>
+    <%= select_tag :match_filter_purchase_order_id,
+          options_for_select(
+            @purchase_orders.map { |po| ["PO ##{po.id} · #{po.vendor.name}", po.id] },
+            @vendor_shipment.match_filter_purchase_order_id
+          ),
+          include_blank: "Any open PO",
+          class: "ss-input" %>
+  </div>
+
+  <%= submit_tag "Start receiving", class: "ss-btn" %>
+<% end %>

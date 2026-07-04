@@ -17,6 +17,10 @@
   <dd class="ss-num"><%= @run_unresolved %></dd>
   <dt>Started</dt>
   <dd><%= display_time(@sourcing_run.started_at) %> by <%= @sourcing_run.started_by_user.display_name %></dd>
+  <% if @next_action.present? %>
+    <dt>Next action</dt>
+    <dd><strong><%= @next_action.next_action_label %></strong> — <%= @next_action.next_action_description %></dd>
+  <% end %>
 </dl>
 
 <% if @sourcing_run.active? %>
@@ -88,47 +92,11 @@
       <% end %>
 
       <% if attempt.status == "submitted" && Authorization.allowed?(user: current_user, permission_key: "sourcing.responses.record", store: current_store) %>
-        <h4>Record vendor response</h4>
-        <%= form_with url: sourcing_attempt_vendor_responses_path(attempt), method: :post, class: "ss-form" do %>
-          <p class="ss-muted">Requested: <%= attempt.quantity_requested %></p>
-          <div class="ss-field-row">
-            <%= label_tag :quantity_confirmed, "Confirmed", class: "ss-label" %>
-            <%= number_field_tag :quantity_confirmed, 0, min: 0, class: "ss-input" %>
-            <%= label_tag :quantity_backordered, "Backordered", class: "ss-label" %>
-            <%= number_field_tag :quantity_backordered, 0, min: 0, class: "ss-input" %>
-            <%= label_tag :quantity_unavailable, "Unavailable", class: "ss-label" %>
-            <%= number_field_tag :quantity_unavailable, 0, min: 0, class: "ss-input" %>
-            <%= label_tag :quantity_canceled, "Canceled", class: "ss-label" %>
-            <%= number_field_tag :quantity_canceled, 0, min: 0, class: "ss-input" %>
-            <%= label_tag :quantity_failed, "Failed", class: "ss-label" %>
-            <%= number_field_tag :quantity_failed, 0, min: 0, class: "ss-input" %>
-          </div>
-          <% if @eligible_po_lines.any? %>
-            <div class="ss-field">
-              <%= label_tag :purchase_order_line_id, "Link PO line (optional)", class: "ss-label" %>
-              <%= select_tag :purchase_order_line_id,
-                    options_for_select(
-                      @eligible_po_lines.map { |line|
-                        ["PO ##{line.purchase_order.id} line #{line.line_number} — #{line.vendor.name}", line.id]
-                      },
-                      attempt.purchase_order_line_id
-                    ),
-                    include_blank: "None",
-                    class: "ss-input" %>
-            </div>
-          <% end %>
-          <div class="ss-field">
-            <%= label_tag :accept_backorder, class: "ss-label" do %>
-              <%= check_box_tag :accept_backorder, "1", false %> Accept backorder allocation
-            <% end %>
-          </div>
-          <div class="ss-field">
-            <%= label_tag :final_response, class: "ss-label" do %>
-              <%= check_box_tag :final_response, "1", true %> Final response
-            <% end %>
-          </div>
-          <%= submit_tag "Record response", class: "ss-btn" %>
-        <% end %>
+        <%= render "response_wizard",
+              attempt: attempt,
+              eligible_po_lines: @eligible_po_lines,
+              draft_purchase_orders: @draft_purchase_orders.select { |po| po.vendor_id == attempt.vendor_id },
+              suggested_vendors: @suggested_vendors %>
       <% end %>
 
       <% cascade_eligible = Sourcing::CascadeEligibleQuantity.for_attempt(attempt) %>

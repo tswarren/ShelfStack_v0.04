@@ -15,6 +15,10 @@
 <%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
 <%= render "orders/shared/attention_panel", items: presenter.attention_items %>
 
+<% if @receipt.posted? && @post_result.present? %>
+  <%= render "orders/receipts/post_result_checklist", post_result: @post_result %>
+<% end %>
+
 <% if @receipt.posted? && @document_hub.inventory_posting.blank? %>
   <p class="ss-hint ss-hint--warning">This receipt posted with no accepted quantity, so on-hand was not changed.</p>
 <% end %>
@@ -86,10 +90,13 @@
         <tr>
           <th>Receipt line</th>
           <th>Item</th>
+          <th>PO</th>
           <th>PO line</th>
+          <th class="ss-num">Matched</th>
           <th class="ss-num">Ordered</th>
           <th class="ss-num">Received on PO</th>
           <th class="ss-num">Open on PO</th>
+          <th>Match</th>
         </tr>
       </thead>
       <tbody>
@@ -97,10 +104,22 @@
           <tr>
             <td><%= match.receipt_line.line_number %></td>
             <td><%= render "orders/shared/variant_identity", variant: match.receipt_line.product_variant %></td>
+            <td><%= match.purchase_order ? "##{match.purchase_order.id}" : "—" %></td>
             <td><%= match.purchase_order_line ? "##{match.purchase_order_line.line_number}" : "—" %></td>
+            <td class="ss-num"><%= match.quantity_matched || "—" %></td>
             <td class="ss-num"><%= match.ordered || "—" %></td>
             <td class="ss-num"><%= match.received_on_po || "—" %></td>
             <td class="ss-num"><%= match.open_on_po || "—" %></td>
+            <td>
+              <% if match.match_status.present? %>
+                <%= match.match_status.humanize %>
+                <% if match.match_source.present? %>
+                  <span class="ss-muted">(<%= match.match_source.humanize %>)</span>
+                <% end %>
+              <% else %>
+                —
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>
@@ -211,6 +230,8 @@
     <%= render "orders/shared/receipt_discrepancies_detail", discrepancies: @document_hub.discrepancies %>
   <% end %>
 <% end %>
+
+<%= render "orders/receipts/line_matches" %>
 
 <%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>
   <%= render "shared/audit_timeline", audit_events: @audit_events %>
