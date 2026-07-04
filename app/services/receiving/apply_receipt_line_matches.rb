@@ -22,16 +22,22 @@ module Receiving
         matches.each do |match_attrs|
           idempotency_key = match_attrs[:idempotency_key] ||
             "receipt:#{receipt.id}:line:#{match_attrs[:receipt_line_id]}:po_line:#{match_attrs[:purchase_order_line_id]}"
+          receipt_line = receipt.receipt_lines.find(match_attrs[:receipt_line_id])
+          po_line = PurchaseOrderLine.find(match_attrs[:purchase_order_line_id])
+          qty = match_attrs[:quantity_matched].to_i
+          validate_match!(receipt_line, po_line, qty)
+
           existing = ReceiptLineMatch.find_by(store: receipt.store, idempotency_key: idempotency_key)
           if existing&.confirmed?
             applied << existing
             next
           end
 
-          receipt_line = receipt.receipt_lines.find(match_attrs[:receipt_line_id])
-          po_line = PurchaseOrderLine.find(match_attrs[:purchase_order_line_id])
-          qty = match_attrs[:quantity_matched].to_i
-          validate_match!(receipt_line, po_line, qty)
+          if existing.present?
+            reconfirm_match!(existing, receipt_line:, po_line:, qty:, match_attrs:, idempotency_key:)
+            applied << existing
+            next
+          end
 
           record = ReceiptLineMatch.create!(
             store: receipt.store,
@@ -49,16 +55,7 @@ module Receiving
             idempotency_key: idempotency_key
           )
 
-          AuditEvents.record!(
-            actor: actor,
-            event_name: "receipt_line_match.confirmed",
-            auditable: record,
-            details: {
-              "receipt_line_id" => receipt_line.id,
-              "purchase_order_line_id" => po_line.id,
-              "quantity_matched" => qty
-            }
-          )
+          audit_confirmed!(record, receipt_line, po_line, qty)
           applied << record
         end
       end
@@ -83,6 +80,42 @@ module Receiving
       end
 
       Purchasing::CustomerDirectPurchaseOrderGate.assert_receivable!(po_line.purchase_order)
+    end
+
+    def reconfirm_match!(existing, receipt_line:, po_line:, qty:, match_attrs:, idempotency_key:)
+      existing.update!(
+        receipt: receipt,
+        receipt_line: receipt_line,
+        purchase_order: po_line.purchase_order,
+        purchase_order_line: po_line,
+        product: receipt_line.product_variant.product,
+        product_variant: receipt_line.product_variant,
+        quantity_matched: qty,
+        match_status: "confirmed",
+        match_source: match_attrs[:match_source] || existing.match_source || "manual",
+        matched_by_user: actor,
+        matched_at: Time.current,
+        released_at: nil,
+        released_by_user: nil,
+        release_reason: nil,
+        idempotency_key: idempotency_key
+      )
+
+      audit_confirmed!(existing, receipt_line, po_line, qty, reconfirmed: true)
+    end
+
+    def audit_confirmed!(record, receipt_line, po_line, qty, reconfirmed: false)
+      AuditEvents.record!(
+        actor: actor,
+        event_name: reconfirmed ? "receipt_line_match.reconfirmed" : "receipt_line_match.confirmed",
+        auditable: record,
+        details: {
+          "receipt_line_id" => receipt_line.id,
+          "purchase_order_line_id" => po_line.id,
+          "quantity_matched" => qty,
+          "reconfirmed" => reconfirmed
+        }
+      )
     end
   end
 end

@@ -86,6 +86,7 @@ module Purchasing
 
       return if remainder <= 0
 
+      remainder_key = "#{idempotency_key}:remainder:#{plan.id}"
       remainder_plan = PurchaseOrderLineDemandPlan.new(
         store: plan.store,
         purchase_order: plan.purchase_order,
@@ -98,7 +99,7 @@ module Purchasing
         coverage_kind: plan.coverage_kind,
         status: "planned",
         created_by_user: actor,
-        idempotency_key: idempotency_key,
+        idempotency_key: remainder_key,
         internal_split: true
       )
       remainder_plan.save!

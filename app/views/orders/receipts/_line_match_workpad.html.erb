@@ -63,16 +63,38 @@
             <th class="ss-num">Open to receive</th>
             <th class="ss-num">Customer planned</th>
             <th class="ss-num">Shelf planned</th>
+            <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+              <th colspan="2">Confirm match</th>
+            <% end %>
           </tr>
         </thead>
         <tbody>
+          <% confirmed_on_line = line_matches.select(&:confirmed?).sum(&:quantity_matched) %>
+          <% remaining_to_match = [ line.quantity_accepted.to_i - confirmed_on_line, 0 ].max %>
           <% candidates.each do |candidate| %>
+            <% suggested_qty = [ candidate.open_to_receive_quantity, remaining_to_match ].min %>
             <tr>
               <td>#<%= candidate.purchase_order.id %></td>
               <td>#<%= candidate.purchase_order_line.line_number %></td>
               <td class="ss-num"><%= candidate.open_to_receive_quantity %></td>
               <td class="ss-num"><%= candidate.customer_planned_quantity %></td>
               <td class="ss-num"><%= candidate.shelf_planned_quantity %></td>
+              <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
+                <td colspan="2">
+                  <% if suggested_qty.positive? %>
+                    <%= form_with url: orders_receipt_receipt_line_matches_path(receipt), method: :post, class: "ss-inline-form ss-form-inline-actions" do %>
+                      <%= hidden_field_tag "return_to", "edit" %>
+                      <%= hidden_field_tag "matches[][receipt_line_id]", line.id %>
+                      <%= hidden_field_tag "matches[][purchase_order_line_id]", candidate.purchase_order_line.id %>
+                      <%= hidden_field_tag "matches[][match_source]", "manual" %>
+                      <%= number_field_tag "matches[][quantity_matched]", suggested_qty, min: 1, max: suggested_qty, class: "ss-input ss-input--num" %>
+                      <%= submit_tag "Confirm match", class: "ss-btn ss-btn-secondary" %>
+                    <% end %>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+              <% end %>
             </tr>
           <% end %>
         </tbody>

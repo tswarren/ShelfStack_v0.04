@@ -59,9 +59,30 @@ module Receiving
       Receiving::ReceiptPostingMatchAdapter.call(receipt: receipt).each do |view|
         next if view.purchase_order_line.blank?
 
-        if view.quantity_accepted > view.receipt_line.quantity_accepted
+        line = view.receipt_line
+        po_line = view.purchase_order_line
+
+        if view.quantity_accepted > line.quantity_accepted
           raise ValidationError,
-                "Line #{view.receipt_line.line_number}: adapter matched quantity exceeds accepted quantity"
+                "Line #{line.line_number}: adapter matched quantity exceeds accepted quantity"
+        end
+
+        if po_line.product_variant_id != line.product_variant_id
+          raise ValidationError,
+                "Line #{line.line_number}: PO line variant does not match receipt line variant"
+        end
+
+        Purchasing::CustomerDirectPurchaseOrderGate.assert_receivable!(po_line.purchase_order)
+
+        unless PurchaseOrder::OPEN_FOR_RECEIVE_LINE_STATUSES.include?(po_line.status)
+          raise ValidationError,
+                "PO line #{po_line.line_number} is not open for receiving"
+        end
+
+        open_qty = Purchasing::PoLineQuantitySummary.for(po_line).open_to_receive_quantity
+        if view.quantity_accepted > open_qty
+          raise ValidationError,
+                "Line #{line.line_number}: matched quantity (#{view.quantity_accepted}) exceeds open to receive (#{open_qty}) on PO line #{po_line.line_number}"
         end
       end
     end

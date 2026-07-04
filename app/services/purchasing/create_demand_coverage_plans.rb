@@ -25,15 +25,23 @@ module Purchasing
           next if qty <= 0
 
           idempotency_key = idempotency_key_for(purchase_order, po_line, plan.demand_line)
-          existing = PurchaseOrderLineDemandPlan.find_by(store: purchase_order.store, idempotency_key: idempotency_key)
-          if existing&.active?
-            created << existing
+          active_existing = PurchaseOrderLineDemandPlan.active_plans.find_by(
+            store: purchase_order.store,
+            idempotency_key: idempotency_key
+          )
+          if active_existing.present?
+            created << active_existing
             next
           end
 
-          if existing.present?
-            revive_plan!(existing, qty, plan, po_line)
-            created << existing
+          revivable = PurchaseOrderLineDemandPlan.where(
+            store: purchase_order.store,
+            idempotency_key: idempotency_key,
+            status: %w[released canceled superseded]
+          ).order(id: :desc).first
+          if revivable.present?
+            revive_plan!(revivable, qty, plan, po_line)
+            created << revivable
             next
           end
 
