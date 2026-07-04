@@ -1,0 +1,61 @@
+<%= render "setup/shared/back_link", path: orders_root_path, label: "Orders" %>
+
+<h1>Buyer workbench</h1>
+<p class="ss-muted">Operational demand queue for buyers — order, source, and track supply in one place.</p>
+
+<div class="ss-filter-bar">
+  <% DemandLines::BuyerWorkbenchScope::TAB_KEYS.each do |tab_key| %>
+    <%= link_to "#{DemandLines::BuyerWorkbenchScope::TAB_LABELS[tab_key]} (#{@tab_counts[tab_key]})",
+          orders_buyer_workbench_path(tab: tab_key),
+          class: @tab == tab_key ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
+  <% end %>
+</div>
+
+<% if @rows.any? %>
+  <%= form_with url: new_orders_demand_po_builder_path, method: :get, id: "buyer-workbench-bulk", class: "ss-form" do %>
+    <table class="ss-table">
+      <thead>
+        <tr>
+          <th><input type="checkbox" data-action="change->buyer-workbench#toggleAll" aria-label="Select all"></th>
+          <th>Demand</th>
+          <th>Customer / purpose</th>
+          <th>Item</th>
+          <th class="ss-num">Qty open</th>
+          <th>Suggested vendor</th>
+          <th>Supply</th>
+          <th>State</th>
+          <th>Next action</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @rows.each do |row| %>
+          <tr>
+            <td><%= check_box_tag "demand_line_ids[]", row.demand_line.id, false, class: "buyer-workbench-select" %></td>
+            <td><%= link_to row.demand_line.demand_number, demand_demand_line_path(row.demand_line) %></td>
+            <td><%= row.customer_or_purpose %></td>
+            <td><%= row.demand_line.product_variant&.sku || "—" %></td>
+            <td class="ss-num"><%= row.qty_open %></td>
+            <td><%= row.suggested_vendor_name %></td>
+            <td class="ss-muted"><%= row.supply_one_liner %></td>
+            <td><%= row.state_label %></td>
+            <td><%= row.next_action_label %></td>
+            <td class="ss-table-actions">
+              <%= link_to row.primary_action[:label], row.primary_action[:path], class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+              <%= link_to "Demand", demand_demand_line_path(row.demand_line), class: "ss-btn-link" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) %>
+      <div class="ss-bulk-actions">
+        <%= submit_tag "Create PO from selected", class: "ss-btn" %>
+        <%= submit_tag "Add to existing draft PO", formaction: new_orders_demand_po_builder_path(mode: "add_existing"), class: "ss-btn ss-btn-secondary" %>
+      </div>
+    <% end %>
+  <% end %>
+<% else %>
+  <p class="ss-muted">No demand lines in this queue.</p>
+<% end %>

@@ -15,6 +15,10 @@
 <%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
 <%= render "orders/shared/attention_panel", items: presenter.attention_items %>
 
+<% if @receipt.posted? && @post_result.present? %>
+  <%= render "orders/receipts/post_result_checklist", post_result: @post_result %>
+<% end %>
+
 <% if @receipt.posted? && @document_hub.inventory_posting.blank? %>
   <p class="ss-hint ss-hint--warning">This receipt posted with no accepted quantity, so on-hand was not changed.</p>
 <% end %>

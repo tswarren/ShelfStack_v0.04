@@ -433,6 +433,8 @@ Rails.application.routes.draw do
   namespace :orders do
     root to: "home#show"
     get "locked_out", to: "home#locked_out"
+    get "buyer_workbench", to: "buyer_workbench#index"
+    resource :demand_po_builder, only: %i[new create], path: "purchase_orders/from_demand", controller: "demand_po_builder"
     resource :variant_lookup, only: %i[show]
     resource :line_lookup, only: %i[show]
     get "manual_tbo", to: redirect("/demand?capture_intent=manual_tbo"), as: :orders_purchase_requests

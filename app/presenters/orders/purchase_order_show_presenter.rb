@@ -28,7 +28,7 @@ module Orders
 
     def metrics
       progress = document_hub.receive_progress
-      [
+      metrics = [
         { label: "Ordered", value: progress.ordered },
         { label: "Received", value: progress.received },
         { label: "Open", value: progress.open },
@@ -38,6 +38,22 @@ module Orders
           value: order_summary.net_discount_bps ? helpers.format_basis_points(order_summary.net_discount_bps) : "—"
         }
       ]
+      if purchase_order.draft? && submit_impact_preview.present?
+        metrics.insert(3, { label: "Planned demand", value: submit_impact_preview.total_planned_copies })
+      end
+      metrics
+    end
+
+    def submit_impact_preview
+      return @submit_impact_preview if defined?(@submit_impact_preview)
+
+      @submit_impact_preview = if purchase_order.draft?
+        Purchasing::PurchaseOrderSubmitImpactPreview.call(purchase_order: purchase_order)
+      end
+    end
+
+    def show_submit_impact?
+      submit_impact_preview.present?
     end
 
     def attention_items

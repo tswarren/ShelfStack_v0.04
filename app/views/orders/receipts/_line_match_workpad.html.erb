@@ -19,7 +19,13 @@
   <% receipt.receipt_lines.select { |line| line.quantity_accepted.to_i.positive? }.each do |line| %>
     <% candidates = match_candidates_by_line[line.id] || [] %>
     <h3>Line <%= line.line_number %> · <%= line.product_variant.sku %></h3>
-    <p class="ss-muted"><%= line.quantity_accepted %> accepted</p>
+    <% confirmed_on_line = line_matches.select(&:confirmed?).sum(&:quantity_matched) %>
+    <% unmatched_accepted = [ line.quantity_accepted.to_i - confirmed_on_line, 0 ].max %>
+    <p class="ss-muted">
+      <%= line.quantity_accepted %> accepted ·
+      <%= confirmed_on_line %> matched ·
+      <strong><%= unmatched_accepted %> unmatched</strong>
+    </p>
 
     <% line_matches = receipt_line_matches.select { |match| match.receipt_line_id == line.id } %>
     <% if line_matches.any? %>

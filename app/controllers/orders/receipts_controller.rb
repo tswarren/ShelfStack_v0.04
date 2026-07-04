@@ -21,23 +21,23 @@ module Orders
         receipt: @receipt,
         document_hub: @document_hub
       )
+      @post_result = Orders::ReceiptPostResultPresenter.new(receipt: @receipt, document_hub: @document_hub) if @receipt.posted?
       @receipt_line_matches = @receipt.receipt_line_matches.includes(:receipt_line, :purchase_order_line, :purchase_order).order(:id)
       @audit_events = AuditEvent.for_auditable(@receipt).limit(50)
     end
 
     def new
       if params[:receiving_mode] == "vendor_shipment"
-        @receipt = Receiving::CreateVendorShipmentReceipt.call!(
-          store: orders_store,
-          vendor: Vendor.find(params[:vendor_id]),
-          created_by_user: current_user,
-          attrs: {
-            vendor_shipment_reference: params[:vendor_shipment_reference],
-            tracking_number: params[:tracking_number]
-          }
+        @vendors = Vendor.active_records.order(:name)
+        @purchase_orders = PurchaseOrder.where(store: orders_store, status: %w[draft submitted partial_received]).order(created_at: :desc)
+        @vendor_shipment = OpenStruct.new(
+          vendor_id: params[:vendor_id],
+          vendor_packing_slip_number: params[:vendor_packing_slip_number],
+          vendor_invoice_number: params[:vendor_invoice_number],
+          tracking_number: params[:tracking_number],
+          received_at: params[:received_at].presence || Time.current,
+          purchase_order_id: params[:purchase_order_id]
         )
-        record_audit!("receipt.created", @receipt)
-        redirect_to edit_orders_receipt_path(@receipt), notice: "Vendor shipment receipt created."
         return
       end
 
@@ -54,6 +54,11 @@ module Orders
     end
 
     def create
+      if params[:receiving_mode] == "vendor_shipment"
+        create_vendor_shipment!
+        return
+      end
+
       @receipt = Receipt.new(receipt_params)
       @receipt.store = orders_store
       @receipt.status = "draft"
@@ -72,6 +77,7 @@ module Orders
       load_form_collections
       load_allocation_preview!
       load_match_workpad!
+      @demand_impact = Receiving::ReceiptDemandImpactPreview.call(receipt: @receipt) if previewable_receipt?
     end
 
     def update
@@ -189,6 +195,30 @@ module Orders
       (@receipt.po_backed? && @receipt.purchase_order_id.present?) ||
         @receipt.receiving_mode == "vendor_shipment" ||
         @receipt.receipt_line_matches.confirmed_matches.exists?
+    end
+
+    def create_vendor_shipment!
+      vendor = Vendor.find(params[:vendor_id])
+      @receipt = Receiving::CreateVendorShipmentReceipt.call!(
+        store: orders_store,
+        vendor: vendor,
+        created_by_user: current_user,
+        attrs: {
+          purchase_order_id: params[:purchase_order_id].presence,
+          vendor_packing_slip_number: params[:vendor_packing_slip_number],
+          vendor_invoice_number: params[:vendor_invoice_number],
+          tracking_number: params[:tracking_number],
+          received_at: params[:received_at]
+        }
+      )
+      record_audit!("receipt.created", @receipt)
+      redirect_to edit_orders_receipt_path(@receipt), notice: "Vendor shipment receipt created. Add lines and match to POs."
+    rescue ActiveRecord::RecordNotFound
+      @vendors = Vendor.active_records.order(:name)
+      @purchase_orders = PurchaseOrder.where(store: orders_store, status: %w[draft submitted partial_received]).order(created_at: :desc)
+      @vendor_shipment = OpenStruct.new(params.permit(:vendor_id, :vendor_packing_slip_number, :vendor_invoice_number, :tracking_number, :received_at, :purchase_order_id))
+      flash.now[:alert] = "Vendor not found."
+      render "new_vendor_shipment", status: :unprocessable_entity
     end
 
     def receipt_params

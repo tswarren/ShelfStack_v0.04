@@ -27,7 +27,8 @@ module Shelfstack
       no_legacy_ordering_writes: { from: "slice_0", check: :no_legacy_ordering_reintroduced? },
       idempotency_services: { from: "slice_e", check: :idempotency_services_present? },
       golden_path_test_present: { from: "final", check: :golden_path_test_present? },
-      audit_events_registered: { from: "final", check: :mvp_audit_events_registered? }
+      audit_events_registered: { from: "final", check: :mvp_audit_events_registered? },
+      ux_capstone_present: { from: "final", check: :ux_capstone_present? }
     }.freeze
 
     READINESS_CHECKS = {
@@ -169,6 +170,16 @@ module Shelfstack
         purchase_order_line_demand_plan.converted_to_inbound
         receipt_line_match.confirmed
       ].all? { |event| content.include?(event) }
+    end
+
+    def ux_capstone_present?
+      %w[
+        app/controllers/orders/buyer_workbench_controller.rb
+        app/controllers/orders/demand_po_builder_controller.rb
+        app/presenters/orders/receipt_post_result_presenter.rb
+        app/views/orders/receipts/_post_result_checklist.html.erb
+        docs/implementation/v0.04-13-usability-capstone.md
+      ].all? { |path| File.exist?(Rails.root.join(path)) }
     end
 
     def external_references_table_present?

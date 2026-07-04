@@ -1,1 +1,5 @@
-<%= render "form", receipt: @receipt %>
+<% if params[:receiving_mode] == "vendor_shipment" %>
+  <%= render "new_vendor_shipment" %>
+<% else %>
+  <%= render "form", receipt: @receipt %>
+<% end %>

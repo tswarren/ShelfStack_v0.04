@@ -24,6 +24,16 @@
 <%= render "orders/shared/metric_strip", metrics: presenter.metrics %>
 <%= render "orders/shared/attention_panel", items: presenter.attention_items %>
 
+<% if presenter.show_submit_impact? %>
+  <%= render "orders/shared/collapsible_panel", title: "Submit impact", open: true do %>
+    <p class="ss-hint"><%= presenter.submit_impact_preview.message %></p>
+    <dl class="ss-summary-compact">
+      <dt>Customer inbound</dt><dd class="ss-num"><%= presenter.submit_impact_preview.customer_inbound_copies %></dd>
+      <dt>Shelf / remaining planned</dt><dd class="ss-num"><%= presenter.submit_impact_preview.shelf_inbound_copies + presenter.submit_impact_preview.remaining_planned_copies %></dd>
+    </dl>
+  <% end %>
+<% end %>
+
 <%= render layout: "orders/shared/document_layout" do %>
   <h2>Lines</h2>
   <table class="ss-table">

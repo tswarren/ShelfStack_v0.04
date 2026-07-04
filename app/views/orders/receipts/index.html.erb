@@ -1,4 +1,7 @@
-<h1>Receipts <%= link_to "New", new_orders_receipt_path, class: "ss-btn" %></h1>
+<h1>Receipts
+  <%= link_to "New", new_orders_receipt_path, class: "ss-btn" %>
+  <%= link_to "Vendor shipment", new_orders_receipt_path(receiving_mode: "vendor_shipment"), class: "ss-btn ss-btn-secondary" %>
+</h1>
 
 <table class="ss-table">
   <thead><tr><th>ID</th><th>Vendor</th><th>Type</th><th>Status</th><th>Posted</th><th></th></tr></thead>

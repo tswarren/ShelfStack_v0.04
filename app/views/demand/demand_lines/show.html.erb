@@ -2,12 +2,27 @@
 
 <h1><%= @demand_line.demand_number %></h1>
 
+<%= render "record_summary", demand_line: @demand_line, supply_summary: @supply_summary %>
+
 <%= render "next_action_panel", workflow: @workflow %>
 
+<%= render "supply_status_strip", supply_summary: @supply_summary %>
+
+<%= render "supply_sections",
+      demand_line: @demand_line,
+      supply_summary: @supply_summary,
+      eligible_inbound_lines: @eligible_inbound_lines,
+      available_for_allocation: @available_for_allocation,
+      workflow: @workflow %>
+
 <div class="ss-detail-layout ss-detail-layout--2col">
-  <%= render "record_summary", demand_line: @demand_line, supply_summary: @supply_summary %>
   <%= render "timeline", workflow: @workflow %>
+  <section id="demand-sourcing-panel">
+    <%= render "sourcing_panel" %>
+  </section>
 </div>
+
+<%= render "allocations_history", allocations: @allocations %>
 
 <div class="ss-detail-actions">
   <% if DemandLine::ALLOCATION_ACTIVE_STATUSES.include?(@demand_line.status) && Authorization.allowed?(user: current_user, permission_key: "demand.expire", store: current_store) %>
@@ -22,18 +37,6 @@
     <% end %>
   <% end %>
 </div>
-
-<%= render "allocation_workbench",
-      demand_line: @demand_line,
-      supply_summary: @supply_summary,
-      eligible_inbound_lines: @eligible_inbound_lines,
-      available_for_allocation: @available_for_allocation %>
-
-<%= render "allocations_history", allocations: @allocations %>
-
-<section id="demand-sourcing-panel">
-  <%= render "sourcing_panel" %>
-</section>
 
 <% if @demand_line.status == "captured" && Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
   <section id="demand-match-variant">

@@ -30,6 +30,7 @@ module Sourcing
       else
         []
       end
+      @draft_purchase_orders = PurchaseOrder.drafts.where(store: sourcing_store).includes(:vendor, :purchase_order_lines)
       @audit_events = AuditEvent.where(auditable: [ @sourcing_run ] + @attempts.to_a)
                                 .or(AuditEvent.where(auditable: @attempts.flat_map(&:vendor_responses)))
                                 .order(occurred_at: :desc)

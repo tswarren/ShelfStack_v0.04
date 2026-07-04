@@ -4,6 +4,10 @@
       <th>Customer</th>
       <th class="ss-num">Qty</th>
       <th>Kind</th>
+      <% if allocations.any? { |a| a.allocation_kind == "inbound_purchase_order" } %>
+        <th>PO</th>
+        <th>Line</th>
+      <% end %>
       <th>Expires</th>
       <th></th>
     </tr>
@@ -14,6 +18,16 @@
         <td><%= allocation.demand_line.display_customer_name || "—" %></td>
         <td class="ss-num"><%= allocation.quantity_allocated %></td>
         <td><%= allocation.allocation_kind.tr("_", " ").titleize %></td>
+        <% if allocations.any? { |a| a.allocation_kind == "inbound_purchase_order" } %>
+          <td>
+            <% if allocation.purchase_order_line.present? %>
+              <%= link_to "##{allocation.purchase_order_line.purchase_order_id}", orders_purchase_order_path(allocation.purchase_order_line.purchase_order_id) %>
+            <% else %>
+              —
+            <% end %>
+          </td>
+          <td><%= allocation.purchase_order_line&.line_number || "—" %></td>
+        <% end %>
         <td><%= allocation.expires_at ? l(allocation.expires_at.to_date) : "—" %></td>
         <td><%= link_to "View demand", demand_demand_line_path(allocation.demand_line), class: "ss-btn-link" %></td>
       </tr>

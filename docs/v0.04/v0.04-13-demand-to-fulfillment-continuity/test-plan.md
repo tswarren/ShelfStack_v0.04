@@ -171,7 +171,18 @@ Tests are grouped by **tier**. Only **MVP** sections are required for `V00413_SL
 * Post receipt → inventory + inbound→on_hand conversion
 * Pre-post preview shows customer names
 
-#### Gates and regression
+#### Usability capstone (integration / request)
+
+* Buyer workbench tab filter renders demand rows with supply one-liner and next-action label
+* Bulk selection → PO builder → draft PO with `purchase_order_line_demand_plans`
+* Demand show renders supply status strip and inbound allocate forms
+* Draft PO show renders submit impact panel when planned coverage exists
+* Vendor shipment `new` form creates receipt and lands on edit workpad
+* Receipt edit shows unmatched accepted quantity per line
+* Posted receipt show renders customer-ready checklist section
+* `PurchaseOrderSubmitImpactPreview` service test
+
+### Readiness — integration tests
 
 * Customer-direct planned coverage on draft PO does not create inbound allocation
 * Attempt to receive against customer-direct PO is rejected

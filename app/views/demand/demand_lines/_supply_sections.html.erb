@@ -1,0 +1,95 @@
+<%# locals: demand_line, supply_summary, eligible_inbound_lines, available_for_allocation, workflow %>
+<section class="ss-panel" id="demand-supply-sections">
+  <h2>Available supply</h2>
+
+  <section id="demand-on-hand-allocation">
+    <h3>On hand</h3>
+    <% if supply_summary.on_hand_available.positive? %>
+      <p><%= supply_summary.on_hand_available %> #{"copy".pluralize(supply_summary.on_hand_available)} available at this store.</p>
+      <% if demand_line.product_variant.present? && !demand_line.terminal? && supply_summary.unallocated_quantity.positive? && Authorization.allowed?(user: current_user, permission_key: "demand.allocations.create", store: current_store) %>
+        <% allocate_qty = [supply_summary.unallocated_quantity, supply_summary.on_hand_available, 1].sort[1] %>
+        <%= button_to "Allocate #{allocate_qty} on hand",
+              demand_demand_line_allocations_path(demand_line),
+              method: :post,
+              params: { allocation_kind: "on_hand", quantity: allocate_qty },
+              class: "ss-btn ss-btn-secondary" %>
+        <%= render "on_hand_allocation_form", demand_line: demand_line, available_for_allocation: available_for_allocation %>
+      <% end %>
+    <% else %>
+      <p class="ss-muted">No on-hand stock available for allocation.</p>
+    <% end %>
+  </section>
+
+  <section id="demand-inbound-allocation">
+    <h3>Inbound PO lines</h3>
+    <% if eligible_inbound_lines.any? %>
+      <table class="ss-table">
+        <thead>
+          <tr>
+            <th>PO</th>
+            <th>Vendor</th>
+            <th>Line</th>
+            <th class="ss-num">Open to receive</th>
+            <th class="ss-num">Available to allocate</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% eligible_inbound_lines.each do |option| %>
+            <tr>
+              <td><%= link_to "PO ##{option.purchase_order.id}", orders_purchase_order_path(option.purchase_order) %></td>
+              <td><%= option.vendor.name %></td>
+              <td>#<%= option.purchase_order_line.line_number %></td>
+              <td class="ss-num"><%= option.open_to_receive %></td>
+              <td class="ss-num"><%= option.available_to_allocate %></td>
+              <td>
+                <% if Authorization.allowed?(user: current_user, permission_key: "demand.allocations.create", store: current_store) %>
+                  <% qty = [supply_summary.unallocated_quantity, option.available_to_allocate, 1].sort[1] %>
+                  <%= button_to "Allocate #{qty}",
+                        demand_demand_line_allocations_path(demand_line),
+                        method: :post,
+                        params: {
+                          allocation_kind: "inbound_purchase_order",
+                          purchase_order_line_id: option.purchase_order_line.id,
+                          quantity: qty
+                        },
+                        class: "ss-btn ss-btn-secondary ss-btn--sm" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="ss-muted">No eligible inbound PO lines.</p>
+    <% end %>
+  </section>
+
+  <section id="demand-vendor-backorder">
+    <h3>Vendor backorder</h3>
+    <% if supply_summary.vendor_backorder_quantity.positive? %>
+      <p><%= supply_summary.vendor_backorder_quantity %> #{"copy".pluralize(supply_summary.vendor_backorder_quantity)} on vendor backorder.</p>
+    <% else %>
+      <p class="ss-muted">No vendor backorder allocations.</p>
+    <% end %>
+  </section>
+
+  <section id="demand-unresolved-supply">
+    <h3>Unresolved</h3>
+    <% if supply_summary.unallocated_quantity.positive? %>
+      <p><%= supply_summary.unallocated_quantity %> #{"copy".pluralize(supply_summary.unallocated_quantity)} still need supply.</p>
+      <div class="ss-detail-actions">
+        <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) %>
+          <%= link_to "Create PO",
+                new_orders_demand_po_builder_path(demand_line_ids: [demand_line.id]),
+                class: "ss-btn ss-btn-secondary" %>
+        <% end %>
+        <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.runs.create", store: current_store) %>
+          <%= link_to "Start sourcing", "##{workflow.next_action.anchor || "demand-sourcing-panel"}", class: "ss-btn ss-btn-secondary" %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="ss-muted">All requested quantity is allocated or planned.</p>
+    <% end %>
+  </section>
+</section>
