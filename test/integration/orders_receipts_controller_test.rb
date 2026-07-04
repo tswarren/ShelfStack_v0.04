@@ -106,7 +106,6 @@ class OrdersReceiptsControllerTest < ActionDispatch::IntegrationTest
     receipt = Receiving::CreateVendorShipmentReceipt.call!(
       store: @store,
       vendor: @vendor,
-      created_by_user: @user,
       attrs: {}
     )
     receipt.receipt_lines.create!(
@@ -158,5 +157,26 @@ class OrdersReceiptsControllerTest < ActionDispatch::IntegrationTest
     assert_nil receipt.purchase_order_id
     assert_equal purchase_order.id, receipt.match_filter_purchase_order_id
     assert_not_equal other_po.id, receipt.match_filter_purchase_order_id
+  end
+
+  test "vendor shipment rejects PO filter from a different vendor" do
+    other_vendor = create_vendor!(name: "Other Vendor")
+    other_po = PurchaseOrder.create!(
+      store: @store,
+      vendor: other_vendor,
+      status: "submitted",
+      submitted_at: Time.current
+    )
+
+    assert_no_difference -> { Receipt.count } do
+      post orders_receipts_path, params: {
+        receiving_mode: "vendor_shipment",
+        vendor_id: @vendor.id,
+        match_filter_purchase_order_id: other_po.id
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "must belong to the same vendor", response.body
   end
 end

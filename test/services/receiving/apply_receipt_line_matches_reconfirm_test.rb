@@ -27,7 +27,6 @@ class ReceivingApplyReceiptLineMatchesReconfirmTest < ActiveSupport::TestCase
     @receipt = Receiving::CreateVendorShipmentReceipt.call!(
       store: @store,
       vendor: @vendor,
-      created_by_user: @user,
       attrs: {}
     )
     @receipt_line = @receipt.receipt_lines.create!(
@@ -73,5 +72,23 @@ class ReceivingApplyReceiptLineMatchesReconfirmTest < ActiveSupport::TestCase
     assert_equal 2, match.quantity_matched
     assert_nil match.released_at
     assert AuditEvent.exists?(auditable: match, event_name: "receipt_line_match.reconfirmed")
+  end
+
+  test "reapplying confirmed match with same idempotency key is idempotent" do
+    Receiving::ApplyReceiptLineMatches.call!(
+      receipt: @receipt,
+      actor: @user,
+      matches: [ @match_attrs ]
+    )
+
+    assert_no_difference -> { ReceiptLineMatch.count } do
+      applied = Receiving::ApplyReceiptLineMatches.call!(
+        receipt: @receipt.reload,
+        actor: @user,
+        matches: [ @match_attrs ]
+      )
+      assert_equal 1, applied.size
+      assert applied.first.confirmed?
+    end
   end
 end

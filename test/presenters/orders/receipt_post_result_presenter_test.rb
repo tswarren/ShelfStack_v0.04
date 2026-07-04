@@ -34,7 +34,7 @@ class OrdersReceiptPostResultPresenterTest < ActiveSupport::TestCase
     Purchasing::SubmitPurchaseOrder.call(purchase_order: purchase_order, submitted_by_user: @user)
     po_line = purchase_order.purchase_order_lines.first
 
-    receipt = Receiving::CreateVendorShipmentReceipt.call!(store: @store, vendor: @vendor, created_by_user: @user, attrs: {})
+    receipt = Receiving::CreateVendorShipmentReceipt.call!(store: @store, vendor: @vendor, attrs: {})
     receipt_line = receipt.receipt_lines.create!(
       product_variant: @variant,
       quantity_expected: 0,

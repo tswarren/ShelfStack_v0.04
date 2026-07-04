@@ -27,7 +27,6 @@ class Purchasing::ReceiptDocumentHubMatchAwareTest < ActiveSupport::TestCase
     @receipt = Receiving::CreateVendorShipmentReceipt.call!(
       store: @store,
       vendor: @vendor,
-      created_by_user: @user,
       attrs: {}
     )
     @receipt_line = @receipt.receipt_lines.create!(

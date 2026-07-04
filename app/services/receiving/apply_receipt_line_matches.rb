@@ -22,16 +22,17 @@ module Receiving
         matches.each do |match_attrs|
           idempotency_key = match_attrs[:idempotency_key] ||
             "receipt:#{receipt.id}:line:#{match_attrs[:receipt_line_id]}:po_line:#{match_attrs[:purchase_order_line_id]}"
-          receipt_line = receipt.receipt_lines.find(match_attrs[:receipt_line_id])
-          po_line = PurchaseOrderLine.find(match_attrs[:purchase_order_line_id])
-          qty = match_attrs[:quantity_matched].to_i
-          validate_match!(receipt_line, po_line, qty)
 
           existing = ReceiptLineMatch.find_by(store: receipt.store, idempotency_key: idempotency_key)
           if existing&.confirmed?
             applied << existing
             next
           end
+
+          receipt_line = receipt.receipt_lines.find(match_attrs[:receipt_line_id])
+          po_line = PurchaseOrderLine.find(match_attrs[:purchase_order_line_id])
+          qty = match_attrs[:quantity_matched].to_i
+          validate_match!(receipt_line, po_line, qty)
 
           if existing.present?
             reconfirm_match!(existing, receipt_line:, po_line:, qty:, match_attrs:, idempotency_key:)

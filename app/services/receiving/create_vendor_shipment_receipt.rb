@@ -4,14 +4,13 @@ module Receiving
   class CreateVendorShipmentReceipt
     class CreateError < StandardError; end
 
-    def self.call!(store:, vendor:, created_by_user:, attrs: {})
-      new(store:, vendor:, created_by_user:, attrs:).call!
+    def self.call!(store:, vendor:, attrs: {})
+      new(store:, vendor:, attrs:).call!
     end
 
-    def initialize(store:, vendor:, created_by_user:, attrs: {})
+    def initialize(store:, vendor:, attrs: {})
       @store = store
       @vendor = vendor
-      @created_by_user = created_by_user
       @attrs = attrs
     end
 
@@ -35,7 +34,7 @@ module Receiving
 
     private
 
-    attr_reader :store, :vendor, :created_by_user, :attrs
+    attr_reader :store, :vendor, :attrs
 
   end
 end

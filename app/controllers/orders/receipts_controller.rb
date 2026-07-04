@@ -203,7 +203,6 @@ module Orders
       @receipt = Receiving::CreateVendorShipmentReceipt.call!(
         store: orders_store,
         vendor: vendor,
-        created_by_user: current_user,
         attrs: {
           match_filter_purchase_order_id: params[:match_filter_purchase_order_id].presence,
           vendor_packing_slip_number: params[:vendor_packing_slip_number],
@@ -214,7 +213,11 @@ module Orders
       )
       record_audit!("receipt.created", @receipt)
       redirect_to edit_orders_receipt_path(@receipt), notice: "Vendor shipment receipt created. Add lines and match to POs."
-    rescue ActiveRecord::RecordNotFound
+    rescue ActiveRecord::RecordNotFound, ActiveRecord::RecordInvalid => e
+      render_vendor_shipment_form_errors!(e)
+    end
+
+    def render_vendor_shipment_form_errors!(error)
       @vendors = Vendor.active_records.order(:name)
       @purchase_orders = PurchaseOrder.where(store: orders_store, status: PurchaseOrder::RECEIVABLE_PO_STATUSES)
                                       .order(created_at: :desc)
@@ -226,8 +229,17 @@ module Orders
         :received_at,
         :match_filter_purchase_order_id
       ))
-      flash.now[:alert] = "Vendor not found."
+      flash.now[:alert] = vendor_shipment_error_message(error)
       render "new_vendor_shipment", status: :unprocessable_entity
+    end
+
+    def vendor_shipment_error_message(error)
+      case error
+      when ActiveRecord::RecordInvalid
+        error.record.errors.full_messages.to_sentence
+      else
+        "Vendor not found."
+      end
     end
 
     def receipt_params

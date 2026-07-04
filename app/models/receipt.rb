@@ -75,6 +75,11 @@ class Receipt < ApplicationRecord
 
     errors.add(:match_filter_purchase_order, "must belong to the same vendor") if match_filter_purchase_order.vendor_id != vendor_id
     errors.add(:match_filter_purchase_order, "must belong to the same store") if match_filter_purchase_order.store_id != store_id
+    return if errors[:match_filter_purchase_order].any?
+
+    unless PurchaseOrder::RECEIVABLE_PO_STATUSES.include?(match_filter_purchase_order.status)
+      errors.add(:match_filter_purchase_order, "must be open for receiving")
+    end
   end
 
   def posted_fields_locked_when_posted

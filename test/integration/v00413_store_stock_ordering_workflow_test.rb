@@ -43,7 +43,6 @@ class V00413StoreStockOrderingWorkflowTest < ActiveSupport::TestCase
     receipt = Receiving::CreateVendorShipmentReceipt.call!(
       store: @store,
       vendor: @vendor,
-      created_by_user: @user,
       attrs: { vendor_shipment_reference: "SHIP-001" }
     )
     receipt_line = receipt.receipt_lines.create!(
@@ -95,7 +94,6 @@ class V00413StoreStockOrderingWorkflowTest < ActiveSupport::TestCase
     receipt = Receiving::CreateVendorShipmentReceipt.call!(
       store: @store,
       vendor: @vendor,
-      created_by_user: @user,
       attrs: {}
     )
     receipt_line = receipt.receipt_lines.create!(
