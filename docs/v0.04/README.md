@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** v0.04-13 Demand-to-Fulfillment Continuity (**complete**). v0.04-0 through v0.04-13 **complete**. Readiness-tier slices (B, E2, R) deferred; proposed v0.04-14 product/catalog cleanup planning, Phase 10-E, v0.04-3, or vendor integration may follow.
+**Current priority:** v0.04-13 Demand-to-Fulfillment Continuity (**complete**). v0.04-0 through v0.04-13 **complete**. Readiness-tier slices (B, E2, R) deferred; proposed target-state v0.04-14 product/catalog cleanup planning, Phase 10-E, v0.04-3, or vendor integration may follow.
 
 ---
 
@@ -36,7 +36,7 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-11 Doc and schema cleanup | **Complete** | [spec](v0.04-11-documentation-schema-cleanup/spec.md) · [audit log](v0.04-11-documentation-schema-cleanup/data-model.md) · [test plan](v0.04-11-documentation-schema-cleanup/test-plan.md) · [completion](../implementation/v0.04-11-completion.md) |
 | v0.04-12 Demand ordering UX | **Complete** | [spec](v0.04-12-demand-ordering-ux/spec.md) · [data model](v0.04-12-demand-ordering-ux/data-model.md) · [test plan](v0.04-12-demand-ordering-ux/test-plan.md) · [completion](../implementation/v0.04-12-completion.md) |
 | v0.04-13 Demand-to-fulfillment continuity | **Complete** | [spec](v0.04-13-demand-to-fulfillment-continuity/spec.md) · [data model](v0.04-13-demand-to-fulfillment-continuity/data-model.md) · [test plan](v0.04-13-demand-to-fulfillment-continuity/test-plan.md) · [completion](../implementation/v0.04-13-completion.md) |
-| v0.04-14 Product/catalog cleanup | **Proposed** | [planning roadmap](../roadmap/v0.04-14-product-catalog-cleanup.md) · [wireframes](../roadmap/v0.04-14-product-catalog-wireframes.md) |
+| v0.04-14 Product/catalog cleanup | **Proposed target state** | [planning roadmap](../roadmap/v0.04-14-product-catalog-cleanup.md) · [wireframes](../roadmap/v0.04-14-product-catalog-wireframes.md) |
 
 ---
 
