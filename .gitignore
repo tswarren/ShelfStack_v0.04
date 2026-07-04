@@ -36,3 +36,6 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Local design scratch (see docs/v0.04 bundles for authoritative specs).
+/docs/drafts_temp/
+
