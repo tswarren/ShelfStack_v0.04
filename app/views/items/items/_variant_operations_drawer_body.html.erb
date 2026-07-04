@@ -2,19 +2,18 @@
 <%= turbo_frame_tag "variant-ops-drawer-frame" do %>
 <% variant = drawer.variant %>
 <% row = drawer.variant_row %>
-<% availability = drawer.availability_context %>
-
-<% availability = drawer.availability_header %>
+<% availability_context = drawer.availability_context %>
+<% availability_header = drawer.availability_header %>
 
 <section class="ss-drawer-section">
   <h3 class="ss-drawer-section-title">Availability</h3>
   <div class="ss-metric-strip ss-metric-strip--compact">
-    <div class="ss-metric"><span class="ss-metric__label">On hand</span><span class="ss-metric__value ss-num"><%= availability[:on_hand] %></span></div>
-    <div class="ss-metric"><span class="ss-metric__label">Reserved</span><span class="ss-metric__value ss-num"><%= availability[:reserved] %></span></div>
-    <div class="ss-metric"><span class="ss-metric__label">Available</span><span class="ss-metric__value ss-num"><%= availability[:available] %></span></div>
-    <div class="ss-metric"><span class="ss-metric__label">On order</span><span class="ss-metric__value ss-num"><%= availability[:on_order] %></span></div>
-    <div class="ss-metric"><span class="ss-metric__label">Inbound allocated</span><span class="ss-metric__value ss-num"><%= availability[:inbound_allocated] %></span></div>
-    <div class="ss-metric"><span class="ss-metric__label">Inbound available</span><span class="ss-metric__value ss-num"><%= availability[:inbound_available] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">On hand</span><span class="ss-metric__value ss-num"><%= availability_header[:on_hand] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Reserved</span><span class="ss-metric__value ss-num"><%= availability_header[:reserved] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Available</span><span class="ss-metric__value ss-num"><%= availability_header[:available] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">On order</span><span class="ss-metric__value ss-num"><%= availability_header[:on_order] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Inbound allocated</span><span class="ss-metric__value ss-num"><%= availability_header[:inbound_allocated] %></span></div>
+    <div class="ss-metric"><span class="ss-metric__label">Inbound available</span><span class="ss-metric__value ss-num"><%= availability_header[:inbound_available] %></span></div>
   </div>
   <% if drawer.recent_activity_one_liner.present? %>
     <p class="ss-muted"><%= drawer.recent_activity_one_liner %></p>
@@ -65,8 +64,8 @@
                   data-action="item-variant-ops-drawer#prepareDemandAction"
                   data-drawer-key="<%= action.drawer_key %>"
                   data-variant-id="<%= variant.id %>"
-                  data-available="<%= availability&.available || 0 %>"
-                  data-on-hand="<%= availability&.on_hand || 0 %>">
+                  data-available="<%= availability_context&.available || 0 %>"
+                  data-on-hand="<%= availability_context&.on_hand || 0 %>">
             <%= action.label %>
           </button>
         <% end %>

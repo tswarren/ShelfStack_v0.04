@@ -6,16 +6,18 @@
     <p class="ss-muted"><%= action.body %></p>
   <% end %>
 
-  <div class="ss-detail-actions">
+  <% action_buttons = capture do %>
     <% case action.key %>
     <% when :create_po, :planned_po %>
       <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) %>
         <%= link_to "Create PO draft",
               new_orders_demand_po_builder_path(demand_line_ids: [workflow.demand_line.id]),
               class: "ss-btn" %>
-        <%= link_to action.secondary_label,
-              add_to_po_demand_demand_line_path(workflow.demand_line),
-              class: "ss-btn ss-btn-secondary" if action.secondary_path.present? %>
+        <% if action.secondary_path.present? %>
+          <%= link_to action.secondary_label,
+                add_to_po_demand_demand_line_path(workflow.demand_line),
+                class: "ss-btn ss-btn-secondary" %>
+        <% end %>
       <% end %>
     <% when :start_sourcing, :review_sourcing %>
       <% if workflow.active_sourcing_run.present? %>
@@ -36,5 +38,9 @@
       <%= link_to action.primary_label, action.primary_path, class: "ss-btn" if action.primary_path.present? %>
       <%= link_to action.secondary_label, action.secondary_path, class: "ss-btn ss-btn-secondary" if action.secondary_path.present? %>
     <% end %>
-  </div>
+  <% end %>
+
+  <% if action_buttons.present? %>
+    <div class="ss-detail-actions"><%= action_buttons %></div>
+  <% end %>
 </section>

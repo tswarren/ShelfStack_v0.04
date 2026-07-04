@@ -1,14 +1,20 @@
-<h1>Demand
-  <% if @active_queue.present? %>
-    <span class="ss-muted">· <%= customers_queue_label(@active_queue) %></span>
-  <% end %>
-  <% if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
-    <%= link_to "New", new_demand_demand_line_path, class: "ss-btn" %>
-  <% end %>
-  <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.access", store: current_store) %>
-    <%= link_to "Stock considerations", demand_stock_considerations_path, class: "ss-btn ss-btn-secondary" %>
-  <% end %>
-</h1>
+<div class="ss-page-header">
+  <div>
+    <h1>Demand
+      <% if @active_queue.present? %>
+        <span class="ss-muted">· <%= customers_queue_label(@active_queue) %></span>
+      <% end %>
+    </h1>
+  </div>
+  <div class="ss-page-actions">
+    <% if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
+      <%= link_to "New", new_demand_demand_line_path, class: "ss-btn" %>
+    <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.access", store: current_store) %>
+      <%= link_to "Stock considerations", demand_stock_considerations_path, class: "ss-btn ss-btn-secondary" %>
+    <% end %>
+  </div>
+</div>
 
 <div class="ss-filter-bar">
   <%= link_to customers_queue_link_label(nil), demand_root_path, class: customers_queue_link_class(nil) %>

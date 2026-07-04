@@ -29,11 +29,15 @@ module Sourcing
 
     def discount_hint
       suggestion = candidate.suggestion
-      return "—" if suggestion.product_variant_vendor.blank? && suggestion.product_vendor.blank?
+      bps = if suggestion.product_variant_vendor.present?
+        suggestion.product_variant_vendor.supplier_discount_bps
+      elsif suggestion.product_vendor.present?
+        suggestion.product_vendor.supplier_discount_bps
+      else
+        vendor.default_supplier_discount_bps
+      end
 
-      source = suggestion.product_variant_vendor || suggestion.product_vendor
-      bps = source.default_supplier_discount_bps
-      bps ? "#{bps / 100.0}%" : "—"
+      bps.present? ? ApplicationController.helpers.format_basis_points(bps) : "—"
     end
 
     def source_record_hint
