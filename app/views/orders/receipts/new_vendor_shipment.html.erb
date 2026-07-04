@@ -36,11 +36,13 @@
   </div>
 
   <div class="ss-field">
-    <%= label_tag :purchase_order_id, "Optional PO filter (scopes match candidates)", class: "ss-label" %>
-    <%= select_tag :purchase_order_id,
-          options_from_collection_for_select(@purchase_orders, :id) { |po| "PO ##{po.id} · #{po.vendor.name}" },
+    <%= label_tag :match_filter_purchase_order_id, "Optional PO filter (scopes match candidates)", class: "ss-label" %>
+    <%= select_tag :match_filter_purchase_order_id,
+          options_for_select(
+            @purchase_orders.map { |po| ["PO ##{po.id} · #{po.vendor.name}", po.id] },
+            @vendor_shipment.match_filter_purchase_order_id
+          ),
           include_blank: "Any open PO",
-          selected: @vendor_shipment.purchase_order_id,
           class: "ss-input" %>
   </div>
 

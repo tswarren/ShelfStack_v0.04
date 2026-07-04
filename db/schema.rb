@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -1631,6 +1631,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_140000) do
   create_table "receipts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "inventory_posting_id"
+    t.bigint "match_filter_purchase_order_id"
     t.string "origin_method", default: "manual", null: false
     t.datetime "posted_at"
     t.bigint "posted_by_user_id"
@@ -1648,6 +1649,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_140000) do
     t.string "vendor_shipment_destination", default: "store", null: false
     t.string "vendor_shipment_reference"
     t.index ["inventory_posting_id"], name: "index_receipts_on_inventory_posting_id"
+    t.index ["match_filter_purchase_order_id"], name: "index_receipts_on_match_filter_purchase_order_id"
     t.index ["posted_by_user_id"], name: "index_receipts_on_posted_by_user_id"
     t.index ["purchase_order_id"], name: "index_receipts_on_purchase_order_id"
     t.index ["receipt_type"], name: "index_receipts_on_receipt_type"
@@ -2596,6 +2598,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_140000) do
   add_foreign_key "receipt_lines", "receipts"
   add_foreign_key "receipts", "inventory_postings"
   add_foreign_key "receipts", "purchase_orders"
+  add_foreign_key "receipts", "purchase_orders", column: "match_filter_purchase_order_id"
   add_foreign_key "receipts", "stores"
   add_foreign_key "receipts", "users", column: "posted_by_user_id"
   add_foreign_key "receipts", "vendors"

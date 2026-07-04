@@ -12,7 +12,7 @@
 </div>
 
 <% if @rows.any? %>
-  <%= form_with url: new_orders_demand_po_builder_path, method: :get, id: "buyer-workbench-bulk", class: "ss-form" do %>
+  <%= form_with url: new_orders_demand_po_builder_path, method: :get, id: "buyer-workbench-bulk", class: "ss-form", data: { controller: "buyer-workbench" } do %>
     <table class="ss-table">
       <thead>
         <tr>

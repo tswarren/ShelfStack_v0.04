@@ -11,21 +11,27 @@ module Receiving
       :sort_priority
     )
 
-    def self.call(receipt_line:)
-      new(receipt_line:).call
+    def self.call(receipt_line:, purchase_order_id: nil)
+      new(receipt_line:, purchase_order_id:).call
     end
 
-    def initialize(receipt_line:)
+    def initialize(receipt_line:, purchase_order_id: nil)
       @receipt_line = receipt_line
+      @purchase_order_id = purchase_order_id
     end
 
     def call
       variant = receipt_line.product_variant
       store = receipt_line.receipt.store
       vendor = receipt_line.receipt.vendor
-
-      PurchaseOrderLine.joins(:purchase_order)
+      scope = PurchaseOrderLine.joins(:purchase_order)
                        .where(purchase_orders: { store_id: store.id, vendor_id: vendor.id, status: PurchaseOrder::RECEIVABLE_PO_STATUSES })
+
+      if filter_purchase_order_id.present?
+        scope = scope.where(purchase_orders: { id: filter_purchase_order_id })
+      end
+
+      scope
                        .where(product_variant_id: variant.id, status: PurchaseOrder::OPEN_FOR_RECEIVE_LINE_STATUSES)
                        .includes(:purchase_order, :purchase_order_line_demand_plans)
                        .filter_map do |po_line|
@@ -50,6 +56,10 @@ module Receiving
 
     private
 
-    attr_reader :receipt_line
+    attr_reader :receipt_line, :purchase_order_id
+
+    def filter_purchase_order_id
+      purchase_order_id.presence || receipt_line.receipt.match_filter_purchase_order_id
+    end
   end
 end

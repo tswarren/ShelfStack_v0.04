@@ -17,7 +17,7 @@ module VendorCapabilities
     ship_to_store vendor_direct_to_customer consolidated_shipment holding_order
   ].freeze
 
-  DEFAULT_FULFILLMENT_METHODS = ["ship_to_store"].freeze
+  DEFAULT_FULFILLMENT_METHODS = [ "ship_to_store" ].freeze
   WHOLESALER_FULFILLMENT_METHODS = %w[
     ship_to_store vendor_direct_to_customer consolidated_shipment holding_order
   ].freeze

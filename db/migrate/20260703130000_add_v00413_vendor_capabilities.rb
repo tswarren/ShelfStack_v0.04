@@ -10,7 +10,7 @@ class AddV00413VendorCapabilities < ActiveRecord::Migration[8.0]
       t.string :shipment_notice_method, null: false, default: "none"
       t.string :invoice_method, null: false, default: "manual"
       t.string :technical_acknowledgment_method, null: false, default: "none"
-      t.jsonb :fulfillment_methods_supported, null: false, default: ["ship_to_store"]
+      t.jsonb :fulfillment_methods_supported, null: false, default: [ "ship_to_store" ]
     end
   end
 end

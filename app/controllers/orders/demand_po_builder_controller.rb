@@ -22,6 +22,17 @@ module Orders
       purchase_orders = []
       plan = Purchasing::DemandCoveragePlanner.call(demand_lines: @demand_lines, store: orders_store)
 
+      if plan.vendor_plans.empty?
+        @presenter = DemandPoBuilderPresenter.new(
+          store: orders_store,
+          demand_lines: @demand_lines,
+          mode: params[:mode].presence || "create_new"
+        )
+        flash.now[:alert] = "No eligible vendor could be resolved for the selected demand."
+        render :new, status: :unprocessable_entity
+        return
+      end
+
       PurchaseOrder.transaction do
         plan.vendor_plans.each do |vendor_plan|
           demand_line_ids = vendor_plan.line_plans.map { |lp| lp.demand_line.id }

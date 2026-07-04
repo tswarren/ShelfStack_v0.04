@@ -42,4 +42,24 @@ class OrdersDemandPoBuilderTest < ActionDispatch::IntegrationTest
     assert_redirected_to orders_purchase_order_path(purchase_order)
     assert purchase_order.purchase_order_line_demand_plans.active_plans.exists?
   end
+
+  test "create rejects demand with no resolvable vendor" do
+    variant = create_product_variant!(inventory_behavior: "standard_physical")
+    demand = DemandLines::Create.call!(
+      store: @store,
+      actor: @user,
+      capture_intent: "special_order",
+      variant: variant,
+      customer: create_customer!,
+      quantity: 1
+    )
+
+    post orders_demand_po_builder_path, params: {
+      demand_line_ids: [ demand.id ],
+      vendor_groups: {}
+    }
+
+    assert_response :unprocessable_entity
+    assert_match "No eligible vendor could be resolved", response.body
+  end
 end

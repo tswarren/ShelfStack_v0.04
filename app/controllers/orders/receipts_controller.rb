@@ -29,14 +29,15 @@ module Orders
     def new
       if params[:receiving_mode] == "vendor_shipment"
         @vendors = Vendor.active_records.order(:name)
-        @purchase_orders = PurchaseOrder.where(store: orders_store, status: %w[draft submitted partial_received]).order(created_at: :desc)
+        @purchase_orders = PurchaseOrder.where(store: orders_store, status: PurchaseOrder::RECEIVABLE_PO_STATUSES)
+                                          .order(created_at: :desc)
         @vendor_shipment = OpenStruct.new(
           vendor_id: params[:vendor_id],
           vendor_packing_slip_number: params[:vendor_packing_slip_number],
           vendor_invoice_number: params[:vendor_invoice_number],
           tracking_number: params[:tracking_number],
           received_at: params[:received_at].presence || Time.current,
-          purchase_order_id: params[:purchase_order_id]
+          match_filter_purchase_order_id: params[:match_filter_purchase_order_id]
         )
         return
       end
@@ -139,7 +140,7 @@ module Orders
           receipt_lines: [
             :product_variant,
             :purchase_order_line,
-            { purchase_order_line: :demand_allocations },
+            { purchase_order_line: :demand_allocations }
           ],
           receipt_line_matches: [ :receipt_line, :purchase_order_line, :purchase_order ]
         )
@@ -204,7 +205,7 @@ module Orders
         vendor: vendor,
         created_by_user: current_user,
         attrs: {
-          purchase_order_id: params[:purchase_order_id].presence,
+          match_filter_purchase_order_id: params[:match_filter_purchase_order_id].presence,
           vendor_packing_slip_number: params[:vendor_packing_slip_number],
           vendor_invoice_number: params[:vendor_invoice_number],
           tracking_number: params[:tracking_number],
@@ -215,8 +216,16 @@ module Orders
       redirect_to edit_orders_receipt_path(@receipt), notice: "Vendor shipment receipt created. Add lines and match to POs."
     rescue ActiveRecord::RecordNotFound
       @vendors = Vendor.active_records.order(:name)
-      @purchase_orders = PurchaseOrder.where(store: orders_store, status: %w[draft submitted partial_received]).order(created_at: :desc)
-      @vendor_shipment = OpenStruct.new(params.permit(:vendor_id, :vendor_packing_slip_number, :vendor_invoice_number, :tracking_number, :received_at, :purchase_order_id))
+      @purchase_orders = PurchaseOrder.where(store: orders_store, status: PurchaseOrder::RECEIVABLE_PO_STATUSES)
+                                      .order(created_at: :desc)
+      @vendor_shipment = OpenStruct.new(params.permit(
+        :vendor_id,
+        :vendor_packing_slip_number,
+        :vendor_invoice_number,
+        :tracking_number,
+        :received_at,
+        :match_filter_purchase_order_id
+      ))
       flash.now[:alert] = "Vendor not found."
       render "new_vendor_shipment", status: :unprocessable_entity
     end

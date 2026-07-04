@@ -12,6 +12,7 @@ class Receipt < ApplicationRecord
   belongs_to :store
   belongs_to :vendor
   belongs_to :purchase_order, optional: true
+  belongs_to :match_filter_purchase_order, class_name: "PurchaseOrder", optional: true
   belongs_to :posted_by_user, class_name: "User", optional: true
   belongs_to :inventory_posting, optional: true
 
@@ -30,6 +31,7 @@ class Receipt < ApplicationRecord
   validate :store_must_be_active
   validate :vendor_must_be_active
   validate :purchase_order_must_match_vendor
+  validate :match_filter_purchase_order_must_match_vendor
   validate :posted_fields_locked_when_posted, on: :update
   validate :cannot_edit_when_posted, on: :update
 
@@ -66,6 +68,13 @@ class Receipt < ApplicationRecord
 
     errors.add(:purchase_order, "must belong to the same vendor") if purchase_order.vendor_id != vendor_id
     errors.add(:purchase_order, "must belong to the same store") if purchase_order.store_id != store_id
+  end
+
+  def match_filter_purchase_order_must_match_vendor
+    return if match_filter_purchase_order.blank?
+
+    errors.add(:match_filter_purchase_order, "must belong to the same vendor") if match_filter_purchase_order.vendor_id != vendor_id
+    errors.add(:match_filter_purchase_order, "must belong to the same store") if match_filter_purchase_order.store_id != store_id
   end
 
   def posted_fields_locked_when_posted

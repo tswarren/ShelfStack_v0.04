@@ -227,9 +227,9 @@ module Shelfstack
           pass = send(method)
           checks << if advisory
                       pending_check(key.to_s, "readiness", pass ? "advisory pass" : "advisory")
-                    else
+          else
                       enforced_check(key.to_s, pass)
-                    end
+          end
         end
       end
 
