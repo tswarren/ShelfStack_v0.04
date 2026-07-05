@@ -1,0 +1,157 @@
+/* ShelfStack Form Components */
+
+.ss-form {
+  display: grid;
+  gap: var(--gap-section);
+}
+
+.ss-form--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.ss-form--compact,
+.ss-form--dense {
+  gap: var(--gap-ui);
+}
+
+.ss-form-card {
+  overflow: hidden;
+}
+
+.ss-form-card-header,
+.ss-form-card__header {
+  padding: var(--pad-card-lg);
+  background: var(--color-base-150);
+  border-bottom: 1px solid var(--color-base-300);
+}
+
+.ss-form-card-body,
+.ss-form-card__body {
+  padding: var(--pad-card-lg);
+}
+
+.ss-form-grid {
+  display: grid;
+  gap: 0.85rem 1rem;
+  padding: var(--pad-card);
+}
+
+.ss-form-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ss-form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.ss-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  align-items: center;
+}
+
+.ss-form-actions--end { justify-content: flex-end; }
+.ss-form-actions--between { justify-content: space-between; }
+
+.ss-field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ss-field--inline {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-ui);
+}
+
+.ss-fieldset {
+  margin: 0;
+  padding: var(--pad-card);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+}
+
+.ss-fieldset__legend,
+.ss-field-label,
+.ss-form label,
+.ss-field label,
+.ss-field .ss-label {
+  color: var(--color-base-content);
+  font-weight: 700;
+  line-height: var(--line-ui);
+}
+
+.ss-help,
+.ss-hint,
+.ss-fieldset__description {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.ss-field-error { color: var(--color-error); font-size: 0.8125rem; font-weight: 650; }
+.ss-field-warning { color: #7a5200; font-size: 0.8125rem; font-weight: 650; }
+
+.ss-input,
+.ss-textarea,
+.ss-select,
+.ss-form input,
+.ss-form select,
+.ss-form textarea,
+.ss-field input,
+.ss-field select,
+.ss-field textarea,
+.ss-search-form input[type="text"],
+.ss-search-form input[type="search"] {
+  max-width: 100%;
+  padding: var(--pad-ui-y) var(--pad-ui-x);
+  line-height: var(--line-ui);
+  background: var(--color-surface);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-pill);
+  color: var(--color-base-content);
+}
+
+.ss-textarea,
+.ss-form textarea {
+  border-radius: var(--radius-md);
+}
+
+.ss-input:focus,
+.ss-textarea:focus,
+.ss-select:focus,
+.ss-form input:focus,
+.ss-form select:focus,
+.ss-form textarea:focus {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.ss-choice-list,
+.ss-checkbox-group,
+.ss-radio-group {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ss-choice-option,
+.ss-check-field,
+.ss-checkbox-field,
+.ss-radio-field {
+  display: flex;
+  gap: var(--gap-ui);
+  align-items: flex-start;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ss-toggle-group,
+.ss-date-range,
+.ss-filter-group,
+.ss-combobox,
+.ss-lookup-panel,
+.ss-upload-zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+}
