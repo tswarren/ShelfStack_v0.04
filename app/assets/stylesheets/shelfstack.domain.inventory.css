@@ -1,0 +1,63 @@
+/* ShelfStack Inventory Domain Components */
+
+.ss-stock-summary,
+.ss-stock-summary-card,
+.ss-inventory-warning {
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--pad-card);
+}
+
+.ss-stock-summary {
+  display: grid;
+  gap: var(--gap-ui);
+}
+
+.ss-stock-movement-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--gap-ui);
+  align-items: center;
+}
+
+.ss-stock-movement-row--receipt { border-left: 4px solid var(--color-success); }
+.ss-stock-movement-row--sale { border-left: 4px solid var(--color-primary); }
+.ss-stock-movement-row--adjustment { border-left: 4px solid var(--color-brand-gold); }
+.ss-stock-movement-row--rtv { border-left: 4px solid var(--color-secondary); }
+.ss-stock-movement-row--buyback { border-left: 4px solid var(--color-info); }
+
+.ss-quantity-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  padding: 0.18rem 0.48rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-quantity-badge--positive { background: var(--color-primary-soft); color: var(--color-primary); }
+.ss-quantity-badge--zero { background: #11182714; color: var(--color-muted); }
+.ss-quantity-badge--negative { background: #d938381a; color: #9b1c1c; }
+.ss-quantity-badge--on-order { background: var(--color-brand-gold-soft); color: #7a5200; }
+.ss-quantity-badge--reserved { background: var(--color-secondary-soft); color: var(--color-secondary); }
+
+.ss-inventory-warning {
+  border-left: 4px solid var(--color-brand-gold);
+  background: #ffaa0014;
+  color: #7a5200;
+}
+
+.ss-inventory-warning--negative,
+.ss-inventory-warning--discrepancy {
+  border-left-color: var(--color-error);
+  background: #d938381a;
+  color: #9b1c1c;
+}
+
+.ss-inventory-balance-table,
+.ss-inventory-adjustment-form {
+  display: grid;
+  gap: var(--gap-ui);
+}
