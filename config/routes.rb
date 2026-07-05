@@ -7,6 +7,7 @@ Rails.application.routes.draw do
 
   resource :password, only: %i[edit update], controller: "passwords"
   resource :pin, only: %i[edit update], controller: "pins"
+  resource :appearance_preference, only: %i[update], controller: "appearance_preferences"
 
   resource :workstation_assignment, only: %i[new create], controller: "workstation_assignments"
 
