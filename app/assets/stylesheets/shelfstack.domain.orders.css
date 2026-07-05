@@ -1,0 +1,84 @@
+/* ShelfStack Orders/Purchasing Domain Components */
+
+.ss-document-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-ui);
+  align-items: flex-start;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-glass);
+  padding: var(--pad-card-lg);
+}
+
+.ss-document-header__meta {
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.ss-line-entry-table,
+.ss-purchasing-table {
+  width: 100%;
+}
+
+.ss-purchasing-table .ss-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.25rem 0.35rem;
+  line-height: var(--line-compact);
+  font-size: 0.8125rem;
+}
+
+.ss-purchasing-table__scan { min-width: 8rem; }
+.ss-purchasing-table__qty { max-width: 4.5rem; }
+.ss-purchasing-table__money { max-width: 5.5rem; }
+
+.ss-purchasing-table__choices {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.ss-purchasing-table__warnings {
+  font-size: 0.75rem;
+  color: #b45309;
+  max-width: 8rem;
+}
+
+.ss-purchasing-table__totals td {
+  background: var(--color-base-150);
+  font-weight: 600;
+}
+
+.ss-receiving-qty-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+  gap: var(--gap-ui);
+}
+
+.ss-receipt-match-card,
+.ss-vendor-source-card,
+.ss-vendor-cascade-step {
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--pad-card);
+}
+
+.ss-receipt-match-card--selected,
+.ss-vendor-source-card--preferred {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.ss-receipt-match-card--conflict,
+.ss-receipt-match-card--unmatched {
+  border-color: #ffaa0073;
+  background: #ffaa0014;
+}
+
+.ss-vendor-cascade {
+  display: grid;
+  gap: var(--gap-ui);
+}
