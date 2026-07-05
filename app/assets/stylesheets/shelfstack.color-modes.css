@@ -1,0 +1,18 @@
+/*
+ * ShelfStack Color Modes
+ *
+ * Light mode is the current supported production mode. Dark mode is reserved
+ * until all operational screens and print views have been reviewed.
+ */
+
+:root,
+[data-ss-color-mode="light"],
+.ss-color-mode-light {
+  color-scheme: light;
+}
+
+[data-ss-color-mode="dark"],
+.ss-color-mode-dark {
+  color-scheme: dark;
+  /* Reserved: do not expose until audited. */
+}
