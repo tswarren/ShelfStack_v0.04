@@ -1,0 +1,13 @@
+/*
+  ShelfStack Preview Bundle: Atkinson Variant
+  ------------------------------------------------------------
+  Load this AFTER the existing ShelfStack CSS.
+
+  Import order:
+    1. current shelfstack.css
+    2. shelfstack.visual-preview.css
+    3. shelfstack.ux-improvements.css
+*/
+
+@import "shelfstack.visual-preview.css";
+@import "shelfstack.ux-improvements.css";

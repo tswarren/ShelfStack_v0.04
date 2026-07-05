@@ -1,0 +1,17 @@
+/*
+  ShelfStack Preview Bundle: Lexend Variant
+  ------------------------------------------------------------
+  Load this AFTER the existing ShelfStack CSS.
+
+  Import order:
+    1. current shelfstack.css
+    2. shelfstack.visual-preview.css
+    3. shelfstack.ux-improvements.css
+    4. shelfstack.lexend.css
+    5. shelfstack.lexend-density.css
+*/
+
+@import "shelfstack.visual-preview.css";
+@import "shelfstack.ux-improvements.css";
+@import "shelfstack.lexend.css";
+@import "shelfstack.lexend-density.css";

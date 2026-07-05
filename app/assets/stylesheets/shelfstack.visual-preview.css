@@ -1,0 +1,811 @@
+/* Optional webfont import for local preview.
+   In production, consider self-hosting or loading through the Rails asset pipeline. */
+   @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,200..800;1,200..800&family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Lexend:wght@100..900&display=swap');
+
+/*
+  ShelfStack Visual Direction Preview Overlay
+  ------------------------------------------------------------
+  Load this AFTER the existing shelfstack.css to quickly preview
+  the warmer ShelfStack UX direction without rewriting views.
+
+  Suggested import order:
+    @import "shelfstack.css";
+    @import "shelfstack.visual-preview.css";
+
+  This file intentionally:
+  - preserves existing .ss-* class names
+  - adds reusable aliases for future markup
+  - restyles existing components through grouped selectors
+  - keeps POS calmer than content/detail pages
+*/
+
+/* ==========================================================================
+   01. Visual direction tokens
+   ========================================================================== */
+
+:root {
+  --color-base-100: #f5f3ef; /* Paarchment */
+  --color-base-150: #ebe6dd; /* Paper */
+  --color-base-200: #d8d0c0;
+  --color-base-300: #c4b8a1; /* Ink */
+  --color-base-content: #111827; /* Text */
+
+  --color-muted: #5c5347; /* Dust */
+  --color-muted-subtle: #78716c; /* Smoke */
+
+  --color-primary: #0e4a4a; /* Teal */ /* Primary */
+  --color-primary-hover: #0a3a3a; /* Teal Dark */
+  --color-primary-soft: #0e4a4a1a; /* Teal Soft */
+
+  --color-secondary: #5a1e4a; /* Purple */
+  --color-secondary-hover: #4a183d; /* Purple Dark */
+  --color-secondary-soft: #5a1e4a1a; /* Purple Soft */
+
+  --color-brand-gold: #d08a00; /* Gold */
+  --color-brand-gold-soft: #d08a0024; /* Gold Soft */
+
+  --color-surface: #ffffff; /* White */
+  --color-surface-glass: #ffffffdb; /* White Glass */
+  --color-surface-muted: #f5f3ef; /* Paarchment Light */
+
+  --radius-sm: 0.45rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.15rem;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px #11182714;
+  --shadow-md: 0 8px 24px #1118271a;
+
+  --layout-max: 1180px;
+
+  --font-ui: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Keep existing names mapped to the new scale. */
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-pill);
+  --radius-box: var(--radius-md);
+}
+
+/* ==========================================================================
+   02. Global atmosphere
+   ========================================================================== */
+
+body {
+  font-family: var(--font-ui, "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  background:
+    radial-gradient(circle at top left, #0e4a4a1a, transparent 34rem),
+    radial-gradient(circle at top right, #5a1e4a1f, transparent 30rem),
+    var(--color-base-100);
+  color: var(--color-base-content);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration-color: var(--color-base-300);
+  text-underline-offset: 0.16em;
+}
+
+a:hover {
+  color: var(--color-secondary);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-base-content);
+}
+
+h1 {
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  color: var(--color-base-content);
+}
+
+/* Keep active POS workspace plainer and calmer. */
+.ss-pos-body {
+  background: var(--color-base-100);
+}
+
+/* ==========================================================================
+   03. App shell preview
+   ========================================================================== */
+
+.ss-header {
+  background: #f5f3efe0;
+  border-bottom: 1px solid var(--color-base-300);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  min-height: 3.75rem;
+  box-shadow: 0 1px 0 #ffffff80;
+}
+
+.ss-header-logo img {
+  height: 40px;
+}
+
+.ss-header-context {
+  color: var(--color-muted);
+  font-size: 0.84rem;
+}
+
+.ss-main {
+  max-width: var(--layout-max);
+  padding: 1.25rem;
+}
+
+.ss-footer {
+  background: #f5f3efe0;
+  border-top: 1px solid var(--color-base-300);
+  color: var(--color-muted);
+}
+
+/* Make the nav quieter and less block-like. */
+.ss-nav {
+  background: #0e4a4a;
+  border-bottom: 1px solid #092f2f;
+  padding: 0.45rem 1rem;
+  gap: 0.35rem;
+}
+
+.ss-nav a,
+.ss-nav .disabled {
+  border-radius: var(--radius-pill);
+  padding: 0.34rem 0.75rem;
+  font-weight: 650;
+}
+
+.ss-nav a:hover {
+  background: #ffffff24;
+}
+
+.ss-nav a.active {
+  background: var(--color-brand-gold);
+  color: #2a1d00;
+}
+
+/* ==========================================================================
+   04. Reusable aliases for future markup
+   ========================================================================== */
+
+.ss-surface {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-surface--plain {
+  background: var(--color-surface);
+}
+
+.ss-surface--muted {
+  background: var(--color-surface-muted);
+}
+
+.ss-surface--compact {
+  border-radius: var(--radius-md);
+}
+
+.ss-surface--strong {
+  box-shadow: var(--shadow-md);
+}
+
+.ss-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.ss-stack--xs { gap: 0.35rem; }
+.ss-stack--sm { gap: 0.5rem; }
+.ss-stack--md { gap: 0.75rem; }
+.ss-stack--start { align-content: start; }
+
+.ss-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ss-action-row--between {
+  justify-content: space-between;
+}
+
+.ss-action-row--end {
+  justify-content: flex-end;
+}
+
+.ss-action-row--loose {
+  gap: 0.75rem 1rem;
+}
+
+.ss-label,
+.ss-eyebrow {
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.ss-text-muted,
+.ss-muted {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  opacity: 1;
+}
+
+.ss-text-subtle {
+  color: var(--color-muted-subtle);
+}
+
+.ss-tabular,
+.ss-money,
+.ss-percent {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   05. Surfaces applied to existing ShelfStack components
+   ========================================================================== */
+
+.ss-card,
+.ss-form-card,
+.ss-detail-panel,
+div.ss-summary,
+dl.ss-summary,
+.ss-sidebar-card,
+.ss-collapsible-panel,
+.ss-item-summary-card,
+.ss-item-ops-summary,
+.ss-pos-panel,
+.ss-pos-balance-inquiry__result,
+.ss-filter-bar,
+.ss-items-index-filters,
+.ss-report-section,
+.ss-buyback-panel,
+.ss-buyback-summary-card {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-card,
+.ss-form-card,
+.ss-sidebar-card,
+.ss-pos-panel {
+  padding: 1rem;
+}
+
+.ss-card:hover {
+  border-color: #0e4a4a66;
+  box-shadow: var(--shadow-md);
+}
+
+.ss-form-card-header,
+div.ss-summary > h2 {
+  background: var(--color-base-150);
+  color: var(--color-base-content);
+  border-bottom: 1px solid var(--color-base-300);
+}
+
+.ss-sidebar-card,
+.ss-collapsible-panel,
+.ss-item-ops-summary,
+.ss-pos-panel {
+  background: var(--color-surface);
+}
+
+/* ==========================================================================
+   06. Buttons, links, and action rows
+   ========================================================================== */
+
+.ss-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-btn:hover {
+  background: var(--color-primary-hover);
+  color: var(--color-primary-content);
+  box-shadow: var(--shadow-md);
+}
+
+.ss-btn-secondary {
+  background: var(--color-secondary);
+  color: var(--color-secondary-content);
+}
+
+.ss-btn-secondary:hover {
+  background: var(--color-secondary-hover);
+  color: var(--color-secondary-content);
+}
+
+.ss-btn-tertiary {
+  background: var(--color-surface);
+  color: var(--color-muted);
+  border-color: var(--color-base-300);
+  box-shadow: none;
+}
+
+.ss-btn-tertiary:hover {
+  background: var(--color-base-150);
+  color: var(--color-base-content);
+}
+
+.ss-btn-danger {
+  background: var(--color-error);
+  color: var(--color-error-content);
+}
+
+.ss-btn-small {
+  padding: 0.28rem 0.65rem;
+  font-size: 0.8125rem;
+  box-shadow: none;
+}
+
+.ss-btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+}
+
+.ss-page-actions,
+.ss-form-actions,
+.ss-detail-actions,
+.ss-context-actions,
+.ss-catalog-actions,
+.ss-report-actions,
+.ss-filter-actions,
+.ss-items-index-toolbar,
+.ss-row-actions,
+.ss-pos-scan-row,
+.ss-pos-actions,
+.ss-pos-tender-actions,
+.ss-pos-secondary-actions,
+.ss-pos-auth-actions,
+.ss-pos-open-ring-form,
+.ss-pos-banner__primary,
+.ss-pos-banner__actions,
+.ss-item-ops-summary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ==========================================================================
+   07. Pills, badges, statuses, and alerts
+   ========================================================================== */
+
+.ss-pill,
+.ss-status-badge,
+.ss-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-pill);
+  padding: 0.25rem 0.55rem;
+  background: var(--color-base-100);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.ss-status-badge.status-active,
+.ss-status-badge.status-submitted,
+.ss-status-badge.status-posted,
+.ss-badge--success,
+.ss-pill--primary {
+  background: var(--color-primary-soft);
+  border-color: #0e4a4a40;
+  color: var(--color-primary);
+}
+
+.ss-status-badge.status-warning,
+.ss-status-badge.status-partial,
+.ss-status-badge.status-partially_received,
+.ss-status-badge.status-partially_ordered,
+.ss-badge--warning,
+.ss-pill--gold {
+  background: var(--color-brand-gold-soft);
+  border-color: #d08a0047;
+  color: #7a5200;
+}
+
+.ss-status-badge.status-inactive,
+.ss-status-badge.status-draft,
+.ss-status-badge.status-cancelled,
+.ss-status-badge.status-closed,
+.ss-badge--muted {
+  background: #11182714;
+  border-color: #1118271a;
+  color: var(--color-muted);
+}
+
+.flash,
+.ss-attention-panel,
+.ss-pos-alert {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-attention-panel,
+.ss-pos-panel--warning,
+.flash-warning {
+  border: 1px solid #ffaa0073;
+  background: #ffaa0014;
+  color: #7a5200;
+}
+
+.flash-notice,
+.ss-pos-alert,
+.ss-pos-panel--highlight {
+  border: 1px solid #1b875540;
+  background: #1b87551f;
+  color: #145c3b;
+}
+
+.flash-alert,
+.ss-pos-alert--error {
+  border: 1px solid #d9383840;
+  background: #d938381a;
+  color: #9b1c1c;
+}
+
+/* ==========================================================================
+   08. Tables
+   ========================================================================== */
+
+.ss-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-base-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-table th {
+  background: var(--color-base-150);
+  color: var(--color-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.75rem;
+}
+
+.ss-table th,
+.ss-table td {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--color-base-200);
+}
+
+.ss-table tbody tr:hover {
+  background: #f5f3efa6;
+}
+
+.ss-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ss-table--compact th,
+.ss-table--compact td,
+.ss-item-table-compact th,
+.ss-item-table-compact td,
+.ss-pos-table--compact th,
+.ss-pos-table--compact td {
+  padding: 0.375rem 0.5rem;
+}
+
+.ss-num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   09. Forms and inputs
+   ========================================================================== */
+
+.ss-form input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="hidden"]):not([type="file"]),
+.ss-form select,
+.ss-form textarea,
+.ss-search-form input[type="text"],
+.ss-search-form input[type="search"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-pill);
+  color: var(--color-base-content);
+}
+
+.ss-form textarea {
+  border-radius: var(--radius-md);
+}
+
+.ss-form input:focus,
+.ss-form select:focus,
+.ss-form textarea:focus,
+.ss-search-form input[type="text"]:focus,
+.ss-search-form input[type="search"]:focus {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+/* ==========================================================================
+   10. Metrics and operational summaries
+   ========================================================================== */
+
+.ss-metric-strip,
+.ss-item-summary-cards__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.ss-metric-card,
+.ss-item-summary-card {
+  border: 1px solid var(--color-base-200);
+  border-radius: var(--radius-md);
+  background: var(--color-base-100);
+  padding: 0.75rem;
+}
+
+.ss-metric-card__label,
+.ss-item-summary-card__label {
+  display: block;
+  margin: 0 0 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ss-metric-card__value,
+.ss-item-summary-card__status {
+  display: block;
+  margin: 0;
+  color: var(--color-base-content);
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.ss-item-summary-card__detail {
+  color: var(--color-muted);
+}
+
+/* ==========================================================================
+   11. Item overview cockpit preview
+   ========================================================================== */
+
+.ss-item-catalog {
+  gap: 1rem;
+}
+
+.ss-item-hero {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.ss-item-hero::after {
+  content: "";
+  position: absolute;
+  right: -4rem;
+  bottom: -5rem;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary-soft), var(--color-secondary-soft), var(--color-brand-gold-soft));
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.ss-item-hero-text,
+.ss-item-cover-slot {
+  position: relative;
+  z-index: 1;
+}
+
+.ss-item-title {
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.ss-item-location-eyebrow {
+  color: var(--color-primary);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.ss-item-cover,
+.ss-item-cover-placeholder,
+.ss-item-cover-image {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-item-sidebar-section,
+.ss-item-subjects-section {
+  border: 1px solid var(--color-base-200);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  background: var(--color-base-100);
+}
+
+.ss-item-open-activity {
+  border: 1px solid var(--color-base-200);
+  border-radius: var(--radius-md);
+  background: var(--color-base-100);
+  padding: 0.75rem 1rem;
+  color: var(--color-muted);
+}
+
+/* ==========================================================================
+   12. Reports
+   ========================================================================== */
+
+.ss-report,
+.ss-report-body {
+  max-width: var(--layout-max);
+}
+
+.ss-report-scope,
+.ss-report-notes,
+.ss-pagination__summary,
+.ss-empty-state,
+.ss-page-description,
+.ss-document-header__meta {
+  color: var(--color-muted);
+}
+
+.ss-filter-bar,
+.ss-items-index-filters {
+  background: #ffffffb8;
+}
+
+/* ==========================================================================
+   13. POS preview: same language, less decoration
+   ========================================================================== */
+
+.ss-pos-main {
+  max-width: 1500px;
+}
+
+.ss-pos-banner {
+  background: #2c2419;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.ss-pos-layout__sidebar {
+  top: 1.25rem;
+}
+
+.ss-pos-workspace-header {
+  background: #ffffffdb;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-pos-action-grid__btn,
+.ss-pos-transaction-show__primary-action,
+.ss-pos-transaction-show__secondary-action,
+.ss-receipt-actions__print {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+}
+
+.ss-pos-status-panel__title {
+  color: var(--color-base-content);
+}
+
+.ss-pos-status-panel__cell--detail,
+.ss-pos-totals-list__tax-meta,
+.ss-pos-cart-line__unit-hint,
+.ss-pos-line-tax__amount--subtle {
+  color: var(--color-muted-subtle);
+}
+
+/* ==========================================================================
+   14. Interaction shell
+   ========================================================================== */
+
+.ss-dropdown-menu {
+  background: var(--color-surface);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.ss-dropdown-trigger {
+  border-radius: var(--radius-pill);
+}
+
+.ss-collapsible-panel summary {
+  border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
+   15. Responsive and print
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .ss-main {
+    padding: 0.8rem;
+  }
+
+  .ss-item-hero {
+    padding: 1rem;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .ss-header {
+    position: static;
+    backdrop-filter: none;
+  }
+
+  .ss-card,
+  .ss-form-card,
+  .ss-detail-panel,
+  div.ss-summary,
+  dl.ss-summary,
+  .ss-sidebar-card,
+  .ss-collapsible-panel,
+  .ss-item-summary-card,
+  .ss-item-ops-summary,
+  .ss-pos-panel,
+  .ss-table,
+  .ss-item-hero {
+    box-shadow: none;
+  }
+}

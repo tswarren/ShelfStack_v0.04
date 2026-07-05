@@ -1,0 +1,249 @@
+/*
+  ShelfStack UX Improvement Experiments
+  ------------------------------------------------------------
+  Load this AFTER shelfstack.visual-preview.css.
+
+  Purpose:
+  - Test interaction/hierarchy improvements using CSS only.
+  - Keep this layer removable.
+  - Promote successful patterns back into the main design system later.
+*/
+
+/* ==========================================================================
+   01. Page context cards
+   ========================================================================== */
+
+.ss-page-header {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.ss-page-header h1 {
+  letter-spacing: -0.035em;
+}
+
+.ss-page-description {
+  color: var(--color-muted);
+  max-width: 70ch;
+}
+
+/* ==========================================================================
+   02. Primary action emphasis
+   ========================================================================== */
+
+/*
+  Preview heuristic:
+  The first button in a page/detail/form action group is treated as primary.
+
+  This is intentionally an experiment. In production, prefer explicit classes:
+  .ss-btn-primary, .ss-btn-secondary, .ss-btn-tertiary.
+*/
+
+.ss-page-actions .ss-btn:first-child,
+.ss-form-actions .ss-btn:first-child,
+.ss-detail-actions .ss-btn:first-child {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  border-color: transparent;
+  box-shadow: var(--shadow-md);
+}
+
+.ss-page-actions .ss-btn:not(:first-child),
+.ss-detail-actions .ss-btn:not(:first-child) {
+  background: var(--color-surface);
+  color: var(--color-muted);
+  border-color: var(--color-base-300);
+  box-shadow: none;
+}
+
+.ss-page-actions .ss-btn:not(:first-child):hover,
+.ss-detail-actions .ss-btn:not(:first-child):hover {
+  background: var(--color-base-150);
+  color: var(--color-base-content);
+}
+
+/* ==========================================================================
+   03. Status badges should read as state, not actions
+   ========================================================================== */
+
+.ss-status-badge,
+.ss-badge,
+.ss-pill {
+  box-shadow: none;
+  cursor: default;
+  text-decoration: none;
+}
+
+.ss-status-badge + .ss-status-badge,
+.ss-badge + .ss-badge,
+.ss-pill + .ss-pill {
+  margin-left: 0.25rem;
+}
+
+/* ==========================================================================
+   04. Better scanability for tables
+   ========================================================================== */
+
+.ss-table {
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-table tbody tr:nth-child(even) {
+  background: #f5f3ef66;
+}
+
+.ss-table tbody tr:nth-child(even):hover,
+.ss-table tbody tr:hover {
+  background: #ebe6dda6;
+}
+
+.ss-table td:first-child,
+.ss-table th:first-child {
+  padding-left: 0.85rem;
+}
+
+.ss-table td:last-child,
+.ss-table th:last-child {
+  padding-right: 0.85rem;
+}
+
+/*
+  Optional sticky table headers.
+  Useful in scroll containers, but can be awkward in some nested POS/report views.
+  Enable by adding .ss-table--sticky to the table.
+*/
+
+.ss-table--sticky th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   05. Item Overview cockpit refinements
+   ========================================================================== */
+
+.ss-item-summary-cards {
+  margin: 1rem 0 0.75rem;
+}
+
+.ss-item-summary-card {
+  min-height: 6rem;
+}
+
+.ss-item-summary-card__status {
+  font-size: 1.1rem;
+}
+
+.ss-item-ops-summary__actions {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-base-200);
+}
+
+.ss-item-open-activity p {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ss-item-section h2,
+.ss-item-sidebar-section h3 {
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   06. Attention panels
+   ========================================================================== */
+
+.ss-attention-panel {
+  border-left: 4px solid var(--color-brand-gold);
+}
+
+.ss-attention-panel h2 {
+  color: #7a5200;
+}
+
+.ss-attention-panel:empty {
+  display: none;
+}
+
+/* ==========================================================================
+   07. Form readability
+   ========================================================================== */
+
+.ss-form-card {
+  overflow: hidden;
+}
+
+.ss-form-card-header {
+  padding: 1rem 1.1rem;
+}
+
+.ss-form-grid {
+  gap: 1rem 1.25rem;
+}
+
+.ss-field label,
+.ss-field .ss-label,
+.ss-form label {
+  color: var(--color-base-content);
+  font-weight: 700;
+}
+
+.ss-help,
+.ss-hint {
+  color: var(--color-muted);
+}
+
+/* ==========================================================================
+   08. Filter panels as tool areas
+   ========================================================================== */
+
+.ss-filter-bar,
+.ss-items-index-filters {
+  background: #ffffffb8;
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-lg);
+}
+
+.ss-filter-group label,
+.ss-items-index-filters label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* ==========================================================================
+   09. POS restraint
+   ========================================================================== */
+
+.ss-pos-body .ss-item-hero::after,
+.ss-pos-body .ss-page-header::after {
+  display: none;
+}
+
+.ss-pos-body .ss-card,
+.ss-pos-body .ss-pos-panel,
+.ss-pos-body .ss-pos-workspace-header {
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-pos-body .ss-btn:hover {
+  box-shadow: none;
+}
+
+/* Keep register work areas dense and calm. */
+.ss-pos-body .ss-page-header,
+.ss-pos-body .ss-pos-workspace-header,
+.ss-pos-body .ss-pos-panel {
+  border-radius: var(--radius-md);
+}

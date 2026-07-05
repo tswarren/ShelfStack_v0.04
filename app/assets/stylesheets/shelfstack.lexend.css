@@ -1,0 +1,19 @@
+/*
+  ShelfStack Lexend Font Preview
+  ------------------------------------------------------------
+  Load this AFTER shelfstack.visual-preview.css and BEFORE
+  shelfstack.lexend-density.css.
+
+  This layer only changes the font family. The density compensation lives
+  in shelfstack.lexend-density.css so you can test them separately.
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@300..800&display=swap");
+
+:root {
+  --font-ui: "Lexend", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font-ui);
+}
