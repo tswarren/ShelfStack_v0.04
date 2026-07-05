@@ -49,33 +49,39 @@
   box-shadow: none;
 }
 
-.ss-btn-danger {
+.ss-btn-danger,
+.ss-btn--danger {
   background: var(--color-error);
   color: var(--color-error-content);
 }
 
-.ss-btn-danger:hover {
+.ss-btn-danger:hover,
+.ss-btn--danger:hover {
   background: #b91c1c;
   color: var(--color-error-content);
 }
 
-.ss-btn-small {
+.ss-btn-small,
+.ss-btn--small {
   padding: var(--pad-compact-y) var(--pad-compact-x);
   font-size: 0.8125rem;
   line-height: var(--line-compact);
   box-shadow: none;
 }
 
-.ss-btn-large {
+.ss-btn-large,
+.ss-btn--large {
   padding: 0.75rem 1.1rem;
   font-size: 1rem;
 }
 
-.ss-btn-full {
+.ss-btn-full,
+.ss-btn--full {
   width: 100%;
 }
 
-.ss-btn-icon {
+.ss-btn-icon,
+.ss-btn--icon {
   width: 2.25rem;
   height: 2.25rem;
   padding: 0;
