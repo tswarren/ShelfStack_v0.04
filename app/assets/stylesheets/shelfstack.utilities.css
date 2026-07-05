@@ -1,0 +1,60 @@
+/*
+ * ShelfStack Utilities
+ *
+ * Small, generic helpers only. Prefer component classes for reusable UI.
+ */
+
+.ss-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.ss-stack--xs { gap: 0.35rem; }
+.ss-stack--sm { gap: 0.5rem; }
+.ss-stack--md { gap: 0.75rem; }
+.ss-stack--lg { gap: 1.25rem; }
+.ss-stack--start { align-content: start; }
+
+.ss-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.ss-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ss-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ss-grid--auto { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+.ss-grid--dense { gap: var(--gap-ui); }
+
+.ss-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  align-items: center;
+}
+
+.ss-action-row--start { justify-content: flex-start; }
+.ss-action-row--end { justify-content: flex-end; }
+.ss-action-row--between { justify-content: space-between; }
+.ss-action-row--loose { gap: 0.75rem 1rem; }
+.ss-action-row--compact { gap: 0.35rem; }
+
+.ss-hidden { display: none !important; }
+.ss-nowrap { white-space: nowrap; }
+.ss-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-full-width { width: 100%; }
+
+.ss-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.is-disabled { opacity: 0.55; pointer-events: none; }
+.is-loading { cursor: wait; }
+.is-selected { outline: 2px solid var(--color-primary-soft); }
