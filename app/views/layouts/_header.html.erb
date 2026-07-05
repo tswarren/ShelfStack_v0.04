@@ -30,6 +30,8 @@
           <div class="ss-dropdown-menu" role="menu">
             <%= link_to "Change password", edit_password_path, role: "menuitem" %>
             <%= link_to "Set PIN", edit_pin_path, role: "menuitem" %>
+            <div class="ss-dropdown-menu__separator" role="separator"></div>
+            <%= render "shared/ui/appearance_switcher" %>
           </div>
         </details>
         <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-tertiary ss-btn-small", form: { style: "display:inline;margin:0;" } %>
