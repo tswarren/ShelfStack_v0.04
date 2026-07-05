@@ -1,0 +1,94 @@
+/* ShelfStack Feedback Components */
+
+.ss-flash-region {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  z-index: var(--z-toast);
+  width: min(44rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  display: grid;
+  gap: var(--gap-ui);
+  pointer-events: none;
+}
+
+.flash,
+.ss-toast {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 0.65rem 0.8rem;
+  pointer-events: auto;
+}
+
+.flash-notice,
+.ss-toast--success {
+  border: 1px solid #1b875540;
+  background: #1b87551f;
+  color: #145c3b;
+}
+
+.flash-warning,
+.ss-toast--warning {
+  border: 1px solid #ffaa0073;
+  background: #ffaa0014;
+  color: #7a5200;
+}
+
+.flash-alert,
+.ss-toast--error {
+  border: 1px solid #d9383840;
+  background: #d938381a;
+  color: #9b1c1c;
+}
+
+.ss-toast-region {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--gap-ui);
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+.ss-empty-state {
+  color: var(--color-muted);
+  text-align: center;
+  padding: var(--space-6);
+}
+
+.ss-empty-state__title {
+  color: var(--color-base-content);
+  font-weight: 800;
+}
+
+.ss-empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap-ui);
+  margin-top: var(--gap-ui);
+}
+
+.ss-progress {
+  width: 100%;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-base-200);
+}
+
+.ss-progress__bar {
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.ss-skeleton {
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, var(--color-base-150), var(--color-base-100), var(--color-base-150));
+  min-height: 1rem;
+}
+
+.ss-copy-button--copied {
+  color: var(--color-success);
+}
