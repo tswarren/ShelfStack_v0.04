@@ -1,0 +1,148 @@
+/* ShelfStack Items/Catalog Domain Components */
+
+.ss-item-catalog {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.ss-item-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 1.1rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.ss-item-hero::after {
+  content: "";
+  position: absolute;
+  right: -4rem;
+  bottom: -5rem;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary-soft), var(--color-secondary-soft), var(--color-brand-gold-soft));
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.ss-item-hero-text,
+.ss-item-cover-slot {
+  position: relative;
+  z-index: 1;
+}
+
+.ss-item-title {
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.ss-item-location-eyebrow {
+  color: var(--color-primary);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.ss-item-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.6rem;
+}
+
+.ss-item-cover,
+.ss-item-cover-placeholder,
+.ss-item-cover-image {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-item-summary-cards {
+  margin-block: 0.85rem;
+}
+
+.ss-item-summary-cards__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.6rem;
+}
+
+.ss-item-summary-card,
+.ss-item-sidebar-section,
+.ss-item-subjects-section,
+.ss-item-open-activity {
+  border: 1px solid var(--color-base-200);
+  border-radius: var(--radius-md);
+  background: var(--color-base-100);
+  padding: 0.75rem;
+}
+
+.ss-item-summary-card__label {
+  display: block;
+  margin: 0 0 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ss-item-summary-card__status {
+  display: block;
+  color: var(--color-base-content);
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+
+.ss-item-summary-card__detail,
+.ss-item-open-activity {
+  color: var(--color-muted);
+}
+
+.ss-item-section {
+  margin-bottom: 1.5rem;
+}
+
+.ss-item-ops-summary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-base-200);
+}
+
+.ss-variant-card,
+.ss-metadata-panel,
+.ss-vendor-source-card {
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--pad-card);
+}
+
+.ss-variant-card--inactive,
+.ss-vendor-source-card--inactive {
+  opacity: 0.72;
+}
+
+.ss-availability-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  padding: 0.18rem 0.48rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ss-identifier-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+}
