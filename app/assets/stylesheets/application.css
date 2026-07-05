@@ -40,6 +40,7 @@
 @import "shelfstack.components.lists.css";
 @import "shelfstack.components.session.css";
 @import "shelfstack.components.access.css";
+@import "shelfstack.components.appearance.css";
 
 /* 04. Domain components */
 @import "shelfstack.domain.items.css";
