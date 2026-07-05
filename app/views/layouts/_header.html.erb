@@ -1,21 +1,28 @@
 <header class="ss-header">
-  <div class="ss-header-logo">
-    <%= link_to root_path do %>
-      <%= image_tag "logo.png", alt: "ShelfStack" %>
-    <% end %>
-  </div>
-  <% if current_store %>
-    <div class="ss-header-context">
-      <%= current_store.name %> · <%= current_workstation&.name || "No workstation" %>
+  <div class="ss-header__left">
+    <div class="ss-header-logo ss-header__logo">
+      <%= link_to root_path do %>
+        <%= image_tag "logo.png", alt: "ShelfStack" %>
+      <% end %>
     </div>
-  <% end %>
-  <div class="ss-search-form">
-    <%= form_with url: items_search_path, method: :get, local: true do %>
-      <%= text_field_tag :q, params[:q], placeholder: "Search / scan items…", aria: { label: "Search items" } %>
-      <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+
+    <% if current_store %>
+      <div class="ss-header-context ss-header__context">
+        <%= current_store.name %> · <%= current_workstation&.name || "No workstation" %>
+      </div>
     <% end %>
   </div>
-  <div class="ss-header-actions">
+
+  <div class="ss-header__search">
+    <div class="ss-search-form">
+      <%= form_with url: items_search_path, method: :get, local: true do %>
+        <%= text_field_tag :q, params[:q], placeholder: "Search / scan items…", aria: { label: "Search items" } %>
+        <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="ss-header-actions ss-header__actions">
     <% if current_user %>
       <div class="ss-user-menu">
         <details class="ss-dropdown">
@@ -25,7 +32,7 @@
             <%= link_to "Set PIN", edit_pin_path, role: "menuitem" %>
           </div>
         </details>
-        <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-secondary", form: { style: "display:inline;margin:0;" } %>
+        <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-tertiary ss-btn-small", form: { style: "display:inline;margin:0;" } %>
       </div>
     <% end %>
   </div>
