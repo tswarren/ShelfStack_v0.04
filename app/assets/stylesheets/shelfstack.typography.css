@@ -1,0 +1,83 @@
+/*
+ * ShelfStack Typography
+ */
+
+a {
+  color: var(--color-primary);
+  text-decoration-color: var(--color-base-300);
+  text-underline-offset: 0.16em;
+}
+
+a:hover {
+  color: var(--color-secondary);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--color-base-content);
+  line-height: 1.12;
+}
+
+h1,
+.ss-heading--page,
+.ss-page-title {
+  letter-spacing: -0.035em;
+}
+
+.ss-page-description,
+.ss-help,
+.ss-hint,
+.ss-inline-note {
+  color: var(--color-muted);
+  line-height: 1.35;
+  max-width: 70ch;
+}
+
+.ss-text-muted,
+.ss-muted {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  opacity: 1;
+}
+
+.ss-text-subtle {
+  color: var(--color-muted-subtle);
+}
+
+.ss-label,
+.ss-eyebrow {
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.ss-tabular,
+.ss-money,
+.ss-percent,
+.ss-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ss-code,
+.ss-code-block,
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+.ss-code-block,
+pre {
+  overflow-x: auto;
+  padding: var(--pad-card);
+  border-radius: var(--radius-md);
+  background: var(--color-base-150);
+}
