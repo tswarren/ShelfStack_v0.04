@@ -1,0 +1,74 @@
+/* ShelfStack Card and Surface Components */
+
+.ss-surface,
+.ss-card,
+.ss-form-card,
+.ss-detail-panel,
+div.ss-summary,
+dl.ss-summary,
+.ss-sidebar-card,
+.ss-side-card,
+.ss-collapsible-panel {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-surface--plain { background: var(--color-surface); }
+.ss-surface--muted { background: var(--color-surface-muted); }
+.ss-surface--compact { border-radius: var(--radius-md); }
+.ss-surface--strong { box-shadow: var(--shadow-md); }
+
+.ss-card,
+.ss-form-card,
+.ss-sidebar-card,
+.ss-side-card {
+  padding: var(--pad-card);
+}
+
+.ss-card--compact { padding: var(--pad-card-sm); border-radius: var(--radius-md); }
+.ss-card--strong { box-shadow: var(--shadow-md); }
+.ss-card--muted { background: var(--color-surface-muted); }
+
+.ss-card--clickable,
+.ss-card:hover {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ss-card--clickable:hover,
+.ss-card:hover {
+  border-color: #0e4a4a66;
+  box-shadow: var(--shadow-md);
+}
+
+.ss-card__header,
+.ss-card__body,
+.ss-card__footer {
+  display: grid;
+  gap: var(--gap-ui);
+}
+
+.ss-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.ss-summary {
+  display: grid;
+}
+
+.ss-summary--two-column,
+dl.ss-summary,
+div.ss-summary {
+  grid-template-columns: max-content 1fr;
+}
+
+.ss-summary dt,
+.ss-summary dd,
+.ss-summary__label,
+.ss-summary__value {
+  line-height: var(--line-ui);
+  padding-block: 0.5rem;
+}
