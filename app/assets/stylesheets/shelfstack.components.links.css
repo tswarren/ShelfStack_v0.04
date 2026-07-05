@@ -1,0 +1,51 @@
+/* ShelfStack Link Components */
+
+.ss-link {
+  color: var(--color-primary);
+  text-decoration-color: var(--color-base-300);
+  text-underline-offset: 0.16em;
+}
+
+.ss-link:hover {
+  color: var(--color-secondary);
+}
+
+.ss-link--quiet,
+.ss-link--muted {
+  color: var(--color-muted);
+}
+
+.ss-link--danger {
+  color: var(--color-error);
+}
+
+.ss-link--block {
+  display: block;
+}
+
+.ss-link--button {
+  text-decoration: none;
+}
+
+.ss-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.ss-skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -10rem;
+  z-index: var(--z-dialog);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+}
+
+.ss-skip-link:focus {
+  top: 1rem;
+}
