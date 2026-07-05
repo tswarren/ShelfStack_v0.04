@@ -5,6 +5,13 @@ module ApplicationHelper
   include ItemsHelper
   include FormHelper
   include ReportsHelper
+
+  APPEARANCE_VIEW_MODE_LABELS = {
+    "standard" => "Standard View",
+    "accessible" => "Accessible View",
+    "compact" => "Compact View"
+  }.freeze
+
   def display_time(timestamp)
     return "—" if timestamp.blank?
 
@@ -21,6 +28,36 @@ module ApplicationHelper
 
   def session_status_label(status)
     status.to_s.humanize
+  end
+
+  def shelfstack_appearance_attributes
+    {
+      data: {
+        ss_typeface: shelfstack_typeface_profile,
+        ss_density: shelfstack_density_profile,
+        ss_color_mode: shelfstack_color_mode
+      }
+    }
+  end
+
+  def shelfstack_view_mode
+    current_user&.appearance_view_mode.presence || "standard"
+  end
+
+  def shelfstack_view_mode_label(mode = shelfstack_view_mode)
+    APPEARANCE_VIEW_MODE_LABELS.fetch(mode.to_s, APPEARANCE_VIEW_MODE_LABELS.fetch("standard"))
+  end
+
+  def shelfstack_typeface_profile
+    current_user&.appearance_typeface || "atkinson"
+  end
+
+  def shelfstack_density_profile
+    current_user&.appearance_density || "standard"
+  end
+
+  def shelfstack_color_mode
+    current_user&.appearance_color_mode.presence || "light"
   end
 
   def audit_event_details_summary(event)
