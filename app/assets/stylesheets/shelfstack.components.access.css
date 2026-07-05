@@ -1,0 +1,55 @@
+/* ShelfStack Access Notice Components */
+
+.ss-access-notice {
+  max-width: 42rem;
+  margin: 2rem auto;
+  padding: var(--pad-card-lg);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-glass);
+  box-shadow: var(--shadow-sm);
+}
+
+.ss-access-notice__eyebrow {
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.ss-access-notice__title {
+  margin: 0.25rem 0 0;
+}
+
+.ss-access-notice__message,
+.ss-access-notice__meta,
+.ss-access-notice__permission {
+  color: var(--color-muted);
+}
+
+.ss-access-notice__permission {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.ss-access-notice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  margin-top: var(--gap-section);
+}
+
+.ss-access-notice__recovery {
+  margin-top: var(--gap-section);
+  padding-top: var(--gap-section);
+  border-top: 1px solid var(--color-base-200);
+}
+
+.ss-access-notice--warning {
+  border-color: #ffaa0073;
+}
+
+.ss-access-notice--compact {
+  padding: var(--pad-card);
+}
