@@ -41,6 +41,7 @@ ShelfStack uses a native `.ss-*` CSS component system for app-wide visual consis
 @import "shelfstack.components.lists.css";
 @import "shelfstack.components.session.css";
 @import "shelfstack.components.access.css";
+@import "shelfstack.components.appearance.css";
 
 @import "shelfstack.domain.items.css";
 @import "shelfstack.domain.inventory.css";
@@ -144,6 +145,7 @@ Recommended user-facing modes:
 | `shelfstack.components.lists.css` | List rows and timelines |
 | `shelfstack.components.session.css` | Login, unlock, PIN/password, workstation assignment surfaces |
 | `shelfstack.components.access.css` | Locked-out/access-required notices |
+| `shelfstack.components.appearance.css` | Appearance view-mode switcher |
 
 ### Domain components
 
