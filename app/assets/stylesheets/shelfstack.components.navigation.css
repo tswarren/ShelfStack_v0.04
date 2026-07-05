@@ -1,0 +1,134 @@
+/* ShelfStack Navigation Components */
+
+.ss-nav {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 1rem;
+  background: var(--color-primary);
+  border-bottom: 1px solid #092f2f;
+}
+
+.ss-nav a,
+.ss-nav__item,
+.ss-nav .disabled,
+.ss-nav__item--disabled {
+  border-radius: var(--radius-pill);
+  padding: 0.28rem 0.65rem;
+  line-height: var(--line-ui);
+  font-size: 0.875rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.ss-nav a,
+.ss-nav__item {
+  color: var(--color-primary-content);
+}
+
+.ss-nav a:hover,
+.ss-nav__item:hover {
+  background: #ffffff24;
+  color: var(--color-primary-content);
+}
+
+.ss-nav a.active,
+.ss-nav__item--active {
+  background: var(--color-brand-gold);
+  color: #2a1d00;
+}
+
+.ss-nav .disabled,
+.ss-nav__item--disabled {
+  color: rgba(245, 243, 239, 0.45);
+  pointer-events: none;
+}
+
+.ss-sidebar {
+  display: grid;
+  gap: var(--gap-section);
+}
+
+.ss-sidebar__section {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ss-sidebar__title {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ss-sidebar__item {
+  display: block;
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+
+.ss-sidebar__item--active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.ss-breadcrumbs,
+.ss-tab-list,
+.ss-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  align-items: center;
+}
+
+.ss-breadcrumbs {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.ss-tabs {
+  display: grid;
+  gap: var(--gap-ui);
+  margin-block: 0.75rem;
+}
+
+.ss-tab,
+.ss-tabs a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-pill);
+  line-height: var(--line-ui);
+  text-decoration: none;
+}
+
+.ss-tab--active,
+.ss-tabs a.active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.ss-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-muted);
+}
+
+.ss-step--active { color: var(--color-primary); font-weight: 700; }
+.ss-step--complete { color: var(--color-success); }
+.ss-step--error { color: var(--color-error); }
+
+.ss-shortcut-key,
+.ss-kbd {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.35rem;
+  background: var(--color-base-150);
+}
