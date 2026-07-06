@@ -16,38 +16,79 @@
 .flash,
 .ss-toast {
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  padding: 0.65rem 0.8rem;
+  box-shadow: var(--shadow-lg);
+  padding: 0.75rem 0.85rem;
   pointer-events: auto;
+}
+
+.ss-flash {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--gap-ui);
+  align-items: start;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.ss-flash__message {
+  min-width: 0;
+  line-height: var(--line-ui);
+  font-weight: 650;
+}
+
+.ss-flash__dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.ss-flash__dismiss:hover,
+.ss-flash__dismiss:focus {
+  opacity: 1;
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
 }
 
 .ss-flash--success,
 .flash-notice,
 .ss-toast--success {
-  border: 1px solid #1b875540;
-  background: #1b87551f;
+  border-color: #1b8755;
+  background: #f2fbf6;
   color: #145c3b;
 }
 
 .ss-flash--warning,
 .flash-warning,
 .ss-toast--warning {
-  border: 1px solid #ffaa0073;
-  background: #ffaa0014;
-  color: #7a5200;
+  border-color: #d08a00;
+  background: #fff7e6;
+  color: #6f4a00;
 }
 
 .ss-flash--error,
 .flash-alert,
 .ss-toast--error {
-  border: 1px solid #d9383840;
-  background: #d938381a;
-  color: #9b1c1c;
+  border-color: #d93838;
+  background: #fff1f1;
+  color: #8f1d1d;
 }
 
 .ss-flash--info {
-  border: 1px solid #95a8d073;
-  background: #95a8d01f;
+  border-color: #637aa8;
+  background: #f2f5fb;
   color: var(--color-info-content);
 }
 
