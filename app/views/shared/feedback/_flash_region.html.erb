@@ -3,8 +3,14 @@
 <% if visible_flash.any? %>
   <div class="ss-flash-region" role="status" aria-live="polite" aria-atomic="true">
     <% visible_flash.each do |key, message| %>
-      <div class="<%= shelfstack_flash_class(key) %>">
-        <%= message %>
+      <div class="<%= shelfstack_flash_class(key) %>" data-controller="flash">
+        <div class="ss-flash__message"><%= message %></div>
+        <button type="button"
+                class="ss-flash__dismiss"
+                aria-label="Dismiss message"
+                data-action="flash#dismiss">
+          ×
+        </button>
       </div>
     <% end %>
   </div>
