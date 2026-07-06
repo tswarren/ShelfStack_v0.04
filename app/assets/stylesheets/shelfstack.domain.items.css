@@ -1,16 +1,37 @@
 /* ShelfStack Items/Catalog Domain Components */
 
-.ss-item-catalog {
+.ss-item-catalog,
+.ss-item-detail {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
+}
+
+.ss-item-detail__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.ss-item-main,
+.ss-item-sidebar {
+  min-width: 0;
+}
+
+.ss-item-sidebar {
+  display: grid;
+  gap: var(--gap-section);
+  align-content: start;
 }
 
 .ss-item-hero {
   position: relative;
   overflow: hidden;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1.1rem;
-  margin-bottom: 1rem;
+  align-items: start;
+  margin-bottom: 0;
   padding: 1.25rem;
   background: var(--color-surface-glass);
   border: 1px solid var(--color-base-300);
@@ -35,6 +56,10 @@
 .ss-item-cover-slot {
   position: relative;
   z-index: 1;
+}
+
+.ss-item-cover-slot {
+  width: clamp(6rem, 12vw, 10rem);
 }
 
 .ss-item-title {
@@ -64,7 +89,7 @@
 }
 
 .ss-item-summary-cards {
-  margin-block: 0.85rem;
+  margin-block: 0 0.85rem;
 }
 
 .ss-item-summary-cards__grid {
@@ -109,6 +134,14 @@
   margin-bottom: 1.5rem;
 }
 
+.ss-item-table-scroll {
+  margin-top: 0.5rem;
+}
+
+.ss-item-table {
+  min-width: 72rem;
+}
+
 .ss-item-ops-summary__actions {
   display: flex;
   flex-wrap: wrap;
@@ -145,4 +178,24 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--gap-ui);
+}
+
+@media (max-width: 1180px) {
+  .ss-item-detail__body {
+    grid-template-columns: 1fr;
+  }
+
+  .ss-item-sidebar {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ss-item-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .ss-item-cover-slot {
+    width: min(10rem, 45vw);
+  }
 }
