@@ -1,11 +1,11 @@
-<header class="ss-pos-register-header">
-  <h1 class="ss-pos-title"><%= pos_draft_type_label(transaction) %> #<%= transaction.id %></h1>
+<section class="ss-pos-panel ss-pos-exchange-summary" aria-label="Exchange summary">
+  <h2 class="ss-pos-exchange-summary__title"><%= pos_draft_type_label(transaction) %> summary</h2>
   <% exchange = pos_exchange_summary(transaction) %>
   <% if exchange %>
-    <p class="ss-pos-register-header__exchange">
+    <p class="ss-pos-exchange-summary__totals">
       Return total: <%= pos_money(exchange.return_total_cents) %>
       · New sale total: <%= pos_money(exchange.sale_total_cents) %>
       · Amount due: <%= pos_money(exchange.amount_due_cents) %>
     </p>
   <% end %>
-</header>
+</section>
