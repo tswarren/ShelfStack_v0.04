@@ -2,7 +2,7 @@
 
 ## Status
 
-**Complete in PR 18** — MVP store-stock path implemented; readiness slices remain deferred. Companion to [spec.md](spec.md) and [data-model.md](data-model.md).
+**Deferred** — scheduled after [v0.04-14](../v0.04-14-design-system-ux-migration/spec.md). Companion to [spec.md](spec.md) and [data-model.md](data-model.md).
 
 ### Milestone tiers
 

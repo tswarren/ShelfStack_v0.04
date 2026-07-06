@@ -293,7 +293,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development priority: **v0.04-14 Design System UX Migration** (Phase 10-E). v0.04-0 through v0.04-13 are **complete**. Spec: [docs/v0.04/v0.04-14-design-system-ux-migration/spec.md](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md). Build plan: [docs/design/ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md).
+Development priority: **v0.04-14 Design System UX Migration** (Phase 10-E). v0.04-0 through v0.04-12 are **complete**; **v0.04-13 deferred** until after v0.04-14. Spec: [docs/v0.04/v0.04-14-design-system-ux-migration/spec.md](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md). Build plan: [docs/design/ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md).
 
 Historical phase sections below are reference material for code not yet migrated. If their status labels (e.g. **In review** on some 8.5 branches) conflict with v0.04 priorities, follow the [v0.04 delivery roadmap](docs/roadmap/v0.04-delivery-roadmap.md) and [v0.04 domain rules](#v0.04-domain-rules-active-for-new-work).
 
@@ -458,9 +458,9 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-12 (demand ordering UX):** **Complete** — [spec bundle](docs/v0.04/v0.04-12-demand-ordering-ux/spec.md) · [completion](docs/implementation/v0.04-12-completion.md).
 
-**v0.04-13 (demand-to-fulfillment continuity):** **Complete** — [spec bundle](docs/v0.04/v0.04-13-demand-to-fulfillment-continuity/spec.md) · [completion](docs/implementation/v0.04-13-completion.md).
+**v0.04-13 (demand-to-fulfillment continuity):** **Deferred** — scheduled after v0.04-14 — [spec bundle](docs/v0.04/v0.04-13-demand-to-fulfillment-continuity/spec.md) · [completion stub](docs/implementation/v0.04-13-completion.md).
 
-**Current priority:** **v0.04-14 Design System UX Migration** (Phase 10-E) — [spec bundle](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md). v0.04-0 through v0.04-13 complete; v0.04-3 product groups deferred.
+**Current priority:** **v0.04-14 Design System UX Migration** (Phase 10-E) — [spec bundle](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md). v0.04-0 through v0.04-12 complete; v0.04-13 deferred; v0.04-3 product groups deferred.
 
 **v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
 

@@ -102,7 +102,7 @@ See [known migration stragglers](../design/components.md#known-migration-straggl
 
 ## Relationship to v0.04 core
 
-v0.04-14 is the **release milestone** for this work; Phase 10-E is the **delivery phase** name. Domain milestones v0.04-0 … v0.04-13 are complete. v0.04-14 is **UI consistency on the existing codebase** and does not change [VERSION_0.04.md](../design/VERSION_0.04.md) domain semantics. New features should use the enabling partials and documented classes from the first PR that touches a workspace.
+v0.04-14 is the **release milestone** for this work; Phase 10-E is the **delivery phase** name. Domain milestones v0.04-0 … v0.04-12 are complete; **v0.04-13 is deferred** until after v0.04-14. v0.04-14 is **UI consistency on the existing codebase** and does not change [VERSION_0.04.md](../design/VERSION_0.04.md) domain semantics. New features should use the enabling partials and documented classes from the first PR that touches a workspace.
 
 ---
 

@@ -17,11 +17,12 @@ Navigation hub for ShelfStack docs.
 **Current priority:**
 
 ```text
-Complete: v0.04-0 through v0.04-13
+Complete: v0.04-0 through v0.04-12
 Active:   v0.04-14 Design System UX Migration (Phase 10-E)
           See v0.04/v0.04-14-design-system-ux-migration/spec.md
           See design/ux-migration-build-plan.md
-Deferred: v0.04-3 product groups
+Deferred: v0.04-13 demand-to-fulfillment continuity (after v0.04-14)
+          v0.04-3 product groups
 ```
 
 **v0.04-14** is the next release milestone — app-wide design-system migration with no domain model changes.
@@ -157,9 +158,10 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | Workstream | Status |
 | ---------- | ------ |
 | v0.03 Phases 1–10-D | Complete |
-| **ShelfStack v0.04 core** | **v0.04-0 through v0.04-13 complete** |
+| **ShelfStack v0.04 core** | **v0.04-0 through v0.04-12 complete** |
 | Phase 9c GL layer | Deferred |
 | **v0.04-14** design system UX | **Active** (Phase 10-E) |
+| **v0.04-13** demand-to-fulfillment | **Deferred** (after v0.04-14) |
 
 v0.03 phase links: [roadmap/README.md](roadmap/README.md)
 

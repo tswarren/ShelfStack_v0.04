@@ -2,7 +2,7 @@
 
 ## Status
 
-**Active** — next ShelfStack release milestone after v0.04-13.
+**Active** — next ShelfStack release milestone after v0.04-12. **v0.04-13** (demand-to-fulfillment continuity) is deferred until after v0.04-14.
 
 Companion documents:
 
