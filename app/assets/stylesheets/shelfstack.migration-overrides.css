@@ -1,0 +1,84 @@
+/*
+ * ShelfStack Migration Overrides
+ *
+ * Temporary post-legacy overrides while the preview CSS remains imported.
+ * This file should shrink as rules are removed from the legacy bridge.
+ */
+
+.ss-main.ss-main--items {
+  max-width: var(--layout-item-detail);
+}
+
+.ss-main.ss-main--wide,
+.ss-main.ss-pos-main {
+  max-width: var(--layout-wide);
+}
+
+.ss-main.ss-main--full {
+  max-width: none;
+}
+
+.ss-main.ss-main--narrow {
+  max-width: var(--layout-narrow);
+}
+
+.ss-item-detail.ss-item-catalog {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.ss-item-detail > .ss-item-hero {
+  grid-column: 1 / -1;
+}
+
+.ss-item-detail > .ss-item-detail__body {
+  display: grid;
+  grid-template-areas: "main sidebar";
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  gap: 1.25rem;
+  align-items: start;
+  width: 100%;
+}
+
+.ss-item-detail .ss-item-main {
+  grid-area: main;
+  min-width: 0;
+}
+
+.ss-item-detail .ss-item-sidebar {
+  grid-area: sidebar;
+  min-width: 0;
+  display: grid;
+  gap: var(--gap-section);
+  align-content: start;
+}
+
+.ss-item-detail .ss-item-table-scroll,
+.ss-item-detail .ss-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.ss-item-detail .ss-item-table {
+  min-width: 72rem;
+}
+
+@media (max-width: 1180px) {
+  .ss-item-detail > .ss-item-detail__body {
+    grid-template-areas:
+      "main"
+      "sidebar";
+    grid-template-columns: 1fr;
+  }
+
+  .ss-item-detail .ss-item-sidebar {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ss-item-detail > .ss-item-hero {
+    grid-template-columns: 1fr;
+  }
+}
