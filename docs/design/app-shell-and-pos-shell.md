@@ -18,6 +18,31 @@ The global app shell owns:
 
 Do not create a second POS-specific top-level header or primary navigation that duplicates the global shell.
 
+## Implementation contract
+
+Every normal app layout should emit the same shell contract:
+
+```erb
+<%= tag.body(**shelfstack_body_attributes(...)) do %>
+  <%= link_to "Skip to content", "#main_content", class: "ss-skip-link" %>
+  <%= render "layouts/header" %>
+  <%= render "layouts/nav" %>
+  <main id="main_content" class="...">
+    ...
+  </main>
+<% end %>
+```
+
+The body contract owns:
+
+- `data-ss-typeface`
+- `data-ss-density`
+- `data-ss-color-mode`
+- `.ss-app-body`
+- page/body context classes, such as `.ss-pos-body`
+
+Use `content_for :main_class` for main-canvas width and `content_for :body_class` for page/body context. Do not create alternate top-level headers, navs, or body appearance mechanisms for domain areas.
+
 ## POS workspace shell
 
 POS-specific context belongs inside the POS workspace, below the global header and global navigation.
