@@ -13,9 +13,7 @@
     <%= render "layouts/header" %>
     <%= render "layouts/nav" %>
     <main id="main_content" class="<%= shelfstack_class_names("ss-main", "ss-pos-main", content_for(:main_class)) %>">
-      <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
-      <% if flash[:warning] %><div class="flash flash-warning"><%= flash[:warning] %></div><% end %>
-      <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
+      <%= render "shared/feedback/flash_region" %>
       <%= yield %>
     </main>
     <%= render "layouts/pos_supervisor_auth_modal" %>
