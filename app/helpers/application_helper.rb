@@ -12,6 +12,14 @@ module ApplicationHelper
     "compact" => "Compact View"
   }.freeze
 
+  FLASH_COMPONENT_VARIANTS = {
+    notice: "success",
+    success: "success",
+    warning: "warning",
+    alert: "error",
+    error: "error"
+  }.freeze
+
   def display_time(timestamp)
     return "—" if timestamp.blank?
 
@@ -52,6 +60,23 @@ module ApplicationHelper
 
   def shelfstack_class_names(*class_names)
     class_names.flatten.compact.flat_map { |class_name| class_name.to_s.split(/\s+/) }.reject(&:blank?).uniq.join(" ")
+  end
+
+  def shelfstack_nav_item_class(active: false, disabled: false)
+    shelfstack_class_names(
+      "ss-nav__item",
+      active && "ss-nav__item--active",
+      disabled && "ss-nav__item--disabled"
+    )
+  end
+
+  def shelfstack_flash_variant(key)
+    FLASH_COMPONENT_VARIANTS.fetch(key.to_sym, "info")
+  end
+
+  def shelfstack_flash_class(key)
+    variant = shelfstack_flash_variant(key)
+    shelfstack_class_names("ss-flash", "ss-alert", "ss-alert--#{variant}", "ss-flash--#{variant}")
   end
 
   def shelfstack_view_mode
