@@ -20,7 +20,7 @@ Do not create a second POS-specific top-level header or primary navigation that 
 
 ## Implementation contract
 
-Every normal app layout should emit the same shell contract:
+Every normal app layout (`application`, `pos`) should emit the same shell contract:
 
 ```erb
 <%= tag.body(**shelfstack_body_attributes(...)) do %>
@@ -28,12 +28,36 @@ Every normal app layout should emit the same shell contract:
   <%= render "layouts/header" %>
   <%= render "layouts/nav" %>
   <main id="main_content" class="...">
-    ...
+    <%= render "shared/feedback/flash_region" %>
+    <%= yield %>
   </main>
+  <%= render "layouts/footer" %>
+  <%= render "shared/interaction/toast_region" %>
 <% end %>
 ```
 
-The body contract owns:
+POS layout (`layouts/pos`) follows the same contract and may add domain-specific modals after `main` (for example supervisor auth).
+
+### Layout regions
+
+| Region | Partial / element | `application` | `pos` | `auth` |
+| ------ | ----------------- | :-------------: | :---: | :----: |
+| Skip link | `#main_content` anchor | yes | yes | no |
+| Header | `layouts/header` | yes | yes | no |
+| Nav | `layouts/nav` | yes | yes | no |
+| Flash | `shared/feedback/flash_region` | yes | yes | no (legacy inline flash) |
+| Main | `#main_content` + `.ss-main` | yes | yes | no |
+| Footer | `layouts/footer` | yes | yes | no |
+| Toast | `shared/interaction/toast_region` | yes | yes | no |
+| Turbo triggers | `#modal_close_triggers`, `#demand_form_reset_triggers` | yes | no | no |
+
+### Auth layout exception
+
+Login, unlock, and other **focused session** screens use `layouts/auth`. They intentionally **do not** render the global header, nav, footer, or `flash_region`. They use a centered `.ss-auth-box` (styles still partly in legacy `shelfstack.css`).
+
+Change password and set/change PIN use the **normal app shell** (`application` layout), not `auth`.
+
+The body contract for normal layouts owns:
 
 - `data-ss-typeface`
 - `data-ss-density`
@@ -42,6 +66,10 @@ The body contract owns:
 - page/body context classes, such as `.ss-pos-body`
 
 Use `content_for :main_class` for main-canvas width and `content_for :body_class` for page/body context. Do not create alternate top-level headers, navs, or body appearance mechanisms for domain areas.
+
+### Verification
+
+Shell contract is enforced by `test/system/app_shell_contract_test.rb` (skip link, header, nav, body appearance attributes, flash dismiss, POS workspace header).
 
 ## Appearance preference scope
 

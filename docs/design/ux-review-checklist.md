@@ -4,7 +4,7 @@
 
 Use this checklist during PR review for new screens, major view changes, workflow changes, and component/CSS changes.
 
-For the broader rationale, see `docs/design/ux-guide.md`.
+For the broader rationale, see [ux-guide.md](ux-guide.md). For feedback class names and migration rules, see [components.md](components.md#feedback-naming-standard).
 
 ## Required review outcome
 
@@ -65,7 +65,7 @@ A UX review should identify one of three outcomes:
 - [ ] Business status uses `.status-*` classes.
 - [ ] Generic patterns go in generic component CSS.
 - [ ] Domain-specific patterns go in the appropriate `shelfstack.domain.*.css` file.
-- [ ] New feature styles are not added to `shelfstack.legacy.css`.
+- [ ] New feature styles are not added to `shelfstack.css` or `shelfstack.legacy.css` (see [app/assets/stylesheets/README.md](../../app/assets/stylesheets/README.md)).
 - [ ] Experimental CSS is not imported by `application.css`.
 
 ## 7. Forms
@@ -92,10 +92,12 @@ A UX review should identify one of three outcomes:
 
 ## 9. Alerts, flash, toast, and dialogs
 
-- [ ] Persistent page warnings use alerts.
-- [ ] Server responses after navigation/submission use flash.
-- [ ] Temporary inline/Turbo feedback uses toast.
-- [ ] Focused modal tasks use dialogs.
+- [ ] Persistent page warnings use `.ss-alert` / `.ss-alert--*` (not page-level flash).
+- [ ] Server responses after navigation/submission use `.ss-flash--*` via `flash_region` (not legacy `.flash-alert`).
+- [ ] Form validation uses field errors or `.ss-alert--error` near the form (not a generic flash block).
+- [ ] Temporary inline/Turbo feedback uses `.ss-toast--*` via `toast_region`.
+- [ ] POS workspace warnings use `.ss-pos-alert` where appropriate (separate from global flash).
+- [ ] Focused modal tasks use dialog/modal partials (`shared/interaction/_modal`).
 - [ ] Risky confirmations use alert dialogs.
 - [ ] The screen does not use a modal when an inline section, sheet, or page flow would be clearer.
 

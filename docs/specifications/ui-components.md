@@ -39,6 +39,10 @@ Do not add new interaction styles to the monolithic `shelfstack.css`. Move durab
 
 Bounded tasks: setup edits, customer lookup, supervisor auth, settlement, confirmations.
 
+**Current contract:** `shared/interaction/_modal` emits `.ss-modal*`; durable styles still live in legacy `shelfstack.css`.
+
+**Target contract:** `.ss-dialog*` in `shelfstack.components.overlays.css` after markup migration. See [components.md](../design/components.md#known-migration-stragglers).
+
 **Partial:** `shared/interaction/modal`
 
 **Controller:** `modal_controller.js`

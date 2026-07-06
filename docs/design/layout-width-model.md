@@ -2,6 +2,8 @@
 
 ShelfStack uses a wide default application canvas because most screens combine operational content, side context, filters, summary cards, action rows, and tables.
 
+**Implementation detail** (import order, token definitions, `.ss-main--*` in layouts): see [app/assets/stylesheets/README.md](../../app/assets/stylesheets/README.md#layout-width-model).
+
 The guiding distinction is:
 
 ```text

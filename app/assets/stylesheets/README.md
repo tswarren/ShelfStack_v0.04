@@ -2,6 +2,8 @@
 
 ShelfStack uses a native `.ss-*` CSS component system for app-wide visual consistency. The current structure introduces the definitive component-library files while preserving the existing production visual layer through `shelfstack.legacy.css` during migration.
 
+**Design rationale and page-pattern guidance:** [docs/design/README.md](../../docs/design/README.md) · [layout-width-model.md](../../docs/design/layout-width-model.md) · [components.md](../../docs/design/components.md)
+
 ## Import order
 
 `application.css` should remain a thin manifest in this order:
@@ -60,6 +62,8 @@ ShelfStack uses a native `.ss-*` CSS component system for app-wide visual consis
 ```
 
 ## Layout width model
+
+**Design rationale and when to constrain content:** [docs/design/layout-width-model.md](../../docs/design/layout-width-model.md).
 
 ShelfStack uses a wide default app canvas because most screens combine operational content, side context, action rows, filters, summary cards, and tables.
 
@@ -234,8 +238,11 @@ Do not rely on action-group order to determine the primary action.
 | `.ss-btn-secondary` | Important alternate action |
 | `.ss-btn-tertiary` | Cancel, back, close, logout |
 | `.ss-btn-ghost` | Low-emphasis persistent utilities such as Lock Session |
-| `.ss-btn-danger` | Destructive or irreversible action |
+| `.ss-btn-danger` / `.ss-btn--danger` | Destructive or irreversible action |
 | `.ss-btn-link` | Low-emphasis inline action |
+| `.ss-btn-small` / `.ss-btn--small` | Compact actions in tables, panels, and row menus |
+
+**Prefer BEM `--` modifiers for new markup.** Both hyphen and `--` forms are valid during migration.
 
 ## CSS migration rules
 

@@ -269,8 +269,11 @@ Use explicit button variants.
 | `.ss-btn-primary` | One main action per page/form/section |
 | `.ss-btn-secondary` | Important alternate action |
 | `.ss-btn-tertiary` | Cancel, back, close, logout, lock session |
-| `.ss-btn-danger` | Destructive or irreversible action |
+| `.ss-btn-danger` / `.ss-btn--danger` | Destructive or irreversible action |
 | `.ss-btn-link` | Low-emphasis inline action |
+| `.ss-btn-small` / `.ss-btn--small` | Compact actions in tables, panels, and row menus |
+
+Prefer BEM `--` modifiers (`.ss-btn--danger`, `.ss-btn--small`) for new markup. Both forms are valid during migration.
 
 Avoid multiple primary buttons in one section, using color alone to communicate risk, danger styling for non-destructive actions, and making logout visually stronger than work actions.
 
@@ -291,6 +294,8 @@ Good uses include item summary, customer profile, vendor source, stock summary, 
 | Alert Dialog | Confirmation for risky action |
 
 These are not interchangeable.
+
+For target CSS class names, the decision rule, and migration stragglers, see [components.md — Feedback naming standard](components.md#feedback-naming-standard).
 
 ### Badges and status
 

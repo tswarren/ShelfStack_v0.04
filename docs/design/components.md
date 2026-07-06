@@ -34,6 +34,8 @@ For UX principles and shell rules, start with:
 | Domain partials | `shared/<domain>/_component_name.html.erb` when tied to ShelfStack workflow semantics |
 | Optional future ViewComponent | `Ui::ComponentNameComponent` after ERB partial API stabilizes |
 
+**Button size and danger modifiers:** CSS accepts both legacy hyphen forms (`.ss-btn-small`, `.ss-btn-danger`) and BEM modifiers (`.ss-btn--small`, `.ss-btn--danger`, `.ss-btn--large`, `.ss-btn--ghost`). Both work during migration. **Prefer BEM `--` modifiers for new markup.** A future `shared/ui/_button` partial should emit one canonical form.
+
 ---
 
 ## Priority 1 implementation status
@@ -42,7 +44,7 @@ These components have the highest copy/paste risk and should be standardized fir
 
 | Component | Status | Current contract / target path | Notes |
 | --------- | ------ | ------------------------------ | ----- |
-| Button | CSS only | `.ss-btn`, `.ss-btn-primary`, `.ss-btn-secondary`, `.ss-btn-tertiary`, `.ss-btn-ghost`, `.ss-btn-danger`, `.ss-btn-small`; planned `shared/ui/_button.html.erb` | Use class conventions now; thin partial should be next. |
+| Button | CSS only | `.ss-btn`, `.ss-btn-primary`, `.ss-btn-secondary`, `.ss-btn-tertiary`, `.ss-btn-ghost`, `.ss-btn-danger` / `.ss-btn--danger`, `.ss-btn-small` / `.ss-btn--small`; planned `shared/ui/_button.html.erb` | Prefer `--` modifiers for new markup; thin partial should be next. |
 | Link | CSS only | `.ss-link`, `.ss-link--quiet`, `.ss-link--danger`, `.ss-btn-link`; planned `shared/ui/_link.html.erb` | Keep normal navigation as links; do not over-buttonize. |
 | Form | Partial exists | `shared/forms/_section`, `shared/forms/_field`, `shared/forms/_page_header`, `shared/forms/_errors`; CSS in `shelfstack.components.forms.css` | Existing `shared/forms/*` is the active form foundation. |
 | Field | Partial exists | `shared/forms/_field`; `.ss-field`, `.ss-field--invalid` | Prefer the existing form partial instead of inventing `shared/ui/_field` now. |
@@ -52,11 +54,11 @@ These components have the highest copy/paste risk and should be standardized fir
 | Flash | Partial exists | `shared/feedback/_flash_region.html.erb`; `.ss-flash`, `.ss-flash--success`, `.ss-flash--warning`, `.ss-flash--error`, `.ss-flash--info` | Server-driven page-level results after navigation/redirect. |
 | Toast | Partial exists / interaction shell | `shared/interaction/_toast`, `shared/interaction/_toast_region`; `.ss-toast-region`, `.ss-toast`, `.ss-toast--success`, `.ss-toast--warning`, `.ss-toast--error`, `.ss-toast--info` | Inline non-blocking feedback; auto-dismiss behavior lives in JS. |
 | Access Notice | CSS only | `.ss-access-notice`, `.ss-access-notice__actions`; planned `shared/ui/_access_notice.html.erb` | Used for locked-out/permission-required pages. |
-| Session Card | CSS only | `.ss-session-card`, `.ss-auth-box`, `.ss-access-card`; session CSS in `shelfstack.components.session.css` | Auth/session screens still need cleanup. |
+| Session Card | Mixed / legacy | `.ss-session-card` in `shelfstack.components.session.css`; `.ss-auth-box` still in legacy `shelfstack.css` | Auth layout (`layouts/auth`) is outside the global shell; see [app-shell-and-pos-shell.md](app-shell-and-pos-shell.md). |
 | Card / Surface | CSS only | `.ss-card`, `.ss-card__header`, `.ss-card__body`, `.ss-surface`; planned `shared/ui/_card.html.erb` | Good candidate for thin partial after Button. |
 | Page Header | Mixed / partial exists | Existing `shared/forms/_page_header`; target generic `shared/ui/_page_header.html.erb`; `.ss-page-header` | Current partial name is form-oriented; generic page header should be extracted later. |
 | Dropdown Menu | Implemented | `.ss-dropdown`, `.ss-dropdown-trigger`, `.ss-dropdown-menu`, `.ss-dropdown-menu__item`; layout/user menu partials | Used by global user menu and POS actions. |
-| Dialog | Partial exists | `shared/interaction/_modal`; `.ss-dialog`, `.ss-modal*` during transition | Phase 10 interaction shell. |
+| Dialog | Partial exists | **Current:** `shared/interaction/_modal` + `.ss-modal*` (styles in legacy `shelfstack.css`). **Target:** `.ss-dialog*` in `shelfstack.components.overlays.css` after markup migration. | Phase 10 interaction shell. |
 | Alert Dialog | CSS only / planned | `.ss-alert-dialog`, `.ss-alert-dialog--danger`; planned partial | Use for interruptive confirmation, post/void/destructive actions. |
 
 ---
@@ -82,6 +84,21 @@ Is the condition still true on this screen?  -> Alert
 Is it specific to POS workspace state?       -> POS local alert
 Is it about one form field?                  -> Field error
 ```
+
+---
+
+## Known migration stragglers
+
+These files still use legacy markup. Migrate them during Phase 10-E or when touching adjacent UI. Do not copy their patterns into new screens.
+
+| File | Issue | Target |
+| ---- | ----- | ------ |
+| `app/views/layouts/auth.html.erb` | Inline `.flash.flash-*` blocks; no global shell | `flash_region` partial or session-scoped `.ss-alert*`; keep focused auth layout (no header/nav) |
+| `app/views/shared/forms/_errors.html.erb` | `.flash.flash-alert` for validation summary | `.ss-alert--error` near the form, or per-field `.ss-field-error` / `.ss-field--invalid` |
+| `app/views/shared/interaction/_modal.html.erb` | `.ss-modal*` markup and classes | eventual `.ss-dialog*` aligned with `shelfstack.components.overlays.css` |
+| Monolithic `shelfstack.css` | POS workspace header, modal, and other rules not yet extracted | Move durable rules into `shelfstack.domain.*.css` or `shelfstack.components.*.css`; delete from legacy |
+
+Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global header, nav, body attributes, flash dismiss). Component class names are convention-only unless covered by a view or system test.
 
 ---
 
@@ -144,7 +161,7 @@ Is it about one form field?                  -> Field error
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| Modal / Dialog | Partial exists | `shared/interaction/_modal`, `.ss-dialog`, legacy `.ss-modal*` |
+| Modal / Dialog | Partial exists | **Current:** `shared/interaction/_modal` + `.ss-modal*` (legacy CSS). **Target:** `.ss-dialog*` in `overlays.css` |
 | Drawer / Sheet | Partial exists | `shared/interaction/_drawer`, `.ss-drawer`, `.ss-sheet` |
 | Alert Dialog | CSS only | `.ss-alert-dialog`, `.ss-alert-dialog--danger` |
 | Dropdown Menu | Implemented | `.ss-dropdown`, `.ss-dropdown-menu`, `.ss-dropdown-menu__item` |
@@ -192,6 +209,18 @@ These are not generic UI-library components. They should usually live in `shelfs
 
 ---
 
+## Phase 10-E alignment
+
+[Phase 10-E](../roadmap/Phase-x10-comprehensive-ux-expansion.md) (consistency sweep) maps directly to this catalog:
+
+1. Migrate [known migration stragglers](#known-migration-stragglers) (auth flash, form errors, modal naming).
+2. Extract POS/header/cart CSS from `shelfstack.css` into `shelfstack.domain.pos.css`.
+3. Add Priority 1 thin partials where copy/paste risk is highest: Button, Alert, generic Page Header.
+4. Normalize views to documented feedback classes (`.ss-flash--*`, `.ss-alert--*`, `.ss-toast--*`).
+5. Run [ux-review-checklist.md](ux-review-checklist.md) on touched workspaces; keep report view contracts stable.
+
+---
+
 ## Recommended implementation priority
 
 ### Priority 1 — must formalize first
@@ -215,6 +244,8 @@ Avatar, Hover Card, Clipboard / Copy Button, Shortcut Key, Command Palette, Cont
 ## Next component spec pages
 
 Do not write full spec pages for all components yet. Create focused specs only for Priority 1 components as they become implementation contracts.
+
+**Location:** one file per component under `docs/design/components/`, for example `docs/design/components/button.md`. Keep `components.md` as the inventory and status index; link out to spec pages when they exist.
 
 Use this template:
 

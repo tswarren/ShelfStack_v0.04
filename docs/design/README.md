@@ -56,6 +56,12 @@ Recommended reading order for contributors:
 
 ---
 
+## Phase 10-E (consistency sweep)
+
+Phase 10-E maps to the component migration roadmap in [components.md](components.md#phase-10-e-alignment): straggler markup, POS CSS extraction from legacy, Priority 1 thin partials, and checklist-driven review. See [Phase-x10-comprehensive-ux-expansion.md](../roadmap/Phase-x10-comprehensive-ux-expansion.md).
+
+---
+
 ## Historical — v0.03 phased delivery
 
 Functional specs under [../specifications/](../specifications/) describe the **v0.03 codebase** (Phases 1–10). Use them to understand shipped behavior until each area is migrated to the v0.04 core.
