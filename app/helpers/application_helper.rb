@@ -40,6 +40,20 @@ module ApplicationHelper
     }
   end
 
+  def shelfstack_body_attributes(*class_names)
+    attributes = shelfstack_appearance_attributes
+    body_classes = [ "ss-app-body" ]
+    body_classes << content_for(:body_class) if content_for?(:body_class)
+    body_classes.concat(class_names)
+
+    attributes[:class] = shelfstack_class_names(body_classes)
+    attributes
+  end
+
+  def shelfstack_class_names(*class_names)
+    class_names.flatten.compact.flat_map { |class_name| class_name.to_s.split(/\s+/) }.reject(&:blank?).uniq.join(" ")
+  end
+
   def shelfstack_view_mode
     current_user&.appearance_view_mode.presence || "standard"
   end
