@@ -143,7 +143,7 @@ body {
   max-width: 70ch;
 }
 
-.ss-footer {
+.ss-footer.ss-footer {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
@@ -213,7 +213,7 @@ body {
     flex-wrap: wrap;
   }
 
-  .ss-footer {
+  .ss-footer.ss-footer {
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
