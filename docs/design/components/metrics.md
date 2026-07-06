@@ -75,6 +75,7 @@ Does it need review?
 - `.ss-metric-card--warning` should be used when the metric itself needs review.
 - Use `.ss-tabular` with monetary/count values when useful.
 - The CSS uses `__detail`, not `__hint`.
+- `.ss-metric-strip--compact` appears in the variant operations drawer but is not defined in modular `metrics.css` today. Treat it as an unstyled hook until a compact strip variant is added to the component CSS.
 
 ---
 

@@ -4,6 +4,7 @@
 | ----- | ----- |
 | Status | CSS only |
 | CSS | `app/assets/stylesheets/shelfstack.components.disclosure.css` |
+| Current partials | `app/views/orders/shared/_collapsible_panel.html.erb` (domain; native `<details>`) |
 | Planned partials | `shared/ui/_collapsible_panel.html.erb`, `_accordion.html.erb` only after behavior stabilizes |
 | Related | Navigation, Card / Surface, Drawer, Table |
 | Design-system priority | Priority 2 |
@@ -126,3 +127,5 @@ Native summary elements inside `.ss-collapsible-panel` are also styled.
 ## Migration notes
 
 Keep simple disclosure native. Add JS behavior only when the page needs coordinated accordion state, keyboard roving behavior, or Turbo-aware expansion. Domain-specific expanded-row editing should live in the relevant domain CSS/interaction pattern, not generic disclosure.
+
+Orders already ship `orders/shared/_collapsible_panel.html.erb` with `.ss-collapsible-panel` and `__body`. A generic `shared/ui` partial should follow that markup when promoted.

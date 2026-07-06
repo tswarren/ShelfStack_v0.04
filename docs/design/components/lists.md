@@ -133,3 +133,5 @@ Use timelines when the ordering and sequence of events matter.
 ## Migration notes
 
 Use lists for small related collections and timelines for sequence. Do not replace tables with lists when row/column comparison matters.
+
+`shared/_audit_timeline.html.erb` still renders a plain `.ss-table` today. Migrate time-ordered audit events to `.ss-timeline*` when that partial is next touched.

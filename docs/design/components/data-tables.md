@@ -4,8 +4,9 @@
 | ----- | ----- |
 | Status | CSS only |
 | CSS | `app/assets/stylesheets/shelfstack.components.data-tables.css` |
+| Current partials | `app/views/reports/shared/_filter_bar.html.erb` (domain; reports filter shell) |
 | Planned partials | `shared/ui/_data_table.html.erb`, `_filter_bar.html.erb`, `_pagination.html.erb` |
-| Related | Tables, Empty State, Form, Button, Select |
+| Related | Tables, Empty State, Form, Button, Select, [report-view-contract.md](../../specifications/report-view-contract.md) |
 | Design-system priority | Priority 2 |
 
 Data tables combine tabular data with filtering, searching, result summaries, pagination, or bulk actions.
@@ -81,7 +82,9 @@ Setup indexes
 - Use BEM element classes: `__toolbar`, `__filters`, `__summary`, `__pagination`.
 - Do not use non-BEM names such as `.ss-data-table-toolbar` or `.ss-data-table-pagination`; those are not defined in modular CSS.
 - `.ss-items-index-filters` is a compatibility hook for the current Items index filter area.
-- `.ss-filter-bar` is the reusable filter container.
+- `.ss-filter-bar` is the reusable filter container. Apply it to the filter `<form>` (or equivalent wrapper), not a separate `.ss-filter-form` class — that name is not defined.
+- `.ss-filter-actions` holds submit/reset controls beside filter fields. It is styled in legacy `shelfstack.css`, not modular `data-tables.css`. Reports use it via `reports/shared/_filter_bar.html.erb`.
+- Date-range filter rows use `.ss-date-range` (scaffold in `shelfstack.components.forms.css`; see [report-view-contract.md](../../specifications/report-view-contract.md)).
 
 ---
 
@@ -119,12 +122,14 @@ Empty state when no results
 ```erb
 <section class="ss-data-table">
   <div class="ss-data-table__toolbar">
-    <%= form_with url: items_root_path, method: :get, class: "ss-filter-form" do %>
+    <%= form_with url: items_root_path, method: :get, class: "ss-filter-bar" do %>
       <div class="ss-filter-group">
         <%= label_tag :q, "Search" %>
         <%= text_field_tag :q, params[:q], class: "ss-input", placeholder: "Search items…" %>
       </div>
-      <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+      <div class="ss-filter-actions">
+        <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+      </div>
     <% end %>
   </div>
 

@@ -39,7 +39,8 @@ POS pages should use the same global shell plus POS workspace chrome inside page
 | Header | Logo, store/workstation context, global search, user menu |
 | Nav | Top-level workspace navigation |
 | Main | Page content canvas |
-| Flash region | Page-level result messages |
+| Flash region | Page-level result messages inside `<main>` |
+| Toast region | Transient interaction feedback after `</main>` |
 | Footer | Version, copyright, Lock Session |
 | POS main class | Wider POS workspace canvas |
 
@@ -169,7 +170,10 @@ Page canvas width is not the same as text measure. Use `.ss-readable` or `.ss-te
   <%= render "shared/feedback/flash_region" %>
   <%= yield %>
 </main>
+<%= render "shared/interaction/toast_region" %>
 ```
+
+`application.html.erb` renders the toast region after `</main>` so transient messages do not compete with page content inside the main landmark.
 
 ### POS page width
 

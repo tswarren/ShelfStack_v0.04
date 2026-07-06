@@ -141,6 +141,8 @@ Compatibility selectors also exist for old nav markup:
 
 ### Tabs
 
+Target contract for new work:
+
 ```erb
 <nav class="ss-tabs" aria-label="Item sections">
   <div class="ss-tab-list">
@@ -149,6 +151,8 @@ Compatibility selectors also exist for old nav markup:
   </div>
 </nav>
 ```
+
+Live Items show still uses compat markup: `.ss-tabs.ss-item-tabs` with plain `active` on links (styled via `.ss-tabs a.active` and legacy `.ss-item-tabs` in `shelfstack.css`). Prefer BEM tab classes when touching that page. Tab panel wrappers may use `.ss-tab-content`; that hook is not styled in modular or legacy CSS today.
 
 ### Steps
 
@@ -170,4 +174,4 @@ Compatibility selectors also exist for old nav markup:
 
 ## Migration notes
 
-Keep top-level app navigation in `layouts/_nav.html.erb`. Do not create domain-specific duplicate primary nav bars. Use tabs/sidebar/steps for local navigation inside a page or workflow.
+Keep top-level app navigation in `layouts/_nav.html.erb`. Do not create domain-specific duplicate primary nav bars. Use tabs/sidebar/steps for local navigation inside a page or workflow. When migrating legacy tab pages, replace `active` with `.ss-tab--active` and drop unstyled hooks such as `.ss-tab-content` unless panel styling is added.
