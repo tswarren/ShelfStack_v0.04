@@ -5,6 +5,14 @@
  * This file should shrink as rules are removed from the legacy bridge.
  */
 
+.ss-main {
+  max-width: var(--layout-standard);
+}
+
+.ss-main.ss-main--readable {
+  max-width: var(--layout-readable);
+}
+
 .ss-main.ss-main--items {
   max-width: var(--layout-item-detail);
 }
