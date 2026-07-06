@@ -52,7 +52,7 @@ class AppShellContractTest < ApplicationSystemTestCase
     all(".ss-flash__dismiss[aria-label='Dismiss message']", minimum: 0).each(&:click)
 
     find(".ss-dropdown-trigger", text: @cashier.display_name).click
-    click_on "View mode"
+    find("summary.ss-dropdown-submenu__trigger", text: "View mode").click
     click_button "Compact View"
 
     assert_selector ".ss-flash", text: "Appearance updated.", wait: 5
