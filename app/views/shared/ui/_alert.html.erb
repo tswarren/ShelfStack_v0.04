@@ -1,0 +1,18 @@
+<%# locals: variant: :info, title: nil, message: nil %>
+<%
+  variant = local_assigns.fetch(:variant, :info)
+  alert_class = ss_alert_variant_class(variant)
+  title_text = local_assigns[:title]
+  message_text = local_assigns[:message]
+  urgent = variant.to_sym == :error
+%>
+<div class="ss-alert <%= alert_class %>"<%= ' role="alert"'.html_safe if urgent %>>
+  <% if title_text.present? %>
+    <div class="ss-alert__title"><%= title_text %></div>
+  <% end %>
+  <% if block_given? %>
+    <%= yield %>
+  <% elsif message_text.present? %>
+    <%= message_text %>
+  <% end %>
+</div>

@@ -1,0 +1,46 @@
+<%# locals: label:, variant: :primary, size: nil, type: :button, url: nil, method: nil, disabled: false, data: {}, aria: {}, form: nil, form_class: nil, class: nil, full_width: false, icon: false %>
+<%
+  label = local_assigns.fetch(:label)
+  variant = local_assigns.fetch(:variant, :primary)
+  disabled = local_assigns.fetch(:disabled, false)
+  url = local_assigns[:url]
+  button_type = local_assigns.fetch(:type, :button)
+  css_class = ss_button_classes(
+    variant: variant,
+    size: local_assigns[:size],
+    full_width: local_assigns.fetch(:full_width, false),
+    icon: local_assigns.fetch(:icon, false),
+    extra_class: local_assigns[:class]
+  )
+  data_attrs = local_assigns.fetch(:data, {})
+  aria_attrs = local_assigns.fetch(:aria, {})
+  form_options = (local_assigns[:form] || {}).dup
+  form_options[:class] = local_assigns[:form_class] if local_assigns[:form_class].present?
+%>
+<% if url.present? %>
+  <% if disabled %>
+    <span class="<%= css_class %>" aria-disabled="true"><%= label %></span>
+  <% elsif local_assigns[:method].present? && local_assigns[:method].to_s.downcase != "get" %>
+    <%= button_to label,
+          url,
+          method: local_assigns[:method],
+          class: css_class,
+          form: form_options.presence,
+          data: data_attrs.presence,
+          aria: aria_attrs.presence %>
+  <% else %>
+    <%= link_to label,
+          url,
+          class: css_class,
+          data: data_attrs.presence,
+          aria: aria_attrs.presence %>
+  <% end %>
+<% else %>
+  <%= button_tag label,
+        type: button_type,
+        class: css_class,
+        disabled: disabled,
+        data: data_attrs.presence,
+        aria: aria_attrs.presence,
+        form: local_assigns[:form] %>
+<% end %>

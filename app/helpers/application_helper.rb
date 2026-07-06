@@ -5,6 +5,7 @@ module ApplicationHelper
   include ItemsHelper
   include FormHelper
   include ReportsHelper
+  include UiHelper
 
   APPEARANCE_VIEW_MODE_LABELS = {
     "standard" => "Standard View",

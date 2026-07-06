@@ -1,15 +1,8 @@
 <%# locals: eyebrow: nil, title:, description: nil, actions: nil %>
-<header class="ss-page-header">
-  <div>
-    <% if local_assigns.fetch(:eyebrow, nil).present? %>
-      <p class="ss-eyebrow"><%= eyebrow %></p>
-    <% end %>
-    <h1><%= title %></h1>
-    <% if local_assigns.fetch(:description, nil).present? %>
-      <p class="ss-page-description"><%= description %></p>
-    <% end %>
-  </div>
-  <% if local_assigns.fetch(:actions, nil).present? %>
-    <div class="ss-page-actions"><%= actions %></div>
+<% if block_given? %>
+  <%= render "shared/ui/page_header", **local_assigns do %>
+    <%= yield %>
   <% end %>
-</header>
+<% else %>
+  <%= render "shared/ui/page_header", **local_assigns %>
+<% end %>
