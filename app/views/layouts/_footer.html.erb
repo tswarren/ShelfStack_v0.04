@@ -1,6 +1,9 @@
 <footer class="ss-footer">
-  <span>ShelfStack · v0.04.12 · © <%= Time.current.year %> ShelfStack</span>
-  <% if current_user_session&.active? %>
-    <%= button_to "Lock Session", session_lock_path, method: :post, params: { return_to: request.fullpath }, class: "ss-btn ss-btn-secondary", form: { class: "ss-inline-form ss-footer__lock-form" } %>
-  <% end %>
+  <div class="ss-footer__version">ShelfStack v0.04.12</div>
+  <div class="ss-footer__copyright">© <%= Time.current.year %> ShelfStack</div>
+  <div class="ss-footer__actions">
+    <% if current_user_session&.active? %>
+      <%= button_to "Lock Session", session_lock_path, method: :post, params: { return_to: request.fullpath }, class: "ss-btn ss-btn-ghost ss-btn-small", form: { class: "ss-inline-form ss-footer__lock-form" } %>
+    <% end %>
+  </div>
 </footer>
