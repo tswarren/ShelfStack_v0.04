@@ -36,9 +36,9 @@ class AppShellContractTest < ApplicationSystemTestCase
     setup_pos_system_sale!
 
     assert_selector ".ss-flash", wait: 5
-    assert_button "Dismiss message"
+    assert_selector ".ss-flash__dismiss[aria-label='Dismiss message']"
 
-    click_button "Dismiss message"
+    find(".ss-flash__dismiss[aria-label='Dismiss message']").click
 
     assert_no_selector ".ss-flash"
   end
