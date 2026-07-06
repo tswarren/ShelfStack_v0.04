@@ -212,7 +212,8 @@ Recommended user-facing modes:
 | File | Responsibility |
 | --- | --- |
 | `shelfstack.print.css` | Print-only and print-optimized styling |
-| `shelfstack.legacy.css` | Temporary bridge importing the old CSS/preview stack |
+| `shelfstack.css` | Frozen monolithic legacy CSS. Do not add new feature styles. Remove rules as they are migrated. |
+| `shelfstack.legacy.css` | Temporary bridge importing the old CSS/preview stack, including `shelfstack.css` |
 | `shelfstack.migration-overrides.css` | Temporary post-legacy overrides while preview CSS remains imported |
 | `shelfstack.experimental.css` | Branch/local experiments only; not imported by `application.css` |
 
@@ -231,18 +232,36 @@ Do not rely on action-group order to determine the primary action.
 | --- | --- |
 | `.ss-btn-primary` | One main action per page/form/section |
 | `.ss-btn-secondary` | Important alternate action |
-| `.ss-btn-tertiary` | Cancel, back, close, logout, lock session |
+| `.ss-btn-tertiary` | Cancel, back, close, logout |
+| `.ss-btn-ghost` | Low-emphasis persistent utilities such as Lock Session |
 | `.ss-btn-danger` | Destructive or irreversible action |
 | `.ss-btn-link` | Low-emphasis inline action |
 
-## Migration rules
+## CSS migration rules
 
-1. Do not add new feature CSS to `shelfstack.legacy.css`.
-2. Move stable rules from old preview files into definitive component/domain files.
-3. Prefer generic component classes before creating domain-specific classes.
-4. Use domain files only when the component is meaningfully tied to ShelfStack workflows.
-5. Keep `shelfstack.migration-overrides.css` temporary; move durable rules into definitive files when the legacy bridge is removed.
-6. Remove `shelfstack.legacy.css` and `shelfstack.migration-overrides.css` imports after views are fully standardized.
+Treat the legacy bridge as a frozen compatibility layer, not an active development surface.
+
+1. Do **not** add new feature CSS to `shelfstack.css`.
+2. Do **not** add new feature CSS to `shelfstack.legacy.css`; it should remain an import bridge only.
+3. Add reusable UI styles to the relevant `shelfstack.components.*.css` file.
+4. Add workflow-specific styles to the relevant `shelfstack.domain.*.css` file.
+5. Prefer generic component classes before creating domain-specific classes.
+6. Use domain files only when the component is meaningfully tied to ShelfStack workflows.
+7. Use `shelfstack.migration-overrides.css` only to neutralize cascade conflicts caused by the legacy import.
+8. Move durable rules out of `migration-overrides.css` into definitive component/domain files as soon as the legacy conflict is removed.
+9. Remove legacy rules from `shelfstack.css` as domains migrate.
+10. Remove `shelfstack.legacy.css` and `shelfstack.migration-overrides.css` imports after views are fully standardized.
+
+Where to put new CSS:
+
+| Change type | Destination |
+| ----------- | ----------- |
+| Button/link/form/table/card/nav/alert/overlay/feedback primitive | `shelfstack.components.*.css` |
+| Items, inventory, orders, demand, customers, buybacks, POS, reports, setup workflow style | `shelfstack.domain.*.css` |
+| Print-only output | `shelfstack.print.css` |
+| Temporary local experiment | `shelfstack.experimental.css` only if deliberately imported locally |
+| Legacy conflict workaround | `shelfstack.migration-overrides.css`, with a comment and follow-up migration path |
+| New production style | Never `shelfstack.css` |
 
 ## Preview files
 
