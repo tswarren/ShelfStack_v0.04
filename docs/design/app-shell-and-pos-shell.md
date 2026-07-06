@@ -1,0 +1,65 @@
+# App Shell and POS Workspace Shell
+
+ShelfStack has one global application shell. The top-level header and primary navigation should be consistent across POS and non-POS areas.
+
+## Global app shell
+
+The global app shell owns:
+
+- logo placement
+- store/workstation context
+- global search
+- user menu
+- appearance switcher
+- logout
+- primary navigation
+- active top-level nav state
+- flash/toast behavior
+
+Do not create a second POS-specific top-level header or primary navigation that duplicates the global shell.
+
+## POS workspace shell
+
+POS-specific context belongs inside the POS workspace, below the global header and global navigation.
+
+The POS workspace shell owns:
+
+- POS/register/session status
+- POS transaction context
+- POS actions menu
+- scan/command input
+- sale/refund/pickup mode
+- Open Ring and Gift Card quick actions
+- POS-specific feedback, choices, and inline panels
+
+## Recommended hierarchy
+
+```text
+Global Header
+Global Navigation
+
+POS Workspace Header
+POS Command Bar
+POS Transaction Workspace
+```
+
+## POS workspace header pattern
+
+| Area | Contents |
+| --- | --- |
+| Left | POS/register/session details |
+| Right | POS actions menu |
+
+The POS workspace header should not repeat store/workstation/user identity because those belong in the global application header.
+
+## POS command bar pattern
+
+| Row | Contents |
+| --- | --- |
+| Command row | Scan/command input + sale/refund/pickup mode |
+| Quick row | Open Ring, Gift Card, and other quick actions |
+| Feedback row | POS choices, warnings, inline panels, and modals |
+
+## Rule
+
+Use one app header and one app nav everywhere. POS adds a specialized workspace below them; it does not replace or duplicate the global shell.
