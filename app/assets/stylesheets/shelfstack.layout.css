@@ -118,6 +118,14 @@ body {
   max-width: var(--layout-wide);
 }
 
+.ss-main--items {
+  max-width: var(--layout-item-detail);
+}
+
+.ss-main--full {
+  max-width: none;
+}
+
 .ss-main--narrow {
   max-width: var(--layout-narrow);
 }
