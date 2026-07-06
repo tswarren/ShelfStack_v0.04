@@ -62,4 +62,39 @@ class SharedUiPartialsTest < ActionView::TestCase
     assert_includes error, "ss-alert--error"
     assert_includes error, 'role="alert"'
   end
+
+  test "errors partial renders alert list instead of flash markup" do
+    vendor = Vendor.new
+    vendor.errors.add(:name, "can't be blank")
+
+    html = render(partial: "shared/forms/errors", locals: { record: vendor })
+
+    assert_includes html, "ss-alert--error"
+    assert_includes html, "<li>Name can&#39;t be blank</li>"
+    assert_not_includes html, "flash-alert"
+  end
+
+  test "empty_state partial renders title message and actions" do
+    html = render(
+      partial: "shared/ui/empty_state",
+      locals: {
+        title: "No vendors",
+        message: "Create one to get started.",
+        actions: '<a href="/new" class="ss-btn">New</a>'.html_safe
+      }
+    )
+
+    assert_includes html, "ss-empty-state"
+    assert_includes html, "ss-empty-state__title"
+    assert_includes html, "ss-empty-state__message"
+    assert_includes html, "ss-empty-state__actions"
+    assert_includes html, 'href="/new"'
+  end
+
+  test "reports empty_state delegates to shared ui empty_state" do
+    html = render(partial: "reports/shared/empty_state", locals: { title: "No rows", message: "Widen the range." })
+
+    assert_includes html, "ss-empty-state__title"
+    assert_includes html, "ss-empty-state__message"
+  end
 end

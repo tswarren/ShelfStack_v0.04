@@ -19,7 +19,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_entity
-    assert_select ".flash-alert", text: /confirmation.*blank/i
+    assert_select ".ss-alert--error", text: /confirmation.*blank/i
     assert @user.reload.authenticate("Password123!")
   end
 

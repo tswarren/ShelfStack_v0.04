@@ -24,4 +24,12 @@ class UiHelperTest < ActionView::TestCase
     assert_equal "ss-alert--error", ss_alert_variant_class(:error)
     assert_equal "ss-alert--info", ss_alert_variant_class(:neutral)
   end
+
+  test "ss_status_badge preserves underscore status keys" do
+    html = ss_status_badge("Partially received", status: :partially_received)
+
+    assert_includes html, "ss-status-badge"
+    assert_includes html, "status-partially_received"
+    assert_not_includes html, "status-partially-received"
+  end
 end

@@ -18,13 +18,13 @@ class SetupWorkstationsControllerTest < ActionDispatch::IntegrationTest
     post setup_workstations_path, params: { workstation: { store_id: "", name: "" } }
 
     assert_response :unprocessable_entity
-    assert_select ".flash.flash-alert", /can't be blank|must exist/i
+    assert_select ".ss-alert--error", /can't be blank|must exist/i
   end
 
   test "update with missing fields shows validation errors" do
     patch setup_workstation_path(@workstation), params: { workstation: { name: "" } }
 
     assert_response :unprocessable_entity
-    assert_select ".flash.flash-alert", /can't be blank/i
+    assert_select ".ss-alert--error", /can't be blank/i
   end
 end

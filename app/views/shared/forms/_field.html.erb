@@ -1,10 +1,17 @@
-<%# locals: f, record, field, label: nil, required: false, help: nil %>
+<%# locals: f, record, field, label: nil, required: false, help: nil, warning: nil %>
+<%
+  help_text = local_assigns[:help]
+  warning_text = local_assigns[:warning]
+%>
 <div class="<%= ss_field_css(record, field) %>">
   <% label_text = local_assigns.fetch(:label, nil) || field.to_s.humanize %>
   <%= f.label field, (local_assigns.fetch(:required, false) ? ss_required_label(label_text) : label_text), class: "ss-label" %>
   <%= yield %>
-  <% if local_assigns.fetch(:help, nil).present? %>
-    <p class="ss-help"><%= help %></p>
+  <% if help_text.present? %>
+    <p id="<%= ss_field_dom_id(record, field, "help") %>" class="ss-help"><%= help_text %></p>
+  <% end %>
+  <% if warning_text.present? %>
+    <%= ss_field_warning(record, field, message: warning_text) %>
   <% end %>
   <%= ss_field_error(record, field) %>
 </div>

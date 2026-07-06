@@ -36,4 +36,9 @@ module UiHelper
 
     "ss-alert--#{key}"
   end
+
+  def ss_status_badge(label, status:)
+    key = status.to_s
+    tag.span(label, class: [ "ss-status-badge", "status-#{key}" ])
+  end
 end

@@ -1,0 +1,18 @@
+<%# locals: title:, message: nil, actions: nil %>
+<div class="ss-empty-state">
+  <% if local_assigns.fetch(:title, nil).present? %>
+    <p class="ss-empty-state__title"><%= title %></p>
+  <% end %>
+  <% if local_assigns.fetch(:message, nil).present? %>
+    <p class="ss-empty-state__message"><%= message %></p>
+  <% end %>
+  <% if local_assigns.fetch(:actions, nil).present? || block_given? %>
+    <div class="ss-empty-state__actions">
+      <% if local_assigns.fetch(:actions, nil).present? %>
+        <%= actions %>
+      <% else %>
+        <%= yield %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

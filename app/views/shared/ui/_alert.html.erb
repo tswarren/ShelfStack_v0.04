@@ -10,9 +10,9 @@
   <% if title_text.present? %>
     <div class="ss-alert__title"><%= title_text %></div>
   <% end %>
-  <% if block_given? %>
-    <%= yield %>
-  <% elsif message_text.present? %>
+  <% if message_text.present? %>
     <%= message_text %>
+  <% elsif block_given? %>
+    <%= yield %>
   <% end %>
 </div>
