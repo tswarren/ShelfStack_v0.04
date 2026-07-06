@@ -36,12 +36,22 @@ Use access notices for permission, workstation, session, or readiness blocks.
 
 ## CSS
 
+### Implemented
+
 ```css
 .ss-access-notice
+.ss-access-notice__eyebrow
 .ss-access-notice__title
-.ss-access-notice__body
+.ss-access-notice__message
+.ss-access-notice__meta
+.ss-access-notice__permission
 .ss-access-notice__actions
+.ss-access-notice__recovery
+.ss-access-notice--warning
+.ss-access-notice--compact
 ```
+
+Use `__message` for explanatory body copy. There is no `__body` element class.
 
 ## Accessibility requirements
 
@@ -59,7 +69,7 @@ Use access notices for permission, workstation, session, or readiness blocks.
     POS access required
   </h1>
 
-  <p class="ss-access-notice__body">
+  <p class="ss-access-notice__message">
     You do not have permission to open the register from this workstation.
   </p>
 

@@ -5,7 +5,7 @@
 | Status | CSS only |
 | CSS | `app/assets/stylesheets/shelfstack.components.alerts.css` |
 | Planned partial | `app/views/shared/ui/_alert.html.erb` |
-| Related | Flash, Toast, Field Error, POS local alert |
+| Related | Flash, Toast, Field Error, POS local alert, Attention Panel |
 | Design-system priority | Priority 1 |
 
 Alerts communicate a condition that is true **right now** on the current screen.
@@ -44,14 +44,55 @@ Alert = what is true now
 
 ## Variants
 
+### Implemented
+
 ```css
 .ss-alert
 .ss-alert--info
 .ss-alert--success
 .ss-alert--warning
 .ss-alert--error
+.ss-alert__title
+.ss-alert__actions
+```
+
+All variants are defined in `shelfstack.components.alerts.css`.
+
+### Planned
+
+```css
 .ss-alert--neutral
 ```
+
+Not in CSS yet. Do not use until added to `shelfstack.components.alerts.css`.
+
+## Attention panel
+
+Operational warning list for multiple issues that need staff review. Shares warning surface styling with `.ss-alert--warning`.
+
+### Implemented
+
+```css
+.ss-attention-panel
+```
+
+`:empty` hides the panel when there are no items.
+
+### Partial
+
+```
+app/views/orders/shared/_attention_panel.html.erb
+```
+
+Also used by items operational warnings (`items/shared/_operational_warnings_panel.html.erb`).
+
+### Example
+
+```
+<%= render "orders/shared/attention_panel", items: @attention_items %>
+```
+
+Use attention panel when there are **multiple** actionable warnings. Use a single [Alert](#variants) for one condition.
 
 ## Rails partial
 

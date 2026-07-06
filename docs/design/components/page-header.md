@@ -37,12 +37,19 @@ Use a page header at the top of index, detail, setup, report, and workflow pages
 
 ## CSS
 
+### Implemented
+
 ```css
 .ss-page-header
-.ss-page-header__title
 .ss-page-description
 .ss-page-actions
+.ss-page-header__actions
+.ss-eyebrow
 ```
+
+Title styling targets a plain `<h1>` inside `.ss-page-header`. There is no `.ss-page-header__title` class in CSS.
+
+`shared/forms/_page_header.html.erb` matches this pattern: eyebrow (optional), `<h1>`, description, actions.
 
 ## Current partial
 

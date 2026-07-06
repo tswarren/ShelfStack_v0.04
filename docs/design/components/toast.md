@@ -3,10 +3,17 @@
 | Field | Value |
 | :---- | :---- |
 | Status | Partial exists / interaction shell |
-| CSS | `app/assets/stylesheets/shelfstack.components.feedback.css` |
+| CSS | `app/assets/stylesheets/shelfstack.components.feedback.css` (+ legacy bridge in `shelfstack.css`) |
 | Current partials | `app/views/shared/interaction/_toast.html.erb`, `_toast_region.html.erb` |
 | Related | Flash, Alert |
 | Design-system priority | Priority 1 |
+
+See also — other classes in `shelfstack.components.feedback.css`:
+
+| Spec | Covers |
+| :---- | :---- |
+| [Empty State](empty-state.md) | `.ss-empty-state*` |
+| [Progress / Skeleton](progress-skeleton.md) | `.ss-progress*`, `.ss-skeleton` |
 
 Toasts are temporary, non-blocking confirmations for inline actions.
 
@@ -36,15 +43,31 @@ Use toasts for small results that happen without leaving the current screen.
 | Destructive confirmation | Alert Dialog |
 | Critical POS completion result | Flash or POS-specific result panel |
 
-## Variants
+## CSS
+
+### Implemented in `shelfstack.components.feedback.css`
 
 ```css
+.ss-toast-region
 .ss-toast
 .ss-toast--success
 .ss-toast--warning
 .ss-toast--error
-.ss-toast--info
 ```
+
+Success, warning, and error variants share color rules with `.ss-flash--*` in the same file.
+
+### Legacy bridge (`shelfstack.css`)
+
+The toast partial also emits these classes, which are **not yet** in modular feedback CSS:
+
+```css
+.ss-toast--info
+.ss-toast__message
+.ss-toast__dismiss
+```
+
+They work today because legacy `shelfstack.css` loads after the component layer. New toast work should assume these move into `shelfstack.components.feedback.css` during Phase 10-E extraction.
 
 ## Behavior
 
@@ -82,4 +105,6 @@ Safe to miss: yes
 
 ## Migration notes
 
-Do not convert flash messages to toasts just to reduce visual weight. First decide whether the message is page-level, inline, or persistent.  
+Do not convert flash messages to toasts just to reduce visual weight. First decide whether the message is page-level, inline, or persistent.
+
+Extract `.ss-toast--info`, `.ss-toast__message`, and `.ss-toast__dismiss` from legacy CSS into `shelfstack.components.feedback.css` when touching toast styling.

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | :---- | :---- |
-| Status | CSS only |
+| Status | CSS only (base class implemented) |
 | CSS | `app/assets/stylesheets/shelfstack.components.forms.css` |
 | Planned partial | `app/views/shared/ui/_select.html.erb` only after usage stabilizes |
 | Related | Field, Combobox, Lookup Panel, Radio Group |
@@ -38,12 +38,23 @@ Use combobox/lookup patterns for large, searchable, or remote lists.
 
 ## CSS
 
+### Implemented
+
 ```css
 .ss-select
+```
+
+Native `select` elements inside `.ss-form` and `.ss-field` receive the same base styling.
+
+### Planned modifiers (not in CSS yet)
+
+```css
 .ss-select--native
 .ss-select--compact
 .ss-select--invalid
 ```
+
+Do not use planned modifier classes until they are added to `shelfstack.components.forms.css`. Use base `.ss-select` and field-level error treatment (`.ss-field--error`, `.ss-field-error`) for now.
 
 ## Accessibility requirements
 
@@ -70,9 +81,9 @@ Use combobox/lookup patterns for large, searchable, or remote lists.
 <%= select_tag :format_id,
       options_from_collection_for_select(@formats, :id, :name, params[:format_id]),
       include_blank: "All formats",
-      class: "ss-select ss-select--compact" %>
+      class: "ss-select" %>
 ```
 
 ## Migration notes
 
-Do not build a custom select for simple cases. Keep native selects where they work. Reserve combobox/lookup work for product/customer/vendor searches.  
+Do not build a custom select for simple cases. Keep native selects where they work. Reserve combobox/lookup work for product/customer/vendor searches.

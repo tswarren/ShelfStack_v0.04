@@ -9,6 +9,14 @@
 | Related | Field, Input, Select, Alert, Page Header |
 | Design-system priority | Priority 1 |
 
+See also — other classes in `shelfstack.components.forms.css`:
+
+| Spec | Covers |
+| :---- | :---- |
+| [Textarea](textarea.md) | `.ss-textarea` |
+| [Fieldset](fieldset.md) | `.ss-fieldset*` |
+| [Choice controls](choice-controls.md) | Checkbox, radio, choice lists |
+
 Forms collect, validate, and submit user input.
 
 ## Purpose
@@ -67,17 +75,34 @@ app/assets/stylesheets/shelfstack.components.forms.css
 
 Target classes:
 
+### Implemented (`shelfstack.components.forms.css`)
+
 ```css
 .ss-form
 .ss-form-card
-.ss-form-section
+.ss-form-card-header
+.ss-form-card-body
+.ss-form-grid
 .ss-form-actions
+.ss-form-actions--end
+.ss-form-actions--between
 .ss-field
-.ss-field--invalid
+.ss-field--error
 .ss-field-error
+.ss-label
+.ss-help
 .ss-input
 .ss-select
+.ss-textarea
 ```
+
+### Legacy only
+
+```css
+.ss-form-section
+```
+
+`shared/forms/_section.html.erb` emits **`.ss-form-card`**, not `.ss-form-section`. `.ss-form-section` exists only in legacy `shelfstack.css`; do not use it in new markup.
 
 ## Rails partials
 
@@ -111,7 +136,8 @@ Prefer these for form-heavy setup and workflow pages.
   <%= render "shared/forms/errors", object: @vendor %>
 
   <%= render "shared/forms/section", title: "Vendor details" do %>
-    <%= render "shared/forms/field", form: form, attribute: :name do %>
+    <%= render layout: "shared/forms/field",
+          locals: { f: form, record: @vendor, field: :name, required: true } do %>
       <%= form.text_field :name, class: "ss-input" %>
     <% end %>
   <% end %>

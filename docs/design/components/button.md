@@ -62,7 +62,7 @@ Do not use buttons for passive information, static status, normal navigation tha
 | Inline explanatory text | Plain text or help text |
 | Current filter labels | Pill or filter chip |
 | Dropdown/menu row actions | `.ss-dropdown-menu__item` |
-| Filter tabs / queue chips | `.ss-filter-chip` or the relevant filter component |
+| Filter tabs / queue chips | `.ss-filter-chip` (used in views; **CSS not defined yet**) or the relevant filter component |
 | POS sale/return/pickup mode | `.ss-pos-mode-switch__btn` |
 | Segmented mutually exclusive modes | `.ss-button-group--segmented` or toggle group |
 | Non-action table values | Text, badge, or link |

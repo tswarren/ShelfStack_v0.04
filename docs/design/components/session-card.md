@@ -2,8 +2,8 @@
 
 | Field | Value |
 | :---- | :---- |
-| Status | CSS only |
-| CSS | `app/assets/stylesheets/shelfstack.components.session.css` |
+| Status | Mixed / legacy |
+| CSS | `app/assets/stylesheets/shelfstack.components.session.css` (target); `.ss-auth-box` in legacy `shelfstack.css` (current auth layout) |
 | Planned partial | `app/views/shared/ui/_session_card.html.erb` |
 | Related | Access Notice, Form, Button |
 | Design-system priority | Priority 1 |
@@ -36,13 +36,30 @@ Use session cards for login, unlock, PIN, password, and workstation assignment w
 
 ## CSS
 
+### Implemented (target)
+
 ```css
+.ss-session-screen
 .ss-session-card
-.ss-auth-box
+.ss-session-card__brand
 .ss-session-card__title
-.ss-session-card__body
+.ss-session-card__description
+.ss-session-card__context
 .ss-session-card__actions
+.ss-session-card__secondary-actions
 ```
+
+Use `__description` or `__context` for supporting copy. There is no `__body` element class.
+
+### Legacy (current auth layout)
+
+```css
+.ss-auth-box
+.ss-auth-logo
+.ss-auth-context
+```
+
+`layouts/auth.html.erb` still wraps session pages in `.ss-auth-box`, not `.ss-session-card`. New auth work should migrate toward session-card classes when touching that layout.
 
 ## Accessibility requirements
 
@@ -56,11 +73,11 @@ Use session cards for login, unlock, PIN, password, and workstation assignment w
 
 ```
 <section class="ss-session-card" aria-labelledby="session-title">
-  <h1 id="session-title">Unlock Session</h1>
+  <h1 id="session-title" class="ss-session-card__title">Unlock Session</h1>
 
   <%= form_with url: session_unlock_path, class: "ss-form" do |form| %>
     <div class="ss-field">
-      <%= form.label :pin, "PIN", class: "ss-field-label" %>
+      <%= form.label :pin, "PIN", class: "ss-label" %>
       <%= form.password_field :pin, class: "ss-input", autocomplete: "current-password" %>
     </div>
 
@@ -74,4 +91,4 @@ Use session cards for login, unlock, PIN, password, and workstation assignment w
 
 ## Migration notes
 
-Auth/session layouts may still use legacy flash markup. Migrate toward shared flash for page-level results and inline alert for persistent form/session errors.
+Auth/session layouts may still use legacy `.ss-auth-box` and inline `.flash.flash-*` blocks. Migrate toward `.ss-session-card` markup and shared flash for page-level results when editing auth screens.

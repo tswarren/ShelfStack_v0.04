@@ -9,6 +9,13 @@
 | Related | Button, Link, Popover |
 | Design-system priority | Priority 1 |
 
+See also — other overlays in the same CSS file:
+
+| Spec | Covers |
+| :---- | :---- |
+| [Drawer](drawer.md) | Side panel partial |
+| [Sheet / Popover](sheet-popover.md) | Sheet, popover, hover card, context menu tokens |
+
 Dropdown menus present a compact list of related actions.
 
 ## Purpose

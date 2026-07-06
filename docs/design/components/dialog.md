@@ -9,6 +9,13 @@
 | Related | Alert Dialog, Drawer, Button |
 | Design-system priority | Priority 1 |
 
+See also — other classes in `shelfstack.components.overlays.css`:
+
+| Spec | Covers |
+| :---- | :---- |
+| [Drawer](drawer.md) | `.ss-drawer*` (partial exists) |
+| [Sheet / Popover](sheet-popover.md) | `.ss-sheet*`, `.ss-popover*`, scaffold overlays |
+
 Dialogs support bounded tasks without leaving the current workflow.
 
 ## Purpose
@@ -37,6 +44,8 @@ Use dialogs for focused interactions that need context but should not require fu
 
 ## CSS
 
+### Target (`shelfstack.components.overlays.css`)
+
 ```css
 .ss-dialog
 .ss-dialog__backdrop
@@ -46,7 +55,24 @@ Use dialogs for focused interactions that need context but should not require fu
 .ss-dialog__footer
 ```
 
-Legacy modal classes may remain during migration.
+Structure tokens only. Positioning, open/close behavior, and focus trap are not yet wired to `.ss-dialog*`.
+
+### Current (`shared/interaction/_modal.html.erb` + legacy `shelfstack.css`)
+
+```css
+.ss-modal
+.ss-modal-overlay
+.ss-modal-dialog
+.ss-modal-dialog--sm
+.ss-modal-dialog--md
+.ss-modal-dialog--lg
+.ss-modal-dialog--pos
+.ss-modal-header
+.ss-modal-body
+.ss-modal-footer
+```
+
+Use modal classes for new work until the dialog migration is executed.
 
 ## Current partial
 
@@ -78,11 +104,12 @@ Legacy modal classes may remain during migration.
 
 <%= render "shared/interaction/modal", id: "edit-price-modal", title: "Edit Price", size: :md do %>
   <%= form_with model: @variant, class: "ss-form" do |form| %>
-    <%= render "shared/forms/field", form: form, attribute: :price do %>
-      <%= form.text_field :price, class: "ss-input ss-input--money" %>
+    <%= render layout: "shared/forms/field",
+          locals: { f: form, record: @variant, field: :price } do %>
+      <%= form.text_field :price, class: "ss-input", inputmode: "decimal" %>
     <% end %>
 
-    <div class="ss-dialog__footer">
+    <div class="ss-form-actions">
       <%= form.submit "Save Price", class: "ss-btn ss-btn-primary" %>
     </div>
   <% end %>

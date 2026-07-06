@@ -42,24 +42,29 @@ For UX principles and shell rules, start with:
 
 These components have the highest copy/paste risk and should be standardized first.
 
-| Component | Status | Current contract / target path | Notes |
-| --------- | ------ | ------------------------------ | ----- |
-| Button | CSS only | `.ss-btn`, `.ss-btn-primary`, `.ss-btn-secondary`, `.ss-btn-tertiary`, `.ss-btn-ghost`, `.ss-btn-danger` / `.ss-btn--danger`, `.ss-btn-small` / `.ss-btn--small`; planned `shared/ui/_button.html.erb` | Prefer `--` modifiers for new markup; thin partial should be next. |
-| Link | CSS only | `.ss-link`, `.ss-link--quiet`, `.ss-link--danger`, `.ss-btn-link`; planned `shared/ui/_link.html.erb` | Keep normal navigation as links; do not over-buttonize. |
-| Form | Partial exists | `shared/forms/_section`, `shared/forms/_field`, `shared/forms/_page_header`, `shared/forms/_errors`; CSS in `shelfstack.components.forms.css` | Existing `shared/forms/*` is the active form foundation. |
-| Field | Partial exists | `shared/forms/_field`; `.ss-field`, `.ss-field--invalid` | Prefer the existing form partial instead of inventing `shared/ui/_field` now. |
-| Input | CSS only | `.ss-input`, `.ss-input--search`, `.ss-input--money`, `.ss-input--compact` | Usually emitted through form helpers/partials. |
-| Select / Native Select | CSS only | `.ss-select`, native `select` rules in `shelfstack.components.forms.css` | Enhanced select/combobox remains planned. |
-| Alert | Mixed / legacy | Target: `.ss-alert`, `.ss-alert--info`, `.ss-alert--success`, `.ss-alert--warning`, `.ss-alert--error`; planned `shared/ui/_alert.html.erb` | Migrate form errors and old `.flash-alert` blocks toward inline alerts where appropriate. |
-| Flash | Partial exists | `shared/feedback/_flash_region.html.erb`; `.ss-flash`, `.ss-flash--success`, `.ss-flash--warning`, `.ss-flash--error`, `.ss-flash--info` | Server-driven page-level results after navigation/redirect. |
-| Toast | Partial exists / interaction shell | `shared/interaction/_toast`, `shared/interaction/_toast_region`; `.ss-toast-region`, `.ss-toast`, `.ss-toast--success`, `.ss-toast--warning`, `.ss-toast--error`, `.ss-toast--info` | Inline non-blocking feedback; auto-dismiss behavior lives in JS. |
-| Access Notice | CSS only | `.ss-access-notice`, `.ss-access-notice__actions`; planned `shared/ui/_access_notice.html.erb` | Used for locked-out/permission-required pages. |
-| Session Card | Mixed / legacy | `.ss-session-card` in `shelfstack.components.session.css`; `.ss-auth-box` still in legacy `shelfstack.css` | Auth layout (`layouts/auth`) is outside the global shell; see [app-shell-and-pos-shell.md](app-shell-and-pos-shell.md). |
-| Card / Surface | CSS only | `.ss-card`, `.ss-card__header`, `.ss-card__body`, `.ss-surface`; planned `shared/ui/_card.html.erb` | Good candidate for thin partial after Button. |
-| Page Header | Mixed / partial exists | Existing `shared/forms/_page_header`; target generic `shared/ui/_page_header.html.erb`; `.ss-page-header` | Current partial name is form-oriented; generic page header should be extracted later. |
-| Dropdown Menu | Implemented | `.ss-dropdown`, `.ss-dropdown-trigger`, `.ss-dropdown-menu`, `.ss-dropdown-menu__item`; layout/user menu partials | Used by global user menu and POS actions. |
-| Dialog | Partial exists | **Current:** `shared/interaction/_modal` + `.ss-modal*` (styles in legacy `shelfstack.css`). **Target:** `.ss-dialog*` in `shelfstack.components.overlays.css` after markup migration. | Phase 10 interaction shell. |
-| Alert Dialog | CSS only / planned | `.ss-alert-dialog`, `.ss-alert-dialog--danger`; planned partial | Use for interruptive confirmation, post/void/destructive actions. |
+| Component | Status | Spec | Current contract / target path | Notes |
+| --------- | ------ | ---- | ------------------------------ | ----- |
+| Button | CSS only | [button.md](components/button.md) | `.ss-btn`, `.ss-btn-primary`, `.ss-btn-secondary`, `.ss-btn-tertiary`, `.ss-btn-ghost`, `.ss-btn-danger` / `.ss-btn--danger`, `.ss-btn-small` / `.ss-btn--small`; planned `shared/ui/_button.html.erb` | Prefer `--` modifiers for new markup; thin partial should be next. |
+| Link | CSS only | [link.md](components/link.md) | `.ss-link`, `.ss-link--quiet`, `.ss-link--danger`, `.ss-btn-link`; planned `shared/ui/_link.html.erb` | Keep normal navigation as links; do not over-buttonize. |
+| Form | Partial exists | [form.md](components/form.md) | `shared/forms/_section`, `shared/forms/_field`, `shared/forms/_page_header`, `shared/forms/_errors`; CSS in `shelfstack.components.forms.css` | Section partial emits `.ss-form-card`, not legacy `.ss-form-section`. |
+| Field | Partial exists | [field.md](components/field.md) | `shared/forms/_field`; `.ss-field`, `.ss-field--error`, `.ss-label`, `.ss-help`, `.ss-field-error` | Partial uses `f`/`record`/`field` locals; prefer over inventing `shared/ui/_field`. |
+| Input | CSS only | [input.md](components/input.md) | `.ss-input` (base only); modifiers planned | Usually emitted through form helpers/partials. |
+| Textarea | CSS only | [textarea.md](components/textarea.md) | `.ss-textarea` | Same forms CSS module as input. |
+| Fieldset | CSS only | [fieldset.md](components/fieldset.md) | `.ss-fieldset`, `.ss-fieldset__legend`, `.ss-fieldset__description` | Semantic grouping; distinct from `.ss-form-card`. |
+| Choice controls | CSS only | [choice-controls.md](components/choice-controls.md) | `.ss-checkbox-group`, `.ss-radio-group`, `.ss-choice-option`, etc. | Toggle/combobox hooks are scaffold only. |
+| Select / Native Select | CSS only | [select-native-select.md](components/select-native-select.md) | `.ss-select` (base only); modifiers planned | Enhanced select/combobox remains planned. |
+| Alert | Mixed / legacy | [alert.md](components/alert.md) | `.ss-alert`, `.ss-alert--*`; `.ss-attention-panel` | Attention panel partial for multi-issue warnings. |
+| Flash | Partial exists | [flash.md](components/flash.md) | `shared/feedback/_flash_region`; see also [empty-state](components/empty-state.md) | Server-driven page-level results after navigation/redirect. |
+| Toast | Partial exists / interaction shell | [toast.md](components/toast.md) | `shared/interaction/_toast*`; see also [empty-state](components/empty-state.md), [progress-skeleton](components/progress-skeleton.md) | `--info` via legacy bridge. |
+| Access Notice | CSS only | [access-notice.md](components/access-notice.md) | `.ss-access-notice`, `__message`, `__actions`; planned `shared/ui/_access_notice.html.erb` | Used for locked-out/permission-required pages. |
+| Session Card | Mixed / legacy | [session-card.md](components/session-card.md) | `.ss-session-card` in `shelfstack.components.session.css`; `.ss-auth-box` still in legacy `shelfstack.css` | Auth layout (`layouts/auth`) is outside the global shell; see [app-shell-and-pos-shell.md](app-shell-and-pos-shell.md). |
+| Card / Surface | CSS only | [card-surface.md](components/card-surface.md) | `.ss-card*`, `.ss-surface*`, `.ss-summary*`, `.ss-sidebar-card`, `.ss-card-grid` | Summary and sidebar variants documented in card spec. |
+| Page Header | Mixed / partial exists | [page-header.md](components/page-header.md) | Existing `shared/forms/_page_header`; target generic `shared/ui/_page_header.html.erb`; `.ss-page-header` | Title is plain `<h1>`, not `__title` class. |
+| Dropdown Menu | Implemented | [dropdown-menu.md](components/dropdown-menu.md) | `.ss-dropdown`, `.ss-dropdown-trigger`, `.ss-dropdown-menu`, `.ss-dropdown-menu__item`; layout/user menu partials | Used by global user menu and POS actions. |
+| Dialog | Partial exists | [dialog.md](components/dialog.md) | **Current:** `shared/interaction/_modal` + `.ss-modal*`. **Target:** `.ss-dialog*` | Phase 10 interaction shell. |
+| Drawer | Partial exists | [drawer.md](components/drawer.md) | `shared/interaction/_drawer` + `.ss-drawer*` (legacy CSS) | Item variant ops, POS session drawer. |
+| Sheet / Popover | CSS only (scaffold) | [sheet-popover.md](components/sheet-popover.md) | `.ss-sheet*`, `.ss-popover*`, `.ss-hover-card*`, `.ss-context-menu` | Tokens only; use drawer/dropdown for new work. |
+| Alert Dialog | CSS only / planned | [alert-dialog.md](components/alert-dialog.md) | `.ss-alert-dialog`, `.ss-alert-dialog--danger`; planned partial | Use for interruptive confirmation. |
 
 ---
 
@@ -73,7 +78,7 @@ Use these names for new work. Legacy selectors remain only for migration compati
 | Toast | Lightweight inline/Turbo result without navigation. | `.ss-toast-region`, `.ss-toast`, `.ss-toast--success`, `.ss-toast--warning`, `.ss-toast--error`, `.ss-toast--info` | Interaction partials exist. |
 | Alert | Persistent in-page condition near the affected workflow. | `.ss-alert`, `.ss-alert--info`, `.ss-alert--success`, `.ss-alert--warning`, `.ss-alert--error` | CSS exists; partial planned. |
 | POS local alert | POS-workspace-specific state or warning. | `.ss-pos-alert`, `.ss-pos-alert--error` | Domain CSS exists; keep separate from global flash. |
-| Field error | Field-specific validation feedback. | `.ss-field-error`, `.ss-field--invalid` | CSS/form partials exist; continue migration from generic flash blocks. |
+| Field error | Field-specific validation feedback. | `.ss-field-error`, `.ss-field--error` | CSS/form partials exist; continue migration from generic flash blocks. |
 
 Decision rule:
 
@@ -94,7 +99,7 @@ These files still use legacy markup. Migrate them during Phase 10-E or when touc
 | File | Issue | Target |
 | ---- | ----- | ------ |
 | `app/views/layouts/auth.html.erb` | Inline `.flash.flash-*` blocks; no global shell | `flash_region` partial or session-scoped `.ss-alert*`; keep focused auth layout (no header/nav) |
-| `app/views/shared/forms/_errors.html.erb` | `.flash.flash-alert` for validation summary | `.ss-alert--error` near the form, or per-field `.ss-field-error` / `.ss-field--invalid` |
+| `app/views/shared/forms/_errors.html.erb` | `.flash.flash-alert` for validation summary | `.ss-alert--error` near the form, or per-field `.ss-field-error` / `.ss-field--error` |
 | `app/views/shared/interaction/_modal.html.erb` | `.ss-modal*` markup and classes | eventual `.ss-dialog*` aligned with `shelfstack.components.overlays.css` |
 | Monolithic `shelfstack.css` | POS workspace header, modal, and other rules not yet extracted | Move durable rules into `shelfstack.domain.*.css` or `shelfstack.components.*.css`; delete from legacy |
 
@@ -128,20 +133,20 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | Sidebar | CSS only | `.ss-sidebar`, `.ss-sidebar__section`, `.ss-sidebar__item` |
 | Page Header | Mixed / partial exists | `.ss-page-header`; generic partial planned |
 | Section Header | CSS only | `.ss-section-header`, `.ss-section-actions` |
-| Card / Surface | CSS only | `.ss-card`, `.ss-surface` |
+| Card / Surface | CSS only | [card-surface.md](components/card-surface.md) — includes summary, sidebar-card, card-grid |
 | Stack / Grid / Action Row | CSS only | `shelfstack.utilities.css`, `.ss-stack`, `.ss-grid`, `.ss-action-row` |
 
 ### Forms and inputs
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| Form | Partial exists | `shared/forms/*`, `.ss-form`, `.ss-form-card` |
-| Form Actions | CSS only | `.ss-form-actions`, `.ss-form-actions--end` |
-| Field | Partial exists | `shared/forms/_field`, `.ss-field`, `.ss-field--invalid` |
-| Fieldset / Label / Help Text | CSS only | `.ss-fieldset`, `.ss-label`, `.ss-help`, `.ss-hint` |
-| Field Error | Mixed / legacy | `.ss-field-error`, `.ss-field--invalid`; migrate old `.flash-alert` error summaries |
-| Input / Textarea / Select | CSS only | `.ss-input`, `.ss-textarea`, `.ss-select` |
-| Checkbox / Radio / Toggle Groups | CSS only | `.ss-checkbox`, `.ss-radio-group`, `.ss-toggle-group` |
+| Form | Partial exists | `shared/forms/*`, `.ss-form`, `.ss-form-card`; [form.md](components/form.md) |
+| Form Actions | CSS only | `.ss-form-actions`, `.ss-form-actions--end`; [form.md](components/form.md) |
+| Field | Partial exists | `shared/forms/_field`; [field.md](components/field.md) |
+| Fieldset / Label / Help Text | CSS only | `.ss-fieldset`, `.ss-label`, `.ss-help`; [fieldset.md](components/fieldset.md), [field.md](components/field.md) |
+| Field Error | Mixed / legacy | `.ss-field-error`, `.ss-field--error`; [field.md](components/field.md) |
+| Input / Textarea / Select | CSS only | [input.md](components/input.md), [textarea.md](components/textarea.md), [select-native-select.md](components/select-native-select.md) |
+| Checkbox / Radio / Toggle Groups | CSS only | [choice-controls.md](components/choice-controls.md) |
 | Combobox / Lookup Panel | Planned | `.ss-combobox`, `.ss-lookup-panel` |
 | Date Picker / File Input / Masked Input | Planned | `.ss-date-picker`, `.ss-file-input`, `.ss-input-mask` |
 
@@ -149,23 +154,23 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| Alert | CSS only | `shelfstack.components.alerts.css`, `.ss-alert*` |
-| Flash | Partial exists | `shared/feedback/_flash_region`, `.ss-flash*` |
-| Toast | Partial exists / interaction shell | `shared/interaction/_toast*`, `.ss-toast*` |
-| Empty State | CSS only | `.ss-empty-state`, `.ss-empty-state__actions` |
-| Access Notice | CSS only | `.ss-access-notice`, `.ss-access-notice__actions` |
-| Progress / Skeleton / Copy State | CSS only | `.ss-progress`, `.ss-skeleton`, `.ss-copy-button--copied` |
+| Alert | CSS only | [alert.md](components/alert.md), `.ss-alert*`, `.ss-attention-panel` |
+| Flash | Partial exists | [flash.md](components/flash.md), `shared/feedback/_flash_region` |
+| Toast | Partial exists | [toast.md](components/toast.md), `shared/interaction/_toast*` |
+| Empty State | Partial exists | [empty-state.md](components/empty-state.md), `reports/shared/_empty_state` |
+| Access Notice | CSS only | [access-notice.md](components/access-notice.md) |
+| Progress / Skeleton / Copy State | CSS only (scaffold) | [progress-skeleton.md](components/progress-skeleton.md) |
 | Badge / Status Badge / Pill / Status Dot | CSS only | `.ss-badge`, `.ss-status-badge`, `.ss-pill`, `.ss-status-dot` |
 
 ### Dialogs, overlays, and menus
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| Modal / Dialog | Partial exists | **Current:** `shared/interaction/_modal` + `.ss-modal*` (legacy CSS). **Target:** `.ss-dialog*` in `overlays.css` |
-| Drawer / Sheet | Partial exists | `shared/interaction/_drawer`, `.ss-drawer`, `.ss-sheet` |
-| Alert Dialog | CSS only | `.ss-alert-dialog`, `.ss-alert-dialog--danger` |
-| Dropdown Menu | Implemented | `.ss-dropdown`, `.ss-dropdown-menu`, `.ss-dropdown-menu__item` |
-| Popover / Hover Card / Context Menu | CSS only / planned | `.ss-popover`, `.ss-hover-card`, `.ss-context-menu` |
+| Modal / Dialog | Partial exists | [dialog.md](components/dialog.md) — current `.ss-modal*`, target `.ss-dialog*` |
+| Drawer / Sheet | Partial exists / scaffold | [drawer.md](components/drawer.md), [sheet-popover.md](components/sheet-popover.md) |
+| Alert Dialog | CSS only | [alert-dialog.md](components/alert-dialog.md) |
+| Dropdown Menu | Implemented | [dropdown-menu.md](components/dropdown-menu.md) |
+| Popover / Hover Card / Context Menu | CSS only (scaffold) | [sheet-popover.md](components/sheet-popover.md) |
 | Clipboard / Copy Button | CSS only | `.ss-copy-button`, `.ss-copy-button--copied` |
 
 ### Navigation and disclosure
@@ -241,13 +246,56 @@ Avatar, Hover Card, Clipboard / Copy Button, Shortcut Key, Command Palette, Cont
 
 ---
 
-## Next component spec pages
+## Component spec index
 
-Do not write full spec pages for all components yet. Create focused specs only for Priority 1 components as they become implementation contracts.
+### Priority 1 — core contract
 
-**Location:** one file per component under `docs/design/components/`, for example `docs/design/components/button.md`. Keep `components.md` as the inventory and status index; link out to spec pages when they exist.
+| Spec | File |
+| ---- | ---- |
+| Button | [components/button.md](components/button.md) |
+| Link | [components/link.md](components/link.md) |
+| Form | [components/form.md](components/form.md) |
+| Field | [components/field.md](components/field.md) |
+| Input | [components/input.md](components/input.md) |
+| Select | [components/select-native-select.md](components/select-native-select.md) |
+| Alert | [components/alert.md](components/alert.md) |
+| Flash | [components/flash.md](components/flash.md) |
+| Toast | [components/toast.md](components/toast.md) |
+| Access Notice | [components/access-notice.md](components/access-notice.md) |
+| Session Card | [components/session-card.md](components/session-card.md) |
+| Card / Surface | [components/card-surface.md](components/card-surface.md) |
+| Page Header | [components/page-header.md](components/page-header.md) |
+| Dropdown Menu | [components/dropdown-menu.md](components/dropdown-menu.md) |
+| Dialog | [components/dialog.md](components/dialog.md) |
+| Alert Dialog | [components/alert-dialog.md](components/alert-dialog.md) |
 
-Use this template:
+### Forms module (`shelfstack.components.forms.css`)
+
+| Spec | File |
+| ---- | ---- |
+| Textarea | [components/textarea.md](components/textarea.md) |
+| Fieldset | [components/fieldset.md](components/fieldset.md) |
+| Checkbox / Radio / Choice | [components/choice-controls.md](components/choice-controls.md) |
+
+### Feedback module (`shelfstack.components.feedback.css`)
+
+| Spec | File |
+| ---- | ---- |
+| Empty State | [components/empty-state.md](components/empty-state.md) |
+| Progress / Skeleton | [components/progress-skeleton.md](components/progress-skeleton.md) |
+
+### Overlays module (`shelfstack.components.overlays.css`)
+
+| Spec | File |
+| ---- | ---- |
+| Drawer | [components/drawer.md](components/drawer.md) |
+| Sheet / Popover / Hover / Context | [components/sheet-popover.md](components/sheet-popover.md) |
+
+Do not write full spec pages for Priority 2+ generic components (Table, Badge, Nav, etc.) until they become implementation contracts.
+
+**Location:** one file per component under `docs/design/components/`. Keep `components.md` as the inventory and status index.
+
+Use this template for new specs:
 
 ```text
 ## Button
@@ -262,5 +310,3 @@ Accessibility requirements:
 Examples:
 Migration notes:
 ```
-
-The next high-value spec pages are: Button, Alert, Flash/Toast, Page Header, Dropdown Menu, and Dialog/Alert Dialog.

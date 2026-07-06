@@ -2,7 +2,7 @@
 
 | Field | Value |
 | :---- | :---- |
-| Status | CSS only |
+| Status | CSS only (base class implemented) |
 | CSS | `app/assets/stylesheets/shelfstack.components.forms.css` |
 | Planned partial | Usually unnecessary; use Rails form helpers with `.ss-input` |
 | Related | Field, Form, Select |
@@ -35,15 +35,30 @@ Use inputs for short, typed values such as names, identifiers, quantities, money
 | Searchable entity lookup | Combobox / lookup panel |
 | Static values | Summary text |
 
-## Variants
+## CSS
+
+### Implemented
 
 ```css
 .ss-input
+```
+
+Base `.ss-input` shares styling with `.ss-form input`, `.ss-field input`, and search-form inputs in `shelfstack.components.forms.css`.
+
+### Planned modifiers (not in CSS yet)
+
+```css
 .ss-input--search
 .ss-input--money
 .ss-input--compact
 .ss-input--invalid
 ```
+
+Do not use planned modifier classes in new markup until they are added to `shelfstack.components.forms.css`. Until then:
+
+- Use base `.ss-input` plus `type`, `inputmode`, and `placeholder` as needed.
+- Use domain CSS (for example POS table sizing) for workflow-specific density.
+- Rely on `.ss-field--error` and `.ss-field-error` for validation, not input-level invalid modifiers.
 
 ## Accessibility requirements
 
@@ -67,7 +82,7 @@ Use inputs for short, typed values such as names, identifiers, quantities, money
 ```
 <%= text_field_tag :q,
       params[:q],
-      class: "ss-input ss-input--search",
+      class: "ss-input",
       placeholder: "ISBN, SKU, title, creator…" %>
 ```
 
@@ -75,7 +90,7 @@ Use inputs for short, typed values such as names, identifiers, quantities, money
 
 ```
 <%= form.text_field :price,
-      class: "ss-input ss-input--money",
+      class: "ss-input",
       inputmode: "decimal" %>
 ```
 
@@ -84,11 +99,11 @@ Use inputs for short, typed values such as names, identifiers, quantities, money
 ```
 <%= text_field_tag :scan,
       nil,
-      class: "ss-input ss-input--search",
+      class: "ss-input",
       placeholder: "Scan or search…",
       autocomplete: "off" %>
 ```
 
 ## Migration notes
 
-Do not add one-off input sizing classes unless the pattern is domain-specific. Put reusable input variants in forms CSS; put POS/receiving table sizing in domain CSS.
+Do not add one-off input sizing classes unless the pattern is domain-specific. Put reusable input variants in `shelfstack.components.forms.css`; put POS/receiving table sizing in domain CSS.

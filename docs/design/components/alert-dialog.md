@@ -37,9 +37,10 @@ Use alert dialogs for destructive, irreversible, money-affecting, inventory-affe
 
 ## Variants
 
+### Implemented (`shelfstack.components.overlays.css`)
+
 ```css
 .ss-alert-dialog
-.ss-alert-dialog--warning
 .ss-alert-dialog--danger
 .ss-alert-dialog__backdrop
 .ss-alert-dialog__panel
@@ -47,6 +48,16 @@ Use alert dialogs for destructive, irreversible, money-affecting, inventory-affe
 .ss-alert-dialog__body
 .ss-alert-dialog__footer
 ```
+
+Structure tokens exist; no alert-dialog partial or live markup yet.
+
+### Planned
+
+```css
+.ss-alert-dialog--warning
+```
+
+Not in CSS yet. Use `--danger` for high-risk confirmations until a warning variant is added.
 
 ## Risk pattern
 
