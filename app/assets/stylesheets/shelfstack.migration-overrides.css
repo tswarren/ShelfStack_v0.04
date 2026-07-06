@@ -143,6 +143,49 @@ body {
   font-weight: 800;
 }
 
+/* Corrects a malformed legacy POS block until the legacy bridge is retired. */
+.ss-pos-workspace-header__action--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ss-pos-workspace-header__action--disabled.ss-btn,
+.ss-pos-workspace-header__action--disabled.ss-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: var(--pad-ui-y) var(--pad-ui-x);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.ss-pos-workspace-header__action--disabled.ss-btn-secondary {
+  background: var(--color-secondary);
+  color: var(--color-secondary-content);
+}
+
+.ss-pos-workspace-header__action--disabled.ss-btn-tertiary {
+  border-color: var(--color-base-300);
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+
+.ss-pos-alert {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #c8dcc0;
+  border-radius: 0.5rem;
+  background: #f5f9f2;
+  color: #2c2419;
+}
+
 .ss-pos-exchange-summary {
   display: grid;
   gap: 0.35rem;
