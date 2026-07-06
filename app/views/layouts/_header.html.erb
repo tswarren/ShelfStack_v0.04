@@ -27,14 +27,31 @@
       <div class="ss-user-menu">
         <details class="ss-dropdown">
           <summary class="ss-dropdown-trigger"><%= current_user.display_name %></summary>
-          <div class="ss-dropdown-menu" role="menu">
+          <div class="ss-dropdown-menu ss-user-menu__menu" role="menu">
+            <div class="ss-dropdown-menu__section-label">Account</div>
             <%= link_to "Change password", edit_password_path, role: "menuitem" %>
             <%= link_to "Set PIN", edit_pin_path, role: "menuitem" %>
+
             <div class="ss-dropdown-menu__separator" role="separator"></div>
-            <%= render "shared/ui/appearance_switcher" %>
+
+            <details class="ss-dropdown-submenu">
+              <summary class="ss-dropdown-menu__item ss-dropdown-submenu__trigger" role="menuitem" aria-haspopup="menu">
+                View mode
+              </summary>
+              <div class="ss-dropdown-submenu__menu" role="menu">
+                <%= render "shared/ui/appearance_switcher", show_title: false %>
+              </div>
+            </details>
+
+            <div class="ss-dropdown-menu__separator" role="separator"></div>
+
+            <%= button_to "Logout",
+                  logout_path,
+                  method: :delete,
+                  class: "ss-dropdown-menu__item ss-dropdown-menu__item--danger",
+                  form: { class: "ss-inline-form ss-user-menu__logout-form" } %>
           </div>
         </details>
-        <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-tertiary ss-btn-small", form: { class: "ss-inline-form ss-user-menu__logout-form" } %>
       </div>
     <% end %>
   </div>
