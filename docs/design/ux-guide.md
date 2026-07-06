@@ -1,5 +1,7 @@
 # ShelfStack UX Guide
 
+*Created: 2026-07-05*
+
 ShelfStack is an operational system for booksellers. The interface should help staff move quickly, understand consequences, and avoid costly mistakes without overwhelming them.
 
 This guide defines the core UX principles, page patterns, component usage rules, and design standards for ShelfStack.

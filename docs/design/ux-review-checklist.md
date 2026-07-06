@@ -1,5 +1,7 @@
 # ShelfStack UX Review Checklist
 
+*Created: 2026-07-05*
+
 Use this checklist during PR review for new screens, major view changes, workflow changes, and component/CSS changes.
 
 For the broader rationale, see `docs/design/ux-guide.md`.
