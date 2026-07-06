@@ -6,7 +6,7 @@
 <%= form_with model: [:setup, @vendor], class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, vendor: @vendor, parent_vendors: @parent_vendors %>
   <footer class="ss-form-actions">
-    <%= f.submit "Update Vendor", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_vendor_path(@vendor), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Update Vendor", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :secondary, url: setup_vendor_path(@vendor) %>
   </footer>
 <% end %>
