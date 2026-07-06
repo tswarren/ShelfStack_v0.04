@@ -9,23 +9,21 @@
      context: context
    ) %>
 
-<header class="ss-pos-workspace-header">
+<header class="ss-pos-workspace-header" aria-label="Point of Sale workspace">
   <div class="ss-pos-workspace-header__meta">
     <span class="ss-pos-workspace-header__brand">Point of Sale</span>
     <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
-    <span class="ss-pos-workspace-header__store">Store <%= current_store.store_number %></span>
-    <% if current_workstation %>
-      <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
-      <span class="ss-pos-workspace-header__workstation"><%= current_workstation.name %></span>
-    <% end %>
-    <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
     <span class="ss-pos-workspace-header__register-status">
-      <%= register_session ? "Open" : "Closed" %>
+      Register <%= register_session ? "open" : "closed" %>
     </span>
     <% if register_session %>
       <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
       <span class="ss-pos-workspace-header__business-date">
-        Business Date: <%= l(register_session.business_date, format: :long) %>
+        Business date: <%= l(register_session.business_date, format: :long) %>
+      </span>
+      <span class="ss-pos-workspace-header__separator" aria-hidden="true">|</span>
+      <span class="ss-pos-workspace-header__session">
+        Session #<%= register_session.id %>
       </span>
     <% end %>
     <% if transaction.present? %>
