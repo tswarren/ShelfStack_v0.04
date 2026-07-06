@@ -13,6 +13,7 @@ ShelfStack uses a native `.ss-*` CSS component system for app-wide visual consis
 5. Domain components
 6. Print styles
 7. Temporary legacy compatibility bridge
+8. Temporary post-legacy migration overrides
 
 ```css
 @import "shelfstack.tokens.css";
@@ -55,6 +56,51 @@ ShelfStack uses a native `.ss-*` CSS component system for app-wide visual consis
 
 @import "shelfstack.print.css";
 @import "shelfstack.legacy.css";
+@import "shelfstack.migration-overrides.css";
+```
+
+## Layout width model
+
+ShelfStack uses a wide default app canvas because most screens combine operational content, side context, action rows, filters, summary cards, and tables.
+
+The guiding distinction is:
+
+```text
+Page canvas width != readable content width
+```
+
+Default page content should have room for operational layouts. Text-heavy content, simple forms, and focused workflows should be constrained inside that canvas.
+
+| Token | Value | Purpose |
+| --- | ---: | --- |
+| `--layout-narrow` | `42rem` | Focused forms, login/unlock/session/account cards |
+| `--layout-readable` | `1180px` | Readable reports, text-heavy pages, simple detail pages |
+| `--layout-standard` | `1440px` | Default application canvas for operational screens |
+| `--layout-max` | `var(--layout-standard)` | Backward-compatible default alias |
+| `--layout-item-detail` | `var(--layout-standard)` | Semantic alias for item detail pages |
+| `--layout-wide` | `1500px` | POS, receiving, inventory grids, very dense workspaces |
+
+Main layout classes:
+
+| Class | Width |
+| --- | --- |
+| `.ss-main` | `--layout-standard` |
+| `.ss-main--readable` | `--layout-readable` |
+| `.ss-main--narrow` | `--layout-narrow` |
+| `.ss-main--items` | `--layout-item-detail` |
+| `.ss-main--wide` | `--layout-wide` |
+| `.ss-main--full` | no max width |
+
+Use internal constraints for content that should not stretch:
+
+```css
+.ss-readable {
+  max-width: var(--layout-readable);
+}
+
+.ss-text-measure {
+  max-width: 70ch;
+}
 ```
 
 ## Naming conventions
@@ -122,7 +168,7 @@ Recommended user-facing modes:
 
 | File | Responsibility |
 | --- | --- |
-| `shelfstack.layout.css` | App shell, header, main, footer, page headers, section headers |
+| `shelfstack.layout.css` | App shell, header, main, footer, page headers, section headers, main width tiers |
 | `shelfstack.utilities.css` | Small layout/state helpers such as stack, grid, action row, hidden, selected |
 
 ### Generic components
@@ -167,6 +213,7 @@ Recommended user-facing modes:
 | --- | --- |
 | `shelfstack.print.css` | Print-only and print-optimized styling |
 | `shelfstack.legacy.css` | Temporary bridge importing the old CSS/preview stack |
+| `shelfstack.migration-overrides.css` | Temporary post-legacy overrides while preview CSS remains imported |
 | `shelfstack.experimental.css` | Branch/local experiments only; not imported by `application.css` |
 
 ## Button rules
@@ -194,7 +241,8 @@ Do not rely on action-group order to determine the primary action.
 2. Move stable rules from old preview files into definitive component/domain files.
 3. Prefer generic component classes before creating domain-specific classes.
 4. Use domain files only when the component is meaningfully tied to ShelfStack workflows.
-5. Remove `shelfstack.legacy.css` imports after views are fully standardized.
+5. Keep `shelfstack.migration-overrides.css` temporary; move durable rules into definitive files when the legacy bridge is removed.
+6. Remove `shelfstack.legacy.css` and `shelfstack.migration-overrides.css` imports after views are fully standardized.
 
 ## Preview files
 
