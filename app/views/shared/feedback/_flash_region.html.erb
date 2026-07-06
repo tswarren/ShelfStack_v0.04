@@ -1,0 +1,11 @@
+<% visible_flash = flash.to_hash.slice("notice", "success", "warning", "alert", "error").compact_blank %>
+
+<% if visible_flash.any? %>
+  <div class="ss-flash-region" role="status" aria-live="polite" aria-atomic="true">
+    <% visible_flash.each do |key, message| %>
+      <div class="<%= shelfstack_flash_class(key) %>">
+        <%= message %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
