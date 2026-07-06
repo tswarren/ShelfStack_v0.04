@@ -46,8 +46,8 @@ These components have the highest copy/paste risk and should be standardized fir
 | --------- | ------ | ---- | ------------------------------ | ----- |
 | Button | CSS only | [button.md](components/button.md) | `.ss-btn`, `.ss-btn-primary`, `.ss-btn-secondary`, `.ss-btn-tertiary`, `.ss-btn-ghost`, `.ss-btn-danger` / `.ss-btn--danger`, `.ss-btn-small` / `.ss-btn--small`; planned `shared/ui/_button.html.erb` | Prefer `--` modifiers for new markup; thin partial should be next. |
 | Link | CSS only | [link.md](components/link.md) | `.ss-link`, `.ss-link--quiet`, `.ss-link--danger`, `.ss-btn-link`; planned `shared/ui/_link.html.erb` | Keep normal navigation as links; do not over-buttonize. |
-| Form | Partial exists | [form.md](components/form.md) | `shared/forms/_section`, `shared/forms/_field`, `shared/forms/_page_header`, `shared/forms/_errors`; CSS in `shelfstack.components.forms.css` | Section partial emits `.ss-form-card`, not legacy `.ss-form-section`. |
-| Field | Partial exists | [field.md](components/field.md) | `shared/forms/_field`; `.ss-field`, `.ss-field--error`, `.ss-label`, `.ss-help`, `.ss-field-error` | Partial uses `f`/`record`/`field` locals; prefer over inventing `shared/ui/_field`. |
+| Form | Partial exists | [form.md](components/form.md) | `shared/forms/_section`, `shared/forms/_field`, `shared/forms/_page_header`, `shared/forms/_errors`; CSS in `shelfstack.components.forms.css` | Section partial emits `.ss-form-card`; inline `button_to` forms use `.ss-inline-form`. |
+| Field | Partial exists | [field.md](components/field.md) | `shared/forms/_field`; `.ss-field`, `.ss-field--error`, `.ss-label`, `.ss-help`, `.ss-field-error`, `.ss-field-warning` | Partial uses `f`/`record`/`field` locals; warning vs error states documented. |
 | Input | CSS only | [input.md](components/input.md) | `.ss-input` (base only); modifiers planned | Usually emitted through form helpers/partials. |
 | Textarea | CSS only | [textarea.md](components/textarea.md) | `.ss-textarea` | Same forms CSS module as input. |
 | Fieldset | CSS only | [fieldset.md](components/fieldset.md) | `.ss-fieldset`, `.ss-fieldset__legend`, `.ss-fieldset__description` | Semantic grouping; distinct from `.ss-form-card`. |
@@ -86,6 +86,21 @@ These components are already represented in modular CSS and now have dedicated i
 
 ---
 
+## Priority 3 foundation and interaction-shell gaps
+
+These are smaller but important contracts for primitives, legacy interaction-shell bridges, and planned patterns.
+
+| Component | Status | Spec | Current contract / target path | Notes |
+| --------- | ------ | ---- | ------------------------------ | ----- |
+| Typography | CSS only | [typography.md](components/typography.md) | `shelfstack.typography.css`, `h1`–`h4`, `.ss-muted`, `.ss-eyebrow`, `.ss-tabular`, `.ss-code-block` | Semantic headings first; classes refine presentation. |
+| Utilities | CSS only | [utilities.md](components/utilities.md) | `shelfstack.utilities.css`, `.ss-stack`, `.ss-grid`, `.ss-action-row`, `.ss-sr-only`, `.is-*` | Tiny helpers only; do not create undocumented components with utilities. |
+| Expanded Row | Partial exists / legacy CSS | [expanded-row.md](components/expanded-row.md) | `shared/interaction/_expanded_row`; `.ss-expand-row*` in legacy CSS | Interaction-shell bridge; extraction target depends on generic vs domain use. |
+| Shortcut Strip | Partial exists / legacy CSS | [shortcut-strip.md](components/shortcut-strip.md) | `shared/interaction/_shortcut_strip`; `.ss-shortcut-strip*` in legacy CSS | Visible shortcut legend; shortcut behavior lives elsewhere. |
+| Filter Chip | Planned / missing modular CSS | [filter-chip.md](components/filter-chip.md) | Target `.ss-filter-chip*`; CSS not yet implemented | Do not use in new markup until CSS exists. |
+| Design Tokens | Implemented | [../tokens.md](tokens.md) | `shelfstack.tokens.css`, `--color-*`, `--space-*`, `--layout-*`, `--z-*` | Tokens are foundation docs, not component docs. |
+
+---
+
 ## Feedback naming standard
 
 Use these names for new work. Legacy selectors remain only for migration compatibility.
@@ -119,7 +134,9 @@ These files still use legacy markup. Migrate them during Phase 10-E or when touc
 | `app/views/layouts/auth.html.erb` | Inline `.flash.flash-*` blocks; no global shell | `flash_region` partial or session-scoped `.ss-alert*`; keep focused auth layout (no header/nav) |
 | `app/views/shared/forms/_errors.html.erb` | `.flash.flash-alert` for validation summary | `.ss-alert--error` near the form, or per-field `.ss-field-error` / `.ss-field--error` |
 | `app/views/shared/interaction/_modal.html.erb` | `.ss-modal*` markup and classes | eventual `.ss-dialog*` aligned with `shelfstack.components.overlays.css` |
-| Monolithic `shelfstack.css` | POS workspace header, modal, and other rules not yet extracted | Move durable rules into `shelfstack.domain.*.css` or `shelfstack.components.*.css`; delete from legacy |
+| `app/views/shared/interaction/_expanded_row.html.erb` | Partial exists but styling is still legacy | Extract generic structure into table/disclosure CSS or keep domain-specific rules in POS/orders CSS |
+| `app/views/shared/interaction/_shortcut_strip.html.erb` | Partial exists but styling is still legacy | Extract generic strip styling into navigation/interaction CSS when usage stabilizes |
+| Monolithic `shelfstack.css` | POS workspace header, modal, expanded row, shortcut strip, and other rules not yet extracted | Move durable rules into `shelfstack.domain.*.css` or `shelfstack.components.*.css`; delete from legacy |
 
 Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global header, nav, body attributes, flash dismiss). Component class names are convention-only unless covered by a view or system test.
 
@@ -131,8 +148,9 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| Design Tokens | Implemented | `shelfstack.tokens.css`, `--color-*`, `--space-*`, `--layout-*`, `--z-*` |
-| Typography | CSS only | `shelfstack.typography.css`, `h1`–`h4`, `.ss-heading--page`, `.ss-page-title`, `.ss-muted`, `.ss-eyebrow`, `.ss-tabular` |
+| Design Tokens | Implemented | [tokens.md](tokens.md), `shelfstack.tokens.css`, `--color-*`, `--space-*`, `--layout-*`, `--z-*` |
+| Typography | CSS only | [components/typography.md](components/typography.md), `shelfstack.typography.css`, `h1`–`h4`, `.ss-heading--page`, `.ss-page-title`, `.ss-muted`, `.ss-eyebrow`, `.ss-tabular` |
+| Utilities | CSS only | [components/utilities.md](components/utilities.md), `shelfstack.utilities.css`, `.ss-stack`, `.ss-grid`, `.ss-action-row`, `.ss-sr-only`, `.is-*` |
 | Link | CSS only | `shelfstack.components.links.css`, `.ss-link`, `.ss-btn-link`; [link.md](components/link.md) |
 | Button | CSS only | `shelfstack.components.buttons.css`, `.ss-btn*`; [button.md](components/button.md) |
 | Separator | Planned | `.ss-separator`, `.ss-separator--vertical` |
@@ -153,7 +171,7 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | Page Header | Mixed / partial exists | [page-header.md](components/page-header.md); `.ss-page-header`; generic partial planned |
 | Section Header | CSS only | [layout-shell.md](components/layout-shell.md); `.ss-section-header`, `.ss-section-actions` |
 | Card / Surface | CSS only | [card-surface.md](components/card-surface.md) — includes summary, sidebar-card, card-grid |
-| Stack / Grid / Action Row | CSS only | `shelfstack.utilities.css`, `.ss-stack`, `.ss-grid`, `.ss-action-row` |
+| Stack / Grid / Action Row | CSS only | [utilities.md](components/utilities.md), `.ss-stack`, `.ss-grid`, `.ss-action-row` |
 
 ### Forms and inputs
 
@@ -161,9 +179,10 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | --------- | ------ | ---------------------- |
 | Form | Partial exists | `shared/forms/*`, `.ss-form`, `.ss-form-card`; [form.md](components/form.md) |
 | Form Actions | CSS only | `.ss-form-actions`, `.ss-form-actions--end`; [form.md](components/form.md) |
+| Inline Form | CSS only | `.ss-inline-form`; [form.md](components/form.md) |
 | Field | Partial exists | `shared/forms/_field`; [field.md](components/field.md) |
 | Fieldset / Label / Help Text | CSS only | `.ss-fieldset`, `.ss-label`, `.ss-help`; [fieldset.md](components/fieldset.md), [field.md](components/field.md) |
-| Field Error | Mixed / legacy | `.ss-field-error`, `.ss-field--error`; [field.md](components/field.md) |
+| Field Error / Warning | Mixed / legacy | `.ss-field-error`, `.ss-field-warning`, `.ss-field--error`; [field.md](components/field.md) |
 | Input / Textarea / Select | CSS only | [input.md](components/input.md), [textarea.md](components/textarea.md), [select-native-select.md](components/select-native-select.md) |
 | Checkbox / Radio / Toggle Groups | CSS only | [choice-controls.md](components/choice-controls.md) |
 | Combobox / Lookup Panel | Planned | `.ss-combobox`, `.ss-lookup-panel` |
@@ -180,6 +199,7 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | Access Notice | CSS only | [access-notice.md](components/access-notice.md) |
 | Progress / Skeleton / Copy State | CSS only (scaffold) | [progress-skeleton.md](components/progress-skeleton.md) |
 | Badge / Status Badge / Pill / Status Dot | CSS only | [badges.md](components/badges.md); `.ss-badge`, `.ss-status-badge`, `.ss-pill`, `.ss-status-dot` |
+| Copy Button | CSS only (state only) | [progress-skeleton.md](components/progress-skeleton.md), `.ss-copy-button--copied` only | Base copy-button styling is not a full component contract yet. |
 
 ### Dialogs, overlays, and menus
 
@@ -187,10 +207,11 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | --------- | ------ | ---------------------- |
 | Modal / Dialog | Partial exists | [dialog.md](components/dialog.md) — current `.ss-modal*`, target `.ss-dialog*` |
 | Drawer / Sheet | Partial exists / scaffold | [drawer.md](components/drawer.md), [sheet-popover.md](components/sheet-popover.md) |
+| Expanded Row | Partial exists / legacy CSS | [expanded-row.md](components/expanded-row.md), `shared/interaction/_expanded_row`, `.ss-expand-row*` |
 | Alert Dialog | CSS only | [alert-dialog.md](components/alert-dialog.md) |
 | Dropdown Menu | Implemented | [dropdown-menu.md](components/dropdown-menu.md) |
 | Popover / Hover Card / Context Menu | CSS only (scaffold) | [sheet-popover.md](components/sheet-popover.md) |
-| Clipboard / Copy Button | CSS only | `.ss-copy-button`, `.ss-copy-button--copied` |
+| Clipboard / Copy Button | CSS only (state only) | `.ss-copy-button--copied`; see [progress-skeleton.md](components/progress-skeleton.md) |
 
 ### Navigation and disclosure
 
@@ -203,6 +224,7 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | Pagination | CSS only | [data-tables.md](components/data-tables.md), `.ss-pagination`, `.ss-pagination__summary` |
 | Steps | CSS only | [navigation.md](components/navigation.md), `.ss-steps`, `.ss-step`, `.ss-step--active` |
 | Shortcut Key | CSS only | [navigation.md](components/navigation.md), `.ss-shortcut-key`, `.ss-kbd` |
+| Shortcut Strip | Partial exists / legacy CSS | [shortcut-strip.md](components/shortcut-strip.md), `shared/interaction/_shortcut_strip`, `.ss-shortcut-strip*` |
 | Command Palette | Planned | `.ss-command`, `.ss-command-palette` |
 
 ### Data display
@@ -211,11 +233,12 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | --------- | ------ | ---------------------- |
 | Table | CSS only | [tables.md](components/tables.md), `.ss-table`, `.ss-table--compact`, `.ss-table-scroll` |
 | Data Table | CSS only | [data-tables.md](components/data-tables.md), `.ss-data-table`, `.ss-data-table__toolbar`, `.ss-data-table__filters`, `.ss-data-table__pagination`, `.ss-filter-bar` |
+| Filter Chip | Planned / missing modular CSS | [filter-chip.md](components/filter-chip.md), target `.ss-filter-chip*` | Do not add new uses until CSS exists. |
 | Row Actions | Mixed / legacy | [tables.md](components/tables.md), modular `.ss-table-actions`; legacy `.ss-row-actions`; `.ss-row-actions--dropdown` not defined |
 | Metric Card / Strip | CSS only | [metrics.md](components/metrics.md), `.ss-metric-card`, `.ss-metric-strip`, `.ss-stat` |
 | List / Timeline | CSS only | [lists.md](components/lists.md), `.ss-list`, `.ss-list-row`, `.ss-timeline` |
 | Summary / Definition List | CSS only | `.ss-summary`, `.ss-summary--two-column`, `.ss-summary__label`, `.ss-summary__value`; [card-surface.md](components/card-surface.md) |
-| Code Block | CSS only | `.ss-code`, `.ss-code-block` |
+| Code Block | CSS only | `.ss-code`, `.ss-code-block`; [typography.md](components/typography.md) |
 | Carousel | Planned | `.ss-carousel`, `.ss-carousel-item` |
 
 ### Domain-specific ShelfStack components
@@ -238,11 +261,12 @@ These are not generic UI-library components. They should usually live in `shelfs
 
 [Phase 10-E](../roadmap/Phase-x10-comprehensive-ux-expansion.md) (consistency sweep) maps directly to this catalog:
 
-1. Migrate [known migration stragglers](#known-migration-stragglers) (auth flash, form errors, modal naming).
+1. Migrate [known migration stragglers](#known-migration-stragglers) (auth flash, form errors, modal naming, expanded row, shortcut strip).
 2. Extract POS/header/cart CSS from `shelfstack.css` into `shelfstack.domain.pos.css`.
 3. Add Priority 1 thin partials where copy/paste risk is highest: Button, Alert, generic Page Header.
 4. Normalize views to documented feedback classes (`.ss-flash--*`, `.ss-alert--*`, `.ss-toast--*`).
-5. Run [ux-review-checklist.md](ux-review-checklist.md) on touched workspaces; keep report view contracts stable.
+5. Add modular CSS before using planned `.ss-filter-chip*` classes.
+6. Run [ux-review-checklist.md](ux-review-checklist.md) on touched workspaces; keep report view contracts stable.
 
 ---
 
@@ -256,9 +280,9 @@ Button, Link, Form, Field, Input, Select / Native Select, Alert, Flash, Toast, A
 
 Data Table, Pagination, Empty State, Combobox, Lookup Panel, Sheet / Drawer, Tabs, Breadcrumbs, Status Badge, Metric Card, Document Header, Line Entry Table, Table, Navigation, Lists, Disclosure, Appearance Switcher, Layout Shell.
 
-### Priority 3 — workflow polish
+### Priority 3 — foundation, workflow polish, and interaction-shell bridges
 
-Steps, Progress, Skeleton, Tooltip, Collapsible, Accordion, Timeline, Switch, Toggle Group, File Input, Date Picker, Masked Input.
+Typography, Utilities, Expanded Row, Shortcut Strip, Filter Chip, Tokens, Steps, Progress, Skeleton, Tooltip, Collapsible, Accordion, Timeline, Switch, Toggle Group, File Input, Date Picker, Masked Input.
 
 ### Priority 4 — useful later
 
@@ -303,14 +327,15 @@ Avatar, Hover Card, Clipboard / Copy Button, Shortcut Key, Command Palette, Cont
 | ---- | ---- |
 | Badges / Status Badges / Pills | [components/badges.md](components/badges.md) |
 | Empty State | [components/empty-state.md](components/empty-state.md) |
-| Progress / Skeleton | [components/progress-skeleton.md](components/progress-skeleton.md) |
+| Progress / Skeleton / Copy State | [components/progress-skeleton.md](components/progress-skeleton.md) |
 
-### Overlays module (`shelfstack.components.overlays.css`)
+### Overlays and interaction shell
 
 | Spec | File |
 | ---- | ---- |
 | Drawer | [components/drawer.md](components/drawer.md) |
 | Sheet / Popover / Hover / Context | [components/sheet-popover.md](components/sheet-popover.md) |
+| Expanded Row | [components/expanded-row.md](components/expanded-row.md) |
 
 ### Layout, navigation, and shell
 
@@ -320,6 +345,15 @@ Avatar, Hover Card, Clipboard / Copy Button, Shortcut Key, Command Palette, Cont
 | Navigation | [components/navigation.md](components/navigation.md) |
 | Disclosure | [components/disclosure.md](components/disclosure.md) |
 | Appearance Switcher | [components/appearance.md](components/appearance.md) |
+| Shortcut Strip | [components/shortcut-strip.md](components/shortcut-strip.md) |
+
+### Foundation
+
+| Spec | File |
+| ---- | ---- |
+| Typography | [components/typography.md](components/typography.md) |
+| Utilities | [components/utilities.md](components/utilities.md) |
+| Tokens | [tokens.md](tokens.md) |
 
 ### Data display
 
@@ -329,6 +363,7 @@ Avatar, Hover Card, Clipboard / Copy Button, Shortcut Key, Command Palette, Cont
 | Data Tables | [components/data-tables.md](components/data-tables.md) |
 | Metrics | [components/metrics.md](components/metrics.md) |
 | Lists / Timelines | [components/lists.md](components/lists.md) |
+| Filter Chip | [components/filter-chip.md](components/filter-chip.md) |
 
 **Location:** one file per component under `docs/design/components/`. Keep `components.md` as the inventory and status index.
 
