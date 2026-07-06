@@ -35,6 +35,5 @@ module Receiving
     private
 
     attr_reader :store, :vendor, :attrs
-
   end
 end
