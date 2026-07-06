@@ -5,6 +5,11 @@
   gap: var(--gap-section);
 }
 
+.ss-inline-form {
+  display: inline;
+  margin: 0;
+}
+
 .ss-form--inline {
   display: flex;
   flex-wrap: wrap;
