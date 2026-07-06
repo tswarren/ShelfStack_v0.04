@@ -2,8 +2,9 @@
 
 | Field | Value |
 | ----- | ----- |
-| Milestone | **v0.04-14** — next release version |
+| Milestone | **v0.04-14** — single release (integration branch) |
 | Status | Active build guide |
+| Integration branch | `v0.04-14/ux-migration` |
 | Parent | [v0.04-14 spec](../v0.04/v0.04-14-design-system-ux-migration/spec.md) · [Phase 10-E UX migration](../roadmap/phase-10e-ux-migration.md) |
 | Component contracts | [components.md](components.md) |
 | Review gate | [ux-review-checklist.md](ux-review-checklist.md) |
@@ -25,8 +26,8 @@ Do **not** build a partial for every documented component. Do **not** start with
 
 ## Prerequisites
 
-1. Merge the modular CSS component library branch (`design/css-component-library`) to `main`.
-2. Branch enabling-layer and migration work from updated `main`.
+1. Modular CSS component library merged to `main` (done).
+2. Milestone **planning docs** live on `main`; **implementation** lands on `v0.04-14/ux-migration` until the full release merges.
 3. Read before coding:
    - [ux-guide.md](ux-guide.md)
    - [app-shell-and-pos-shell.md](app-shell-and-pos-shell.md)
@@ -44,6 +45,34 @@ Do **not** build a partial for every documented component. Do **not** start with
 | Migrate one setup surface fully before sweeping | Rewrite every status table when adding `ss_status_badge` |
 | Use `shared/ui/*` for repeated chrome patterns | Build `_data_table`, `_form`, or `_filter_chip` partials yet |
 | Run the UX review checklist on each migrated surface | Change POS/purchasing domain rules during styling work |
+
+---
+
+## Release branching (single v0.04-14 release)
+
+v0.04-14 ships as **one release** to `main`. Implementation accumulates on an integration branch; slice PRs do not merge to `main` until the milestone is complete.
+
+```text
+main                         (stable — planning docs only until release)
+  └── v0.04-14/ux-migration  (integration branch — all implementation)
+        ├── v0.04-14/pr0-prep       → merge into integration branch
+        ├── v0.04-14/pr1-core-ui    → merge into integration branch
+        ├── v0.04-14/pr2-forms      → …
+        └── v0.04-14/pr3-vendors    → …
+
+Release:  v0.04-14/ux-migration → main  (single PR) + tag v0.04-14
+```
+
+| Rule | Detail |
+| ---- | ------ |
+| Integration branch | `v0.04-14/ux-migration` |
+| Slice branch naming | `v0.04-14/<slice>` (e.g. `v0.04-14/pr1-core-ui`) |
+| Slice PR target | Merge into `v0.04-14/ux-migration`, not `main` |
+| New slice base | Branch from **integration branch** after prior slice merged |
+| Stay current | Periodically merge `main` → integration branch if other work lands on `main` |
+| Release | One PR integration branch → `main`; tag `v0.04-14`; write `v0.04-14-completion.md` |
+
+Planning and milestone-tracking docs may land on `main` early. CSS, partials, helpers, and view migrations stay on the integration branch until release.
 
 ---
 
@@ -367,13 +396,18 @@ Do not force POS-, receiving-, or purchasing-specific controls into generic comp
 
 # PR sequence summary
 
+Slice PRs merge into **`v0.04-14/ux-migration`**. Only the final release PR merges the integration branch to `main`.
+
 ```text
-PR 0 — Prep
+Integration branch: v0.04-14/ux-migration
+
+PR 0 — Prep  (merged)
   filter-chip CSS
   empty-state __message CSS
   auth/password shell docs
 
 PR 1 — Core UI partials
+  branch: v0.04-14/pr1-core-ui
   shared/ui/_button
   shared/ui/_page_header
   shared/ui/_alert
@@ -381,6 +415,7 @@ PR 1 — Core UI partials
   Phase 1 tests
 
 PR 2 — Forms and feedback
+  branch: v0.04-14/pr2-forms
   forms/_errors revised
   forms/_field warning + describedby
   shared/ui/_empty_state
@@ -389,12 +424,15 @@ PR 2 — Forms and feedback
   Phase 2 tests
 
 PR 3 — Pilot
+  branch: v0.04-14/pr3-vendors
   setup/vendors index + show
   pilot test
 
 PR 4+ — Setup surfaces (tax_categories, formats, …)
 
 Later — Operational and domain workspaces
+
+Release — v0.04-14/ux-migration → main + tag v0.04-14
 ```
 
 ---

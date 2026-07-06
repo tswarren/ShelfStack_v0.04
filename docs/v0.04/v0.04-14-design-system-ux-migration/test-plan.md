@@ -4,14 +4,20 @@
 
 **Active** — companion to [spec.md](spec.md) and [ux-migration-build-plan.md](../../design/ux-migration-build-plan.md).
 
+Implementation runs on integration branch **`v0.04-14/ux-migration`**. Slice PRs merge there; the merge gate below applies at **release** (integration branch → `main`).
+
 ---
 
 ## Merge gate (milestone complete)
+
+Run on **`v0.04-14/ux-migration`** before opening the release PR to `main`:
 
 ```bash
 ./dev/rails-docker bin/rails test
 ./dev/rails-docker bin/rails test:system test/system/app_shell_contract_test.rb
 ```
+
+Per-slice: run the same test command on the integration branch after each slice merge.
 
 Plus Phase 9b report regression (manual or automated where available):
 
@@ -26,11 +32,13 @@ Prior v0.04 verifiers must remain green; this milestone does not change domain r
 
 ## PR-stage gates
 
-### PR 0 — Prep
+### PR 0 — Prep (complete on integration branch)
 
 * `.ss-filter-chip*` rules exist in `shelfstack.components.data-tables.css`
 * `.ss-empty-state__message` exists in `shelfstack.components.feedback.css`
 * [app-shell-and-pos-shell.md](../../design/app-shell-and-pos-shell.md) documents auth vs PIN layout
+
+Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr0-prep`.
 
 ### PR 1 — Core UI partials
 
