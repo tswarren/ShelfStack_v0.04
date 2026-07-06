@@ -67,7 +67,9 @@
 
   /* Layout */
   --layout-narrow: 42rem;
-  --layout-max: 1180px;
+  --layout-standard: 1180px;
+  --layout-max: var(--layout-standard);
+  --layout-item-detail: 1440px;
   --layout-wide: 1500px;
 
   /* Spacing scale */
