@@ -72,6 +72,24 @@
   min-width: 72rem;
 }
 
+.ss-pos-workspace-header__session {
+  color: var(--color-base-content);
+  font-weight: 800;
+}
+
+.ss-pos-exchange-summary {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ss-pos-exchange-summary__title {
+  color: var(--color-base-content);
+}
+
+.ss-pos-exchange-summary__totals {
+  line-height: var(--line-compact);
+}
+
 @media (max-width: 1180px) {
   .ss-item-detail > .ss-item-detail__body {
     grid-template-areas:
