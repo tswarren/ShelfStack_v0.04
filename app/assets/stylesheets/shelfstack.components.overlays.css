@@ -66,9 +66,18 @@
 .ss-drawer--left { left: 0; }
 .ss-sheet--wide .ss-sheet__panel { width: min(48rem, 100vw); }
 
-.ss-dropdown {
+.ss-dropdown,
+.ss-dropdown-submenu {
   position: relative;
+}
+
+.ss-dropdown {
   display: inline-block;
+}
+
+.ss-dropdown-trigger,
+.ss-dropdown-submenu__trigger {
+  cursor: pointer;
 }
 
 .ss-dropdown-trigger {
@@ -78,6 +87,7 @@
 }
 
 .ss-dropdown-menu,
+.ss-dropdown-submenu__menu,
 .ss-popover-content,
 .ss-hover-card__content,
 .ss-context-menu {
@@ -92,8 +102,15 @@
   position: absolute;
   top: calc(100% + 0.35rem);
   right: 0;
-  min-width: 11rem;
+  min-width: 12rem;
   padding-block: 0.3rem;
+}
+
+.ss-dropdown-submenu__menu {
+  position: static;
+  margin: 0.25rem 0.5rem 0.45rem;
+  padding-block: 0.2rem;
+  box-shadow: none;
 }
 
 .ss-pos-workspace-header__actions {
@@ -112,8 +129,25 @@
   text-decoration: none;
 }
 
+.ss-dropdown-menu button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
 .ss-dropdown-menu__item--danger {
   color: var(--color-error);
+}
+
+.ss-dropdown-menu__section-label {
+  padding: 0.25rem 0.75rem 0.15rem;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .ss-dropdown-menu__separator {
