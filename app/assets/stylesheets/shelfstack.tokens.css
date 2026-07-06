@@ -1,8 +1,5 @@
 /*
  * ShelfStack CSS Token Layer
- *
- * Define design tokens only. Component files should consume these variables
- * rather than hard-coding colors, spacing, type, radius, or shadows.
  */
 
 :root {
@@ -53,8 +50,6 @@
   --radius-md: 0.75rem;
   --radius-lg: 1.15rem;
   --radius-pill: 999px;
-
-  /* Compatibility aliases retained while legacy classes are migrated. */
   --radius-selector: var(--radius-sm);
   --radius-field: var(--radius-pill);
   --radius-box: var(--radius-md);
@@ -67,9 +62,10 @@
 
   /* Layout */
   --layout-narrow: 42rem;
-  --layout-standard: 1180px;
+  --layout-readable: 1180px;
+  --layout-standard: 1440px;
   --layout-max: var(--layout-standard);
-  --layout-item-detail: 1440px;
+  --layout-item-detail: var(--layout-standard);
   --layout-wide: 1500px;
 
   /* Spacing scale */
