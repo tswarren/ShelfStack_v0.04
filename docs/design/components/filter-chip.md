@@ -2,8 +2,8 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | Planned / missing modular CSS |
-| Target CSS home | `app/assets/stylesheets/shelfstack.components.data-tables.css` or future `shelfstack.components.filters.css` |
+| Status | CSS implemented (v0.04-14 PR 0) |
+| Target CSS home | `app/assets/stylesheets/shelfstack.components.data-tables.css` |
 | Planned partial | `app/views/shared/ui/_filter_chip.html.erb` only after CSS exists |
 | Related | Data Tables, Badges, Buttons, Navigation |
 | Design-system priority | Priority 3 pattern cleanup |
@@ -14,9 +14,7 @@ Filter chips represent applied filters, selectable queue filters, or removable s
 
 ## Current reality
 
-`filter-chip` is a named pattern in the design guidance, but modular CSS is not currently defined for `.ss-filter-chip`.
-
-Do not treat filter chips as implemented until CSS exists.
+Modular CSS lives in `app/assets/stylesheets/shelfstack.components.data-tables.css`. Buyer workbench tabs use selectable `link_to` chips. Removable chip markup is documented below; partial deferred until repeated usage.
 
 ---
 
@@ -72,7 +70,7 @@ How is this different from a badge, tab, or button?
 
 ## Planned CSS contract
 
-Add modular CSS before using this class in new markup:
+Implemented in `shelfstack.components.data-tables.css`:
 
 ```css
 .ss-filter-chip

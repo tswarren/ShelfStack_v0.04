@@ -57,6 +57,14 @@ Login, unlock, workstation assignment, and **change password** use `layouts/auth
 
 **Set/change PIN** uses the **normal app shell** (`application` layout), not `auth`.
 
+| Screen | Controller | Layout |
+| ------ | ---------- | ------ |
+| Login | `SessionsController` | `auth` |
+| Unlock session | `SessionLocksController` | `auth` |
+| Workstation assignment | `WorkstationAssignmentsController` | `auth` |
+| Change password | `PasswordsController` | `auth` |
+| Set / change PIN | `PinsController` | `application` (default) |
+
 Auth screens should still use shared form, alert, flash, and session-card patterns where appropriate — not duplicate global chrome.
 
 The body contract for normal layouts owns:

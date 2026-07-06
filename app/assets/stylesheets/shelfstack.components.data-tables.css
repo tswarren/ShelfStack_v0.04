@@ -73,3 +73,75 @@
   color: var(--color-muted-subtle);
   pointer-events: none;
 }
+
+/* Filter chips — applied/selectable filter state (see docs/design/components/filter-chip.md) */
+
+.ss-filter-chip,
+a.ss-filter-chip,
+button.ss-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-pill);
+  padding: 0.35rem 0.75rem;
+  background: #ffffff;
+  color: var(--color-base-content);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: var(--line-ui);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+a.ss-filter-chip:hover,
+button.ss-filter-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.ss-filter-chip--active,
+a.ss-filter-chip--active,
+button.ss-filter-chip--active {
+  background: var(--color-primary-soft);
+  border-color: #0e4a4a40;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.ss-filter-chip--removable {
+  padding-right: 0.35rem;
+}
+
+.ss-filter-chip__label {
+  min-width: 0;
+}
+
+.ss-filter-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.ss-filter-chip__remove:hover,
+.ss-filter-chip__remove:focus {
+  opacity: 1;
+  background: #00000012;
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}

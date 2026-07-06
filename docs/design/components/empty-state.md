@@ -38,10 +38,11 @@ Use empty states when the surrounding workflow is valid but there is nothing to 
 ```css
 .ss-empty-state
 .ss-empty-state__title
+.ss-empty-state__message
 .ss-empty-state__actions
 ```
 
-Reports partial also uses `.ss-empty-state__message` in markup. Add that element class to `feedback.css` if you standardize on the partial contract app-wide.
+Reports partial and the planned `shared/ui/_empty_state` both use `.ss-empty-state__message`.
 
 ## Rails partial
 
