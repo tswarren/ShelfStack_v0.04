@@ -87,7 +87,6 @@ Target classes:
 .ss-form-actions--end
 .ss-form-actions--between
 .ss-field
-.ss-field--error
 .ss-field-error
 .ss-label
 .ss-help
@@ -95,6 +94,14 @@ Target classes:
 .ss-select
 .ss-textarea
 ```
+
+### Helper-emitted / legacy-styled (`shelfstack.css` until extracted)
+
+```css
+.ss-field--error
+```
+
+Emitted by `ss_field_css` when the record has errors on that field. Error-border styling for nested inputs is not yet in modular forms CSS. See [field.md](field.md).
 
 ### Legacy only
 

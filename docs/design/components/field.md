@@ -46,7 +46,7 @@ What went wrong?
 
 ## CSS
 
-### Implemented
+### Implemented (`shelfstack.components.forms.css`)
 
 ```css
 .ss-field
@@ -54,23 +54,31 @@ What went wrong?
 .ss-label
 .ss-help
 .ss-hint
-.ss-required
 .ss-field-error
-.ss-field--error
 ```
 
 | Class | Role |
 | :---- | :---- |
 | `.ss-field` | Wrapper grid for label, control, help, and error |
-| `.ss-field--error` | Added by `ss_field_css` when the record has errors on that field |
 | `.ss-label` | Label text (what `_field.html.erb` emits) |
 | `.ss-help` / `.ss-hint` | Muted help copy below the control |
-| `.ss-required` | Asterisk abbr inside required labels (`ss_required_label`) |
-| `.ss-field-error` | Per-field validation message |
+| `.ss-field-error` | Per-field validation message text |
 
 `.ss-field-label` is styled in forms CSS for compatibility, but **`_field.html.erb` emits `ss-label`**, not `ss-field-label`.
 
-Invalid input borders for `.ss-field--error` currently live in legacy `shelfstack.css`. Prefer `ss-field--error` for new markup. Legacy `.ss-field--invalid` exists in monolithic CSS only; do not add new usages.
+### Helper-emitted / legacy-styled (`shelfstack.css` until extracted)
+
+```css
+.ss-field--error
+.ss-required
+```
+
+| Class | Role |
+| :---- | :---- |
+| `.ss-field--error` | Added by `ss_field_css` when the record has errors; error borders on nested inputs |
+| `.ss-required` | Asterisk abbr inside required labels (`ss_required_label`) |
+
+Prefer `ss-field--error` for new markup. Legacy `.ss-field--invalid` exists in monolithic CSS only; do not add new usages.
 
 ## Rails partial
 

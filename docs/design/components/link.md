@@ -66,14 +66,21 @@ app/assets/stylesheets/shelfstack.components.links.css
 
 Target classes:
 
+### Implemented
+
 ```css
 .ss-link
 .ss-link--quiet
+.ss-link--muted
 .ss-link--danger
+.ss-link--block
+.ss-link--button
 .ss-back-link
 .ss-skip-link
 .ss-btn-link
 ```
+
+`.ss-link--muted` is an alias of quiet styling. `--block` and `--button` are layout/affordance helpers for narrow cases; prefer documented variants above for new markup.
 
 ## Rails partial
 

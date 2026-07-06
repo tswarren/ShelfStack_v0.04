@@ -114,7 +114,7 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
 | Design Tokens | Implemented | `shelfstack.tokens.css`, `--color-*`, `--space-*`, `--layout-*`, `--z-*` |
-| Typography | CSS only | `shelfstack.typography.css`, `.ss-heading`, `.ss-muted`, `.ss-eyebrow`, `.ss-tabular` |
+| Typography | CSS only | `shelfstack.typography.css`, `h1`–`h4`, `.ss-heading--page`, `.ss-page-title`, `.ss-muted`, `.ss-eyebrow`, `.ss-tabular` |
 | Link | CSS only | `shelfstack.components.links.css`, `.ss-link`, `.ss-btn-link` |
 | Button | CSS only | `shelfstack.components.buttons.css`, `.ss-btn*` |
 | Separator | Planned | `.ss-separator`, `.ss-separator--vertical` |
@@ -190,11 +190,11 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
 | Table | CSS only | `.ss-table`, `.ss-table--compact`, `.ss-table-scroll` |
-| Data Table | CSS only | `.ss-data-table`, `.ss-data-table-toolbar`, `.ss-data-table-pagination` |
-| Row Actions | CSS only | `.ss-row-actions`, `.ss-row-actions--dropdown` |
+| Data Table | CSS only | `.ss-data-table`, `.ss-data-table__toolbar`, `.ss-data-table__filters`, `.ss-data-table__pagination`, `.ss-filter-bar` |
+| Row Actions | Mixed / legacy | Modular: `.ss-table-actions` (`tables.css`). Legacy: `.ss-row-actions` (`shelfstack.css`, still used in some views). Not defined: `.ss-row-actions--dropdown`. |
 | Metric Card / Strip | CSS only | `.ss-metric-card`, `.ss-metric-strip`, `.ss-stat` |
 | List / Timeline | CSS only | `.ss-list`, `.ss-list-row`, `.ss-timeline` |
-| Summary / Definition List | CSS only | `.ss-summary`, `.ss-summary--compact` |
+| Summary / Definition List | CSS only | `.ss-summary`, `.ss-summary--two-column`, `.ss-summary__label`, `.ss-summary__value`; [card-surface.md](components/card-surface.md) |
 | Code Block | CSS only | `.ss-code`, `.ss-code-block` |
 | Carousel | Planned | `.ss-carousel`, `.ss-carousel-item` |
 
