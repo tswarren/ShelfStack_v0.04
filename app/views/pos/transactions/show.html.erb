@@ -1,3 +1,5 @@
+<% content_for :main_class, "ss-main--wide ss-pos-main" %>
+
 <div class="ss-pos-transaction-show<%= " ss-pos-transaction-show--summary" if pos_transaction_summary?(@transaction) %>"
      <% if @transaction.completed? && !@transaction.voided? %>
        data-controller="pos-void"
