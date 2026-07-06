@@ -22,6 +22,7 @@ Use these documents first when reviewing UI work, adding new screens, or migrati
 | Document | Role |
 | -------- | ---- |
 | [components.md](components.md) | Component catalog, implementation status, and migration roadmap |
+| [tokens.md](tokens.md) | Design-token contract for color, spacing, typography, density, layout width, and layering |
 | [../../app/assets/stylesheets/README.md](../../app/assets/stylesheets/README.md) | CSS import order, file responsibilities, naming conventions, and migration rules |
 | [../specifications/ui-components.md](../specifications/ui-components.md) | Phase 10 interaction-shell implementation detail: modal, drawer, toast, expanded row, shortcut strip |
 
@@ -31,7 +32,8 @@ Recommended reading order for contributors:
 2. [app-shell-and-pos-shell.md](app-shell-and-pos-shell.md)
 3. [layout-width-model.md](layout-width-model.md)
 4. [components.md](components.md)
-5. [ux-review-checklist.md](ux-review-checklist.md)
+5. [tokens.md](tokens.md)
+6. [ux-review-checklist.md](ux-review-checklist.md)
 
 ---
 
@@ -50,7 +52,8 @@ Recommended reading order for contributors:
 | Category | Documents | Meaning |
 | -------- | --------- | ------- |
 | Design-system spine | `ux-guide.md`, `app-shell-and-pos-shell.md`, `layout-width-model.md`, `ux-review-checklist.md` | Current guidance for app-wide UI/UX decisions |
-| Component inventory | `components.md` | Roadmap and status tracker for reusable CSS/ERB components |
+| Component inventory | `components.md`, component specs under `components/` | Roadmap and status tracker for reusable CSS/ERB components |
+| Foundation contract | `tokens.md`, typography/utilities specs | Shared primitives used by components and domain CSS |
 | Implementation detail | `../specifications/ui-components.md` and interaction specs | Shipped Phase 10 behavior and technical interaction patterns |
 | Domain design | `VERSION_0.04.md`, v0.04 specs, roadmap docs | Product/domain decisions and milestone delivery scope |
 
