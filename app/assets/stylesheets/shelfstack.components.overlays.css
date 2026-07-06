@@ -129,6 +129,12 @@
   text-decoration: none;
 }
 
+.ss-dropdown-menu a:hover,
+.ss-dropdown-menu button:hover,
+.ss-dropdown-menu__item:hover {
+  background: var(--color-base-150);
+}
+
 .ss-dropdown-menu button {
   background: transparent;
   border: 0;
@@ -137,7 +143,8 @@
   font: inherit;
 }
 
-.ss-dropdown-menu__item--danger {
+.ss-dropdown-menu__item--danger,
+.ss-dropdown-menu button.ss-dropdown-menu__item--danger {
   color: var(--color-error);
 }
 
