@@ -113,6 +113,10 @@ body {
   padding: 1rem 1.25rem;
 }
 
+.ss-main--readable {
+  max-width: var(--layout-readable);
+}
+
 .ss-main--wide,
 .ss-pos-main {
   max-width: var(--layout-wide);
@@ -128,6 +132,15 @@ body {
 
 .ss-main--narrow {
   max-width: var(--layout-narrow);
+}
+
+.ss-readable,
+.ss-text-measure {
+  max-width: var(--layout-readable);
+}
+
+.ss-text-measure {
+  max-width: 70ch;
 }
 
 .ss-footer {
