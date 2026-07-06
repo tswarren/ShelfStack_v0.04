@@ -49,8 +49,19 @@
   }
 
   .no-print,
+  .ss-pos-no-print,
+  .ss-skip-link,
+  .ss-header,
+  .ss-nav,
+  .ss-footer,
   .ss-flash-region,
-  .ss-toast-region {
+  .flash,
+  .ss-toast-region,
+  .ss-pos-workspace-header,
+  .ss-pos-command-bar,
+  .ss-page-actions,
+  .ss-context-actions,
+  .ss-section-actions {
     display: none !important;
   }
 
@@ -58,7 +69,6 @@
     display: revert;
   }
 
-  .ss-header,
   .ss-app-chrome {
     position: static !important;
     backdrop-filter: none !important;
