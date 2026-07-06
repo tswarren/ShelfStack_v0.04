@@ -18,6 +18,7 @@ class AppShellContractTest < ApplicationSystemTestCase
     assert_selector "a.ss-skip-link[href='#main_content']", visible: :all
     assert_selector "header.ss-header[role='banner']"
     assert_selector "nav.ss-nav[aria-label='Primary navigation']"
+    assert_selector "nav.ss-nav a.ss-nav__item--active[aria-current='page']", text: "Dashboard"
     assert_selector "main#main_content.ss-main"
 
     visit edit_pos_transaction_path(@transaction)
@@ -26,7 +27,19 @@ class AppShellContractTest < ApplicationSystemTestCase
     assert_selector "a.ss-skip-link[href='#main_content']", visible: :all
     assert_selector "header.ss-header[role='banner']"
     assert_selector "nav.ss-nav[aria-label='Primary navigation']"
+    assert_selector "nav.ss-nav a.ss-nav__item--active[aria-current='page']", text: "POS"
     assert_selector "main#main_content.ss-main.ss-pos-main"
     assert_selector ".ss-pos-workspace-header[aria-label='Point of Sale workspace']"
+  end
+
+  test "flash messages can be dismissed" do
+    setup_pos_system_sale!
+
+    assert_selector ".ss-flash", wait: 5
+    assert_button "Dismiss message"
+
+    click_button "Dismiss message"
+
+    assert_no_selector ".ss-flash"
   end
 end
