@@ -10,12 +10,7 @@ class AppShellContractTest < ApplicationSystemTestCase
 
   test "non-POS and POS layouts expose the same shell contract" do
     setup_pos_system_sale!
-    @cashier.update!(
-      appearance_view_mode: "accessible",
-      appearance_typeface: "lexend",
-      appearance_density: "comfortable",
-      appearance_color_mode: "light"
-    )
+    @cashier.update!(appearance_view_mode: "accessible", appearance_color_mode: "light")
 
     visit root_path
 
