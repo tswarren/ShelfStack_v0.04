@@ -5,6 +5,72 @@
  * This file should shrink as rules are removed from the legacy bridge.
  */
 
+body[data-ss-typeface="system"] {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-typeface="atkinson"] {
+  --font-ui: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-typeface="lexend"] {
+  --font-ui: "Lexend", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-typeface="compact"] {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-density="standard"] {
+  --line-body: 1.45;
+  --line-ui: 1.22;
+  --line-compact: 1.14;
+  --pad-ui-y: 0.4rem;
+  --pad-ui-x: 0.75rem;
+  --pad-compact-y: 0.28rem;
+  --pad-compact-x: 0.55rem;
+  --pad-card: 0.85rem;
+  --pad-card-sm: 0.7rem;
+  --pad-card-lg: 1rem;
+  --gap-ui: 0.5rem;
+  --gap-section: 0.85rem;
+}
+
+body[data-ss-density="comfortable"] {
+  --line-body: 1.5;
+  --line-ui: 1.3;
+  --line-compact: 1.18;
+  --pad-ui-y: 0.5rem;
+  --pad-ui-x: 0.9rem;
+  --pad-compact-y: 0.34rem;
+  --pad-compact-x: 0.65rem;
+  --pad-card: 1rem;
+  --pad-card-sm: 0.85rem;
+  --pad-card-lg: 1.15rem;
+  --gap-ui: 0.65rem;
+  --gap-section: 1rem;
+}
+
+body[data-ss-density="compact"] {
+  --line-body: 1.35;
+  --line-ui: 1.15;
+  --line-compact: 1.1;
+  --pad-ui-y: 0.3rem;
+  --pad-ui-x: 0.6rem;
+  --pad-compact-y: 0.22rem;
+  --pad-compact-x: 0.45rem;
+  --pad-card: 0.7rem;
+  --pad-card-sm: 0.6rem;
+  --pad-card-lg: 0.85rem;
+  --gap-ui: 0.4rem;
+  --gap-section: 0.7rem;
+}
+
+body {
+  font-family: var(--font-ui);
+  line-height: var(--line-body);
+}
+
 .ss-main {
   max-width: var(--layout-standard);
 }
