@@ -68,6 +68,24 @@ These components have the highest copy/paste risk and should be standardized fir
 
 ---
 
+## Priority 2 implementation status
+
+These components are already represented in modular CSS and now have dedicated implementation-oriented specs.
+
+| Component | Status | Spec | Current contract / target path | Notes |
+| --------- | ------ | ---- | ------------------------------ | ----- |
+| Badges / Status Badges / Pills | CSS only | [badges.md](components/badges.md) | `.ss-badge`, `.ss-status-badge`, `.ss-pill`, `.ss-status-dot` | Use `.status-*` only for domain/business state. |
+| Tables | CSS only | [tables.md](components/tables.md) | `.ss-table`, `.ss-table-scroll`, `.ss-table--compact`, `.ss-table-actions` | Modular row actions use `.ss-table-actions`; legacy `.ss-row-actions` still exists in old CSS. |
+| Data Tables | CSS only | [data-tables.md](components/data-tables.md) | `.ss-data-table`, `.ss-data-table__toolbar`, `.ss-data-table__filters`, `.ss-data-table__pagination`, `.ss-filter-bar` | Use BEM element names; non-BEM data-table names are not defined. |
+| Navigation | CSS only / app nav implemented | [navigation.md](components/navigation.md) | `.ss-nav`, `.ss-sidebar`, `.ss-breadcrumbs`, `.ss-tabs`, `.ss-steps`, `.ss-kbd` | Global nav lives in `layouts/_nav`; local nav uses sidebar/tabs/steps. |
+| Metrics | CSS only / domain partials exist | [metrics.md](components/metrics.md) | `.ss-metric-card`, `.ss-metric-strip`, `.ss-stat` | Reports/orders have partials; generic UI partial deferred. |
+| Lists / Timelines | CSS only | [lists.md](components/lists.md) | `.ss-list`, `.ss-list-row`, `.ss-timeline` | Use lists for small related collections, not comparable tabular data. |
+| Disclosure | CSS only | [disclosure.md](components/disclosure.md) | `.ss-collapsible-panel`, `.ss-accordion`, `.ss-details` | Prefer native `<details>` where possible. |
+| Appearance Switcher | Partial exists / CSS only styling | [appearance.md](components/appearance.md) | `shared/ui/_appearance_switcher`; `.ss-appearance-switcher*` | User-facing view-mode control. |
+| Layout Shell | Implemented | [layout-shell.md](components/layout-shell.md) | `layouts/application`, `layouts/pos`, `.ss-header`, `.ss-main`, `.ss-footer` | Detailed app shell spec; broader shell rules remain in `app-shell-and-pos-shell.md`. |
+
+---
+
 ## Feedback naming standard
 
 Use these names for new work. Legacy selectors remain only for migration compatibility.
@@ -115,8 +133,8 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | --------- | ------ | ---------------------- |
 | Design Tokens | Implemented | `shelfstack.tokens.css`, `--color-*`, `--space-*`, `--layout-*`, `--z-*` |
 | Typography | CSS only | `shelfstack.typography.css`, `h1`–`h4`, `.ss-heading--page`, `.ss-page-title`, `.ss-muted`, `.ss-eyebrow`, `.ss-tabular` |
-| Link | CSS only | `shelfstack.components.links.css`, `.ss-link`, `.ss-btn-link` |
-| Button | CSS only | `shelfstack.components.buttons.css`, `.ss-btn*` |
+| Link | CSS only | `shelfstack.components.links.css`, `.ss-link`, `.ss-btn-link`; [link.md](components/link.md) |
+| Button | CSS only | `shelfstack.components.buttons.css`, `.ss-btn*`; [button.md](components/button.md) |
 | Separator | Planned | `.ss-separator`, `.ss-separator--vertical` |
 | Icon | Planned | `.ss-icon`, `.ss-icon--status` |
 | Avatar | Planned | `.ss-avatar`, `.ss-avatar--initials` |
@@ -125,14 +143,15 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| App Shell | Implemented | `layouts/application`, `layouts/pos`, `shelfstack_body_attributes` |
-| Header | Implemented | `layouts/_header`, `.ss-header`, `.ss-header__search`, `.ss-header__actions` |
-| Navigation Bar | Implemented | `layouts/_nav`, `.ss-nav`, `.ss-nav__item--active`, `.ss-nav__item--disabled` |
-| Footer | Implemented | `layouts/_footer`, `.ss-footer`, `.ss-footer__version`, `.ss-footer__copyright`, `.ss-footer__actions` |
-| Main Container | Implemented | `.ss-main`, `.ss-main--readable`, `.ss-main--items`, `.ss-main--wide`, `.ss-main--narrow` |
-| Sidebar | CSS only | `.ss-sidebar`, `.ss-sidebar__section`, `.ss-sidebar__item` |
-| Page Header | Mixed / partial exists | `.ss-page-header`; generic partial planned |
-| Section Header | CSS only | `.ss-section-header`, `.ss-section-actions` |
+| Layout Shell | Implemented | [layout-shell.md](components/layout-shell.md); `layouts/application`, `layouts/pos`, `shelfstack_body_attributes` |
+| Header | Implemented | [layout-shell.md](components/layout-shell.md); `layouts/_header`, `.ss-header`, `.ss-header__search`, `.ss-header__actions` |
+| Navigation Bar | Implemented | [navigation.md](components/navigation.md); `layouts/_nav`, `.ss-nav`, `.ss-nav__item--active`, `.ss-nav__item--disabled` |
+| Footer | Implemented | [layout-shell.md](components/layout-shell.md); `layouts/_footer`, `.ss-footer`, `.ss-footer__version`, `.ss-footer__copyright`, `.ss-footer__actions` |
+| Main Container | Implemented | [layout-shell.md](components/layout-shell.md); `.ss-main`, `.ss-main--readable`, `.ss-main--items`, `.ss-main--wide`, `.ss-main--narrow` |
+| Appearance Switcher | Partial exists | [appearance.md](components/appearance.md); `shared/ui/_appearance_switcher`, `.ss-appearance-switcher*` |
+| Sidebar | CSS only | [navigation.md](components/navigation.md); `.ss-sidebar`, `.ss-sidebar__section`, `.ss-sidebar__item` |
+| Page Header | Mixed / partial exists | [page-header.md](components/page-header.md); `.ss-page-header`; generic partial planned |
+| Section Header | CSS only | [layout-shell.md](components/layout-shell.md); `.ss-section-header`, `.ss-section-actions` |
 | Card / Surface | CSS only | [card-surface.md](components/card-surface.md) — includes summary, sidebar-card, card-grid |
 | Stack / Grid / Action Row | CSS only | `shelfstack.utilities.css`, `.ss-stack`, `.ss-grid`, `.ss-action-row` |
 
@@ -160,7 +179,7 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 | Empty State | Partial exists | [empty-state.md](components/empty-state.md), `reports/shared/_empty_state` |
 | Access Notice | CSS only | [access-notice.md](components/access-notice.md) |
 | Progress / Skeleton / Copy State | CSS only (scaffold) | [progress-skeleton.md](components/progress-skeleton.md) |
-| Badge / Status Badge / Pill / Status Dot | CSS only | `.ss-badge`, `.ss-status-badge`, `.ss-pill`, `.ss-status-dot` |
+| Badge / Status Badge / Pill / Status Dot | CSS only | [badges.md](components/badges.md); `.ss-badge`, `.ss-status-badge`, `.ss-pill`, `.ss-status-dot` |
 
 ### Dialogs, overlays, and menus
 
@@ -177,23 +196,24 @@ Shell contract enforcement: `test/system/app_shell_contract_test.rb` (global hea
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| Breadcrumbs | CSS only | `.ss-breadcrumbs` |
-| Tabs | CSS only | `.ss-tabs`, `.ss-tab`, `.ss-tab--active` |
-| Accordion / Collapsible | CSS only | `.ss-accordion`, `.ss-collapsible-panel` |
-| Pagination | CSS only | `.ss-pagination`, `.ss-pagination__summary` |
-| Steps | CSS only | `.ss-steps`, `.ss-step`, `.ss-step--active` |
-| Shortcut Key | CSS only | `.ss-shortcut-key`, `.ss-kbd` |
+| Navigation | CSS only / app nav implemented | [navigation.md](components/navigation.md), `.ss-nav`, `.ss-sidebar`, `.ss-breadcrumbs`, `.ss-tabs`, `.ss-steps`, `.ss-kbd` |
+| Breadcrumbs | CSS only | [navigation.md](components/navigation.md), `.ss-breadcrumbs` |
+| Tabs | CSS only | [navigation.md](components/navigation.md), `.ss-tabs`, `.ss-tab`, `.ss-tab--active` |
+| Accordion / Collapsible / Details | CSS only | [disclosure.md](components/disclosure.md), `.ss-accordion`, `.ss-collapsible-panel`, `.ss-details` |
+| Pagination | CSS only | [data-tables.md](components/data-tables.md), `.ss-pagination`, `.ss-pagination__summary` |
+| Steps | CSS only | [navigation.md](components/navigation.md), `.ss-steps`, `.ss-step`, `.ss-step--active` |
+| Shortcut Key | CSS only | [navigation.md](components/navigation.md), `.ss-shortcut-key`, `.ss-kbd` |
 | Command Palette | Planned | `.ss-command`, `.ss-command-palette` |
 
 ### Data display
 
 | Component | Status | Target classes / files |
 | --------- | ------ | ---------------------- |
-| Table | CSS only | `.ss-table`, `.ss-table--compact`, `.ss-table-scroll` |
-| Data Table | CSS only | `.ss-data-table`, `.ss-data-table__toolbar`, `.ss-data-table__filters`, `.ss-data-table__pagination`, `.ss-filter-bar` |
-| Row Actions | Mixed / legacy | Modular: `.ss-table-actions` (`tables.css`). Legacy: `.ss-row-actions` (`shelfstack.css`, still used in some views). Not defined: `.ss-row-actions--dropdown`. |
-| Metric Card / Strip | CSS only | `.ss-metric-card`, `.ss-metric-strip`, `.ss-stat` |
-| List / Timeline | CSS only | `.ss-list`, `.ss-list-row`, `.ss-timeline` |
+| Table | CSS only | [tables.md](components/tables.md), `.ss-table`, `.ss-table--compact`, `.ss-table-scroll` |
+| Data Table | CSS only | [data-tables.md](components/data-tables.md), `.ss-data-table`, `.ss-data-table__toolbar`, `.ss-data-table__filters`, `.ss-data-table__pagination`, `.ss-filter-bar` |
+| Row Actions | Mixed / legacy | [tables.md](components/tables.md), modular `.ss-table-actions`; legacy `.ss-row-actions`; `.ss-row-actions--dropdown` not defined |
+| Metric Card / Strip | CSS only | [metrics.md](components/metrics.md), `.ss-metric-card`, `.ss-metric-strip`, `.ss-stat` |
+| List / Timeline | CSS only | [lists.md](components/lists.md), `.ss-list`, `.ss-list-row`, `.ss-timeline` |
 | Summary / Definition List | CSS only | `.ss-summary`, `.ss-summary--two-column`, `.ss-summary__label`, `.ss-summary__value`; [card-surface.md](components/card-surface.md) |
 | Code Block | CSS only | `.ss-code`, `.ss-code-block` |
 | Carousel | Planned | `.ss-carousel`, `.ss-carousel-item` |
@@ -234,7 +254,7 @@ Button, Link, Form, Field, Input, Select / Native Select, Alert, Flash, Toast, A
 
 ### Priority 2 — high operational value
 
-Data Table, Pagination, Empty State, Combobox, Lookup Panel, Sheet / Drawer, Tabs, Breadcrumbs, Status Badge, Metric Card, Document Header, Line Entry Table.
+Data Table, Pagination, Empty State, Combobox, Lookup Panel, Sheet / Drawer, Tabs, Breadcrumbs, Status Badge, Metric Card, Document Header, Line Entry Table, Table, Navigation, Lists, Disclosure, Appearance Switcher, Layout Shell.
 
 ### Priority 3 — workflow polish
 
@@ -277,10 +297,11 @@ Avatar, Hover Card, Clipboard / Copy Button, Shortcut Key, Command Palette, Cont
 | Fieldset | [components/fieldset.md](components/fieldset.md) |
 | Checkbox / Radio / Choice | [components/choice-controls.md](components/choice-controls.md) |
 
-### Feedback module (`shelfstack.components.feedback.css`)
+### Feedback/status module
 
 | Spec | File |
 | ---- | ---- |
+| Badges / Status Badges / Pills | [components/badges.md](components/badges.md) |
 | Empty State | [components/empty-state.md](components/empty-state.md) |
 | Progress / Skeleton | [components/progress-skeleton.md](components/progress-skeleton.md) |
 
@@ -291,7 +312,23 @@ Avatar, Hover Card, Clipboard / Copy Button, Shortcut Key, Command Palette, Cont
 | Drawer | [components/drawer.md](components/drawer.md) |
 | Sheet / Popover / Hover / Context | [components/sheet-popover.md](components/sheet-popover.md) |
 
-Do not write full spec pages for Priority 2+ generic components (Table, Badge, Nav, etc.) until they become implementation contracts.
+### Layout, navigation, and shell
+
+| Spec | File |
+| ---- | ---- |
+| Layout Shell | [components/layout-shell.md](components/layout-shell.md) |
+| Navigation | [components/navigation.md](components/navigation.md) |
+| Disclosure | [components/disclosure.md](components/disclosure.md) |
+| Appearance Switcher | [components/appearance.md](components/appearance.md) |
+
+### Data display
+
+| Spec | File |
+| ---- | ---- |
+| Tables | [components/tables.md](components/tables.md) |
+| Data Tables | [components/data-tables.md](components/data-tables.md) |
+| Metrics | [components/metrics.md](components/metrics.md) |
+| Lists / Timelines | [components/lists.md](components/lists.md) |
 
 **Location:** one file per component under `docs/design/components/`. Keep `components.md` as the inventory and status index.
 
