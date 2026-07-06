@@ -1,262 +1,271 @@
 <% overview = local_assigns[:overview] %>
 <% operations = local_assigns[:operations] %>
-<div class="ss-item-catalog">
-  <div class="ss-item-main">
-    <header class="ss-item-hero">
-      <div class="ss-item-hero-text">
-        <div class="ss-item-hero-top">
-          <div>
-            <%= item_location_eyebrow(
-                  item.display_location_path(variant: local_assigns[:variant]),
-                  topic_section: item.topic_section_label(variant: local_assigns[:variant])
-                ) %>
-            <h1 class="ss-item-title"><%= item.title %></h1>
-            <% if item.subtitle.present? %>
-              <p class="ss-item-subtitle"><%= item.subtitle %></p>
-            <% end %>
-          </div>
-        </div>
 
-        <% if item.creator_entries.any? %>
-          <div class="ss-item-creators">
-            <% item.creator_entries.each_with_index do |creator, index| %>
-              <% if index.positive? %><span class="ss-item-sep">|</span><% end %>
-              <span class="ss-item-creator">
-                <span class="ss-item-creator-name"><%= creator["display_name"] %></span>
-                <% creator["roles"].each do |role| %>
-                  <%= item_creator_role_badge(role) %>
-                <% end %>
-              </span>
-            <% end %>
-          </div>
-        <% end %>
-
-        <% if item.catalog_facts.any? || item.publication_status_label.present? %>
-          <dl class="ss-item-facts">
-            <% item.catalog_facts.each do |label, value| %>
-              <dt><%= label %></dt>
-              <dd>
-                <% if label == "Released" && item.publication_status_label.present? %>
-                  <span class="ss-item-released">
-                    <%= value %>
-                    <%= item_publication_status_badge(item.publication_status_label) %>
-                  </span>
-                <% else %>
-                  <%= value %>
-                <% end %>
-              </dd>
-            <% end %>
-            <% if item.publication_status_label.present? && item.released_date_label.blank? %>
-              <dt>Status</dt>
-              <dd><%= item_publication_status_badge(item.publication_status_label) %></dd>
-            <% end %>
-          </dl>
-        <% elsif item.product.blank? && item.display_metadata.blank? %>
-          <p class="ss-muted ss-item-no-catalog">This item has no product metadata yet. Create a product for operational use.</p>
-        <% elsif item.product.blank? %>
-          <p class="ss-muted ss-item-no-catalog">Bibliographic metadata exists, but no product has been created for operational use.</p>
-        <% end %>
-      </div>
-
-      <div class="ss-item-cover-slot">
-        <div class="ss-item-cover-badges">
-          <%= item_lifecycle_status_badge(item.primary_status) %>
-        </div>
-        <%= item_cover_thumbnail(item, size: :hero) %>
-      </div>
-    </header>
-
-    <% if local_assigns[:operational_warnings].present? %>
-      <%= render "items/shared/operational_warnings_panel", warnings: operational_warnings %>
-    <% end %>
-
-    <% if overview.present? %>
-      <section class="ss-item-summary-cards" aria-label="Operational summary">
-        <div class="ss-item-summary-cards__grid">
-          <% overview.summary_cards.each do |card| %>
-            <article class="ss-item-summary-card">
-              <h2 class="ss-item-summary-card__label"><%= card.label %></h2>
-              <p class="ss-item-summary-card__status"><%= card.status %></p>
-              <p class="ss-muted ss-item-summary-card__detail"><%= card.detail %></p>
-              <%= item_warning_severity_badge(card.severity) if card.severity.present? %>
-            </article>
+<div class="ss-item-detail ss-item-catalog">
+  <header class="ss-item-hero">
+    <div class="ss-item-hero-text">
+      <div class="ss-item-hero-top">
+        <div>
+          <%= item_location_eyebrow(
+                item.display_location_path(variant: local_assigns[:variant]),
+                topic_section: item.topic_section_label(variant: local_assigns[:variant])
+              ) %>
+          <h1 class="ss-item-title"><%= item.title %></h1>
+          <% if item.subtitle.present? %>
+            <p class="ss-item-subtitle"><%= item.subtitle %></p>
           <% end %>
         </div>
-        <% if operations&.header_actions&.any? %>
-          <div class="ss-item-ops-summary__actions">
-            <% operations.header_actions.each do |action| %>
-              <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+      </div>
+
+      <% if item.creator_entries.any? %>
+        <div class="ss-item-creators">
+          <% item.creator_entries.each_with_index do |creator, index| %>
+            <% if index.positive? %><span class="ss-item-sep">|</span><% end %>
+            <span class="ss-item-creator">
+              <span class="ss-item-creator-name"><%= creator["display_name"] %></span>
+              <% creator["roles"].each do |role| %>
+                <%= item_creator_role_badge(role) %>
+              <% end %>
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if item.catalog_facts.any? || item.publication_status_label.present? %>
+        <dl class="ss-item-facts">
+          <% item.catalog_facts.each do |label, value| %>
+            <dt><%= label %></dt>
+            <dd>
+              <% if label == "Released" && item.publication_status_label.present? %>
+                <span class="ss-item-released">
+                  <%= value %>
+                  <%= item_publication_status_badge(item.publication_status_label) %>
+                </span>
+              <% else %>
+                <%= value %>
+              <% end %>
+            </dd>
+          <% end %>
+          <% if item.publication_status_label.present? && item.released_date_label.blank? %>
+            <dt>Status</dt>
+            <dd><%= item_publication_status_badge(item.publication_status_label) %></dd>
+          <% end %>
+        </dl>
+      <% elsif item.product.blank? && item.display_metadata.blank? %>
+        <p class="ss-muted ss-item-no-catalog">This item has no product metadata yet. Create a product for operational use.</p>
+      <% elsif item.product.blank? %>
+        <p class="ss-muted ss-item-no-catalog">Bibliographic metadata exists, but no product has been created for operational use.</p>
+      <% end %>
+    </div>
+
+    <div class="ss-item-cover-slot">
+      <div class="ss-item-cover-badges">
+        <%= item_lifecycle_status_badge(item.primary_status) %>
+      </div>
+      <%= item_cover_thumbnail(item, size: :hero) %>
+    </div>
+  </header>
+
+  <% if local_assigns[:operational_warnings].present? %>
+    <%= render "items/shared/operational_warnings_panel", warnings: operational_warnings %>
+  <% end %>
+
+  <div class="ss-item-detail__body">
+    <main class="ss-item-main">
+      <% if overview.present? %>
+        <section class="ss-item-summary-cards" aria-label="Operational summary">
+          <div class="ss-item-summary-cards__grid">
+            <% overview.summary_cards.each do |card| %>
+              <article class="ss-item-summary-card">
+                <h2 class="ss-item-summary-card__label"><%= card.label %></h2>
+                <p class="ss-item-summary-card__status"><%= card.status %></p>
+                <p class="ss-muted ss-item-summary-card__detail"><%= card.detail %></p>
+                <%= item_warning_severity_badge(card.severity) if card.severity.present? %>
+              </article>
             <% end %>
           </div>
-        <% end %>
-      </section>
+          <% if operations&.header_actions&.any? %>
+            <div class="ss-item-ops-summary__actions">
+              <% operations.header_actions.each do |action| %>
+                <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+              <% end %>
+            </div>
+          <% end %>
+        </section>
 
-      <section id="variant-matrix" class="ss-item-section" aria-label="Variant readiness matrix">
-        <h2><%= items_user_facing_label("product_variants") %></h2>
-        <% if overview.matrix_rows.any? %>
-          <table class="ss-table ss-item-table">
-            <thead>
-              <tr>
-                <th>Variant</th>
-                <th>SKU</th>
-                <th>Status</th>
-                <th class="ss-num">Price</th>
-                <th>Subdepartment</th>
-                <th>Tax category</th>
-                <th>Tracking</th>
-                <th>Orderable</th>
-                <th>Preferred vendor</th>
-                <th>Source</th>
-                <% if overview.inventory_visible? %>
-                  <th class="ss-num">On hand</th>
-                  <th class="ss-num">Available</th>
-                  <th class="ss-num">Reserved</th>
-                  <th class="ss-num">On order</th>
-                  <th>Last received</th>
-                <% end %>
-                <th>Last sold</th>
-                <th>Returnability</th>
-                <th class="ss-num">Expected cost</th>
-                <th>Warnings</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% overview.matrix_rows.each do |row| %>
-                <% variant = row.variant %>
-                <% snapshot = row.snapshot %>
-                <tr>
-                  <td><%= variant.list_label %></td>
-                  <td><%= variant.sku %></td>
-                  <td>
-                    <% ProductVariants::OperationalPolicy.for(variant).operational_badges.each do |badge| %>
-                      <span class="ss-badge ss-badge--muted"><%= badge.label %></span>
+        <section id="variant-matrix" class="ss-item-section" aria-label="Variant readiness matrix">
+          <h2><%= items_user_facing_label("product_variants") %></h2>
+          <% if overview.matrix_rows.any? %>
+            <div class="ss-table-scroll ss-item-table-scroll">
+              <table class="ss-table ss-table--compact ss-item-table">
+                <thead>
+                  <tr>
+                    <th>Variant</th>
+                    <th>SKU</th>
+                    <th>Status</th>
+                    <th class="ss-num">Price</th>
+                    <th>Subdepartment</th>
+                    <th>Tax category</th>
+                    <th>Tracking</th>
+                    <th>Orderable</th>
+                    <th>Preferred vendor</th>
+                    <th>Source</th>
+                    <% if overview.inventory_visible? %>
+                      <th class="ss-num">On hand</th>
+                      <th class="ss-num">Available</th>
+                      <th class="ss-num">Reserved</th>
+                      <th class="ss-num">On order</th>
+                      <th>Last received</th>
                     <% end %>
-                  </td>
-                  <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
-                  <td><%= row.sub_department_name || "—" %></td>
-                  <td><%= row.tax_category_name || "—" %></td>
-                  <td><%= humanize_controlled_value(snapshot&.inventory_tracking || "—") %></td>
-                  <td><%= snapshot&.orderable ? "Yes" : "No" %></td>
-                  <td><%= snapshot&.suggested_vendor&.vendor&.name || "—" %></td>
-                  <td><%= item_vendor_source_status_label(row.vendor_source_status) %></td>
-                  <% if overview.inventory_visible? %>
-                    <td class="ss-num"><%= snapshot&.on_hand.nil? ? "—" : snapshot.on_hand %></td>
-                    <td class="ss-num"><%= snapshot&.available.nil? ? "—" : snapshot.available %></td>
-                    <td class="ss-num"><%= snapshot&.reserved.nil? ? "—" : snapshot.reserved %></td>
-                    <td class="ss-num"><%= snapshot&.on_order.nil? ? "—" : snapshot.on_order %></td>
-                    <td>
-                      <% if snapshot&.last_received.present? %>
-                        <%= l(snapshot.last_received.received_at.to_date) %>
-                      <% else %>
-                        —
+                    <th>Last sold</th>
+                    <th>Returnability</th>
+                    <th class="ss-num">Expected cost</th>
+                    <th>Warnings</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% overview.matrix_rows.each do |row| %>
+                    <% variant = row.variant %>
+                    <% snapshot = row.snapshot %>
+                    <tr>
+                      <td><%= variant.list_label %></td>
+                      <td><%= variant.sku %></td>
+                      <td>
+                        <% ProductVariants::OperationalPolicy.for(variant).operational_badges.each do |badge| %>
+                          <span class="ss-badge ss-badge--muted"><%= badge.label %></span>
+                        <% end %>
+                      </td>
+                      <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
+                      <td><%= row.sub_department_name || "—" %></td>
+                      <td><%= row.tax_category_name || "—" %></td>
+                      <td><%= humanize_controlled_value(snapshot&.inventory_tracking || "—") %></td>
+                      <td><%= snapshot&.orderable ? "Yes" : "No" %></td>
+                      <td><%= snapshot&.suggested_vendor&.vendor&.name || "—" %></td>
+                      <td><%= item_vendor_source_status_label(row.vendor_source_status) %></td>
+                      <% if overview.inventory_visible? %>
+                        <td class="ss-num"><%= snapshot&.on_hand.nil? ? "—" : snapshot.on_hand %></td>
+                        <td class="ss-num"><%= snapshot&.available.nil? ? "—" : snapshot.available %></td>
+                        <td class="ss-num"><%= snapshot&.reserved.nil? ? "—" : snapshot.reserved %></td>
+                        <td class="ss-num"><%= snapshot&.on_order.nil? ? "—" : snapshot.on_order %></td>
+                        <td>
+                          <% if snapshot&.last_received.present? %>
+                            <%= l(snapshot.last_received.received_at.to_date) %>
+                          <% else %>
+                            —
+                          <% end %>
+                        </td>
                       <% end %>
-                    </td>
+                      <td>
+                        <% if row.last_sold_at.present? %>
+                          <%= l(row.last_sold_at.to_date) %>
+                        <% else %>
+                          —
+                        <% end %>
+                      </td>
+                      <td><%= snapshot&.returnability_status.present? ? snapshot.returnability_status.humanize : "—" %></td>
+                      <td class="ss-num"><%= snapshot&.expected_unit_cost_cents.present? ? format_cents(snapshot.expected_unit_cost_cents) : "—" %></td>
+                      <td><%= item_warning_severity_badge(row.worst_severity) || "—" %></td>
+                    </tr>
                   <% end %>
-                  <td>
-                    <% if row.last_sold_at.present? %>
-                      <%= l(row.last_sold_at.to_date) %>
-                    <% else %>
-                      —
-                    <% end %>
-                  </td>
-                  <td><%= snapshot&.returnability_status.present? ? snapshot.returnability_status.humanize : "—" %></td>
-                  <td class="ss-num"><%= snapshot&.expected_unit_cost_cents.present? ? format_cents(snapshot.expected_unit_cost_cents) : "—" %></td>
-                  <td><%= item_warning_severity_badge(row.worst_severity) || "—" %></td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        <% else %>
-          <p class="ss-muted">No sellable SKUs yet.</p>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="ss-muted">No sellable SKUs yet.</p>
+          <% end %>
+        </section>
+
+        <section class="ss-item-open-activity" aria-label="Open activity summary">
+          <p>
+            Open TBO <%= overview.activity_counts.open_tbo_lines %> ·
+            Open PO lines <%= overview.activity_counts.open_po_lines %> ·
+            Recent receipts <%= overview.activity_counts.recent_receipts %>
+            <%= link_to "View operations", items_item_path_with_match(item, tab: "operations"), class: "ss-btn-link" %>
+          </p>
+        </section>
+
+        <% if overview.sales_history_rows.any? %>
+          <section id="sales-history" class="ss-item-section" aria-label="Recent sales history">
+            <h2>Recent sales</h2>
+            <div class="ss-table-scroll">
+              <table class="ss-table ss-table--compact">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>SKU</th>
+                    <th class="ss-num">Qty</th>
+                    <th class="ss-num">Net sales</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% overview.sales_history_rows.each do |row| %>
+                    <tr>
+                      <td><%= l(row.sold_at, format: :short) %></td>
+                      <td><%= row.variant_sku %></td>
+                      <td class="ss-num"><%= row.quantity %></td>
+                      <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
+                      <td>
+                        <% if overview.sales_visible? %>
+                          <%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </section>
         <% end %>
-      </section>
 
-      <section class="ss-item-open-activity" aria-label="Open activity summary">
-        <p>
-          Open TBO <%= overview.activity_counts.open_tbo_lines %> ·
-          Open PO lines <%= overview.activity_counts.open_po_lines %> ·
-          Recent receipts <%= overview.activity_counts.recent_receipts %>
-          <%= link_to "View operations", items_item_path_with_match(item, tab: "operations"), class: "ss-btn-link" %>
-        </p>
-      </section>
+        <% if overview.receiving_history_rows.any? %>
+          <section id="receiving-history" class="ss-item-section" aria-label="Recent receiving history">
+            <h2>Recent receiving</h2>
+            <div class="ss-table-scroll">
+              <table class="ss-table ss-table--compact">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Vendor</th>
+                    <th>SKU</th>
+                    <th class="ss-num">Accepted</th>
+                    <th class="ss-num">Unit cost</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% overview.receiving_history_rows.each do |row| %>
+                    <tr>
+                      <td><%= l(row.received_at.to_date) %></td>
+                      <td><%= row.vendor.name %></td>
+                      <td><%= row.variant_sku %></td>
+                      <td class="ss-num"><%= row.quantity_accepted %></td>
+                      <td class="ss-num"><%= format_cents(row.unit_cost_cents) %></td>
+                      <td>
+                        <% if row.purchase_order.present? %>
+                          <%= link_to "PO ##{row.purchase_order.id}", orders_purchase_order_path(row.purchase_order), class: "ss-btn-link" %>
+                        <% end %>
+                        <%= link_to "Receipt ##{row.receipt.id}", orders_receipt_path(row.receipt), class: "ss-btn-link" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        <% end %>
+      <% end %>
+    </main>
 
-      <% if overview.sales_history_rows.any? %>
-        <section id="sales-history" class="ss-item-section" aria-label="Recent sales history">
-          <h2>Recent sales</h2>
-          <table class="ss-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>SKU</th>
-                <th class="ss-num">Qty</th>
-                <th class="ss-num">Net sales</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% overview.sales_history_rows.each do |row| %>
-                <tr>
-                  <td><%= l(row.sold_at, format: :short) %></td>
-                  <td><%= row.variant_sku %></td>
-                  <td class="ss-num"><%= row.quantity %></td>
-                  <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
-                  <td>
-                    <% if overview.sales_visible? %>
-                      <%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
+    <aside class="ss-item-sidebar">
+      <%= render "items/items/overview_subjects", item: item %>
+
+      <% if item.description_text.present? %>
+        <section class="ss-item-sidebar-section">
+          <h3>Description</h3>
+          <%= item_description_block(item.description_text) %>
         </section>
       <% end %>
-
-      <% if overview.receiving_history_rows.any? %>
-        <section id="receiving-history" class="ss-item-section" aria-label="Recent receiving history">
-          <h2>Recent receiving</h2>
-          <table class="ss-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Vendor</th>
-                <th>SKU</th>
-                <th class="ss-num">Accepted</th>
-                <th class="ss-num">Unit cost</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% overview.receiving_history_rows.each do |row| %>
-                <tr>
-                  <td><%= l(row.received_at.to_date) %></td>
-                  <td><%= row.vendor.name %></td>
-                  <td><%= row.variant_sku %></td>
-                  <td class="ss-num"><%= row.quantity_accepted %></td>
-                  <td class="ss-num"><%= format_cents(row.unit_cost_cents) %></td>
-                  <td>
-                    <% if row.purchase_order.present? %>
-                      <%= link_to "PO ##{row.purchase_order.id}", orders_purchase_order_path(row.purchase_order), class: "ss-btn-link" %>
-                    <% end %>
-                    <%= link_to "Receipt ##{row.receipt.id}", orders_receipt_path(row.receipt), class: "ss-btn-link" %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </section>
-      <% end %>
-    <% end %>
+    </aside>
   </div>
-
-  <aside class="ss-item-sidebar">
-    <%= render "items/items/overview_subjects", item: item %>
-
-    <% if item.description_text.present? %>
-      <section class="ss-item-sidebar-section">
-        <h3>Description</h3>
-        <%= item_description_block(item.description_text) %>
-      </section>
-    <% end %>
-  </aside>
 </div>
