@@ -8,10 +8,11 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <%= tag.body(**shelfstack_appearance_attributes) do %>
+  <%= tag.body(**shelfstack_body_attributes) do %>
+    <%= link_to "Skip to content", "#main_content", class: "ss-skip-link" %>
     <%= render "layouts/header" %>
     <%= render "layouts/nav" %>
-    <main class="<%= ["ss-main", content_for(:main_class)].compact_blank.join(" ") %>">
+    <main id="main_content" class="<%= shelfstack_class_names("ss-main", content_for(:main_class)) %>">
       <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
       <% if flash[:warning] %><div class="flash flash-warning"><%= flash[:warning] %></div><% end %>
       <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
