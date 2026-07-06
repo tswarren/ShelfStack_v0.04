@@ -257,16 +257,19 @@ These are not generic UI-library components. They should usually live in `shelfs
 
 ---
 
-## Phase 10-E alignment
+## v0.04-14 alignment (Phase 10-E)
 
-[Phase 10-E](../roadmap/Phase-x10-comprehensive-ux-expansion.md) (consistency sweep) maps directly to this catalog:
+**Milestone:** [v0.04-14 spec](../v0.04/v0.04-14-design-system-ux-migration/spec.md) · **Build guide:** [ux-migration-build-plan.md](ux-migration-build-plan.md) · **Roadmap:** [phase-10e-ux-migration.md](../roadmap/phase-10e-ux-migration.md)
 
-1. Migrate [known migration stragglers](#known-migration-stragglers) (auth flash, form errors, modal naming, expanded row, shortcut strip).
-2. Extract POS/header/cart CSS from `shelfstack.css` into `shelfstack.domain.pos.css`.
-3. Add Priority 1 thin partials where copy/paste risk is highest: Button, Alert, generic Page Header.
-4. Normalize views to documented feedback classes (`.ss-flash--*`, `.ss-alert--*`, `.ss-toast--*`).
-5. Add modular CSS before using planned `.ss-filter-chip*` classes.
-6. Run [ux-review-checklist.md](ux-review-checklist.md) on touched workspaces; keep report view contracts stable.
+Execution order:
+
+1. **Prep (PR 0):** filter-chip CSS, `.ss-empty-state__message`, auth shell docs.
+2. **Enabling layer (PR 1–2):** `shared/ui` button, page_header, alert, empty_state; revise `_errors` and `_field`; `ss_status_badge` helper.
+3. **Pilot (PR 3):** `setup/vendors` index + show.
+4. Migrate [known migration stragglers](#known-migration-stragglers) when touching adjacent UI (auth flash, form errors, modal naming, expanded row, shortcut strip).
+5. Extract POS/header/cart CSS from `shelfstack.css` into `shelfstack.domain.*.css` during domain migration (Phase 6).
+6. Normalize views to documented feedback classes (`.ss-flash--*`, `.ss-alert--*`, `.ss-toast--*`).
+7. Run [ux-review-checklist.md](ux-review-checklist.md) on touched workspaces; keep report view contracts stable.
 
 ---
 

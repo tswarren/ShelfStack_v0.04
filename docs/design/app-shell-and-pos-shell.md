@@ -53,9 +53,11 @@ POS layout (`layouts/pos`) follows the same contract and may add domain-specific
 
 ### Auth layout exception
 
-Login, unlock, and other **focused session** screens use `layouts/auth`. They intentionally **do not** render the global header, nav, footer, or `flash_region`. They use a centered `.ss-auth-box` (styles still partly in legacy `shelfstack.css`).
+Login, unlock, workstation assignment, and **change password** use `layouts/auth`. They intentionally **do not** render the global header, nav, footer, or `flash_region`. They use a centered `.ss-auth-box` (styles still partly in legacy `shelfstack.css`).
 
-Change password and set/change PIN use the **normal app shell** (`application` layout), not `auth`.
+**Set/change PIN** uses the **normal app shell** (`application` layout), not `auth`.
+
+Auth screens should still use shared form, alert, flash, and session-card patterns where appropriate — not duplicate global chrome.
 
 The body contract for normal layouts owns:
 

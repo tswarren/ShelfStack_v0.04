@@ -60,10 +60,10 @@ Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are 
 | **10-A** | [phase-10a-interaction-infrastructure.md](phase-10a-interaction-infrastructure.md) | Modal, drawer, toast, expanded row, focus/keyboard, Turbo targets | — | **Complete** |
 | **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | **Complete** |
 | **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **Complete** (2026-06-26; [completion](../implementation/phase-10c-completion.md)) |
-| **10-D** | This document (Workstreams 4–6) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | Planned |
-| **10-E** | This document (below) | Consistency sweep, accessibility, report regression | All | Planned |
+| **10-D** | [phase-10d-workflow-polish.md](phase-10d-workflow-polish.md) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | **Complete** |
+| **10-E** | [phase-10e-ux-migration.md](phase-10e-ux-migration.md) · [v0.04-14 spec](../v0.04/v0.04-14-design-system-ux-migration/spec.md) | Consistency sweep, accessibility, report regression | All | **Active** (v0.04-14) |
 
-**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. **Current implementation priority:** 10-D.
+**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. **Current implementation priority:** 10-E (release milestone **v0.04-14**).
 
 **Note:** Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match delivery order (10-B = items, 10-C = POS).
 
@@ -381,6 +381,8 @@ Turbo/Stimulus interaction standards are part of Phase 10-A. Server remains sour
 
 ## Phase 10-E — Polish and Consistency Sweep
 
+**Release milestone:** [v0.04-14](../v0.04/v0.04-14-design-system-ux-migration/spec.md). **Execution:** [phase-10e-ux-migration.md](phase-10e-ux-migration.md) · [ux-migration-build-plan.md](../design/ux-migration-build-plan.md).
+
 ```text
 1. Remove one-off button/filter/table styles
 2. Replace raw selects/inputs
@@ -404,7 +406,7 @@ After shared CSS or layout component changes, verify:
 * Customer request queue report renders with status badges
 * No report filter, button, or table layout regressions from shared component changes
 
-Future: dedicated [phase-10e-consistency-sweep.md](phase-10e-consistency-sweep.md) when 10-E starts.
+Future: see [phase-10e-ux-migration.md](phase-10e-ux-migration.md) and [ux-migration-build-plan.md](../design/ux-migration-build-plan.md).
 
 ---
 

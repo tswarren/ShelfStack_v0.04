@@ -72,6 +72,8 @@ README.md
 docs/design/VERSION_0.04.md
 docs/roadmap/v0.04-delivery-roadmap.md
 docs/v0.04/README.md
+docs/v0.04/v0.04-14-design-system-ux-migration/spec.md
+docs/design/ux-migration-build-plan.md
 docs/roadmap/README.md
 ```
 
@@ -111,6 +113,7 @@ docs/design/ux-guide.md
 docs/design/app-shell-and-pos-shell.md
 docs/design/layout-width-model.md
 docs/design/components.md
+docs/design/ux-migration-build-plan.md
 docs/design/ux-review-checklist.md
 app/assets/stylesheets/README.md
 docs/specifications/ui-components.md
@@ -118,7 +121,7 @@ docs/specifications/view-contracts.md
 docs/specifications/modal-and-drawer-patterns.md
 ```
 
-Phase 10-E (consistency sweep) should follow Priority 1 items and migration stragglers in [docs/design/components.md](docs/design/components.md).
+Phase 10-E (consistency sweep) follows [docs/design/ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md) and migration stragglers in [docs/design/components.md](docs/design/components.md).
 
 Phase specs under `docs/specifications/phase-*` are **historical v0.03 implementation reference** — not current domain guidance.
 
@@ -290,7 +293,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development priority is **ShelfStack v0.04 core** — the canonical domain model. The v0.03 phase work forms the **current implementation base**. v0.04-0 through v0.04-13 are **complete**; Phase 10-E is eligible to resume.
+Development priority: **v0.04-14 Design System UX Migration** (Phase 10-E). v0.04-0 through v0.04-13 are **complete**. Spec: [docs/v0.04/v0.04-14-design-system-ux-migration/spec.md](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md). Build plan: [docs/design/ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md).
 
 Historical phase sections below are reference material for code not yet migrated. If their status labels (e.g. **In review** on some 8.5 branches) conflict with v0.04 priorities, follow the [v0.04 delivery roadmap](docs/roadmap/v0.04-delivery-roadmap.md) and [v0.04 domain rules](#v0.04-domain-rules-active-for-new-work).
 
@@ -423,9 +426,9 @@ See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-co
 
 See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-gl-shaped-financial-layer.md). Not scheduled for the current roadmap cycle. Operational reports in 9b remain authoritative for store reconciliation until 9c is resumed.
 
-## Phase 10: Comprehensive UI/UX Expansion — **Mostly complete** (10-E eligible to resume)
+## Phase 10: Comprehensive UI/UX Expansion — **v0.04-14 / 10-E active**
 
-See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). **10-E (consistency sweep) eligible to resume** now that v0.04-12 is merged.
+See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). **v0.04-14** release milestone / **10-E** execution: [docs/v0.04/v0.04-14-design-system-ux-migration/spec.md](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [docs/design/ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md) · [docs/roadmap/phase-10e-ux-migration.md](docs/roadmap/phase-10e-ux-migration.md).
 
 ## ShelfStack v0.04 Core — **Active**
 
@@ -457,7 +460,7 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-13 (demand-to-fulfillment continuity):** **Complete** — [spec bundle](docs/v0.04/v0.04-13-demand-to-fulfillment-continuity/spec.md) · [completion](docs/implementation/v0.04-13-completion.md).
 
-**Current priority:** **v0.04-0 through v0.04-13 complete** — next milestone TBD (v0.04-3 product groups deferred; Phase 10-E or readiness slices).
+**Current priority:** **v0.04-14 Design System UX Migration** (Phase 10-E) — [spec bundle](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md). v0.04-0 through v0.04-13 complete; v0.04-3 product groups deferred.
 
 **v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
 
@@ -523,6 +526,8 @@ Phase 10-D was completed on 2026-06-26. See [docs/roadmap/Phase-x10-comprehensiv
 
 ```text
 docs/roadmap/Phase-x10-comprehensive-ux-expansion.md
+docs/roadmap/phase-10e-ux-migration.md
+docs/design/ux-migration-build-plan.md
 docs/roadmap/phase-10a-interaction-infrastructure.md
 docs/roadmap/phase-10b-item-cockpit-completion.md
 docs/roadmap/phase-10c-pos-keyboard-workspace.md

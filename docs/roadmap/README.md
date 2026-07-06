@@ -12,7 +12,7 @@
 | [v0.04-delivery-roadmap.md](v0.04-delivery-roadmap.md) | Implementation milestones |
 | [../v0.04/README.md](../v0.04/README.md) | Milestone spec bundles |
 
-Phase 10-E is **paused** until the v0.04 core stabilizes.
+**v0.04-14** (design system UX migration) is the **active release milestone** — implemented as Phase 10-E. Spec: [../v0.04/v0.04-14-design-system-ux-migration/spec.md](../v0.04/v0.04-14-design-system-ux-migration/spec.md). Build plan: [../design/ux-migration-build-plan.md](../design/ux-migration-build-plan.md).
 
 ---
 
@@ -54,6 +54,7 @@ Parent summary: [../roadmap.md](../roadmap.md)
 | 10-C-9B Tender / completion | [phase-10c-9b-tender-workspace-and-completion.md](phase-10c-9b-tender-workspace-and-completion.md) |
 | 10-C-11 Layout cleanup | [phase-10c-11-workspace-layout-status-panel-cleanup.md](phase-10c-11-workspace-layout-status-panel-cleanup.md) |
 | 10-D Workflow polish | [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md) (Workstreams 4–6) |
+| 10-E UX migration | [phase-10e-ux-migration.md](phase-10e-ux-migration.md) · [ux-migration-build-plan.md](../design/ux-migration-build-plan.md) |
 
 Completion records: [../implementation/](../implementation/)
 
@@ -64,7 +65,6 @@ Completion records: [../implementation/](../implementation/)
 | Item | Document |
 | ---- | -------- |
 | 9c GL-shaped financial layer | [phase-9c-gl-shaped-financial-layer.md](phase-9c-gl-shaped-financial-layer.md) |
-| 10-E Consistency sweep | [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md) |
 
 ---
 
