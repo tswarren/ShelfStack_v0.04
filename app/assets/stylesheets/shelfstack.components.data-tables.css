@@ -85,15 +85,21 @@ button.ss-filter-chip {
   border: 1px solid var(--color-base-300);
   border-radius: var(--radius-pill);
   padding: 0.35rem 0.75rem;
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-base-content);
   font: inherit;
   font-size: 0.875rem;
   font-weight: 650;
   line-height: var(--line-ui);
   text-decoration: none;
-  cursor: pointer;
+  cursor: default;
   white-space: nowrap;
+}
+
+a.ss-filter-chip,
+button.ss-filter-chip,
+.ss-filter-chip__remove {
+  cursor: pointer;
 }
 
 a.ss-filter-chip:hover,
@@ -106,7 +112,7 @@ button.ss-filter-chip:hover {
 a.ss-filter-chip--active,
 button.ss-filter-chip--active {
   background: var(--color-primary-soft);
-  border-color: #0e4a4a40;
+  border-color: var(--color-primary);
   color: var(--color-primary);
   font-weight: 700;
 }
@@ -141,7 +147,7 @@ button.ss-filter-chip--active {
 .ss-filter-chip__remove:hover,
 .ss-filter-chip__remove:focus {
   opacity: 1;
-  background: #00000012;
+  background: var(--color-base-100);
   outline: 2px solid currentColor;
   outline-offset: 1px;
 }

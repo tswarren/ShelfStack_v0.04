@@ -68,7 +68,7 @@ How is this different from a badge, tab, or button?
 
 ---
 
-## Planned CSS contract
+## Implemented CSS contract
 
 Implemented in `shelfstack.components.data-tables.css`:
 
@@ -86,6 +86,8 @@ Optional future states, only if needed:
 .ss-filter-chip--disabled
 .ss-filter-chip--warning
 ```
+
+Non-interactive chip wrappers (`<span class="ss-filter-chip">`) use `cursor: default`. Links, buttons, and `.ss-filter-chip__remove` use `cursor: pointer`.
 
 ---
 
@@ -143,4 +145,4 @@ Do not introduce the partial until the CSS contract exists and at least two work
 
 ## Migration notes
 
-This is a documentation placeholder until CSS is implemented. The recommended implementation home is `shelfstack.components.data-tables.css` if chips remain tied to filters/data-table work. Use a separate `shelfstack.components.filters.css` only if filter patterns become broad enough to justify a new component file.
+CSS is implemented in `shelfstack.components.data-tables.css`. The Rails partial remains deferred until repeated usage justifies it. Use a separate `shelfstack.components.filters.css` only if filter patterns become broad enough to justify a new component file.
