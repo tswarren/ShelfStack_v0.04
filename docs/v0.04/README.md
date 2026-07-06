@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** **v0.04-14 Design System UX Migration** (active) — next release milestone; implemented as Phase 10-E. v0.04-0 through v0.04-12 **complete**. **v0.04-13 deferred** until after v0.04-14. v0.04-3 product groups and readiness-tier slices (B, E2, R) deferred.
+**Current priority:** **v0.04-14 Design System UX Migration** (active) — single release via integration branch **`v0.04-14/ux-migration`**. v0.04-0 through v0.04-12 **complete**. **v0.04-13 deferred** until after v0.04-14. v0.04-3 product groups and readiness-tier slices (B, E2, R) deferred.
 
 ---
 

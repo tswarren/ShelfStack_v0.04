@@ -3,6 +3,7 @@
 | Field | Value |
 | ----- | ----- |
 | Release milestone | **v0.04-14** — [spec bundle](../v0.04/v0.04-14-design-system-ux-migration/spec.md) |
+| Integration branch | `v0.04-14/ux-migration` (single release to `main` at milestone close) |
 | Status | **Active** — build guide ready |
 | Parent | [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md) |
 | Build plan | [../design/ux-migration-build-plan.md](../design/ux-migration-build-plan.md) |
@@ -26,7 +27,8 @@ Do **not** build a partial for every component. Do **not** start with POS, purch
 ## Prerequisites
 
 1. Modular CSS component library merged to `main` (design system branch).
-2. Contributors read [ux-migration-build-plan.md](../design/ux-migration-build-plan.md) before opening migration PRs.
+2. Implementation on integration branch **`v0.04-14/ux-migration`**; slice PRs merge there, not to `main`.
+3. Contributors read [ux-migration-build-plan.md](../design/ux-migration-build-plan.md) before opening migration PRs.
 
 ---
 

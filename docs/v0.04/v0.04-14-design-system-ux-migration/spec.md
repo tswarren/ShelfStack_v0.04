@@ -45,6 +45,7 @@ Migrate legacy and inconsistent views to the documented design system:
 
 | Decision | Choice |
 | -------- | ------ |
+| Release model | **Single release** — integration branch `v0.04-14/ux-migration`; one merge to `main` at milestone close |
 | Milestone type | App-wide UX consistency — not domain redesign |
 | Schema | No new core tables |
 | Partial scope | Seven enabling pieces only (button, page_header, alert, empty_state, errors, field, status badge helper) |
