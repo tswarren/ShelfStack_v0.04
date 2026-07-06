@@ -1,3 +1,5 @@
+<% content_for :main_class, "ss-main--wide ss-pos-main" %>
+
 <%= render "pos/shared/workspace_header",
       register_session: @transaction.pos_register_session || current_register_session,
       transaction: @transaction,
