@@ -43,6 +43,18 @@ The body contract owns:
 
 Use `content_for :main_class` for main-canvas width and `content_for :body_class` for page/body context. Do not create alternate top-level headers, navs, or body appearance mechanisms for domain areas.
 
+## Appearance preference scope
+
+The user-facing appearance control in this branch is **view mode**:
+
+- Standard View
+- Accessible View
+- Compact View
+
+View mode derives the active typeface and density profile. The shell emits these as `data-ss-typeface` and `data-ss-density` on `body`.
+
+`appearance_color_mode` and `data-ss-color-mode` are present as plumbing for the shell contract, but full user-facing color mode switching and dark-mode QA are reserved for a later pass.
+
 ## POS workspace shell
 
 POS-specific context belongs inside the POS workspace, below the global header and global navigation.
