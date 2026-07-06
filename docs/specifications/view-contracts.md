@@ -4,6 +4,8 @@
 
 Per-screen-type behavior contracts. Canonical visual source: [shelfstack_ux_direction_visual.html](../samples/phase-10-mockups/shelfstack_ux_direction_visual.html).
 
+**See also:** page patterns and action hierarchy in [ux-guide.md](../design/ux-guide.md); shell layout in [app-shell-and-pos-shell.md](../design/app-shell-and-pos-shell.md).
+
 ## North-star rules
 
 * One primary action should be visually obvious per screen/section.

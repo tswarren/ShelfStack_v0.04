@@ -1,0 +1,47 @@
+/* ShelfStack Reports Domain Components */
+
+.ss-report,
+.ss-report-body {
+  max-width: var(--layout-max);
+}
+
+.ss-report-body {
+  margin-top: 0.85rem;
+}
+
+.ss-report-header,
+.ss-report-section,
+.ss-report-summary {
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--pad-card);
+}
+
+.ss-report-section {
+  margin-bottom: 1.2rem;
+}
+
+.ss-report-section__title {
+  line-height: 1.15;
+  margin-bottom: 0.6rem;
+}
+
+.ss-report-scope,
+.ss-report-notes {
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.ss-report-actions,
+.ss-report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  align-items: end;
+}
+
+.ss-report-total-row {
+  font-weight: 800;
+  background: var(--color-base-150);
+}

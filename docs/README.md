@@ -36,7 +36,26 @@ These documents describe the **current** implemented domain:
 | [glossary.md](glossary.md) | Term definitions and retired v0.03 vocabulary |
 | [schema-reference.md](schema-reference.md) | Curated schema index (authoritative detail: `db/schema.rb`) |
 | [design/VERSION_0.04.md](design/VERSION_0.04.md) | Authoritative v0.04 design |
+| [design/README.md](design/README.md) | **Design system index** (UX guide, components, shell, CSS) |
 | [v0.04/README.md](v0.04/README.md) | Milestone specs and status |
+
+---
+
+## Design system (UI / UX)
+
+Start at [design/README.md](design/README.md) for views, CSS, shell, and component work.
+
+| Document | Purpose |
+| -------- | ------- |
+| [design/README.md](design/README.md) | Design system spine and reading order |
+| [design/ux-guide.md](design/ux-guide.md) | Operational UX principles and page patterns |
+| [design/components.md](design/components.md) | Component catalog, status, migration stragglers |
+| [design/app-shell-and-pos-shell.md](design/app-shell-and-pos-shell.md) | App shell and POS workspace contract |
+| [design/layout-width-model.md](design/layout-width-model.md) | Canvas width rationale |
+| [design/ux-review-checklist.md](design/ux-review-checklist.md) | PR review checklist |
+| [../app/assets/stylesheets/README.md](../app/assets/stylesheets/README.md) | CSS file map and migration rules |
+
+Phase 10-E (consistency sweep) work should follow [design/components.md](design/components.md) Priority 1 and migration stragglers.
 
 ---
 
@@ -55,6 +74,14 @@ These documents describe the **current** implemented domain:
 2. [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md)
 3. Milestone bundle under [v0.04/](v0.04/)
 4. [implementation-guide.md](implementation-guide.md) — conventions
+
+### Implementing UI / design system
+
+1. [design/README.md](design/README.md) — design system index
+2. [design/ux-guide.md](design/ux-guide.md) — principles and page patterns
+3. [design/app-shell-and-pos-shell.md](design/app-shell-and-pos-shell.md) — shell contract
+4. [design/components.md](design/components.md) — component status and migration
+5. [../app/assets/stylesheets/README.md](../app/assets/stylesheets/README.md) — where to put CSS
 
 ### Working on v0.03 code (historical)
 
@@ -75,7 +102,7 @@ Read [../AGENTS.md](../AGENTS.md) first, then v0.04 core docs above.
 ```text
 docs/
   README.md                 ← you are here
-  design/                   ← v0.04 core domain model
+  design/                   ← v0.04 domain model + application design system (see design/README.md)
   v0.04/                    ← milestone specs (v0.04-1 … v0.04-12)
   roadmap/                  ← v0.04 delivery roadmap + v0.03 phase roadmaps
   specifications/           ← v0.03 phase specs (historical reference)
@@ -108,6 +135,7 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | Type | Location |
 | ---- | -------- |
 | **Core domain** | [design/VERSION_0.04.md](design/VERSION_0.04.md) |
+| **Design system** | [design/README.md](design/README.md), [design/ux-guide.md](design/ux-guide.md), [design/components.md](design/components.md) |
 | **Active domain docs** | overview, domain-model, glossary, schema-reference |
 | **Delivery milestones** | [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) |
 | **Milestone specs** | [v0.04/](v0.04/) |

@@ -2506,7 +2506,6 @@ h2 {
 .ss-pos-workspace-header__action--disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
   display: flex;
   align-items: flex-start;
   justify-content: space-between;

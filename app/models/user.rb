@@ -2,6 +2,8 @@
 
 class User < ApplicationRecord
   USER_TYPES = %w[user admin system].freeze
+  APPEARANCE_VIEW_MODES = %w[standard accessible compact].freeze
+  APPEARANCE_COLOR_MODES = %w[light dark].freeze
 
   has_secure_password validations: false
 
@@ -33,6 +35,8 @@ class User < ApplicationRecord
   validates :username, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 50 }
   validates :first_name, :last_name, :display_name, presence: true
   validates :user_type, inclusion: { in: USER_TYPES }
+  validates :appearance_view_mode, inclusion: { in: APPEARANCE_VIEW_MODES }
+  validates :appearance_color_mode, inclusion: { in: APPEARANCE_COLOR_MODES }
   validates :clerk_number, uniqueness: true, allow_nil: true, length: { maximum: 10 }
   validates :password, confirmation: true, if: -> { password.present? }
   validate :password_required_for_interactive_users
@@ -43,6 +47,7 @@ class User < ApplicationRecord
   end
 
   before_validation :normalize_username
+  before_validation :set_default_appearance_preferences
 
   scope :active_records, -> { where(active: true) }
   scope :interactive, -> { where(interactive_login_enabled: true).where.not(user_type: "system") }
@@ -57,6 +62,22 @@ class User < ApplicationRecord
 
   def locked_out?
     locked_at.present?
+  end
+
+  def appearance_typeface
+    case appearance_view_mode
+    when "accessible" then "lexend"
+    when "compact" then "system"
+    else "atkinson"
+    end
+  end
+
+  def appearance_density
+    case appearance_view_mode
+    when "accessible" then "comfortable"
+    when "compact" then "compact"
+    else "standard"
+    end
   end
 
   def authenticate_pin(pin)
@@ -107,6 +128,11 @@ class User < ApplicationRecord
 
   def normalize_username
     self.username = username&.downcase&.strip
+  end
+
+  def set_default_appearance_preferences
+    self.appearance_view_mode = "standard" if appearance_view_mode.blank?
+    self.appearance_color_mode = "light" if appearance_color_mode.blank?
   end
 
   def password_required_for_interactive_users

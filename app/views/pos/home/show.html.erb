@@ -1,11 +1,12 @@
+<% content_for :main_class, "ss-main--wide ss-pos-main" %>
+
 <div class="ss-pos-home">
   <% if @register_session %>
     <%= render "open_dashboard" %>
   <% else %>
     <div class="ss-pos-home__closed-shell"
          data-controller="pos-command-bar"
-         data-pos-command-bar-route-url-value="<%= pos_route_command_path %>"
-         data-action="modal:closed@document->pos-command-bar#modalClosed">
+         data-pos-command-bar-route-url-value="<%= pos_route_command_path %>">
       <%= render "pos/shared/workspace_header", register_session: nil, context: :root %>
       <div id="pos_flash">
         <%= render "pos/transactions/flash" %>

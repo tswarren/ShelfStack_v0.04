@@ -1,0 +1,72 @@
+/* ShelfStack Badge Components */
+
+.ss-pill,
+.ss-status-badge,
+.ss-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-pill);
+  padding: 0.18rem 0.48rem;
+  background: var(--color-base-100);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.1;
+  white-space: nowrap;
+  box-shadow: none;
+  cursor: default;
+  text-decoration: none;
+}
+
+.ss-badge--success,
+.ss-badge--primary,
+.ss-pill--primary,
+.ss-status-badge.status-active,
+.ss-status-badge.status-submitted,
+.ss-status-badge.status-posted {
+  background: var(--color-primary-soft);
+  border-color: #0e4a4a40;
+  color: var(--color-primary);
+}
+
+.ss-badge--warning,
+.ss-pill--gold,
+.ss-status-badge.status-warning,
+.ss-status-badge.status-partial,
+.ss-status-badge.status-partially_received,
+.ss-status-badge.status-partially_ordered {
+  background: var(--color-brand-gold-soft);
+  border-color: #d08a0047;
+  color: #7a5200;
+}
+
+.ss-badge--muted,
+.ss-status-badge.status-inactive,
+.ss-status-badge.status-draft,
+.ss-status-badge.status-cancelled,
+.ss-status-badge.status-closed {
+  background: #11182714;
+  border-color: #1118271a;
+  color: var(--color-muted);
+}
+
+.ss-badge--error,
+.ss-status-badge.status-error {
+  background: #d938381a;
+  border-color: #d9383840;
+  color: #9b1c1c;
+}
+
+.ss-status-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-muted-subtle);
+}
+
+.ss-status-dot--success { background: var(--color-success); }
+.ss-status-dot--warning { background: var(--color-warning); }
+.ss-status-dot--error { background: var(--color-error); }
+.ss-status-dot--muted { background: var(--color-muted-subtle); }

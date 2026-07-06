@@ -8,18 +8,17 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body>
+  <%= tag.body(**shelfstack_body_attributes) do %>
+    <%= link_to "Skip to content", "#main_content", class: "ss-skip-link" %>
     <%= render "layouts/header" %>
     <%= render "layouts/nav" %>
-    <main class="ss-main">
-      <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
-      <% if flash[:warning] %><div class="flash flash-warning"><%= flash[:warning] %></div><% end %>
-      <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
+    <main id="main_content" class="<%= shelfstack_class_names("ss-main", content_for(:main_class)) %>">
+      <%= render "shared/feedback/flash_region" %>
       <%= yield %>
     </main>
     <%= render "layouts/footer" %>
     <%= render "shared/interaction/toast_region" %>
     <div id="modal_close_triggers" aria-hidden="true"></div>
     <div id="demand_form_reset_triggers" aria-hidden="true"></div>
-  </body>
+  <% end %>
 </html>

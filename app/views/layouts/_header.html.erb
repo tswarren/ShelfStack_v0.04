@@ -1,31 +1,57 @@
-<header class="ss-header">
-  <div class="ss-header-logo">
-    <%= link_to root_path do %>
-      <%= image_tag "logo.png", alt: "ShelfStack" %>
-    <% end %>
-  </div>
-  <% if current_store %>
-    <div class="ss-header-context">
-      <%= current_store.name %> · <%= current_workstation&.name || "No workstation" %>
+<header class="ss-header" role="banner">
+  <div class="ss-header__left">
+    <div class="ss-header-logo ss-header__logo">
+      <%= link_to root_path do %>
+        <%= image_tag "logo.png", alt: "ShelfStack" %>
+      <% end %>
     </div>
-  <% end %>
-  <div class="ss-search-form">
-    <%= form_with url: items_search_path, method: :get, local: true do %>
-      <%= text_field_tag :q, params[:q], placeholder: "Search / scan items…", aria: { label: "Search items" } %>
-      <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+
+    <% if current_store %>
+      <div class="ss-header-context ss-header__context">
+        <%= current_store.name %> · <%= current_workstation&.name || "No workstation" %>
+      </div>
     <% end %>
   </div>
-  <div class="ss-header-actions">
+
+  <div class="ss-header__search">
+    <div class="ss-search-form">
+      <%= form_with url: items_search_path, method: :get, local: true do %>
+        <%= text_field_tag :q, params[:q], placeholder: "Search / scan items…", aria: { label: "Search items" } %>
+        <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="ss-header-actions ss-header__actions">
     <% if current_user %>
       <div class="ss-user-menu">
         <details class="ss-dropdown">
           <summary class="ss-dropdown-trigger"><%= current_user.display_name %></summary>
-          <div class="ss-dropdown-menu" role="menu">
+          <div class="ss-dropdown-menu ss-user-menu__menu" role="menu">
+            <div class="ss-dropdown-menu__section-label">Account</div>
             <%= link_to "Change password", edit_password_path, role: "menuitem" %>
             <%= link_to "Set PIN", edit_pin_path, role: "menuitem" %>
+
+            <div class="ss-dropdown-menu__separator" role="separator"></div>
+
+            <details class="ss-dropdown-submenu">
+              <summary class="ss-dropdown-menu__item ss-dropdown-submenu__trigger" role="menuitem" aria-haspopup="menu">
+                View mode
+              </summary>
+              <div class="ss-dropdown-submenu__menu" role="menu">
+                <%= render "shared/ui/appearance_switcher", show_title: false %>
+              </div>
+            </details>
+
+            <div class="ss-dropdown-menu__separator" role="separator"></div>
+
+            <%= button_to "Logout",
+                  logout_path,
+                  method: :delete,
+                  class: "ss-dropdown-menu__item ss-dropdown-menu__item--danger",
+                  form: { class: "ss-inline-form ss-user-menu__logout-form" } %>
           </div>
         </details>
-        <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-secondary", form: { style: "display:inline;margin:0;" } %>
       </div>
     <% end %>
   </div>

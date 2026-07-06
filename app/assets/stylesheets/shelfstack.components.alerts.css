@@ -1,0 +1,51 @@
+/* ShelfStack Alert Components */
+
+.ss-alert,
+.ss-attention-panel {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 0.65rem 0.8rem;
+}
+
+.ss-alert--info {
+  border: 1px solid #95a8d073;
+  background: #95a8d01f;
+  color: var(--color-info-content);
+}
+
+.ss-alert--success {
+  border: 1px solid #1b875540;
+  background: #1b87551f;
+  color: #145c3b;
+}
+
+.ss-alert--warning,
+.ss-attention-panel {
+  border: 1px solid #ffaa0073;
+  border-left-width: 4px;
+  background: #ffaa0014;
+  color: #7a5200;
+}
+
+.ss-alert--error {
+  border: 1px solid #d9383840;
+  background: #d938381a;
+  color: #9b1c1c;
+}
+
+.ss-alert__title,
+.ss-attention-panel h2 {
+  margin-top: 0;
+  color: inherit;
+}
+
+.ss-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  margin-top: var(--gap-ui);
+}
+
+.ss-attention-panel:empty {
+  display: none;
+}

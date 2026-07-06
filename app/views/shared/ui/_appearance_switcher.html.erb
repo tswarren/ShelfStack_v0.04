@@ -1,0 +1,19 @@
+<% current_mode = shelfstack_view_mode %>
+<% show_title = local_assigns.fetch(:show_title, true) %>
+
+<div class="ss-appearance-switcher" role="group" aria-label="Appearance view mode">
+  <% if show_title %>
+    <div class="ss-appearance-switcher__title">View mode</div>
+  <% end %>
+  <div class="ss-appearance-switcher__options">
+    <% User::APPEARANCE_VIEW_MODES.each do |mode| %>
+      <%= button_to shelfstack_view_mode_label(mode),
+            appearance_preference_path,
+            method: :patch,
+            params: { appearance_view_mode: mode },
+            class: "ss-appearance-switcher__option#{' is-active' if current_mode == mode}",
+            form: { class: "ss-appearance-switcher__form" },
+            aria: { pressed: current_mode == mode } %>
+    <% end %>
+  </div>
+</div>

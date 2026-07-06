@@ -1,99 +1,284 @@
-# ShelfStack Preview CSS Bundle
+# ShelfStack CSS and Component Library
 
-This bundle gives you a preview setup for the visual direction experiments.
+ShelfStack uses a native `.ss-*` CSS component system for app-wide visual consistency. The current structure introduces the definitive component-library files while preserving the existing production visual layer through `shelfstack.legacy.css` during migration.
 
-## Files
+**Design rationale and page-pattern guidance:** [docs/design/README.md](../../docs/design/README.md) · [layout-width-model.md](../../docs/design/layout-width-model.md) · [components.md](../../docs/design/components.md)
 
-### `shelfstack.visual-preview.css`
+## Import order
 
-Base visual-direction overlay. Load after your existing `shelfstack.css`.
+`application.css` should remain a thin manifest in this order:
 
-It adds:
-- warm paper background
-- soft surfaces
-- rounded cards/panels
-- pill badges
-- calmer tables
-- item overview cockpit styling
-- POS styling that is aligned but less decorative
-
-This file is font-neutral through `--font-ui`, defaulting to Atkinson Hyperlegible.
-
-### `shelfstack.ux-improvements.css`
-
-CSS-only UX experiments. Load after `shelfstack.visual-preview.css`.
-
-It adds:
-- page headers as context cards
-- first-button primary-action emphasis
-- calmer badges
-- better zebra table scanability
-- item overview refinements
-- filter panel styling
-- POS restraint
-
-### `shelfstack.lexend.css`
-
-Lexend font experiment. Load after the visual preview and UX-improvement layers.
-
-It imports Lexend and sets:
+1. Foundation tokens and appearance profiles
+2. Base/global styles and typography
+3. Layout and utilities
+4. Generic UI components
+5. Domain components
+6. Print styles
+7. Temporary legacy compatibility bridge
+8. Temporary post-legacy migration overrides
 
 ```css
---font-ui: "Lexend", ...
+@import "shelfstack.tokens.css";
+@import "shelfstack.typefaces.css";
+@import "shelfstack.density.css";
+@import "shelfstack.color-modes.css";
+@import "shelfstack.base.css";
+@import "shelfstack.typography.css";
+
+@import "shelfstack.layout.css";
+@import "shelfstack.utilities.css";
+
+@import "shelfstack.components.buttons.css";
+@import "shelfstack.components.links.css";
+@import "shelfstack.components.forms.css";
+@import "shelfstack.components.cards.css";
+@import "shelfstack.components.alerts.css";
+@import "shelfstack.components.badges.css";
+@import "shelfstack.components.tables.css";
+@import "shelfstack.components.data-tables.css";
+@import "shelfstack.components.navigation.css";
+@import "shelfstack.components.overlays.css";
+@import "shelfstack.components.feedback.css";
+@import "shelfstack.components.disclosure.css";
+@import "shelfstack.components.metrics.css";
+@import "shelfstack.components.lists.css";
+@import "shelfstack.components.session.css";
+@import "shelfstack.components.access.css";
+@import "shelfstack.components.appearance.css";
+
+@import "shelfstack.domain.items.css";
+@import "shelfstack.domain.inventory.css";
+@import "shelfstack.domain.orders.css";
+@import "shelfstack.domain.demand.css";
+@import "shelfstack.domain.customers.css";
+@import "shelfstack.domain.buybacks.css";
+@import "shelfstack.domain.pos.css";
+@import "shelfstack.domain.reports.css";
+@import "shelfstack.domain.setup.css";
+
+@import "shelfstack.print.css";
+@import "shelfstack.legacy.css";
+@import "shelfstack.migration-overrides.css";
 ```
 
-### `shelfstack.lexend-density.css`
+## Layout width model
 
-Spacing compensation for Lexend. Load after `shelfstack.lexend.css`.
+**Design rationale and when to constrain content:** [docs/design/layout-width-model.md](../../docs/design/layout-width-model.md).
 
-It tightens:
-- buttons
-- badges
-- tables
-- filters
-- forms
-- item overview
-- POS panels
-- dropdowns
-- summaries
+ShelfStack uses a wide default app canvas because most screens combine operational content, side context, action rows, filters, summary cards, and tables.
 
-### `shelfstack.preview-atkinson.css`
+The guiding distinction is:
 
-Convenience import file for the Atkinson/default preview.
+```text
+Page canvas width != readable content width
+```
 
-### `shelfstack.preview-lexend.css`
+Default page content should have room for operational layouts. Text-heavy content, simple forms, and focused workflows should be constrained inside that canvas.
 
-Convenience import file for the full Lexend preview.
+| Token | Value | Purpose |
+| --- | ---: | --- |
+| `--layout-narrow` | `42rem` | Focused forms, login/unlock/session/account cards |
+| `--layout-readable` | `1180px` | Readable reports, text-heavy pages, simple detail pages |
+| `--layout-standard` | `1440px` | Default application canvas for operational screens |
+| `--layout-max` | `var(--layout-standard)` | Backward-compatible default alias |
+| `--layout-item-detail` | `var(--layout-standard)` | Semantic alias for item detail pages |
+| `--layout-wide` | `1500px` | POS, receiving, inventory grids, very dense workspaces |
 
-## Recommended Rails import options
+Main layout classes:
 
-### Option A — Atkinson/default visual preview
+| Class | Width |
+| --- | --- |
+| `.ss-main` | `--layout-standard` |
+| `.ss-main--readable` | `--layout-readable` |
+| `.ss-main--narrow` | `--layout-narrow` |
+| `.ss-main--items` | `--layout-item-detail` |
+| `.ss-main--wide` | `--layout-wide` |
+| `.ss-main--full` | no max width |
+
+Use internal constraints for content that should not stretch:
 
 ```css
-@import "shelfstack.css";
-@import "shelfstack.preview-atkinson.css";
+.ss-readable {
+  max-width: var(--layout-readable);
+}
+
+.ss-text-measure {
+  max-width: 70ch;
+}
 ```
 
-### Option B — Lexend visual preview
+## Naming conventions
+
+Use ShelfStack-native class names:
 
 ```css
-@import "shelfstack.css";
-@import "shelfstack.preview-lexend.css";
+.ss-component
+.ss-component__element
+.ss-component--variant
 ```
 
-### Option C — Explicit import order
+Use `.is-*` for temporary UI state:
 
 ```css
-@import "shelfstack.css";
-@import "shelfstack.visual-preview.css";
-@import "shelfstack.ux-improvements.css";
-@import "shelfstack.lexend.css";
-@import "shelfstack.lexend-density.css";
+.is-active
+.is-disabled
+.is-loading
+.is-selected
+.is-expanded
 ```
 
-## Notes
+Use `.status-*` only for domain/business statuses:
 
-- These files are preview overlays. They are intentionally loaded after the current CSS.
-- Keep them removable until you decide which visual changes should become permanent.
-- The first-button primary-action emphasis is a heuristic. Long term, use explicit `.ss-btn-primary`, `.ss-btn-secondary`, and `.ss-btn-tertiary` classes.
-- In production, consider self-hosting fonts or loading them through the Rails asset pipeline rather than using Google Fonts imports directly.
+```css
+.status-draft
+.status-posted
+.status-cancelled
+.status-active
+.status-inactive
+```
+
+## Appearance model
+
+Appearance is separated into independent profiles:
+
+| Concern | Attribute | Example |
+| --- | --- | --- |
+| Typeface | `data-ss-typeface` | `system`, `atkinson`, `lexend`, `compact` |
+| Density | `data-ss-density` | `comfortable`, `standard`, `compact` |
+| Color mode | `data-ss-color-mode` | `light`, `dark` |
+
+Recommended user-facing modes:
+
+| View mode | Typeface | Density |
+| --- | --- | --- |
+| Standard View | `atkinson` or `system` | `standard` |
+| Accessible View | `lexend` | `comfortable` |
+| Compact View | `system` or future compact font | `compact` |
+
+## File responsibilities
+
+### Foundation
+
+| File | Responsibility |
+| --- | --- |
+| `shelfstack.tokens.css` | Design tokens only: colors, surfaces, radii, shadows, layout widths, spacing, typography, density, z-index |
+| `shelfstack.typefaces.css` | Typeface profiles and `--font-ui` assignments |
+| `shelfstack.density.css` | Comfortable, standard, and compact spacing/line-height profiles |
+| `shelfstack.color-modes.css` | Light/dark color-mode profile hooks |
+| `shelfstack.base.css` | Global element defaults |
+| `shelfstack.typography.css` | Headings, muted text, labels, numeric utilities, code blocks |
+
+### Layout
+
+| File | Responsibility |
+| --- | --- |
+| `shelfstack.layout.css` | App shell, header, main, footer, page headers, section headers, main width tiers |
+| `shelfstack.utilities.css` | Small layout/state helpers such as stack, grid, action row, hidden, selected |
+
+### Generic components
+
+| File | Responsibility |
+| --- | --- |
+| `shelfstack.components.buttons.css` | Button hierarchy and button-like controls |
+| `shelfstack.components.links.css` | Link variants, back links, skip links |
+| `shelfstack.components.forms.css` | Forms, fields, fieldsets, inputs, select, choices, filters, combobox shells |
+| `shelfstack.components.cards.css` | Cards, surfaces, summaries, card grids |
+| `shelfstack.components.alerts.css` | Inline alerts and attention panels |
+| `shelfstack.components.badges.css` | Badges, status badges, pills, status dots |
+| `shelfstack.components.tables.css` | Basic tables, compact/dense/sticky tables, tree rows |
+| `shelfstack.components.data-tables.css` | Filter bars, table toolbars, pagination, bulk action shells |
+| `shelfstack.components.navigation.css` | Nav, sidebar, breadcrumbs, tabs, steps, shortcut keys |
+| `shelfstack.components.overlays.css` | Dialogs, alert dialogs, sheets, drawers, dropdowns, popovers, hover cards |
+| `shelfstack.components.feedback.css` | Flash region, toast region, empty states, progress, skeletons, copy button state |
+| `shelfstack.components.disclosure.css` | Collapsible panels, accordions, details sections |
+| `shelfstack.components.metrics.css` | Metric strips, metric cards, stats |
+| `shelfstack.components.lists.css` | List rows and timelines |
+| `shelfstack.components.session.css` | Login, unlock, PIN/password, workstation assignment surfaces |
+| `shelfstack.components.access.css` | Locked-out/access-required notices |
+| `shelfstack.components.appearance.css` | Appearance view-mode switcher |
+
+### Domain components
+
+| File | Responsibility |
+| --- | --- |
+| `shelfstack.domain.items.css` | Catalog/item/product/variant detail components |
+| `shelfstack.domain.inventory.css` | Stock summary, quantity badges, inventory warnings, movement rows |
+| `shelfstack.domain.orders.css` | PO/receipt/RTV/document headers, purchasing tables, receiving fields, vendor cascade |
+| `shelfstack.domain.demand.css` | Demand cards, allocation cards, customer request states |
+| `shelfstack.domain.customers.css` | Customer headers, activity, stored value, balances |
+| `shelfstack.domain.buybacks.css` | Buyback workspace, buyback lines, offer summaries |
+| `shelfstack.domain.pos.css` | Register/POS workspace, cart, tender, totals, receipt actions |
+| `shelfstack.domain.reports.css` | Report bodies, sections, notes, summaries, totals |
+| `shelfstack.domain.setup.css` | Admin/setup cards, settings rows, permission matrices |
+
+### Output and migration
+
+| File | Responsibility |
+| --- | --- |
+| `shelfstack.print.css` | Print-only and print-optimized styling |
+| `shelfstack.css` | Frozen monolithic legacy CSS. Do not add new feature styles. Remove rules as they are migrated. |
+| `shelfstack.legacy.css` | Temporary bridge importing the old CSS/preview stack, including `shelfstack.css` |
+| `shelfstack.migration-overrides.css` | Temporary post-legacy overrides while preview CSS remains imported |
+| `shelfstack.experimental.css` | Branch/local experiments only; not imported by `application.css` |
+
+## Button rules
+
+Use explicit button variants in new markup:
+
+```erb
+<%= button_tag "Save", class: "ss-btn ss-btn-primary" %>
+<%= link_to "Cancel", path, class: "ss-btn ss-btn-tertiary" %>
+```
+
+Do not rely on action-group order to determine the primary action.
+
+| Variant | Use |
+| --- | --- |
+| `.ss-btn-primary` | One main action per page/form/section |
+| `.ss-btn-secondary` | Important alternate action |
+| `.ss-btn-tertiary` | Cancel, back, close, logout |
+| `.ss-btn-ghost` | Low-emphasis persistent utilities such as Lock Session |
+| `.ss-btn-danger` / `.ss-btn--danger` | Destructive or irreversible action |
+| `.ss-btn-link` | Low-emphasis inline action |
+| `.ss-btn-small` / `.ss-btn--small` | Compact actions in tables, panels, and row menus |
+
+**Prefer BEM `--` modifiers for new markup.** Both hyphen and `--` forms are valid during migration.
+
+## CSS migration rules
+
+Treat the legacy bridge as a frozen compatibility layer, not an active development surface.
+
+1. Do **not** add new feature CSS to `shelfstack.css`.
+2. Do **not** add new feature CSS to `shelfstack.legacy.css`; it should remain an import bridge only.
+3. Add reusable UI styles to the relevant `shelfstack.components.*.css` file.
+4. Add workflow-specific styles to the relevant `shelfstack.domain.*.css` file.
+5. Prefer generic component classes before creating domain-specific classes.
+6. Use domain files only when the component is meaningfully tied to ShelfStack workflows.
+7. Use `shelfstack.migration-overrides.css` only to neutralize cascade conflicts caused by the legacy import.
+8. Move durable rules out of `migration-overrides.css` into definitive component/domain files as soon as the legacy conflict is removed.
+9. Remove legacy rules from `shelfstack.css` as domains migrate.
+10. Remove `shelfstack.legacy.css` and `shelfstack.migration-overrides.css` imports after views are fully standardized.
+
+Where to put new CSS:
+
+| Change type | Destination |
+| ----------- | ----------- |
+| Button/link/form/table/card/nav/alert/overlay/feedback primitive | `shelfstack.components.*.css` |
+| Items, inventory, orders, demand, customers, buybacks, POS, reports, setup workflow style | `shelfstack.domain.*.css` |
+| Print-only output | `shelfstack.print.css` |
+| Temporary local experiment | `shelfstack.experimental.css` only if deliberately imported locally |
+| Legacy conflict workaround | `shelfstack.migration-overrides.css`, with a comment and follow-up migration path |
+| New production style | Never `shelfstack.css` |
+
+## Preview files
+
+The old preview files remain as source/reference material during migration:
+
+- `shelfstack.visual-preview.css`
+- `shelfstack.ux-improvements.css`
+- `shelfstack.lexend.css`
+- `shelfstack.lexend-density.css`
+- `shelfstack.preview-atkinson.css`
+- `shelfstack.preview-lexend.css`
+
+They should not receive new production styles.

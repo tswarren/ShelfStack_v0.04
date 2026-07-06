@@ -28,7 +28,7 @@ class PosReadinessPreviewTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     refute_includes response.body, "Enter tender amounts"
-    refute_includes response.body, "Register open"
+    refute_includes css_select("#pos_completion_readiness").to_s, "Register open"
     refute_includes response.body, "All items active"
     refute_includes response.body, "ss-pos-readiness-list"
     assert_match(/id="pos_completion_readiness" class="js-pos-readiness-host" hidden/, response.body)

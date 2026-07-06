@@ -1,0 +1,219 @@
+/*
+ * ShelfStack Migration Overrides
+ *
+ * Temporary post-legacy overrides while the preview CSS remains imported.
+ * This file should shrink as rules are removed from the legacy bridge.
+ */
+
+body[data-ss-typeface="system"] {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-typeface="atkinson"] {
+  --font-ui: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-typeface="lexend"] {
+  --font-ui: "Lexend", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-typeface="compact"] {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-ss-density="standard"] {
+  --line-body: 1.45;
+  --line-ui: 1.22;
+  --line-compact: 1.14;
+  --pad-ui-y: 0.4rem;
+  --pad-ui-x: 0.75rem;
+  --pad-compact-y: 0.28rem;
+  --pad-compact-x: 0.55rem;
+  --pad-card: 0.85rem;
+  --pad-card-sm: 0.7rem;
+  --pad-card-lg: 1rem;
+  --gap-ui: 0.5rem;
+  --gap-section: 0.85rem;
+}
+
+body[data-ss-density="comfortable"] {
+  --line-body: 1.5;
+  --line-ui: 1.3;
+  --line-compact: 1.18;
+  --pad-ui-y: 0.5rem;
+  --pad-ui-x: 0.9rem;
+  --pad-compact-y: 0.34rem;
+  --pad-compact-x: 0.65rem;
+  --pad-card: 1rem;
+  --pad-card-sm: 0.85rem;
+  --pad-card-lg: 1.15rem;
+  --gap-ui: 0.65rem;
+  --gap-section: 1rem;
+}
+
+body[data-ss-density="compact"] {
+  --line-body: 1.35;
+  --line-ui: 1.15;
+  --line-compact: 1.1;
+  --pad-ui-y: 0.3rem;
+  --pad-ui-x: 0.6rem;
+  --pad-compact-y: 0.22rem;
+  --pad-compact-x: 0.45rem;
+  --pad-card: 0.7rem;
+  --pad-card-sm: 0.6rem;
+  --pad-card-lg: 0.85rem;
+  --gap-ui: 0.4rem;
+  --gap-section: 0.7rem;
+}
+
+body {
+  font-family: var(--font-ui);
+  line-height: var(--line-body);
+}
+
+.ss-main {
+  max-width: var(--layout-standard);
+}
+
+.ss-main.ss-main--readable {
+  max-width: var(--layout-readable);
+}
+
+.ss-main.ss-main--items {
+  max-width: var(--layout-item-detail);
+}
+
+.ss-main.ss-main--wide,
+.ss-main.ss-pos-main {
+  max-width: var(--layout-wide);
+}
+
+.ss-main.ss-main--full {
+  max-width: none;
+}
+
+.ss-main.ss-main--narrow {
+  max-width: var(--layout-narrow);
+}
+
+.ss-item-detail.ss-item-catalog {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.ss-item-detail > .ss-item-hero {
+  grid-column: 1 / -1;
+}
+
+.ss-item-detail > .ss-item-detail__body {
+  display: grid;
+  grid-template-areas: "main sidebar";
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  gap: 1.25rem;
+  align-items: start;
+  width: 100%;
+}
+
+.ss-item-detail .ss-item-main {
+  grid-area: main;
+  min-width: 0;
+}
+
+.ss-item-detail .ss-item-sidebar {
+  grid-area: sidebar;
+  min-width: 0;
+  display: grid;
+  gap: var(--gap-section);
+  align-content: start;
+}
+
+.ss-item-detail .ss-item-table-scroll,
+.ss-item-detail .ss-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.ss-item-detail .ss-item-table {
+  min-width: 72rem;
+}
+
+.ss-pos-workspace-header__session {
+  color: var(--color-base-content);
+  font-weight: 800;
+}
+
+/* Corrects a malformed legacy POS block until the legacy bridge is retired. */
+.ss-pos-workspace-header__action--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ss-pos-workspace-header__action--disabled.ss-btn,
+.ss-pos-workspace-header__action--disabled.ss-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: var(--pad-ui-y) var(--pad-ui-x);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.ss-pos-workspace-header__action--disabled.ss-btn-secondary {
+  background: var(--color-secondary);
+  color: var(--color-secondary-content);
+}
+
+.ss-pos-workspace-header__action--disabled.ss-btn-tertiary {
+  border-color: var(--color-base-300);
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+
+.ss-pos-alert {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #c8dcc0;
+  border-radius: 0.5rem;
+  background: #f5f9f2;
+  color: #2c2419;
+}
+
+.ss-pos-exchange-summary {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ss-pos-exchange-summary__title {
+  color: var(--color-base-content);
+}
+
+.ss-pos-exchange-summary__totals {
+  line-height: var(--line-compact);
+}
+
+@media (max-width: 1180px) {
+  .ss-item-detail > .ss-item-detail__body {
+    grid-template-areas:
+      "main"
+      "sidebar";
+    grid-template-columns: 1fr;
+  }
+
+  .ss-item-detail .ss-item-sidebar {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .ss-item-detail > .ss-item-hero {
+    grid-template-columns: 1fr;
+  }
+}

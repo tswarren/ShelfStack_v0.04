@@ -1,0 +1,27 @@
+/*
+ * ShelfStack Typeface Profiles
+ *
+ * User-facing view modes should map to typeface and density profiles.
+ * Example: Accessible View -> data-ss-typeface="lexend" + data-ss-density="comfortable".
+ */
+
+:root,
+[data-ss-typeface="system"] {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+[data-ss-typeface="atkinson"] {
+  --font-ui: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+[data-ss-typeface="lexend"] {
+  --font-ui: "Lexend", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+[data-ss-typeface="compact"] {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font-ui);
+}

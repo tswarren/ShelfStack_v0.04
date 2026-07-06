@@ -1,0 +1,65 @@
+/* ShelfStack Session/Auth Components */
+
+.ss-session-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.ss-session-card {
+  width: min(100%, 28rem);
+  display: grid;
+  gap: var(--gap-section);
+  padding: var(--pad-card-lg);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-glass);
+  box-shadow: var(--shadow-md);
+}
+
+.ss-session-card__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-ui);
+}
+
+.ss-session-card__title {
+  margin: 0;
+}
+
+.ss-session-card__description,
+.ss-session-card__context,
+.ss-auth-context {
+  color: var(--color-muted);
+}
+
+.ss-session-card__actions,
+.ss-session-card__secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-ui);
+  align-items: center;
+}
+
+.ss-session-card__secondary-actions {
+  justify-content: center;
+}
+
+.ss-unlock-form {
+  display: grid;
+  gap: var(--gap-ui);
+}
+
+.ss-pin-input {
+  text-align: center;
+  font-size: 1.35rem;
+  letter-spacing: 0.2em;
+}
+
+@media (max-width: 520px) {
+  .ss-session-card {
+    border-radius: var(--radius-md);
+    padding: var(--pad-card);
+  }
+}

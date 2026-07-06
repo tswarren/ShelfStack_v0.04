@@ -1,0 +1,47 @@
+/* ShelfStack Metric Components */
+
+.ss-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.ss-metric-card,
+.ss-stat {
+  border: 1px solid var(--color-base-200);
+  border-radius: var(--radius-md);
+  background: var(--color-base-100);
+  padding: 0.6rem 0.75rem;
+  line-height: var(--line-ui);
+}
+
+.ss-metric-card--warning {
+  border-color: #ffaa0073;
+  background: #ffaa0014;
+}
+
+.ss-metric-card__label,
+.ss-stat__label {
+  display: block;
+  margin: 0 0 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ss-metric-card__value,
+.ss-stat__value {
+  display: block;
+  margin: 0;
+  color: var(--color-base-content);
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: var(--line-ui);
+}
+
+.ss-metric-card__detail,
+.ss-stat__description {
+  color: var(--color-muted);
+}

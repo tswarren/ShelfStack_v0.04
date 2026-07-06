@@ -52,7 +52,7 @@ class PosWorkspaceHeaderTest < ActionDispatch::IntegrationTest
     get pos_root_path
 
     assert_response :success
-    assert_select ".ss-pos-workspace-header__register-status", text: "Closed"
+    assert_select ".ss-pos-workspace-header__register-status", text: "Register closed"
     assert_select "button[data-action*='showBalanceModal']"
     assert_includes response.body, "Cash In"
     assert_includes response.body, Pos::CommandRegistry::NO_REGISTER_SESSION_MESSAGE

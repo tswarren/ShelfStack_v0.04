@@ -1,0 +1,15 @@
+/*
+ * ShelfStack Legacy Compatibility Layer
+ *
+ * Temporary bridge while the definitive component library is adopted.
+ * Existing production styles are imported here so the new file structure can
+ * be introduced without breaking current screens.
+ *
+ * Rules:
+ * - Do not add new feature styles here.
+ * - Move styles from the legacy imports into definitive files as views are standardized.
+ * - Remove these imports once the migration is complete.
+ */
+
+@import "shelfstack.css";
+@import "shelfstack.preview-lexend.css";

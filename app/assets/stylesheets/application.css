@@ -1,5 +1,64 @@
 /*
- * ShelfStack application styles
+ * ShelfStack CSS and Component Library
+ *
+ * Import order:
+ * 1. Foundation tokens and appearance profiles
+ * 2. Base/global styles and typography
+ * 3. Layout and utilities
+ * 4. Generic UI components
+ * 5. Domain components
+ * 6. Print
+ * 7. Legacy compatibility bridge
+ * 8. Temporary post-legacy migration overrides
  */
-@import "shelfstack.css";
-@import "shelfstack.preview-lexend.css";
+
+/* 01. Foundation */
+@import "shelfstack.tokens.css";
+@import "shelfstack.typefaces.css";
+@import "shelfstack.density.css";
+@import "shelfstack.color-modes.css";
+@import "shelfstack.base.css";
+@import "shelfstack.typography.css";
+
+/* 02. Layout */
+@import "shelfstack.layout.css";
+@import "shelfstack.utilities.css";
+
+/* 03. Generic components */
+@import "shelfstack.components.buttons.css";
+@import "shelfstack.components.links.css";
+@import "shelfstack.components.forms.css";
+@import "shelfstack.components.cards.css";
+@import "shelfstack.components.alerts.css";
+@import "shelfstack.components.badges.css";
+@import "shelfstack.components.tables.css";
+@import "shelfstack.components.data-tables.css";
+@import "shelfstack.components.navigation.css";
+@import "shelfstack.components.overlays.css";
+@import "shelfstack.components.feedback.css";
+@import "shelfstack.components.disclosure.css";
+@import "shelfstack.components.metrics.css";
+@import "shelfstack.components.lists.css";
+@import "shelfstack.components.session.css";
+@import "shelfstack.components.access.css";
+@import "shelfstack.components.appearance.css";
+
+/* 04. Domain components */
+@import "shelfstack.domain.items.css";
+@import "shelfstack.domain.inventory.css";
+@import "shelfstack.domain.orders.css";
+@import "shelfstack.domain.demand.css";
+@import "shelfstack.domain.customers.css";
+@import "shelfstack.domain.buybacks.css";
+@import "shelfstack.domain.pos.css";
+@import "shelfstack.domain.reports.css";
+@import "shelfstack.domain.setup.css";
+
+/* 05. Output modes */
+@import "shelfstack.print.css";
+
+/* 06. Temporary migration layer */
+@import "shelfstack.legacy.css";
+
+/* 07. Temporary post-legacy overrides */
+@import "shelfstack.migration-overrides.css";

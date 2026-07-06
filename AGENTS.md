@@ -101,6 +101,25 @@ docs/implementation/csv-seeds.md
 docs/specifications/cross-cutting/README.md
 ```
 
+## Design system (UI / UX)
+
+For views, CSS, shell layout, feedback patterns, and component migration, start with [docs/design/README.md](docs/design/README.md).
+
+```text
+docs/design/README.md
+docs/design/ux-guide.md
+docs/design/app-shell-and-pos-shell.md
+docs/design/layout-width-model.md
+docs/design/components.md
+docs/design/ux-review-checklist.md
+app/assets/stylesheets/README.md
+docs/specifications/ui-components.md
+docs/specifications/view-contracts.md
+docs/specifications/modal-and-drawer-patterns.md
+```
+
+Phase 10-E (consistency sweep) should follow Priority 1 items and migration stragglers in [docs/design/components.md](docs/design/components.md).
+
 Phase specs under `docs/specifications/phase-*` are **historical v0.03 implementation reference** — not current domain guidance.
 
 ## Historical phase documents (v0.03 implementation reference)

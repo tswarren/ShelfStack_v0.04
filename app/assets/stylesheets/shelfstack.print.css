@@ -1,0 +1,92 @@
+/* ShelfStack Print Styles */
+
+.print-only {
+  display: none;
+}
+
+.ss-print-page {
+  background: #ffffff;
+  color: #000000;
+}
+
+.ss-print-page--letter {
+  max-width: 8.5in;
+  margin: 0 auto;
+}
+
+.ss-print-page--receipt {
+  max-width: 3.125in;
+  margin: 0 auto;
+}
+
+.ss-print-header,
+.ss-print-section {
+  margin-bottom: 1rem;
+}
+
+.ss-print-title {
+  margin: 0;
+}
+
+.ss-print-meta {
+  color: #444444;
+  font-size: 0.875rem;
+}
+
+.ss-print-section--totals {
+  border-top: 1px solid #000000;
+  padding-top: 0.5rem;
+}
+
+.ss-receipt,
+.ss-slip {
+  font-size: 0.85rem;
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .no-print,
+  .ss-pos-no-print,
+  .ss-skip-link,
+  .ss-header,
+  .ss-nav,
+  .ss-footer,
+  .ss-flash-region,
+  .flash,
+  .ss-toast-region,
+  .ss-pos-workspace-header,
+  .ss-pos-command-bar,
+  .ss-page-actions,
+  .ss-context-actions,
+  .ss-section-actions {
+    display: none !important;
+  }
+
+  .print-only {
+    display: revert;
+  }
+
+  .ss-app-chrome {
+    position: static !important;
+    backdrop-filter: none !important;
+  }
+
+  .ss-card,
+  .ss-form-card,
+  .ss-detail-panel,
+  div.ss-summary,
+  dl.ss-summary,
+  .ss-sidebar-card,
+  .ss-collapsible-panel,
+  .ss-item-summary-card,
+  .ss-item-ops-summary,
+  .ss-pos-panel,
+  .ss-table,
+  .ss-item-hero,
+  .ss-surface {
+    box-shadow: none !important;
+  }
+}

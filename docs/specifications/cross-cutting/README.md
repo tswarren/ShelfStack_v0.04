@@ -8,12 +8,15 @@ Documents that apply **across phases and workspaces**, not tied to a single deli
 
 | Document | Purpose |
 | -------- | ------- |
+| [design/README.md](../../design/README.md) | **Start here** — design system index |
+| [ux-guide.md](../../design/ux-guide.md) | Current UX principles for operational workflows |
+| [components.md](../../design/components.md) | Component catalog, status, migration stragglers |
 | [view-contracts.md](../view-contracts.md) | Per-screen-type behavior contracts |
 | [keyboard-and-focus.md](../keyboard-and-focus.md) | Global keyboard and focus standards |
 | [modal-and-drawer-patterns.md](../modal-and-drawer-patterns.md) | Shared overlay patterns |
-| [ui-components.md](../ui-components.md) | Reusable interaction components |
+| [ui-components.md](../ui-components.md) | Phase 10 interaction-shell implementation detail |
 | [pos-keyboard-workspace.md](../pos-keyboard-workspace.md) | POS UX supplement (Phase 10-C) |
-| [ui-ux-concept.md](../ui-ux-concept.md) | UX direction reference |
+| [ui-ux-concept.md](../ui-ux-concept.md) | Historical detailed workflow concept — reference only; do not extend without reconciling [ux-guide.md](../../design/ux-guide.md) |
 
 ---
 

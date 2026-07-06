@@ -1,0 +1,228 @@
+/* ShelfStack POS Domain Components */
+
+.ss-pos-body {
+  background: var(--color-base-100);
+}
+
+.ss-pos-main {
+  max-width: var(--layout-wide);
+  padding-bottom: 1.5rem;
+}
+
+.ss-pos-banner {
+  background: #2c2419;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding-block: 0.6rem;
+}
+
+.ss-pos-layout,
+.ss-pos-dashboard,
+.ss-pos-home,
+.ss-pos-workspace,
+.ss-pos-layout__main,
+.ss-pos-layout__sidebar {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ss-pos-workspace-header,
+.ss-pos-panel,
+.ss-pos-tender-panel,
+.ss-pos-totals-panel,
+.ss-pos-status-panel {
+  background: #ffffffdb;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 0.65rem 0.85rem;
+}
+
+.ss-pos-workspace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--gap-ui);
+  width: 100%;
+}
+
+.ss-pos-workspace-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.45rem;
+  min-width: 0;
+  color: var(--color-muted);
+  line-height: var(--line-ui);
+}
+
+.ss-pos-workspace-header__brand,
+.ss-pos-workspace-header__register-status,
+.ss-pos-workspace-header__transaction {
+  color: var(--color-base-content);
+  font-weight: 800;
+}
+
+.ss-pos-workspace-header__actions {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.ss-pos-workspace-header__actions-trigger {
+  white-space: nowrap;
+}
+
+.ss-pos-command-bar {
+  display: grid;
+  gap: 0.75rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.ss-pos-command-bar__entry-row,
+.ss-pos-workspace__entry-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--gap-ui);
+  align-items: end;
+  width: 100%;
+}
+
+.ss-pos-command-bar__scan-column {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ss-pos-command-bar__mode-column {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  min-width: max-content;
+}
+
+.ss-pos-scan-input,
+.ss-pos-scan-input--primary {
+  width: 100%;
+  min-width: 0;
+}
+
+.ss-pos-command-bar__quick-row {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.ss-pos-command-bar__quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.ss-pos-scan-row,
+.ss-pos-actions,
+.ss-pos-secondary-actions,
+.ss-pos-auth-actions,
+.ss-pos-tender-actions,
+.ss-receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.ss-pos-action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.6rem;
+}
+
+.ss-pos-action-grid__btn,
+.ss-pos-transaction-show__primary-action,
+.ss-pos-transaction-show__secondary-action,
+.ss-receipt-actions__print {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.1rem;
+  padding: 0.85rem 1rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: var(--line-ui);
+  text-align: center;
+  text-decoration: none;
+  border-radius: var(--radius-lg);
+}
+
+.ss-pos-cart,
+.ss-pos-totals-list,
+.ss-pos-stats {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ss-pos-cart-line {
+  border: 1px solid var(--color-base-200);
+  border-radius: var(--radius-md);
+  padding: var(--pad-card-sm);
+}
+
+.ss-pos-cart-line--return { border-left: 4px solid var(--color-brand-gold); }
+.ss-pos-cart-line--voided { opacity: 0.55; }
+
+.ss-pos-status-panel__title {
+  color: var(--color-base-content);
+}
+
+.ss-pos-status-panel__cell,
+.ss-pos-cart-line__discount-breakdown,
+.ss-pos-cart-line__unit-hint,
+.ss-pos-line-tax,
+.ss-pos-line-tax__amount--subtle,
+.ss-pos-totals-list__tax-meta {
+  line-height: var(--line-compact);
+}
+
+.ss-pos-status-panel__cell--detail,
+.ss-pos-totals-list__tax-meta,
+.ss-pos-cart-line__unit-hint,
+.ss-pos-line-tax__amount--subtle {
+  color: var(--color-muted-subtle);
+}
+
+.ss-pos-panel--warning,
+.ss-pos-alert {
+  border-color: #ffaa0073;
+  background: #ffaa0014;
+  color: #7a5200;
+}
+
+.ss-pos-alert--error {
+  border-color: #d9383840;
+  background: #d938381a;
+  color: #9b1c1c;
+}
+
+.ss-pos-body .ss-item-hero::after,
+.ss-pos-body .ss-page-header::after {
+  display: none;
+}
+
+.ss-pos-body .ss-btn:hover {
+  box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  .ss-pos-workspace-header {
+    align-items: flex-start;
+  }
+
+  .ss-pos-command-bar__entry-row,
+  .ss-pos-workspace__entry-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ss-pos-command-bar__mode-column {
+    justify-content: flex-start;
+  }
+}

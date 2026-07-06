@@ -1,0 +1,65 @@
+/* ShelfStack List and Timeline Components */
+
+.ss-list {
+  display: grid;
+  gap: var(--gap-ui);
+}
+
+.ss-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gap-ui);
+  padding: var(--pad-card);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.ss-list-row--selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.ss-list-row--warning {
+  border-color: #ffaa0073;
+  background: #ffaa0014;
+}
+
+.ss-list-row__title {
+  font-weight: 750;
+}
+
+.ss-list-row__meta {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.ss-list-row__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.ss-timeline {
+  display: grid;
+  gap: var(--gap-ui);
+}
+
+.ss-timeline-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--gap-ui);
+}
+
+.ss-timeline-marker {
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-top: 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+.ss-timeline-meta {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
