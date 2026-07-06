@@ -9,6 +9,7 @@
  * 5. Domain components
  * 6. Print
  * 7. Legacy compatibility bridge
+ * 8. Temporary post-legacy migration overrides
  */
 
 /* 01. Foundation */
@@ -58,3 +59,6 @@
 
 /* 06. Temporary migration layer */
 @import "shelfstack.legacy.css";
+
+/* 07. Temporary post-legacy overrides */
+@import "shelfstack.migration-overrides.css";
