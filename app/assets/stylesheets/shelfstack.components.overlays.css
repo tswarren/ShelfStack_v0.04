@@ -89,7 +89,16 @@
 }
 
 .ss-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  min-width: 11rem;
   padding-block: 0.3rem;
+}
+
+.ss-pos-workspace-header__actions {
+  position: relative;
+  z-index: var(--z-dropdown);
 }
 
 .ss-dropdown-menu__item,

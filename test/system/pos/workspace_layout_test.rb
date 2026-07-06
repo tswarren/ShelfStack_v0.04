@@ -17,6 +17,15 @@ class PosWorkspaceLayoutSystemTest < ApplicationSystemTestCase
     assert_button "Stored Value Balance Inquiry"
   end
 
+  test "header actions menu dispatches balance inquiry modal" do
+    visit_pos_transaction_edit!
+
+    find(".ss-pos-workspace-header__actions summary").click
+    click_button "Stored Value Balance Inquiry"
+
+    assert_selector "#pos-balance-inquiry-modal:not([hidden])", wait: 5
+  end
+
   test "balance command opens balance modal without leaving workspace" do
     visit_pos_transaction_edit!
 

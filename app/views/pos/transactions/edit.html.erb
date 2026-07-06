@@ -1,14 +1,5 @@
 <% content_for :main_class, "ss-main--wide ss-pos-main" %>
 
-<%= render "pos/shared/workspace_header",
-      register_session: @transaction.pos_register_session || current_register_session,
-      transaction: @transaction,
-      context: :transaction %>
-
-<div id="pos_flash">
-  <%= render "pos/transactions/flash" %>
-</div>
-
 <% if pos_exchange_summary(@transaction) %>
   <%= render "pos/transactions/register_header", transaction: @transaction %>
 <% end %>
@@ -38,6 +29,15 @@
      data-pos-settlement-panel-refund-value="<%= Pos::TenderTypePolicy.refund_transaction?(@transaction) %>"
      data-pos-settlement-panel-lookup-url-value="<%= pos_stored_value_lookup_path %>"
      data-action="modal:closed@document->pos-command-bar#modalClosed pos:authorization-granted@document->pos-transaction-edit#setAuthorizationId pos:workspace-updated@document->pos-transaction-edit#updateChange pos:settlement-updated@document->pos-transaction-edit#updateChange pos:workspace-updated@document->pos-settlement-panel#syncTotal">
+
+  <%= render "pos/shared/workspace_header",
+        register_session: @transaction.pos_register_session || current_register_session,
+        transaction: @transaction,
+        context: :transaction %>
+
+  <div id="pos_flash">
+    <%= render "pos/transactions/flash" %>
+  </div>
 
   <div class="ss-pos-layout" data-controller="pos-cart-line">
     <div class="ss-pos-layout__main">
