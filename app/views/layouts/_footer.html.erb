@@ -1,6 +1,6 @@
 <footer class="ss-footer">
   <span>ShelfStack · v0.04.12 · © <%= Time.current.year %> ShelfStack</span>
   <% if current_user_session&.active? %>
-    <%= button_to "Lock Session", session_lock_path, method: :post, params: { return_to: request.fullpath }, class: "ss-btn ss-btn-secondary", form: { style: "display:inline;margin:0;" } %>
+    <%= button_to "Lock Session", session_lock_path, method: :post, params: { return_to: request.fullpath }, class: "ss-btn ss-btn-secondary", form: { class: "ss-inline-form ss-footer__lock-form" } %>
   <% end %>
 </footer>
