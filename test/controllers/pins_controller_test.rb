@@ -15,7 +15,7 @@ class PinsControllerTest < ActionDispatch::IntegrationTest
     patch pin_path, params: { pin: "5678", pin_confirmation: "" }
 
     assert_response :unprocessable_entity
-    assert_select ".flash-alert", text: /confirmation.*blank/i
+    assert_select ".ss-flash--error", text: /confirmation.*blank/i
     assert_not @user.reload.pin_set?
   end
 
