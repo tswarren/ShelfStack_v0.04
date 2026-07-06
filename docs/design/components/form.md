@@ -25,7 +25,7 @@ Use forms for creating, editing, filtering, posting, or configuring records.
 
 ShelfStack forms should support:
 
-```
+```text
 clear grouping
 visible validation
 predictable submit/cancel placement
@@ -58,7 +58,7 @@ dense operational workflows
 
 Recommended order:
 
-```
+```text
 Page header
 Form-level alert/errors
 Sections
@@ -69,11 +69,9 @@ Actions
 
 ## CSS
 
-```
+```text
 app/assets/stylesheets/shelfstack.components.forms.css
 ```
-
-Target classes:
 
 ### Implemented (`shelfstack.components.forms.css`)
 
@@ -86,8 +84,10 @@ Target classes:
 .ss-form-actions
 .ss-form-actions--end
 .ss-form-actions--between
+.ss-inline-form
 .ss-field
 .ss-field-error
+.ss-field-warning
 .ss-label
 .ss-help
 .ss-input
@@ -111,11 +111,35 @@ Emitted by `ss_field_css` when the record has errors on that field. Error-border
 
 `shared/forms/_section.html.erb` emits **`.ss-form-card`**, not `.ss-form-section`. `.ss-form-section` exists only in legacy `shelfstack.css`; do not use it in new markup.
 
+## Inline form
+
+Use `.ss-inline-form` for Rails `button_to` forms that must sit inline inside another component, such as dropdown menu rows, footer utilities, compact table actions, and small action clusters.
+
+Do not use `.ss-inline-form` for normal data-entry forms.
+
+Good uses:
+
+```text
+logout inside user menu
+Lock Session in footer
+small destructive row action
+button_to inside dropdown menu
+```
+
+Avoid:
+
+```text
+full setup form
+filter form
+receipt posting form with fields
+multi-field workflow form
+```
+
 ## Rails partials
 
 Current active form partials:
 
-```
+```text
 app/views/shared/forms/_page_header.html.erb
 app/views/shared/forms/_section.html.erb
 app/views/shared/forms/_field.html.erb
@@ -126,19 +150,20 @@ Prefer these for form-heavy setup and workflow pages.
 
 ## Accessibility requirements
 
-1. Every input must have an associated label.  
-2. Required fields must be visually and semantically clear.  
-3. Validation errors must be close to the affected field.  
-4. Form-level errors should use inline alert treatment, not global flash.  
-5. Submit button text should describe the result.  
-6. Cancel/back actions should be links or tertiary buttons.  
+1. Every input must have an associated label.
+2. Required fields must be visually and semantically clear.
+3. Validation errors must be close to the affected field.
+4. Form-level errors should use inline alert treatment, not global flash.
+5. Submit button text should describe the result.
+6. Cancel/back actions should be links or tertiary buttons.
 7. Keyboard tab order should follow visual order.
+8. Inline forms must not disrupt menu/list semantics.
 
 ## Examples
 
 ### Standard form shell
 
-```
+```erb
 <%= form_with model: @vendor, class: "ss-form" do |form| %>
   <%= render "shared/forms/errors", object: @vendor %>
 
@@ -156,6 +181,28 @@ Prefer these for form-heavy setup and workflow pages.
 <% end %>
 ```
 
+### Inline form inside a dropdown menu
+
+```erb
+<%= button_to "Logout",
+      logout_path,
+      method: :delete,
+      class: "ss-dropdown-menu__item ss-dropdown-menu__item--danger",
+      form: { class: "ss-inline-form" } %>
+```
+
+### Inline form in the footer
+
+```erb
+<%= button_to "Lock Session",
+      session_lock_path,
+      method: :post,
+      class: "ss-btn ss-btn-ghost ss-btn--small",
+      form: { class: "ss-inline-form ss-footer__lock-form" } %>
+```
+
 ## Migration notes
 
 Keep `shared/forms/*` as the current form foundation. Do not invent a parallel `shared/ui/form` API until the current form partials are either promoted or replaced.
+
+When touching compact `button_to` markup inside menus, footers, or row actions, add `.ss-inline-form` to prevent Rails’ generated form wrapper from disrupting layout.
