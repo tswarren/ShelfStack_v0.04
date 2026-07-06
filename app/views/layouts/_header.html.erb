@@ -34,7 +34,7 @@
             <%= render "shared/ui/appearance_switcher" %>
           </div>
         </details>
-        <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-tertiary ss-btn-small", form: { style: "display:inline;margin:0;" } %>
+        <%= button_to "Logout", logout_path, method: :delete, class: "ss-btn ss-btn-tertiary ss-btn-small", form: { class: "ss-inline-form ss-user-menu__logout-form" } %>
       </div>
     <% end %>
   </div>
