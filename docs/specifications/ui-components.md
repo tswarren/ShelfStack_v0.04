@@ -4,6 +4,13 @@
 
 Shared interaction components for operational UI.
 
+This document is an **implementation detail** for the Phase 10 interaction shell: modal, drawer, toast, expanded row, shortcut strip, and shared JavaScript overlay utilities. For the broader design system and component inventory, start with:
+
+- [../design/README.md](../design/README.md)
+- [../design/ux-guide.md](../design/ux-guide.md)
+- [../design/components.md](../design/components.md)
+- [../design/app-shell-and-pos-shell.md](../design/app-shell-and-pos-shell.md)
+
 ## Mockup reference
 
 Drawer, modal, expanded row, and shortcut strip patterns in:
@@ -12,17 +19,31 @@ Drawer, modal, expanded row, and shortcut strip patterns in:
 * [shelfstack_items_mockups.html](../samples/phase-10-mockups/shelfstack_items_mockups.html)
 * [shelfstack_pos_mockups.html](../samples/phase-10-mockups/shelfstack_pos_mockups.html)
 
-Implementation uses `ss-*` classes in `app/assets/stylesheets/shelfstack.css` and shared partials under `app/views/shared/interaction/`.
+Implementation uses shared partials under `app/views/shared/interaction/`, Stimulus controllers under `app/javascript/controllers/`, shared overlay utilities under `app/javascript/shelfstack/`, and modular CSS files:
+
+| Concern | Current CSS home |
+| ------- | ---------------- |
+| Dialog/modal/drawer/dropdown/popover shells | `app/assets/stylesheets/shelfstack.components.overlays.css` |
+| Flash/toast/empty/progress/skeleton feedback | `app/assets/stylesheets/shelfstack.components.feedback.css` |
+| Tabs/disclosure/expanded/collapsible patterns | `app/assets/stylesheets/shelfstack.components.disclosure.css` and `shelfstack.components.navigation.css` |
+| POS-specific workspace interaction styling | `app/assets/stylesheets/shelfstack.domain.pos.css` |
+| Item-specific drawer/detail styling | `app/assets/stylesheets/shelfstack.domain.items.css` |
+| Temporary legacy compatibility | `app/assets/stylesheets/shelfstack.legacy.css` importing the old monolithic `shelfstack.css` |
+| Temporary cascade fixes while legacy remains | `app/assets/stylesheets/shelfstack.migration-overrides.css` |
+
+Do not add new interaction styles to the monolithic `shelfstack.css`. Move durable interaction styles into the component/domain files above.
 
 ## Components
 
-### Modal (`ss-modal*`)
+### Modal (`ss-modal*` / target `ss-dialog*`)
 
 Bounded tasks: setup edits, customer lookup, supervisor auth, settlement, confirmations.
 
 **Partial:** `shared/interaction/modal`
 
 **Controller:** `modal_controller.js`
+
+**CSS:** `shelfstack.components.overlays.css`; legacy `.ss-modal*` remains during migration.
 
 **Open by id:**
 
@@ -48,6 +69,8 @@ Detail without losing page context: variant demand, session summary, item detail
 
 **Controller:** `drawer_controller.js`
 
+**CSS:** `shelfstack.components.overlays.css`; domain refinements belong in the relevant `shelfstack.domain.*.css` file.
+
 **Pilot:** item customer demand drawer (`id="item-demand-drawer"`) on Items operations tab.
 
 ### Toast (`ss-toast*`)
@@ -56,17 +79,23 @@ Minor non-blocking confirmations only. Server/Turbo append `_toast.html.erb` to 
 
 **Region:** `shared/interaction/toast_region` in application and POS layouts.
 
+**CSS:** `shelfstack.components.feedback.css`.
+
 ### Expanded row (`ss-expand-row*`, `ss-row-detail*`)
 
 Inline line edits: POS cart, PO lines, inventory adjustments.
 
 **Partial:** `shared/interaction/expanded_row` (optional helper; POS cart migration in 10-C).
 
+**CSS:** Generic disclosure/table structure belongs in `shelfstack.components.disclosure.css` or `shelfstack.components.tables.css`; POS-specific row styling belongs in `shelfstack.domain.pos.css`.
+
 ### Shortcut strip
 
 Visible command hints and alias legend (POS, optional elsewhere). Function-key bindings are **out of scope** for Phase 10-C completion; do not block POS delivery on F-key reliability.
 
 **Partial:** `shared/interaction/shortcut_strip`
+
+**CSS:** `shelfstack.components.navigation.css`; POS-specific command hints belong in `shelfstack.domain.pos.css`.
 
 ## Shared JavaScript utilities
 
