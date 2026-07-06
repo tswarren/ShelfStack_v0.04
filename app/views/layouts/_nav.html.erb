@@ -1,45 +1,55 @@
 <nav class="ss-nav" aria-label="Primary navigation">
-  <%= link_to "Dashboard", root_path, class: (current_page?(root_path) ? "active" : nil) %>
+  <%= link_to "Dashboard", root_path, class: shelfstack_nav_item_class(active: current_page?(root_path)) %>
+
   <% if Authorization.allowed?(user: current_user, permission_key: "pos.access", store: current_store) %>
-    <%= link_to "POS", pos_root_path, class: (request.path.start_with?("/pos") ? "active" : nil) %>
+    <%= link_to "POS", pos_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/pos")) %>
   <% else %>
-    <span class="disabled">POS</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">POS</span>
   <% end %>
+
   <% if Authorization.allowed?(user: current_user, permission_key: "inventory.access", store: current_store) %>
-    <%= link_to "Inventory", inventory_root_path, class: (request.path.start_with?("/inventory") ? "active" : nil) %>
+    <%= link_to "Inventory", inventory_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/inventory")) %>
   <% else %>
-    <span class="disabled">Inventory</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">Inventory</span>
   <% end %>
-  <%= link_to "Items", items_root_path, class: (request.path.start_with?("/items") ? "active" : nil) %>
+
+  <%= link_to "Items", items_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/items")) %>
+
   <% if Authorization.allowed?(user: current_user, permission_key: "orders.access", store: current_store) %>
-    <%= link_to "Orders", orders_root_path, class: (request.path.start_with?("/orders") ? "active" : nil) %>
+    <%= link_to "Orders", orders_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/orders")) %>
   <% else %>
-    <span class="disabled">Orders</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">Orders</span>
   <% end %>
+
   <% if Authorization.allowed?(user: current_user, permission_key: "demand.access", store: current_store) %>
-    <%= link_to "Demand", demand_root_path, class: (request.path.start_with?("/demand") ? "active" : nil) %>
+    <%= link_to "Demand", demand_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/demand")) %>
   <% else %>
-    <span class="disabled">Demand</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">Demand</span>
   <% end %>
+
   <% if Authorization.allowed?(user: current_user, permission_key: "sourcing.access", store: current_store) %>
-    <%= link_to "Sourcing", sourcing_root_path, class: (request.path.start_with?("/sourcing") ? "active" : nil) %>
+    <%= link_to "Sourcing", sourcing_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/sourcing")) %>
   <% else %>
-    <span class="disabled">Sourcing</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">Sourcing</span>
   <% end %>
+
   <% if Authorization.allowed?(user: current_user, permission_key: "customers.access", store: current_store) %>
-    <%= link_to "Customers", customers_root_path, class: (request.path.start_with?("/customers") ? "active" : nil) %>
+    <%= link_to "Customers", customers_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/customers")) %>
   <% else %>
-    <span class="disabled">Customers</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">Customers</span>
   <% end %>
+
   <% if Authorization.allowed?(user: current_user, permission_key: "buybacks.view", store: current_store) %>
-    <%= link_to "Buybacks", buybacks_root_path, class: (request.path.start_with?("/buybacks") ? "active" : nil) %>
+    <%= link_to "Buybacks", buybacks_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/buybacks")) %>
   <% else %>
-    <span class="disabled">Buybacks</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">Buybacks</span>
   <% end %>
+
   <% if reports_nav_visible? %>
-    <%= link_to "Reports", reports_root_path, class: (request.path.start_with?("/reports") ? "active" : nil) %>
+    <%= link_to "Reports", reports_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/reports")) %>
   <% else %>
-    <span class="disabled">Reports</span>
+    <span class="<%= shelfstack_nav_item_class(disabled: true) %>">Reports</span>
   <% end %>
-  <%= link_to "Setup", setup_root_path, class: (request.path.start_with?("/setup") ? "active" : nil) %>
+
+  <%= link_to "Setup", setup_root_path, class: shelfstack_nav_item_class(active: request.path.start_with?("/setup")) %>
 </nav>
