@@ -49,6 +49,23 @@
   box-shadow: none;
 }
 
+.ss-btn-ghost,
+.ss-btn--ghost {
+  background: transparent;
+  color: var(--color-muted);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.ss-btn-ghost:hover,
+.ss-btn--ghost:hover,
+.ss-btn-ghost:focus,
+.ss-btn--ghost:focus {
+  background: var(--color-base-150);
+  color: var(--color-base-content);
+  box-shadow: none;
+}
+
 .ss-btn-danger,
 .ss-btn--danger {
   background: var(--color-error);
