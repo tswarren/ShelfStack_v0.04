@@ -2,12 +2,16 @@
 <p class="ss-muted">Review open TBO demand, then build a vendor PO from selected lines.</p>
 
 <div class="ss-actions">
-  <%= link_to "Vendor-first view",
-        from_tbo_orders_purchase_orders_path(@from_tbo_filters.merge(view: "vendor")),
-        class: "ss-btn ss-btn-secondary#{ " ss-btn--active" if @view_mode == "vendor" }" %>
-  <%= link_to "Suggested vendor view",
-        from_tbo_orders_purchase_orders_path(@from_tbo_filters.merge(view: "suggested")),
-        class: "ss-btn ss-btn-secondary#{ " ss-btn--active" if @view_mode == "suggested" }" %>
+  <%= render "shared/ui/button",
+        label: "Vendor-first view",
+        variant: :secondary,
+        url: from_tbo_orders_purchase_orders_path(@from_tbo_filters.merge(view: "vendor")),
+        class: ("ss-btn--active" if @view_mode == "vendor") %>
+  <%= render "shared/ui/button",
+        label: "Suggested vendor view",
+        variant: :secondary,
+        url: from_tbo_orders_purchase_orders_path(@from_tbo_filters.merge(view: "suggested")),
+        class: ("ss-btn--active" if @view_mode == "suggested") %>
 </div>
 
 <%= form_with url: from_tbo_orders_purchase_orders_path, method: :get, class: "ss-form-inline" do %>

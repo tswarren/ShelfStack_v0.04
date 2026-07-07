@@ -62,5 +62,14 @@
           { label: "" }
         ] %>
 
-  <%= f.submit class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button",
+          label: (receipt.persisted? ? "Update Receipt" : "Create Receipt"),
+          type: :submit,
+          variant: :primary %>
+    <%= render "shared/ui/button",
+          label: "Cancel",
+          variant: :tertiary,
+          url: (receipt.persisted? ? orders_receipt_path(receipt) : orders_receipts_path) %>
+  </footer>
 <% end %>

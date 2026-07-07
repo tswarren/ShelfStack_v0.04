@@ -37,5 +37,14 @@
           { label: "" }
         ] %>
 
-  <%= f.submit class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button",
+          label: (return_to_vendor.persisted? ? "Update Return to Vendor" : "Create Return to Vendor"),
+          type: :submit,
+          variant: :primary %>
+    <%= render "shared/ui/button",
+          label: "Cancel",
+          variant: :tertiary,
+          url: (return_to_vendor.persisted? ? orders_returns_to_vendor_path(return_to_vendor) : orders_returns_to_vendor_index_path) %>
+  </footer>
 <% end %>

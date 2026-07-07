@@ -34,12 +34,11 @@
   <td class="ss-num" data-purchasing-line-row-target="acceptingDisplay"><%= line_form.object.quantity_accepted %></td>
   <td class="ss-purchasing-table__exception">
     <% has_exception = line_form.object.quantity_rejected.to_i.positive? %>
-    <button type="button"
-            class="ss-btn-link"
-            data-purchasing-line-row-target="exceptionToggle"
-            data-action="purchasing-line-row#toggleException">
-      <%= has_exception ? "Edit exception" : "Add exception" %>
-    </button>
+    <%= render "shared/ui/button",
+          label: (has_exception ? "Edit exception" : "Add exception"),
+          type: :button,
+          variant: :link,
+          data: { purchasing_line_row_target: "exceptionToggle", action: "purchasing-line-row#toggleException" } %>
     <div data-purchasing-line-row-target="exceptionPanel"
          class="ss-purchasing-table__exception-panel"
          <%= "hidden" unless has_exception %>>
@@ -56,11 +55,11 @@
             { include_blank: "Reason…" },
             class: "ss-input",
             data: { purchasing_line_row_target: "exceptionReason", action: "change->purchasing-line-row#exceptionChanged" } %>
-      <button type="button"
-              class="ss-btn-link"
-              data-action="purchasing-line-row#clearException">
-        Remove
-      </button>
+      <%= render "shared/ui/button",
+            label: "Remove",
+            type: :button,
+            variant: :link,
+            data: { action: "purchasing-line-row#clearException" } %>
     </div>
   </td>
   <td class="ss-num">

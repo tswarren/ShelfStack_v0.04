@@ -1,7 +1,8 @@
 <%= render "setup/shared/back_link", path: orders_root_path, label: "Orders" %>
 
-<h1>Buyer workbench</h1>
-<p class="ss-muted">Operational demand queue for buyers — order, source, and track supply in one place.</p>
+<%= render "shared/ui/page_header",
+           title: "Buyer workbench",
+           description: "Operational demand queue for buyers — order, source, and track supply in one place." %>
 
 <div class="ss-filter-bar">
   <% DemandLines::BuyerWorkbenchScope::TAB_KEYS.each do |tab_key| %>
@@ -41,8 +42,15 @@
             <td><%= row.state_label %></td>
             <td><%= row.next_action_label %></td>
             <td class="ss-table-actions">
-              <%= link_to row.primary_action[:label], row.primary_action[:path], class: "ss-btn ss-btn-secondary ss-btn--sm" %>
-              <%= link_to "Demand", demand_demand_line_path(row.demand_line), class: "ss-btn-link" %>
+              <%= render "shared/ui/button",
+                    label: row.primary_action[:label],
+                    variant: :secondary,
+                    size: :small,
+                    url: row.primary_action[:path] %>
+              <%= render "shared/ui/button",
+                    label: "Demand",
+                    variant: :link,
+                    url: demand_demand_line_path(row.demand_line) %>
             </td>
           </tr>
         <% end %>
@@ -50,10 +58,13 @@
     </table>
 
     <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) %>
-      <div class="ss-bulk-actions">
-        <%= submit_tag "Create PO from selected", class: "ss-btn" %>
-        <%= submit_tag "Add to existing draft PO", formaction: new_orders_demand_po_builder_path(mode: "add_existing"), class: "ss-btn ss-btn-secondary" %>
-      </div>
+      <footer class="ss-form-actions">
+        <%= render "shared/ui/button", label: "Create PO from selected", type: :submit, variant: :primary %>
+        <%= button_tag "Add to existing draft PO",
+              type: "submit",
+              formaction: new_orders_demand_po_builder_path(mode: "add_existing"),
+              class: ss_button_classes(variant: :secondary) %>
+      </footer>
     <% end %>
   <% end %>
 <% else %>

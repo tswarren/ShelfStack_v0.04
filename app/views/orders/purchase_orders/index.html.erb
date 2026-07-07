@@ -1,7 +1,11 @@
-<h1>Purchase Orders
-  <%= link_to "New", new_orders_purchase_order_path, class: "ss-btn" %>
-  <%= link_to "Manual TBO", orders_orders_purchase_requests_path, class: "ss-btn" %>
-</h1>
+<%
+  header_actions = safe_join([
+    render("shared/ui/button", label: "Manual TBO", variant: :secondary, url: orders_orders_purchase_requests_path),
+    render("shared/ui/button", label: "New", variant: :primary, url: new_orders_purchase_order_path)
+  ])
+%>
+
+<%= render "shared/ui/page_header", title: "Purchase Orders", actions: header_actions %>
 
 <table class="ss-table">
   <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Submitted</th><th></th></tr></thead>

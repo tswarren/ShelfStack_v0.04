@@ -26,9 +26,16 @@
             <td class="ss-num"><%= row[:quantity] %></td>
             <td>
               <% if row[:demand_line].customer.present? %>
-                <%= link_to "Open customer", customers_customer_path(row[:demand_line].customer), class: "ss-btn-link" %>
+                <%= render "shared/ui/button",
+                      label: "Open customer",
+                      variant: :link,
+                      url: customers_customer_path(row[:demand_line].customer) %>
               <% end %>
-              <button type="button" class="ss-btn ss-btn-secondary ss-btn--sm" disabled title="Hold slip printing deferred to v0.05">Hold slip</button>
+              <%= button_tag "Hold slip",
+                    type: "button",
+                    class: ss_button_classes(variant: :secondary, size: :small),
+                    disabled: true,
+                    title: "Hold slip printing deferred to v0.05" %>
             </td>
           </tr>
         <% end %>

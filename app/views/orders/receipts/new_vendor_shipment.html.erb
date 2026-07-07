@@ -46,5 +46,8 @@
           class: "ss-input" %>
   </div>
 
-  <%= submit_tag "Start receiving", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Start receiving", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: orders_receipts_path %>
+  </footer>
 <% end %>

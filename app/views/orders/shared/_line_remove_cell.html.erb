@@ -1,4 +1,12 @@
 <td>
-  <button type="button" class="ss-btn-link" data-action="purchasing-line-row#toggleDetails">Details</button>
-  <button type="button" class="ss-btn-link" data-action="purchasing-line-table#removeLine">Remove</button>
+  <%= render "shared/ui/button",
+        label: "Details",
+        type: :button,
+        variant: :link,
+        data: { action: "purchasing-line-row#toggleDetails" } %>
+  <%= render "shared/ui/button",
+        label: "Remove",
+        type: :button,
+        variant: :link,
+        data: { action: "purchasing-line-table#removeLine" } %>
 </td>

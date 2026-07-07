@@ -93,5 +93,8 @@
     <%= text_area_tag :notes, nil, rows: 2, class: "ss-input" %>
   </div>
 
-  <%= submit_tag "Create / update draft POs", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Create / update draft POs", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: orders_buyer_workbench_path %>
+  </footer>
 <% end %>

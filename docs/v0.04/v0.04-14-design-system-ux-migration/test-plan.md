@@ -206,7 +206,17 @@ Integration/view tests: `ui_partials_test.rb` (block precedence), `customers_cus
 | Settlement / tender / completion flow | Complete |
 | POS reports and receipts | Complete |
 
-Integration tests: `items_item_ux_contract_test.rb`, `items_legacy_admin_ux_contract_test.rb`, `items_add_item_ux_contract_test.rb`, `pos_ux_contract_test.rb`; `items_setup_modals_integration_test.rb` regression.
+**Slice 8 — Orders/Purchasing (branch `v0.04-14/pr8-orders`, complete):**
+
+| Surface | Status |
+| ------- | ------ |
+| Purchase orders index/show/form/TBO | Complete |
+| Receipts index/show/edit/form/vendor shipment | Complete |
+| Returns to vendor index/show/form | Complete |
+| Buyer workbench and demand PO builder | Complete |
+| Shared document header and line actions | Complete |
+
+Integration tests: `items_item_ux_contract_test.rb`, `items_legacy_admin_ux_contract_test.rb`, `items_add_item_ux_contract_test.rb`, `pos_ux_contract_test.rb`, `orders_ux_contract_test.rb`; `items_setup_modals_integration_test.rb` regression.
 
 **Later (not Phase 6 gate):** field `aria-describedby` mass wiring, items filter partial, `shared/ui/_filter_chip` partial — see build plan Later backlog.
 

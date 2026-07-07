@@ -1,8 +1,12 @@
 <% if @receipt.draft? %>
   <%= render "orders/shared/collapsible_panel", title: "PO line matches" do %>
     <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
-      <div class="ss-detail-actions">
-        <%= button_to "Suggest matches", apply_suggested_matches_orders_receipt_path(@receipt), method: :post, class: "ss-btn ss-btn-secondary" %>
+      <div class="ss-page-actions">
+        <%= render "shared/ui/button",
+              label: "Suggest matches",
+              variant: :secondary,
+              url: apply_suggested_matches_orders_receipt_path(@receipt),
+              method: :post %>
       </div>
     <% end %>
 
@@ -28,7 +32,11 @@
               <td><%= match.match_source.humanize %></td>
               <td>
                 <% if match.confirmed? && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
-                  <%= button_to "Release", orders_receipt_receipt_line_match_path(@receipt, match), method: :delete, class: "ss-btn ss-btn-secondary" %>
+                  <%= render "shared/ui/button",
+                        label: "Release",
+                        variant: :secondary,
+                        url: orders_receipt_receipt_line_match_path(@receipt, match),
+                        method: :delete %>
                 <% end %>
               </td>
             </tr>
