@@ -6,7 +6,7 @@
 <%= form_with model: @user, url: setup_user_path(@user), method: :patch, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, user: @user, stores: @stores %>
   <footer class="ss-form-actions">
-    <%= f.submit "Save", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_user_path(@user), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Save", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_user_path(@user) %>
   </footer>
 <% end %>

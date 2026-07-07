@@ -89,14 +89,14 @@ Repeat pilot assertions per migrated setup index/show.
 | Surface | Status on integration branch |
 | ------- | ---------------------------- |
 | `setup/tax_categories` | Complete |
-| `setup/formats` | Pending |
-| `setup/discount_reasons` | Pending |
-| `setup/stores` | Pending |
-| `setup/users` | Pending |
-| `setup/sub_departments` | Pending |
-| `setup/departments` | Pending |
+| `setup/formats` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
+| `setup/discount_reasons` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
+| `setup/stores` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
+| `setup/users` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
+| `setup/sub_departments` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
+| `setup/departments` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
 
-Integration tests: `setup_tax_categories_ux_contract_test.rb` (tax categories); `setup_vendors_ux_contract_test.rb` (vendors pilot).
+Integration tests: `setup_vendors_ux_contract_test.rb`, `setup_tax_categories_ux_contract_test.rb`, `setup_pr4_surfaces_ux_contract_test.rb` (remaining six surfaces).
 
 ### Phase 6 — Domain workspaces
 

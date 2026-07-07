@@ -1,23 +1,32 @@
-<h1>Users <%= link_to "New", new_setup_user_path, class: "ss-btn" %></h1>
+<% new_user_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_user_path) %>
+
+<%= render "shared/ui/page_header", title: "Users", actions: new_user_action %>
 
 <%= form_with url: setup_users_path, method: :get, class: "ss-form" do %>
   <%= text_field_tag :q, params[:q], placeholder: "Search username" %>
-  <%= submit_tag "Search", class: "ss-btn ss-btn-secondary" %>
+  <%= render "shared/ui/button", label: "Search", type: :submit, variant: :secondary %>
 <% end %>
 
-<table class="ss-table">
-  <thead>
-    <tr><th>Username</th><th>Name</th><th>Type</th><th>Status</th><th></th></tr>
-  </thead>
-  <tbody>
-    <% @users.each do |user| %>
-      <tr>
-        <td><%= user.username %></td>
-        <td><%= user.display_name %></td>
-        <td><%= user.user_type %></td>
-        <td><span class="<%= status_class(user.active?) %>"><%= status_label(user.active?) %></span></td>
-        <td><%= link_to "View", setup_user_path(user) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% if @users.any? %>
+  <table class="ss-table">
+    <thead>
+      <tr><th>Username</th><th>Name</th><th>Type</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr>
+          <td><%= user.username %></td>
+          <td><%= user.display_name %></td>
+          <td><%= user.user_type %></td>
+          <td><%= ss_status_badge(status_label(user.active?), status: user.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_user_path(user) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No users found",
+             message: params[:q].present? ? "No users match your search. Try a different username." : "Create a user account to grant store access and permissions.",
+             actions: new_user_action %>
+<% end %>

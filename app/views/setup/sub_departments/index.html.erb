@@ -1,45 +1,55 @@
-<h1>Subdepartments <%= link_to "New", new_setup_sub_department_path, class: "ss-btn" %></h1>
-<table class="ss-table ss-table--tree">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Key</th>
-      <th>Short name</th>
-      <th>Default tax category</th>
-      <th>Default pricing model</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @sub_department_rows.each do |row| %>
-      <% if row.record_type == :department %>
-        <% department = row.record %>
-        <tr class="ss-tree-row--root">
-          <td class="ss-tree-name-cell" style="--tree-depth: <%= row.depth %>">
-            <%= department.department_number %> — <%= department.name %>
-          </td>
-          <td><%= department.department_number %></td>
-          <td><%= department.short_name %></td>
-          <td>—</td>
-          <td>—</td>
-          <td><span class="<%= status_class(department.active?) %>"><%= status_label(department.active?) %></span></td>
-          <td><%= link_to "View", setup_department_path(department) %></td>
-        </tr>
-      <% else %>
-        <% sub_department = row.record %>
-        <tr>
-          <td class="ss-tree-name-cell" style="--tree-depth: <%= row.depth %>">
-            <%= sub_department.name %>
-          </td>
-          <td><%= sub_department.sub_department_key %></td>
-          <td><%= sub_department.short_name %></td>
-          <td><%= sub_department.default_tax_category.name %></td>
-          <td><%= sub_department.default_pricing_model ? humanize_controlled_value(sub_department.default_pricing_model) : "—" %></td>
-          <td><span class="<%= status_class(sub_department.active?) %>"><%= status_label(sub_department.active?) %></span></td>
-          <td><%= link_to "View", setup_sub_department_path(sub_department) %></td>
-        </tr>
+<% new_sub_department_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_sub_department_path) %>
+
+<%= render "shared/ui/page_header", title: "Subdepartments", actions: new_sub_department_action %>
+
+<% if @sub_department_rows.any? %>
+  <table class="ss-table ss-table--tree">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Key</th>
+        <th>Short name</th>
+        <th>Default tax category</th>
+        <th>Default pricing model</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @sub_department_rows.each do |row| %>
+        <% if row.record_type == :department %>
+          <% department = row.record %>
+          <tr class="ss-tree-row--root">
+            <td class="ss-tree-name-cell" style="--tree-depth: <%= row.depth %>">
+              <%= department.department_number %> — <%= department.name %>
+            </td>
+            <td><%= department.department_number %></td>
+            <td><%= department.short_name %></td>
+            <td>—</td>
+            <td>—</td>
+            <td><%= ss_status_badge(status_label(department.active?), status: department.active? ? :active : :inactive) %></td>
+            <td><%= link_to "View", setup_department_path(department) %></td>
+          </tr>
+        <% else %>
+          <% sub_department = row.record %>
+          <tr>
+            <td class="ss-tree-name-cell" style="--tree-depth: <%= row.depth %>">
+              <%= sub_department.name %>
+            </td>
+            <td><%= sub_department.sub_department_key %></td>
+            <td><%= sub_department.short_name %></td>
+            <td><%= sub_department.default_tax_category.name %></td>
+            <td><%= sub_department.default_pricing_model ? humanize_controlled_value(sub_department.default_pricing_model) : "—" %></td>
+            <td><%= ss_status_badge(status_label(sub_department.active?), status: sub_department.active? ? :active : :inactive) %></td>
+            <td><%= link_to "View", setup_sub_department_path(sub_department) %></td>
+          </tr>
+        <% end %>
       <% end %>
-    <% end %>
-  </tbody>
-</table>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No subdepartments yet",
+             message: "Create a subdepartment to define operational behavior defaults for sellable classification.",
+             actions: new_sub_department_action %>
+<% end %>

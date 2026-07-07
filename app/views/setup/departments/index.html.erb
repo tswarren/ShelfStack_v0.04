@@ -1,16 +1,26 @@
-<h1>Departments <%= link_to "New", new_setup_department_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Number</th><th>Name</th><th>Short Name</th><th>GL Code</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @departments.each do |department| %>
-      <tr>
-        <td><%= department.department_number %></td>
-        <td><%= department.name %></td>
-        <td><%= department.short_name %></td>
-        <td><%= department.gl_account_code || "—" %></td>
-        <td><span class="<%= status_class(department.active?) %>"><%= status_label(department.active?) %></span></td>
-        <td><%= link_to "View", setup_department_path(department) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_department_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_department_path) %>
+
+<%= render "shared/ui/page_header", title: "Departments", actions: new_department_action %>
+
+<% if @departments.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Number</th><th>Name</th><th>Short Name</th><th>GL Code</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @departments.each do |department| %>
+        <tr>
+          <td><%= department.department_number %></td>
+          <td><%= department.name %></td>
+          <td><%= department.short_name %></td>
+          <td><%= department.gl_account_code || "—" %></td>
+          <td><%= ss_status_badge(status_label(department.active?), status: department.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_department_path(department) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No departments yet",
+             message: "Create a department to group subdepartments for reporting and merchandising.",
+             actions: new_department_action %>
+<% end %>

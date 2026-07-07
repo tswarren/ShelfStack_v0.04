@@ -1,10 +1,29 @@
 <%= render "setup/shared/back_link", path: setup_stores_path, label: "Stores" %>
-<h1><%= @store.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @store,
+    edit_path: edit_setup_store_path(@store),
+    inactivate_path: inactivate_setup_store_path(@store),
+    reactivate_path: reactivate_setup_store_path(@store)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @store.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Store number</dt><dd><%= @store.store_number %></dd>
   <dt>Time zone</dt><dd><%= @store.time_zone %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@store.active?) %>"><%= status_label(@store.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@store.active?), status: @store.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions"><%= link_to "Edit", edit_setup_store_path(@store), class: "ss-btn" %></div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "store-danger-zone-heading",
+           message: "Delete removes the store only when nothing references it. Prefer inactivating to preserve operational history.",
+           delete_label: "Delete store",
+           delete_path: setup_store_path(@store),
+           confirm_message: "Delete this store? This cannot be undone." %>

@@ -1,0 +1,13 @@
+<%# locals: heading_id:, title: "Danger zone", message:, delete_label:, delete_path:, confirm_message: %>
+<section aria-labelledby="<%= heading_id %>">
+  <h2 id="<%= heading_id %>"><%= local_assigns.fetch(:title, "Danger zone") %></h2>
+  <p class="ss-muted"><%= message %></p>
+  <div class="ss-section-actions">
+    <%= render "shared/ui/button",
+               label: delete_label,
+               variant: :danger,
+               url: delete_path,
+               method: :delete,
+               data: { turbo_confirm: confirm_message } %>
+  </div>
+</section>

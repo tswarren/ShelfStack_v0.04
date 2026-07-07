@@ -6,7 +6,7 @@
 <%= form_with model: @department, url: setup_departments_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, department: @department %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Department", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_departments_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Department", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_departments_path %>
   </footer>
 <% end %>
