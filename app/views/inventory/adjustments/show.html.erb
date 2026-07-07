@@ -1,4 +1,4 @@
-<h1>Adjustment #<%= @adjustment.id %></h1>
+<%= render "shared/ui/page_header", title: "Adjustment ##{@adjustment.id}" %>
 <p>Type: <%= @adjustment.adjustment_type %> | Status: <%= @adjustment.status %></p>
 <% if @adjustment.notes.present? %><p><%= @adjustment.notes %></p><% end %>
 
@@ -48,14 +48,14 @@
   </tbody>
 </table>
 
-<div class="ss-actions">
-  <% if @adjustment.draft? %>
-    <%= link_to "Edit", edit_inventory_adjustment_path(@adjustment), class: "ss-btn" %>
-    <%= button_to "Post", post_inventory_adjustment_path(@adjustment), method: :patch, class: "ss-btn" %>
-    <%= button_to "Cancel", cancel_inventory_adjustment_path(@adjustment), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= link_to "Back", inventory_adjustments_path %>
-</div>
+<% if @adjustment.draft? %>
+  <div class="ss-page-actions">
+    <%= render "shared/ui/button", label: "Edit", variant: :secondary, url: edit_inventory_adjustment_path(@adjustment) %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :secondary, url: cancel_inventory_adjustment_path(@adjustment), method: :patch %>
+    <%= render "shared/ui/button", label: "Post", variant: :primary, url: post_inventory_adjustment_path(@adjustment), method: :patch %>
+  </div>
+<% end %>
+<p><%= link_to "Back", inventory_adjustments_path %></p>
 
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>

@@ -1,4 +1,6 @@
-<h1>Inventory Adjustments <%= link_to "New", new_inventory_adjustment_path, class: "ss-btn" %></h1>
+<%= render "shared/ui/page_header",
+           title: "Inventory Adjustments",
+           actions: render("shared/ui/button", label: "New", variant: :primary, url: new_inventory_adjustment_path) %>
 
 <table class="ss-table">
   <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>Posted</th><th></th></tr></thead>

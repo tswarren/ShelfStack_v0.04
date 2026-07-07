@@ -32,5 +32,9 @@
     <%= line_form.label :inventory_location_id, "Location" %>
     <%= line_form.collection_select :inventory_location_id, locations, :id, :name, include_blank: true %>
   </div>
-  <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#removeLine">Remove line</button>
+  <%= render "shared/ui/button",
+        label: "Remove line",
+        variant: :secondary,
+        type: :button,
+        data: { action: "nested-form-lines#removeLine" } %>
 </fieldset>
