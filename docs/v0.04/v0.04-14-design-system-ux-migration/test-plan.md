@@ -107,7 +107,17 @@ Integration tests: `setup_vendors_ux_contract_test.rb`, `setup_tax_categories_ux
 | Service | `Setup::HomeNavigation` filters sections and links |
 | CSS | `.ss-setup-section` rules in `shelfstack.domain.setup.css` only |
 
-### Phase 6 — Domain workspaces
+### Phase 5 — Operational surfaces
+
+| Surface | Status on integration branch |
+| ------- | ---------------------------- |
+| `customers/customers` index/show/forms | Complete (branch `v0.04-14/pr5-customers`) |
+| `items` index | Pending |
+| item detail | Pending |
+| `reports` index/views | Pending |
+| demand queues | Pending |
+
+Integration tests: `customers_customers_ux_contract_test.rb` (customers index/show/forms).
 
 * `test/system/app_shell_contract_test.rb` still passes after POS touches
 * POS workspace layout tests unchanged in behavior

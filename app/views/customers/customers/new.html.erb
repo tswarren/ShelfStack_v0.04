@@ -7,7 +7,7 @@
   <%= hidden_field_tag :return_to, @return_to if @return_to.present? %>
   <%= render "form", f: f, customer: @customer %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Customer", class: "ss-btn" %>
-    <%= link_to "Cancel", @return_to.presence || customers_customers_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Customer", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: @return_to.presence || customers_customers_path %>
   </footer>
 <% end %>
