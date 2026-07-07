@@ -1,28 +1,41 @@
-<h1>Tax Mappings <%= link_to "New", new_setup_store_tax_category_rate_path, class: "ss-btn" %></h1>
+<% new_tax_mapping_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_store_tax_category_rate_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Tax Mappings",
+           description: "Effective-dated mappings from tax categories to store tax rates.",
+           actions: new_tax_mapping_action %>
 
 <% if @stores.many? %>
-  <p>
-    Filter:
-    <%= link_to "All stores", setup_store_tax_category_rates_path, class: params[:store_id].blank? ? "ss-link-active" : nil %>
+  <div class="ss-filter-bar">
+    <%= link_to "All stores", setup_store_tax_category_rates_path, class: params[:store_id].blank? ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
     <% @stores.each do |store| %>
-      | <%= link_to store.store_number, setup_store_tax_category_rates_path(store_id: store.id), class: params[:store_id].to_s == store.id.to_s ? "ss-link-active" : nil %>
+      <%= link_to store.store_number,
+            setup_store_tax_category_rates_path(store_id: store.id),
+            class: params[:store_id].to_s == store.id.to_s ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
     <% end %>
-  </p>
+  </div>
 <% end %>
 
-<table class="ss-table">
-  <thead><tr><th>Store</th><th>Tax Category</th><th>Rate</th><th>Effective</th><th>Ends</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @store_tax_category_rates.each do |mapping| %>
-      <tr>
-        <td><%= mapping.store.store_number %></td>
-        <td><%= mapping.tax_category.name %></td>
-        <td><%= mapping.store_tax_rate.name %> (<%= format_basis_points(mapping.store_tax_rate.tax_rate_bps) %>)</td>
-        <td><%= mapping.effective_on %></td>
-        <td><%= mapping.ends_on || "Open-ended" %></td>
-        <td><span class="<%= status_class(mapping.active?) %>"><%= status_label(mapping.active?) %></span></td>
-        <td><%= link_to "View", setup_store_tax_category_rate_path(mapping) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% if @store_tax_category_rates.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Store</th><th>Tax Category</th><th>Rate</th><th>Effective</th><th>Ends</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @store_tax_category_rates.each do |mapping| %>
+        <tr>
+          <td><%= mapping.store.store_number %></td>
+          <td><%= mapping.tax_category.name %></td>
+          <td><%= mapping.store_tax_rate.name %> (<%= format_basis_points(mapping.store_tax_rate.tax_rate_bps) %>)</td>
+          <td><%= mapping.effective_on %></td>
+          <td><%= mapping.ends_on || "Open-ended" %></td>
+          <td><%= ss_status_badge(status_label(mapping.active?), status: mapping.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_store_tax_category_rate_path(mapping) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No tax mappings yet",
+             message: "Create a mapping to connect tax categories to store tax rates for a date range.",
+             actions: new_tax_mapping_action %>
+<% end %>

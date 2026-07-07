@@ -6,7 +6,7 @@
 <%= form_with model: @store_tax_category_rate, url: setup_store_tax_category_rate_path(@store_tax_category_rate), class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, store_tax_category_rate: @store_tax_category_rate, stores: @stores, tax_categories: @tax_categories, store_tax_rates: @store_tax_rates %>
   <footer class="ss-form-actions">
-    <%= f.submit "Update Tax Mapping", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_store_tax_category_rate_path(@store_tax_category_rate), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Update Tax Mapping", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_store_tax_category_rate_path(@store_tax_category_rate) %>
   </footer>
 <% end %>

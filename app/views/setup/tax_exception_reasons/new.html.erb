@@ -1,5 +1,12 @@
-<h1>New Tax Exception Reason</h1>
-<%= form_with model: @tax_exception_reason, url: setup_tax_exception_reasons_path, class: "ss-form" do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Tax Exception Reason",
+           description: "Reason codes staff select when applying POS tax exemptions or overrides." %>
+
+<%= form_with model: @tax_exception_reason, url: setup_tax_exception_reasons_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, tax_exception_reason: @tax_exception_reason %>
-  <%= f.submit "Create", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Create Tax Exception Reason", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_tax_exception_reasons_path %>
+  </footer>
 <% end %>

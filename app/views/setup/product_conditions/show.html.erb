@@ -1,21 +1,32 @@
 <%= render "setup/shared/back_link", path: setup_product_conditions_path, label: "Product Conditions" %>
-<h1><%= @product_condition.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @product_condition,
+    edit_path: edit_setup_product_condition_path(@product_condition),
+    inactivate_path: inactivate_setup_product_condition_path(@product_condition),
+    reactivate_path: reactivate_setup_product_condition_path(@product_condition)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @product_condition.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Condition key</dt><dd><%= @product_condition.condition_key %></dd>
   <dt>Short name</dt><dd><%= @product_condition.short_name %></dd>
   <dt>SKU component</dt><dd><%= @product_condition.sku_component || "—" %></dd>
   <dt>List price factor</dt><dd><%= format_basis_points(@product_condition.default_list_price_factor_bps) %></dd>
   <dt>New condition</dt><dd><%= @product_condition.new_condition? ? "Yes" : "No" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@product_condition.active?) %>"><%= status_label(@product_condition.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@product_condition.active?), status: @product_condition.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_product_condition_path(@product_condition), class: "ss-btn" %>
-  <% if @product_condition.active? %>
-    <%= button_to "Inactivate", inactivate_setup_product_condition_path(@product_condition), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_product_condition_path(@product_condition), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_product_condition_path(@product_condition), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this condition?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "product-condition-danger-zone-heading",
+           message: "Delete removes the condition only when nothing references it. Prefer inactivating to preserve variant history.",
+           delete_label: "Delete product condition",
+           delete_path: setup_product_condition_path(@product_condition),
+           confirm_message: "Delete this product condition? This cannot be undone." %>

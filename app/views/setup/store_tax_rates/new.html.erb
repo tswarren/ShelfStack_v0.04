@@ -6,7 +6,7 @@
 <%= form_with model: @store_tax_rate, url: setup_store_tax_rates_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, store_tax_rate: @store_tax_rate, stores: @stores %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Store Tax Rate", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_store_tax_rates_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Store Tax Rate", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_store_tax_rates_path %>
   </footer>
 <% end %>

@@ -98,6 +98,23 @@ Repeat pilot assertions per migrated setup index/show.
 
 Integration tests: `setup_vendors_ux_contract_test.rb`, `setup_tax_categories_ux_contract_test.rb`, `setup_pr4_surfaces_ux_contract_test.rb` (remaining six surfaces), `setup_home_ux_contract_test.rb` (setup landing).
 
+### PR 4B — Remaining setup CRUD (Batch A + B)
+
+| Surface | Status on integration branch |
+| ------- | ---------------------------- |
+| `setup/roles` | Complete |
+| `setup/permissions` | Complete (index only) |
+| `setup/workstations` | Complete |
+| `setup/product_conditions` | Complete |
+| `setup/display_locations` | Complete |
+| `setup/inventory_reason_codes` | Complete |
+| `setup/stored_value_reason_codes` | Complete |
+| `setup/tax_exception_reasons` | Complete |
+| `setup/store_tax_rates` | Complete |
+| `setup/store_tax_category_rates` | Complete |
+
+Integration tests: `setup_pr4b_surfaces_ux_contract_test.rb`. Button partial defaults `ss-inline-form` for non-GET `button_to` wrappers.
+
 ### PR 4½ — Setup landing (complete on branch)
 
 | Test area | Assertion |

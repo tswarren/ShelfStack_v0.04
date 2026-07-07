@@ -1,28 +1,30 @@
-<%= render "setup/shared/back_link", path: setup_stored_value_reason_codes_path, label: "Stored Value Reason Codes" %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Stored Value Reason Code",
+           description: "Reason codes for manual stored value issues, adjustments, and voids." %>
 
-<h1>New Stored Value Reason Code</h1>
 <%= form_with model: @reason_code, url: setup_stored_value_reason_codes_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "shared/forms/errors", record: @reason_code %>
   <div class="ss-form-grid ss-form-grid--2">
     <div class="ss-field">
       <%= f.label :reason_key, class: "ss-label" %>
-      <%= f.text_field :reason_key %>
+      <%= f.text_field :reason_key, class: "ss-input" %>
     </div>
     <div class="ss-field">
       <%= f.label :name, class: "ss-label" %>
-      <%= f.text_field :name %>
+      <%= f.text_field :name, class: "ss-input" %>
     </div>
   </div>
   <div class="ss-field">
     <%= f.label :description, class: "ss-label" %>
-    <%= f.text_area :description, rows: 3 %>
+    <%= f.text_area :description, rows: 3, class: "ss-input" %>
   </div>
   <div class="ss-field">
     <%= f.label :active, class: "ss-label" %>
     <%= f.check_box :active %>
   </div>
   <footer class="ss-form-actions">
-    <%= f.submit "Create reason code", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_stored_value_reason_codes_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create reason code", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_stored_value_reason_codes_path %>
   </footer>
 <% end %>

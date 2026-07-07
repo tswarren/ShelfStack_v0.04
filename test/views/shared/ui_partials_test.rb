@@ -35,6 +35,16 @@ class SharedUiPartialsTest < ActionView::TestCase
     assert_not_includes html, "<a "
   end
 
+  test "button partial defaults inline form class for non-get button_to" do
+    html = render(
+      partial: "shared/ui/button",
+      locals: { label: "Inactivate", variant: :secondary, url: "/setup/vendors/1", method: :patch }
+    )
+
+    assert_includes html, 'class="ss-inline-form"'
+    assert_includes html, "ss-btn-secondary"
+  end
+
   test "page_header partial renders h1 and page actions" do
     html = render(
       partial: "shared/ui/page_header",

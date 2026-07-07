@@ -15,7 +15,11 @@
   data_attrs = local_assigns.fetch(:data, {})
   aria_attrs = local_assigns.fetch(:aria, {})
   form_options = (local_assigns[:form] || {}).dup
-  form_options[:class] = local_assigns[:form_class] if local_assigns[:form_class].present?
+  if url.present? && local_assigns[:method].present? && local_assigns[:method].to_s.downcase != "get"
+    form_options[:class] = local_assigns[:form_class].presence || form_options[:class].presence || "ss-inline-form"
+  elsif local_assigns[:form_class].present?
+    form_options[:class] = local_assigns[:form_class]
+  end
 %>
 <% if url.present? %>
   <% if disabled %>

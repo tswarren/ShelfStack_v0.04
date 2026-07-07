@@ -1,19 +1,30 @@
 <%= render "setup/shared/back_link", path: setup_display_locations_path, label: "Display Locations" %>
-<h1><%= @display_location.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @display_location,
+    edit_path: edit_setup_display_location_path(@display_location),
+    inactivate_path: inactivate_setup_display_location_path(@display_location),
+    reactivate_path: reactivate_setup_display_location_path(@display_location)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @display_location.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Short name</dt><dd><%= @display_location.short_name %></dd>
   <dt>Parent</dt><dd><%= @display_location.parent&.name || "—" %></dd>
   <dt>Sort order</dt><dd><%= @display_location.sort_order %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@display_location.active?) %>"><%= status_label(@display_location.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@display_location.active?), status: @display_location.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_display_location_path(@display_location), class: "ss-btn" %>
-  <% if @display_location.active? %>
-    <%= button_to "Inactivate", inactivate_setup_display_location_path(@display_location), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_display_location_path(@display_location), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_display_location_path(@display_location), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this display location?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "display-location-danger-zone-heading",
+           message: "Delete removes the display location only when nothing references it. Prefer inactivating.",
+           delete_label: "Delete display location",
+           delete_path: setup_display_location_path(@display_location),
+           confirm_message: "Delete this display location? This cannot be undone." %>

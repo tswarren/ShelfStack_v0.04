@@ -1,27 +1,40 @@
-<h1>Store Tax Rates <%= link_to "New", new_setup_store_tax_rate_path, class: "ss-btn" %></h1>
+<% new_store_tax_rate_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_store_tax_rate_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Store Tax Rates",
+           description: "Named tax rates for each store. Map tax categories to these rates separately.",
+           actions: new_store_tax_rate_action %>
 
 <% if @stores.many? %>
-  <p>
-    Filter:
-    <%= link_to "All stores", setup_store_tax_rates_path, class: params[:store_id].blank? ? "ss-link-active" : nil %>
+  <div class="ss-filter-bar">
+    <%= link_to "All stores", setup_store_tax_rates_path, class: params[:store_id].blank? ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
     <% @stores.each do |store| %>
-      | <%= link_to store.store_number, setup_store_tax_rates_path(store_id: store.id), class: params[:store_id].to_s == store.id.to_s ? "ss-link-active" : nil %>
+      <%= link_to store.store_number,
+            setup_store_tax_rates_path(store_id: store.id),
+            class: params[:store_id].to_s == store.id.to_s ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
     <% end %>
-  </p>
+  </div>
 <% end %>
 
-<table class="ss-table">
-  <thead><tr><th>Store</th><th>Name</th><th>Identifier</th><th>Rate</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @store_tax_rates.each do |rate| %>
-      <tr>
-        <td><%= rate.store.store_number %></td>
-        <td><%= rate.name %></td>
-        <td><%= rate.tax_identifier %></td>
-        <td><%= format_basis_points(rate.tax_rate_bps) %></td>
-        <td><span class="<%= status_class(rate.active?) %>"><%= status_label(rate.active?) %></span></td>
-        <td><%= link_to "View", setup_store_tax_rate_path(rate) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% if @store_tax_rates.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Store</th><th>Name</th><th>Identifier</th><th>Rate</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @store_tax_rates.each do |rate| %>
+        <tr>
+          <td><%= rate.store.store_number %></td>
+          <td><%= rate.name %></td>
+          <td><%= rate.tax_identifier %></td>
+          <td><%= format_basis_points(rate.tax_rate_bps) %></td>
+          <td><%= ss_status_badge(status_label(rate.active?), status: rate.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_store_tax_rate_path(rate) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No store tax rates yet",
+             message: "Create a named tax rate before mapping categories to it.",
+             actions: new_store_tax_rate_action %>
+<% end %>
