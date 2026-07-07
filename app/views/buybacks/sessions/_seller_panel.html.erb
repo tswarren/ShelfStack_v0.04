@@ -17,9 +17,9 @@
   <% end %>
   <% if buyback_session.editable? %>
     <p class="ss-form-actions">
-      <%= link_to "New customer", new_customers_customer_path(return_to: buybacks_session_path(buyback_session)), class: "ss-btn ss-btn-secondary ss-btn--small" %>
-      <%= link_to "Edit customer", edit_customers_customer_path(buyback_session.customer, return_to: buybacks_session_path(buyback_session)), class: "ss-btn ss-btn-secondary ss-btn--small" %>
-      <%= link_to "Change customer", new_buybacks_session_path, class: "ss-btn ss-btn-secondary ss-btn--small" %>
+      <%= render "shared/ui/button", label: "New customer", variant: :secondary, size: :small, url: new_customers_customer_path(return_to: buybacks_session_path(buyback_session)) %>
+      <%= render "shared/ui/button", label: "Edit customer", variant: :secondary, size: :small, url: edit_customers_customer_path(buyback_session.customer, return_to: buybacks_session_path(buyback_session)) %>
+      <%= render "shared/ui/button", label: "Change customer", variant: :secondary, size: :small, url: new_buybacks_session_path %>
     </p>
   <% end %>
 </section>

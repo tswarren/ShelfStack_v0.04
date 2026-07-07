@@ -11,10 +11,12 @@
   <% if line.product.blank? %>
     <section class="ss-buyback-line-detail__section">
       <h4>Match / create record</h4>
-      <%= button_to "Resolve",
-            resolve_buybacks_session_line_path(session, line),
+      <%= render "shared/ui/button",
+            label: "Resolve",
+            variant: :secondary,
+            size: :small,
+            url: resolve_buybacks_session_line_path(session, line),
             method: :post,
-            class: "ss-btn ss-btn-secondary ss-btn--small",
             form: { data: { turbo_frame: dom_id(line, :resolve) } } %>
       <%= turbo_frame_tag dom_id(line, :resolve) do %>
         <p class="ss-muted ss-hint">Click Resolve to search catalog matches.</p>
@@ -25,7 +27,7 @@
       <%= form_with url: intake_buybacks_session_line_path(session, line), class: "ss-form-inline", data: { turbo_stream: true } do %>
         <%= select_tag :sub_department_id, options_from_collection_for_select(sub_departments, :id, :name), include_blank: "Subdepartment" %>
         <%= select_tag :product_condition_id, options_from_collection_for_select(conditions, :id, :name), include_blank: "Condition" %>
-        <%= submit_tag "Create intake item", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+        <%= render "shared/ui/button", label: "Create intake item", type: :submit, variant: :secondary, size: :small %>
       <% end %>
     </section>
   <% elsif session.editable? && !line.status.in?(%w[posted voided]) %>
@@ -48,16 +50,19 @@
       <%= form_with url: reject_buybacks_session_line_path(session, line), method: :post, class: "ss-form-inline", data: { turbo_stream: true } do %>
         <%= select_tag :buyback_reject_reason_id, options_from_collection_for_select(reject_reasons, :id, :name), include_blank: "Reject reason" %>
         <%= hidden_field_tag :outcome, "rejected_by_store" %>
-        <%= submit_tag "Store reject", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+        <%= render "shared/ui/button", label: "Store reject", type: :submit, variant: :secondary, size: :small %>
       <% end %>
     </section>
   <% end %>
 
   <% if session.draft? && line.status.in?(%w[pending resolved priced]) %>
-    <%= button_to "Remove line",
-          buybacks_session_line_path(session, line),
+    <%= render "shared/ui/button",
+          label: "Remove line",
+          variant: :secondary,
+          size: :small,
+          url: buybacks_session_line_path(session, line),
           method: :delete,
-          class: "ss-btn ss-btn-secondary ss-btn--small",
-          form: { data: { turbo_stream: true, turbo_confirm: "Remove this line?" } } %>
+          data: { turbo_confirm: "Remove this line?" },
+          form: { data: { turbo_stream: true } } %>
   <% end %>
 </div>

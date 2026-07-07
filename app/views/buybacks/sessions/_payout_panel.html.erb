@@ -25,7 +25,7 @@
         <% if cash_reason.present? && decision_totals&.accepted_cash_cents.to_i.positive? %>
           <p class="ss-hint"><%= cash_reason %></p>
         <% end %>
-        <%= f.submit "Select cash payout", class: "ss-btn ss-btn-secondary", disabled: !cash_enabled || cash_reason.present? %>
+        <%= render "shared/ui/button", label: "Select cash payout", type: :submit, variant: :secondary, disabled: !cash_enabled || cash_reason.present? %>
       <% end %>
 
       <% trade_enabled = workflow.action_state(:save_payout).enabled && decision_totals&.accepted_trade_credit_cents.to_i.positive? %>
@@ -33,7 +33,7 @@
         <%= f.hidden_field :payout_mode, value: "trade_credit" %>
         <h3><%= buyback_payout_card_label("trade_credit") %></h3>
         <p class="ss-buyback-payout-card__amount"><%= buyback_money(decision_totals&.accepted_trade_credit_cents) %></p>
-        <%= f.submit "Select trade credit", class: "ss-btn ss-btn-secondary", disabled: !trade_enabled %>
+        <%= render "shared/ui/button", label: "Select trade credit", type: :submit, variant: :secondary, disabled: !trade_enabled %>
       <% end %>
 
       <% donation_only = decision_totals.present? && decision_totals.donation_count.positive? && decision_totals.accepted_cash_cents.zero? && decision_totals.accepted_trade_credit_cents.zero? %>
@@ -41,7 +41,7 @@
         <%= f.hidden_field :payout_mode, value: "no_value_donation" %>
         <h3><%= buyback_payout_card_label("no_value_donation") %></h3>
         <p class="ss-muted">All posting lines are donated with zero payout.</p>
-        <%= f.submit "Select donation completion", class: "ss-btn ss-btn-secondary", disabled: !donation_only %>
+        <%= render "shared/ui/button", label: "Select donation completion", type: :submit, variant: :secondary, disabled: !donation_only %>
       <% end %>
     </div>
 
@@ -58,7 +58,7 @@
         <%= render "shared/forms/checkbox", f: f, record: buyback_session, field: :needs_cleaning %>
         <%= render "shared/forms/checkbox", f: f, record: buyback_session, field: :hold_for_review %>
       </div>
-      <%= f.submit "Save processing options", class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button", label: "Save processing options", type: :submit, variant: :secondary %>
     <% end %>
   </section>
 <% end %>

@@ -1,9 +1,9 @@
-<h1>Buyback reports</h1>
+<%= render "shared/ui/page_header", title: "Buyback reports" %>
 
 <%= form_with url: buybacks_reports_path, method: :get, class: "ss-form ss-form-inline" do %>
   <%= date_field_tag :start_date, params[:start_date] %>
   <%= date_field_tag :end_date, params[:end_date] %>
-  <%= submit_tag "Filter", class: "ss-btn ss-btn-secondary" %>
+  <%= render "shared/ui/button", label: "Filter", type: :submit, variant: :secondary %>
 <% end %>
 
 <dl class="ss-stats-grid">

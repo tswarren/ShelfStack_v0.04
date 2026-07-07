@@ -19,7 +19,7 @@
     </div>
   </div>
   <footer class="ss-form-actions">
-    <%= submit_tag "Start session", class: "ss-btn" %>
-    <%= link_to "Cancel", buybacks_root_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Start session", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: buybacks_root_path %>
   </footer>
 <% end %>

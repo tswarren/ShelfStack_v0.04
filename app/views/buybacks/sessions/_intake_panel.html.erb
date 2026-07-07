@@ -7,7 +7,7 @@
   <%= form_with url: buybacks_session_lines_path(buyback_session), class: "ss-form ss-form-inline", data: { buyback_intake_target: "form", action: "submit->buyback-intake#submit" } do %>
     <%= text_field_tag :identifier, nil, placeholder: "ISBN / identifier", autofocus: true, data: { buyback_intake_target: "identifier" } %>
     <%= text_field_tag :title, nil, placeholder: "Title (if no identifier)", data: { buyback_intake_target: "title" } %>
-    <%= submit_tag "Add line", class: "ss-btn", data: { buyback_intake_target: "submit" } %>
+    <%= render "shared/ui/button", label: "Add line", type: :submit, variant: :primary, data: { buyback_intake_target: "submit" } %>
   <% end %>
   <p class="ss-hint">Press <kbd>/</kbd> to focus scan field. <kbd>N</kbd> jumps to the next item needing work.</p>
 </section>

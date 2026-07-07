@@ -18,10 +18,12 @@
       <ul class="ss-buyback-resolve-results__variants">
         <% result.variants.each do |variant| %>
           <li>
-            <%= button_to variant.name,
-                  select_variant_buybacks_session_line_path(session, line, product_variant_id: variant.id),
+            <%= render "shared/ui/button",
+                  label: variant.name,
+                  variant: :secondary,
+                  size: :small,
+                  url: select_variant_buybacks_session_line_path(session, line, product_variant_id: variant.id),
                   method: :post,
-                  class: "ss-btn ss-btn-secondary ss-btn--small",
                   form: { data: { turbo_stream: true } } %>
             <span class="ss-muted"><%= variant.sku %> · <%= variant.condition&.short_name %></span>
           </li>
@@ -43,7 +45,7 @@
               options_from_collection_for_select(conditions, :id, :name),
               include_blank: "Condition",
               required: true %>
-        <%= submit_tag "Add used variant", class: "ss-btn ss-btn-secondary ss-btn--small" %>
+        <%= render "shared/ui/button", label: "Add used variant", type: :submit, variant: :secondary, size: :small %>
       <% end %>
     <% end %>
 

@@ -1,23 +1,22 @@
-<div class="ss-page-header">
-  <div>
-    <h1><%= @buyback_session.buyback_number.presence || "Buyback session ##{@buyback_session.id}" %></h1>
-    <p class="ss-muted"><%= buyback_status_label(@buyback_session.status) %></p>
-  </div>
-  <div>
-    <% if @buyback_session.completed? %>
-      <%= link_to "Receipt", receipt_buybacks_session_path(@buyback_session), class: "ss-btn ss-btn-secondary" %>
-      <% if @buyback_session.payout_mode == "trade_credit" %>
-        <%= link_to "Trade credit slip", trade_credit_slip_buybacks_session_path(@buyback_session), class: "ss-btn ss-btn-secondary" %>
-      <% end %>
-    <% end %>
-    <% if @buyback_session.quoted? || @buyback_session.decision? %>
-      <%= link_to "Print proposal", print_proposal_buybacks_session_path(@buyback_session), class: "ss-btn ss-btn-secondary", target: "_blank" %>
-    <% end %>
-    <% if current_register_session %>
-      <%= link_to "Register session", pos_register_session_path(current_register_session), class: "ss-btn ss-btn-secondary" %>
-    <% end %>
-  </div>
-</div>
+<%
+  header_actions = safe_join([
+    (@buyback_session.completed? ?
+      safe_join([
+        render("shared/ui/button", label: "Receipt", variant: :secondary, url: receipt_buybacks_session_path(@buyback_session)),
+        (@buyback_session.payout_mode == "trade_credit" ?
+          render("shared/ui/button", label: "Trade credit slip", variant: :secondary, url: trade_credit_slip_buybacks_session_path(@buyback_session)) : nil)
+      ].compact) : nil),
+    ((@buyback_session.quoted? || @buyback_session.decision?) ?
+      render("shared/ui/button", label: "Print proposal", variant: :secondary, url: print_proposal_buybacks_session_path(@buyback_session), target: "_blank") : nil),
+    (current_register_session ?
+      render("shared/ui/button", label: "Register session", variant: :secondary, url: pos_register_session_path(current_register_session)) : nil)
+  ].compact)
+%>
+
+<%= render "shared/ui/page_header",
+           title: (@buyback_session.buyback_number.presence || "Buyback session ##{@buyback_session.id}"),
+           description: buyback_status_label(@buyback_session.status),
+           actions: header_actions %>
 
 <div data-controller="buyback-workspace buyback-line-drawer buyback-work-items buyback-intake"
      id="buyback-workspace"
@@ -62,7 +61,7 @@
   <% if @buyback_session.editable? %>
     <%= render "buybacks/sessions/sticky_footer", buyback_session: @buyback_session, workflow: @workflow %>
   <% elsif @buyback_session.completed? %>
-    <section class="ss-panel">
+    <section class="ss-panel ss-danger-zone">
       <h2>Void</h2>
       <% if @buyback_session.payout_mode == "cash" %>
         <p class="ss-hint">Cash payout voids require supervisor authorization and an open register session.</p>
@@ -70,7 +69,11 @@
       <%= form_with url: void_buybacks_session_path(@buyback_session), method: :patch, class: "ss-form" do %>
         <%= text_field_tag :void_reason, nil, placeholder: "Void reason", required: true %>
         <%= text_field_tag :pos_authorization_id, nil, placeholder: "Authorization ID (cash voids)" %>
-        <%= submit_tag "Void buyback", class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Void this completed buyback?" } %>
+        <%= render "shared/ui/button",
+              label: "Void buyback",
+              type: :submit,
+              variant: :danger,
+              data: { turbo_confirm: "Void this completed buyback?" } %>
       <% end %>
     </section>
   <% end %>

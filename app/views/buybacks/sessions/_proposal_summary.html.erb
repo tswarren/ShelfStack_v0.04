@@ -18,8 +18,8 @@
         <p class="ss-hint ss-hint-warning">Proposal changed since last print.</p>
       <% end %>
       <div class="ss-form-actions">
-        <%= link_to "Print proposal", print_proposal_buybacks_session_path(buyback_session), class: "ss-btn ss-btn-secondary", target: "_blank" %>
-        <%= link_to "Revise proposal", "#work-items-panel", class: "ss-btn ss-btn-secondary" %>
+        <%= render "shared/ui/button", label: "Print proposal", variant: :secondary, url: print_proposal_buybacks_session_path(buyback_session), target: "_blank" %>
+        <%= render "shared/ui/button", label: "Revise proposal", variant: :secondary, url: "#work-items-panel" %>
         <% if buyback_session.quoted? && !buyback_session.decision? %>
           <% open_state = workflow.action_state(:open_decision) %>
           <%= buyback_action_button(
@@ -27,8 +27,7 @@
                 method: :patch,
                 label: "Open customer decisions",
                 enabled: open_state.enabled,
-                reason: open_state.reason,
-                class: "ss-btn"
+                reason: open_state.reason
               ) %>
         <% end %>
       </div>
@@ -40,8 +39,7 @@
             method: :patch,
             label: workflow.save_proposal_label,
             enabled: save_state.enabled,
-            reason: save_state.reason,
-            class: "ss-btn"
+            reason: save_state.reason
           ) %>
       <% if workflow.proposal_revision_needed? %>
         <p class="ss-hint">Save the revised proposal, reprint it, then reopen customer decisions if needed.</p>
@@ -60,8 +58,7 @@
           method: :patch,
           label: workflow.save_proposal_label,
           enabled: save_state.enabled,
-          reason: save_state.reason,
-          class: "ss-btn"
+          reason: save_state.reason
         ) %>
   </section>
 <% end %>
