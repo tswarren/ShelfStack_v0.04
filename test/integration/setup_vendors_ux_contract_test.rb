@@ -45,6 +45,7 @@ class SetupVendorsUxContractTest < ActionDispatch::IntegrationTest
     get setup_vendor_path(vendor)
 
     assert_response :success
+    assert_select ".ss-detail-back .ss-btn-tertiary", text: /Back to Vendors/
     assert_select ".ss-page-header h1", text: "Showcase Vendor"
     page_actions = css_select(".ss-page-actions").first.to_s
     assert_operator page_actions.index("Inactivate"), :<, page_actions.index("Edit")

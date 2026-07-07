@@ -74,7 +74,7 @@ Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr2-forms`.
 | --------- | --------- |
 | Vendors index | `.ss-page-header`, `.ss-table`, `.ss-status-badge` |
 | Vendors index (empty) | `.ss-empty-state` |
-| Vendors show | page header (secondary → primary), status badge, danger zone delete |
+| Vendors show | page header (secondary → primary), status badge, tertiary back link, danger zone delete |
 | Vendors forms | primary submit left, cancel tertiary right |
 | Integration | `test/integration/setup_vendors_ux_contract_test.rb` |
 

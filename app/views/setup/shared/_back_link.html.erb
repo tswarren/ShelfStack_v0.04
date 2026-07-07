@@ -1,4 +1,8 @@
 <%# locals: path:, label: %>
 <nav class="ss-detail-back" aria-label="Back navigation">
-  <%= link_to "← Back to #{label}", path, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+  <%= render "shared/ui/button",
+             label: "← Back to #{label}",
+             variant: :tertiary,
+             size: :small,
+             url: path %>
 </nav>
