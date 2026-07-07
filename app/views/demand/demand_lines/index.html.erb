@@ -20,12 +20,15 @@
 
 <%= form_with url: demand_root_path, method: :get, class: "ss-filter-bar ss-form" do %>
   <%= hidden_field_tag :queue, params[:queue] if params[:queue].present? %>
+  <%= label_tag :status, "Status", class: "ss-sr-only" %>
   <%= select_tag :status,
         options_for_select([["All statuses", ""]] + DemandLine::STATUSES.map { |s| [demand_status_label(s), s] }, params[:status]),
         class: "ss-input" %>
+  <%= label_tag :capture_intent, "Capture intent", class: "ss-sr-only" %>
   <%= select_tag :capture_intent,
         options_for_select([["All intents", ""]] + DemandLine::CAPTURE_INTENTS.map { |i| [demand_capture_intent_label(i), i] }, params[:capture_intent]),
         class: "ss-input" %>
+  <%= label_tag :allocation_state, "Allocation state", class: "ss-sr-only" %>
   <%= select_tag :allocation_state,
         options_for_select(
           [
@@ -38,6 +41,7 @@
           params[:allocation_state]
         ),
         class: "ss-input" %>
+  <%= label_tag :allocation_kind, "Allocation kind", class: "ss-sr-only" %>
   <%= select_tag :allocation_kind,
         options_for_select(
           [
@@ -48,6 +52,7 @@
           params[:allocation_kind]
         ),
         class: "ss-input" %>
+  <%= label_tag :q, "Search demand lines", class: "ss-sr-only" %>
   <%= text_field_tag :q, params[:q], placeholder: "Search demand number, customer, SKU, title…", class: "ss-input" %>
   <%= render "shared/ui/button", label: "Filter", type: :submit, variant: :secondary %>
 <% end %>

@@ -29,6 +29,8 @@ class ItemsItemUxContractTest < ActionDispatch::IntegrationTest
     assert_select ".ss-detail-back .ss-btn-tertiary", text: /Back to Items/
     assert_select ".ss-item-hero h1.ss-item-title", text: @product.title
     assert_select ".ss-page-header", count: 0
+    assert_select "main.ss-item-main", count: 0
+    assert_select "section.ss-item-main[aria-label='Item overview']"
     assert_select ".ss-item-tabs a.active", text: "Overview"
   end
 

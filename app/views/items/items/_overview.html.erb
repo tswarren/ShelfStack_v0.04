@@ -71,7 +71,7 @@
   <% end %>
 
   <div class="ss-item-detail__body">
-    <main class="ss-item-main">
+    <section class="ss-item-main" aria-label="Item overview">
       <% if overview.present? %>
         <section class="ss-item-summary-cards" aria-label="Operational summary">
           <div class="ss-item-summary-cards__grid">
@@ -257,7 +257,7 @@
           </section>
         <% end %>
       <% end %>
-    </main>
+    </section>
 
     <aside class="ss-item-sidebar">
       <%= render "items/items/overview_subjects", item: item %>

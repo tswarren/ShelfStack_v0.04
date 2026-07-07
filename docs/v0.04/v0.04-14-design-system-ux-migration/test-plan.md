@@ -153,6 +153,31 @@ Integration tests: `setup_pr4c_surfaces_ux_contract_test.rb`.
 
 Integration tests: `customers_customers_ux_contract_test.rb`, `items_index_ux_contract_test.rb`, `items_item_ux_contract_test.rb`, `demand_queues_ux_contract_test.rb`, `reports_ux_contract_test.rb`.
 
+### PR polish — Pre–Phase 6 contract fixes
+
+| Test area | Assertion |
+| --------- | --------- |
+| `page_header` / `empty_state` | block content wins over `actions:` local |
+| Item overview | no nested `main.ss-item-main`; uses `section.ss-item-main` |
+| Customers index filter | `label.ss-sr-only` for search field |
+| Demand index filters | `label.ss-sr-only` for status and search fields |
+
+Integration/view tests: `ui_partials_test.rb` (block precedence), `customers_customers_ux_contract_test.rb`, `demand_queues_ux_contract_test.rb`, `items_item_ux_contract_test.rb`.
+
+### Phase 6 — Domain workspaces (next)
+
+Add per-slice integration tests following Phase 5 / setup contract patterns. Track surfaces in [ux-migration-build-plan.md](../../design/ux-migration-build-plan.md#phase-6-tracking-checklist).
+
+| Workspace | Contract test (add when slice lands) |
+| --------- | ------------------------------------ |
+| POS | page header/actions; no layout behavior change |
+| Purchasing / receiving | tables, badges, bounded line UX |
+| Inventory ops | lifecycle header + danger zone |
+| Item operations | drawer actions; legacy admin routes |
+| Buybacks | index + workflow show patterns |
+
+**Later (not Phase 6 gate):** field `aria-describedby` mass wiring, items filter partial, `shared/ui/_filter_chip` partial — see build plan Later backlog.
+
 * `test/system/app_shell_contract_test.rb` still passes after POS touches
 * POS workspace layout tests unchanged in behavior
 * No new rules added to monolithic `shelfstack.css` for migrated surfaces

@@ -9,13 +9,13 @@
       <p class="ss-page-description"><%= description %></p>
     <% end %>
   </div>
-  <% if local_assigns.fetch(:actions, nil).present? || block_given? %>
+  <%
+    actions_html = capture { yield } if block_given?
+    actions_html = actions if actions_html.blank? && local_assigns.fetch(:actions, nil).present?
+  %>
+  <% if actions_html.present? %>
     <div class="ss-page-actions">
-      <% if local_assigns.fetch(:actions, nil).present? %>
-        <%= actions %>
-      <% elsif block_given? %>
-        <%= yield %>
-      <% end %>
+      <%= actions_html %>
     </div>
   <% end %>
 </header>

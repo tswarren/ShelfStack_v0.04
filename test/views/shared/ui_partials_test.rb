@@ -56,6 +56,20 @@ class SharedUiPartialsTest < ActionView::TestCase
     assert_includes html, "ss-page-actions"
   end
 
+  test "page_header block wins over actions local" do
+    html = render(
+      inline: <<~ERB,
+        <%= render "shared/ui/page_header", title: "Vendors", actions: actions do %>
+          <button type="button" class="ss-btn">Block action</button>
+        <% end %>
+      ERB
+      locals: { actions: '<a href="/ignored">Ignored</a>'.html_safe }
+    )
+
+    assert_includes html, "Block action"
+    assert_not_includes html, "Ignored"
+  end
+
   test "forms page_header delegates to shared ui page_header" do
     html = render(partial: "shared/forms/page_header", locals: { title: "Formats" })
 
@@ -99,6 +113,20 @@ class SharedUiPartialsTest < ActionView::TestCase
     assert_includes html, "ss-empty-state__message"
     assert_includes html, "ss-empty-state__actions"
     assert_includes html, 'href="/new"'
+  end
+
+  test "empty_state block wins over actions local" do
+    html = render(
+      inline: <<~ERB,
+        <%= render "shared/ui/empty_state", title: "No vendors", actions: actions do %>
+          <button type="button" class="ss-btn">Block action</button>
+        <% end %>
+      ERB
+      locals: { actions: '<a href="/ignored">Ignored</a>'.html_safe }
+    )
+
+    assert_includes html, "Block action"
+    assert_not_includes html, "Ignored"
   end
 
   test "reports empty_state delegates to shared ui empty_state" do

@@ -69,9 +69,16 @@ Migrate legacy and inconsistent views to the documented design system:
 | 3 | Pilot: setup vendors |
 | 4 | Remaining setup CRUD surfaces |
 | 5 | Customers, items, reports, demand |
+| polish | Pre–Phase 6 enabling-layer contract fixes |
 | 6 | POS, purchasing, receiving, inventory ops, buybacks |
 
-Full detail: [ux-migration-build-plan.md](../../design/ux-migration-build-plan.md).
+Full detail: [ux-migration-build-plan.md](../../design/ux-migration-build-plan.md) (includes Phase 6 tracking checklist and Later backlog).
+
+---
+
+## Later backlog (tracked, not blocking Phase 6)
+
+See build plan **Later backlog**: field `aria-describedby` mass wiring, items filter layout partial, `shared/ui/_filter_chip`, metric/summary partials, stored-value admin surfaces, full a11y audit, incremental `shelfstack.css` extraction.
 
 ---
 

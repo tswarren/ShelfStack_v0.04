@@ -370,6 +370,8 @@ Add `shared/ui/_metric_card` and `shared/ui/_summary` only when repetition prove
 
 **Defer:** buyer workbench until filter-chip CSS is proven and workbench patterns stabilize.
 
+**Polish gate (complete on integration branch):** Before Phase 6, fix enabling-layer contract fidelity and Phase 5 a11y gaps — see PR polish slice below.
+
 ---
 
 # Phase 6 — High-risk domain workspaces
@@ -380,7 +382,7 @@ Migrate last, with domain CSS extraction:
 POS
 purchasing / receiving
 inventory adjustments
-item operations
+item operations (variant drawer, allocation workbench, legacy items admin routes)
 buybacks (dynamic workbench patterns)
 ```
 
@@ -396,6 +398,52 @@ shelfstack.domain.inventory.css
 Do not force POS-, receiving-, or purchasing-specific controls into generic components unless truly reusable.
 
 **Interaction shell:** keep `shared/interaction/_modal`, `_drawer`, `_expanded_row`, `_shortcut_strip`. Extract styling from legacy CSS; do not fork partials.
+
+### Phase 6 tracking checklist
+
+Use this when opening each Phase 6 slice PR. Do not change domain rules — shell, buttons, badges, empty states, and domain CSS extraction only.
+
+| Workspace | Surfaces to migrate | Domain CSS | Notes |
+| --------- | ------------------- | ---------- | ----- |
+| POS | workspace header, status panel, command/tender/settlement drawers, completion flow | `shelfstack.domain.pos.css` | Keyboard workspace behavior is frozen (Phase 10-C); styling + button hierarchy only |
+| Purchasing / receiving | PO index/show, receipt lines, RTV, allocation visibility partials | `shelfstack.domain.orders.css` | Preserve Phase 8.5-3 demand/allocation semantics |
+| Inventory ops | adjustments index/show/post, balance views | `shelfstack.domain.inventory.css` | Store-scoped auth unchanged |
+| Item operations | variant ops drawer bodies, demand partials on item show, legacy `items/catalog_items`, `items/products`, `items/product_variants` admin routes | `shelfstack.domain.items.css` | Item hero/tab layout stays; migrate actions and tables |
+| Buybacks | index, staged workflow, proposal/decision drawers | `shelfstack.domain.items.css` or buyback-specific rules in domain layer | Dynamic workbench patterns; filter chips may appear here |
+
+### Phase 6 contract tests (add per slice)
+
+* Page header: secondary → primary; no delete in header
+* Form footer: primary submit left, tertiary cancel right
+* Danger zone for destructive lifecycle actions
+* `ss_status_badge` on index/show tables
+* `shared/ui/empty_state` on empty indexes
+* No new rules in monolithic `shelfstack.css`
+* POS: `app_shell_contract_test` and POS system tests remain green
+
+### Phase 6 explicit non-goals
+
+* POS command routing or keyboard behavior changes
+* New `shared/ui/_data_table` or workbench abstractions
+* Demand allocation / PO merge rule changes
+* Full items index filter layout refactor (see Later backlog)
+
+---
+
+# Later backlog (post–Phase 6 or incremental)
+
+Items to track but not block Phase 6 start:
+
+| Item | When | Notes |
+| ---- | ---- | ----- |
+| `shared/forms/_field` yields `field_aria` + callers wire `aria-describedby` | Incremental as forms are touched | Helpers exist; mass migration deferred |
+| Unknown button/alert variant raises in test/dev | Small helper cleanup | Production may keep fallback |
+| Items index filter layout → `shared/forms/field` or filter partial | After filter-chip partial proves out | `ss-items-index-filters` stays domain-specific until then |
+| `shared/ui/_filter_chip` partial | After repeated usage in buybacks/workbench | CSS contract exists |
+| `shared/ui/_metric_card`, `_summary` | Reports/dashboard repetition | Direct markup OK for now |
+| Customers stored-value admin surfaces | When that workspace is migrated | Not Phase 5 contract scope |
+| Full workspace a11y audit | Milestone close | Representative pages per workspace at minimum |
+| Complete `shelfstack.css` deletion | Ongoing extraction | Incremental per domain CSS file |
 
 ---
 
@@ -447,9 +495,25 @@ PR 3 — Pilot
   setup/vendors index + show
   pilot test
 
-PR 4+ — Setup surfaces (tax_categories, formats, …)
+PR 4C — Nested setup + link tables (complete on integration branch)
+  category_schemes, category_nodes, bisac, audit_events,
+  product_vendors, product_variant_vendors, inventory_locations, store_display_locations
 
-Later — Operational and domain workspaces
+PR polish — Pre–Phase 6 contract fixes (complete on integration branch)
+  page_header / empty_state block precedence
+  item overview nested main → section
+  customer + demand filter sr-only labels
+  contract tests
+
+Phase 5 — Operational surfaces (complete on integration branch)
+  customers, items index/detail, reports, demand queues
+
+Phase 6 — Domain workspaces (active next)
+  POS, purchasing/receiving, inventory ops, item operations, buybacks
+  see Phase 6 tracking checklist above
+
+Later — Enabling-layer follow-ups and filter/layout polish
+  field aria wiring, variant strictness, items filter partial, metric_card
 
 Release — v0.04-14/ux-migration → main + tag v0.04-14
 ```

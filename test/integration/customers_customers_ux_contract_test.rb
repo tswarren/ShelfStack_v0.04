@@ -24,6 +24,7 @@ class CustomersCustomersUxContractTest < ActionDispatch::IntegrationTest
     assert_select ".ss-page-header h1", text: "Customers"
     assert_select ".ss-page-description", text: /Search customer profiles/
     assert_select ".ss-page-actions .ss-btn-primary", text: "New"
+    assert_select "label.ss-sr-only[for=?]", "q", text: "Search customers"
     assert_select ".ss-status-badge.status-active", text: "Active"
     assert_select "a[href='#{customers_customer_path(customer)}']", text: "View"
   end

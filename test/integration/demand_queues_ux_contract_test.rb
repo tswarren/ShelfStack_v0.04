@@ -38,6 +38,8 @@ class DemandQueuesUxContractTest < ActionDispatch::IntegrationTest
     assert_select ".ss-page-actions .ss-btn-secondary", text: "Stock considerations"
     assert_select ".ss-page-actions .ss-btn-primary", text: "New"
     assert_select ".ss-filter-bar a.ss-filter-chip", minimum: 1
+    assert_select "label.ss-sr-only[for=?]", "status", text: "Status"
+    assert_select "label.ss-sr-only[for=?]", "q", text: "Search demand lines"
     assert_select "table.ss-table .ss-status-badge", text: "Open"
   end
 

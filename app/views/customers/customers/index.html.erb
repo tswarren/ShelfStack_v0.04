@@ -13,6 +13,7 @@
            actions: header_actions.presence %>
 
 <%= form_with url: customers_customers_path, method: :get, class: "ss-form" do %>
+  <%= label_tag :q, "Search customers", class: "ss-sr-only" %>
   <%= text_field_tag :q, params[:q], placeholder: "Search by name" %>
   <%= render "shared/ui/button", label: "Search", type: :submit, variant: :secondary %>
 <% end %>

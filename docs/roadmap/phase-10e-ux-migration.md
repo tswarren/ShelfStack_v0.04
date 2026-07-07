@@ -40,11 +40,23 @@ Do **not** build a partial for every component. Do **not** start with POS, purch
 | 1 | `shared/ui` button, page_header, alert | PR 1 |
 | 2 | `_errors`, `_field`, empty_state, `ss_status_badge` | PR 2 |
 | 3 | Pilot: `setup/vendors` index + show | PR 3 |
-| 4 | Remaining setup CRUD surfaces | PR 4+ |
-| 5 | Customers, items, reports, demand | Later |
-| 6 | POS, purchasing, receiving, inventory ops | Last |
+| 4 | Remaining setup CRUD surfaces (4, 4B, 4C) | PR 4+ |
+| polish | Pre–Phase 6 contract fixes (block precedence, nested main, filter labels) | PR polish |
+| 5 | Customers, items, reports, demand | Complete |
+| 6 | POS, purchasing, receiving, inventory ops, buybacks | **Active next** |
 
-Full APIs, tests, and surface order: [ux-migration-build-plan.md](../design/ux-migration-build-plan.md).
+Full APIs, tests, surface order, and Phase 6 tracking checklist: [ux-migration-build-plan.md](../design/ux-migration-build-plan.md).
+
+### Later backlog (not Phase 6 blockers)
+
+Tracked in the build plan **Later backlog** section:
+
+* `shared/forms/_field` aria yield + caller wiring (incremental)
+* Strict button/alert variant validation in test/dev
+* Items index filter layout partial / `shared/forms/field` adoption
+* `shared/ui/_filter_chip`, `_metric_card`, `_summary` partials
+* Customers stored-value admin migration
+* Full workspace a11y audit at milestone close
 
 ---
 
