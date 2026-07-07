@@ -2,7 +2,7 @@
   <%= render "reports/shared/header",
              title: "Demand Queue",
              scope: report.scope_label,
-             actions: safe_join([report_print_button, (back_path ? link_to("Back", back_path, class: "ss-btn ss-btn-secondary ss-report-no-print") : nil)].compact, " ") %>
+             actions: report_standard_actions(back_path: back_path, back_label: "Back") %>
 
   <%= render layout: "reports/shared/filter_bar", locals: { url: filter_url } do %>
     <div class="ss-field">

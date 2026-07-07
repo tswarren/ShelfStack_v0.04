@@ -3,10 +3,10 @@
   <div>
     <h1><%= title %></h1>
     <% if local_assigns.fetch(:scope, nil).present? %>
-      <p class="ss-report-scope"><%= scope %></p>
+      <p class="ss-page-description ss-report-scope"><%= scope %></p>
     <% end %>
   </div>
   <% if local_assigns.fetch(:actions, nil).present? %>
-    <div class="ss-report-actions"><%= actions %></div>
+    <div class="ss-page-actions ss-report-actions"><%= actions %></div>
   <% end %>
 </header>

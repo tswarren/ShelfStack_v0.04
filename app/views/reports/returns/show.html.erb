@@ -2,11 +2,7 @@
   <%= render "reports/shared/header",
              title: "Returns List",
              scope: "Recent return and exchange transactions",
-             actions: safe_join([
-               report_print_button,
-               render("reports/shared/export_action", url: reports_returns_path(format: :csv)),
-               link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")
-             ], " ") %>
+             actions: report_standard_actions(export_url: reports_returns_path(format: :csv)) %>
 
   <div class="ss-report-body">
     <% if @transactions.any? %>

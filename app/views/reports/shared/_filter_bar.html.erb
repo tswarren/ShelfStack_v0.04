@@ -6,7 +6,7 @@
     <%= yield %>
   </div>
   <div class="ss-filter-actions">
-    <%= submit_tag "Run report", class: "ss-btn ss-btn-primary" %>
+    <%= render "shared/ui/button", label: "Run report", type: :submit, variant: :secondary %>
     <%= yield :filter_actions if content_for?(:filter_actions) %>
   </div>
 <% end %>

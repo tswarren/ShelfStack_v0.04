@@ -2,7 +2,7 @@
   <%= render "reports/shared/header",
              title: "Register Summary",
              scope: @report&.scope&.label,
-             actions: safe_join([report_print_button, (link_to "Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+             actions: report_standard_actions %>
 
   <%= render layout: "reports/shared/filter_bar", locals: { url: reports_register_summary_path } do %>
     <div class="ss-field">

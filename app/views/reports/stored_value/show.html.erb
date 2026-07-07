@@ -2,7 +2,7 @@
   <%= render "reports/shared/header",
              title: "Stored Value Liability",
              scope: report_store.name,
-             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+             actions: report_standard_actions %>
 
   <%= render layout: "reports/shared/filter_bar", locals: { url: reports_stored_value_path } do %>
     <%= render "reports/shared/date_range", start_value: params[:start_date], end_value: params[:end_date] %>

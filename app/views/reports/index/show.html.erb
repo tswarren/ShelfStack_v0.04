@@ -1,5 +1,6 @@
-<h1>Reports</h1>
-<p class="ss-report-scope">Operational reports for <%= current_store.name %>.</p>
+<%= render "shared/ui/page_header",
+           title: "Reports",
+           description: "Operational reports for #{current_store.name}." %>
 
 <% @grouped_reports.each do |group, reports| %>
   <section class="ss-section">
