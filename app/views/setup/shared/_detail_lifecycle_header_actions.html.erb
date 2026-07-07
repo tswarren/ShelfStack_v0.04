@@ -1,0 +1,15 @@
+<%# locals: record:, edit_path:, inactivate_path:, reactivate_path: %>
+<%
+  header_actions = if record.active?
+                     safe_join([
+                       render("shared/ui/button", label: "Inactivate", variant: :secondary, url: inactivate_path, method: :patch),
+                       render("shared/ui/button", label: "Edit", variant: :primary, url: edit_path)
+                     ])
+                   else
+                     safe_join([
+                       render("shared/ui/button", label: "Edit", variant: :secondary, url: edit_path),
+                       render("shared/ui/button", label: "Reactivate", variant: :primary, url: reactivate_path, method: :patch)
+                     ])
+                   end
+%>
+<%= header_actions %>

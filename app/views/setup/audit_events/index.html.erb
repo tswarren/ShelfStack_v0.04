@@ -1,15 +1,22 @@
-<h1>Audit Events</h1>
-<table class="ss-table">
-  <thead><tr><th>When</th><th>Event</th><th>Actor</th><th>Store</th><th></th></tr></thead>
-  <tbody>
-    <% @audit_events.each do |event| %>
-      <tr>
-        <td><%= display_time(event.occurred_at) %></td>
-        <td><%= event.event_name %></td>
-        <td><%= event.actor_user.display_name %></td>
-        <td><%= event.store&.store_number || "—" %></td>
-        <td><%= link_to "View", setup_audit_event_path(event) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<%= render "shared/ui/page_header", title: "Audit Events" %>
+
+<% if @audit_events.any? %>
+  <table class="ss-table">
+    <thead><tr><th>When</th><th>Event</th><th>Actor</th><th>Store</th><th></th></tr></thead>
+    <tbody>
+      <% @audit_events.each do |event| %>
+        <tr>
+          <td><%= display_time(event.occurred_at) %></td>
+          <td><%= event.event_name %></td>
+          <td><%= event.actor_user.display_name %></td>
+          <td><%= event.store&.store_number || "—" %></td>
+          <td><%= link_to "View", setup_audit_event_path(event) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No audit events yet",
+             message: "System activity will appear here as staff make changes." %>
+<% end %>

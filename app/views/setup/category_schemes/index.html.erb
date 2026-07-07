@@ -1,15 +1,25 @@
-<h1>Category Schemes <%= link_to "New", new_setup_category_scheme_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Key</th><th>Name</th><th>Purpose</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @category_schemes.each do |scheme| %>
-      <tr>
-        <td><%= scheme.scheme_key %></td>
-        <td><%= scheme.name %></td>
-        <td><%= humanize_scheme_purpose(scheme.purpose) %></td>
-        <td><span class="<%= status_class(scheme.active?) %>"><%= status_label(scheme.active?) %></span></td>
-        <td><%= link_to "View", setup_category_scheme_path(scheme) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_scheme_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_category_scheme_path) %>
+
+<%= render "shared/ui/page_header", title: "Category Schemes", actions: new_scheme_action %>
+
+<% if @category_schemes.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Key</th><th>Name</th><th>Purpose</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @category_schemes.each do |scheme| %>
+        <tr>
+          <td><%= scheme.scheme_key %></td>
+          <td><%= scheme.name %></td>
+          <td><%= humanize_scheme_purpose(scheme.purpose) %></td>
+          <td><%= ss_status_badge(status_label(scheme.active?), status: scheme.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_category_scheme_path(scheme) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No category schemes yet",
+             message: "Create a scheme to organize category nodes for store shelving or reference trees.",
+             actions: new_scheme_action %>
+<% end %>

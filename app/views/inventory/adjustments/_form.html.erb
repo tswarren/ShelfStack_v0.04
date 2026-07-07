@@ -23,5 +23,8 @@
         store: inventory_store,
         line_locals: { reason_codes: @reason_codes, locations: @locations } %>
 
-  <%= f.submit class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: (@adjustment.persisted? ? "Update Adjustment" : "Create Adjustment"), type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: inventory_adjustments_path %>
+  </footer>
 <% end %>

@@ -15,7 +15,12 @@
       <% end %>
     </div>
     <% if workflow.next_line_id.present? %>
-      <%= link_to "Next item needing work", "#line-#{workflow.next_line_id}", class: "ss-btn ss-btn-secondary ss-btn--small", data: { action: "buyback-work-items#openNext" } %>
+      <%= render "shared/ui/button",
+            label: "Next item needing work",
+            variant: :secondary,
+            size: :small,
+            url: "#line-#{workflow.next_line_id}",
+            data: { action: "buyback-work-items#openNext" } %>
     <% end %>
   </div>
 

@@ -44,15 +44,21 @@
     <%= f.check_box :preferred %>
   </div>
   <footer class="ss-form-actions">
-    <%= f.submit(editing ? "Save override" : "Add override", class: "ss-btn") %>
-    <button type="button" class="ss-btn ss-btn-secondary"
-            data-action="modal#close"
-            data-modal-target-id-param="item-variant-vendor-modal">Cancel</button>
+    <%= render "shared/ui/button",
+               label: (editing ? "Save override" : "Add override"),
+               type: :submit,
+               variant: :primary %>
+    <%= render "shared/ui/button",
+               label: "Cancel",
+               variant: :tertiary,
+               type: :button,
+               data: { action: "modal#close", modal_target_id_param: "item-variant-vendor-modal" } %>
     <% if editing %>
-      <%= link_to "Full edit",
-            edit_items_product_variant_product_variant_vendor_path(variant, variant_vendor),
-            class: "ss-btn-link",
-            data: { turbo_frame: "_top" } %>
+      <%= render "shared/ui/button",
+                 label: "Full edit",
+                 variant: :link,
+                 url: edit_items_product_variant_product_variant_vendor_path(variant, variant_vendor),
+                 data: { turbo_frame: "_top" } %>
     <% end %>
   </footer>
 <% end %>

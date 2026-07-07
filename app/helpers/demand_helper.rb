@@ -40,6 +40,32 @@ module DemandHelper
     end
   end
 
+  def demand_status_badge_key(status)
+    case status.to_s
+    when "open", "fulfilled" then :active
+    when "partially_allocated", "allocated", "captured" then :partial
+    when "canceled", "expired" then :cancelled
+    else :inactive
+    end
+  end
+
+  def demand_status_badge(status)
+    ss_status_badge(demand_status_label(status), status: demand_status_badge_key(status))
+  end
+
+  def stock_consideration_status_badge_key(status)
+    case status.to_s
+    when "open", "reviewing" then :partial
+    when "converted_to_demand" then :active
+    when "dismissed", "duplicate", "already_carried" then :cancelled
+    else :inactive
+    end
+  end
+
+  def stock_consideration_status_badge(status)
+    ss_status_badge(status.to_s.humanize, status: stock_consideration_status_badge_key(status))
+  end
+
   def demand_allocation_summary(demand_line)
     DemandAllocations::AllocationQuantities.for_demand_line(demand_line)
   end

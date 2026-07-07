@@ -1,0 +1,4 @@
+<%# locals: link: (Setup::HomeNavigation::Link) %>
+<%= link_to link.path, class: "ss-card ss-card--clickable" do %>
+  <span class="ss-card__body"><%= setup_home_link_label(link) %></span>
+<% end %>

@@ -1,24 +1,27 @@
 <%= render "setup/shared/back_link", path: setup_discount_reasons_path, label: "Discount Reasons" %>
 
-<h1><%= @discount_reason.name %></h1>
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @discount_reason,
+    edit_path: edit_setup_discount_reason_path(@discount_reason),
+    inactivate_path: inactivate_setup_discount_reason_path(@discount_reason),
+    reactivate_path: reactivate_setup_discount_reason_path(@discount_reason)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @discount_reason.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Key</dt><dd><code><%= @discount_reason.reason_key %></code></dd>
   <dt>Sort order</dt><dd><%= @discount_reason.sort_order %></dd>
   <dt>Requires note</dt><dd><%= @discount_reason.requires_note? ? "Yes" : "No" %></dd>
   <dt>Requires authorization</dt><dd><%= @discount_reason.requires_authorization? ? "Yes" : "No" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@discount_reason.active?) %>"><%= status_label(@discount_reason.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@discount_reason.active?), status: @discount_reason.active? ? :active : :inactive) %></dd>
   <% if @discount_reason.description.present? %>
     <dt>Description</dt><dd><%= @discount_reason.description %></dd>
   <% end %>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_discount_reason_path(@discount_reason), class: "ss-btn" %>
-  <% if @discount_reason.active? %>
-    <%= button_to "Inactivate", inactivate_setup_discount_reason_path(@discount_reason), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_discount_reason_path(@discount_reason), method: :patch, class: "ss-btn" %>
-  <% end %>
-</div>
-<%= render "orders/shared/collapsible_panel", title: "Audit timeline", open: false do %>
-  <%= render "shared/audit_timeline", audit_events: @audit_events %>
-<% end %>
+
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>

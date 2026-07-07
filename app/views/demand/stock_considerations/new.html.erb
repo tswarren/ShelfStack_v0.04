@@ -1,4 +1,6 @@
-<h1>New stock consideration</h1>
+<%= render "shared/forms/page_header",
+           title: "New stock consideration",
+           description: "Capture a provisional stocking idea before it becomes a demand line." %>
 
 <%= form_with url: demand_stock_considerations_path, method: :post, class: "ss-form ss-form--standard" do %>
   <div class="ss-field">
@@ -22,12 +24,10 @@
     <%= text_area_tag :notes, @stock_consideration.notes, rows: 2, class: "ss-input" %>
   </div>
 
-  <% if @stock_consideration.errors.any? %>
-    <div class="ss-form-errors"><%= @stock_consideration.errors.full_messages.to_sentence %></div>
-  <% end %>
+  <%= render "shared/forms/errors", record: @stock_consideration %>
 
   <footer class="ss-form-actions">
-    <%= submit_tag "Create", class: "ss-btn" %>
-    <%= link_to "Cancel", demand_stock_considerations_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: demand_stock_considerations_path %>
   </footer>
 <% end %>

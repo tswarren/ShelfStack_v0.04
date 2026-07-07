@@ -46,6 +46,6 @@
       <p class="ss-hint">Changing pricing clears the recorded customer decision.</p>
     <% end %>
 
-    <%= submit_tag "Save line proposal", class: "ss-btn ss-btn--small" %>
+    <%= render "shared/ui/button", label: "Save line proposal", type: :submit, variant: :primary, size: :small %>
   <% end %>
 </div>

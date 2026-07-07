@@ -1,0 +1,59 @@
+<%# locals: label:, variant: :primary, size: nil, type: :button, url: nil, method: nil, params: nil, name: nil, value: nil, disabled: false, data: {}, aria: {}, form: nil, form_class: nil, class: nil, full_width: false, icon: false, target: nil %>
+<%
+  label = local_assigns.fetch(:label)
+  variant = local_assigns.fetch(:variant, :primary)
+  disabled = local_assigns.fetch(:disabled, false)
+  url = local_assigns[:url]
+  button_type = local_assigns.fetch(:type, :button)
+  css_class = ss_button_classes(
+    variant: variant,
+    size: local_assigns[:size],
+    full_width: local_assigns.fetch(:full_width, false),
+    icon: local_assigns.fetch(:icon, false),
+    extra_class: local_assigns[:class]
+  )
+  data_attrs = local_assigns.fetch(:data, {})
+  aria_attrs = local_assigns.fetch(:aria, {})
+  link_options = { class: css_class, data: data_attrs.presence, aria: aria_attrs.presence, target: local_assigns[:target] }.compact
+  form_options = (local_assigns[:form] || {}).dup
+  if url.present? && local_assigns[:method].present? && local_assigns[:method].to_s.downcase != "get"
+    form_options[:class] = local_assigns[:form_class].presence || form_options[:class].presence || "ss-inline-form"
+  elsif local_assigns[:form_class].present?
+    form_options[:class] = local_assigns[:form_class]
+  end
+%>
+<% if url.present? %>
+  <% if disabled %>
+    <span class="<%= css_class %>" aria-disabled="true"><%= label %></span>
+  <% elsif local_assigns[:method].present? && local_assigns[:method].to_s.downcase != "get" %>
+    <% use_link_method = local_assigns[:params].blank? && local_assigns[:form].blank? && local_assigns[:form_class].blank? %>
+    <% if use_link_method %>
+      <%= link_to label, url, **link_options.merge(data: data_attrs.merge(turbo_method: local_assigns[:method]).presence) %>
+    <% else %>
+      <%= button_to label,
+            url,
+            method: local_assigns[:method],
+            params: local_assigns[:params],
+            class: css_class,
+            form: form_options.presence,
+            data: data_attrs.presence,
+            aria: aria_attrs.presence %>
+    <% end %>
+  <% else %>
+    <%= link_to label, url, **link_options %>
+  <% end %>
+<% else %>
+  <%
+    button_tag_options = {
+      type: button_type,
+      class: css_class,
+      disabled: disabled,
+      data: data_attrs.presence,
+      aria: aria_attrs.presence,
+      form: local_assigns[:form]
+    }.compact
+    button_tag_options[:name] = local_assigns[:name] if local_assigns[:name].present?
+    button_tag_options[:value] = local_assigns[:value] if local_assigns[:value].present?
+  %>
+  <%= button_tag label, **button_tag_options %>
+<% end %>

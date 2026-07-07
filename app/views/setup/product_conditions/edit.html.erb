@@ -6,7 +6,7 @@
 <%= form_with model: @product_condition, url: setup_product_condition_path(@product_condition), class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, product_condition: @product_condition %>
   <footer class="ss-form-actions">
-    <%= f.submit "Update Condition", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_product_condition_path(@product_condition), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Update Condition", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_product_condition_path(@product_condition) %>
   </footer>
 <% end %>

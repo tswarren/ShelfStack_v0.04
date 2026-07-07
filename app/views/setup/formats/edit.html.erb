@@ -6,7 +6,7 @@
 <%= form_with model: @format, url: setup_format_path(@format), class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, format: @format %>
   <footer class="ss-form-actions">
-    <%= f.submit "Update Format", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_format_path(@format), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Update Format", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_format_path(@format) %>
   </footer>
 <% end %>

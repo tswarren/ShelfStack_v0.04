@@ -16,7 +16,10 @@
       <%= operations_tab.highlight_variant.sku %> —
       <%= operations_tab.highlight_variant.name %>
     </p>
-    <%= link_to "Show all variants", item.tab_path("operations"), class: "ss-btn-link" %>
+    <%= render "shared/ui/button",
+               label: "Show all variants",
+               variant: :link,
+               url: item.tab_path("operations") %>
   </div>
 <% end %>
 
@@ -72,23 +75,31 @@
             <% end %>
           </td>
           <td>
-            <%= link_to "Focus", items_item_path_with_match(item, tab: "operations", variant_id: row.variant.id), class: "ss-btn-link" %>
-            <button type="button"
-                    class="ss-btn ss-btn-small ss-btn-secondary"
-                    data-action="item-variant-ops-drawer#prepareOpen drawer#open"
-                    data-drawer-target-id-param="item-variant-ops-drawer"
-                    data-variant-id="<%= row.variant.id %>"
-                    data-variant-sku="<%= row.variant.sku %>"
-                    data-variant-name="<%= row.variant.name %>">
-              Details
-            </button>
+            <%= render "shared/ui/button",
+                       label: "Focus",
+                       variant: :link,
+                       url: items_item_path_with_match(item, tab: "operations", variant_id: row.variant.id) %>
+            <%= render "shared/ui/button",
+                       label: "Details",
+                       variant: :secondary,
+                       size: :small,
+                       type: :button,
+                       data: {
+                         action: "item-variant-ops-drawer#prepareOpen drawer#open",
+                         drawer_target_id_param: "item-variant-ops-drawer",
+                         variant_id: row.variant.id,
+                         variant_sku: row.variant.sku,
+                         variant_name: row.variant.name
+                       } %>
             <% if request_match_context.valid? &&
                   Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
-              <%= button_to "Match",
-                    match_variant_demand_demand_line_path(request_match_context.demand_line),
-                    method: :post,
-                    params: { product_variant_id: row.variant.id },
-                    class: "ss-btn ss-btn-small" %>
+              <%= render "shared/ui/button",
+                         label: "Match",
+                         variant: :primary,
+                         size: :small,
+                         url: match_variant_demand_demand_line_path(request_match_context.demand_line),
+                         method: :post,
+                         params: { product_variant_id: row.variant.id } %>
             <% end %>
           </td>
         </tr>
@@ -96,6 +107,10 @@
     </tbody>
   </table>
   <p class="ss-hint">Select <strong>Details</strong> on a variant row to view demand, purchasing, receiving, and recent sales.</p>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No variant operations yet",
+             message: "Create sellable SKUs in Item setup to review demand, purchasing, and inventory signals here." %>
 <% end %>
 
 <section id="receiving-history" class="ss-item-anchor-section" aria-label="Receiving history">
@@ -130,7 +145,7 @@
               <td><%= row.variant_sku %></td>
               <td class="ss-num"><%= row.quantity %></td>
               <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
-              <td><%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %></td>
+              <td><%= render "shared/ui/button", label: "Transaction", variant: :link, url: pos_transaction_path(row.transaction) %></td>
             </tr>
           <% end %>
         </tbody>

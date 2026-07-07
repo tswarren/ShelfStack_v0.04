@@ -1,16 +1,26 @@
-<h1>Formats <%= link_to "New", new_setup_format_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Key</th><th>Name</th><th>Short Name</th><th>Virtual</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @formats.each do |format| %>
-      <tr>
-        <td><%= format.format_key %></td>
-        <td><%= format.name %></td>
-        <td><%= format.short_name %></td>
-        <td><%= format.virtual? ? "Yes" : "No" %></td>
-        <td><span class="<%= status_class(format.active?) %>"><%= status_label(format.active?) %></span></td>
-        <td><%= link_to "View", setup_format_path(format) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_format_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_format_path) %>
+
+<%= render "shared/ui/page_header", title: "Formats", actions: new_format_action %>
+
+<% if @formats.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Key</th><th>Name</th><th>Short Name</th><th>Virtual</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @formats.each do |format| %>
+        <tr>
+          <td><%= format.format_key %></td>
+          <td><%= format.name %></td>
+          <td><%= format.short_name %></td>
+          <td><%= format.virtual? ? "Yes" : "No" %></td>
+          <td><%= ss_status_badge(status_label(format.active?), status: format.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_format_path(format) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No formats yet",
+             message: "Create a format to describe the physical or digital form of catalog items.",
+             actions: new_format_action %>
+<% end %>

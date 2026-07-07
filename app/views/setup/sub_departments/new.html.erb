@@ -6,7 +6,7 @@
 <%= form_with model: [:setup, @sub_department], class: "ss-form ss-form--wide" do |f| %>
   <%= render "form", f: f, sub_department: @sub_department, tax_categories: @tax_categories, departments: @departments %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Subdepartment", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_sub_departments_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Subdepartment", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_sub_departments_path %>
   </footer>
 <% end %>

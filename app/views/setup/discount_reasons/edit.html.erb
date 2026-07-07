@@ -1,10 +1,12 @@
-<%= render "setup/shared/back_link", path: setup_discount_reason_path(@discount_reason), label: @discount_reason.name %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Discount Reason",
+           description: "Update discount reason settings for structured POS discounts." %>
 
-<h1>Edit Discount Reason</h1>
 <%= form_with model: @discount_reason, url: setup_discount_reason_path(@discount_reason), method: :patch, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, discount_reason: @discount_reason %>
   <footer class="ss-form-actions">
-    <%= f.submit "Save changes", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_discount_reason_path(@discount_reason), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Update Discount Reason", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_discount_reason_path(@discount_reason) %>
   </footer>
 <% end %>

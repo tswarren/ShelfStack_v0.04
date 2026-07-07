@@ -31,8 +31,8 @@ class PosTransactionDiscountModalTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-modal-dirty-guard-value="false"'
     assert_match(/id="pos-transaction-discount-modal"[\s\S]*?data-modal-dirty-guard-value="false"/, response.body)
     assert_includes response.body, "Estimated total after discount"
-    assert_includes response.body, 'data-controller="pos-transaction-discount-modal-open"'
-    assert_includes response.body, 'data-action="click->pos-transaction-discount-modal-open#open"'
+    assert_select "button[data-controller='pos-transaction-discount-modal-open'][data-action*='pos-transaction-discount-modal-open#open']",
+                  text: "Add discount"
   end
 
   test "route_command discount with whole number prefill percent" do

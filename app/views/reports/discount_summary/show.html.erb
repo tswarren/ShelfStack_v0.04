@@ -2,7 +2,7 @@
   <%= render "reports/shared/header",
              title: "Discount Summary",
              scope: @report&.scope&.label,
-             actions: safe_join([report_print_button, link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")], " ") %>
+             actions: report_standard_actions %>
 
   <%= render "reports/shared/pos_scope_filter", url: reports_discount_summary_path, sessions: @sessions %>
   <%= render "reports/shared/section_notice", message: "Totals from active Phase 8.5-1 discount applications on completed transactions." %>

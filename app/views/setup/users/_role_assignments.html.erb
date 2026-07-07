@@ -32,11 +32,13 @@
           <% if @can_manage_user_roles && !@user.system_user? %>
             <td>
               <% if assignment.active? %>
-                <%= button_to "Remove",
-                      remove_role_setup_user_path(@user, assignment_id: assignment.id),
-                      method: :patch,
-                      class: "ss-btn ss-btn-secondary ss-btn-small",
-                      form: { data: { turbo_confirm: "Remove this role assignment?" } } %>
+                <%= render "shared/ui/button",
+                           label: "Remove",
+                           variant: :secondary,
+                           size: :small,
+                           url: remove_role_setup_user_path(@user, assignment_id: assignment.id),
+                           method: :patch,
+                           data: { turbo_confirm: "Remove this role assignment?" } %>
               <% end %>
             </td>
           <% end %>
@@ -67,7 +69,7 @@
       <%= select_tag :store_id, options_from_collection_for_select(@stores, :id, :name), include_blank: "Select a store" %>
     </div>
 
-    <%= submit_tag "Assign Role", class: "ss-btn" %>
+    <%= render "shared/ui/button", label: "Assign Role", type: :submit, variant: :primary %>
   <% end %>
 <% elsif @user.system_user? %>
   <p class="ss-muted">The system user does not receive role assignments.</p>

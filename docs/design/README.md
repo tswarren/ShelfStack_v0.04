@@ -14,6 +14,7 @@ Use these documents first when reviewing UI work, adding new screens, or migrati
 | [app-shell-and-pos-shell.md](app-shell-and-pos-shell.md) | Global app shell contract, POS workspace shell rules, body/view-mode contract |
 | [layout-width-model.md](layout-width-model.md) | Page canvas width model and when to use readable, standard, wide, item, and POS widths |
 | [ux-review-checklist.md](ux-review-checklist.md) | Review checklist for shell, POS, feedback, accessibility, responsive behavior, and workflow pages |
+| [ux-migration-build-plan.md](ux-migration-build-plan.md) | **v0.04-14 / Phase 10-E execution plan** — enabling partials, PR slices, pilot surface, migration order |
 
 ---
 
@@ -34,6 +35,7 @@ Recommended reading order for contributors:
 4. [components.md](components.md)
 5. [tokens.md](tokens.md)
 6. [ux-review-checklist.md](ux-review-checklist.md)
+7. [ux-migration-build-plan.md](ux-migration-build-plan.md) — when implementing Phase 10-E migrations
 
 ---
 
@@ -61,7 +63,7 @@ Recommended reading order for contributors:
 
 ## Phase 10-E (consistency sweep)
 
-Phase 10-E maps to the component migration roadmap in [components.md](components.md#phase-10-e-alignment): straggler markup, POS CSS extraction from legacy, Priority 1 thin partials, and checklist-driven review. See [Phase-x10-comprehensive-ux-expansion.md](../roadmap/Phase-x10-comprehensive-ux-expansion.md).
+Phase 10-E is **complete on integration branch** (v0.04-14). Start at [ux-migration-build-plan.md](ux-migration-build-plan.md) for PR history and partial APIs. Completion: [v0.04-14-completion.md](../implementation/v0.04-14-completion.md). Roadmap summary: [phase-10e-ux-migration.md](../roadmap/phase-10e-ux-migration.md). Component stragglers: [components.md](components.md#known-migration-stragglers).
 
 ---
 

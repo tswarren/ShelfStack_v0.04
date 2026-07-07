@@ -2,7 +2,7 @@
 
 ## Status
 
-**Complete in PR 18** — MVP store-stock path implemented; readiness slices remain deferred.
+**Deferred** — scheduled after [v0.04-14](../v0.04-14-design-system-ux-migration/spec.md). Spec and data model remain authoritative for implementation when the milestone resumes.
 
 Companion documents:
 
@@ -22,13 +22,14 @@ v0.04-13 is the **follow-on MVP** for manual, non-EDI ordering continuity. It is
 
 ```text
 v0.04-12 = Demand Ordering UX completion
-v0.04-13 = Manual Demand-to-Fulfillment Continuity MVP
+v0.04-14 = Design system UX migration (complete on integration branch; release pending)
+v0.04-13 = Manual Demand-to-Fulfillment Continuity MVP (deferred until after v0.04-14)
 post-v0.04-13 = vendor integration, EDI, Direct-to-Home automation, or other roadmap work (TBD)
 ```
 
 ### Roadmap note
 
-Readiness-tier and deferred items in this spec (vendor-direct conversion UI, `external_references` management, ipage/EDI automation, carton scan, and similar) are **documented for future work** but **do not assume the next milestone after v0.04-13**. The project may schedule Phase 10-E, v0.04-3 product groups, catalog cleanup, or other priorities before any vendor-integration milestone. When integration work resumes, it should **call the same domain services** defined here — not redesign demand, PO, receiving, or fulfillment semantics.
+Readiness-tier and deferred items in this spec are **documented for future work**. **v0.04-14** (design system UX) ships before v0.04-13 resumes. When integration work follows v0.04-13, it should **call the same domain services** defined here — not redesign demand, PO, receiving, or fulfillment semantics.
 
 ---
 
@@ -814,7 +815,7 @@ receipt.posted_with_demand_impact
 
 Delivery tiers: **MVP (required for milestone merge)**, **Readiness (same milestone, optional PRs — may ship after MVP merge or in a later roadmap cycle)**, **Deferred (document only)**.
 
-Readiness and deferred work **does not assume immediate follow-on** after v0.04-13 merge. Phase 10-E, v0.04-3, catalog cleanup, or other milestones may intervene.
+Readiness and deferred work **does not assume immediate follow-on** after v0.04-13 merge. **v0.04-14** (design system UX) ships first; v0.04-3, catalog cleanup, or vendor-integration milestones may follow v0.04-13.
 
 ### MVP core (store-stock manual ordering)
 
@@ -863,7 +864,7 @@ Individual slices A–H are **required parts of the MVP**; they do not each have
 
 ## Deferred (§22 — future work, sequencing TBD)
 
-These items are specified so future work does not redesign core semantics. **The next milestone after v0.04-13 is not predetermined** — it may be Phase 10-E, v0.04-3, catalog cleanup, or a vendor-integration milestone when scheduled.
+These items are specified so future work does not redesign core semantics. **v0.04-14 precedes v0.04-13** in the delivery schedule. Post-v0.04-13 priorities (v0.04-3, catalog cleanup, vendor integration) are TBD when v0.04-13 closes.
 
 | Topic | When (indicative) |
 | ----- | ----------------- |

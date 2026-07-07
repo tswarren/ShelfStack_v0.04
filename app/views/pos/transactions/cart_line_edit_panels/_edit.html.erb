@@ -37,12 +37,13 @@
       </div>
     </div>
 
-    <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
-      <%= submit_tag "Save", class: "ss-btn ss-pos-line-edit__action" %>
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
-              data-action="pos-cart-line#cancel"
-              data-line-id="<%= line.id %>">Cancel</button>
+    <footer class="ss-row-detail__footer ss-pos-line-edit__footer ss-form-actions">
+      <%= render "shared/ui/button", label: "Save", type: :submit, variant: :primary, class: "ss-pos-line-edit__action" %>
+      <%= render "shared/ui/button",
+                 label: "Cancel",
+                 variant: :tertiary,
+                 class: "ss-pos-line-edit__action",
+                 data: { action: "pos-cart-line#cancel", line_id: line.id } %>
     </footer>
   <% end %>
 </div>

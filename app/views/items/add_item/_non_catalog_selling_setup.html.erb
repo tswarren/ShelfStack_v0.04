@@ -9,14 +9,19 @@
              require_sku: true,
              description: "Define the product before creating sellable SKUs." %>
   <footer class="ss-form-actions">
-    <%= f.submit "Add Sellable SKU", class: "ss-btn" %>
-    <%= submit_tag "Done", name: "commit", class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Cancel", items_root_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Add Sellable SKU", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Done", type: :submit, variant: :secondary, name: "commit" %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: items_root_path %>
   </footer>
 <% end %>
 
-<p class="ss-form-actions" style="margin-top: 0.5rem;">
-  <%= button_to "Generate SKU", items_add_item_path(step: "selling_setup"), method: :post,
-        params: { generate_sku: "1" }, class: "ss-btn ss-btn-secondary ss-btn-small" %>
-  <%= link_to "Back", items_add_item_path(step: "choose_path") %>
-</p>
+<div class="ss-inline-actions">
+  <%= render "shared/ui/button",
+             label: "Generate SKU",
+             variant: :secondary,
+             size: :small,
+             url: items_add_item_path(step: "selling_setup"),
+             method: :post,
+             params: { generate_sku: "1" } %>
+  <%= render "shared/ui/button", label: "Back", variant: :link, url: items_add_item_path(step: "choose_path") %>
+</div>

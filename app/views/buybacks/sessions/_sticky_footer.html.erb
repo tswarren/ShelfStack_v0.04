@@ -13,16 +13,25 @@
               label: "Complete buyback",
               enabled: complete_state.enabled,
               reason: complete_state.reason,
-              class: "ss-btn",
               data: { turbo_confirm: "Complete this buyback?" }
             ) %>
       <% elsif buyback_session.editable? && (buyback_session.draft? || workflow.proposal_revision_needed?) %>
         <% save_state = workflow.action_state(:save_proposal) %>
         <% if save_state.enabled %>
-          <%= button_to workflow.save_proposal_label, save_proposal_buybacks_session_path(buyback_session), method: :patch, class: "ss-btn", form: { data: { turbo_stream: true } } %>
+          <%= render "shared/ui/button",
+                label: workflow.save_proposal_label,
+                variant: :primary,
+                url: save_proposal_buybacks_session_path(buyback_session),
+                method: :patch,
+                form: { data: { turbo_stream: true } } %>
         <% end %>
       <% end %>
-      <%= button_to "Cancel session", cancel_buybacks_session_path(buyback_session), method: :patch, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Cancel this session?" } %>
+      <%= render "shared/ui/button",
+            label: "Cancel session",
+            variant: :secondary,
+            url: cancel_buybacks_session_path(buyback_session),
+            method: :patch,
+            data: { turbo_confirm: "Cancel this session?" } %>
     <% end %>
   </div>
 </footer>

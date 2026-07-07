@@ -2,8 +2,8 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | Planned / missing modular CSS |
-| Target CSS home | `app/assets/stylesheets/shelfstack.components.data-tables.css` or future `shelfstack.components.filters.css` |
+| Status | CSS implemented (v0.04-14 PR 0) |
+| Target CSS home | `app/assets/stylesheets/shelfstack.components.data-tables.css` |
 | Planned partial | `app/views/shared/ui/_filter_chip.html.erb` only after CSS exists |
 | Related | Data Tables, Badges, Buttons, Navigation |
 | Design-system priority | Priority 3 pattern cleanup |
@@ -14,9 +14,7 @@ Filter chips represent applied filters, selectable queue filters, or removable s
 
 ## Current reality
 
-`filter-chip` is a named pattern in the design guidance, but modular CSS is not currently defined for `.ss-filter-chip`.
-
-Do not treat filter chips as implemented until CSS exists.
+Modular CSS lives in `app/assets/stylesheets/shelfstack.components.data-tables.css`. Buyer workbench tabs use selectable `link_to` chips. Removable chip markup is documented below; partial deferred until repeated usage.
 
 ---
 
@@ -70,9 +68,9 @@ How is this different from a badge, tab, or button?
 
 ---
 
-## Planned CSS contract
+## Implemented CSS contract
 
-Add modular CSS before using this class in new markup:
+Implemented in `shelfstack.components.data-tables.css`:
 
 ```css
 .ss-filter-chip
@@ -88,6 +86,8 @@ Optional future states, only if needed:
 .ss-filter-chip--disabled
 .ss-filter-chip--warning
 ```
+
+Non-interactive chip wrappers (`<span class="ss-filter-chip">`) use `cursor: default`. Links, buttons, and `.ss-filter-chip__remove` use `cursor: pointer`.
 
 ---
 
@@ -145,4 +145,4 @@ Do not introduce the partial until the CSS contract exists and at least two work
 
 ## Migration notes
 
-This is a documentation placeholder until CSS is implemented. The recommended implementation home is `shelfstack.components.data-tables.css` if chips remain tied to filters/data-table work. Use a separate `shelfstack.components.filters.css` only if filter patterns become broad enough to justify a new component file.
+CSS is implemented in `shelfstack.components.data-tables.css`. The Rails partial remains deferred until repeated usage justifies it. Use a separate `shelfstack.components.filters.css` only if filter patterns become broad enough to justify a new component file.

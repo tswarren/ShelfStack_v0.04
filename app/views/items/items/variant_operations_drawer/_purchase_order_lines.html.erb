@@ -18,7 +18,7 @@
         <td><%= po.status %></td>
         <td>
           <% if po.receivable? && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.create", store: current_store) %>
-            <%= button_to "Receive", receive_orders_purchase_order_path(po), method: :post, class: "ss-btn-link" %>
+            <%= render "shared/ui/button", label: "Receive", variant: :link, url: receive_orders_purchase_order_path(po), method: :post %>
           <% end %>
         </td>
       </tr>

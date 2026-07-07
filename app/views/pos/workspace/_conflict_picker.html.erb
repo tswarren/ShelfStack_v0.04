@@ -10,9 +10,10 @@
   <ul class="ss-pos-workspace-conflict__list">
     <% @landing.candidates.each do |draft| %>
       <li>
-        <%= link_to "Continue draft ##{draft.id} (#{draft.pos_transaction_lines.size} items, #{pos_money(draft.total_cents)})",
-              edit_pos_transaction_path(draft, mode: "sale"),
-              class: "ss-btn ss-btn-secondary" %>
+        <%= render "shared/ui/button",
+                   label: "Continue draft ##{draft.id} (#{draft.pos_transaction_lines.size} items, #{pos_money(draft.total_cents)})",
+                   variant: :secondary,
+                   url: edit_pos_transaction_path(draft, mode: "sale") %>
       </li>
     <% end %>
   </ul>

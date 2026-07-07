@@ -6,7 +6,7 @@
 <%= form_with model: @workstation, url: setup_workstations_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, workstation: @workstation, stores: @stores %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Workstation", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_workstations_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Workstation", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_workstations_path %>
   </footer>
 <% end %>

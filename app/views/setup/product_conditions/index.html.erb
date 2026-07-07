@@ -1,16 +1,29 @@
-<h1>Product Conditions <%= link_to "New", new_setup_product_condition_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Name</th><th>Short Name</th><th>SKU Component</th><th>Factor</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @product_conditions.each do |condition| %>
-      <tr>
-        <td><%= condition.name %></td>
-        <td><%= condition.short_name %></td>
-        <td><%= condition.sku_component || "—" %></td>
-        <td><%= format_basis_points(condition.default_list_price_factor_bps) %></td>
-        <td><span class="<%= status_class(condition.active?) %>"><%= status_label(condition.active?) %></span></td>
-        <td><%= link_to "View", setup_product_condition_path(condition) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_product_condition_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_product_condition_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Product Conditions",
+           description: "Conditions drive SKU suffixes, variant names, and used-book pricing factors.",
+           actions: new_product_condition_action %>
+
+<% if @product_conditions.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Name</th><th>Short Name</th><th>SKU Component</th><th>Factor</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @product_conditions.each do |condition| %>
+        <tr>
+          <td><%= condition.name %></td>
+          <td><%= condition.short_name %></td>
+          <td><%= condition.sku_component || "—" %></td>
+          <td><%= format_basis_points(condition.default_list_price_factor_bps) %></td>
+          <td><%= ss_status_badge(status_label(condition.active?), status: condition.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_product_condition_path(condition) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No product conditions yet",
+             message: "Create conditions for new, used, and other sellable states.",
+             actions: new_product_condition_action %>
+<% end %>

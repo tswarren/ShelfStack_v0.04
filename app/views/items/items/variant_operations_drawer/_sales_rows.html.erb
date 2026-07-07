@@ -13,7 +13,7 @@
         <td><%= l(row.sold_at, format: :short) %></td>
         <td class="ss-num"><%= row.quantity %></td>
         <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
-        <td><%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %></td>
+        <td><%= render "shared/ui/button", label: "Transaction", variant: :link, url: pos_transaction_path(row.transaction) %></td>
       </tr>
     <% end %>
   </tbody>

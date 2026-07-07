@@ -1,4 +1,6 @@
-<h1>Returns to Vendor <%= link_to "New", new_orders_returns_to_vendor_path, class: "ss-btn" %></h1>
+<% new_rtv_action = render("shared/ui/button", label: "New", variant: :primary, url: new_orders_returns_to_vendor_path) %>
+
+<%= render "shared/ui/page_header", title: "Returns to Vendor", actions: new_rtv_action %>
 
 <table class="ss-table">
   <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Posted</th><th></th></tr></thead>

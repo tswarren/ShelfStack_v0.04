@@ -71,7 +71,7 @@
   <% end %>
 
   <div class="ss-item-detail__body">
-    <main class="ss-item-main">
+    <section class="ss-item-main" aria-label="Item overview">
       <% if overview.present? %>
         <section class="ss-item-summary-cards" aria-label="Operational summary">
           <div class="ss-item-summary-cards__grid">
@@ -87,7 +87,7 @@
           <% if operations&.header_actions&.any? %>
             <div class="ss-item-ops-summary__actions">
               <% operations.header_actions.each do |action| %>
-                <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+                <%= render "shared/ui/button", label: action.label, variant: :secondary, size: :small, url: action.url %>
               <% end %>
             </div>
           <% end %>
@@ -171,7 +171,9 @@
               </table>
             </div>
           <% else %>
-            <p class="ss-muted">No sellable SKUs yet.</p>
+            <%= render "shared/ui/empty_state",
+                       title: "No sellable SKUs yet",
+                       message: "Create sellable SKUs in Item setup to enable inventory, demand, and POS activity." %>
           <% end %>
         </section>
 
@@ -180,7 +182,7 @@
             Open TBO <%= overview.activity_counts.open_tbo_lines %> ·
             Open PO lines <%= overview.activity_counts.open_po_lines %> ·
             Recent receipts <%= overview.activity_counts.recent_receipts %>
-            <%= link_to "View operations", items_item_path_with_match(item, tab: "operations"), class: "ss-btn-link" %>
+            <%= render "shared/ui/button", label: "View operations", variant: :link, url: items_item_path_with_match(item, tab: "operations") %>
           </p>
         </section>
 
@@ -207,7 +209,7 @@
                       <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
                       <td>
                         <% if overview.sales_visible? %>
-                          <%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %>
+                          <%= render "shared/ui/button", label: "Transaction", variant: :link, url: pos_transaction_path(row.transaction) %>
                         <% end %>
                       </td>
                     </tr>
@@ -243,9 +245,9 @@
                       <td class="ss-num"><%= format_cents(row.unit_cost_cents) %></td>
                       <td>
                         <% if row.purchase_order.present? %>
-                          <%= link_to "PO ##{row.purchase_order.id}", orders_purchase_order_path(row.purchase_order), class: "ss-btn-link" %>
+                          <%= render "shared/ui/button", label: "PO ##{row.purchase_order.id}", variant: :link, url: orders_purchase_order_path(row.purchase_order) %>
                         <% end %>
-                        <%= link_to "Receipt ##{row.receipt.id}", orders_receipt_path(row.receipt), class: "ss-btn-link" %>
+                        <%= render "shared/ui/button", label: "Receipt ##{row.receipt.id}", variant: :link, url: orders_receipt_path(row.receipt) %>
                       </td>
                     </tr>
                   <% end %>
@@ -255,7 +257,7 @@
           </section>
         <% end %>
       <% end %>
-    </main>
+    </section>
 
     <aside class="ss-item-sidebar">
       <%= render "items/items/overview_subjects", item: item %>

@@ -1,9 +1,19 @@
-<%= form_with url: add_identifier_items_catalog_item_path(catalog_item, return_to: local_assigns[:return_to]), method: :post do |f| %>
-  <%= f.label :identifier_type, "Type" %>
-  <%= f.select :identifier_type, ProductIdentifierService::LEGACY_IDENTIFIER_TYPES.map { |t| [t.upcase, t] } %>
-  <%= f.label :identifier_value, "Value" %>
-  <%= f.text_field :identifier_value, required: true, autofocus: true %>
-  <%= f.label :primary, "Set as primary" %>
-  <%= f.check_box :primary %>
-  <%= f.submit "Add Identifier", class: "ss-btn" %>
+<%= form_with url: add_identifier_items_catalog_item_path(catalog_item, return_to: local_assigns[:return_to]), method: :post, class: "ss-form ss-form--standard" do |f| %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <div class="ss-field">
+      <%= f.label :identifier_type, "Type", class: "ss-label" %>
+      <%= f.select :identifier_type, ProductIdentifierService::LEGACY_IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, {}, class: "ss-input" %>
+    </div>
+    <div class="ss-field">
+      <%= f.label :identifier_value, "Value", class: "ss-label" %>
+      <%= f.text_field :identifier_value, required: true, autofocus: true, class: "ss-input" %>
+    </div>
+    <div class="ss-field">
+      <%= f.label :primary, "Set as primary", class: "ss-label" %>
+      <%= f.check_box :primary %>
+    </div>
+  </div>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Add Identifier", type: :submit, variant: :primary %>
+  </footer>
 <% end %>

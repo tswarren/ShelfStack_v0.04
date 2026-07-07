@@ -1,12 +1,13 @@
-<div class="ss-page-header">
-  <div>
-    <h1>Buybacks</h1>
-    <p class="ss-muted">Used buyback sessions — evaluate items, pay sellers, and receive inventory.</p>
-  </div>
-  <% if Authorization.allowed?(user: current_user, permission_key: "buybacks.create", store: current_store) %>
-    <%= link_to "New buyback", new_buybacks_session_path, class: "ss-btn" %>
-  <% end %>
-</div>
+<%
+  header_actions = if Authorization.allowed?(user: current_user, permission_key: "buybacks.create", store: current_store)
+    render("shared/ui/button", label: "New buyback", variant: :primary, url: new_buybacks_session_path)
+  end
+%>
+
+<%= render "shared/ui/page_header",
+           title: "Buybacks",
+           description: "Used buyback sessions — evaluate items, pay sellers, and receive inventory.",
+           actions: header_actions %>
 
 <dl class="ss-stats-grid">
   <div><dt>Completed</dt><dd><%= @summary.completed_count %></dd></div>

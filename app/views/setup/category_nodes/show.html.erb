@@ -1,8 +1,29 @@
 <%= render "setup/shared/back_link", path: setup_category_scheme_category_nodes_path(@category_scheme), label: "Category Nodes" %>
-<h1><%= @category_node.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @category_node,
+    edit_path: edit_setup_category_scheme_category_node_path(@category_scheme, @category_node),
+    inactivate_path: inactivate_setup_category_scheme_category_node_path(@category_scheme, @category_node),
+    reactivate_path: reactivate_setup_category_scheme_category_node_path(@category_scheme, @category_node)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @category_node.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Node key</dt><dd><%= @category_node.node_key %></dd>
   <dt>Parent</dt><dd><%= @category_node.parent&.name || "Top level" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@category_node.active?) %>"><%= status_label(@category_node.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@category_node.active?), status: @category_node.active? ? :active : :inactive) %></dd>
 </dl>
-<%= link_to "Edit", edit_setup_category_scheme_category_node_path(@category_scheme, @category_node), class: "ss-btn" %>
+
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "category-node-danger-zone-heading",
+           message: "Delete removes the node only when it has no children or categorizations. Prefer inactivating.",
+           delete_label: "Delete category node",
+           delete_path: setup_category_scheme_category_node_path(@category_scheme, @category_node),
+           confirm_message: "Delete this category node? This cannot be undone." %>

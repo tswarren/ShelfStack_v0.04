@@ -2,9 +2,11 @@
 <% if slips.any? %>
   <div class="ss-pos-issuance-slip-links">
     <% slips.each do |slip| %>
-      <%= link_to slip.label,
-            pos_stored_value_issuance_slip_path(slip.ledger_entry_id),
-            class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+                 label: slip.label,
+                 variant: :secondary,
+                 class: "ss-pos-action-grid__btn",
+                 url: pos_stored_value_issuance_slip_path(slip.ledger_entry_id) %>
     <% end %>
   </div>
 <% end %>

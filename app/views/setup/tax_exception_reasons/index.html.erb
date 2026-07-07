@@ -1,29 +1,42 @@
-<h1>Tax Exception Reasons <%= link_to "New", new_setup_tax_exception_reason_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead>
-    <tr>
-      <th>Key</th>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Sort</th>
-      <th>Note</th>
-      <th>Certificate</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @tax_exception_reasons.each do |reason| %>
+<% new_tax_exception_reason_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_tax_exception_reason_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Tax Exception Reasons",
+           description: "Reason codes staff select when applying POS tax exemptions or overrides.",
+           actions: new_tax_exception_reason_action %>
+
+<% if @tax_exception_reasons.any? %>
+  <table class="ss-table">
+    <thead>
       <tr>
-        <td><code><%= reason.reason_key %></code></td>
-        <td><%= reason.name %></td>
-        <td><%= reason.exception_type.humanize %></td>
-        <td><%= reason.sort_order %></td>
-        <td><%= reason.requires_note? ? "Yes" : "No" %></td>
-        <td><%= reason.requires_certificate? ? "Yes" : "No" %></td>
-        <td><span class="<%= status_class(reason.active?) %>"><%= status_label(reason.active?) %></span></td>
-        <td><%= link_to "View", setup_tax_exception_reason_path(reason) %></td>
+        <th>Key</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Sort</th>
+        <th>Note</th>
+        <th>Certificate</th>
+        <th>Status</th>
+        <th></th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% @tax_exception_reasons.each do |reason| %>
+        <tr>
+          <td><code><%= reason.reason_key %></code></td>
+          <td><%= reason.name %></td>
+          <td><%= reason.exception_type.humanize %></td>
+          <td><%= reason.sort_order %></td>
+          <td><%= reason.requires_note? ? "Yes" : "No" %></td>
+          <td><%= reason.requires_certificate? ? "Yes" : "No" %></td>
+          <td><%= ss_status_badge(status_label(reason.active?), status: reason.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_tax_exception_reason_path(reason) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No tax exception reasons yet",
+             message: "Create reasons for POS tax exemptions and line overrides.",
+             actions: new_tax_exception_reason_action %>
+<% end %>

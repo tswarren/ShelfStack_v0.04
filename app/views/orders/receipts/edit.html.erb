@@ -30,14 +30,18 @@
         match_candidates_by_line: @match_candidates_by_line %>
 <% end %>
 
-<div class="ss-detail-actions">
+<div class="ss-page-actions">
   <% if @receipt.draft? %>
-    <%= link_to "Cancel", orders_receipt_path(@receipt), class: "ss-btn ss-btn-secondary" %>
-    <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) && !(@receipt.po_backed? && @receipt.purchase_order_id.present?) %>
-      <%= button_to "Suggest matches", apply_suggested_matches_orders_receipt_path(@receipt, return_to: "edit"), method: :post, class: "ss-btn ss-btn-secondary" %>
-    <% end %>
     <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.post", store: current_store) %>
-      <%= button_to "Post", post_orders_receipt_path(@receipt), method: :patch, class: "ss-btn" %>
+      <%= render "shared/ui/button", label: "Post", variant: :primary, url: post_orders_receipt_path(@receipt), method: :patch %>
     <% end %>
+    <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) && !(@receipt.po_backed? && @receipt.purchase_order_id.present?) %>
+      <%= render "shared/ui/button",
+            label: "Suggest matches",
+            variant: :secondary,
+            url: apply_suggested_matches_orders_receipt_path(@receipt, return_to: "edit"),
+            method: :post %>
+    <% end %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: orders_receipt_path(@receipt) %>
   <% end %>
 </div>

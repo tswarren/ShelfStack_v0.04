@@ -22,7 +22,12 @@
           <td><%= transaction.suspended_at ? pos_store_local_time(transaction.suspended_at) : "—" %></td>
           <td>
             <% if pos_can_resume_transaction?(transaction) %>
-              <%= link_to "Resume", resume_pos_transaction_path(transaction), data: { turbo_method: :patch }, class: "ss-btn ss-btn-secondary ss-btn--small" %>
+              <%= render "shared/ui/button",
+                         label: "Resume",
+                         variant: :secondary,
+                         size: :small,
+                         url: resume_pos_transaction_path(transaction),
+                         method: :patch %>
             <% else %>
               <span class="ss-hint">No access</span>
             <% end %>

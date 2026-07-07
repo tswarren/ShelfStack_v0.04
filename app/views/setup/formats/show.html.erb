@@ -1,20 +1,31 @@
 <%= render "setup/shared/back_link", path: setup_formats_path, label: "Formats" %>
-<h1><%= @format.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @format,
+    edit_path: edit_setup_format_path(@format),
+    inactivate_path: inactivate_setup_format_path(@format),
+    reactivate_path: reactivate_setup_format_path(@format)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @format.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Format key</dt><dd><%= @format.format_key %></dd>
   <dt>Short name</dt><dd><%= @format.short_name %></dd>
   <dt>Code</dt><dd><%= @format.code || "—" %></dd>
   <dt>Virtual</dt><dd><%= @format.virtual? ? "Yes" : "No" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@format.active?) %>"><%= status_label(@format.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@format.active?), status: @format.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_format_path(@format), class: "ss-btn" %>
-  <% if @format.active? %>
-    <%= button_to "Inactivate", inactivate_setup_format_path(@format), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_format_path(@format), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_format_path(@format), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this format?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "format-danger-zone-heading",
+           message: "Delete removes the format only when nothing references it. Prefer inactivating to preserve catalog history.",
+           delete_label: "Delete format",
+           delete_path: setup_format_path(@format),
+           confirm_message: "Delete this format? This cannot be undone." %>

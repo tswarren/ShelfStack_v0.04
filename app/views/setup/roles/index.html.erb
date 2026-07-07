@@ -1,14 +1,27 @@
-<h1>Roles <%= link_to "New", new_setup_role_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Key</th><th>Name</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @roles.each do |role| %>
-      <tr>
-        <td><%= role.role_key %></td>
-        <td><%= role.name %></td>
-        <td><span class="<%= status_class(role.active?) %>"><%= status_label(role.active?) %></span></td>
-        <td><%= link_to "View", setup_role_path(role) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_role_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_role_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Roles",
+           description: "Group permissions for global and store-scoped user assignments.",
+           actions: new_role_action %>
+
+<% if @roles.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Key</th><th>Name</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @roles.each do |role| %>
+        <tr>
+          <td><%= role.role_key %></td>
+          <td><%= role.name %></td>
+          <td><%= ss_status_badge(status_label(role.active?), status: role.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_role_path(role) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No roles yet",
+             message: "Create a role to bundle permissions for staff assignments.",
+             actions: new_role_action %>
+<% end %>

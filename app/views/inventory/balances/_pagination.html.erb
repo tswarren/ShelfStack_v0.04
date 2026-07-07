@@ -1,11 +1,17 @@
 <% if @total_pages > 1 %>
   <nav class="ss-pagination" aria-label="Inventory pagination">
     <% if @page > 1 %>
-      <%= link_to "Previous", inventory_root_path(request.query_parameters.merge("page" => @page - 1)), class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+            label: "Previous",
+            variant: :secondary,
+            url: inventory_root_path(request.query_parameters.merge("page" => @page - 1)) %>
     <% end %>
     <span class="ss-pagination__summary">Page <%= @page %> of <%= @total_pages %> (<%= @total_count %> balances)</span>
     <% if @page < @total_pages %>
-      <%= link_to "Next", inventory_root_path(request.query_parameters.merge("page" => @page + 1)), class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+            label: "Next",
+            variant: :secondary,
+            url: inventory_root_path(request.query_parameters.merge("page" => @page + 1)) %>
     <% end %>
   </nav>
 <% elsif @total_count.positive? %>

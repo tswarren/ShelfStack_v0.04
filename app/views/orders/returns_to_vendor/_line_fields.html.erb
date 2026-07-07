@@ -28,5 +28,9 @@
     <%= line_form.label :credit_amount_cents, "Credit (cents)" %>
     <%= line_form.number_field :credit_amount_cents, min: 0, step: 1 %>
   </div>
-  <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#removeLine">Remove line</button>
+  <%= render "shared/ui/button",
+        label: "Remove line",
+        type: :button,
+        variant: :secondary,
+        data: { action: "nested-form-lines#removeLine" } %>
 </fieldset>

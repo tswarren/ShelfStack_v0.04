@@ -15,7 +15,10 @@
         <td><%= reservation.expires_at ? l(reservation.expires_at.to_date) : "—" %></td>
         <td>
           <% if reservation.customer_request_line.present? %>
-            <%= link_to "View request", customers_customer_request_path(reservation.customer_request_line.customer_request), class: "ss-btn-link" %>
+            <%= render "shared/ui/button",
+                       label: "View request",
+                       variant: :link,
+                       url: customers_customer_request_path(reservation.customer_request_line.customer_request) %>
           <% end %>
         </td>
       </tr>

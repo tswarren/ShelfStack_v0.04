@@ -6,7 +6,7 @@
 <%= form_with model: [:setup, @store_display_location], class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, store_display_location: @store_display_location, stores: @stores, display_locations: @display_locations %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Store Display Location", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_store_display_locations_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Store Display Location", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_store_display_locations_path %>
   </footer>
 <% end %>

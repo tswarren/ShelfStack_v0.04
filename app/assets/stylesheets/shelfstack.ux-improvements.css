@@ -36,35 +36,16 @@
    ========================================================================== */
 
 /*
-  Preview heuristic:
-  The first button in a page/detail/form action group is treated as primary.
+  Removed: :first-child button coloring in action rows.
 
-  This is intentionally an experiment. In production, prefer explicit classes:
-  .ss-btn-primary, .ss-btn-secondary, .ss-btn-tertiary.
+  That experiment conflicted with:
+  - explicit .ss-btn-primary / .ss-btn-secondary / .ss-btn-tertiary variants
+  - page-header order (secondary left, primary right)
+  - button_to wrappers (first .ss-btn is not the first action in the row)
+
+  Use explicit variant classes from shelfstack.components.buttons.css.
+  See docs/design/components/button.md#action-order-shelfstack-standard.
 */
-
-.ss-page-actions .ss-btn:first-child,
-.ss-form-actions .ss-btn:first-child,
-.ss-detail-actions .ss-btn:first-child {
-  background: var(--color-primary);
-  color: var(--color-primary-content);
-  border-color: transparent;
-  box-shadow: var(--shadow-md);
-}
-
-.ss-page-actions .ss-btn:not(:first-child),
-.ss-detail-actions .ss-btn:not(:first-child) {
-  background: var(--color-surface);
-  color: var(--color-muted);
-  border-color: var(--color-base-300);
-  box-shadow: none;
-}
-
-.ss-page-actions .ss-btn:not(:first-child):hover,
-.ss-detail-actions .ss-btn:not(:first-child):hover {
-  background: var(--color-base-150);
-  color: var(--color-base-content);
-}
 
 /* ==========================================================================
    03. Status badges should read as state, not actions

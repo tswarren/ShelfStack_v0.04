@@ -1,4 +1,10 @@
-<h1>Register Session</h1>
+<% content_for :main_class, "ss-main--wide ss-pos-main" %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "POS",
+           title: "Register Session",
+           description: "Session activity, cash movements, and register close." %>
+
 <p class="ss-pos-no-print">
   <%= link_to "Register summary", register_summary_pos_reports_path(register_session_id: @register_session.id), class: "ss-link" %>
 </p>
@@ -68,11 +74,23 @@
 
 <section class="ss-pos-panel" id="cash-movement">
   <h2>Cash movement</h2>
-  <%= form_with url: pos_register_session_cash_movements_path(@register_session), class: "ss-form" do %>
-    <%= select_tag :movement_type, options_for_select([["Paid in", "paid_in"], ["Paid out", "paid_out"]]) %>
-    <%= pos_money_field :amount_dollars, nil, min: 0.01, placeholder: "Amount" %>
-    <%= text_field_tag :reason_code, nil, placeholder: "Reason" %>
-    <%= submit_tag "Record", class: "ss-btn" %>
+  <%= form_with url: pos_register_session_cash_movements_path(@register_session), class: "ss-form ss-form--standard" do %>
+    <div class="ss-field">
+      <%= label_tag :movement_type, "Type", class: "ss-label" %>
+      <%= select_tag :movement_type, options_for_select([["Paid in", "paid_in"], ["Paid out", "paid_out"]]) %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :amount_dollars, "Amount", class: "ss-label" %>
+      <%= pos_money_field :amount_dollars, nil, min: 0.01, placeholder: "Amount" %>
+    </div>
+    <div class="ss-field">
+      <%= label_tag :reason_code, "Reason", class: "ss-label" %>
+      <%= text_field_tag :reason_code, nil, placeholder: "Reason" %>
+    </div>
+    <footer class="ss-form-actions">
+      <%= render "shared/ui/button", label: "Record", type: :submit, variant: :primary %>
+      <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: pos_root_path %>
+    </footer>
   <% end %>
 </section>
 
@@ -94,26 +112,44 @@
       </tbody>
     </table>
 
-    <%= form_with url: close_pos_register_session_path(@register_session), method: :patch, class: "ss-form ss-pos-close-form" do %>
+    <%= form_with url: close_pos_register_session_path(@register_session), method: :patch, class: "ss-form ss-form--standard ss-pos-close-form" do %>
       <div class="ss-field">
-        <%= label_tag :counted_closing_cash_dollars, "Counted cash" %>
+        <%= label_tag :counted_closing_cash_dollars, "Counted cash", class: "ss-label" %>
         <%= pos_money_field :counted_closing_cash_dollars, nil, required: true, data: { pos_register_close_target: "countedField", action: "input->pos-register-close#updateVariance change->pos-register-close#updateVariance" } %>
       </div>
       <p class="ss-pos-variance">Variance: <span data-pos-register-close-target="varianceDisplay"><%= pos_money(0) %></span></p>
-      <%= submit_tag "Close register", class: "ss-btn" %>
+      <footer class="ss-form-actions">
+        <%= render "shared/ui/button", label: "Close register", type: :submit, variant: :primary %>
+        <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: pos_root_path %>
+      </footer>
     <% end %>
 
     <details class="ss-pos-advanced-actions">
       <summary>Advanced / Manager actions</summary>
       <div class="ss-pos-advanced-actions__panel">
         <p class="ss-hint">Force close requires manager approval and should only be used when normal close is blocked.</p>
-        <%= form_with url: force_close_pos_register_session_path(@register_session), method: :patch, class: "ss-form" do %>
+        <%= form_with url: force_close_pos_register_session_path(@register_session), method: :patch, class: "ss-form ss-form--standard" do %>
           <%= hidden_field_tag :pos_authorization_id, nil, data: { pos_transaction_edit_target: "authorizationId" } %>
-          <%= pos_money_field :counted_closing_cash_dollars, nil %>
-          <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-transaction-edit#requestAuth" data-authorization-type="force_close_register" data-register-session-id="<%= @register_session.id %>" data-authorization-message="Force close requires manager approval.">
-            Authorize force close
-          </button>
-          <%= submit_tag "Force close register", class: "ss-btn ss-btn--danger", data: { turbo_confirm: "Force close this register session?" } %>
+          <div class="ss-field">
+            <%= label_tag :counted_closing_cash_dollars, "Counted cash", class: "ss-label" %>
+            <%= pos_money_field :counted_closing_cash_dollars, nil %>
+          </div>
+          <footer class="ss-form-actions">
+            <%= render "shared/ui/button",
+                       label: "Authorize force close",
+                       variant: :secondary,
+                       data: {
+                         action: "pos-transaction-edit#requestAuth",
+                         authorization_type: "force_close_register",
+                         register_session_id: @register_session.id,
+                         authorization_message: "Force close requires manager approval."
+                       } %>
+            <%= render "shared/ui/button",
+                       label: "Force close register",
+                       type: :submit,
+                       variant: :danger,
+                       data: { turbo_confirm: "Force close this register session?" } %>
+          </footer>
         <% end %>
       </div>
     </details>

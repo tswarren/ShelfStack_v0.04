@@ -1,4 +1,4 @@
-<h1>Variant Inventory</h1>
+<%= render "shared/ui/page_header", title: "Variant Inventory" %>
 <p><strong><%= @variant.sku %></strong> — <%= @variant.name %></p>
 
 <% if @balance %>
@@ -12,7 +12,12 @@
 <% end %>
 
 <% if Authorization.allowed?(user: current_user, permission_key: "inventory.adjustments.create", store: current_store) %>
-  <p><%= link_to "Adjust this variant", new_inventory_adjustment_path(product_variant_id: @variant.id), class: "ss-btn" %></p>
+  <p>
+    <%= render "shared/ui/button",
+          label: "Adjust this variant",
+          variant: :primary,
+          url: new_inventory_adjustment_path(product_variant_id: @variant.id) %>
+  </p>
 <% end %>
 
 <h2>Ledger History</h2>
@@ -39,4 +44,4 @@
   </tbody>
 </table>
 
-<%= link_to "Back to Inventory", inventory_root_path %>
+<p><%= link_to "Back to Inventory", inventory_root_path %></p>

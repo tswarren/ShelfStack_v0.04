@@ -23,27 +23,22 @@
     <div class="ss-pos-choices" data-customer-lookup-target="choices"></div>
   </div>
 
-  <div class="ss-form__actions" data-pos-customer-lookup-target="actions" hidden>
+  <div class="ss-form__actions ss-form-actions" data-pos-customer-lookup-target="actions" hidden>
     <% if attach_url.present? %>
-      <button type="button"
-              class="ss-btn"
-              data-action="pos-customer-lookup#attach"
-              data-pos-customer-lookup-target="attachButton">
-        Attach to transaction
-      </button>
+      <%= render "shared/ui/button",
+                 label: "Attach to transaction",
+                 variant: :primary,
+                 data: { action: "pos-customer-lookup#attach", pos_customer_lookup_target: "attachButton" } %>
     <% end %>
     <% if start_sale_url.present? %>
-      <button type="button"
-              class="ss-btn"
-              data-action="pos-customer-lookup#startSale"
-              data-pos-customer-lookup-target="startSaleButton">
-        Start sale with this customer
-      </button>
+      <%= render "shared/ui/button",
+                 label: "Start sale with this customer",
+                 variant: :primary,
+                 data: { action: "pos-customer-lookup#startSale", pos_customer_lookup_target: "startSaleButton" } %>
     <% end %>
-    <button type="button"
-            class="ss-btn ss-btn-secondary"
-            data-action="customer-lookup#clearCustomer">
-      Clear selection
-    </button>
+    <%= render "shared/ui/button",
+               label: "Clear selection",
+               variant: :tertiary,
+               data: { action: "customer-lookup#clearCustomer" } %>
   </div>
 </div>

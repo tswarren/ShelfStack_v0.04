@@ -1,9 +1,14 @@
 <div class="ss-pos-no-print ss-receipt-actions" data-controller="pos-receipt-print" data-pos-receipt-print-print-url-value="<%= print_trade_credit_slip_buybacks_session_path(session) %>">
-  <button type="button" class="ss-btn ss-receipt-actions__print" data-action="pos-receipt-print#print">Print</button>
+  <%= render "shared/ui/button",
+        label: "Print",
+        variant: :primary,
+        type: :button,
+        class: "ss-receipt-actions__print",
+        data: { action: "pos-receipt-print#print" } %>
 
   <div class="ss-receipt-actions__secondary">
-    <%= link_to "Buyback receipt", receipt_buybacks_session_path(session), class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Session", buybacks_session_path(session), class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Buybacks", buybacks_root_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Buyback receipt", variant: :secondary, url: receipt_buybacks_session_path(session) %>
+    <%= render "shared/ui/button", label: "Session", variant: :secondary, url: buybacks_session_path(session) %>
+    <%= render "shared/ui/button", label: "Buybacks", variant: :secondary, url: buybacks_root_path %>
   </div>
 </div>

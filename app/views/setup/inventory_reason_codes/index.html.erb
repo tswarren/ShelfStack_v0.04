@@ -1,15 +1,28 @@
-<h1>Inventory Reason Codes <%= link_to "New", new_setup_inventory_reason_code_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Key</th><th>Name</th><th>Sort</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @reason_codes.each do |reason_code| %>
-      <tr>
-        <td><%= reason_code.reason_key %></td>
-        <td><%= reason_code.name %></td>
-        <td><%= reason_code.sort_order %></td>
-        <td><%= status_label(reason_code.active?) %></td>
-        <td><%= link_to "View", setup_inventory_reason_code_path(reason_code) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_reason_code_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_inventory_reason_code_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Inventory Reason Codes",
+           description: "Reason codes staff select when posting inventory adjustments.",
+           actions: new_reason_code_action %>
+
+<% if @reason_codes.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Key</th><th>Name</th><th>Sort</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @reason_codes.each do |reason_code| %>
+        <tr>
+          <td><code><%= reason_code.reason_key %></code></td>
+          <td><%= reason_code.name %></td>
+          <td><%= reason_code.sort_order %></td>
+          <td><%= ss_status_badge(status_label(reason_code.active?), status: reason_code.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_inventory_reason_code_path(reason_code) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No inventory reason codes yet",
+             message: "Create reason codes for inventory adjustments and corrections.",
+             actions: new_reason_code_action %>
+<% end %>

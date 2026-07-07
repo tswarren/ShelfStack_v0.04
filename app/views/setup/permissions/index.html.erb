@@ -1,14 +1,23 @@
-<h1>Permissions</h1>
-<table class="ss-table">
-  <thead><tr><th>Group</th><th>Key</th><th>Name</th><th>Status</th></tr></thead>
-  <tbody>
-    <% @permissions.each do |permission| %>
-      <tr>
-        <td><%= permission.permission_group %></td>
-        <td><%= permission.permission_key %></td>
-        <td><%= permission.name %></td>
-        <td><span class="<%= status_class(permission.active?) %>"><%= status_label(permission.active?) %></span></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<%= render "shared/ui/page_header",
+           title: "Permissions",
+           description: "Read-only catalog of permission keys grouped by functional area." %>
+
+<% if @permissions.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Group</th><th>Key</th><th>Name</th><th>Status</th></tr></thead>
+    <tbody>
+      <% @permissions.each do |permission| %>
+        <tr>
+          <td><%= permission.permission_group %></td>
+          <td><code><%= permission.permission_key %></code></td>
+          <td><%= permission.name %></td>
+          <td><%= ss_status_badge(status_label(permission.active?), status: permission.active? ? :active : :inactive) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No permissions found",
+             message: "Permission records are seeded with the application." %>
+<% end %>

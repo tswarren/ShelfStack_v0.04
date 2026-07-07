@@ -5,8 +5,8 @@
 <% totals = @proposal.totals %>
 
 <div class="no-print print-actions">
-  <button type="button" class="ss-btn" onclick="window.print()">Print proposal</button>
-  <%= link_to "Back to buyback", buybacks_session_path(session), class: "ss-btn ss-btn-secondary" %>
+  <%= link_to "Print proposal", "#", class: ss_button_classes(variant: :primary), onclick: "window.print(); return false;" %>
+  <%= render "shared/ui/button", label: "Back to buyback", variant: :secondary, url: buybacks_session_path(session) %>
 </div>
 
 <section class="proposal-header">

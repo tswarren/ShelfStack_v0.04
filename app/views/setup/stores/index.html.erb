@@ -1,15 +1,25 @@
-<h1>Stores <%= link_to "New", new_setup_store_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Number</th><th>Name</th><th>Time Zone</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @stores.each do |store| %>
-      <tr>
-        <td><%= store.store_number %></td>
-        <td><%= store.name %></td>
-        <td><%= store.time_zone %></td>
-        <td><span class="<%= status_class(store.active?) %>"><%= status_label(store.active?) %></span></td>
-        <td><%= link_to "View", setup_store_path(store) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_store_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_store_path) %>
+
+<%= render "shared/ui/page_header", title: "Stores", actions: new_store_action %>
+
+<% if @stores.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Number</th><th>Name</th><th>Time Zone</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @stores.each do |store| %>
+        <tr>
+          <td><%= store.store_number %></td>
+          <td><%= store.name %></td>
+          <td><%= store.time_zone %></td>
+          <td><%= ss_status_badge(status_label(store.active?), status: store.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_store_path(store) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No stores yet",
+             message: "Create a store to define a physical location where ShelfStack operates.",
+             actions: new_store_action %>
+<% end %>

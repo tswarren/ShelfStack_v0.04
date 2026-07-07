@@ -1,19 +1,32 @@
 <%= render "setup/shared/back_link", path: setup_store_display_locations_path, label: "Store Display Locations" %>
-<h1><%= @store_display_location.store.name %> — <%= @store_display_location.display_location.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @store_display_location,
+    edit_path: edit_setup_store_display_location_path(@store_display_location),
+    inactivate_path: inactivate_setup_store_display_location_path(@store_display_location),
+    reactivate_path: reactivate_setup_store_display_location_path(@store_display_location)
+  )
+%>
+
+<%= render "shared/ui/page_header",
+           title: "#{@store_display_location.store.name} — #{@store_display_location.display_location.name}",
+           actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Store</dt><dd><%= @store_display_location.store.name %> (<%= @store_display_location.store.store_number %>)</dd>
   <dt>Display location</dt><dd><%= @store_display_location.display_location.name %></dd>
   <dt>Linear feet</dt><dd><%= @store_display_location.linear_feet %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@store_display_location.active?) %>"><%= status_label(@store_display_location.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@store_display_location.active?), status: @store_display_location.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_store_display_location_path(@store_display_location), class: "ss-btn" %>
-  <% if @store_display_location.active? %>
-    <%= button_to "Inactivate", inactivate_setup_store_display_location_path(@store_display_location), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_store_display_location_path(@store_display_location), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_store_display_location_path(@store_display_location), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this store display location?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "store-display-location-danger-zone-heading",
+           message: "Delete removes the store assignment only when nothing references it. Prefer inactivating.",
+           delete_label: "Delete store display location",
+           delete_path: setup_store_display_location_path(@store_display_location),
+           confirm_message: "Delete this store display location?" %>

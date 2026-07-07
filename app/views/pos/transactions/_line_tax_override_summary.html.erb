@@ -8,11 +8,13 @@
     </p>
     <p class="ss-hint">Reason: <%= override.tax_exception_reason.name %></p>
     <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.tax_overrides.line.void", store: current_store) %>
-      <%= button_to "Remove override",
-            void_line_tax_override_pos_transaction_path(transaction, override_id: override.id),
-            method: :delete,
-            class: "ss-btn ss-btn-secondary ss-btn--small",
-            form: { data: { turbo_stream: true } } %>
+      <%= render "shared/ui/button",
+                 label: "Remove override",
+                 variant: :secondary,
+                 size: :small,
+                 url: void_line_tax_override_pos_transaction_path(transaction, override_id: override.id),
+                 method: :delete,
+                 form: { data: { turbo_stream: true } } %>
     <% end %>
   </div>
 <% end %>

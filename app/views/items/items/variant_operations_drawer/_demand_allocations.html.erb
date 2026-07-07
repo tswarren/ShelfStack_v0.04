@@ -29,7 +29,7 @@
           <td><%= allocation.purchase_order_line&.line_number || "—" %></td>
         <% end %>
         <td><%= allocation.expires_at ? l(allocation.expires_at.to_date) : "—" %></td>
-        <td><%= link_to "View demand", demand_demand_line_path(allocation.demand_line), class: "ss-btn-link" %></td>
+        <td><%= render "shared/ui/button", label: "View demand", variant: :link, url: demand_demand_line_path(allocation.demand_line) %></td>
       </tr>
     <% end %>
   </tbody>

@@ -992,15 +992,6 @@ h2 {
   color: var(--color-primary);
 }
 
-.ss-setup-section {
-  margin-bottom: 2rem;
-}
-
-.ss-setup-section h2 {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
-}
-
 .ss-tabs {
   display: flex;
   gap: 0.5rem;

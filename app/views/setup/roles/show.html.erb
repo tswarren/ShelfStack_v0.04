@@ -1,11 +1,34 @@
 <%= render "setup/shared/back_link", path: setup_roles_path, label: "Roles" %>
-<h1><%= @role.name %></h1>
-<p><%= @role.description %></p>
+
+<%
+  editable_role = !(@role.system_role? && @role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY)
+  header_actions = if editable_role
+                     render(
+                       "setup/shared/detail_lifecycle_header_actions",
+                       record: @role,
+                       edit_path: edit_setup_role_path(@role),
+                       inactivate_path: inactivate_setup_role_path(@role),
+                       reactivate_path: reactivate_setup_role_path(@role)
+                     )
+                   end
+%>
+
+<%= render "shared/ui/page_header",
+           title: @role.name,
+           description: @role.description.presence,
+           actions: header_actions %>
+
 <% if @role.system_role? && @role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY %>
-  <p class="flash flash-notice">Super Administrator permissions are fixed and cannot be removed.</p>
-<% else %>
-  <div class="ss-detail-actions"><%= link_to "Edit", edit_setup_role_path(@role), class: "ss-btn" %></div>
+  <%= render "shared/ui/alert",
+             variant: :info,
+             title: "Super Administrator permissions are fixed and cannot be removed." %>
 <% end %>
+
+<dl class="ss-summary">
+  <dt>Role key</dt><dd><code><%= @role.role_key %></code></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@role.active?), status: @role.active? ? :active : :inactive) %></dd>
+</dl>
+
 <h2>Permissions</h2>
 <table class="ss-table">
   <thead><tr><th>Permission</th><th>Granted</th></tr></thead>
@@ -17,7 +40,7 @@
           <% if @role.system_role? && @role.role_key == ShelfStack::SUPER_ADMINISTRATOR_ROLE_KEY %>
             <%= @role.permissions.include?(permission) ? "Yes" : "No" %>
           <% else %>
-            <%= form_with url: update_permissions_setup_role_path(@role), method: :patch do %>
+            <%= form_with url: update_permissions_setup_role_path(@role), method: :patch, class: "ss-inline-form" do %>
               <%= hidden_field_tag :permission_id, permission.id %>
               <%= check_box_tag :grant, "1", @role.permissions.include?(permission),
                     onchange: "this.form.submit()" %>
@@ -28,5 +51,15 @@
     <% end %>
   </tbody>
 </table>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<% if editable_role && !@role.system_role? %>
+  <%= render "setup/shared/detail_danger_zone",
+             heading_id: "role-danger-zone-heading",
+             message: "Delete removes the role only when no assignments reference it. Prefer inactivating to preserve history.",
+             delete_label: "Delete role",
+             delete_path: setup_role_path(@role),
+             confirm_message: "Delete this role? This cannot be undone." %>
+<% end %>

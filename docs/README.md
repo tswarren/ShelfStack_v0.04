@@ -11,17 +11,19 @@ Navigation hub for ShelfStack docs.
 | Start here | Purpose |
 | ---------- | ------- |
 | [design/VERSION_0.04.md](design/VERSION_0.04.md) | Core domain model (products, identifiers, demand, …) |
-| [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) | Implementation milestones v0.04-0 … v0.04-12 |
+| [roadmap/v0.04-delivery-roadmap.md](roadmap/v0.04-delivery-roadmap.md) | Implementation milestones v0.04-0 … v0.04-14 |
 | [v0.04/README.md](v0.04/README.md) | Milestone spec bundles and completion status |
 
 **Current priority:**
 
 ```text
-Complete: v0.04-0 through v0.04-12
-Current:  Next milestone TBD (v0.04-3 product groups deferred; Phase 10-E or catalog cleanup candidates)
+Complete: v0.04-0 through v0.04-12, v0.04-14 (integration branch)
+Release:  v0.04-14 merge to `main` pending — see implementation/v0.04-14-completion.md
+Deferred: v0.04-13 demand-to-fulfillment continuity (after v0.04-14 release)
+          v0.04-3 product groups
 ```
 
-Phase 10-E (consistency sweep) is **eligible to resume** now that v0.04-12 is merged.
+**v0.04-14** is the design-system migration milestone — implementation complete on `v0.04-14/ux-migration`; no domain model changes.
 
 ---
 
@@ -53,9 +55,11 @@ Start at [design/README.md](design/README.md) for views, CSS, shell, and compone
 | [design/app-shell-and-pos-shell.md](design/app-shell-and-pos-shell.md) | App shell and POS workspace contract |
 | [design/layout-width-model.md](design/layout-width-model.md) | Canvas width rationale |
 | [design/ux-review-checklist.md](design/ux-review-checklist.md) | PR review checklist |
+| [design/ux-migration-build-plan.md](design/ux-migration-build-plan.md) | **v0.04-14 build plan** (partials, PRs, pilot, surface order) |
+| [v0.04/v0.04-14-design-system-ux-migration/spec.md](v0.04/v0.04-14-design-system-ux-migration/spec.md) | **v0.04-14 milestone spec** |
 | [../app/assets/stylesheets/README.md](../app/assets/stylesheets/README.md) | CSS file map and migration rules |
 
-Phase 10-E (consistency sweep) work should follow [design/components.md](design/components.md) Priority 1 and migration stragglers.
+v0.04-14 work follows [v0.04/v0.04-14-design-system-ux-migration/spec.md](v0.04/v0.04-14-design-system-ux-migration/spec.md) and [design/ux-migration-build-plan.md](design/ux-migration-build-plan.md).
 
 ---
 
@@ -78,10 +82,11 @@ Phase 10-E (consistency sweep) work should follow [design/components.md](design/
 ### Implementing UI / design system
 
 1. [design/README.md](design/README.md) — design system index
-2. [design/ux-guide.md](design/ux-guide.md) — principles and page patterns
-3. [design/app-shell-and-pos-shell.md](design/app-shell-and-pos-shell.md) — shell contract
-4. [design/components.md](design/components.md) — component status and migration
-5. [../app/assets/stylesheets/README.md](../app/assets/stylesheets/README.md) — where to put CSS
+2. [design/ux-migration-build-plan.md](design/ux-migration-build-plan.md) — **Phase 10-E execution plan**
+3. [design/ux-guide.md](design/ux-guide.md) — principles and page patterns
+4. [design/app-shell-and-pos-shell.md](design/app-shell-and-pos-shell.md) — shell contract
+5. [design/components.md](design/components.md) — component status and migration
+6. [../app/assets/stylesheets/README.md](../app/assets/stylesheets/README.md) — where to put CSS
 
 ### Working on v0.03 code (historical)
 
@@ -151,9 +156,10 @@ Legacy redirects: [VERSION_0.04.md](VERSION_0.04.md) → [design/VERSION_0.04.md
 | Workstream | Status |
 | ---------- | ------ |
 | v0.03 Phases 1–10-D | Complete |
-| **ShelfStack v0.04 core** | **v0.04-0 through v0.04-12 Complete** |
+| **ShelfStack v0.04 core** | **v0.04-0 through v0.04-12 complete** |
 | Phase 9c GL layer | Deferred |
-| Phase 10-E consistency sweep | Eligible to resume |
+| **v0.04-14** design system UX | **Complete (integration branch)** — [completion](implementation/v0.04-14-completion.md) |
+| **v0.04-13** demand-to-fulfillment | **Deferred** (after v0.04-14) |
 
 v0.03 phase links: [roadmap/README.md](roadmap/README.md)
 

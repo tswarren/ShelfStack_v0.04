@@ -4,11 +4,12 @@
   <% if transaction.customer.blank? &&
         transaction.editable? &&
         Authorization.allowed?(user: current_user, permission_key: "pos.access", store: current_store) %>
-    <button type="button"
-            class="ss-btn ss-btn-secondary ss-btn--small ss-pos-status-panel__header-action"
-            data-action="pos-command-bar#showCustomerLookupModal">
-      Link customer
-    </button>
+    <%= render "shared/ui/button",
+               label: "Link customer",
+               variant: :secondary,
+               size: :small,
+               class: "ss-pos-status-panel__header-action",
+               data: { action: "pos-command-bar#showCustomerLookupModal" } %>
   <% end %>
 </div>
 
@@ -20,11 +21,12 @@
         <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--amount" aria-hidden="true"></td>
         <td class="ss-pos-status-panel__cell ss-pos-status-panel__cell--action">
           <% if transaction.editable? %>
-            <%= button_to "Remove",
-                  detach_customer_pos_transaction_path(transaction),
-                  method: :patch,
-                  class: "ss-btn-link",
-                  form: { data: { turbo_stream: true }, class: "ss-pos-status-panel__action-form" } %>
+            <%= render "shared/ui/button",
+                       label: "Remove",
+                       variant: :link,
+                       url: detach_customer_pos_transaction_path(transaction),
+                       method: :patch,
+                       form: { data: { turbo_stream: true }, class: "ss-pos-status-panel__action-form" } %>
           <% end %>
         </td>
       </tr>

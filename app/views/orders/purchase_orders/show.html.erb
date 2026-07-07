@@ -5,20 +5,24 @@
       status: presenter.status,
       metadata_lines: presenter.metadata_lines do %>
   <% if @purchase_order.draft? %>
-    <%= link_to "Edit", edit_orders_purchase_order_path(@purchase_order), class: "ss-btn" %>
-    <%= button_to "Submit", submit_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn" %>
-    <%= button_to "Cancel", cancel_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn" %>
+    <%= render "shared/ui/button", label: "Edit", variant: :secondary, url: edit_orders_purchase_order_path(@purchase_order) %>
+    <%= render "shared/ui/button", label: "Submit", variant: :primary, url: submit_orders_purchase_order_path(@purchase_order), method: :patch %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :danger, url: cancel_orders_purchase_order_path(@purchase_order), method: :patch %>
   <% elsif @purchase_order.status == "submitted" %>
-    <%= button_to "Cancel", cancel_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn" %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :danger, url: cancel_orders_purchase_order_path(@purchase_order), method: :patch %>
   <% end %>
   <% if @receivable && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.create", store: current_store) %>
-    <%= button_to "Receive", receive_orders_purchase_order_path(@purchase_order), method: :post, class: "ss-btn" %>
+    <%= render "shared/ui/button", label: "Receive", variant: :primary, url: receive_orders_purchase_order_path(@purchase_order), method: :post %>
   <% end %>
   <% if @closable %>
-    <%= button_to "Close", close_orders_purchase_order_path(@purchase_order), method: :patch, class: "ss-btn",
+    <%= render "shared/ui/button",
+          label: "Close",
+          variant: :danger,
+          url: close_orders_purchase_order_path(@purchase_order),
+          method: :patch,
           data: { turbo_confirm: "Close this purchase order? Open lines will be marked closed or closed short." } %>
   <% end %>
-  <%= link_to "Back", orders_purchase_orders_path %>
+  <%= render "shared/ui/button", label: "Back", variant: :tertiary, url: orders_purchase_orders_path %>
 <% end %>
 
 <%= render "orders/shared/metric_strip", metrics: presenter.metrics %>

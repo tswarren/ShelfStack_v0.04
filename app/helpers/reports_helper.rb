@@ -50,11 +50,34 @@ module ReportsHelper
   end
 
   def report_print_button(label: "Print")
-    link_to label, "#", class: "ss-btn ss-btn-secondary ss-report-no-print", onclick: "window.print(); return false;"
+    link_to label, "#",
+      class: "#{ss_button_classes(variant: :secondary)} ss-report-no-print",
+      onclick: "window.print(); return false;"
+  end
+
+  def report_back_link(label: "Back to reports", path: reports_root_path)
+    render("shared/ui/button",
+           label: label,
+           variant: :tertiary,
+           url: path,
+           class: "ss-report-no-print")
+  end
+
+  def report_standard_actions(export_url: nil, back_path: reports_root_path, back_label: "Back to reports")
+    safe_join([
+      report_print_button,
+      (render("reports/shared/export_action", url: export_url) if export_url.present?),
+      (report_back_link(label: back_label, path: back_path) if back_path.present?)
+    ].compact)
   end
 
   def report_csv_link(path, label: "Export CSV")
-    link_to label, path, class: "ss-btn ss-btn-secondary ss-report-no-print", data: { turbo: false }
+    render("shared/ui/button",
+           label: label,
+           variant: :secondary,
+           url: path,
+           class: "ss-report-no-print",
+           data: { turbo: false })
   end
 
   def reports_nav_visible?

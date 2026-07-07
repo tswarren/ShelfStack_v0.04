@@ -34,5 +34,14 @@
           { label: "" }
         ] %>
 
-  <%= f.submit class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button",
+          label: (purchase_order.persisted? ? "Update Purchase Order" : "Create Purchase Order"),
+          type: :submit,
+          variant: :primary %>
+    <%= render "shared/ui/button",
+          label: "Cancel",
+          variant: :tertiary,
+          url: (purchase_order.persisted? ? orders_purchase_order_path(purchase_order) : orders_purchase_orders_path) %>
+  </footer>
 <% end %>

@@ -1,18 +1,39 @@
 <%= render "setup/shared/back_link", path: setup_tax_categories_path, label: "Tax Categories" %>
-<h1><%= @tax_category.name %></h1>
+
+<%
+  header_actions = if @tax_category.active?
+                     safe_join([
+                       render("shared/ui/button", label: "Inactivate", variant: :secondary, url: inactivate_setup_tax_category_path(@tax_category), method: :patch),
+                       render("shared/ui/button", label: "Edit", variant: :primary, url: edit_setup_tax_category_path(@tax_category))
+                     ])
+                   else
+                     safe_join([
+                       render("shared/ui/button", label: "Edit", variant: :secondary, url: edit_setup_tax_category_path(@tax_category)),
+                       render("shared/ui/button", label: "Reactivate", variant: :primary, url: reactivate_setup_tax_category_path(@tax_category), method: :patch)
+                     ])
+                   end
+%>
+
+<%= render "shared/ui/page_header", title: @tax_category.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Short name</dt><dd><%= @tax_category.short_name %></dd>
   <dt>Sort order</dt><dd><%= @tax_category.sort_order %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@tax_category.active?) %>"><%= status_label(@tax_category.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@tax_category.active?), status: @tax_category.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_tax_category_path(@tax_category), class: "ss-btn" %>
-  <% if @tax_category.active? %>
-    <%= button_to "Inactivate", inactivate_setup_tax_category_path(@tax_category), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_tax_category_path(@tax_category), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_tax_category_path(@tax_category), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this tax category?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<section aria-labelledby="tax-category-danger-zone-heading">
+  <h2 id="tax-category-danger-zone-heading">Danger zone</h2>
+  <p class="ss-muted">Delete removes the tax category only when nothing references it. Prefer inactivating to preserve tax mapping history.</p>
+  <div class="ss-section-actions">
+    <%= render "shared/ui/button",
+               label: "Delete tax category",
+               variant: :danger,
+               url: setup_tax_category_path(@tax_category),
+               method: :delete,
+               data: { turbo_confirm: "Delete this tax category? This cannot be undone." } %>
+  </div>
+</section>

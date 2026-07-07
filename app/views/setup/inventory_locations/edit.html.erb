@@ -1,8 +1,27 @@
-<h1>Edit Inventory Location</h1>
-<%= form_with model: @location, url: setup_inventory_location_path(@location), method: :patch do |f| %>
-  <div class="ss-field"><%= f.label :store_id %><%= f.collection_select :store_id, Store.active_records.order(:store_number), :id, :name %></div>
-  <div class="ss-field"><%= f.label :name %><%= f.text_field :name %></div>
-  <div class="ss-field"><%= f.label :short_name %><%= f.text_field :short_name %></div>
-  <div class="ss-field"><%= f.label :sort_order %><%= f.number_field :sort_order %></div>
-  <%= f.submit class: "ss-btn" %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Inventory Location",
+           description: "Update where stock is kept within a store." %>
+
+<%= form_with model: @location, url: setup_inventory_location_path(@location), method: :patch, class: "ss-form ss-form--standard" do |f| %>
+  <%= render "shared/forms/errors", record: @location %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @location, field: :store_id, label: "Store", required: true } do %>
+      <%= f.collection_select :store_id, Store.active_records.order(:store_number), :id, :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @location, field: :name, required: true } do %>
+      <%= f.text_field :name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @location, field: :short_name, required: true } do %>
+      <%= f.text_field :short_name %>
+    <% end %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: @location, field: :sort_order } do %>
+      <%= f.number_field :sort_order, min: 0, step: 1 %>
+    <% end %>
+  </div>
+  <%= render "shared/forms/checkbox", f: f, record: @location, field: :active %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Update Inventory Location", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_inventory_location_path(@location) %>
+  </footer>
 <% end %>

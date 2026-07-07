@@ -2,7 +2,7 @@
 
 ## Status
 
-**Complete in PR 18** — MVP store-stock path implemented; readiness slices remain deferred. Companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`), v0.04-7 (`demand_allocations`), v0.04-8 (sourcing), v0.04-9 (PO/receiving quantities), v0.04-12 (demand ordering UX).
+**Deferred** — scheduled after [v0.04-14](../v0.04-14-design-system-ux-migration/spec.md). Companion to [spec.md](spec.md). Depends on v0.04-6 (`demand_lines`), v0.04-7 (`demand_allocations`), v0.04-8 (sourcing), v0.04-9 (PO/receiving quantities), v0.04-12 (demand ordering UX).
 
 ---
 

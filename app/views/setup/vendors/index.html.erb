@@ -1,15 +1,25 @@
-<h1>Vendors <%= link_to "New", new_setup_vendor_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Name</th><th>Parent</th><th>Supplier discount</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @vendors.each do |vendor| %>
-      <tr>
-        <td><%= vendor.name %></td>
-        <td><%= vendor.parent_vendor&.name || "—" %></td>
-        <td><%= format_basis_points(vendor.default_supplier_discount_bps) %></td>
-        <td><span class="<%= status_class(vendor.active?) %>"><%= status_label(vendor.active?) %></span></td>
-        <td><%= link_to "View", setup_vendor_path(vendor) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_vendor_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_vendor_path) %>
+
+<%= render "shared/ui/page_header", title: "Vendors", actions: new_vendor_action %>
+
+<% if @vendors.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Name</th><th>Parent</th><th>Supplier discount</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @vendors.each do |vendor| %>
+        <tr>
+          <td><%= vendor.name %></td>
+          <td><%= vendor.parent_vendor&.name || "—" %></td>
+          <td><%= format_basis_points(vendor.default_supplier_discount_bps) %></td>
+          <td><%= ss_status_badge(status_label(vendor.active?), status: vendor.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_vendor_path(vendor) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No vendors yet",
+             message: "Create a vendor to configure sourcing and purchasing defaults.",
+             actions: new_vendor_action %>
+<% end %>

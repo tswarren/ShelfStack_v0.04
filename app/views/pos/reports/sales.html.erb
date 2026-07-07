@@ -1,5 +1,5 @@
 <h1>Sales Report</h1>
-<p><%= link_to "Export CSV", sales_pos_reports_path(format: :csv), class: "ss-btn ss-btn-secondary" %></p>
+<%= render "shared/ui/button", label: "Export CSV", variant: :secondary, url: sales_pos_reports_path(format: :csv) %>
 
 <table class="ss-table ss-pos-table">
   <thead>

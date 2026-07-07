@@ -1,15 +1,28 @@
-<h1>Inventory Locations <%= link_to "New", new_setup_inventory_location_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Store</th><th>Name</th><th>Short</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @locations.each do |location| %>
-      <tr>
-        <td><%= location.store.name %></td>
-        <td><%= location.name %></td>
-        <td><%= location.short_name %></td>
-        <td><%= status_label(location.active?) %></td>
-        <td><%= link_to "View", setup_inventory_location_path(location) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_location_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_inventory_location_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Inventory Locations",
+           description: "Physical inventory locations within each store.",
+           actions: new_location_action %>
+
+<% if @locations.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Store</th><th>Name</th><th>Short</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @locations.each do |location| %>
+        <tr>
+          <td><%= location.store.name %></td>
+          <td><%= location.name %></td>
+          <td><%= location.short_name %></td>
+          <td><%= ss_status_badge(status_label(location.active?), status: location.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_inventory_location_path(location) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No inventory locations yet",
+             message: "Create locations to describe where stock is kept within a store.",
+             actions: new_location_action %>
+<% end %>

@@ -11,7 +11,7 @@
             label: "Accept all offered lines",
             enabled: accept_state.enabled,
             reason: accept_state.reason,
-            class: "ss-btn ss-btn-secondary"
+            variant: :secondary
           ) %>
       <% decline_state = workflow.action_state(:decline_all) %>
       <%= buyback_action_button(
@@ -20,7 +20,7 @@
             label: "Decline all offered lines",
             enabled: decline_state.enabled,
             reason: decline_state.reason,
-            class: "ss-btn ss-btn-secondary"
+            variant: :secondary
           ) %>
       <% donate_state = workflow.action_state(:donate_declined) %>
       <%= buyback_action_button(
@@ -29,7 +29,7 @@
             label: "Donate all declined items",
             enabled: donate_state.enabled,
             reason: donate_state.reason,
-            class: "ss-btn ss-btn-secondary",
+            variant: :secondary,
             data: {
               turbo_confirm: "Mark all customer-declined items as donated to the store? These items will be added to inventory with zero payout."
             }
@@ -46,8 +46,7 @@
           method: :patch,
           label: "Open customer decisions",
           enabled: open_state.enabled,
-          reason: open_state.reason,
-          class: "ss-btn"
+          reason: open_state.reason
         ) %>
   </section>
 <% end %>

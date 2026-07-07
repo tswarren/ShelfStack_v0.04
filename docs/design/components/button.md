@@ -99,6 +99,28 @@ One primary button per immediate decision area.
 
 A page can have more than one primary button only when actions are in clearly separate regions, such as a main form and an unrelated sidebar card.
 
+### Action order (ShelfStack standard)
+
+Use **explicit variant classes** for every button. Do not rely on DOM order or experimental `:first-child` styling to imply hierarchy.
+
+| Region | Order (left → right) | Variants |
+| :---- | :---- | :---- |
+| **Page header / toolbar** (`.ss-page-actions`) | Secondary and lifecycle actions first; **primary last (rightmost in the cluster)** | e.g. `[Inactivate secondary] [Edit primary]` |
+| **Form footer** (`.ss-form-actions`) | **Primary first (leftmost)**; cancel/back last | e.g. `[Save primary] [Cancel tertiary]` |
+| **Danger zone** (setup detail) | Destructive action isolated below main content | `[Delete vendor danger]` — not in the header |
+| **Dialogs** (when used) | Cancel/back left; confirm/commit **right** | Match page-header toolbar order within the dialog action row |
+
+Setup detail show pages follow:
+
+```text
+page header     → lifecycle secondary, then edit/reactivate primary (rightmost)
+summary         → read-only fields and status badge
+audit/history   → timeline when applicable
+danger zone     → delete and other irreversible actions only
+```
+
+Index pages with a single create action may use one primary button in the header (`New`, `New vendor`).
+
 ---
 
 ### Secondary
@@ -519,7 +541,7 @@ Do not render a disabled-looking link that still navigates.
 
 ### Page header actions
 
-Inline `.ss-page-header` examples are illustrative until a generic `shared/ui/_page_header.html.erb` partial exists.
+Order actions **secondary → primary** (left to right). The primary action is **rightmost** in `.ss-page-actions`.
 
 ```
 <div class="ss-page-header">
@@ -534,6 +556,17 @@ Inline `.ss-page-header` examples are illustrative until a generic `shared/ui/_p
   </div>
 </div>
 ```
+
+Setup detail example (active record):
+
+```
+<div class="ss-page-actions">
+  <%= button_to "Inactivate", inactivate_setup_vendor_path(@vendor), method: :patch, class: "ss-btn ss-btn-secondary" %>
+  <%= link_to "Edit", edit_setup_vendor_path(@vendor), class: "ss-btn ss-btn-primary" %>
+</div>
+```
+
+Do not place delete or other danger actions in the page header. Use a separated danger zone on setup detail pages.
 
 For form-specific pages, prefer the existing form page header partial when compatible.
 
@@ -631,6 +664,9 @@ Do not style dropdown menu rows as normal buttons. Use dropdown menu item classe
 | Do | Don’t |
 | :---- | :---- |
 | Use one primary action per decision area | Put three primary buttons in one toolbar |
+| Use explicit variant classes on every button | Rely on button order or `:first-child` CSS to imply hierarchy |
+| Page header: secondary left, primary right in the cluster | Put delete in the page header toolbar |
+| Form footer: primary left, cancel tertiary right | Use secondary for cancel/back |
 | Use danger for destructive actions | Use danger for normal cancellation |
 | Use ghost for persistent low-emphasis utilities | Use secondary for footer utilities like Lock Session |
 | Use links for navigation | Make every navigation link a button |

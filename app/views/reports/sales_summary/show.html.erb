@@ -2,11 +2,7 @@
   <%= render "reports/shared/header",
              title: "Sales & Revenue Summary",
              scope: @report&.scope&.label,
-             actions: safe_join([
-               report_print_button,
-               (@report ? render("reports/shared/export_action", url: reports_sales_summary_path(request.query_parameters.merge(format: :csv))) : nil),
-               link_to("Back to reports", reports_root_path, class: "ss-btn ss-btn-secondary ss-report-no-print")
-             ].compact, " ") %>
+             actions: report_standard_actions(export_url: (@report ? reports_sales_summary_path(request.query_parameters.merge(format: :csv)) : nil)) %>
 
   <%= render "reports/shared/pos_scope_filter", url: reports_sales_summary_path, sessions: @sessions %>
 

@@ -46,10 +46,12 @@ end %>
           data: { item_setup_modal_target: "primaryField" } %>
   </div>
   <footer class="ss-form-actions">
-    <%= submit_tag(editing ? "Save identifier" : "Add identifier", class: "ss-btn") %>
-    <button type="button" class="ss-btn ss-btn-secondary"
-            data-action="modal#close"
-            data-modal-target-id-param="item-identifier-modal">Cancel</button>
+    <%= render "shared/ui/button", label: (editing ? "Save identifier" : "Add identifier"), type: :submit, variant: :primary %>
+    <%= render "shared/ui/button",
+               label: "Cancel",
+               variant: :tertiary,
+               type: :button,
+               data: { action: "modal#close", modal_target_id_param: "item-identifier-modal" } %>
   </footer>
 <% end %>
 <% end %>

@@ -22,16 +22,16 @@
 
   <div class="ss-pos-command-bar__quick-row">
     <div class="ss-pos-command-bar__quick-actions">
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-command-bar#openRingQuickAction">
-        Open Ring
-      </button>
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-command-bar#openGiftCardQuickAction">
-        Gift Card
-      </button>
+      <%= render "shared/ui/button",
+                 label: "Open Ring",
+                 variant: :secondary,
+                 size: :small,
+                 data: { action: "pos-command-bar#openRingQuickAction" } %>
+      <%= render "shared/ui/button",
+                 label: "Gift Card",
+                 variant: :secondary,
+                 size: :small,
+                 data: { action: "pos-command-bar#openGiftCardQuickAction" } %>
     </div>
   </div>
 

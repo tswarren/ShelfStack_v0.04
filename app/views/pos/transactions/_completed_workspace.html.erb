@@ -40,23 +40,27 @@
     <ul class="ss-pos-completed-workspace__document-list">
       <li class="ss-pos-completed-workspace__document-item">
         <% if transaction.pos_receipt %>
-          <%= link_to "Print receipt",
-                pos_receipt_path(transaction.pos_receipt, return_to: "completed"),
-                class: "ss-btn ss-btn-secondary ss-pos-completed-workspace__document-action",
-                data: { pos_completed_workspace_target: "receiptAction" } %>
+          <%= render "shared/ui/button",
+                     label: "Print receipt",
+                     variant: :secondary,
+                     class: "ss-pos-completed-workspace__document-action",
+                     url: pos_receipt_path(transaction.pos_receipt, return_to: "completed"),
+                     data: { pos_completed_workspace_target: "receiptAction" } %>
         <% else %>
           <span class="ss-hint">Receipt will be available shortly.</span>
         <% end %>
       </li>
       <% issuance_slips.each do |slip| %>
         <li class="ss-pos-completed-workspace__document-item">
-          <%= link_to slip.label,
-                pos_stored_value_issuance_slip_path(slip.ledger_entry_id),
-                class: "ss-btn ss-btn-secondary ss-pos-completed-workspace__document-action#{' ss-pos-completed-workspace__document-action--required' if slip == required_slip}",
-                data: {
-                  pos_completed_workspace_target: "slipAction",
-                  required: slip == required_slip ? "true" : "false"
-                } %>
+          <%= render "shared/ui/button",
+                     label: slip.label,
+                     variant: :secondary,
+                     class: "ss-pos-completed-workspace__document-action#{' ss-pos-completed-workspace__document-action--required' if slip == required_slip}",
+                     url: pos_stored_value_issuance_slip_path(slip.ledger_entry_id),
+                     data: {
+                       pos_completed_workspace_target: "slipAction",
+                       required: slip == required_slip ? "true" : "false"
+                     } %>
         </li>
       <% end %>
       <li class="ss-pos-completed-workspace__document-item ss-pos-completed-workspace__document-item--planned">
@@ -66,13 +70,17 @@
   </section>
 
   <footer class="ss-pos-completed-workspace__footer">
-    <%= link_to "New Sale",
-          pos_root_path,
-          class: "ss-btn ss-pos-completed-workspace__primary-action",
-          data: { pos_completed_workspace_target: "newSaleAction" } %>
+    <%= render "shared/ui/button",
+               label: "New Sale",
+               variant: :primary,
+               class: "ss-pos-completed-workspace__primary-action",
+               url: pos_root_path,
+               data: { pos_completed_workspace_target: "newSaleAction" } %>
 
-    <%= link_to "View Summary",
-          pos_transaction_path(transaction),
-          class: "ss-btn ss-btn-tertiary ss-pos-completed-workspace__tertiary-action" %>
+    <%= render "shared/ui/button",
+               label: "View Summary",
+               variant: :tertiary,
+               class: "ss-pos-completed-workspace__tertiary-action",
+               url: pos_transaction_path(transaction) %>
   </footer>
 </div>

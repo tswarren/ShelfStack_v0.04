@@ -1,8 +1,11 @@
 <%= render "setup/shared/back_link", path: setup_audit_events_path, label: "Audit Events" %>
-<h1><%= @audit_event.event_name %></h1>
+
+<%= render "shared/ui/page_header", title: @audit_event.event_name %>
+
 <dl class="ss-summary">
   <dt>When</dt><dd><%= display_time(@audit_event.occurred_at) %></dd>
   <dt>Actor</dt><dd><%= @audit_event.actor_user.display_name %></dd>
+  <dt>Store</dt><dd><%= @audit_event.store&.name || "—" %></dd>
   <dt>Details</dt>
   <dd>
     <% if @audit_event.event_details.present? %>

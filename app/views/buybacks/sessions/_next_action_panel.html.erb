@@ -4,7 +4,7 @@
   <h2 class="ss-buyback-next-action__title"><%= action.label %></h2>
   <% case action.kind %>
   <% when :anchor %>
-    <%= link_to action.label, "##{action.anchor}", class: "ss-btn" %>
+    <%= render "shared/ui/button", label: action.label, variant: :primary, url: "##{action.anchor}" %>
   <% when :action %>
     <% case action.key %>
     <% when :save_proposal %>
@@ -14,8 +14,7 @@
             method: :patch,
             label: workflow.save_proposal_label,
             enabled: save_state.enabled,
-            reason: save_state.reason,
-            class: "ss-btn"
+            reason: save_state.reason
           ) %>
     <% when :open_decision %>
       <% open_state = workflow.action_state(:open_decision) %>
@@ -24,8 +23,7 @@
             method: :patch,
             label: action.label,
             enabled: open_state.enabled,
-            reason: open_state.reason,
-            class: "ss-btn"
+            reason: open_state.reason
           ) %>
     <% when :complete %>
       <% complete_state = workflow.action_state(:complete) %>
@@ -35,12 +33,11 @@
             label: action.label,
             enabled: complete_state.enabled,
             reason: complete_state.reason,
-            class: "ss-btn",
             data: { turbo_confirm: "Complete this buyback?" }
           ) %>
     <% end %>
   <% when :disabled %>
-    <button type="button" class="ss-btn ss-btn--disabled" disabled><%= action.label %></button>
+    <%= render "shared/ui/button", label: action.label, variant: :primary, disabled: true, class: "ss-btn--disabled" %>
     <% disabled_state = case action.key
        when :save_proposal then workflow.action_state(:save_proposal)
        when :open_decision then workflow.action_state(:open_decision)
@@ -57,7 +54,7 @@
   <% if action.secondary_label.present? %>
     <% case action.secondary_key %>
     <% when :print_proposal %>
-      <%= link_to action.secondary_label, print_proposal_buybacks_session_path(buyback_session), class: "ss-btn ss-btn-secondary", target: "_blank" %>
+      <%= render "shared/ui/button", label: action.secondary_label, variant: :secondary, url: print_proposal_buybacks_session_path(buyback_session), target: "_blank" %>
     <% end %>
   <% end %>
 

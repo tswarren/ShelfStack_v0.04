@@ -14,9 +14,10 @@
         <td><%= order.status.tr("_", " ").titleize %></td>
         <td class="ss-num"><%= order.quantity_committed %></td>
         <td>
-          <%= link_to "View request",
-                customers_customer_request_path(order.customer_request_line.customer_request, anchor: "line-#{order.customer_request_line_id}"),
-                class: "ss-btn-link" %>
+          <%= render "shared/ui/button",
+                     label: "View request",
+                     variant: :link,
+                     url: customers_customer_request_path(order.customer_request_line.customer_request, anchor: "line-#{order.customer_request_line_id}") %>
         </td>
       </tr>
     <% end %>

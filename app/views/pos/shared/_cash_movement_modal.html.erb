@@ -31,9 +31,13 @@
               data: { pos_command_bar_target: "cashMovementReason" } %>
       </div>
 
-      <div class="ss-form__actions">
-        <%= submit_tag "Record movement", class: "ss-btn", data: { pos_command_bar_target: "cashMovementSubmit" } %>
-      </div>
+      <footer class="ss-form-actions">
+        <%= render "shared/ui/button",
+                   label: "Record movement",
+                   type: :submit,
+                   variant: :primary,
+                   data: { pos_command_bar_target: "cashMovementSubmit" } %>
+      </footer>
     <% end %>
   <% end %>
 <% end %>

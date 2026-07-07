@@ -20,7 +20,7 @@
     </div>
   <% end %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Role", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_roles_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Role", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_roles_path %>
   </footer>
 <% end %>

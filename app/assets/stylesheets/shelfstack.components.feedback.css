@@ -113,6 +113,11 @@
   font-weight: 800;
 }
 
+.ss-empty-state__message {
+  margin: 0;
+  line-height: var(--line-ui);
+}
+
 .ss-empty-state__actions {
   display: flex;
   flex-wrap: wrap;

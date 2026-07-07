@@ -16,7 +16,7 @@
         <td>
           <% if Authorization.allowed?(user: current_user, permission_key: "orders.purchase_orders.create", store: current_store) &&
                 Inventory::Eligibility.eligible?(line.product_variant) %>
-            <%= link_to "Add to PO", build_purchase_order_orders_purchase_request_path(line.purchase_request), class: "ss-btn-link" %>
+            <%= render "shared/ui/button", label: "Add to PO", variant: :link, url: build_purchase_order_orders_purchase_request_path(line.purchase_request) %>
           <% end %>
         </td>
       </tr>

@@ -1,18 +1,39 @@
 <%= render "setup/shared/back_link", path: setup_vendors_path, label: "Vendors" %>
-<h1><%= @vendor.name %></h1>
+
+<%
+  header_actions = if @vendor.active?
+                     safe_join([
+                       render("shared/ui/button", label: "Inactivate", variant: :secondary, url: inactivate_setup_vendor_path(@vendor), method: :patch),
+                       render("shared/ui/button", label: "Edit", variant: :primary, url: edit_setup_vendor_path(@vendor))
+                     ])
+                   else
+                     safe_join([
+                       render("shared/ui/button", label: "Edit", variant: :secondary, url: edit_setup_vendor_path(@vendor)),
+                       render("shared/ui/button", label: "Reactivate", variant: :primary, url: reactivate_setup_vendor_path(@vendor), method: :patch)
+                     ])
+                   end
+%>
+
+<%= render "shared/ui/page_header", title: @vendor.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Parent vendor</dt><dd><%= @vendor.parent_vendor&.name || "—" %></dd>
   <dt>Default supplier discount</dt><dd><%= format_basis_points(@vendor.default_supplier_discount_bps) %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@vendor.active?) %>"><%= status_label(@vendor.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@vendor.active?), status: @vendor.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_vendor_path(@vendor), class: "ss-btn" %>
-  <% if @vendor.active? %>
-    <%= button_to "Inactivate", inactivate_setup_vendor_path(@vendor), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_vendor_path(@vendor), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_vendor_path(@vendor), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this vendor?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<section aria-labelledby="vendor-danger-zone-heading">
+  <h2 id="vendor-danger-zone-heading">Danger zone</h2>
+  <p class="ss-muted">Delete removes the vendor only when nothing references it. Prefer inactivating to preserve purchasing and receiving history.</p>
+  <div class="ss-section-actions">
+    <%= render "shared/ui/button",
+               label: "Delete vendor",
+               variant: :danger,
+               url: setup_vendor_path(@vendor),
+               method: :delete,
+               data: { turbo_confirm: "Delete this vendor? This cannot be undone." } %>
+  </div>
+</section>

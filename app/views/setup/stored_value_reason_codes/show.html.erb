@@ -1,21 +1,32 @@
 <%= render "setup/shared/back_link", path: setup_stored_value_reason_codes_path, label: "Stored Value Reason Codes" %>
 
-<h1><%= @reason_code.name %></h1>
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @reason_code,
+    edit_path: edit_setup_stored_value_reason_code_path(@reason_code),
+    inactivate_path: inactivate_setup_stored_value_reason_code_path(@reason_code),
+    reactivate_path: reactivate_setup_stored_value_reason_code_path(@reason_code)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @reason_code.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Key</dt><dd><code><%= @reason_code.reason_key %></code></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@reason_code.active?) %>"><%= status_label(@reason_code.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@reason_code.active?), status: @reason_code.active? ? :active : :inactive) %></dd>
   <% if @reason_code.description.present? %>
     <dt>Description</dt><dd><%= @reason_code.description %></dd>
   <% end %>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_stored_value_reason_code_path(@reason_code), class: "ss-btn" %>
-  <% if @reason_code.active? %>
-    <%= button_to "Inactivate", inactivate_setup_stored_value_reason_code_path(@reason_code), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_stored_value_reason_code_path(@reason_code), method: :patch, class: "ss-btn" %>
-  <% end %>
-</div>
+
 <%= render "orders/shared/collapsible_panel", title: "Audit timeline", open: false do %>
   <%= render "shared/audit_timeline", audit_events: @audit_events %>
 <% end %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "stored-value-reason-code-danger-zone-heading",
+           message: "Delete removes the reason code only when no ledger history references it. Prefer inactivating.",
+           delete_label: "Delete reason code",
+           delete_path: setup_stored_value_reason_code_path(@reason_code),
+           confirm_message: "Delete this stored value reason code? This cannot be undone." %>

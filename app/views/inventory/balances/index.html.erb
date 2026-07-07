@@ -1,30 +1,32 @@
-<h1>Store Inventory</h1>
-<p class="ss-muted">Store: <%= inventory_store.name %></p>
+<%
+  header_actions = safe_join([
+    render("shared/ui/button", label: "Adjustments", variant: :secondary, url: inventory_adjustments_path),
+    render("shared/ui/button", label: "Negative On Hand", variant: :secondary, url: inventory_negative_path),
+    (Authorization.allowed?(user: current_user, permission_key: "inventory.enterprise.view", store: current_store) ?
+      render("shared/ui/button", label: "Enterprise Rollup", variant: :secondary, url: inventory_enterprise_path) : nil),
+    (Authorization.allowed?(user: current_user, permission_key: "inventory.admin.rebuild_balances", store: current_store) ?
+      render("shared/ui/button", label: "Admin Tools", variant: :secondary, url: inventory_admin_path) : nil),
+    render("shared/ui/button", label: "New Opening Inventory", variant: :secondary, url: new_inventory_adjustment_path(adjustment_type: "opening_inventory")),
+    render("shared/ui/button", label: "New Adjustment", variant: :primary, url: new_inventory_adjustment_path)
+  ].compact)
+%>
 
-<div class="ss-actions">
-  <%= link_to "Adjustments", inventory_adjustments_path, class: "ss-btn" %>
-  <%= link_to "Negative On Hand", inventory_negative_path, class: "ss-btn" %>
-  <% if Authorization.allowed?(user: current_user, permission_key: "inventory.enterprise.view", store: current_store) %>
-    <%= link_to "Enterprise Rollup", inventory_enterprise_path, class: "ss-btn" %>
-  <% end %>
-  <% if Authorization.allowed?(user: current_user, permission_key: "inventory.admin.rebuild_balances", store: current_store) %>
-    <%= link_to "Admin Tools", inventory_admin_path, class: "ss-btn" %>
-  <% end %>
-  <%= link_to "New Adjustment", new_inventory_adjustment_path, class: "ss-btn" %>
-  <%= link_to "New Opening Inventory", new_inventory_adjustment_path(adjustment_type: "opening_inventory"), class: "ss-btn" %>
-</div>
+<%= render "shared/ui/page_header",
+           title: "Store Inventory",
+           description: "Store: #{inventory_store.name}",
+           actions: header_actions %>
 
 <%= form_with url: inventory_root_path, method: :get, class: "ss-form-inline" do %>
   <%= text_field_tag :q, params[:q], placeholder: "Search SKU or name" %>
   <%= hidden_field_tag :stock, params[:stock] if params[:stock].present? %>
-  <%= submit_tag "Search", class: "ss-btn" %>
+  <%= render "shared/ui/button", label: "Search", type: :submit, variant: :secondary %>
 <% end %>
 
-<p class="ss-actions">
-  <%= link_to "All stock", inventory_root_path(q: params[:q]), class: (@stock_filter.blank? ? "ss-btn" : "ss-btn ss-btn-secondary") %>
-  <%= link_to "Zero stock", inventory_root_path(q: params[:q], stock: "zero"), class: (@stock_filter == "zero" ? "ss-btn" : "ss-btn ss-btn-secondary") %>
-  <%= link_to "Low stock", inventory_root_path(q: params[:q], stock: "low"), class: (@stock_filter == "low" ? "ss-btn" : "ss-btn ss-btn-secondary") %>
-</p>
+<nav class="ss-filter-bar" aria-label="Stock filters">
+  <%= link_to "All stock", inventory_root_path(q: params[:q]), class: @stock_filter.blank? ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
+  <%= link_to "Zero stock", inventory_root_path(q: params[:q], stock: "zero"), class: @stock_filter == "zero" ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
+  <%= link_to "Low stock", inventory_root_path(q: params[:q], stock: "low"), class: @stock_filter == "low" ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip" %>
+</nav>
 
 <p class="ss-muted">
   On hand: <%= @totals[:quantity_on_hand] %> |

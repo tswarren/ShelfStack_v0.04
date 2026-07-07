@@ -1,24 +1,31 @@
-<h1><%= @catalog_item.title %></h1>
+<%= render "setup/shared/back_link", path: items_catalog_items_path, label: "Catalog Items" %>
+
+<%
+  header_actions = if @catalog_item.active?
+                     safe_join([
+                       (@product.present? ? render("shared/ui/button", label: "Generate House EAN", variant: :secondary, url: generate_local_identifier_items_catalog_item_path(@catalog_item), method: :post) : nil),
+                       render("shared/ui/button", label: "Inactivate", variant: :secondary, url: inactivate_items_catalog_item_path(@catalog_item), method: :patch),
+                       render("shared/ui/button", label: "Edit", variant: :primary, url: edit_items_catalog_item_path(@catalog_item))
+                     ].compact)
+                   else
+                     safe_join([
+                       (@product.present? ? render("shared/ui/button", label: "Generate House EAN", variant: :secondary, url: generate_local_identifier_items_catalog_item_path(@catalog_item), method: :post) : nil),
+                       render("shared/ui/button", label: "Edit", variant: :secondary, url: edit_items_catalog_item_path(@catalog_item)),
+                       render("shared/ui/button", label: "Reactivate", variant: :primary, url: reactivate_items_catalog_item_path(@catalog_item), method: :patch)
+                     ].compact)
+                   end
+%>
+
+<%= render "shared/ui/page_header", title: @catalog_item.title, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Type</dt><dd><%= humanize_controlled_value(@catalog_item.catalog_item_type) %></dd>
   <dt>Format</dt><dd><%= @catalog_item.format.name %></dd>
   <dt>Publisher</dt><dd><%= @catalog_item.publisher || "—" %></dd>
   <dt>Publication status</dt><dd><%= humanize_controlled_value(@catalog_item.publication_status) %></dd>
   <dt>Creators</dt><dd><%= @catalog_item.creators || "—" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@catalog_item.active?) %>"><%= status_label(@catalog_item.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@catalog_item.active?), status: @catalog_item.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_items_catalog_item_path(@catalog_item), class: "ss-btn" %>
-  <% if @catalog_item.active? %>
-    <%= button_to "Inactivate", inactivate_items_catalog_item_path(@catalog_item), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_items_catalog_item_path(@catalog_item), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", items_catalog_item_path(@catalog_item), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this catalog item?" } %>
-  <% if @product.present? %>
-    <%= button_to "Generate House EAN", generate_local_identifier_items_catalog_item_path(@catalog_item), method: :post, class: "ss-btn ss-btn-secondary" %>
-  <% end %>
-</div>
 
 <h2>Identifiers</h2>
 <% if @product.blank? %>
@@ -36,14 +43,24 @@
           <td><%= identifier.valid_check_digit.nil? ? "—" : (identifier.valid_check_digit? ? "Yes" : "No") %></td>
           <td><%= identifier.validation_message || "—" %></td>
           <td class="ss-row-actions">
-            <%= link_to "Edit", edit_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id), class: "ss-btn-link" %>
+            <%= render "shared/ui/button",
+                       label: "Edit",
+                       variant: :link,
+                       url: edit_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id) %>
             <% unless identifier.primary_identifier? %>
-              <%= button_to "Set Primary", set_primary_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id), method: :patch, class: "ss-btn ss-btn-secondary" %>
+              <%= render "shared/ui/button",
+                         label: "Set Primary",
+                         variant: :secondary,
+                         size: :small,
+                         url: set_primary_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id),
+                         method: :patch %>
             <% end %>
-            <%= button_to "Remove", destroy_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id),
-                  method: :delete,
-                  class: "ss-btn-link",
-                  data: { turbo_confirm: "Remove this identifier?" } %>
+            <%= render "shared/ui/button",
+                       label: "Remove",
+                       variant: :link,
+                       url: destroy_identifier_items_catalog_item_path(@catalog_item, identifier_id: identifier.id),
+                       method: :delete,
+                       data: { turbo_confirm: "Remove this identifier?" } %>
           </td>
         </tr>
       <% end %>
@@ -56,3 +73,10 @@
 
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "catalog-item-danger-zone-heading",
+           message: "Delete removes the catalog item only when nothing references it. Prefer inactivating.",
+           delete_label: "Delete catalog item",
+           delete_path: items_catalog_item_path(@catalog_item),
+           confirm_message: "Delete this catalog item?" %>

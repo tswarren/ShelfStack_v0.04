@@ -8,11 +8,12 @@
   </p>
 
   <% if Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
-    <div class="ss-detail-actions">
-      <%= button_to "Suggest matches",
-            apply_suggested_matches_orders_receipt_path(receipt, return_to: "edit"),
-            method: :post,
-            class: "ss-btn ss-btn-secondary" %>
+    <div class="ss-page-actions">
+      <%= render "shared/ui/button",
+            label: "Suggest matches",
+            variant: :secondary,
+            url: apply_suggested_matches_orders_receipt_path(receipt, return_to: "edit"),
+            method: :post %>
     </div>
   <% end %>
 
@@ -47,10 +48,11 @@
               <td><%= match.match_status.humanize %></td>
               <td>
                 <% if match.confirmed? && Authorization.allowed?(user: current_user, permission_key: "orders.receipts.update", store: current_store) %>
-                  <%= button_to "Release",
-                        orders_receipt_receipt_line_match_path(receipt, match, return_to: "edit"),
-                        method: :delete,
-                        class: "ss-btn ss-btn-secondary" %>
+                  <%= render "shared/ui/button",
+                        label: "Release",
+                        variant: :secondary,
+                        url: orders_receipt_receipt_line_match_path(receipt, match, return_to: "edit"),
+                        method: :delete %>
                 <% end %>
               </td>
             </tr>
@@ -93,7 +95,7 @@
                       <%= hidden_field_tag "matches[][purchase_order_line_id]", candidate.purchase_order_line.id %>
                       <%= hidden_field_tag "matches[][match_source]", "manual" %>
                       <%= number_field_tag "matches[][quantity_matched]", suggested_qty, min: 1, max: suggested_qty, class: "ss-input ss-input--num" %>
-                      <%= submit_tag "Confirm match", class: "ss-btn ss-btn-secondary" %>
+                      <%= render "shared/ui/button", label: "Confirm match", type: :submit, variant: :secondary %>
                     <% end %>
                   <% else %>
                     —

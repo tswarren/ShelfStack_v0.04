@@ -53,7 +53,7 @@
     <% if vendor.present? && sourcing && !sourcing.sourcing_record_present %>
       <% sourcing_path = orders_tbo_sourcing_path(line.product_variant, vendor: vendor, from_tbo_filters: from_tbo_filters) %>
       <% if sourcing_path %>
-        <%= link_to "Add sourcing", sourcing_path, class: "ss-btn-link" %>
+        <%= render "shared/ui/button", label: "Add sourcing", variant: :link, url: sourcing_path %>
       <% end %>
     <% else %>
       —

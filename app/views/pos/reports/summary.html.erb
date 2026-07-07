@@ -9,8 +9,8 @@
     </div>
     <% if @report %>
       <div class="ss-pos-report__actions ss-pos-no-print">
-        <%= link_to "Print", "#", onclick: "window.print(); return false;", class: "ss-btn" %>
-        <%= link_to "Export CSV", summary_pos_reports_path(request.query_parameters.merge(format: :csv)), class: "ss-btn ss-btn-secondary" %>
+        <%= link_to "Print", "#", class: ss_button_classes(variant: :primary), onclick: "window.print(); return false;" %>
+        <%= render "shared/ui/button", label: "Export CSV", variant: :secondary, url: summary_pos_reports_path(request.query_parameters.merge(format: :csv)) %>
       </div>
     <% end %>
   </header>

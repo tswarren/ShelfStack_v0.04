@@ -45,7 +45,10 @@
         <li class="ss-warning-list-item ss-warning-list-item--<%= warning.severity %>">
           <%= warning.message %>
           <% if warning.corrective_path.present? %>
-            <%= link_to warning.corrective_label || "Review", warning.corrective_path, class: "ss-btn-link" %>
+            <%= render "shared/ui/button",
+                       label: warning.corrective_label || "Review",
+                       variant: :link,
+                       url: warning.corrective_path %>
           <% end %>
         </li>
       <% end %>
@@ -59,15 +62,18 @@
       <h3 class="ss-drawer-section-title">Demand actions</h3>
       <div class="ss-form-actions">
         <% drawer.demand_actions.each do |action| %>
-          <button type="button"
-                  class="ss-btn ss-btn-secondary ss-btn-small"
-                  data-action="item-variant-ops-drawer#prepareDemandAction"
-                  data-drawer-key="<%= action.drawer_key %>"
-                  data-variant-id="<%= variant.id %>"
-                  data-available="<%= availability_context&.available || 0 %>"
-                  data-on-hand="<%= availability_context&.on_hand || 0 %>">
-            <%= action.label %>
-          </button>
+          <%= render "shared/ui/button",
+                     label: action.label,
+                     variant: :secondary,
+                     size: :small,
+                     type: :button,
+                     data: {
+                       action: "item-variant-ops-drawer#prepareDemandAction",
+                       drawer_key: action.drawer_key,
+                       variant_id: variant.id,
+                       available: availability_context&.available || 0,
+                       on_hand: availability_context&.on_hand || 0
+                     } %>
         <% end %>
       </div>
     <% end %>
@@ -75,7 +81,7 @@
       <h3 class="ss-drawer-section-title">Operational actions</h3>
       <div class="ss-form-actions">
         <% drawer.recommended_actions.each do |action| %>
-          <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+          <%= render "shared/ui/button", label: action.label, variant: :secondary, size: :small, url: action.url %>
         <% end %>
       </div>
     <% end %>
@@ -110,7 +116,7 @@
     <% end %>
 
     <% if drawer.add_to_po_path.present? %>
-      <%= link_to "Add to PO", drawer.add_to_po_path, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+      <%= render "shared/ui/button", label: "Add to PO", variant: :secondary, size: :small, url: drawer.add_to_po_path %>
     <% end %>
   </section>
 <% end %>

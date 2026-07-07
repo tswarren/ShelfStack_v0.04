@@ -1,17 +1,30 @@
-<h1>Display Locations <%= link_to "New", new_setup_display_location_path, class: "ss-btn" %></h1>
-<table class="ss-table ss-table--tree">
-  <thead><tr><th>Name</th><th>Short Name</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @display_location_rows.each do |row| %>
-      <% location = row.record %>
-      <tr class="<%= "ss-tree-row--root" if row.depth.zero? %>">
-        <td class="ss-tree-name-cell" style="--tree-depth: <%= row.depth %>">
-          <%= location.name %>
-        </td>
-        <td><%= location.short_name %></td>
-        <td><span class="<%= status_class(location.active?) %>"><%= status_label(location.active?) %></span></td>
-        <td><%= link_to "View", setup_display_location_path(location) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_display_location_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_display_location_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Display Locations",
+           description: "Organize where items appear on the sales floor.",
+           actions: new_display_location_action %>
+
+<% if @display_location_rows.any? %>
+  <table class="ss-table ss-table--tree">
+    <thead><tr><th>Name</th><th>Short Name</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @display_location_rows.each do |row| %>
+        <% location = row.record %>
+        <tr class="<%= "ss-tree-row--root" if row.depth.zero? %>">
+          <td class="ss-tree-name-cell" style="--tree-depth: <%= row.depth %>">
+            <%= location.name %>
+          </td>
+          <td><%= location.short_name %></td>
+          <td><%= ss_status_badge(status_label(location.active?), status: location.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_display_location_path(location) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No display locations yet",
+             message: "Create display locations to organize shelving and floor placement.",
+             actions: new_display_location_action %>
+<% end %>

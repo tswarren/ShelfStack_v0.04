@@ -1,20 +1,31 @@
 <%= render "setup/shared/back_link", path: setup_store_tax_rates_path, label: "Store Tax Rates" %>
-<h1><%= @store_tax_rate.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @store_tax_rate,
+    edit_path: edit_setup_store_tax_rate_path(@store_tax_rate),
+    inactivate_path: inactivate_setup_store_tax_rate_path(@store_tax_rate),
+    reactivate_path: reactivate_setup_store_tax_rate_path(@store_tax_rate)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @store_tax_rate.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Store</dt><dd><%= @store_tax_rate.store.name %> (<%= @store_tax_rate.store.store_number %>)</dd>
   <dt>Short name</dt><dd><%= @store_tax_rate.short_name %></dd>
   <dt>Tax identifier</dt><dd><%= @store_tax_rate.tax_identifier %></dd>
   <dt>Rate</dt><dd><%= format_basis_points(@store_tax_rate.tax_rate_bps) %> (<%= @store_tax_rate.tax_rate_bps %> bps)</dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@store_tax_rate.active?) %>"><%= status_label(@store_tax_rate.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@store_tax_rate.active?), status: @store_tax_rate.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_store_tax_rate_path(@store_tax_rate), class: "ss-btn" %>
-  <% if @store_tax_rate.active? %>
-    <%= button_to "Inactivate", inactivate_setup_store_tax_rate_path(@store_tax_rate), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_store_tax_rate_path(@store_tax_rate), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_store_tax_rate_path(@store_tax_rate), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this store tax rate?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "store-tax-rate-danger-zone-heading",
+           message: "Delete removes the store tax rate only when no mappings reference it. Prefer inactivating.",
+           delete_label: "Delete store tax rate",
+           delete_path: setup_store_tax_rate_path(@store_tax_rate),
+           confirm_message: "Delete this store tax rate? This cannot be undone." %>

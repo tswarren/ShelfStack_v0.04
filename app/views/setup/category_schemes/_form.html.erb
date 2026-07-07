@@ -13,7 +13,13 @@
   </div>
   <%= render "shared/forms/checkbox", f: f, record: @category_scheme, field: :active %>
   <footer class="ss-form-actions">
-    <%= f.submit class: "ss-btn" %>
-    <%= link_to "Cancel", setup_category_schemes_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button",
+               label: (@category_scheme.persisted? ? "Update Category Scheme" : "Create Category Scheme"),
+               type: :submit,
+               variant: :primary %>
+    <%= render "shared/ui/button",
+               label: "Cancel",
+               variant: :tertiary,
+               url: (@category_scheme.persisted? ? setup_category_scheme_path(@category_scheme) : setup_category_schemes_path) %>
   </footer>
 <% end %>

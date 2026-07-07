@@ -140,11 +140,11 @@
          data-pos-discount-input-target="authorizePanel"
          <%= "hidden" unless (selected_reason_requires_auth && authorization_id.blank?) || invalid.call("discount_authorization") %>>
       <p class="ss-hint ss-hint--warning">This reason requires manager approval before applying the discount.</p>
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-discount-input#requestAuthorization">
-        Authorize discount
-      </button>
+      <%= render "shared/ui/button",
+                 label: "Authorize discount",
+                 variant: :secondary,
+                 size: :small,
+                 data: { action: "pos-discount-input#requestAuthorization" } %>
     </div>
     <p class="ss-hint ss-pos-discount-auth-status"
        data-pos-discount-input-target="authorizedStatus"

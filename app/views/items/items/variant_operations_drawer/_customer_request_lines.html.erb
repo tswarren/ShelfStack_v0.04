@@ -15,7 +15,7 @@
         <td><%= line.request_type.tr("_", " ").titleize %></td>
         <td class="ss-num"><%= line.requested_quantity %></td>
         <td><%= line.status.tr("_", " ").titleize %></td>
-        <td><%= link_to "View", customers_customer_request_path(line.customer_request, anchor: "line-#{line.id}"), class: "ss-btn-link" %></td>
+        <td><%= render "shared/ui/button", label: "View", variant: :link, url: customers_customer_request_path(line.customer_request, anchor: "line-#{line.id}") %></td>
       </tr>
     <% end %>
   </tbody>

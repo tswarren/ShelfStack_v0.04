@@ -31,22 +31,24 @@
                 default_type: "percent",
                 submitted: discount_error&.dig(:submitted),
                 invalid_fields: discount_error&.dig(:invalid_fields) %>
-          <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
-            <%= submit_tag "Apply discount", class: "ss-btn ss-pos-line-edit__action" %>
-            <button type="button"
-                    class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
-                    data-action="pos-cart-line#cancel"
-                    data-line-id="<%= line.id %>">Cancel</button>
+          <footer class="ss-row-detail__footer ss-pos-line-edit__footer ss-form-actions">
+            <%= render "shared/ui/button", label: "Apply discount", type: :submit, variant: :primary, class: "ss-pos-line-edit__action" %>
+            <%= render "shared/ui/button",
+                       label: "Cancel",
+                       variant: :tertiary,
+                       class: "ss-pos-line-edit__action",
+                       data: { action: "pos-cart-line#cancel", line_id: line.id } %>
           </footer>
         <% end %>
         <%= render "pos/transactions/line_discount_list", transaction: transaction, line: line %>
       <% else %>
         <p class="ss-hint"><%= eligibility.message %></p>
         <footer class="ss-row-detail__footer ss-pos-line-edit__footer">
-          <button type="button"
-                  class="ss-btn ss-btn-secondary ss-pos-line-edit__action"
-                  data-action="pos-cart-line#cancel"
-                  data-line-id="<%= line.id %>">Cancel</button>
+          <%= render "shared/ui/button",
+                     label: "Cancel",
+                     variant: :tertiary,
+                     class: "ss-pos-line-edit__action",
+                     data: { action: "pos-cart-line#cancel", line_id: line.id } %>
         </footer>
       <% end %>
     <% end %>

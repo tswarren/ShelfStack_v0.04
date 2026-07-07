@@ -1,10 +1,30 @@
 <%= render "setup/shared/back_link", path: setup_workstations_path, label: "Workstations" %>
-<h1><%= @workstation.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @workstation,
+    edit_path: edit_setup_workstation_path(@workstation),
+    inactivate_path: inactivate_setup_workstation_path(@workstation),
+    reactivate_path: reactivate_setup_workstation_path(@workstation)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @workstation.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Code</dt><dd><%= @workstation.workstation_code %></dd>
   <dt>Store</dt><dd><%= @workstation.store.name %></dd>
   <dt>Type</dt><dd><%= @workstation.workstation_type %></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@workstation.active?), status: @workstation.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions"><%= link_to "Edit", edit_setup_workstation_path(@workstation), class: "ss-btn" %></div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "workstation-danger-zone-heading",
+           message: "Delete removes the workstation only when no sessions or assignments reference it. Prefer inactivating.",
+           delete_label: "Delete workstation",
+           delete_path: setup_workstation_path(@workstation),
+           confirm_message: "Delete this workstation? This cannot be undone." %>

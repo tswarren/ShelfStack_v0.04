@@ -16,7 +16,7 @@
       </div>
       <% if flash[:notice] %><div class="flash flash-notice"><%= flash[:notice] %></div><% end %>
       <% if flash[:warning] %><div class="flash flash-warning"><%= flash[:warning] %></div><% end %>
-      <% if flash[:alert] %><div class="flash flash-alert"><%= flash[:alert] %></div><% end %>
+      <% if flash[:alert] %><%= render "shared/ui/alert", variant: :error, message: flash[:alert] %><% end %>
       <%= yield %>
     </div>
   </body>

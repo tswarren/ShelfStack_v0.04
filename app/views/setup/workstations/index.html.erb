@@ -1,16 +1,29 @@
-<h1>Workstations <%= link_to "New", new_setup_workstation_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Code</th><th>Name</th><th>Store</th><th>Type</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @workstations.each do |ws| %>
-      <tr>
-        <td><%= ws.workstation_code %></td>
-        <td><%= ws.name %></td>
-        <td><%= ws.store.store_number %></td>
-        <td><%= ws.workstation_type %></td>
-        <td><span class="<%= status_class(ws.active?) %>"><%= status_label(ws.active?) %></span></td>
-        <td><%= link_to "View", setup_workstation_path(ws) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_workstation_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_workstation_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Workstations",
+           description: "Register terminals and back-office workstations for session and POS context.",
+           actions: new_workstation_action %>
+
+<% if @workstations.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Code</th><th>Name</th><th>Store</th><th>Type</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @workstations.each do |ws| %>
+        <tr>
+          <td><%= ws.workstation_code %></td>
+          <td><%= ws.name %></td>
+          <td><%= ws.store.store_number %></td>
+          <td><%= ws.workstation_type %></td>
+          <td><%= ss_status_badge(status_label(ws.active?), status: ws.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_workstation_path(ws) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No workstations yet",
+             message: "Create a workstation before staff can sign in at a register or back-office terminal.",
+             actions: new_workstation_action %>
+<% end %>

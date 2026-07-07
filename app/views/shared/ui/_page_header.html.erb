@@ -1,0 +1,21 @@
+<%# locals: title:, eyebrow: nil, description: nil, actions: nil %>
+<header class="ss-page-header">
+  <div>
+    <% if local_assigns.fetch(:eyebrow, nil).present? %>
+      <p class="ss-eyebrow"><%= eyebrow %></p>
+    <% end %>
+    <h1><%= title %></h1>
+    <% if local_assigns.fetch(:description, nil).present? %>
+      <p class="ss-page-description"><%= description %></p>
+    <% end %>
+  </div>
+  <%
+    actions_html = capture { yield } if block_given?
+    actions_html = actions if actions_html.blank? && local_assigns.fetch(:actions, nil).present?
+  %>
+  <% if actions_html.present? %>
+    <div class="ss-page-actions">
+      <%= actions_html %>
+    </div>
+  <% end %>
+</header>

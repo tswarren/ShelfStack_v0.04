@@ -3,7 +3,7 @@
 <aside class="ss-buyback-line-drawer__panel" data-buyback-line-drawer-target="panel" hidden aria-label="Work item detail">
   <header class="ss-buyback-line-drawer__header">
     <h2 data-buyback-line-drawer-target="title">Work item</h2>
-    <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="buyback-line-drawer#close">Close</button>
+    <%= render "shared/ui/button", label: "Close", variant: :secondary, size: :small, type: :button, data: { action: "buyback-line-drawer#close" } %>
   </header>
   <div class="ss-buyback-line-drawer__body" data-buyback-line-drawer-target="body">
     <%= turbo_frame_tag "buyback-line-detail-frame", data: { buyback_line_drawer_target: "frame" } do %>

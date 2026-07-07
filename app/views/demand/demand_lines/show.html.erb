@@ -1,6 +1,15 @@
 <%= render "setup/shared/back_link", path: demand_root_path, label: "Demand" %>
 
-<h1><%= @demand_line.demand_number %></h1>
+<%
+  header_actions = safe_join([
+    (render("shared/ui/button", label: "Expire", variant: :secondary, url: expire_demand_demand_line_path(@demand_line), method: :patch) if DemandLine::ALLOCATION_ACTIVE_STATUSES.include?(@demand_line.status) && Authorization.allowed?(user: current_user, permission_key: "demand.expire", store: current_store))
+  ].compact)
+%>
+
+<%= render "shared/ui/page_header",
+           title: @demand_line.demand_number,
+           description: "#{demand_capture_intent_label(@demand_line.capture_intent)} · #{demand_status_label(@demand_line.status)}",
+           actions: header_actions.presence %>
 
 <%= render "record_summary", demand_line: @demand_line, supply_summary: @supply_summary %>
 
@@ -24,30 +33,35 @@
 
 <%= render "allocations_history", allocations: @allocations %>
 
-<div class="ss-detail-actions">
-  <% if DemandLine::ALLOCATION_ACTIVE_STATUSES.include?(@demand_line.status) && Authorization.allowed?(user: current_user, permission_key: "demand.expire", store: current_store) %>
-    <%= button_to "Expire", expire_demand_demand_line_path(@demand_line), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% end %>
-  <% unless @demand_line.terminal? %>
-    <% if Authorization.allowed?(user: current_user, permission_key: "demand.cancel", store: current_store) %>
-      <%= form_with url: cancel_demand_demand_line_path(@demand_line), method: :patch, class: "ss-form ss-form--inline" do %>
-        <%= text_field_tag :cancel_reason, nil, placeholder: "Cancel reason", class: "ss-input" %>
-        <%= submit_tag "Cancel", class: "ss-btn ss-btn-secondary" %>
-      <% end %>
-    <% end %>
-  <% end %>
-</div>
-
 <% if @demand_line.status == "captured" && Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
   <section id="demand-match-variant">
     <h2>Match variant</h2>
     <p class="ss-muted">Search items or scan an ISBN to match this research demand.</p>
-    <%= link_to "Search items to match",
-          items_root_path(
-            return_to: DemandLines::MatchContext::RETURN_TO,
-            demand_line_id: @demand_line.id,
-            q: @demand_line.provisional_identifier.presence || @demand_line.provisional_title
-          ),
-          class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button",
+               label: "Search items to match",
+               variant: :secondary,
+               url: items_root_path(
+                 return_to: DemandLines::MatchContext::RETURN_TO,
+                 demand_line_id: @demand_line.id,
+                 q: @demand_line.provisional_identifier.presence || @demand_line.provisional_title
+               ) %>
   </section>
+<% end %>
+
+<% unless @demand_line.terminal? %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "demand.cancel", store: current_store) %>
+    <section aria-labelledby="demand-cancel-heading">
+      <h2 id="demand-cancel-heading">Danger zone</h2>
+      <p class="ss-muted">Canceling a demand line stops fulfillment work. Provide a reason for the audit trail.</p>
+      <%= form_with url: cancel_demand_demand_line_path(@demand_line), method: :patch, class: "ss-form ss-form--inline" do %>
+        <div class="ss-field">
+          <%= label_tag :cancel_reason, "Cancel reason", class: "ss-label" %>
+          <%= text_field_tag :cancel_reason, nil, class: "ss-input", required: true %>
+        </div>
+        <footer class="ss-form-actions">
+          <%= render "shared/ui/button", label: "Cancel demand", type: :submit, variant: :danger %>
+        </footer>
+      <% end %>
+    </section>
+  <% end %>
 <% end %>

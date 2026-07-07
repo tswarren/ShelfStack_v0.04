@@ -1,12 +1,25 @@
 <%= render "setup/shared/back_link", path: setup_departments_path, label: "Departments" %>
-<h1><%= @department.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @department,
+    edit_path: edit_setup_department_path(@department),
+    inactivate_path: inactivate_setup_department_path(@department),
+    reactivate_path: reactivate_setup_department_path(@department)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @department.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Department number</dt><dd><%= @department.department_number %></dd>
   <dt>Short name</dt><dd><%= @department.short_name %></dd>
   <dt>GL account code</dt><dd><%= @department.gl_account_code || "—" %></dd>
   <dt>Description</dt><dd><%= @department.description.presence || "—" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@department.active?) %>"><%= status_label(@department.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@department.active?), status: @department.active? ? :active : :inactive) %></dd>
 </dl>
+
 <h2>Subdepartments</h2>
 <% if @sub_departments.any? %>
   <table class="ss-table">
@@ -16,7 +29,7 @@
         <tr>
           <td><%= sub_department.name %></td>
           <td><%= sub_department.sub_department_key %></td>
-          <td><span class="<%= status_class(sub_department.active?) %>"><%= status_label(sub_department.active?) %></span></td>
+          <td><%= ss_status_badge(status_label(sub_department.active?), status: sub_department.active? ? :active : :inactive) %></td>
           <td><%= link_to "View", setup_sub_department_path(sub_department) %></td>
         </tr>
       <% end %>
@@ -25,14 +38,13 @@
 <% else %>
   <p class="ss-muted">No subdepartments linked to this department yet.</p>
 <% end %>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_department_path(@department), class: "ss-btn" %>
-  <% if @department.active? %>
-    <%= button_to "Inactivate", inactivate_setup_department_path(@department), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_department_path(@department), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_department_path(@department), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this department?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "department-danger-zone-heading",
+           message: "Delete removes the department only when nothing references it. Prefer inactivating to preserve classification history.",
+           delete_label: "Delete department",
+           delete_path: setup_department_path(@department),
+           confirm_message: "Delete this department? This cannot be undone." %>

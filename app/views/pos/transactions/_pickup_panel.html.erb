@@ -28,7 +28,7 @@
             class: "ss-input",
             data: { pos_pickup_panel_target: "demandNumber", action: "keydown.enter->pos-pickup-panel#search" } %>
     </div>
-    <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-pickup-panel#search">Search ready items</button>
+    <%= render "shared/ui/button", label: "Search ready items", variant: :secondary, data: { action: "pos-pickup-panel#search" } %>
     <p class="ss-hint" data-pos-pickup-panel-target="message"></p>
     <div class="ss-pos-choices" data-pos-pickup-panel-target="results"></div>
   </div>
@@ -38,7 +38,7 @@
   <section class="ss-pos-panel ss-pos-drawer ss-pos-drawer--inline">
     <div class="ss-pos-drawer__header">
       <h2 class="ss-pos-panel__title">Customer pickup</h2>
-      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-command-bar#closePickupPanel">Cancel</button>
+      <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, size: :small, data: { action: "pos-command-bar#closePickupPanel" } %>
     </div>
     <%= pickup_content %>
   </section>

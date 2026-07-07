@@ -1,7 +1,35 @@
 <% item = Items::ItemPresenter.from_product_variant(@product_variant) %>
 <% item_flow = { return_to: "item" } %>
 
-<h1><%= @product_variant.name %></h1>
+<%= render "setup/shared/back_link", path: item.tab_path("item_setup", variant_id: @product_variant.id), label: "Item setup" %>
+
+<%
+  secondary_actions = []
+  if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store)
+    secondary_actions << render("shared/ui/button", label: "Inventory Ledger", variant: :secondary, url: inventory_variant_path(@product_variant))
+  end
+  if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store)
+    secondary_actions << render("shared/ui/button", label: "Manual TBO", variant: :secondary, url: new_demand_demand_line_path(product_variant_id: @product_variant.id, capture_intent: "manual_tbo"))
+  end
+  secondary_actions << render("shared/ui/button", label: "Regenerate Name", variant: :secondary, url: regenerate_name_items_product_variant_path(@product_variant, item_flow), method: :patch)
+
+  header_actions = if @product_variant.active?
+                     safe_join([
+                       *secondary_actions,
+                       render("shared/ui/button", label: "Inactivate", variant: :secondary, url: inactivate_items_product_variant_path(@product_variant, item_flow), method: :patch),
+                       render("shared/ui/button", label: "Edit", variant: :primary, url: edit_items_product_variant_path(@product_variant, item_flow))
+                     ])
+                   else
+                     safe_join([
+                       *secondary_actions,
+                       render("shared/ui/button", label: "Edit", variant: :secondary, url: edit_items_product_variant_path(@product_variant, item_flow)),
+                       render("shared/ui/button", label: "Reactivate", variant: :primary, url: reactivate_items_product_variant_path(@product_variant, item_flow), method: :patch)
+                     ])
+                   end
+%>
+
+<%= render "shared/ui/page_header", title: @product_variant.name, actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Product</dt><dd><%= @product_variant.product.name %></dd>
   <dt>SKU</dt><dd><%= @product_variant.sku %></dd>
@@ -22,7 +50,7 @@
       <dd><%= @order_quantity.pending %></dd>
     <% end %>
   <% end %>
-  <dt>Status</dt><dd><span class="<%= status_class(@product_variant.active?) %>"><%= status_label(@product_variant.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@product_variant.active?), status: @product_variant.active? ? :active : :inactive) %></dd>
 </dl>
 
 <% if @manage_inventory_behavior %>
@@ -34,22 +62,12 @@
   </details>
 <% end %>
 
-<div class="ss-detail-actions">
-  <%= link_to "Back to Item", item.tab_path("item_setup", variant_id: @product_variant.id), class: "ss-btn ss-btn-secondary" %>
-  <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "inventory.ledger.view", store: current_store) %>
-    <%= link_to "Inventory Ledger", inventory_variant_path(@product_variant), class: "ss-btn ss-btn-secondary" %>
-  <% end %>
-  <% if Inventory::Eligibility.eligible?(@product_variant) && Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
-    <%= link_to "Manual TBO", new_demand_demand_line_path(product_variant_id: @product_variant.id, capture_intent: "manual_tbo"), class: "ss-btn ss-btn-secondary" %>
-  <% end %>
-  <%= link_to "Edit", edit_items_product_variant_path(@product_variant, item_flow), class: "ss-btn" %>
-  <%= button_to "Regenerate Name", regenerate_name_items_product_variant_path(@product_variant, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% if @product_variant.active? %>
-    <%= button_to "Inactivate", inactivate_items_product_variant_path(@product_variant, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_items_product_variant_path(@product_variant, item_flow), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", items_product_variant_path(@product_variant, item_flow), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this variant?" } %>
-</div>
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "product-variant-danger-zone-heading",
+           message: "Delete removes the variant only when nothing references it. Prefer inactivating.",
+           delete_label: "Delete variant",
+           delete_path: items_product_variant_path(@product_variant, item_flow),
+           confirm_message: "Delete this variant?" %>

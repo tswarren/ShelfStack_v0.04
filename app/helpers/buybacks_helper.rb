@@ -194,24 +194,42 @@ module BuybacksHelper
   end
 
   def buyback_external_lookup_link(session, line, label: "Search external sources", **options)
-    css = [ "ss-btn", "ss-btn-secondary", "ss-btn--small", options.delete(:class) ].compact.join(" ")
-    link_to label,
-            buyback_external_lookup_path(session, line),
-            class: css,
-            data: { turbo_frame: "_top" },
-            **options
+    extra_class = options.delete(:class)
+    render("shared/ui/button",
+      label: label,
+      variant: :secondary,
+      size: :small,
+      url: buyback_external_lookup_path(session, line),
+      class: extra_class,
+      data: { turbo_frame: "_top" },
+      **options)
   end
 
-  def buyback_action_button(path:, method:, label:, enabled:, reason: nil, **options)
-    css = [ "ss-btn", options.delete(:class) ].compact.join(" ")
-    data = options.delete(:data) || {}
+  def buyback_action_button(path:, method:, label:, enabled:, reason: nil, variant: :primary, size: nil, **options)
+    data = (options.delete(:data) || {}).dup
     form_options = { data: data.merge(turbo_stream: true) }
+    options.delete(:class)
+
     if enabled
-      button_to label, path, method: method, class: css, form: form_options, **options
+      render("shared/ui/button",
+        label: label,
+        variant: variant,
+        size: size,
+        url: path,
+        method: method,
+        form: form_options,
+        data: data.presence,
+        **options)
     else
       tag.div(class: "ss-buyback-action-disabled") do
         safe_join([
-          tag.button(label, class: "#{css} ss-btn--disabled", disabled: true, type: "button"),
+          render("shared/ui/button",
+            label: label,
+            variant: variant,
+            size: size,
+            disabled: true,
+            class: "ss-btn--disabled",
+            **options),
           (tag.p(reason, class: "ss-hint") if reason.present?)
         ].compact)
       end

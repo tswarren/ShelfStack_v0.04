@@ -40,9 +40,11 @@
     <%= text_area_tag :notes, params[:notes] %>
   </div>
 
-  <div class="ss-actions">
-    <%= submit_tag form_vendor ? "Create Draft Purchase Order for #{form_vendor.name}" : "Create Draft Purchase Order",
-          class: "ss-btn" %>
-    <%= link_to "Cancel", orders_purchase_orders_path, class: "ss-btn ss-btn-secondary" %>
-  </div>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button",
+          label: (form_vendor ? "Create Draft Purchase Order for #{form_vendor.name}" : "Create Draft Purchase Order"),
+          type: :submit,
+          variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: orders_purchase_orders_path %>
+  </footer>
 <% end %>

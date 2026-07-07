@@ -24,10 +24,11 @@
     </dl>
 
     <% if Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.configure", store: current_store) %>
-      <%= button_to "Run health check",
-                    setup_external_data_source_health_check_path(source.source_key),
-                    method: :post,
-                    class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+                 label: "Run health check",
+                 variant: :secondary,
+                 url: setup_external_data_source_health_check_path(source.source_key),
+                 method: :post %>
     <% end %>
   <% end %>
 <% end %>

@@ -1,45 +1,50 @@
 <%= render "setup/shared/back_link", path: customers_customers_path, label: "Customers" %>
 
-<h1><%= @customer.display_name %></h1>
+<%
+  lifecycle_actions = if @customer.active?
+                        safe_join([
+                          (render("shared/ui/button", label: "Inactivate", variant: :secondary, url: inactivate_customers_customer_path(@customer), method: :patch) if Authorization.allowed?(user: current_user, permission_key: "customers.inactivate", store: current_store)),
+                          (render("shared/ui/button", label: "Edit", variant: :primary, url: edit_customers_customer_path(@customer)) if Authorization.allowed?(user: current_user, permission_key: "customers.update", store: current_store))
+                        ].compact)
+                      else
+                        safe_join([
+                          (render("shared/ui/button", label: "Edit", variant: :secondary, url: edit_customers_customer_path(@customer)) if Authorization.allowed?(user: current_user, permission_key: "customers.update", store: current_store)),
+                          (render("shared/ui/button", label: "Reactivate", variant: :primary, url: reactivate_customers_customer_path(@customer), method: :patch) if Authorization.allowed?(user: current_user, permission_key: "customers.reactivate", store: current_store))
+                        ].compact)
+                      end
+%>
+
+<%= render "shared/ui/page_header", title: @customer.display_name, actions: lifecycle_actions.presence %>
 
 <dl class="ss-summary">
   <dt>Email</dt><dd><%= @customer.email.presence || "—" %></dd>
   <dt>Phone</dt><dd><%= @customer.phone.presence || "—" %></dd>
   <dt>Preferred contact</dt>
   <dd><%= @customer.preferred_contact_method.present? ? customers_preferred_contact_label(@customer.preferred_contact_method) : "—" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@customer.active?) %>"><%= status_label(@customer.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@customer.active?), status: @customer.active? ? :active : :inactive) %></dd>
   <% if @customer.notes.present? %>
     <dt>Notes</dt><dd><%= simple_format(@customer.notes) %></dd>
   <% end %>
 </dl>
 
-<div class="ss-detail-actions">
-  <% if Authorization.allowed?(user: current_user, permission_key: "customers.update", store: current_store) %>
-    <%= link_to "Edit", edit_customers_customer_path(@customer), class: "ss-btn" %>
-  <% end %>
-  <% if @customer.active? && Authorization.allowed?(user: current_user, permission_key: "customers.inactivate", store: current_store) %>
-    <%= button_to "Inactivate", inactivate_customers_customer_path(@customer), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% elsif Authorization.allowed?(user: current_user, permission_key: "customers.reactivate", store: current_store) %>
-    <%= button_to "Reactivate", reactivate_customers_customer_path(@customer), method: :patch, class: "ss-btn" %>
-  <% end %>
-</div>
-
 <% if @profile_presenter %>
-  <div class="ss-profile-actions ss-detail-actions">
+  <section class="ss-section-actions ss-profile-actions">
     <% if @profile_presenter.can_create_demand? %>
-      <%= link_to "New demand", @profile_presenter.new_demand_path, class: "ss-btn" %>
+      <%= render "shared/ui/button", label: "New demand", variant: :primary, url: @profile_presenter.new_demand_path %>
     <% elsif @profile_presenter.can_create_request? %>
-      <%= link_to "New request", @profile_presenter.new_request_path, class: "ss-btn" %>
+      <%= render "shared/ui/button", label: "New request", variant: :primary, url: @profile_presenter.new_request_path %>
     <% end %>
     <% if @profile_presenter.can_view_requests? && @profile_presenter.ready_for_pickup_line_count.positive? %>
-      <%= link_to "View ready pickups (#{@profile_presenter.ready_for_pickup_line_count})",
-            @profile_presenter.ready_pickups_path,
-            class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+                 label: "View ready pickups (#{@profile_presenter.ready_for_pickup_line_count})",
+                 variant: :secondary,
+                 url: @profile_presenter.ready_pickups_path %>
     <% end %>
     <% if @profile_presenter.can_view_requests? && @profile_presenter.active_hold_count.positive? %>
-      <%= link_to "View active holds (#{@profile_presenter.active_hold_count})",
-            @profile_presenter.active_holds_path,
-            class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+                 label: "View active holds (#{@profile_presenter.active_hold_count})",
+                 variant: :secondary,
+                 url: @profile_presenter.active_holds_path %>
     <% end %>
     <% if @profile_presenter.can_record_contact? %>
       <details class="ss-collapsible-inline">
@@ -48,11 +53,12 @@
       </details>
     <% end %>
     <% if Authorization.allowed?(user: current_user, permission_key: "stored_value.accounts.view", store: current_store) %>
-      <%= link_to "Stored value accounts",
-            customers_stored_value_accounts_path(customer_id: @customer.id),
-            class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+                 label: "Stored value accounts",
+                 variant: :secondary,
+                 url: customers_stored_value_accounts_path(customer_id: @customer.id) %>
     <% end %>
-  </div>
+  </section>
   <p class="ss-muted">
     <%= @profile_presenter.open_request_count %> open request<%= @profile_presenter.open_request_count == 1 ? "" : "s" %>
   </p>
@@ -91,7 +97,9 @@
     </tbody>
   </table>
 <% else %>
-  <p class="ss-muted">No demand lines yet.</p>
+  <%= render "shared/ui/empty_state",
+             title: "No demand lines yet",
+             message: "Demand lines for this customer will appear here after staff capture requests or holds." %>
 <% end %>
 
 <h2>Contact history</h2>
@@ -117,7 +125,9 @@
     </tbody>
   </table>
 <% else %>
-  <p class="ss-muted">No contact events recorded.</p>
+  <%= render "shared/ui/empty_state",
+             title: "No contact events recorded",
+             message: "Record a contact attempt from the profile actions above when you reach out to this customer." %>
 <% end %>
 
 <%= render "orders/shared/collapsible_panel", title: "Audit timeline" do %>

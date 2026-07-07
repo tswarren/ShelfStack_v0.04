@@ -1,12 +1,16 @@
-<h1>Inventory Admin Tools</h1>
-<p class="ss-muted">Store: <%= inventory_store.name %></p>
+<%
+  header_actions = safe_join([
+    render("shared/ui/button", label: "New Balance Correction", variant: :secondary, url: new_inventory_adjustment_path(adjustment_type: "balance_correction")),
+    render("shared/ui/button", label: "Rebuild Balances", variant: :secondary, url: rebuild_balances_inventory_admin_path, method: :post, data: { turbo_confirm: "Rebuild all inventory balances from the ledger?" }),
+    render("shared/ui/button", label: "Run Integrity Check", variant: :secondary, url: integrity_check_inventory_admin_path, method: :post),
+    render("shared/ui/button", label: "Back to Inventory", variant: :tertiary, url: inventory_root_path)
+  ])
+%>
 
-<div class="ss-actions">
-  <%= link_to "New Balance Correction", new_inventory_adjustment_path(adjustment_type: "balance_correction"), class: "ss-btn" %>
-  <%= button_to "Rebuild Balances", rebuild_balances_inventory_admin_path, method: :post, class: "ss-btn", data: { turbo_confirm: "Rebuild all inventory balances from the ledger?" } %>
-  <%= button_to "Run Integrity Check", integrity_check_inventory_admin_path, method: :post, class: "ss-btn" %>
-  <%= link_to "Back to Inventory", inventory_root_path, class: "ss-btn ss-btn-secondary" %>
-</div>
+<%= render "shared/ui/page_header",
+           title: "Inventory Admin Tools",
+           description: "Store: #{inventory_store.name}",
+           actions: header_actions %>
 
 <% if @integrity_result %>
   <section class="ss-summary-block">

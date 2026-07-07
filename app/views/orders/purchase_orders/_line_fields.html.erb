@@ -37,5 +37,9 @@
     <%= line_form.number_field :unit_cost_cents, min: 0, step: 1,
           data: { inventory_variant_lookup_target: "unitCost" } %>
   </div>
-  <button type="button" class="ss-btn ss-btn-secondary" data-action="nested-form-lines#removeLine">Remove line</button>
+  <%= render "shared/ui/button",
+        label: "Remove line",
+        type: :button,
+        variant: :secondary,
+        data: { action: "nested-form-lines#removeLine" } %>
 </fieldset>
