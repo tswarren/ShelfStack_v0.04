@@ -74,6 +74,16 @@ Use:
 
 Do not rely on button order alone to communicate importance.
 
+**Action order (ShelfStack standard):**
+
+| Region | Order (left → right) |
+| :---- | :---- |
+| Page header / toolbar (`.ss-page-actions`) | Secondary and lifecycle actions first; **primary rightmost** |
+| Form footer (`.ss-form-actions`) | **Primary first**; cancel/back **tertiary last** |
+| Setup detail danger zone | Delete and irreversible actions only — not in the header |
+
+Full detail: [components/button.md](components/button.md#action-order-shelfstack-standard).
+
 ### Keep risky actions explicit
 
 Actions that post, void, cancel, reverse, close, delete, inactivate, or alter inventory/financial history should be deliberate.

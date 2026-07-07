@@ -293,6 +293,17 @@ Avoid `departments` / `sub_departments` first — classification tree adds noise
 7. No new `shelfstack.css` rules
 8. No new `.flash-alert` patterns
 9. Pass [ux-review-checklist.md](ux-review-checklist.md) for shell, page header, feedback, accessibility
+10. **Action order:** page header secondary → primary; form footer primary → cancel (tertiary); delete in danger zone only ([button.md](components/button.md#action-order-shelfstack-standard))
+
+### Setup detail show pattern (canonical after pilot)
+
+```text
+back link (optional)
+page header     → lifecycle secondary, edit/reactivate primary (rightmost)
+summary         → read-only fields + status badge
+audit timeline  → when applicable
+danger zone     → delete (danger) with explanatory copy
+```
 
 ### Pilot tests
 
@@ -332,6 +343,14 @@ After pilot, repeat the same pattern on similar setup surfaces.
 Page Header → Table / Data Table shell → Empty State → Status Badge
 → Form sections/fields → Alert for workflow conditions → Button partial for actions
 ```
+
+Setup detail show:
+
+```text
+page header (secondary → primary) → summary → audit → danger zone (delete only)
+```
+
+Form pages: `.ss-form-actions` with primary left, cancel tertiary right.
 
 Do not migrate removed resources (`accounting_mappings`, `merchandise_classes`).
 

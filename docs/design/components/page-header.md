@@ -69,6 +69,21 @@ Use it for compatible form pages. A generic UI partial should be extracted later
 4. Header actions must not duplicate global navigation.  
 5. The page header should not become a dumping ground for workflow state; use alerts/panels for that.
 
+## Action order
+
+Page headers use a **title/context block on the left** and **`.ss-page-actions` on the right**.
+
+Within `.ss-page-actions`, order buttons **secondary → primary** (left to right). The primary action is **rightmost** in the cluster.
+
+```text
+[ Inactivate ]  [ Edit ]
+ secondary       primary
+```
+
+Do not place delete or other danger actions in the page header. Use a separated **danger zone** on setup detail show pages (see [button.md](button.md#action-order-shelfstack-standard)).
+
+Form pages that use this header for title/description only should keep submit/cancel in `.ss-form-actions` below the form: **primary left, cancel tertiary right**.
+
 ## Example
 
 ```

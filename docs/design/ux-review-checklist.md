@@ -33,9 +33,11 @@ A UX review should identify one of three outcomes:
 ## 3. Action hierarchy
 
 - [ ] There is one clear primary action per page/form/section.
+- [ ] Page header actions follow secondary → primary (left to right); form footers follow primary → cancel (tertiary).
 - [ ] Secondary actions are visually lower priority than the primary action.
 - [ ] Cancel, back, close, logout, and lock session use tertiary or link treatment.
 - [ ] Destructive actions use danger styling only when the action is actually risky or irreversible.
+- [ ] Delete and other irreversible setup actions are not placed in the page header toolbar.
 - [ ] The screen does not rely on button order alone to communicate action importance.
 - [ ] Row actions are consistent with similar tables elsewhere in the app.
 

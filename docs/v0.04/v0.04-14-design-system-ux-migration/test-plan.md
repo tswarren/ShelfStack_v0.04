@@ -40,7 +40,7 @@ Prior v0.04 verifiers must remain green; this milestone does not change domain r
 
 Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr0-prep`.
 
-### PR 1 — Core UI partials
+### PR 1 — Core UI partials (complete on integration branch)
 
 | Test area | Assertion |
 | --------- | --------- |
@@ -49,7 +49,9 @@ Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr0-prep`.
 | Alert | `.ss-alert--warning`, `.ss-alert--error`; no `:neutral` until CSS exists |
 | Forms page header | delegates to `shared/ui/page_header` |
 
-### PR 2 — Forms and feedback
+Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr1-core-ui`.
+
+### PR 2 — Forms and feedback (complete on integration branch)
 
 | Test area | Assertion |
 | --------- | --------- |
@@ -64,13 +66,21 @@ Update legacy tests that assert `.flash-alert` on form errors:
 * `test/controllers/passwords_controller_test.rb`
 * `test/integration/setup_workstations_controller_test.rb`
 
-### PR 3 — Pilot (setup vendors)
+Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr2-forms`.
+
+### PR 3 — Pilot (setup vendors) (complete on integration branch)
 
 | Test area | Assertion |
 | --------- | --------- |
 | Vendors index | `.ss-page-header`, `.ss-table`, `.ss-status-badge` |
 | Vendors index (empty) | `.ss-empty-state` |
-| Vendors show | page header + status badge pattern |
+| Vendors show | page header (secondary → primary), status badge, danger zone delete |
+| Vendors forms | primary submit left, cancel tertiary right |
+| Integration | `test/integration/setup_vendors_ux_contract_test.rb` |
+
+Canonical setup detail pattern documented in [button.md](../../design/components/button.md#action-order-shelfstack-standard) and [ux-migration-build-plan.md](../../design/ux-migration-build-plan.md).
+
+Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr3-vendors` + pilot refinements.
 
 ### PR 4+ — Setup surfaces
 

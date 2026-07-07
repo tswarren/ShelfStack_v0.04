@@ -49,7 +49,8 @@ Migrate legacy and inconsistent views to the documented design system:
 | Milestone type | App-wide UX consistency — not domain redesign |
 | Schema | No new core tables |
 | Partial scope | Seven enabling pieces only (button, page_header, alert, empty_state, errors, field, status badge helper) |
-| Pilot surface | `setup/vendors` index + show |
+| Pilot surface | `setup/vendors` index + show (+ canonical setup detail action order) |
+| Action order | Page header: secondary → primary; form footer: primary → cancel (tertiary); delete in danger zone — [button.md](../../design/components/button.md#action-order-shelfstack-standard) |
 | Auth layout | Login, unlock, workstation assignment, change password → `layouts/auth` |
 | PIN layout | Set/change PIN → `application` shell |
 | Filter chip | CSS in modular layer before new uses; no partial yet |

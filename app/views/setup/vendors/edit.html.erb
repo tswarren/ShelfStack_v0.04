@@ -7,6 +7,6 @@
   <%= render "form", f: f, vendor: @vendor, parent_vendors: @parent_vendors %>
   <footer class="ss-form-actions">
     <%= render "shared/ui/button", label: "Update Vendor", type: :submit, variant: :primary %>
-    <%= render "shared/ui/button", label: "Cancel", variant: :secondary, url: setup_vendor_path(@vendor) %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_vendor_path(@vendor) %>
   </footer>
 <% end %>
