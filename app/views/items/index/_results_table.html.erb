@@ -56,11 +56,13 @@
           <% if local_assigns[:match_context]&.valid? &&
                 Authorization.allowed?(user: current_user, permission_key: "demand.match_variant", store: current_store) %>
             <% if active_variants.size == 1 %>
-              <%= button_to "Match to demand",
-                    match_variant_demand_demand_line_path(match_context.demand_line),
-                    method: :post,
-                    params: { product_variant_id: active_variants.first.id },
-                    class: "ss-btn ss-btn-small" %>
+              <%= render "shared/ui/button",
+                         label: "Match to demand",
+                         variant: :primary,
+                         size: :small,
+                         url: match_variant_demand_demand_line_path(match_context.demand_line),
+                         method: :post,
+                         params: { product_variant_id: active_variants.first.id } %>
             <% elsif active_variants.any? %>
               <%= link_to "Pick variant",
                     items_item_path_with_match(item, tab: "operations", variant_id: active_variants.first.id),

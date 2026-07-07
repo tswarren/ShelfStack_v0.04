@@ -164,17 +164,21 @@ Integration tests: `customers_customers_ux_contract_test.rb`, `items_index_ux_co
 
 Integration/view tests: `ui_partials_test.rb` (block precedence), `customers_customers_ux_contract_test.rb`, `demand_queues_ux_contract_test.rb`, `items_item_ux_contract_test.rb`.
 
-### Phase 6 — Domain workspaces (next)
+### Phase 6 — Domain workspaces (active)
 
-Add per-slice integration tests following Phase 5 / setup contract patterns. Track surfaces in [ux-migration-build-plan.md](../../design/ux-migration-build-plan.md#phase-6-tracking-checklist).
+**Slice 6A — Item operations (branch `v0.04-14/pr6-item-ops`, in progress):**
 
-| Workspace | Contract test (add when slice lands) |
-| --------- | ------------------------------------ |
-| POS | page header/actions; no layout behavior change |
-| Purchasing / receiving | tables, badges, bounded line UX |
-| Inventory ops | lifecycle header + danger zone |
-| Item operations | drawer actions; legacy admin routes |
-| Buybacks | index + workflow show patterns |
+| Surface | Status |
+| ------- | ------ |
+| Operations tab + variant drawer | In progress |
+| Customer demand form (drawer) | In progress |
+| Item setup quick modals | In progress |
+| Display / vendor sourcing (item setup) | In progress |
+| Items index pagination + match action | In progress |
+| Legacy `items/catalog_items`, `items/products`, `items/product_variants` admin | Deferred (slice 6B) |
+| Add item wizard | Deferred (slice 6C) |
+
+Integration tests: extend `items_item_ux_contract_test.rb`; `items_setup_modals_integration_test.rb` regression.
 
 **Later (not Phase 6 gate):** field `aria-describedby` mass wiring, items filter partial, `shared/ui/_filter_chip` partial — see build plan Later backlog.
 

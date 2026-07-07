@@ -1,4 +1,4 @@
-<%# locals: label:, variant: :primary, size: nil, type: :button, url: nil, method: nil, disabled: false, data: {}, aria: {}, form: nil, form_class: nil, class: nil, full_width: false, icon: false %>
+<%# locals: label:, variant: :primary, size: nil, type: :button, url: nil, method: nil, params: nil, disabled: false, data: {}, aria: {}, form: nil, form_class: nil, class: nil, full_width: false, icon: false %>
 <%
   label = local_assigns.fetch(:label)
   variant = local_assigns.fetch(:variant, :primary)
@@ -28,6 +28,7 @@
     <%= button_to label,
           url,
           method: local_assigns[:method],
+          params: local_assigns[:params],
           class: css_class,
           form: form_options.presence,
           data: data_attrs.presence,

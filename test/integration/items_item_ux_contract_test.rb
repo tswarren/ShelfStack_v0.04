@@ -61,4 +61,26 @@ class ItemsItemUxContractTest < ActionDispatch::IntegrationTest
     assert_select ".ss-page-header h1", text: @product.title
     assert_select ".ss-page-description", text: /Inventory movements and audit history/
   end
+
+  test "operations tab variant table and drawer use contract buttons" do
+    grant_permission!(@user, "demand.access", store: @store)
+
+    get item_path(tab: "operations")
+
+    assert_response :success
+    assert_select "button.ss-btn-secondary.ss-btn--small", text: "Details"
+    assert_select "#item-variant-ops-drawer"
+    assert_select "footer.ss-form-actions button.ss-btn-primary", text: "Submit"
+    assert_select "footer.ss-form-actions button.ss-btn-tertiary", text: "Cancel"
+  end
+
+  test "item setup display section uses contract vendor action buttons" do
+    grant_permission!(@user, "setup.product_vendors.create", store: @store)
+
+    get item_path(tab: "item_setup")
+
+    assert_response :success
+    assert_select "#vendor-sourcing button.ss-btn-secondary.ss-btn--small", text: "Quick add product vendor"
+    assert_select "#vendor-sourcing a.ss-btn-secondary.ss-btn--small", text: "Add product vendor"
+  end
 end

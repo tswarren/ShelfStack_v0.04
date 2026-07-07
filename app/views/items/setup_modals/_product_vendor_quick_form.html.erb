@@ -34,14 +34,27 @@
     <%= f.check_box :preferred %>
   </div>
   <footer class="ss-form-actions">
-    <%= f.submit(editing ? "Save vendor source" : "Add vendor source", class: "ss-btn") %>
-    <button type="button" class="ss-btn ss-btn-secondary"
-            data-action="modal#close"
-            data-modal-target-id-param="item-product-vendor-modal">Cancel</button>
+    <%= render "shared/ui/button",
+               label: (editing ? "Save vendor source" : "Add vendor source"),
+               type: :submit,
+               variant: :primary %>
+    <%= render "shared/ui/button",
+               label: "Cancel",
+               variant: :tertiary,
+               type: :button,
+               data: { action: "modal#close", modal_target_id_param: "item-product-vendor-modal" } %>
     <% if editing %>
-      <%= link_to "Full edit", edit_items_product_product_vendor_path(product, product_vendor), class: "ss-btn-link", data: { turbo_frame: "_top" } %>
+      <%= render "shared/ui/button",
+                 label: "Full edit",
+                 variant: :link,
+                 url: edit_items_product_product_vendor_path(product, product_vendor),
+                 data: { turbo_frame: "_top" } %>
     <% else %>
-      <%= link_to "Full form", new_items_product_product_vendor_path(product), class: "ss-btn-link", data: { turbo_frame: "_top" } %>
+      <%= render "shared/ui/button",
+                 label: "Full form",
+                 variant: :link,
+                 url: new_items_product_product_vendor_path(product),
+                 data: { turbo_frame: "_top" } %>
     <% end %>
   </footer>
 <% end %>

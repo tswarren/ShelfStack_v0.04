@@ -108,11 +108,18 @@
   <% end %>
 
   <footer class="ss-form-actions">
-    <%= submit_tag "Submit",
-          class: "ss-btn",
-          data: { item_variant_ops_drawer_target: "submitButton" } %>
-    <button type="button" class="ss-btn ss-btn-secondary"
-            data-action="drawer#close"
-            data-drawer-target-id-param="item-variant-ops-drawer">Cancel</button>
+    <%= render "shared/ui/button",
+               label: "Submit",
+               type: :submit,
+               variant: :primary,
+               data: { item_variant_ops_drawer_target: "submitButton" } %>
+    <%= render "shared/ui/button",
+               label: "Cancel",
+               variant: :tertiary,
+               type: :button,
+               data: {
+                 action: "drawer#close",
+                 drawer_target_id_param: "item-variant-ops-drawer"
+               } %>
   </footer>
 <% end %>

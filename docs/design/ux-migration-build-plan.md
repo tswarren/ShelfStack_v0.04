@@ -509,7 +509,8 @@ Phase 5 — Operational surfaces (complete on integration branch)
   customers, items index/detail, reports, demand queues
 
 Phase 6 — Domain workspaces (active next)
-  POS, purchasing/receiving, inventory ops, item operations, buybacks
+  6A item operations (branch v0.04-14/pr6-item-ops)
+  6B POS, purchasing/receiving, inventory ops, buybacks
   see Phase 6 tracking checklist above
 
 Later — Enabling-layer follow-ups and filter/layout polish
