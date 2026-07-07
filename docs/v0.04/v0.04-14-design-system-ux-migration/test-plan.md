@@ -112,12 +112,12 @@ Integration tests: `setup_vendors_ux_contract_test.rb`, `setup_tax_categories_ux
 | Surface | Status on integration branch |
 | ------- | ---------------------------- |
 | `customers/customers` index/show/forms | Complete (branch `v0.04-14/pr5-customers`) |
-| `items` index | Pending |
+| `items` index | Complete (branch `v0.04-14/pr5-items-index`) |
 | item detail | Pending |
 | `reports` index/views | Pending |
 | demand queues | Pending |
 
-Integration tests: `customers_customers_ux_contract_test.rb` (customers index/show/forms).
+Integration tests: `customers_customers_ux_contract_test.rb`, `items_index_ux_contract_test.rb`.
 
 * `test/system/app_shell_contract_test.rb` still passes after POS touches
 * POS workspace layout tests unchanged in behavior
