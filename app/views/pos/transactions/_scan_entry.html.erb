@@ -14,7 +14,7 @@
               data: { pos_line_entry_target: "lookupInput", action: "keydown->pos-line-entry#lookupExact input->pos-line-entry#search" } %>
         <%= number_field_tag :quantity, 1, step: 1, class: "ss-pos-qty-input ss-pos-no-print", data: { pos_line_entry_target: "quantity", pos_register_workspace_target: "scanQuantity" } %>
         <%= pos_money_field :unit_price, nil, placeholder: "Price override", class: "ss-pos-money-input ss-pos-no-print", data: { pos_line_entry_target: "unitPrice" } %>
-        <%= button_tag "Add", type: "button", class: "ss-btn ss-pos-no-print", data: { action: "pos-line-entry#submitLine" } %>
+        <%= render "shared/ui/button", label: "Add", variant: :primary, class: "ss-pos-no-print", data: { action: "pos-line-entry#submitLine" } %>
       </div>
       <p class="ss-pos-preview" data-pos-line-entry-target="preview"></p>
       <p class="ss-hint ss-hint--warning" data-pos-line-entry-target="message" hidden></p>

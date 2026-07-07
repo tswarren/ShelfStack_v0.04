@@ -3,9 +3,17 @@
 <% back_label = return_path.present? ? "Back to completed sale" : "Back to summary" %>
 
 <div class="ss-pos-no-print ss-receipt-actions" data-controller="pos-receipt-print" data-pos-receipt-print-print-url-value="<%= print_pos_receipt_path(receipt) %>">
-  <button type="button" class="ss-btn ss-receipt-actions__print" data-action="pos-receipt-print#print">Print</button>
+  <%= render "shared/ui/button",
+             label: "Print",
+             variant: :primary,
+             class: "ss-receipt-actions__print",
+             data: { action: "pos-receipt-print#print" } %>
 
-  <%= link_to back_label, back_path, class: "ss-btn ss-btn-secondary ss-receipt-actions__back" %>
+  <%= render "shared/ui/button",
+             label: back_label,
+             variant: :secondary,
+             class: "ss-receipt-actions__back",
+             url: back_path %>
 
   <%= render "pos/transactions/issuance_slip_links", transaction: transaction %>
 </div>

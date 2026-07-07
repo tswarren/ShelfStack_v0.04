@@ -19,17 +19,21 @@
       <span class="ss-pos-cart-line__qty-readonly"><%= line.quantity.abs %></span>
     <% else %>
       <div class="ss-pos-qty-controls">
-        <%= button_to "−",
-              update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: -1),
-              method: :patch,
-              class: "ss-btn ss-btn-secondary ss-btn--small",
-              form: { data: { turbo_stream: true } } %>
+        <%= render "shared/ui/button",
+                   label: "−",
+                   variant: :secondary,
+                   size: :small,
+                   url: update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: -1),
+                   method: :patch,
+                   form: { data: { turbo_stream: true } } %>
         <span><%= line.quantity.abs %></span>
-        <%= button_to "+",
-              update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: 1),
-              method: :patch,
-              class: "ss-btn ss-btn-secondary ss-btn--small",
-              form: { data: { turbo_stream: true } } %>
+        <%= render "shared/ui/button",
+                   label: "+",
+                   variant: :secondary,
+                   size: :small,
+                   url: update_line_pos_transaction_path(transaction, line_id: line.id, quantity_delta: 1),
+                   method: :patch,
+                   form: { data: { turbo_stream: true } } %>
       </div>
     <% end %>
   </td>
@@ -86,13 +90,19 @@
   </td>
   <td class="ss-pos-cart-line__actions">
     <div class="ss-pos-line-actions">
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-cart-line#toggleMenu"
-              data-line-id="<%= line.id %>"
-              aria-haspopup="menu"
-              aria-expanded="false"
-              aria-controls="pos_line_menu_<%= line.id %>">More ▾</button>
+      <%= render "shared/ui/button",
+                 label: "More ▾",
+                 variant: :secondary,
+                 size: :small,
+                 data: {
+                   action: "pos-cart-line#toggleMenu",
+                   line_id: line.id
+                 },
+                 aria: {
+                   haspopup: "menu",
+                   expanded: "false",
+                   controls: "pos_line_menu_#{line.id}"
+                 } %>
       <div class="ss-pos-line-menu"
            id="pos_line_menu_<%= line.id %>"
            role="menu"

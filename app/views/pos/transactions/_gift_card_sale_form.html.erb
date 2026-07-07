@@ -6,5 +6,7 @@
                 action: "turbo:submit-end->pos-command-bar#giftCardSubmitted"
               } do %>
   <%= pos_money_field :unit_price, nil, placeholder: "Gift card amount", required: true, min: 0.01 %>
-  <%= submit_tag "Add gift card", class: "ss-btn ss-btn-secondary" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Add gift card", type: :submit, variant: :primary %>
+  </footer>
 <% end %>

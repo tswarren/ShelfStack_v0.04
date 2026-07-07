@@ -1,4 +1,4 @@
-<h1>Recent Transactions</h1>
+<%= render "shared/ui/page_header", title: "Recent Transactions" %>
 
 <table class="ss-table">
   <thead>
@@ -28,7 +28,7 @@
   </tbody>
 </table>
 
-<p>
-  <%= link_to "New transaction", new_pos_transaction_path, class: "ss-btn" %>
-  <%= link_to "Back to POS", pos_root_path, class: "ss-btn" %>
-</p>
+<footer class="ss-form-actions">
+  <%= render "shared/ui/button", label: "New transaction", variant: :primary, url: new_pos_transaction_path %>
+  <%= render "shared/ui/button", label: "Back to POS", variant: :tertiary, url: pos_root_path %>
+</footer>

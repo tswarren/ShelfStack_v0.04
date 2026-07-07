@@ -1,10 +1,22 @@
 <div class="ss-pos-transaction-show__actions">
-  <%= link_to "POS Menu", pos_root_path, class: "ss-btn ss-pos-transaction-show__primary-action" %>
+  <%= render "shared/ui/button",
+             label: "POS Menu",
+             variant: :primary,
+             class: "ss-pos-transaction-show__primary-action",
+             url: pos_root_path %>
 
   <% if transaction.pos_receipt %>
-    <%= link_to "Receipt", pos_receipt_path(transaction.pos_receipt), class: "ss-btn ss-btn-secondary ss-pos-transaction-show__secondary-action" %>
+    <%= render "shared/ui/button",
+               label: "Receipt",
+               variant: :secondary,
+               class: "ss-pos-transaction-show__secondary-action",
+               url: pos_receipt_path(transaction.pos_receipt) %>
   <% else %>
-    <span class="ss-btn ss-btn-secondary ss-pos-transaction-show__secondary-action" aria-disabled="true">Receipt</span>
+    <%= render "shared/ui/button",
+               label: "Receipt",
+               variant: :secondary,
+               disabled: true,
+               class: "ss-pos-transaction-show__secondary-action" %>
   <% end %>
 </div>
 <%= render "pos/transactions/issuance_slip_links", transaction: transaction %>

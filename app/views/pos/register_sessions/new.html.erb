@@ -1,19 +1,25 @@
 <% content_for :main_class, "ss-main--wide ss-pos-main" %>
 
-<h1>Open Register Session</h1>
+<%= render "shared/forms/page_header",
+           eyebrow: "POS",
+           title: "Open Register Session",
+           description: "Start a register session for this workstation." %>
 
-<%= form_with url: pos_register_sessions_path, class: "ss-form" do %>
+<%= form_with url: pos_register_sessions_path, class: "ss-form ss-form--standard" do %>
   <div class="ss-field">
-    <%= label_tag :business_date, "Business date" %>
-    <%= date_field_tag :business_date, Date.current %>
+    <%= label_tag :business_date, "Business date", class: "ss-label" %>
+    <%= date_field_tag :business_date, Date.current, class: "ss-input" %>
   </div>
   <div class="ss-field">
-    <%= label_tag :opening_cash_dollars, "Opening cash" %>
+    <%= label_tag :opening_cash_dollars, "Opening cash", class: "ss-label" %>
     <%= pos_money_field :opening_cash_dollars, 0, min: 0 %>
   </div>
   <div class="ss-field">
-    <%= label_tag :notes, "Notes" %>
-    <%= text_area_tag :notes %>
+    <%= label_tag :notes, "Notes", class: "ss-label" %>
+    <%= text_area_tag :notes, nil, class: "ss-input" %>
   </div>
-  <%= submit_tag "Open register", class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Open register", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: pos_root_path %>
+  </footer>
 <% end %>

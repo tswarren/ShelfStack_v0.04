@@ -25,14 +25,23 @@
   <% if disabled %>
     <span class="<%= css_class %>" aria-disabled="true"><%= label %></span>
   <% elsif local_assigns[:method].present? && local_assigns[:method].to_s.downcase != "get" %>
-    <%= button_to label,
-          url,
-          method: local_assigns[:method],
-          params: local_assigns[:params],
-          class: css_class,
-          form: form_options.presence,
-          data: data_attrs.presence,
-          aria: aria_attrs.presence %>
+    <% use_link_method = local_assigns[:params].blank? && local_assigns[:form].blank? && local_assigns[:form_class].blank? %>
+    <% if use_link_method %>
+      <%= link_to label,
+            url,
+            class: css_class,
+            data: data_attrs.merge(turbo_method: local_assigns[:method]).presence,
+            aria: aria_attrs.presence %>
+    <% else %>
+      <%= button_to label,
+            url,
+            method: local_assigns[:method],
+            params: local_assigns[:params],
+            class: css_class,
+            form: form_options.presence,
+            data: data_attrs.presence,
+            aria: aria_attrs.presence %>
+    <% end %>
   <% else %>
     <%= link_to label,
           url,

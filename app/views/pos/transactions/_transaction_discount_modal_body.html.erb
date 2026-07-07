@@ -31,10 +31,12 @@
         applied_transaction_discount_cents: applied_transaction_discount_cents,
         current_total_cents: current_total_cents %>
 
-  <footer class="ss-modal-form-footer ss-pos-transaction-discount-form__footer">
-    <%= submit_tag "Apply discount", class: "ss-btn ss-pos-transaction-discount-form__action" %>
-    <button type="button"
-            class="ss-btn ss-btn-secondary ss-pos-transaction-discount-form__action"
-            data-action="pos-command-bar#closeTransactionDiscountModal">Cancel</button>
+  <footer class="ss-modal-form-footer ss-pos-transaction-discount-form__footer ss-form-actions">
+    <%= render "shared/ui/button", label: "Apply discount", type: :submit, variant: :primary, class: "ss-pos-transaction-discount-form__action" %>
+    <%= render "shared/ui/button",
+               label: "Cancel",
+               variant: :tertiary,
+               class: "ss-pos-transaction-discount-form__action",
+               data: { action: "pos-command-bar#closeTransactionDiscountModal" } %>
   </footer>
 <% end %>

@@ -51,20 +51,32 @@
          aria-label="Tender type"
          data-pos-settlement-panel-target="typeSelector">
       <% if pos_can_use_tender_type?(transaction, "cash") %>
-        <%= button_tag "1 Cash", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "cash", hotkey: "1" } %>
+        <%= render "shared/ui/button",
+                   label: "1 Cash",
+                   variant: :secondary,
+                   class: "ss-pos-tender-workspace__type-btn",
+                   data: { action: "pos-settlement-panel#selectTenderType", tender_type: "cash", hotkey: "1" } %>
       <% end %>
       <% if pos_can_use_tender_type?(transaction, "card") %>
-        <%= button_tag "2 Card", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "card", hotkey: "2" } %>
+        <%= render "shared/ui/button",
+                   label: "2 Card",
+                   variant: :secondary,
+                   class: "ss-pos-tender-workspace__type-btn",
+                   data: { action: "pos-settlement-panel#selectTenderType", tender_type: "card", hotkey: "2" } %>
       <% end %>
       <% if pos_can_use_tender_type?(transaction, "check") %>
-        <%= button_tag "3 Check", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "check", hotkey: "3" } %>
+        <%= render "shared/ui/button",
+                   label: "3 Check",
+                   variant: :secondary,
+                   class: "ss-pos-tender-workspace__type-btn",
+                   data: { action: "pos-settlement-panel#selectTenderType", tender_type: "check", hotkey: "3" } %>
       <% end %>
       <% if pos_stored_value_tender_available?(transaction) %>
-        <%= button_tag "4 Stored value", type: "button", class: "ss-btn ss-btn-secondary ss-pos-tender-workspace__type-btn",
-              data: { action: "pos-settlement-panel#selectTenderType", tender_type: "stored_value", hotkey: "4" } %>
+        <%= render "shared/ui/button",
+                   label: "4 Stored value",
+                   variant: :secondary,
+                   class: "ss-pos-tender-workspace__type-btn",
+                   data: { action: "pos-settlement-panel#selectTenderType", tender_type: "stored_value", hotkey: "4" } %>
       <% end %>
     </div>
 
@@ -76,11 +88,16 @@
       <table class="ss-pos-settlement-table ss-pos-settlement-table--draft">
         <tbody data-pos-settlement-panel-target="draftRows"></tbody>
       </table>
-      <footer class="ss-pos-tender-workspace__active-footer">
-        <%= button_tag "Save tender", type: "button", class: "ss-btn ss-pos-tender-workspace__save-btn",
-              data: { action: "pos-settlement-panel#saveActiveDetail" } %>
-        <%= button_tag "Cancel", type: "button", class: "ss-btn ss-btn-secondary",
-              data: { action: "pos-settlement-panel#cancelActiveDetail" } %>
+      <footer class="ss-pos-tender-workspace__active-footer ss-form-actions">
+        <%= render "shared/ui/button",
+                   label: "Save tender",
+                   variant: :primary,
+                   class: "ss-pos-tender-workspace__save-btn",
+                   data: { action: "pos-settlement-panel#saveActiveDetail" } %>
+        <%= render "shared/ui/button",
+                   label: "Cancel",
+                   variant: :tertiary,
+                   data: { action: "pos-settlement-panel#cancelActiveDetail" } %>
       </footer>
     </section>
 
@@ -159,14 +176,17 @@
     <div class="ss-pos-settlement-modal-footer">
       <div class="ss-pos-settlement-modal-footer__toolbar">
         <div class="ss-pos-settlement-modal-footer__right">
-          <%= button_tag "Back", type: "button", class: "ss-btn ss-btn-secondary ss-btn--small", data: { action: "pos-settlement-panel#close" } %>
+          <%= render "shared/ui/button", label: "Back", variant: :tertiary, size: :small, data: { action: "pos-settlement-panel#close" } %>
         </div>
       </div>
       <div class="ss-pos-settlement-modal-footer__complete">
-        <%= submit_tag complete_label,
-              class: "ss-btn ss-pos-complete-btn ss-pos-settlement-complete-btn",
-              disabled: !readiness.complete_ready?,
-              data: { pos_transaction_edit_target: "completeButton" } %>
+        <%= render "shared/ui/button",
+                   label: complete_label,
+                   type: :submit,
+                   variant: :primary,
+                   class: "ss-pos-complete-btn ss-pos-settlement-complete-btn",
+                   disabled: !readiness.complete_ready?,
+                   data: { pos_transaction_edit_target: "completeButton" } %>
       </div>
     </div>
   <% end %>

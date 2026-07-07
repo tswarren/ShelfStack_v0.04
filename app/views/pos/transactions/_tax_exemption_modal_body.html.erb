@@ -16,11 +16,12 @@
       <p><strong>Tax removed:</strong> −<%= pos_money(summary[:tax_removed_cents]) %></p>
     <% end %>
     <% if Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.void", store: current_store) %>
-      <%= button_to "Remove exemption",
-            void_tax_exemption_pos_transaction_path(transaction, exemption_id: exemption.id),
-            method: :delete,
-            class: "ss-btn ss-btn-secondary",
-            form: { data: { turbo_stream: true, action: "turbo:submit-end->pos-command-bar#taxExemptionSubmitted" } } %>
+      <%= render "shared/ui/button",
+                 label: "Remove exemption",
+                 variant: :secondary,
+                 url: void_tax_exemption_pos_transaction_path(transaction, exemption_id: exemption.id),
+                 method: :delete,
+                 form: { data: { turbo_stream: true, action: "turbo:submit-end->pos-command-bar#taxExemptionSubmitted" } } %>
     <% end %>
   </div>
 <% else %>
@@ -41,11 +42,13 @@
           submitted: submitted,
           invalid_fields: invalid_fields %>
 
-    <footer class="ss-modal-form-footer ss-pos-tax-exemption-form__footer">
-      <%= submit_tag "Apply tax exemption", class: "ss-btn ss-pos-tax-exemption-form__action" %>
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-pos-tax-exemption-form__action"
-              data-action="pos-command-bar#closeTaxExemptionModal">Cancel</button>
+    <footer class="ss-modal-form-footer ss-pos-tax-exemption-form__footer ss-form-actions">
+      <%= render "shared/ui/button", label: "Apply tax exemption", type: :submit, variant: :primary, class: "ss-pos-tax-exemption-form__action" %>
+      <%= render "shared/ui/button",
+                 label: "Cancel",
+                 variant: :tertiary,
+                 class: "ss-pos-tax-exemption-form__action",
+                 data: { action: "pos-command-bar#closeTaxExemptionModal" } %>
     </footer>
   <% end %>
 <% end %>

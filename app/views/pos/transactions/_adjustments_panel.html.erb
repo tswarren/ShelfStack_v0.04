@@ -4,20 +4,23 @@
     <p class="ss-hint">Eligible discount base: <%= pos_money(pos_transaction_discount_base_cents(transaction)) %></p>
     <p class="ss-hint">Current transaction discount: <%= pos_money(pos_transaction_applied_transaction_discount_cents(transaction)) %></p>
     <% if transaction.editable? %>
-      <button type="button"
-              class="ss-btn ss-btn-secondary ss-pos-adjustments__launcher"
-              data-controller="pos-transaction-discount-modal-open"
-              data-action="click->pos-transaction-discount-modal-open#open">Apply transaction discount</button>
+      <%= render "shared/ui/button",
+                 label: "Apply transaction discount",
+                 variant: :secondary,
+                 class: "ss-pos-adjustments__launcher",
+                 data: { controller: "pos-transaction-discount-modal-open", action: "click->pos-transaction-discount-modal-open#open" } %>
     <% end %>
     <% transaction.pos_discount_applications.active_records.where(scope: "transaction").order(:stack_order).each do |application| %>
       <div class="ss-pos-discount-list__item">
         <span><%= application.discount_reason.name %> −<%= pos_money(application.applied_discount_cents) %></span>
         <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.discounts.void", store: current_store) %>
-          <%= button_to "Remove",
-                void_discount_application_pos_transaction_path(transaction, application_id: application.id),
-                method: :delete,
-                class: "ss-btn ss-btn-secondary ss-btn--small",
-                form: { data: { turbo_stream: true } } %>
+          <%= render "shared/ui/button",
+                     label: "Remove",
+                     variant: :secondary,
+                     size: :small,
+                     url: void_discount_application_pos_transaction_path(transaction, application_id: application.id),
+                     method: :delete,
+                     form: { data: { turbo_stream: true } } %>
         <% end %>
       </div>
     <% end %>
@@ -27,7 +30,9 @@
       <%= label_tag :pos_transaction_rounding_dollars, "Cash rounding" %>
       <%= pos_money_field "pos_transaction[rounding_dollars]", transaction.rounding_cents %>
     </div>
-    <%= f.submit "Recalculate", class: "ss-btn ss-btn-secondary" %>
+    <footer class="ss-form-actions">
+      <%= render "shared/ui/button", label: "Recalculate", type: :submit, variant: :primary %>
+    </footer>
   <% end %>
 </details>
 
@@ -46,17 +51,21 @@
         <p><strong>Tax removed:</strong> −<%= pos_money(summary[:tax_removed_cents]) %></p>
       <% end %>
       <% if transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.void", store: current_store) %>
-        <%= button_to "Remove exemption",
-              void_tax_exemption_pos_transaction_path(transaction, exemption_id: exemption.id),
-              method: :delete,
-              class: "ss-btn ss-btn-secondary ss-btn--small",
-              form: { data: { turbo_stream: true } } %>
+        <%= render "shared/ui/button",
+                   label: "Remove exemption",
+                   variant: :secondary,
+                   size: :small,
+                   url: void_tax_exemption_pos_transaction_path(transaction, exemption_id: exemption.id),
+                   method: :delete,
+                   form: { data: { turbo_stream: true } } %>
       <% end %>
     </div>
   <% elsif Authorization.allowed?(user: current_user, permission_key: "pos.tax_exemptions.apply", store: current_store) && transaction.editable? %>
     <%= form_with url: apply_tax_exemption_pos_transaction_path(transaction), method: :post, class: "ss-form", data: { turbo_stream: true } do %>
       <%= render "pos/transactions/tax_exemption_fields", id_prefix: "tax_exemption_adjustments" %>
-      <%= submit_tag "Apply tax exemption", class: "ss-btn ss-btn-secondary" %>
+      <footer class="ss-form-actions">
+        <%= render "shared/ui/button", label: "Apply tax exemption", type: :submit, variant: :primary %>
+      </footer>
     <% end %>
   <% end %>
 </details>

@@ -38,6 +38,8 @@
       </div>
     </div>
 
-    <%= submit_tag "Run report", class: "ss-btn" %>
+    <footer class="ss-form-actions">
+      <%= render "shared/ui/button", label: "Run report", type: :submit, variant: :primary %>
+    </footer>
   <% end %>
 </section>

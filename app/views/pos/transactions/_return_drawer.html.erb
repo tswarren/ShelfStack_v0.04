@@ -8,7 +8,7 @@
   <div class="ss-pos-drawer__header">
     <h2 class="ss-pos-panel__title">Return</h2>
     <% if inline %>
-      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-command-bar#closeReceiptPanel">Cancel</button>
+      <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, size: :small, data: { action: "pos-command-bar#closeReceiptPanel" } %>
     <% end %>
   </div>
 
@@ -42,7 +42,7 @@
             placeholder: "Receipt / transaction number",
             class: "ss-pos-scan-input",
             data: { pos_return_lookup_target: "input", action: "keydown->pos-return-lookup#lookup" } %>
-      <%= button_tag "Find receipt", type: "button", class: "ss-btn ss-btn-secondary", data: { action: "pos-return-lookup#lookup" } %>
+      <%= render "shared/ui/button", label: "Find receipt", variant: :secondary, data: { action: "pos-return-lookup#lookup" } %>
     </div>
     <p class="ss-hint ss-hint--warning" data-pos-return-lookup-target="message" hidden></p>
     <div data-pos-return-lookup-target="results"></div>

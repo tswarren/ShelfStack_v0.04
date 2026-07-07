@@ -196,7 +196,17 @@ Integration/view tests: `ui_partials_test.rb` (block precedence), `customers_cus
 | External metadata show | Complete |
 | Ingram import | Complete |
 
-Integration tests: `items_item_ux_contract_test.rb`, `items_legacy_admin_ux_contract_test.rb`, `items_add_item_ux_contract_test.rb`; `items_setup_modals_integration_test.rb` regression.
+**Slice 7 — POS (branch `v0.04-14/pr7-pos`, complete):**
+
+| Surface | Status |
+| ------- | ------ |
+| POS home action grid and queues | Complete |
+| Register session new/show | Complete |
+| Active workspace (command bar, status panel, drawers) | Complete |
+| Settlement / tender / completion flow | Complete |
+| POS reports and receipts | Complete |
+
+Integration tests: `items_item_ux_contract_test.rb`, `items_legacy_admin_ux_contract_test.rb`, `items_add_item_ux_contract_test.rb`, `pos_ux_contract_test.rb`; `items_setup_modals_integration_test.rb` regression.
 
 **Later (not Phase 6 gate):** field `aria-describedby` mass wiring, items filter partial, `shared/ui/_filter_chip` partial — see build plan Later backlog.
 

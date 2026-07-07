@@ -19,7 +19,11 @@
 
     <% if @transaction.completed? && !@transaction.voided? %>
       <div class="ss-pos-confirmation__void">
-        <button type="button" class="ss-btn ss-btn--danger ss-btn--small" data-action="pos-void#open">Void transaction</button>
+        <%= render "shared/ui/button",
+                   label: "Void transaction",
+                   variant: :danger,
+                   size: :small,
+                   data: { action: "pos-void#open" } %>
       </div>
     <% end %>
   <% else %>
@@ -68,10 +72,10 @@
             <%= text_area_tag :notes, nil, rows: 3, placeholder: "Optional notes", data: { pos_void_target: "notesField" } %>
           </div>
           <p class="ss-hint">This will reverse inventory and tenders. Original receipt remains in history.</p>
-          <div class="ss-pos-modal__actions">
-            <%= submit_tag "Void transaction", class: "ss-btn ss-btn--danger" %>
-            <button type="button" class="ss-btn ss-btn-secondary" data-action="pos-void#close">Cancel</button>
-          </div>
+          <footer class="ss-form-actions ss-pos-modal__actions">
+            <%= render "shared/ui/button", label: "Void transaction", type: :submit, variant: :danger %>
+            <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, data: { action: "pos-void#close" } %>
+          </footer>
         <% end %>
       </div>
     </div>

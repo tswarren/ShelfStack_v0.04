@@ -1,26 +1,29 @@
 <%# locals: (transaction:, check:) %>
 <% case check.action_key %>
 <% when :open_register %>
-  <%= link_to check.action_label, new_pos_register_session_path, class: "ss-btn ss-btn-secondary ss-btn--small" %>
+  <%= render "shared/ui/button", label: check.action_label, variant: :secondary, size: :small, url: new_pos_register_session_path %>
 <% when :focus_scan %>
-  <button type="button" class="ss-btn ss-btn-secondary ss-btn--small" data-action="pos-transaction-edit#focusScan"><%= check.action_label %></button>
+  <%= render "shared/ui/button", label: check.action_label, variant: :secondary, size: :small, data: { action: "pos-transaction-edit#focusScan" } %>
 <% when :fill_cash %>
-  <button type="button"
-          class="ss-btn ss-btn-secondary ss-btn--small"
-          data-action="pos-transaction-edit#fillTender"
-          data-tender-type="cash"><%= check.action_label %></button>
+  <%= render "shared/ui/button",
+             label: check.action_label,
+             variant: :secondary,
+             size: :small,
+             data: { action: "pos-transaction-edit#fillTender", tender_type: "cash" } %>
 <% when :confirm_inactive %>
   <label class="ss-pos-confirm-inactive">
     <%= check_box_tag :confirm_inactive_checkbox, 1, params[:confirm_inactive].present?, data: { action: "change->pos-transaction-edit#confirmInactive", pos_transaction_edit_target: "confirmInactive" } %>
     <%= check.action_label %>
   </label>
 <% when :supervisor_auth %>
-  <button type="button"
-          class="ss-btn ss-btn-secondary ss-btn--small"
-          data-action="pos-transaction-edit#requestAuth"
-          data-authorization-type="<%= pos_supervisor_authorization_type(check) %>"
-          data-transaction-id="<%= transaction.id %>"
-          data-authorization-message="<%= pos_supervisor_auth_message(check) %>">
-    <%= check.action_label %>
-  </button>
+  <%= render "shared/ui/button",
+             label: check.action_label,
+             variant: :secondary,
+             size: :small,
+             data: {
+               action: "pos-transaction-edit#requestAuth",
+               authorization_type: pos_supervisor_authorization_type(check),
+               transaction_id: transaction.id,
+               authorization_message: pos_supervisor_auth_message(check)
+             } %>
 <% end %>

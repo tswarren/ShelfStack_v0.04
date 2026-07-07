@@ -35,14 +35,25 @@ class SharedUiPartialsTest < ActionView::TestCase
     assert_not_includes html, "<a "
   end
 
-  test "button partial defaults inline form class for non-get button_to" do
+  test "button partial simple patch uses turbo method link" do
     html = render(
       partial: "shared/ui/button",
       locals: { label: "Inactivate", variant: :secondary, url: "/setup/vendors/1", method: :patch }
     )
 
-    assert_includes html, 'class="ss-inline-form"'
+    assert_includes html, 'data-turbo-method="patch"'
     assert_includes html, "ss-btn-secondary"
+    assert_not_includes html, "ss-inline-form"
+  end
+
+  test "button partial patch with params uses inline form button_to" do
+    html = render(
+      partial: "shared/ui/button",
+      locals: { label: "Receive", variant: :link, url: "/orders/1/receive", method: :post, params: { confirm: "1" } }
+    )
+
+    assert_includes html, 'class="ss-inline-form"'
+    assert_includes html, "ss-btn-link"
   end
 
   test "button partial submit supports name and value attributes" do

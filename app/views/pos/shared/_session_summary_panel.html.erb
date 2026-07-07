@@ -5,8 +5,7 @@
   <div class="ss-pos-session-summary__header">
     <h2 class="ss-panel__title">Register session</h2>
     <% if local_assigns.fetch(:show_close, false) %>
-      <button type="button" class="ss-btn ss-btn-secondary ss-btn--small"
-              data-action="pos-command-bar#closeSessionPanel">Close</button>
+      <%= render "shared/ui/button", label: "Close", variant: :tertiary, size: :small, data: { action: "pos-command-bar#closeSessionPanel" } %>
     <% end %>
   </div>
 

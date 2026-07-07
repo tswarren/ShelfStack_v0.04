@@ -19,10 +19,12 @@
                        options_for_select(pos_report_session_options(@sessions), params[:register_session_id] || current_register_session&.id),
                        include_blank: "Select a session" %>
       </div>
-      <%= submit_tag "Run report", class: "ss-btn" %>
-      <% if @report %>
-        <%= link_to "Print", "#", onclick: "window.print(); return false;", class: "ss-btn ss-btn-secondary" %>
-      <% end %>
+      <footer class="ss-form-actions">
+        <%= render "shared/ui/button", label: "Run report", type: :submit, variant: :primary %>
+        <% if @report %>
+          <%= link_to "Print", "#", class: ss_button_classes(variant: :secondary), onclick: "window.print(); return false;" %>
+        <% end %>
+      </footer>
     <% end %>
   </div>
 

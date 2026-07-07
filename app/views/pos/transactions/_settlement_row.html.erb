@@ -151,27 +151,31 @@
   <td class="ss-pos-settlement-row__actions">
     <div class="ss-pos-settlement-row__actions-expanded">
       <% unless row.tender_type == "cash" %>
-        <%= button_tag "Fill",
-              type: "button",
-              class: "ss-btn ss-btn-secondary ss-btn--small",
-              data: { action: "pos-settlement-panel#fillRemaining", tender_type: row.tender_type } %>
-        <%= button_tag "Remove",
-              type: "button",
-              class: "ss-btn ss-btn--danger ss-btn--small",
-              data: { action: "pos-settlement-panel#removeRow" } %>
+        <%= render "shared/ui/button",
+                   label: "Fill",
+                   variant: :secondary,
+                   size: :small,
+                   data: { action: "pos-settlement-panel#fillRemaining", tender_type: row.tender_type } %>
+        <%= render "shared/ui/button",
+                   label: "Remove",
+                   variant: :danger,
+                   size: :small,
+                   data: { action: "pos-settlement-panel#removeRow" } %>
       <% else %>
-        <%= button_tag "Fill",
-              type: "button",
-              class: "ss-btn ss-btn-secondary ss-btn--small",
-              data: { action: "pos-settlement-panel#fillRemaining", tender_type: "cash" } %>
+        <%= render "shared/ui/button",
+                   label: "Fill",
+                   variant: :secondary,
+                   size: :small,
+                   data: { action: "pos-settlement-panel#fillRemaining", tender_type: "cash" } %>
       <% end %>
     </div>
     <div class="ss-pos-settlement-row__actions-collapsed">
       <% unless row.tender_type == "cash" %>
-        <%= button_tag "Remove",
-              type: "button",
-              class: "ss-btn ss-btn--danger ss-btn--small",
-              data: { action: "pos-settlement-panel#removeRow" } %>
+        <%= render "shared/ui/button",
+                   label: "Remove",
+                   variant: :danger,
+                   size: :small,
+                   data: { action: "pos-settlement-panel#removeRow" } %>
       <% end %>
     </div>
   </td>

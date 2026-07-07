@@ -1,15 +1,20 @@
-<h1>New Transaction</h1>
+<%= render "shared/forms/page_header",
+           eyebrow: "POS",
+           title: "New Transaction",
+           description: "Start a draft sale, return, or exchange on this workstation." %>
 
 <section class="ss-panel">
-  <p>Start a draft sale, return, or exchange on this workstation.</p>
-
   <% unless current_register_session %>
-    <p class="ss-alert">No register session is open. You can build a draft now, but you must open the register before completing.</p>
-    <%= link_to "Open register", new_pos_register_session_path, class: "ss-btn" %>
+    <%= render "shared/ui/alert",
+               variant: :warning,
+               message: "No register session is open. You can build a draft now, but you must open the register before completing." %>
+    <p>
+      <%= render "shared/ui/button", label: "Open register", variant: :secondary, url: new_pos_register_session_path %>
+    </p>
   <% end %>
 
-  <p>
-    <%= button_to "Start transaction", pos_transactions_path, method: :post, class: "ss-btn" %>
-    <%= link_to "Cancel", pos_root_path, class: "ss-btn" %>
-  </p>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Start transaction", variant: :primary, url: pos_transactions_path, method: :post %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: pos_root_path %>
+  </footer>
 </section>

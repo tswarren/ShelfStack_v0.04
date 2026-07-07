@@ -2,11 +2,12 @@
 <% confirm_inactive = params[:confirm_inactive].present? %>
 
 <section class="ss-pos-panel ss-pos-settlement-actions">
-  <%= button_tag "Complete Transaction",
-        type: "button",
-        class: "ss-btn ss-pos-settlement-open-btn ss-pos-settlement-open-btn--primary",
-        disabled: readiness.structural_blocked?,
-        data: { action: "pos-settlement-panel#open", pos_transaction_edit_target: "settlementButton" } %>
+  <%= render "shared/ui/button",
+             label: "Complete Transaction",
+             variant: :primary,
+             class: "ss-pos-settlement-open-btn ss-pos-settlement-open-btn--primary",
+             disabled: readiness.structural_blocked?,
+             data: { action: "pos-settlement-panel#open", pos_transaction_edit_target: "settlementButton" } %>
 
   <%= render "pos/transactions/settlement_secondary_actions", transaction: transaction %>
 </section>

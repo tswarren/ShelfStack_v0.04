@@ -1,17 +1,27 @@
 <div class="ss-pos-action-grid">
   <% if variant == :open %>
     <% if @draft_transactions.any? %>
-      <%= link_to "Continue", edit_pos_transaction_path(@draft_transactions.first), class: "ss-pos-action-grid__btn ss-btn" %>
+      <%= render "shared/ui/button",
+                 label: "Continue",
+                 variant: :primary,
+                 class: "ss-pos-action-grid__btn",
+                 url: edit_pos_transaction_path(@draft_transactions.first) %>
     <% else %>
-      <%= button_to "New Transaction", pos_transactions_path, method: :post, params: { mode: "sale" }, class: "ss-pos-action-grid__btn ss-btn" %>
+      <%= render "shared/ui/button",
+                 label: "New Transaction",
+                 variant: :primary,
+                 class: "ss-pos-action-grid__btn",
+                 url: pos_transactions_path,
+                 method: :post,
+                 params: { mode: "sale" } %>
     <% end %>
-    <%= link_to "Manage Session", pos_register_session_path(@register_session), class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
-    <%= link_to "Cash In/Out", pos_register_session_path(@register_session, anchor: "cash-movement"), class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
-    <%= link_to "Reports", pos_reports_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
-    <%= link_to "Check Balance", pos_stored_value_balance_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Manage Session", variant: :secondary, class: "ss-pos-action-grid__btn", url: pos_register_session_path(@register_session) %>
+    <%= render "shared/ui/button", label: "Cash In/Out", variant: :secondary, class: "ss-pos-action-grid__btn", url: pos_register_session_path(@register_session, anchor: "cash-movement") %>
+    <%= render "shared/ui/button", label: "Reports", variant: :secondary, class: "ss-pos-action-grid__btn", url: pos_reports_path %>
+    <%= render "shared/ui/button", label: "Check Balance", variant: :secondary, class: "ss-pos-action-grid__btn", url: pos_stored_value_balance_path %>
   <% else %>
-    <%= link_to "Open Register", new_pos_register_session_path, class: "ss-pos-action-grid__btn ss-btn" %>
-    <%= link_to "Sessions (History)", drawer_pos_reports_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
-    <%= link_to "Reports", pos_reports_path, class: "ss-pos-action-grid__btn ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Open Register", variant: :primary, class: "ss-pos-action-grid__btn", url: new_pos_register_session_path %>
+    <%= render "shared/ui/button", label: "Sessions (History)", variant: :secondary, class: "ss-pos-action-grid__btn", url: drawer_pos_reports_path %>
+    <%= render "shared/ui/button", label: "Reports", variant: :secondary, class: "ss-pos-action-grid__btn", url: pos_reports_path %>
   <% end %>
 </div>

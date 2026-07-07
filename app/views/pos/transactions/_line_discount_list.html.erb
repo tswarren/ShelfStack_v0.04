@@ -14,11 +14,13 @@
           −<%= pos_money(allocation.allocated_discount_cents) %>
         </span>
         <% if application.line_scope? && transaction.editable? && Authorization.allowed?(user: current_user, permission_key: "pos.discounts.void", store: current_store) %>
-          <%= button_to "Remove",
-                void_discount_application_pos_transaction_path(transaction, application_id: application.id),
-                method: :delete,
-                class: "ss-btn ss-btn-secondary ss-btn--small",
-                form: { data: { turbo_stream: true } } %>
+          <%= render "shared/ui/button",
+                     label: "Remove",
+                     variant: :secondary,
+                     size: :small,
+                     url: void_discount_application_pos_transaction_path(transaction, application_id: application.id),
+                     method: :delete,
+                     form: { data: { turbo_stream: true } } %>
         <% end %>
       </li>
     <% end %>

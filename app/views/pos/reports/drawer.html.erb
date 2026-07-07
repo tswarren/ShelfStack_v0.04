@@ -11,9 +11,11 @@
       <div><dt>Net cash tenders</dt><dd><%= pos_money(@summary.net_cash_tender_cents) %></dd></div>
       <div><dt>Expected closing</dt><dd><%= pos_money(@summary.expected_closing_cash_cents) %></dd></div>
     </dl>
-    <%= link_to "View session", pos_register_session_path(@session), class: "ss-btn" if @session %>
-    <%= link_to "Register summary", register_summary_pos_reports_path(register_session_id: @session.id), class: "ss-btn ss-btn-secondary" if @session %>
-    <%= link_to "Sales & revenue summary", summary_pos_reports_path(filter_type: "register_session", register_session_id: @session.id), class: "ss-btn ss-btn-secondary" if @session %>
+    <div class="ss-inline-actions">
+      <%= render "shared/ui/button", label: "View session", variant: :primary, url: pos_register_session_path(@session) if @session %>
+      <%= render "shared/ui/button", label: "Register summary", variant: :secondary, url: register_summary_pos_reports_path(register_session_id: @session.id) if @session %>
+      <%= render "shared/ui/button", label: "Sales & revenue summary", variant: :secondary, url: summary_pos_reports_path(filter_type: "register_session", register_session_id: @session.id) if @session %>
+    </div>
   </section>
 <% end %>
 
