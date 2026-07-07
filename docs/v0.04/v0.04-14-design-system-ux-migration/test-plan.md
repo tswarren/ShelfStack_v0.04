@@ -96,7 +96,16 @@ Repeat pilot assertions per migrated setup index/show.
 | `setup/sub_departments` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
 | `setup/departments` | Complete (branch `v0.04-14/pr4-setup-surfaces`) |
 
-Integration tests: `setup_vendors_ux_contract_test.rb`, `setup_tax_categories_ux_contract_test.rb`, `setup_pr4_surfaces_ux_contract_test.rb` (remaining six surfaces).
+Integration tests: `setup_vendors_ux_contract_test.rb`, `setup_tax_categories_ux_contract_test.rb`, `setup_pr4_surfaces_ux_contract_test.rb` (remaining six surfaces), `setup_home_ux_contract_test.rb` (setup landing).
+
+### PR 4½ — Setup landing (complete on branch)
+
+| Test area | Assertion |
+| --------- | --------- |
+| Setup home | `.ss-page-header`, `.ss-setup-home`, `.ss-card--clickable` nav cards |
+| Permission filter | Links hidden without matching `*.view` permission |
+| Service | `Setup::HomeNavigation` filters sections and links |
+| CSS | `.ss-setup-section` rules in `shelfstack.domain.setup.css` only |
 
 ### Phase 6 — Domain workspaces
 
