@@ -1,20 +1,33 @@
 <%= render "setup/shared/back_link", path: setup_product_vendors_path, label: "Product Vendors" %>
-<h1><%= @product_vendor.product.name %> — <%= @product_vendor.vendor.name %></h1>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @product_vendor,
+    edit_path: edit_setup_product_vendor_path(@product_vendor),
+    inactivate_path: inactivate_setup_product_vendor_path(@product_vendor),
+    reactivate_path: reactivate_setup_product_vendor_path(@product_vendor)
+  )
+%>
+
+<%= render "shared/ui/page_header",
+           title: "#{@product_vendor.product.name} — #{@product_vendor.vendor.name}",
+           actions: header_actions %>
+
 <dl class="ss-summary">
   <dt>Vendor item number</dt><dd><%= @product_vendor.vendor_item_number || "—" %></dd>
   <dt>Supplier discount</dt><dd><%= format_basis_points(@product_vendor.supplier_discount_bps) %></dd>
   <dt>Returnability</dt><dd><%= @product_vendor.returnability_status ? humanize_controlled_value(@product_vendor.returnability_status) : "—" %></dd>
   <dt>Preferred</dt><dd><%= @product_vendor.preferred? ? "Yes" : "No" %></dd>
-  <dt>Status</dt><dd><span class="<%= status_class(@product_vendor.active?) %>"><%= status_label(@product_vendor.active?) %></span></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@product_vendor.active?), status: @product_vendor.active? ? :active : :inactive) %></dd>
 </dl>
-<div class="ss-detail-actions">
-  <%= link_to "Edit", edit_setup_product_vendor_path(@product_vendor), class: "ss-btn" %>
-  <% if @product_vendor.active? %>
-    <%= button_to "Inactivate", inactivate_setup_product_vendor_path(@product_vendor), method: :patch, class: "ss-btn ss-btn-secondary" %>
-  <% else %>
-    <%= button_to "Reactivate", reactivate_setup_product_vendor_path(@product_vendor), method: :patch, class: "ss-btn" %>
-  <% end %>
-  <%= button_to "Delete", setup_product_vendor_path(@product_vendor), method: :delete, class: "ss-btn ss-btn-secondary", data: { turbo_confirm: "Delete this product vendor?" } %>
-</div>
+
 <h2>Audit Timeline</h2>
 <%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "product-vendor-danger-zone-heading",
+           message: "Delete removes the product vendor link only when nothing references it. Prefer inactivating.",
+           delete_label: "Delete product vendor",
+           delete_path: setup_product_vendor_path(@product_vendor),
+           confirm_message: "Delete this product vendor?" %>

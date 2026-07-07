@@ -1,9 +1,23 @@
 <%= render "setup/shared/back_link", path: setup_root_path, label: "Setup" %>
-<h1>BISAC Subject Headings</h1>
-<p class="ss-muted">
-  Load the industry BISAC subject tree into a dedicated category scheme for catalog reference, reporting, and store category suggestions.
-  BISAC subjects do not replace the store category picker on catalog items.
-</p>
+
+<%
+  header_actions = safe_join([
+    (@scheme.present? ? render("shared/ui/button", label: "View scheme", variant: :secondary, url: setup_category_scheme_path(@scheme)) : nil),
+    render(
+      "shared/ui/button",
+      label: "Load / Update BISAC subjects",
+      variant: :primary,
+      url: import_setup_bisac_subjects_path,
+      method: :post,
+      data: { turbo_confirm: "Load or update approximately 3,900 BISAC subject nodes?" }
+    )
+  ].compact)
+%>
+
+<%= render "shared/ui/page_header",
+           title: "BISAC Subject Headings",
+           description: "Load the industry BISAC subject tree into a dedicated category scheme for catalog reference, reporting, and store category suggestions. BISAC subjects do not replace the store category picker on catalog items.",
+           actions: header_actions %>
 
 <dl class="ss-summary">
   <dt>Scheme</dt>
@@ -28,14 +42,3 @@
     <% end %>
   </dd>
 </dl>
-
-<div class="ss-detail-actions">
-  <%= button_to "Load / Update BISAC subjects",
-                import_setup_bisac_subjects_path,
-                method: :post,
-                class: "ss-btn",
-                data: { turbo_confirm: "Load or update approximately 3,900 BISAC subject nodes?" } %>
-  <% if @scheme.present? %>
-    <%= link_to "View scheme", setup_category_scheme_path(@scheme), class: "ss-btn ss-btn-secondary" %>
-  <% end %>
-</div>

@@ -115,6 +115,23 @@ Integration tests: `setup_vendors_ux_contract_test.rb`, `setup_tax_categories_ux
 
 Integration tests: `setup_pr4b_surfaces_ux_contract_test.rb`. Button partial defaults `ss-inline-form` for non-GET `button_to` wrappers.
 
+### PR 4C — Nested setup and link tables (Batch C + D)
+
+| Surface | Status on integration branch |
+| ------- | ---------------------------- |
+| `setup/category_schemes` | Complete |
+| `setup/category_nodes` | Complete (tree index preserved) |
+| `setup/bisac_subjects` | Complete (import show page) |
+| `setup/audit_events` | Complete (read-only) |
+| `setup/product_vendors` | Complete |
+| `setup/product_variant_vendors` | Complete |
+| `setup/inventory_locations` | Complete |
+| `setup/store_display_locations` | Complete |
+
+Polish: `setup/home/locked_out` (`.ss-access-notice`), `setup/users/_role_assignments`, `setup/external_data_sources` health-check button.
+
+Integration tests: `setup_pr4c_surfaces_ux_contract_test.rb`.
+
 ### PR 4½ — Setup landing (complete on branch)
 
 | Test area | Assertion |

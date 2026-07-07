@@ -1,5 +1,12 @@
-<h1>New Variant Vendor</h1>
-<%= form_with model: [:setup, @product_variant_vendor], url: setup_product_variant_vendors_path do |f| %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "New Variant Vendor",
+           description: "Link a sellable SKU to a vendor for variant-level sourcing." %>
+
+<%= form_with model: [:setup, @product_variant_vendor], url: setup_product_variant_vendors_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, product_variant_vendor: @product_variant_vendor %>
-  <%= f.submit class: "ss-btn" %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Create Variant Vendor", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_product_variant_vendors_path %>
+  </footer>
 <% end %>

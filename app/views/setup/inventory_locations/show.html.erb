@@ -1,6 +1,30 @@
-<%= render "setup/shared/back_link", path: setup_inventory_locations_path, label: "Store Inventory Locations" %>
-<h1><%= @location.name %></h1>
-<p>Store: <%= @location.store.name %> | Short: <%= @location.short_name %></p>
-<div class="ss-actions">
-  <%= link_to "Edit", edit_setup_inventory_location_path(@location), class: "ss-btn" %>
-</div>
+<%= render "setup/shared/back_link", path: setup_inventory_locations_path, label: "Inventory Locations" %>
+
+<%
+  header_actions = render(
+    "setup/shared/detail_lifecycle_header_actions",
+    record: @location,
+    edit_path: edit_setup_inventory_location_path(@location),
+    inactivate_path: inactivate_setup_inventory_location_path(@location),
+    reactivate_path: reactivate_setup_inventory_location_path(@location)
+  )
+%>
+
+<%= render "shared/ui/page_header", title: @location.name, actions: header_actions %>
+
+<dl class="ss-summary">
+  <dt>Store</dt><dd><%= @location.store.name %> (<%= @location.store.store_number %>)</dd>
+  <dt>Short name</dt><dd><%= @location.short_name %></dd>
+  <dt>Sort order</dt><dd><%= @location.sort_order %></dd>
+  <dt>Status</dt><dd><%= ss_status_badge(status_label(@location.active?), status: @location.active? ? :active : :inactive) %></dd>
+</dl>
+
+<h2>Audit Timeline</h2>
+<%= render "shared/audit_timeline", audit_events: @audit_events %>
+
+<%= render "setup/shared/detail_danger_zone",
+           heading_id: "inventory-location-danger-zone-heading",
+           message: "Delete removes the location only when no ledger or adjustment lines reference it. Prefer inactivating.",
+           delete_label: "Delete inventory location",
+           delete_path: setup_inventory_location_path(@location),
+           confirm_message: "Delete this inventory location?" %>

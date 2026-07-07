@@ -1,2 +1,6 @@
-<h1>Edit Category Node</h1>
+<%= render "shared/forms/page_header",
+           eyebrow: "Setup",
+           title: "Edit Category Node",
+           description: "Update #{@category_node.name} in #{@category_scheme.name}." %>
+
 <%= render "form" %>

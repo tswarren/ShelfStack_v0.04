@@ -1,15 +1,28 @@
-<h1>Store Display Locations <%= link_to "New", new_setup_store_display_location_path, class: "ss-btn" %></h1>
-<table class="ss-table">
-  <thead><tr><th>Store</th><th>Location</th><th>Linear Feet</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @store_display_locations.each do |record| %>
-      <tr>
-        <td><%= record.store.name %></td>
-        <td><%= record.display_location.name %></td>
-        <td><%= record.linear_feet %></td>
-        <td><span class="<%= status_class(record.active?) %>"><%= status_label(record.active?) %></span></td>
-        <td><%= link_to "View", setup_store_display_location_path(record) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% new_store_display_location_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_store_display_location_path) %>
+
+<%= render "shared/ui/page_header",
+           title: "Store Display Locations",
+           description: "Link global display locations to stores with optional linear feet.",
+           actions: new_store_display_location_action %>
+
+<% if @store_display_locations.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Store</th><th>Location</th><th>Linear Feet</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @store_display_locations.each do |record| %>
+        <tr>
+          <td><%= record.store.name %></td>
+          <td><%= record.display_location.name %></td>
+          <td><%= record.linear_feet %></td>
+          <td><%= ss_status_badge(status_label(record.active?), status: record.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_store_display_location_path(record) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No store display locations yet",
+             message: "Assign display locations to stores for shelving defaults.",
+             actions: new_store_display_location_action %>
+<% end %>

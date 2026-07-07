@@ -1,6 +1,4 @@
-<% if product_vendor.errors.any? %>
-  <div class="ss-errors"><%= product_vendor.errors.full_messages.to_sentence %></div>
-<% end %>
+<%= render "shared/forms/errors", record: product_vendor %>
 
 <%= render "shared/forms/product_vendor_fields",
       f: f,

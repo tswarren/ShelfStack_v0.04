@@ -1,17 +1,26 @@
-<h1>Product Vendors <%= link_to "New", new_setup_product_vendor_path, class: "ss-btn" %></h1>
+<% new_product_vendor_action = render("shared/ui/button", label: "New", variant: :primary, url: new_setup_product_vendor_path) %>
 
-<table class="ss-table">
-  <thead><tr><th>Product</th><th>Vendor</th><th>Item #</th><th>Preferred</th><th>Status</th><th></th></tr></thead>
-  <tbody>
-    <% @product_vendors.each do |product_vendor| %>
-      <tr>
-        <td><%= product_vendor.product.name %></td>
-        <td><%= product_vendor.vendor.name %></td>
-        <td><%= product_vendor.vendor_item_number || "—" %></td>
-        <td><%= product_vendor.preferred? ? "Yes" : "No" %></td>
-        <td><%= status_label(product_vendor.active?) %></td>
-        <td><%= link_to "View", setup_product_vendor_path(product_vendor) %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<%= render "shared/ui/page_header", title: "Product Vendors", actions: new_product_vendor_action %>
+
+<% if @product_vendors.any? %>
+  <table class="ss-table">
+    <thead><tr><th>Product</th><th>Vendor</th><th>Item #</th><th>Preferred</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% @product_vendors.each do |product_vendor| %>
+        <tr>
+          <td><%= product_vendor.product.name %></td>
+          <td><%= product_vendor.vendor.name %></td>
+          <td><%= product_vendor.vendor_item_number || "—" %></td>
+          <td><%= product_vendor.preferred? ? "Yes" : "No" %></td>
+          <td><%= ss_status_badge(status_label(product_vendor.active?), status: product_vendor.active? ? :active : :inactive) %></td>
+          <td><%= link_to "View", setup_product_vendor_path(product_vendor) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No product vendors yet",
+             message: "Link products to vendors for purchasing and sourcing defaults.",
+             actions: new_product_vendor_action %>
+<% end %>

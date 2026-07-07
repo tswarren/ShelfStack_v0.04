@@ -1,17 +1,13 @@
-<h1>Setup Access Required</h1>
+<section class="ss-access-notice" aria-labelledby="setup-access-notice-title">
+  <h1 id="setup-access-notice-title" class="ss-access-notice__title">Setup Access Required</h1>
+  <p class="ss-access-notice__message">Your account does not currently have permission to open the Admin area (<code>setup.access</code>).</p>
+  <p class="ss-access-notice__message">This can happen if Super Administrator role permissions were changed or the role was inactivated while exploring setup screens.</p>
 
-<p>Your account does not currently have permission to open the Admin area (<code>setup.access</code>).</p>
+  <h2>Recovery</h2>
+  <p>An administrator with server access can restore defaults by running:</p>
+  <pre>docker compose exec web bin/rails db:seed</pre>
+  <p>Or in the Rails console:</p>
+  <pre>SuperAdministratorProtection.restore!</pre>
 
-<p>This can happen if Super Administrator role permissions were changed or the role was inactivated while exploring setup screens.</p>
-
-<h2>Recovery</h2>
-
-<p>An administrator with server access can restore defaults by running:</p>
-
-<pre>docker compose exec web bin/rails db:seed</pre>
-
-<p>Or in the Rails console:</p>
-
-<pre>SuperAdministratorProtection.restore!</pre>
-
-<p><%= link_to "Return to dashboard", root_path %></p>
+  <p><%= link_to "Return to dashboard", root_path, class: "ss-btn ss-btn-tertiary" %></p>
+</section>
