@@ -12,7 +12,7 @@
 | [v0.04-delivery-roadmap.md](v0.04-delivery-roadmap.md) | Implementation milestones |
 | [../v0.04/README.md](../v0.04/README.md) | Milestone spec bundles |
 
-**v0.04-14** (design system UX migration) is the **active release milestone** — implemented as Phase 10-E. Spec: [../v0.04/v0.04-14-design-system-ux-migration/spec.md](../v0.04/v0.04-14-design-system-ux-migration/spec.md). Build plan: [../design/ux-migration-build-plan.md](../design/ux-migration-build-plan.md).
+**v0.04-14** (design system UX migration) is **complete on integration branch** — release to `main` pending. Spec: [../v0.04/v0.04-14-design-system-ux-migration/spec.md](../v0.04/v0.04-14-design-system-ux-migration/spec.md). Completion: [../implementation/v0.04-14-completion.md](../implementation/v0.04-14-completion.md).
 
 ---
 

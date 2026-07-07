@@ -2,7 +2,7 @@
 
 ## Status
 
-**Active** — next ShelfStack release milestone after v0.04-12. **v0.04-13** (demand-to-fulfillment continuity) is deferred until after v0.04-14.
+**Complete on integration branch** — slice work merged to **`v0.04-14/ux-migration`**; **release to `main` pending**. v0.04-13 remains deferred until after v0.04-14 ships.
 
 Companion documents:
 
@@ -10,7 +10,7 @@ Companion documents:
 * [test-plan.md](test-plan.md) — enabling-layer and surface migration gates
 * [../../design/ux-migration-build-plan.md](../../design/ux-migration-build-plan.md) — detailed PR slices and partial APIs
 * [../../roadmap/phase-10e-ux-migration.md](../../roadmap/phase-10e-ux-migration.md) — Phase 10-E roadmap summary
-* `docs/implementation/v0.04-14-completion.md` (created at milestone close)
+* `docs/implementation/v0.04-14-completion.md` (milestone close-out on integration branch)
 
 ---
 

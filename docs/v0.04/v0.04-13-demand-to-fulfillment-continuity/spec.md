@@ -22,7 +22,7 @@ v0.04-13 is the **follow-on MVP** for manual, non-EDI ordering continuity. It is
 
 ```text
 v0.04-12 = Demand Ordering UX completion
-v0.04-14 = Design system UX migration (active — ships first)
+v0.04-14 = Design system UX migration (complete on integration branch; release pending)
 v0.04-13 = Manual Demand-to-Fulfillment Continuity MVP (deferred until after v0.04-14)
 post-v0.04-13 = vendor integration, EDI, Direct-to-Home automation, or other roadmap work (TBD)
 ```

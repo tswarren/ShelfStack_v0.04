@@ -32,7 +32,7 @@ Each phase should produce a coherent working foundation for later phases, rather
 | Phase 8.5-1 | POS Discount Model & Calculation | Structured discount reasons, applications, allocations, stacking, and non-discountable rules. **In review** (branch merge pending). |
 | Phase 7 | Advanced Store Operations       | Transfers, cycle counts, and remaining operational workflows.                                      |
 | Phase 9 | Reporting and Accounting        | Report UX foundation (9a) and operational reports (9b) **complete**. GL-shaped financial postings and export (9c) **deferred**; see Phase 10. |
-| Phase 10 | Comprehensive UI/UX Expansion  | Interaction infra (10-A ✓), item cockpit (10-B ✓), POS workspace (10-C ✓), workflow polish (10-D ✓), consistency sweep (10-E **paused**). |
+| Phase 10 | Comprehensive UI/UX Expansion  | Interaction infra (10-A ✓), item cockpit (10-B ✓), POS workspace (10-C ✓), workflow polish (10-D ✓), consistency sweep (10-E ✓ on integration branch; v0.04-14 release pending). |
 
 Later phases may be split or reordered as implementation details become clearer.
 
@@ -654,18 +654,19 @@ Do not normalize every metadata concept too early. Use JSONB where it provides u
 
 # Current Priority
 
-Phases 1–10-D are complete. See implementation records under `docs/implementation/`.
+Phases 1–10-E are complete on integration branch **`v0.04-14/ux-migration`**. See implementation records under `docs/implementation/`.
 
 ```text
-v0.04 core (active) → Phase 10-E resumes after v0.04-11
+v0.04-14 release (merge to main) → v0.04-13 demand-to-fulfillment continuity
 ```
 
-**Active work:** [ShelfStack v0.04 core](design/VERSION_0.04.md) — [delivery roadmap](roadmap/v0.04-delivery-roadmap.md). v0.04-0 complete; current: v0.04-1 product fusion, then v0.04-2 identifiers. See [v0.04-0 completion](implementation/v0.04-0-completion.md).
+**Active work:** Release [v0.04-14](implementation/v0.04-14-completion.md) to `main`, then resume [v0.04-13](v0.04/v0.04-13-demand-to-fulfillment-continuity/spec.md). [v0.04 delivery roadmap](roadmap/v0.04-delivery-roadmap.md).
 
-Phase 9c GL-shaped financial layer and Phase 10-E consistency sweep resume after the v0.04 core stabilizes.
+Phase 9c GL-shaped financial layer remains deferred.
 
 Implementation records:
 
 - [docs/implementation/phase-1-completion.md](implementation/phase-1-completion.md) through [phase-10c-completion.md](implementation/phase-10c-completion.md)
+- [docs/implementation/v0.04-14-completion.md](implementation/v0.04-14-completion.md) · [phase-10e-completion.md](implementation/phase-10e-completion.md)
 - [docs/implementation/phase-10a-completion.md](implementation/phase-10a-completion.md), [phase-10b-completion.md](implementation/phase-10b-completion.md), [phase-10c-completion.md](implementation/phase-10c-completion.md)
 - Phase 8.5 slice records: `docs/implementation/phase-8.5-*-completion.md`

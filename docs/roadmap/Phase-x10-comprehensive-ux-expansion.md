@@ -61,9 +61,9 @@ Phase 10 ships incrementally. **Phase 10 is complete when 10-A through 10-E are 
 | **10-B** | [phase-10b-item-cockpit-completion.md](phase-10b-item-cockpit-completion.md) | Item cockpit gaps on 8.5-4; setup modals; operations drawer | 10-A | **Complete** |
 | **10-C** | [phase-10c-pos-keyboard-workspace.md](phase-10c-pos-keyboard-workspace.md) | Keyboard-first POS workspace, landing, commands, settlement | 10-A, 10-B (complete) | **Complete** (2026-06-26; [completion](../implementation/phase-10c-completion.md)) |
 | **10-D** | [phase-10d-workflow-polish.md](phase-10d-workflow-polish.md) | Customer requests, purchasing/receiving line UX, buyback header metrics | 10-A | **Complete** |
-| **10-E** | [phase-10e-ux-migration.md](phase-10e-ux-migration.md) · [v0.04-14 spec](../v0.04/v0.04-14-design-system-ux-migration/spec.md) | Consistency sweep, accessibility, report regression | All | **Active** (v0.04-14) |
+| **10-E** | [phase-10e-ux-migration.md](phase-10e-ux-migration.md) · [v0.04-14 spec](../v0.04/v0.04-14-design-system-ux-migration/spec.md) | Consistency sweep, accessibility, report regression | All | **Complete** (integration branch; release pending) |
 
-**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. **Current implementation priority:** 10-E (release milestone **v0.04-14**).
+**Delivery order (confirmed):** 10-A → 10-B → 10-C → 10-D → 10-E. **10-E complete on integration branch** (release milestone **v0.04-14**); merge to `main` pending.
 
 **Note:** Early drafts labeled 10-B as POS and 10-C as items. Sub-phase letters now match delivery order (10-B = items, 10-C = POS).
 

@@ -293,7 +293,7 @@ If documentation and implementation disagree, flag the discrepancy rather than s
 
 # Current Development Priority
 
-Development priority: **v0.04-14 Design System UX Migration** (Phase 10-E). Implementation branch: **`v0.04-14/ux-migration`** (single release to `main`). v0.04-0 through v0.04-12 are **complete**; **v0.04-13 deferred** until after v0.04-14. Spec: [docs/v0.04/v0.04-14-design-system-ux-migration/spec.md](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md). Build plan: [docs/design/ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md).
+Development priority: **v0.04-14 release** — merge integration branch **`v0.04-14/ux-migration`** to `main` (implementation complete; release gate pending). **Next:** v0.04-13 (demand-to-fulfillment continuity). Completion: [docs/implementation/v0.04-14-completion.md](docs/implementation/v0.04-14-completion.md). Spec: [docs/v0.04/v0.04-14-design-system-ux-migration/spec.md](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md).
 
 Historical phase sections below are reference material for code not yet migrated. If their status labels (e.g. **In review** on some 8.5 branches) conflict with v0.04 priorities, follow the [v0.04 delivery roadmap](docs/roadmap/v0.04-delivery-roadmap.md) and [v0.04 domain rules](#v0.04-domain-rules-active-for-new-work).
 
@@ -426,9 +426,9 @@ See [docs/implementation/phase-9b-completion.md](docs/implementation/phase-9b-co
 
 See [docs/roadmap/phase-9c-gl-shaped-financial-layer.md](docs/roadmap/phase-9c-gl-shaped-financial-layer.md). Not scheduled for the current roadmap cycle. Operational reports in 9b remain authoritative for store reconciliation until 9c is resumed.
 
-## Phase 10: Comprehensive UI/UX Expansion — **v0.04-14 / 10-E active**
+## Phase 10: Comprehensive UI/UX Expansion — **Complete (integration branch)**
 
-See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). **v0.04-14** release milestone / **10-E** execution: [docs/v0.04/v0.04-14-design-system-ux-migration/spec.md](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [docs/design/ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md) · [docs/roadmap/phase-10e-ux-migration.md](docs/roadmap/phase-10e-ux-migration.md).
+See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x10-comprehensive-ux-expansion.md). **v0.04-14** / **10-E**: [completion](docs/implementation/v0.04-14-completion.md) · [phase-10e-completion.md](docs/implementation/phase-10e-completion.md) · [spec bundle](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [build plan](docs/design/ux-migration-build-plan.md). Release merge to `main` pending.
 
 ## ShelfStack v0.04 Core — **Active**
 
@@ -460,7 +460,9 @@ See [docs/roadmap/Phase-x10-comprehensive-ux-expansion.md](docs/roadmap/Phase-x1
 
 **v0.04-13 (demand-to-fulfillment continuity):** **Deferred** — scheduled after v0.04-14 — [spec bundle](docs/v0.04/v0.04-13-demand-to-fulfillment-continuity/spec.md) · [completion stub](docs/implementation/v0.04-13-completion.md).
 
-**Current priority:** **v0.04-14 Design System UX Migration** (Phase 10-E) — integration branch **`v0.04-14/ux-migration`** · [spec bundle](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [ux-migration-build-plan.md](docs/design/ux-migration-build-plan.md). v0.04-0 through v0.04-12 complete; v0.04-13 deferred; v0.04-3 product groups deferred.
+**v0.04-14 (design system UX migration):** **Complete (integration branch)** — [spec bundle](docs/v0.04/v0.04-14-design-system-ux-migration/spec.md) · [completion](docs/implementation/v0.04-14-completion.md). Release to `main` pending.
+
+**Current priority:** **v0.04-14 release** then **v0.04-13** (demand-to-fulfillment continuity). Integration branch **`v0.04-14/ux-migration`**. v0.04-3 product groups deferred.
 
 **v0.04 merge gate verifiers** (run before marking a v0.04 milestone complete):
 

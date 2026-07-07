@@ -4,7 +4,7 @@
 | ----- | ----- |
 | Release milestone | **v0.04-14** — [spec bundle](../v0.04/v0.04-14-design-system-ux-migration/spec.md) |
 | Integration branch | `v0.04-14/ux-migration` (single release to `main` at milestone close) |
-| Status | **Active** — build guide ready |
+| Status | **Complete on integration branch** — release to `main` pending |
 | Parent | [Phase-x10-comprehensive-ux-expansion.md](Phase-x10-comprehensive-ux-expansion.md) |
 | Build plan | [../design/ux-migration-build-plan.md](../design/ux-migration-build-plan.md) |
 | Component catalog | [../design/components.md](../design/components.md) |
@@ -43,7 +43,7 @@ Do **not** build a partial for every component. Do **not** start with POS, purch
 | 4 | Remaining setup CRUD surfaces (4, 4B, 4C) | PR 4+ |
 | polish | Pre–Phase 6 contract fixes (block precedence, nested main, filter labels) | PR polish |
 | 5 | Customers, items, reports, demand | Complete |
-| 6 | POS, purchasing, receiving, inventory ops, buybacks | **Active next** |
+| 6 | POS, purchasing, receiving, inventory ops, buybacks | **Complete** (integration branch) |
 
 Full APIs, tests, surface order, and Phase 6 tracking checklist: [ux-migration-build-plan.md](../design/ux-migration-build-plan.md).
 
@@ -131,4 +131,6 @@ Phase 10-E is complete when:
 5. Phase 9b report regression checklist passes.
 6. [ux-review-checklist.md](../design/ux-review-checklist.md) passes on representative pages per workspace.
 
-Completion records: `docs/implementation/v0.04-14-completion.md` (milestone) and `docs/implementation/phase-10e-completion.md` (Phase 10 close-out) when done.
+**Status:** Criteria 1–4 met on **`v0.04-14/ux-migration`**. Criteria 5–6 are **release gate** items before merge to `main`.
+
+Completion records: [v0.04-14-completion.md](../implementation/v0.04-14-completion.md) and [phase-10e-completion.md](../implementation/phase-10e-completion.md).

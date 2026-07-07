@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** **v0.04-14 Design System UX Migration** (active) — single release via integration branch **`v0.04-14/ux-migration`**. v0.04-0 through v0.04-12 **complete**. **v0.04-13 deferred** until after v0.04-14. v0.04-3 product groups and readiness-tier slices (B, E2, R) deferred.
+**Current priority:** **v0.04-14 release** — merge integration branch **`v0.04-14/ux-migration`** to `main` (implementation complete; release gate pending). **Next domain milestone:** v0.04-13 (deferred until after v0.04-14 ships). v0.04-3 product groups and readiness-tier slices (B, E2, R) deferred.
 
 ---
 
@@ -36,7 +36,7 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-11 Doc and schema cleanup | **Complete** | [spec](v0.04-11-documentation-schema-cleanup/spec.md) · [audit log](v0.04-11-documentation-schema-cleanup/data-model.md) · [test plan](v0.04-11-documentation-schema-cleanup/test-plan.md) · [completion](../implementation/v0.04-11-completion.md) |
 | v0.04-12 Demand ordering UX | **Complete** | [spec](v0.04-12-demand-ordering-ux/spec.md) · [data model](v0.04-12-demand-ordering-ux/data-model.md) · [test plan](v0.04-12-demand-ordering-ux/test-plan.md) · [completion](../implementation/v0.04-12-completion.md) |
 | v0.04-13 Demand-to-fulfillment continuity | **Deferred** (after v0.04-14) | [spec](v0.04-13-demand-to-fulfillment-continuity/spec.md) · [data model](v0.04-13-demand-to-fulfillment-continuity/data-model.md) · [test plan](v0.04-13-demand-to-fulfillment-continuity/test-plan.md) · [completion stub](../implementation/v0.04-13-completion.md) |
-| v0.04-14 Design system UX migration | **Active** | [spec](v0.04-14-design-system-ux-migration/spec.md) · [data model](v0.04-14-design-system-ux-migration/data-model.md) · [test plan](v0.04-14-design-system-ux-migration/test-plan.md) · [build plan](../design/ux-migration-build-plan.md) |
+| v0.04-14 Design system UX migration | **Complete (integration branch)** | [spec](v0.04-14-design-system-ux-migration/spec.md) · [data model](v0.04-14-design-system-ux-migration/data-model.md) · [test plan](v0.04-14-design-system-ux-migration/test-plan.md) · [build plan](../design/ux-migration-build-plan.md) · [completion](../implementation/v0.04-14-completion.md) |
 
 ---
 

@@ -63,7 +63,7 @@ Recommended reading order for contributors:
 
 ## Phase 10-E (consistency sweep)
 
-Phase 10-E is **active**. Start at [ux-migration-build-plan.md](ux-migration-build-plan.md) for PR slices, partial APIs, tests, and surface order. Roadmap summary: [phase-10e-ux-migration.md](../roadmap/phase-10e-ux-migration.md). Component stragglers: [components.md](components.md#phase-10-e-alignment).
+Phase 10-E is **complete on integration branch** (v0.04-14). Start at [ux-migration-build-plan.md](ux-migration-build-plan.md) for PR history and partial APIs. Completion: [v0.04-14-completion.md](../implementation/v0.04-14-completion.md). Roadmap summary: [phase-10e-ux-migration.md](../roadmap/phase-10e-ux-migration.md). Component stragglers: [components.md](components.md#known-migration-stragglers).
 
 ---
 

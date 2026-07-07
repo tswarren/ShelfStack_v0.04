@@ -508,15 +508,19 @@ PR polish — Pre–Phase 6 contract fixes (complete on integration branch)
 Phase 5 — Operational surfaces (complete on integration branch)
   customers, items index/detail, reports, demand queues
 
-Phase 6 — Domain workspaces (active next)
-  6A item operations (branch v0.04-14/pr6-item-ops)
-  6B POS, purchasing/receiving, inventory ops, buybacks
+Phase 6 — Domain workspaces (complete on integration branch)
+  6A–6C item operations (branch v0.04-14/pr6-item-ops)
+  7 POS (branch v0.04-14/pr7-pos)
+  8 purchasing/receiving (branch v0.04-14/pr8-orders)
+  9 inventory ops (branch v0.04-14/pr9-inventory)
+  10 buybacks (branch v0.04-14/pr10-buybacks)
   see Phase 6 tracking checklist above
 
 Later — Enabling-layer follow-ups and filter/layout polish
   field aria wiring, variant strictness, items filter partial, metric_card
+  see docs/implementation/v0.04-14-completion.md (known gaps)
 
-Release — v0.04-14/ux-migration → main + tag v0.04-14
+Release — v0.04-14/ux-migration → main + tag v0.04-14 (pending)
 ```
 
 ---
