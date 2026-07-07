@@ -48,4 +48,17 @@ class ReportsUxContractTest < ActionDispatch::IntegrationTest
     assert_select ".ss-page-actions a.ss-btn-secondary", text: "Export CSV"
     assert_select ".ss-page-actions a.ss-btn-tertiary", text: "Back to reports"
   end
+
+  test "demand queue report uses header actions and filter bar" do
+    grant_permission!(@user, "demand.access", store: @store)
+
+    get reports_demand_queue_path
+
+    assert_response :success
+    assert_select ".ss-page-header.ss-report-header h1", text: "Demand Queue"
+    assert_select ".ss-page-actions.ss-report-actions a.ss-btn-secondary", text: "Print"
+    assert_select ".ss-page-actions.ss-report-actions a.ss-btn-tertiary", text: "Back"
+    assert_select ".ss-filter-actions button.ss-btn-secondary", text: "Run report"
+    assert_select ".ss-report.report-print"
+  end
 end
