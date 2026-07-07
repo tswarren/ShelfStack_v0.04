@@ -19,8 +19,8 @@
              show_advanced: false,
              manage_inventory_behavior: @manage_inventory_behavior %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Variant", class: "ss-btn" %>
+    <%= render "shared/ui/button", label: "Create Variant", type: :submit, variant: :primary %>
     <% cancel_path = @product_variant.product.present? ? item_flow_cancel_path(@product_variant.product, tab: "item_setup") : items_product_variants_path %>
-    <%= link_to "Cancel", cancel_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: cancel_path %>
   </footer>
 <% end %>

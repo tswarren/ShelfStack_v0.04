@@ -56,23 +56,26 @@
           </td>
           <td class="ss-row-actions">
             <% if setup_product.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
-              <button type="button"
-                      class="ss-btn-link"
-                      data-action="item-setup-modal#prepareIdentifierEdit modal#open"
-                      data-modal-target-id-param="item-identifier-modal"
-                      data-identifier-value="<%= identifier.identifier_value %>"
-                      data-identifier-type="<%= product_identifier_legacy_type(identifier) %>"
-                      data-primary="<%= identifier.primary_identifier? %>"
-                      data-update-url="<%= items_setup_modals_identifier_path(identifier, product_id: setup_product.id) %>">
-                Quick edit
-              </button>
+              <%= render "shared/ui/button",
+                         label: "Quick edit",
+                         variant: :link,
+                         type: :button,
+                         data: {
+                           action: "item-setup-modal#prepareIdentifierEdit modal#open",
+                           modal_target_id_param: "item-identifier-modal",
+                           identifier_value: identifier.identifier_value,
+                           identifier_type: product_identifier_legacy_type(identifier),
+                           primary: identifier.primary_identifier?,
+                           update_url: items_setup_modals_identifier_path(identifier, product_id: setup_product.id)
+                         } %>
               <% if identifiers.size > 1 %>
-                <%= button_to "Remove",
-                      items_setup_modals_destroy_identifier_path(identifier, product_id: setup_product.id),
-                      method: :delete,
-                      class: "ss-btn-link",
-                      form: { data: { turbo_stream: true } },
-                      data: { turbo_confirm: "Remove this identifier?" } %>
+                <%= render "shared/ui/button",
+                           label: "Remove",
+                           variant: :link,
+                           url: items_setup_modals_destroy_identifier_path(identifier, product_id: setup_product.id),
+                           method: :delete,
+                           form: { data: { turbo_stream: true } },
+                           data: { turbo_confirm: "Remove this identifier?" } %>
               <% end %>
             <% end %>
           </td>

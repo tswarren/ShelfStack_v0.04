@@ -1,19 +1,27 @@
-<h1>Edit Product Vendor</h1>
-<p><%= @product.name %> — <%= @product_vendor.vendor.name %></p>
+<% cancel_path = Items::ReturnPath.for(
+     record: @product,
+     return_to: "item",
+     tab: "item_setup",
+     anchor: "vendor-sourcing"
+   ) %>
+
+<%= render "setup/shared/back_link", path: cancel_path, label: "Cancel" %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "Edit Product Vendor",
+           description: "#{@product.name} — #{@product_vendor.vendor.name}" %>
 
 <%= form_with model: @product_vendor,
       url: items_product_product_vendor_path(@product, @product_vendor),
-      method: :patch do |f| %>
+      method: :patch,
+      class: "ss-form ss-form--standard" do |f| %>
   <%= render "shared/forms/product_vendor_fields",
         f: f,
         product_vendor: @product_vendor,
         lock_product: true %>
-  <%= f.submit class: "ss-btn" %>
-  <%= link_to "Cancel",
-        Items::ReturnPath.for(
-          record: @product,
-          return_to: "item",
-          tab: "item_setup",
-          anchor: "vendor-sourcing"
-        ) %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Update Product Vendor", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: cancel_path %>
+  </footer>
 <% end %>

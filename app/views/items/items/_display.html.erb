@@ -13,7 +13,7 @@
           <li>
             <strong><%= gap[:variant].sku %></strong>:
             preferred vendor <%= gap[:vendor].name %> has no active vendor source row.
-            <%= render "shared/ui/button",
+az               <%= render "shared/ui/button",
                        label: "Add product vendor",
                        variant: :link,
                        url: new_items_product_product_vendor_path(item.product, vendor_id: gap[:vendor].id) if Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.create", store: current_store) %>
@@ -60,14 +60,16 @@
               <td><%= variant.display_location&.name || "—" %></td>
               <td>
                 <% if Authorization.allowed?(user: current_user, permission_key: "items.product_variants.update", store: current_store) %>
-                  <button type="button"
-                          class="ss-btn-link"
-                          data-action="item-setup-modal#openModalBody modal#open"
-                          data-modal-target-id-param="item-classification-modal"
-                          data-modal-body-url="<%= items_edit_setup_modals_variant_classification_path(variant) %>"
-                          data-modal-title="Classification — <%= variant.sku %>">
-                    Quick edit classification
-                  </button>
+                  <%= render "shared/ui/button",
+                             label: "Quick edit classification",
+                             variant: :link,
+                             type: :button,
+                             data: {
+                               action: "item-setup-modal#openModalBody modal#open",
+                               modal_target_id_param: "item-classification-modal",
+                               modal_body_url: items_edit_setup_modals_variant_classification_path(variant),
+                               modal_title: "Classification — #{variant.sku}"
+                             } %>
                 <% end %>
                 <%= link_to "Edit", edit_items_product_variant_path(variant, return_to: "item") %>
               </td>
@@ -117,14 +119,16 @@
                 <td><%= product_vendor.preferred? ? "Yes" : "No" %></td>
                 <td>
                   <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_vendors.update", store: current_store) %>
-                    <button type="button"
-                            class="ss-btn-link"
-                            data-action="item-setup-modal#openModalBody modal#open"
-                            data-modal-target-id-param="item-product-vendor-modal"
-                            data-modal-body-url="<%= items_edit_setup_modals_product_vendor_path(product_vendor) %>"
-                            data-modal-title="Edit <%= product_vendor.vendor.name %>">
-                      Quick edit
-                    </button>
+                    <%= render "shared/ui/button",
+                               label: "Quick edit",
+                               variant: :link,
+                               type: :button,
+                               data: {
+                                 action: "item-setup-modal#openModalBody modal#open",
+                                 modal_target_id_param: "item-product-vendor-modal",
+                                 modal_body_url: items_edit_setup_modals_product_vendor_path(product_vendor),
+                                 modal_title: "Edit #{product_vendor.vendor.name}"
+                               } %>
                     <%= link_to "Edit", edit_items_product_product_vendor_path(item.product, product_vendor) %>
                   <% else %>
                     <%= link_to "View", setup_product_vendor_path(product_vendor) %>
@@ -189,14 +193,16 @@
                 <td><%= variant_vendor.preferred? ? "Yes" : "No" %></td>
                 <td>
                   <% if Authorization.allowed?(user: current_user, permission_key: "setup.product_variant_vendors.update", store: current_store) %>
-                    <button type="button"
-                            class="ss-btn-link"
-                            data-action="item-setup-modal#openModalBody modal#open"
-                            data-modal-target-id-param="item-variant-vendor-modal"
-                            data-modal-body-url="<%= items_edit_setup_modals_variant_vendor_path(variant_vendor) %>"
-                            data-modal-title="Edit <%= variant_vendor.vendor.name %> — <%= variant_vendor.product_variant.sku %>">
-                      Quick edit
-                    </button>
+                    <%= render "shared/ui/button",
+                               label: "Quick edit",
+                               variant: :link,
+                               type: :button,
+                               data: {
+                                 action: "item-setup-modal#openModalBody modal#open",
+                                 modal_target_id_param: "item-variant-vendor-modal",
+                                 modal_body_url: items_edit_setup_modals_variant_vendor_path(variant_vendor),
+                                 modal_title: "Edit #{variant_vendor.vendor.name} — #{variant_vendor.product_variant.sku}"
+                               } %>
                     <%= link_to "Edit", edit_items_product_variant_product_variant_vendor_path(variant_vendor.product_variant, variant_vendor) %>
                   <% else %>
                     <%= link_to "View", setup_product_variant_vendor_path(variant_vendor) %>

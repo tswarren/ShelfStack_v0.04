@@ -1,14 +1,21 @@
-<h1>Edit Identifier</h1>
-<p class="ss-muted"><%= @catalog_item.title %> · <%= product_identifier_display_type(@identifier).upcase %></p>
+<% linked_product = @catalog_item.products.active_records.order(:id).first %>
+<% cancel_path = params[:return_to] == "item" ? items_item_path(linked_product ? { product_id: linked_product.id, tab: "item_setup" } : { catalog_item_id: @catalog_item.id, tab: "item_setup" }) : items_catalog_item_path(@catalog_item) %>
 
-<%= form_with url: update_identifier_items_catalog_item_path(@catalog_item, identifier_id: @identifier.id, return_to: params[:return_to]), method: :patch do |f| %>
-  <%= f.label :identifier_value, "Identifier value" %>
-  <%= f.text_field :identifier_value, value: @identifier.identifier_value, required: true, autofocus: true %>
-  <p class="ss-hint">Normalized preview: <span><%= @identifier.normalized_identifier %></span></p>
-  <%= f.submit "Save Identifier", class: "ss-btn" %>
+<%= render "setup/shared/back_link", path: cancel_path, label: "Cancel" %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "Edit Identifier",
+           description: "#{@catalog_item.title} · #{product_identifier_display_type(@identifier).upcase}" %>
+
+<%= form_with url: update_identifier_items_catalog_item_path(@catalog_item, identifier_id: @identifier.id, return_to: params[:return_to]), method: :patch, class: "ss-form ss-form--standard" do |f| %>
+  <div class="ss-field">
+    <%= f.label :identifier_value, "Identifier value", class: "ss-label" %>
+    <%= f.text_field :identifier_value, value: @identifier.identifier_value, required: true, autofocus: true, class: "ss-input" %>
+    <p class="ss-hint">Normalized preview: <span><%= @identifier.normalized_identifier %></span></p>
+  </div>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Save Identifier", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: cancel_path %>
+  </footer>
 <% end %>
-
-<p>
-  <% linked_product = @catalog_item.products.active_records.order(:id).first %>
-  <%= link_to "Cancel", params[:return_to] == "item" ? items_item_path(linked_product ? { product_id: linked_product.id, tab: "item_setup" } : { catalog_item_id: @catalog_item.id, tab: "item_setup" }) : items_catalog_item_path(@catalog_item) %>
-</p>

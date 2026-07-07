@@ -46,14 +46,16 @@
             <td><%= format_cents(variant.selling_price_cents) %></td>
             <td>
               <% if Authorization.allowed?(user: current_user, permission_key: "items.product_variants.update", store: current_store) %>
-                <button type="button"
-                        class="ss-btn-link"
-                        data-action="item-setup-modal#openModalBody modal#open"
-                        data-modal-target-id-param="item-price-modal"
-                        data-modal-body-url="<%= items_edit_setup_modals_variant_price_path(variant) %>"
-                        data-modal-title="Edit price — <%= variant.sku %>">
-                  Quick edit price
-                </button>
+                <%= render "shared/ui/button",
+                           label: "Quick edit price",
+                           variant: :link,
+                           type: :button,
+                           data: {
+                             action: "item-setup-modal#openModalBody modal#open",
+                             modal_target_id_param: "item-price-modal",
+                             modal_body_url: items_edit_setup_modals_variant_price_path(variant),
+                             modal_title: "Edit price — #{variant.sku}"
+                           } %>
               <% end %>
               <%= link_to "Edit", edit_items_product_variant_path(variant, item_flow) %>
               <% if Inventory::Eligibility.eligible?(variant) && Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>

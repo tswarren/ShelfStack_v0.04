@@ -107,11 +107,13 @@
       "skip" => "Skip"
     } %>
     <% @preview.allowed_actions.each do |action| %>
-      <%= submit_tag action_labels.fetch(action, action.humanize),
-                     name: "action_type",
-                     value: action,
-                     class: "ss-btn #{action == 'skip' ? 'ss-btn-secondary' : ''}" %>
+      <%= render "shared/ui/button",
+                 label: action_labels.fetch(action, action.humanize),
+                 type: :submit,
+                 variant: (action == "skip" ? :secondary : :primary),
+                 name: "action_type",
+                 value: action %>
     <% end %>
-    <%= link_to "Back", items_add_item_path(step: "identify"), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Back", variant: :tertiary, url: items_add_item_path(step: "identify") %>
   </footer>
 <% end %>

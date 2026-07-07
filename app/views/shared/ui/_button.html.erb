@@ -1,4 +1,4 @@
-<%# locals: label:, variant: :primary, size: nil, type: :button, url: nil, method: nil, params: nil, disabled: false, data: {}, aria: {}, form: nil, form_class: nil, class: nil, full_width: false, icon: false %>
+<%# locals: label:, variant: :primary, size: nil, type: :button, url: nil, method: nil, params: nil, name: nil, value: nil, disabled: false, data: {}, aria: {}, form: nil, form_class: nil, class: nil, full_width: false, icon: false %>
 <%
   label = local_assigns.fetch(:label)
   variant = local_assigns.fetch(:variant, :primary)
@@ -41,11 +41,17 @@
           aria: aria_attrs.presence %>
   <% end %>
 <% else %>
-  <%= button_tag label,
-        type: button_type,
-        class: css_class,
-        disabled: disabled,
-        data: data_attrs.presence,
-        aria: aria_attrs.presence,
-        form: local_assigns[:form] %>
+  <%
+    button_tag_options = {
+      type: button_type,
+      class: css_class,
+      disabled: disabled,
+      data: data_attrs.presence,
+      aria: aria_attrs.presence,
+      form: local_assigns[:form]
+    }.compact
+    button_tag_options[:name] = local_assigns[:name] if local_assigns[:name].present?
+    button_tag_options[:value] = local_assigns[:value] if local_assigns[:value].present?
+  %>
+  <%= button_tag label, **button_tag_options %>
 <% end %>

@@ -1,5 +1,7 @@
 <% content_for(:title, "Ingram Import") %>
 
+<%= render "setup/shared/back_link", path: items_root_path, label: "Items" %>
+
 <%= render "shared/forms/page_header",
            title: "Ingram Catalog Import",
            description: "Upload an Ingram list to create or update catalog items and products, then add new-condition sellable SKUs when missing." %>
@@ -69,10 +71,10 @@
       </div>
     <% end %>
 
-    <div class="ss-form-actions">
-      <%= submit_tag "Preview file", class: "ss-button ss-button--primary" %>
-      <%= link_to "Back to Items", items_root_path, class: "ss-button ss-button--secondary" %>
-    </div>
+    <footer class="ss-form-actions">
+      <%= render "shared/ui/button", label: "Preview file", type: :submit, variant: :primary %>
+      <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: items_root_path %>
+    </footer>
   <% end %>
 
   <% if @preview_rows.present? %>
@@ -85,9 +87,13 @@
       <%= hidden_field_tag :set_preferred_vendor, params[:set_preferred_vendor] %>
       <%= hidden_field_tag :overwrite_existing_preferred_vendor, params[:overwrite_existing_preferred_vendor] %>
       <%= hidden_field_tag :create_or_update_vendor_sources, params[:create_or_update_vendor_sources] %>
-      <div class="ss-form-actions">
-        <%= submit_tag "Run import", class: "ss-button ss-button--primary", data: { turbo_confirm: "Run import for #{@row_count} rows?" } %>
-      </div>
+      <footer class="ss-form-actions">
+        <%= render "shared/ui/button",
+                   label: "Run import",
+                   type: :submit,
+                   variant: :primary,
+                   data: { turbo_confirm: "Run import for #{@row_count} rows?" } %>
+      </footer>
     <% end %>
   <% end %>
 

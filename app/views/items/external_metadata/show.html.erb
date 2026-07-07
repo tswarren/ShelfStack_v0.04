@@ -49,7 +49,8 @@
 <% end %>
 
 <footer class="ss-form-actions">
-  <%= link_to "Back to item setup",
-              @linked_product ? items_item_path(product_id: @linked_product.id, tab: "item_setup") : items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup"),
-              class: "ss-btn ss-btn-secondary" %>
+  <%= render "shared/ui/button",
+             label: "Back to item setup",
+             variant: :tertiary,
+             url: (@linked_product ? items_item_path(product_id: @linked_product.id, tab: "item_setup") : items_item_path(catalog_item_id: @catalog_item.id, tab: "item_setup")) %>
 </footer>

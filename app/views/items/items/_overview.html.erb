@@ -182,7 +182,7 @@
             Open TBO <%= overview.activity_counts.open_tbo_lines %> ·
             Open PO lines <%= overview.activity_counts.open_po_lines %> ·
             Recent receipts <%= overview.activity_counts.recent_receipts %>
-            <%= link_to "View operations", items_item_path_with_match(item, tab: "operations"), class: "ss-btn-link" %>
+            <%= render "shared/ui/button", label: "View operations", variant: :link, url: items_item_path_with_match(item, tab: "operations") %>
           </p>
         </section>
 
@@ -209,7 +209,7 @@
                       <td class="ss-num"><%= format_cents(row.net_sales_cents) %></td>
                       <td>
                         <% if overview.sales_visible? %>
-                          <%= link_to "Transaction", pos_transaction_path(row.transaction), class: "ss-btn-link" %>
+                          <%= render "shared/ui/button", label: "Transaction", variant: :link, url: pos_transaction_path(row.transaction) %>
                         <% end %>
                       </td>
                     </tr>
@@ -245,9 +245,9 @@
                       <td class="ss-num"><%= format_cents(row.unit_cost_cents) %></td>
                       <td>
                         <% if row.purchase_order.present? %>
-                          <%= link_to "PO ##{row.purchase_order.id}", orders_purchase_order_path(row.purchase_order), class: "ss-btn-link" %>
+                          <%= render "shared/ui/button", label: "PO ##{row.purchase_order.id}", variant: :link, url: orders_purchase_order_path(row.purchase_order) %>
                         <% end %>
-                        <%= link_to "Receipt ##{row.receipt.id}", orders_receipt_path(row.receipt), class: "ss-btn-link" %>
+                        <%= render "shared/ui/button", label: "Receipt ##{row.receipt.id}", variant: :link, url: orders_receipt_path(row.receipt) %>
                       </td>
                     </tr>
                   <% end %>

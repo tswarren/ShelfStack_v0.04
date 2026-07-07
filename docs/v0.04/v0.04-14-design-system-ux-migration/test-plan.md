@@ -166,19 +166,37 @@ Integration/view tests: `ui_partials_test.rb` (block precedence), `customers_cus
 
 ### Phase 6 — Domain workspaces (active)
 
-**Slice 6A — Item operations (branch `v0.04-14/pr6-item-ops`, in progress):**
+**Slice 6A — Item operations (branch `v0.04-14/pr6-item-ops`, complete):**
 
 | Surface | Status |
 | ------- | ------ |
-| Operations tab + variant drawer | In progress |
-| Customer demand form (drawer) | In progress |
-| Item setup quick modals | In progress |
-| Display / vendor sourcing (item setup) | In progress |
-| Items index pagination + match action | In progress |
-| Legacy `items/catalog_items`, `items/products`, `items/product_variants` admin | Deferred (slice 6B) |
-| Add item wizard | Deferred (slice 6C) |
+| Operations tab + variant drawer | Complete |
+| Customer demand form (drawer) | Complete |
+| Item setup quick modals | Complete |
+| Display / vendor sourcing (item setup) | Complete |
+| Overview / selling / catalog link buttons | Complete |
+| Items index pagination + match action | Complete |
+| Legacy admin form footers (catalog/product/variant) | Complete |
 
-Integration tests: extend `items_item_ux_contract_test.rb`; `items_setup_modals_integration_test.rb` regression.
+**Slice 6B — Legacy items admin (branch `v0.04-14/pr6-item-ops`, complete):**
+
+| Surface | Status |
+| ------- | ------ |
+| `items/catalog_items` show + identifier actions | Complete |
+| `items/products` index + show | Complete |
+| `items/product_variants` index + show | Complete |
+| Product / variant vendor new + edit forms | Complete |
+| Add identifier + edit identifier forms | Complete |
+**Slice 6C — Add item wizard (branch `v0.04-14/pr6-item-ops`, complete):**
+
+| Surface | Status |
+| ------- | ------ |
+| Wizard steps (`choose_path` → `sellable_sku`) | Complete |
+| External lookup preview | Complete |
+| External metadata show | Complete |
+| Ingram import | Complete |
+
+Integration tests: `items_item_ux_contract_test.rb`, `items_legacy_admin_ux_contract_test.rb`, `items_add_item_ux_contract_test.rb`; `items_setup_modals_integration_test.rb` regression.
 
 **Later (not Phase 6 gate):** field `aria-describedby` mass wiring, items filter partial, `shared/ui/_filter_chip` partial — see build plan Later backlog.
 

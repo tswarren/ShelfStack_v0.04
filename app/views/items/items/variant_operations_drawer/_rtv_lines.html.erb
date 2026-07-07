@@ -16,7 +16,7 @@
         <td><%= rtv.vendor.name %></td>
         <td class="ss-num"><%= line.quantity %></td>
         <td><%= rtv.status %></td>
-        <td><%= link_to "View", orders_returns_to_vendor_path(rtv), class: "ss-btn-link" %></td>
+        <td><%= render "shared/ui/button", label: "View", variant: :link, url: orders_returns_to_vendor_path(rtv) %></td>
       </tr>
     <% end %>
   </tbody>

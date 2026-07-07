@@ -1,8 +1,27 @@
-<h1>Add Product Vendor</h1>
-<p><%= @product.name %></p>
+<% cancel_path = Items::ReturnPath.for(
+     record: @product,
+     return_to: params[:return_to].presence || "item",
+     tab: params[:return_to] == "from_tbo" ? nil : "item_setup",
+     anchor: params[:return_to] == "from_tbo" ? nil : "vendor-sourcing",
+     from_tbo_filters: {
+       view: params[:from_tbo_view],
+       vendor_id: params[:from_tbo_vendor_id],
+       sourced_only: params[:from_tbo_sourced_only],
+       department_id: params[:from_tbo_department_id],
+       format_id: params[:from_tbo_format_id]
+     }.compact
+   ) %>
+
+<%= render "setup/shared/back_link", path: cancel_path, label: "Cancel" %>
+
+<%= render "shared/forms/page_header",
+           eyebrow: "Items",
+           title: "Add Product Vendor",
+           description: @product.name %>
 
 <%= form_with model: @product_vendor,
-      url: items_product_product_vendors_path(@product) do |f| %>
+      url: items_product_product_vendors_path(@product),
+      class: "ss-form ss-form--standard" do |f| %>
   <% if params[:return_to] == "from_tbo" %>
     <%= hidden_field_tag :return_to, "from_tbo" %>
     <%= hidden_field_tag :from_tbo_view, params[:from_tbo_view] %>
@@ -15,19 +34,8 @@
         f: f,
         product_vendor: @product_vendor,
         lock_product: true %>
-  <%= f.submit class: "ss-btn" %>
-  <%= link_to "Cancel",
-        Items::ReturnPath.for(
-          record: @product,
-          return_to: params[:return_to].presence || "item",
-          tab: params[:return_to] == "from_tbo" ? nil : "item_setup",
-          anchor: params[:return_to] == "from_tbo" ? nil : "vendor-sourcing",
-          from_tbo_filters: {
-            view: params[:from_tbo_view],
-            vendor_id: params[:from_tbo_vendor_id],
-            sourced_only: params[:from_tbo_sourced_only],
-            department_id: params[:from_tbo_department_id],
-            format_id: params[:from_tbo_format_id]
-          }.compact
-        ) %>
+  <footer class="ss-form-actions">
+    <%= render "shared/ui/button", label: "Add Product Vendor", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: cancel_path %>
+  </footer>
 <% end %>

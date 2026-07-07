@@ -45,6 +45,17 @@ class SharedUiPartialsTest < ActionView::TestCase
     assert_includes html, "ss-btn-secondary"
   end
 
+  test "button partial submit supports name and value attributes" do
+    html = render(
+      partial: "shared/ui/button",
+      locals: { label: "Skip", type: :submit, variant: :secondary, name: "action_type", value: "skip" }
+    )
+
+    assert_includes html, 'name="action_type"'
+    assert_includes html, 'value="skip"'
+    assert_includes html, "ss-btn-secondary"
+  end
+
   test "page_header partial renders h1 and page actions" do
     html = render(
       partial: "shared/ui/page_header",

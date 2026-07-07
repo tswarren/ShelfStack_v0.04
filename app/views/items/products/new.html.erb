@@ -25,7 +25,7 @@
                require_sku: true %>
   <% end %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Product", class: "ss-btn" %>
-    <%= link_to "Cancel", item_flow_cancel_path(@product.catalog_item || @product, tab: @product.catalog_item.present? ? "item_setup" : "overview"), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Product", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: item_flow_cancel_path(@product.catalog_item || @product, tab: @product.catalog_item.present? ? "item_setup" : "overview") %>
   </footer>
 <% end %>

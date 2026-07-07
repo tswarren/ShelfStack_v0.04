@@ -22,7 +22,7 @@
                vendors: @vendors %>
   <% end %>
   <footer class="ss-form-actions">
-    <%= f.submit "Update Product", class: "ss-btn" %>
-    <%= link_to "Cancel", item_flow_cancel_path(@product, tab: "item_setup"), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Update Product", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: item_flow_cancel_path(@product, tab: "item_setup") %>
   </footer>
 <% end %>

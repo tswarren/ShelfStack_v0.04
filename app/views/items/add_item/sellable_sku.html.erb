@@ -19,10 +19,13 @@
              show_advanced: false %>
 
   <footer class="ss-form-actions">
-    <%= f.submit "Create SKU", class: "ss-btn" %>
-    <%= f.submit "Create SKU and Add Another", class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Cancel", (@match_context&.valid? ? add_item_cancel_path : Items::ItemPresenter.from_product(@product).show_path), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create SKU", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Create SKU and Add Another", type: :submit, variant: :secondary %>
+    <%= render "shared/ui/button",
+               label: "Cancel",
+               variant: :tertiary,
+               url: (@match_context&.valid? ? add_item_cancel_path : Items::ItemPresenter.from_product(@product).show_path) %>
   </footer>
 <% end %>
 
-<p><%= link_to "Back", items_add_item_path(step: "selling_setup") %></p>
+<p><%= render "shared/ui/button", label: "Back", variant: :link, url: items_add_item_path(step: "selling_setup") %></p>

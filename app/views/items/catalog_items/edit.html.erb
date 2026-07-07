@@ -16,7 +16,7 @@
         bisac_scheme_loaded: @bisac_scheme_loaded,
         store_category_nodes: @store_category_nodes %>
   <footer class="ss-form-actions">
-    <%= f.submit "Update Catalog Item", class: "ss-btn" %>
-    <%= link_to "Cancel", item_flow_cancel_path(@catalog_item, tab: "item_setup"), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Update Catalog Item", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: item_flow_cancel_path(@catalog_item, tab: "item_setup") %>
   </footer>
 <% end %>

@@ -16,7 +16,7 @@
         <td><%= receipt.vendor.name %></td>
         <td class="ss-num"><%= line.quantity_accepted %></td>
         <td><%= receipt.posted_at ? l(receipt.posted_at.to_date) : "—" %></td>
-        <td><%= link_to "View", orders_receipt_path(receipt), class: "ss-btn-link" %></td>
+        <td><%= render "shared/ui/button", label: "View", variant: :link, url: orders_receipt_path(receipt) %></td>
       </tr>
     <% end %>
   </tbody>

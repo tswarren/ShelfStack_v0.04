@@ -75,12 +75,25 @@ class ItemsItemUxContractTest < ActionDispatch::IntegrationTest
   end
 
   test "item setup display section uses contract vendor action buttons" do
+    vendor = create_vendor!(name: "Display Vendor")
+    ProductVendor.create!(product: @product, vendor: vendor, active: true)
     grant_permission!(@user, "setup.product_vendors.create", store: @store)
+    grant_permission!(@user, "setup.product_vendors.update", store: @store)
 
     get item_path(tab: "item_setup")
 
     assert_response :success
     assert_select "#vendor-sourcing button.ss-btn-secondary.ss-btn--small", text: "Quick add product vendor"
     assert_select "#vendor-sourcing a.ss-btn-secondary.ss-btn--small", text: "Add product vendor"
+    assert_select "#vendor-sourcing button.ss-btn-link", text: "Quick edit"
+  end
+
+  test "overview history rows use link variant buttons" do
+    grant_permission!(@user, "pos.transactions.view", store: @store)
+
+    get item_path(tab: "overview")
+
+    assert_response :success
+    assert_select ".ss-item-open-activity a.ss-btn-link", text: "View operations"
   end
 end

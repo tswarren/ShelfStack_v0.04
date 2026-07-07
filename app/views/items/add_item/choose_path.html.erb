@@ -28,8 +28,8 @@
     </div>
   <% end %>
   <footer class="ss-form-actions">
-    <%= submit_tag "Continue", class: "ss-btn" %>
-    <%= link_to "Search for existing item", items_root_path(@match_context&.param_hash || {}), class: "ss-btn ss-btn-secondary" %>
-    <%= link_to "Cancel", (@match_context&.return_path || items_root_path), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Continue", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Search for existing item", variant: :secondary, url: items_root_path(@match_context&.param_hash || {}) %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: (@match_context&.return_path || items_root_path) %>
   </footer>
 <% end %>

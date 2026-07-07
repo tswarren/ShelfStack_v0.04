@@ -7,7 +7,7 @@
     <p class="ss-hint">
       <strong>Variation type:</strong> <%= humanize_controlled_value(product.variation_type) %>
       <% if local_assigns.fetch(:show_product_select, true) == false %>
-        <%= link_to "Change variation type", edit_items_product_path(product, return_to: "item"), class: "ss-btn-link" %>
+        <%= render "shared/ui/button", label: "Change variation type", variant: :link, url: edit_items_product_path(product, return_to: "item") %>
       <% end %>
     </p>
   </div>
