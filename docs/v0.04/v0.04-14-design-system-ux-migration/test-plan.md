@@ -86,6 +86,18 @@ Slice merged to `v0.04-14/ux-migration` via `v0.04-14/pr3-vendors` + pilot refin
 
 Repeat pilot assertions per migrated setup index/show.
 
+| Surface | Status on integration branch |
+| ------- | ---------------------------- |
+| `setup/tax_categories` | Complete |
+| `setup/formats` | Pending |
+| `setup/discount_reasons` | Pending |
+| `setup/stores` | Pending |
+| `setup/users` | Pending |
+| `setup/sub_departments` | Pending |
+| `setup/departments` | Pending |
+
+Integration tests: `setup_tax_categories_ux_contract_test.rb` (tax categories); `setup_vendors_ux_contract_test.rb` (vendors pilot).
+
 ### Phase 6 — Domain workspaces
 
 * `test/system/app_shell_contract_test.rb` still passes after POS touches

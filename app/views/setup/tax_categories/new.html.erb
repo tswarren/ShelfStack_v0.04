@@ -6,7 +6,7 @@
 <%= form_with model: @tax_category, url: setup_tax_categories_path, class: "ss-form ss-form--standard" do |f| %>
   <%= render "form", f: f, tax_category: @tax_category %>
   <footer class="ss-form-actions">
-    <%= f.submit "Create Tax Category", class: "ss-btn" %>
-    <%= link_to "Cancel", setup_tax_categories_path, class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "Create Tax Category", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: setup_tax_categories_path %>
   </footer>
 <% end %>
