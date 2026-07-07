@@ -1,13 +1,23 @@
-<h1>Stock considerations
-  <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.create", store: current_store) %>
-    <%= link_to "New", new_demand_stock_consideration_path, class: "ss-btn" %>
-  <% end %>
-  <%= link_to "Demand lines", demand_root_path, class: "ss-btn ss-btn-secondary" %>
-</h1>
+<%= render "setup/shared/back_link", path: demand_root_path, label: "Demand" %>
+
+<%
+  header_actions = safe_join([
+    (render("shared/ui/button", label: "Demand lines", variant: :secondary, url: demand_root_path) if Authorization.allowed?(user: current_user, permission_key: "demand.access", store: current_store)),
+    (render("shared/ui/button", label: "New", variant: :primary, url: new_demand_stock_consideration_path) if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.create", store: current_store))
+  ].compact)
+%>
+
+<%= render "shared/ui/page_header",
+           title: "Stock considerations",
+           description: "Review provisional stocking ideas before converting them to demand lines.",
+           actions: header_actions.presence %>
 
 <%= form_with url: demand_stock_considerations_path, method: :get, class: "ss-form" do %>
   <%= hidden_field_tag :queue, "open" if params[:queue] == "open" %>
-  <%= submit_tag(params[:queue] == "open" ? "Show all" : "Open queue only", class: "ss-btn ss-btn-secondary") %>
+  <%= render "shared/ui/button",
+             label: (params[:queue] == "open" ? "Show all" : "Open queue only"),
+             type: :submit,
+             variant: :secondary %>
 <% end %>
 
 <% if @stock_considerations.any? %>
@@ -31,7 +41,7 @@
               <%= row.provisional_title || "—" %>
             <% end %>
           </td>
-          <td><%= row.status.humanize %></td>
+          <td><%= stock_consideration_status_badge(row.status) %></td>
           <td><%= row.reason.presence || "—" %></td>
           <td><%= display_time(row.created_at) %></td>
           <td><%= link_to "View", demand_stock_consideration_path(row) %></td>
@@ -40,5 +50,9 @@
     </tbody>
   </table>
 <% else %>
-  <p class="ss-muted">No stock considerations.</p>
+  <% empty_actions = render("shared/ui/button", label: "New stock consideration", variant: :primary, url: new_demand_stock_consideration_path) if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.create", store: current_store) %>
+  <%= render "shared/ui/empty_state",
+             title: "No stock considerations",
+             message: "Capture stocking ideas here before they become demand lines.",
+             actions: empty_actions %>
 <% end %>

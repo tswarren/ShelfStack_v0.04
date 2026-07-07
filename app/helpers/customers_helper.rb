@@ -73,6 +73,11 @@ module CustomersHelper
     active ? base : "#{base} ss-btn-secondary"
   end
 
+  def customers_queue_filter_chip_class(queue_key)
+    active = queue_key.nil? ? params[:queue].blank? : customers_queue_active?(queue_key)
+    active ? "ss-filter-chip ss-filter-chip--active" : "ss-filter-chip"
+  end
+
   def customers_demand_match_context
     @customers_demand_match_context ||= DemandLines::MatchContext.from_params(
       params,

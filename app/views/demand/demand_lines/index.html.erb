@@ -1,25 +1,20 @@
-<div class="ss-page-header">
-  <div>
-    <h1>Demand
-      <% if @active_queue.present? %>
-        <span class="ss-muted">· <%= customers_queue_label(@active_queue) %></span>
-      <% end %>
-    </h1>
-  </div>
-  <div class="ss-page-actions">
-    <% if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
-      <%= link_to "New", new_demand_demand_line_path, class: "ss-btn" %>
-    <% end %>
-    <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.access", store: current_store) %>
-      <%= link_to "Stock considerations", demand_stock_considerations_path, class: "ss-btn ss-btn-secondary" %>
-    <% end %>
-  </div>
-</div>
+<%
+  header_actions = safe_join([
+    (render("shared/ui/button", label: "Stock considerations", variant: :secondary, url: demand_stock_considerations_path) if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.access", store: current_store)),
+    (render("shared/ui/button", label: "New", variant: :primary, url: new_demand_demand_line_path) if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store))
+  ].compact)
+%>
+
+<%= render "shared/ui/page_header",
+           title: "Demand",
+           eyebrow: (@active_queue.present? ? customers_queue_label(@active_queue) : nil),
+           description: "Operational demand queue — capture intent, allocation state, and fulfillment progress.",
+           actions: header_actions.presence %>
 
 <div class="ss-filter-bar">
-  <%= link_to customers_queue_link_label(nil), demand_root_path, class: customers_queue_link_class(nil) %>
+  <%= link_to customers_queue_link_label(nil), demand_root_path, class: customers_queue_filter_chip_class(nil) %>
   <% DemandLines::QueueScope::OPERATIONAL_QUEUE_KEYS.each do |queue_key| %>
-    <%= link_to customers_queue_link_label(queue_key), demand_demand_lines_path(queue: queue_key), class: customers_queue_link_class(queue_key) %>
+    <%= link_to customers_queue_link_label(queue_key), demand_demand_lines_path(queue: queue_key), class: customers_queue_filter_chip_class(queue_key) %>
   <% end %>
 </div>
 
@@ -54,7 +49,7 @@
         ),
         class: "ss-input" %>
   <%= text_field_tag :q, params[:q], placeholder: "Search demand number, customer, SKU, title…", class: "ss-input" %>
-  <%= submit_tag "Filter", class: "ss-btn ss-btn-secondary" %>
+  <%= render "shared/ui/button", label: "Filter", type: :submit, variant: :secondary %>
 <% end %>
 
 <% if @demand_lines.any? %>
@@ -79,7 +74,7 @@
           <td><%= demand_capture_intent_label(line.capture_intent) %></td>
           <td><%= line.display_customer_name.presence || "—" %></td>
           <td><%= demand_item_label(line) %></td>
-          <td><span class="<%= demand_status_class(line.status) %>"><%= demand_status_label(line.status) %></span></td>
+          <td><%= demand_status_badge(line.status) %></td>
           <td><%= demand_allocation_state_label(line) %></td>
           <td class="ss-num"><%= line.quantity_requested %></td>
           <td><%= display_time(line.created_at) %></td>
@@ -89,5 +84,9 @@
     </tbody>
   </table>
 <% else %>
-  <p class="ss-muted">No demand lines match the current filters.</p>
+  <% empty_actions = render("shared/ui/button", label: "New demand", variant: :primary, url: new_demand_demand_line_path) if Authorization.allowed?(user: current_user, permission_key: "demand.create", store: current_store) %>
+  <%= render "shared/ui/empty_state",
+             title: "No demand lines match",
+             message: "Adjust queue filters or create a new demand line to capture customer requests.",
+             actions: empty_actions %>
 <% end %>

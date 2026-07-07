@@ -3,7 +3,7 @@
   <h2>Record summary</h2>
   <dl class="ss-summary">
     <dt>Status</dt>
-    <dd><span class="<%= demand_status_class(demand_line.status) %>"><%= demand_status_label(demand_line.status) %></span></dd>
+    <dd><%= demand_status_badge(demand_line.status) %></dd>
     <dt>Supply state</dt>
     <dd><%= demand_supply_state_label(supply_summary.primary_supply_state) %></dd>
     <dt>Capture intent</dt>

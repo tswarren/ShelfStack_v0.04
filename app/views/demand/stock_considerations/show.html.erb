@@ -1,9 +1,18 @@
 <%= render "setup/shared/back_link", path: demand_stock_considerations_path, label: "Stock considerations" %>
 
-<h1>Stock consideration</h1>
+<%
+  header_actions = safe_join([
+    (render("shared/ui/button", label: "Convert to demand", variant: :primary, url: convert_demand_stock_consideration_path(@stock_consideration), method: :post) if !@stock_consideration.terminal? && Authorization.allowed?(user: current_user, permission_key: "stock_considerations.convert", store: current_store))
+  ].compact)
+%>
+
+<%= render "shared/ui/page_header",
+           title: "Stock consideration",
+           description: "Review item context before converting to demand or dismissing.",
+           actions: header_actions.presence %>
 
 <dl class="ss-summary">
-  <dt>Status</dt><dd><%= @stock_consideration.status.humanize %></dd>
+  <dt>Status</dt><dd><%= stock_consideration_status_badge(@stock_consideration.status) %></dd>
   <dt>Item</dt>
   <dd>
     <% if @stock_consideration.product_variant.present? %>
@@ -22,17 +31,20 @@
         demand_demand_line_path(@stock_consideration.converted_demand_line) %></p>
 <% end %>
 
-<div class="ss-detail-actions">
-  <% unless @stock_consideration.terminal? %>
-    <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.convert", store: current_store) %>
-      <%= button_to "Convert to demand", convert_demand_stock_consideration_path(@stock_consideration),
-            method: :post, class: "ss-btn" %>
-    <% end %>
-    <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.dismiss", store: current_store) %>
-      <%= form_with url: dismiss_demand_stock_consideration_path(@stock_consideration), method: :patch, class: "ss-form ss-form--inline" do %>
-        <%= text_field_tag :dismiss_reason, nil, placeholder: "Dismiss reason", class: "ss-input" %>
-        <%= submit_tag "Dismiss", class: "ss-btn ss-btn-secondary" %>
+<% unless @stock_consideration.terminal? %>
+  <% if Authorization.allowed?(user: current_user, permission_key: "stock_considerations.dismiss", store: current_store) %>
+    <section aria-labelledby="stock-consideration-dismiss-heading">
+      <h2 id="stock-consideration-dismiss-heading">Danger zone</h2>
+      <p class="ss-muted">Dismiss removes this consideration from the open queue. Provide a reason for the audit trail.</p>
+      <%= form_with url: dismiss_demand_stock_consideration_path(@stock_consideration), method: :patch, class: "ss-form" do %>
+        <div class="ss-field">
+          <%= label_tag :dismiss_reason, "Dismiss reason", class: "ss-label" %>
+          <%= text_field_tag :dismiss_reason, nil, class: "ss-input", required: true %>
+        </div>
+        <footer class="ss-form-actions">
+          <%= render "shared/ui/button", label: "Dismiss", type: :submit, variant: :danger %>
+        </footer>
       <% end %>
-    <% end %>
+    </section>
   <% end %>
-</div>
+<% end %>
