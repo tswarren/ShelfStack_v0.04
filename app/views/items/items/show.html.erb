@@ -1,7 +1,11 @@
 <% content_for :main_class, "ss-main--items" %>
 
+<%= render "setup/shared/back_link", path: items_root_path, label: "Items" %>
+
 <% unless @tab == "overview" %>
-  <h1><%= @item.title %></h1>
+  <%= render "shared/ui/page_header",
+             title: @item.title,
+             description: items_tab_description(@tab) %>
 <% end %>
 
 <nav class="ss-tabs ss-item-tabs">
@@ -44,9 +48,11 @@
 </div>
 
 <% unless @tab.in?(%w[overview item_setup]) %>
-  <div class="ss-context-actions">
-    <% @item.context_actions.each do |action| %>
-      <%= link_to action[:label], action[:url], class: "ss-btn ss-btn-secondary" %>
-    <% end %>
-  </div>
+  <% if @item.context_actions.any? %>
+    <div class="ss-context-actions">
+      <% @item.context_actions.each do |action| %>
+        <%= render "shared/ui/button", label: action[:label], variant: :secondary, url: action[:url] %>
+      <% end %>
+    </div>
+  <% end %>
 <% end %>

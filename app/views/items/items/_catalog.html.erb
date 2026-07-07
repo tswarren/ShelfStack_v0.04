@@ -84,29 +84,42 @@
   <div class="ss-catalog-actions">
     <% bibliographic_edit_path = item.edit_bibliographic_metadata_path %>
     <% if bibliographic_edit_path.present? %>
-      <%= link_to "Edit bibliographic details", bibliographic_edit_path, class: "ss-btn" %>
       <% if setup_catalog_item.present? && external_catalog_import.present? && Authorization.allowed?(user: current_user, permission_key: "items.external_lookup.access", store: current_store) %>
-        <%= link_to "View original metadata",
-                    items_item_external_metadata_path(catalog_item_id: setup_catalog_item.id),
-                    class: "ss-btn ss-btn-secondary" %>
+        <%= render "shared/ui/button",
+                   label: "View original metadata",
+                   variant: :secondary,
+                   url: items_item_external_metadata_path(catalog_item_id: setup_catalog_item.id) %>
       <% end %>
+      <%= render "shared/ui/button", label: "Edit bibliographic details", variant: :primary, url: bibliographic_edit_path %>
     <% end %>
     <% if setup_product.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
-      <button type="button"
-              class="ss-btn ss-btn-secondary"
-              data-action="item-setup-modal#prepareIdentifierCreate modal#open"
-              data-modal-target-id-param="item-identifier-modal">
-        Quick add identifier
-      </button>
-      <%= button_to "Generate house EAN (201)",
-            items_setup_modals_generate_house_identifier_path(product_id: setup_product.id),
-            method: :post,
-            class: "ss-btn ss-btn-secondary" %>
+      <%= render "shared/ui/button",
+                 label: "Quick add identifier",
+                 variant: :secondary,
+                 data: {
+                   action: "item-setup-modal#prepareIdentifierCreate modal#open",
+                   modal_target_id_param: "item-identifier-modal"
+                 } %>
+      <%= render "shared/ui/button",
+                 label: "Generate house EAN (201)",
+                 variant: :secondary,
+                 url: items_setup_modals_generate_house_identifier_path(product_id: setup_product.id),
+                 method: :post %>
     <% end %>
-    <% if setup_catalog_item.present? && setup_catalog_item.active? %>
-      <%= button_to "Inactivate catalog item", inactivate_items_catalog_item_path(setup_catalog_item, item_flow), method: :patch, class: "ss-btn ss-btn-secondary" %>
-    <% elsif setup_catalog_item.present? %>
-      <%= button_to "Reactivate catalog item", reactivate_items_catalog_item_path(setup_catalog_item, item_flow), method: :patch, class: "ss-btn" %>
+    <% if setup_catalog_item.present? %>
+      <% if setup_catalog_item.active? %>
+        <%= render "shared/ui/button",
+                   label: "Inactivate catalog item",
+                   variant: :secondary,
+                   url: inactivate_items_catalog_item_path(setup_catalog_item, item_flow),
+                   method: :patch %>
+      <% else %>
+        <%= render "shared/ui/button",
+                   label: "Reactivate catalog item",
+                   variant: :primary,
+                   url: reactivate_items_catalog_item_path(setup_catalog_item, item_flow),
+                   method: :patch %>
+      <% end %>
     <% end %>
   </div>
 <% end %>

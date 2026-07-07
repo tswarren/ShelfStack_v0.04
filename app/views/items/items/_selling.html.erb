@@ -1,5 +1,7 @@
 <% if item.product.blank? %>
-  <p>No selling setup exists yet for this item.</p>
+  <%= render "shared/ui/empty_state",
+             title: "No selling setup yet",
+             message: "Create a product to configure sellable SKUs, pricing, and operational defaults for this item." %>
 <% else %>
   <% item_flow = { return_to: "item" } %>
   <dl class="ss-summary">
@@ -63,11 +65,14 @@
       </tbody>
     </table>
   <% else %>
-    <p>No active sellable SKUs yet.</p>
+    <%= render "shared/ui/empty_state",
+               title: "No active sellable SKUs yet",
+               message: "Add a sellable SKU to make this product available for inventory and POS.",
+               actions: render("shared/ui/button", label: "New sellable SKUs", variant: :primary, url: new_items_product_variant_path(product_id: item.product.id, **item_flow)) %>
   <% end %>
 
   <div class="ss-catalog-actions">
-    <%= link_to "Edit product", edit_items_product_path(item.product, item_flow), class: "ss-btn" %>
-    <%= link_to "New sellable SKUs", new_items_product_variant_path(product_id: item.product.id, **item_flow), class: "ss-btn ss-btn-secondary" %>
+    <%= render "shared/ui/button", label: "New sellable SKUs", variant: :secondary, url: new_items_product_variant_path(product_id: item.product.id, **item_flow) %>
+    <%= render "shared/ui/button", label: "Edit product", variant: :primary, url: edit_items_product_path(item.product, item_flow) %>
   </div>
 <% end %>

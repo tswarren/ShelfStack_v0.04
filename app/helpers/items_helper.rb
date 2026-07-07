@@ -19,6 +19,13 @@ module ItemsHelper
     "activity" => "Activity"
   }.freeze
 
+  ITEM_TAB_DESCRIPTIONS = {
+    "overview" => "Operational summary, variant readiness, and recent sales and receiving history.",
+    "operations" => "Demand, purchasing, receiving, and inventory signals by variant.",
+    "item_setup" => "Catalog metadata, selling setup, display, and vendor sourcing.",
+    "activity" => "Inventory movements and audit history for this item."
+  }.freeze
+
   COVER_IMAGE_SIZES = {
     hero: [ 112, 160 ],
     search: [ 48, 70 ],
@@ -43,6 +50,10 @@ module ItemsHelper
 
   def items_tab_label(tab)
     ITEM_TAB_LABELS.fetch(tab.to_s, tab.to_s.titleize)
+  end
+
+  def items_tab_description(tab)
+    ITEM_TAB_DESCRIPTIONS.fetch(tab.to_s) { "Item workspace for #{items_tab_label(tab).downcase}." }
   end
 
   def items_user_facing_label(resource_key)

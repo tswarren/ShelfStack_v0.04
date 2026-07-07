@@ -96,6 +96,10 @@
     </tbody>
   </table>
   <p class="ss-hint">Select <strong>Details</strong> on a variant row to view demand, purchasing, receiving, and recent sales.</p>
+<% else %>
+  <%= render "shared/ui/empty_state",
+             title: "No variant operations yet",
+             message: "Create sellable SKUs in Item setup to review demand, purchasing, and inventory signals here." %>
 <% end %>
 
 <section id="receiving-history" class="ss-item-anchor-section" aria-label="Receiving history">

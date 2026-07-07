@@ -87,7 +87,7 @@
           <% if operations&.header_actions&.any? %>
             <div class="ss-item-ops-summary__actions">
               <% operations.header_actions.each do |action| %>
-                <%= link_to action.label, action.url, class: "ss-btn ss-btn-secondary ss-btn-small" %>
+                <%= render "shared/ui/button", label: action.label, variant: :secondary, size: :small, url: action.url %>
               <% end %>
             </div>
           <% end %>
@@ -171,7 +171,9 @@
               </table>
             </div>
           <% else %>
-            <p class="ss-muted">No sellable SKUs yet.</p>
+            <%= render "shared/ui/empty_state",
+                       title: "No sellable SKUs yet",
+                       message: "Create sellable SKUs in Item setup to enable inventory, demand, and POS activity." %>
           <% end %>
         </section>
 
