@@ -1,0 +1,77 @@
+<%# locals: overview:, operations:, item: %>
+<section id="variant-availability" class="ss-item-section" aria-label="Variant availability">
+  <h2><%= items_user_facing_label("product_variants") %></h2>
+  <% if overview.availability_rows.any? %>
+    <div class="ss-item-availability-wrap">
+      <table class="ss-table ss-table--compact ss-item-availability-table">
+        <thead>
+          <tr>
+            <th>Variant</th>
+            <th>SKU</th>
+            <th class="ss-num">Price</th>
+            <% if overview.inventory_visible? %>
+              <th class="ss-num">Avail. On Hand</th>
+              <th class="ss-num">Avail. On Order</th>
+            <% end %>
+            <th>Subdepartment</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% overview.availability_rows.each do |row| %>
+            <% variant = row.variant %>
+            <% snapshot = row.snapshot %>
+            <tr>
+              <td><%= variant.list_label %></td>
+              <td><%= variant.sku %></td>
+              <td class="ss-num"><%= format_cents(variant.selling_price_cents) %></td>
+              <% if overview.inventory_visible? %>
+                <td class="ss-num"><%= snapshot&.available.nil? ? "—" : snapshot.available %></td>
+                <td class="ss-num"><%= snapshot&.on_order_available.nil? ? "—" : snapshot.on_order_available %></td>
+              <% end %>
+              <td><%= row.resolved_subdepartment_name || "—" %></td>
+              <td class="ss-item-availability-actions">
+                <% if operations&.customer_demand_visible? && row.demand_actions.any? %>
+                  <details class="ss-dropdown ss-item-request-dropdown">
+                    <summary class="ss-dropdown-trigger ss-btn ss-btn-secondary ss-btn--small">Request</summary>
+                    <div class="ss-dropdown-menu" role="menu">
+                      <% row.demand_actions.each do |action| %>
+                        <button type="button"
+                                class="ss-dropdown-menu__item"
+                                role="menuitem"
+                                data-action="item-variant-ops-drawer#prepareOpen drawer#open item-variant-ops-drawer#prepareDemandAction"
+                                data-drawer-target-id-param="item-variant-ops-drawer"
+                                data-variant-id="<%= variant.id %>"
+                                data-variant-sku="<%= variant.sku %>"
+                                data-variant-name="<%= variant.name %>"
+                                data-drawer-key="<%= action.drawer_key %>">
+                          <%= action.label %>
+                        </button>
+                      <% end %>
+                    </div>
+                  </details>
+                <% end %>
+                <%= render "shared/ui/button",
+                           label: "Details",
+                           variant: :secondary,
+                           size: :small,
+                           type: :button,
+                           data: {
+                             action: "item-variant-ops-drawer#prepareOpen drawer#open",
+                             drawer_target_id_param: "item-variant-ops-drawer",
+                             variant_id: variant.id,
+                             variant_sku: variant.sku,
+                             variant_name: variant.name
+                           } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <%= render "shared/ui/empty_state",
+               title: "No sellable SKUs yet",
+               message: "Create sellable SKUs in Item setup to enable inventory, demand, and POS activity." %>
+  <% end %>
+</section>

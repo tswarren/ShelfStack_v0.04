@@ -5,6 +5,8 @@ module Items
     include Rails.application.routes.url_helpers
 
     SummaryCard = Data.define(:key, :label, :status, :detail, :severity)
+    SummaryStrip = Data.define(:available, :reserved, :on_order, :tbo, :last_received_on, :last_sold_on)
+    AvailabilityRow = Data.define(:variant, :snapshot, :resolved_subdepartment_name, :demand_actions)
     MatrixRow = Data.define(
       :variant,
       :snapshot,
@@ -58,6 +60,34 @@ module Items
         stock_card,
         activity_card
       ]
+    end
+
+    def summary_strip
+      @summary_strip ||= begin
+        rows = snapshot.rows.values
+        last_received = rows.filter_map(&:last_received).max_by(&:received_at)
+        last_sold = sales_visible? ? last_sold_at.values.compact.max : nil
+
+        SummaryStrip.new(
+          available: rows.sum { |row| row.available || 0 },
+          reserved: rows.sum { |row| row.reserved || 0 },
+          on_order: rows.sum { |row| row.on_order || 0 },
+          tbo: rows.sum(&:open_tbo),
+          last_received_on: last_received&.received_at&.to_date,
+          last_sold_on: last_sold&.to_date
+        )
+      end
+    end
+
+    def availability_rows
+      @availability_rows ||= variants.map do |variant|
+        AvailabilityRow.new(
+          variant: variant,
+          snapshot: snapshot.rows[variant.id],
+          resolved_subdepartment_name: SubdepartmentDisplayResolver.name_for(variant:, product: item.product),
+          demand_actions: operations_presenter.variant_customer_demand_actions(variant)
+        )
+      end
     end
 
     def matrix_rows
@@ -271,6 +301,10 @@ module Items
     def classification_for(variant)
       @classification_by_variant_id ||= {}
       @classification_by_variant_id[variant.id] ||= ClassificationDefaultsResolver.for(variant:, store:)
+    end
+
+    def operations_presenter
+      @operations_presenter ||= ItemOperationsPresenter.new(item:, store:, user:)
     end
   end
 end

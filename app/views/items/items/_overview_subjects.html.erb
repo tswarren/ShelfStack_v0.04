@@ -1,13 +1,34 @@
+<% visible_count = local_assigns.fetch(:visible_count, 5) %>
 <% if item.subject_groups.any? %>
-  <section class="ss-item-sidebar-section ss-item-subjects-section">
+  <section class="ss-item-sidebar-section ss-item-subjects-section" aria-label="Metadata">
     <% item.subject_groups.each do |group| %>
       <div class="ss-item-subject-group">
         <h3 class="ss-item-subject-group-label"><%= group[:label] %></h3>
-        <ul class="ss-item-subject-list">
-          <% group[:headings].each do |heading| %>
-            <li><%= heading %></li>
-          <% end %>
-        </ul>
+        <% headings = group[:headings] %>
+        <% if headings.size > visible_count %>
+          <ul class="ss-item-subject-list">
+            <% headings.first(visible_count).each do |heading| %>
+              <li><%= heading %></li>
+            <% end %>
+          </ul>
+          <details class="ss-item-subject-overflow">
+            <summary class="ss-item-subject-overflow__toggle">
+              <span class="ss-item-subject-overflow__more">More</span>
+              <span class="ss-item-subject-overflow__less">Less</span>
+            </summary>
+            <ul class="ss-item-subject-list">
+              <% headings.drop(visible_count).each do |heading| %>
+                <li><%= heading %></li>
+              <% end %>
+            </ul>
+          </details>
+        <% else %>
+          <ul class="ss-item-subject-list">
+            <% headings.each do |heading| %>
+              <li><%= heading %></li>
+            <% end %>
+          </ul>
+        <% end %>
       </div>
     <% end %>
   </section>

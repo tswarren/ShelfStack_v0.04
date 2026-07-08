@@ -1,0 +1,17 @@
+<% strip = overview.summary_strip %>
+<section id="overview-summary-strip" class="ss-item-summary-strip" aria-label="Operational summary">
+  <% if overview.inventory_visible? %>
+    <span class="ss-item-summary-strip__item"><strong>Available:</strong> <%= strip.available %></span>
+    <span class="ss-item-summary-strip__item"><strong>Reserved:</strong> <%= strip.reserved %></span>
+    <span class="ss-item-summary-strip__item"><strong>On Order:</strong> <%= strip.on_order.positive? ? strip.on_order : "—" %></span>
+  <% end %>
+  <span class="ss-item-summary-strip__item"><strong>TBO:</strong> <%= strip.tbo.positive? ? strip.tbo : "—" %></span>
+  <span class="ss-item-summary-strip__item">
+    <strong>Last Received:</strong>
+    <%= strip.last_received_on.present? ? l(strip.last_received_on, format: "%b %-d") : "—" %>
+  </span>
+  <span class="ss-item-summary-strip__item">
+    <strong>Last Sold:</strong>
+    <%= strip.last_sold_on.present? ? l(strip.last_sold_on, format: "%b %-d") : "—" %>
+  </span>
+</section>

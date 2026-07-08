@@ -4,6 +4,8 @@ Phase 8.5-4 establishes what Phase 9 reporting may rely on when linking into `/i
 
 Spec: [phase-8.5-4-item-data-quality-spec.md](../specifications/phase-8.5-4-item-data-quality-spec.md)
 
+v0.04-15 (Products Overview refactor) revises Overview-tab surfaces; Operations tab retains history anchors.
+
 Phase 9b operational reports that consume this contract:
 
 * **Customer Request Queue** — item links via `product_variant_id` to overview tab
@@ -31,10 +33,11 @@ Legacy redirect only (do not emit from new code):
 Anchors:
 
 ```text
-#warnings
-#variant-matrix
-#sales-history
-#receiving-history
+#warnings              — hidden anchor on Overview (report drill-down stability)
+#variant-availability  — Overview variant table (replaces #variant-matrix on Overview)
+#overview-summary-strip
+#sales-history         — Operations tab
+#receiving-history     — Operations tab
 ```
 
 ## Contract surfaces (overview tab)
@@ -42,15 +45,16 @@ Anchors:
 | Surface | DOM / aria |
 | ------- | ---------- |
 | Stable identity | `.ss-item-hero` |
-| Warning summary | `#warnings` |
-| Sell / order / stock cards | `.ss-item-summary-cards` |
-| Variant readiness | `#variant-matrix` |
-| Recent sales | `#sales-history` |
-| Recent receiving | `#receiving-history` |
+| Warning anchor | `#warnings` (hidden; no visible panel on Overview) |
+| Operational summary | `#overview-summary-strip` |
+| Variant availability | `#variant-availability` |
+| Main column shell | `section.ss-item-main[aria-label='Item overview']` |
+
+Removed from Overview (v0.04-15): `.ss-item-summary-cards`, visible `#warnings` panel, `#variant-matrix`, `#sales-history`, `#receiving-history`.
 
 ## Index contract
 
-Index rows may expose batched worst warning severity and operational quantities via the Signals column. Full warning text is only on item detail.
+Index rows may expose batched worst warning severity and operational quantities via the Signals column. Full warning text is only on item detail (Operations tab).
 
 ## Out of scope
 

@@ -103,4 +103,32 @@ class Items::ItemOverviewPresenterTest < ActiveSupport::TestCase
 
     assert_equal :not_applicable, matrix_row.vendor_source_status
   end
+
+  test "summary strip rolls up availability and activity dates" do
+    InventoryBalance.create!(
+      store: @store,
+      product_variant: @variant,
+      quantity_on_hand: 8,
+      quantity_available: 6,
+      quantity_reserved: 2
+    )
+
+    overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
+    strip = overview.summary_strip
+
+    assert_equal 6, strip.available
+    assert_equal 2, strip.reserved
+  end
+
+  test "availability rows include resolved subdepartment and demand actions" do
+    grant_permission!(@user, "demand.access", store: @store)
+    grant_permission!(@user, "demand.create", store: @store)
+
+    overview = Items::ItemOverviewPresenter.for(item: @item, store: @store, user: @user)
+    row = overview.availability_rows.first
+
+    assert_equal @variant, row.variant
+    assert_equal @variant.sub_department.name, row.resolved_subdepartment_name
+    assert row.demand_actions.any?
+  end
 end

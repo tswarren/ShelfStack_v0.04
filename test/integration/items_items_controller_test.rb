@@ -31,8 +31,8 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Sellable SKUs", response.body
     assert_match "ss-item-subject-list", response.body
     assert_match ">Subjects<", response.body
-    assert_match 'id="variant-matrix"', response.body
-    assert_match "ss-item-table", response.body
+    assert_match 'id="variant-availability"', response.body
+    assert_match "ss-item-availability-table", response.body
     assert_no_match "ss-item-subject-chip", response.body
     assert_no_match "ss-item-edit-link", response.body
     assert_no_match "Edit Catalog Item", response.body
@@ -57,36 +57,26 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "ss-item-cover-image", response.body
   end
 
-  test "overview shows display location eyebrow with parent breadcrumbs" do
-    store_floor = create_display_location!(name: "Store Floor", short_name: "Flr #{SecureRandom.hex(2)}")
-    fiction = create_display_location!(name: "Fiction", short_name: "Fic #{SecureRandom.hex(2)}", parent: store_floor)
-    shelf = create_display_location!(name: "Shelf A", short_name: "ShA #{SecureRandom.hex(2)}", parent: fiction)
-    @product.update!(default_display_location: shelf)
-
-    get item_path
-    assert_response :success
-    assert_match "ss-item-location-eyebrow", response.body
-    assert_match "Store Floor", response.body
-    assert_match "Fiction", response.body
-    assert_match "Shelf A", response.body
-  end
-
-  test "overview eyebrow shows store category after display location" do
-    store_floor = create_display_location!(name: "Store Floor", short_name: "Flr #{SecureRandom.hex(2)}")
-    shelf = create_display_location!(name: "Shelf A", short_name: "ShA #{SecureRandom.hex(2)}", parent: store_floor)
+  test "overview shows store category eyebrow when store category present" do
     scheme = CategoryScheme.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY) ||
              create_category_scheme!(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY, name: "Store Sections")
     biography = create_category_node!(category_scheme: scheme, node_key: "biography", name: "Biography")
-    @product.update!(default_display_location: shelf, store_category: biography)
+    @product.update!(store_category: biography)
 
     get item_path
     assert_response :success
+    assert_match "ss-item-overview-eyebrow", response.body
+    assert_match "Biography", response.body
+    assert_no_match "Shelf A", response.body
+  end
 
-    eyebrow = response.body[/ss-item-location-eyebrow.*?<\/nav>/m]
-    assert_includes eyebrow, "Store Floor"
-    assert_includes eyebrow, "Shelf A"
-    assert_includes eyebrow, "Biography"
-    assert_operator eyebrow.index("Shelf A"), :<, eyebrow.index("Biography")
+  test "overview shows resolved subdepartment eyebrow when no store category" do
+    @product.update!(store_category: nil)
+
+    get item_path
+    assert_response :success
+    assert_match "ss-item-overview-eyebrow", response.body
+    assert_match @variant.sub_department.name, response.body
   end
 
   test "item setup tab shows variant matrix and selling actions" do
@@ -243,7 +233,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "ss-collapsible-panel", response.body
   end
 
-  test "overview shows attention panel when open tbo exists" do
+  test "overview keeps hidden warnings anchor when open tbo exists" do
     seed_phase5_reference_data!
     Seeds::V0046Permissions.seed!
     grant_all_phase5_permissions!(@user, store: @store)
@@ -259,8 +249,8 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
 
     get item_path(tab: "overview")
     assert_response :success
-    assert_match "Needs Attention", response.body
-    assert_match "open TBO", response.body
+    assert_match 'id="warnings"', response.body
+    assert_no_match "ss-operational-warnings", response.body
   end
 
   test "legacy catalog_item_id redirects to product_id when product linked" do

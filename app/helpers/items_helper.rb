@@ -208,21 +208,30 @@ module ItemsHelper
     end
   end
 
+  def item_overview_eyebrow(label)
+    return if label.blank?
+
+    tag.p(label, class: "ss-item-location-eyebrow ss-item-overview-eyebrow")
+  end
+
   DESCRIPTION_PREVIEW_LENGTH = 280
 
   def item_description_block(text, length: DESCRIPTION_PREVIEW_LENGTH)
     return if text.blank?
 
     if text.length > length
-      tag.details(class: "ss-item-description") do
+      toggle_id = "item-description-#{SecureRandom.hex(4)}"
+      tag.div(class: "ss-item-description ss-item-description--expandable") do
         safe_join([
-          tag.summary(class: "ss-item-description-summary") do
+          tag.input(type: "checkbox", id: toggle_id, class: "ss-item-description-checkbox"),
+          tag.div(truncate(text, length: length, separator: " "), class: "ss-item-description-teaser"),
+          tag.div(simple_format(text), class: "ss-item-description-body"),
+          tag.label(for: toggle_id, class: "ss-item-description-toggle") do
             safe_join([
-              tag.span(truncate(text, length: length, separator: " "), class: "ss-item-description-teaser"),
-              tag.span("Read more", class: "ss-item-read-more")
+              tag.span("Read more", class: "ss-item-read-more"),
+              tag.span("Read less", class: "ss-item-read-less")
             ])
-          end,
-          tag.div(simple_format(text), class: "ss-item-description-body")
+          end
         ])
       end
     else

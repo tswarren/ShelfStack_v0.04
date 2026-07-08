@@ -230,8 +230,84 @@ module Items
       [
         { label: "Subjects", headings: cleaned_headings_from(bisac_subject_source) },
         { label: "Genres", headings: cleaned_headings_from({ data: meta.genre_data, raw: meta.genres }) },
-        { label: "Themes", headings: cleaned_headings_from({ data: meta.theme_data, raw: meta.themes }) }
+        { label: "Themes", headings: cleaned_headings_from({ data: meta.theme_data, raw: meta.themes }) },
+        { label: "Audiences", headings: cleaned_headings_from({ data: meta.target_audience_data, raw: meta.target_audiences }) },
+        { label: "Access Restrictions", headings: cleaned_headings_from({ data: meta.access_restriction_data, raw: meta.access_restrictions }) }
       ].reject { |group| group[:headings].empty? }
+    end
+
+    def overview_eyebrow_label(variant: nil)
+      store_category_label = display_metadata&.store_category&.breadcrumb_label
+      return store_category_label if store_category_label.present?
+
+      resolved_variant = variant_for_eyebrow(variant)
+      return nil if resolved_variant.blank?
+
+      SubdepartmentDisplayResolver.name_for(variant: resolved_variant, product: product)
+    end
+
+    def overview_header_badges
+      meta = display_metadata
+      badges = []
+      badges << { key: :digital, label: "Digital" } if meta&.digital?
+      badges << { key: :large_print, label: "Large Print" } if meta&.large_print?
+      badges
+    end
+
+    def product_facts_for_overview
+      meta = display_metadata
+      facts = []
+
+      if product&.list_price_cents.present?
+        facts << [ "List Price", format_cents(product.list_price_cents) ]
+      end
+
+      identifier_label = primary_identifier_label
+      facts << [ "Primary Identifier", identifier_label ] if identifier_label != "—"
+
+      format_value = format_label
+      if format_value != "—"
+        facts << [ "Format", format_value ]
+      end
+
+      facts << [ "Publisher / Manufacturer", meta.publisher ] if meta&.publisher.present?
+
+      if released_date_label.present?
+        facts << [ "Publication Date", released_date_label ]
+      elsif meta&.year.present?
+        facts << [ "Publication Date", meta.year.to_s ]
+      end
+
+      details = details_label
+      facts << [ "Details", details ] if details.present?
+
+      facts
+    end
+
+    def details_label
+      parts = []
+      parts << description_summary_label if description_summary_label.present?
+      parts << dimensions_label if dimensions_label.present?
+      parts.join(" · ").presence
+    end
+
+    def description_summary_label
+      meta = display_metadata
+      parts = []
+      parts << "#{pages_label} pp." if pages_label.present?
+      parts << running_time_label if running_time_label.present?
+      parts << pub_frequency_label if pub_frequency_label.present?
+      if meta&.year.present? && released_date_label.blank?
+        parts << meta.year.to_s
+      end
+      parts.join(" · ").presence
+    end
+
+    def catalog_item_type_label
+      type = display_metadata&.catalog_item_type
+      return nil if type.blank?
+
+      humanize_status(type)
     end
 
     def description_text

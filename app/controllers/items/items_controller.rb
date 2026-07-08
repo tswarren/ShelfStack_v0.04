@@ -14,8 +14,8 @@ module Items
       load_tab_data
       load_operations_presenter if @tab.in?(%w[overview operations])
       load_operations_tab_presenter if @tab == "operations"
-      load_overview_presenter if @tab.in?(%w[overview operations])
-      load_operational_warnings if @tab.in?(%w[overview operations])
+      load_overview_presenter if @tab == "overview"
+      load_operational_warnings if @tab == "operations"
     end
 
     private
