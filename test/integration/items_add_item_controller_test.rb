@@ -190,7 +190,11 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_item_path(product_id: product.id)
 
     follow_redirect!
-    assert_match "Product Created", response.body
+    # v0.04-15: the generic lifecycle badge ("Product Created") was removed from
+    # the Overview hero. A product created without a variant now lands on its
+    # Overview showing the title and the "no sellable SKUs" empty state.
+    assert_match "Done Product", response.body
+    assert_match "No sellable SKUs yet", response.body
   end
 
   test "create sku and add another keeps wizard on sellable sku step" do

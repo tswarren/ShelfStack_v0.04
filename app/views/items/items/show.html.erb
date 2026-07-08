@@ -2,7 +2,9 @@
 
 <%= render "setup/shared/back_link", path: items_root_path, label: "Items" %>
 
-<% unless @tab == "overview" %>
+<% if @tab == "overview" %>
+  <%= render "items/items/overview_hero", item: @item, variant: @highlight_variant %>
+<% else %>
   <%= render "shared/ui/page_header",
              title: @item.title,
              description: items_tab_description(@tab) %>
@@ -22,15 +24,13 @@
           statuses: @statuses,
           variant: @highlight_variant,
           operations: @operations,
-          overview: @overview,
-          operational_warnings: @operational_warnings %>
+          overview: @overview %>
   <% when "operations" %>
     <%= render "items/items/operations",
           item: @item,
           operations: @operations,
           operations_tab: @operations_tab,
-          operational_warnings: @operational_warnings,
-          overview: @overview %>
+          operational_warnings: @operational_warnings %>
   <% when "item_setup" %>
     <%= render "items/items/item_setup",
           item: @item,

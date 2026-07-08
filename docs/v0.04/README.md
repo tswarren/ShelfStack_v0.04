@@ -37,6 +37,7 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-12 Demand ordering UX | **Complete** | [spec](v0.04-12-demand-ordering-ux/spec.md) · [data model](v0.04-12-demand-ordering-ux/data-model.md) · [test plan](v0.04-12-demand-ordering-ux/test-plan.md) · [completion](../implementation/v0.04-12-completion.md) |
 | v0.04-13 Demand-to-fulfillment continuity | **Deferred** (after v0.04-14) | [spec](v0.04-13-demand-to-fulfillment-continuity/spec.md) · [data model](v0.04-13-demand-to-fulfillment-continuity/data-model.md) · [test plan](v0.04-13-demand-to-fulfillment-continuity/test-plan.md) · [completion stub](../implementation/v0.04-13-completion.md) |
 | v0.04-14 Design system UX migration | **Complete (integration branch)** | [spec](v0.04-14-design-system-ux-migration/spec.md) · [data model](v0.04-14-design-system-ux-migration/data-model.md) · [test plan](v0.04-14-design-system-ux-migration/test-plan.md) · [build plan](../design/ux-migration-build-plan.md) · [completion](../implementation/v0.04-14-completion.md) |
+| v0.04-15 Products overview refactor | **Draft** | [spec](v0.04-15-products-overview-refactor/spec.md) · [data model](v0.04-15-products-overview-refactor/data-model.md) · [test plan](v0.04-15-products-overview-refactor/test-plan.md) |
 
 ---
 

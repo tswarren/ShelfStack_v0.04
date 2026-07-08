@@ -23,20 +23,24 @@ class Items::ItemOverviewContractTest < ActionDispatch::IntegrationTest
     get items_item_path(product_id: @product.id, tab: "overview")
 
     assert_response :success
-    assert_select "#variant-matrix"
-    assert_select ".ss-item-summary-cards"
+    assert_select "#variant-availability"
+    assert_select "#overview-summary-strip"
     assert_select ".ss-item-hero"
+    assert_select "#warnings[hidden][aria-hidden='true']"
+    assert_select ".ss-item-summary-cards", count: 0
+    assert_select "#sales-history", count: 0
+    assert_select "#receiving-history", count: 0
   end
 
   test "product_variant_id resolves item and highlights variant" do
     get items_item_path(product_variant_id: @variant.id, tab: "overview")
 
     assert_response :success
-    assert_select "#variant-matrix"
+    assert_select "#variant-availability"
     assert_match @variant.sku, response.body
   end
 
-  test "overview receiving history includes purchase order link when present" do
+  test "overview does not render receiving history on overview tab" do
     po = create_purchase_order!(store: @store, vendor: create_vendor!)
     receipt = create_receipt!(
       store: @store,
@@ -58,16 +62,17 @@ class Items::ItemOverviewContractTest < ActionDispatch::IntegrationTest
     get items_item_path(product_id: @product.id, tab: "overview")
 
     assert_response :success
-    assert_match "PO ##{po.id}", response.body
-    assert_match "Receipt ##{receipt.id}", response.body
+    assert_select "#receiving-history", count: 0
+    assert_no_match "Receipt ##{receipt.id}", response.body
   end
 
-  test "overview renders warnings region when warnings present" do
+  test "overview keeps hidden warnings anchor without visible warnings panel" do
     @variant.update!(selling_price_cents: 0)
 
     get items_item_path(product_id: @product.id, tab: "overview")
 
     assert_response :success
-    assert_select "#warnings"
+    assert_select "#warnings[hidden][aria-hidden='true']"
+    assert_select ".ss-operational-warnings", count: 0
   end
 end

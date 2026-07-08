@@ -32,6 +32,7 @@ class ItemsItemUxContractTest < ActionDispatch::IntegrationTest
     assert_select "main.ss-item-main", count: 0
     assert_select "section.ss-item-main[aria-label='Item overview']"
     assert_select ".ss-item-tabs a.active", text: "Overview"
+    assert_select ".ss-item-hero + .ss-item-tabs"
   end
 
   test "item setup tab uses page header and selling setup action buttons" do
@@ -86,14 +87,5 @@ class ItemsItemUxContractTest < ActionDispatch::IntegrationTest
     assert_select "#vendor-sourcing button.ss-btn-secondary.ss-btn--small", text: "Quick add product vendor"
     assert_select "#vendor-sourcing a.ss-btn-secondary.ss-btn--small", text: "Add product vendor"
     assert_select "#vendor-sourcing button.ss-btn-link", text: "Quick edit"
-  end
-
-  test "overview history rows use link variant buttons" do
-    grant_permission!(@user, "pos.transactions.view", store: @store)
-
-    get item_path(tab: "overview")
-
-    assert_response :success
-    assert_select ".ss-item-open-activity a.ss-btn-link", text: "View operations"
   end
 end

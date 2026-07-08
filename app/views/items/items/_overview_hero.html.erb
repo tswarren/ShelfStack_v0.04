@@ -1,0 +1,44 @@
+<header class="ss-item-hero">
+  <div class="ss-item-hero-text">
+    <div class="ss-item-hero-top">
+      <div>
+        <%= item_overview_eyebrow(item.overview_eyebrow_label(variant: local_assigns[:variant])) %>
+        <h1 class="ss-item-title"><%= item.title %></h1>
+        <% if item.subtitle.present? %>
+          <p class="ss-item-subtitle"><%= item.subtitle %></p>
+        <% end %>
+        <% if item.series_label.present? && item.series_label != "—" %>
+          <p class="ss-item-series"><%= item.series_label %></p>
+        <% end %>
+      </div>
+    </div>
+
+    <% if item.creator_entries.any? %>
+      <div class="ss-item-creators">
+        <% item.creator_entries.each_with_index do |creator, index| %>
+          <% if index.positive? %><span class="ss-item-sep">|</span><% end %>
+          <span class="ss-item-creator">
+            <span class="ss-item-creator-name"><%= creator["display_name"] %></span>
+            <% creator["roles"].each do |role| %>
+              <%= item_creator_role_badge(role) %>
+            <% end %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="ss-item-cover-slot">
+    <% if item.overview_header_badges.any? %>
+      <div class="ss-item-hero-badges">
+        <% item.overview_header_badges.each do |badge| %>
+          <span class="ss-badge ss-badge--muted"><%= badge[:label] %></span>
+        <% end %>
+      </div>
+    <% end %>
+    <%= item_cover_thumbnail(item, size: :hero) %>
+    <% if item.catalog_item_type_label.present? %>
+      <p class="ss-item-cover-type ss-muted"><%= item.catalog_item_type_label %></p>
+    <% end %>
+  </div>
+</header>
