@@ -233,7 +233,7 @@ SKU remains system-assigned per v0.04-2. Barcode/identifier scan paths unchanged
 | Add Item — selling setup | Align classification section with section 2 rules |
 | Add Item — sellable SKU | Simplified variant partials |
 | Items — product `new` / `edit` | Progressive form |
-| Items — product `edit_metadata` | Same resolver + sections |
+| Items — product `edit_metadata` | Product metadata form + `EntryContext` |
 | Items — variant `new` / `edit` | Simplified variant form |
 | Items — Item setup tab | Metadata modals or inline edit follow same visibility rules |
 | Setup — formats | Admin can add formats; eligibility columns editable |
@@ -252,9 +252,54 @@ SKU remains system-assigned per v0.04-2. Barcode/identifier scan paths unchanged
 | `Products::OperationalTypeDeriver` | Defaults `product_type` on create from kind + digital + service/non-inventory |
 | `Products::ItemKindNormalizer` | Maps legacy `audiobook`/`ebook` to book display context; resolves staff item-kind label for Service / Non-Inventory (never plain **Other**) |
 | `Products::FieldLabelResolver` (or resolver helper) | Contextual field labels — e.g. **Publisher** (book), **Label** (music), **Studio** (video) on shared `publisher` column |
+| `Products::EntryContext` | Composed context for controllers/views — visibility, labels, eligible formats, controlled scheme, operational type, short-form flag, staff item kind |
+| `Products::MetadataParamsSanitizer` | Enforces hidden-field policy on create, edit, and item-kind change |
 | `StoreCategoryDefaults` | Existing — wire live preview on store category change |
 
-Controllers remain thin; Stimulus controllers may toggle sections client-side but **server-side resolver is authoritative** for submit validation.
+Controllers remain thin; build one `Products::EntryContext` per request. Stimulus controllers may toggle sections client-side but **server-side resolver + sanitizer are authoritative** for submit validation.
+
+---
+
+## Implementation policies
+
+### Product metadata form ownership
+
+v0.04-16 introduces a **product-oriented** shared metadata form under `app/views/items/shared/product_forms/metadata/`. Primary consumers: Add Item `item_details`, `products#edit_metadata`. Legacy [`catalog_items/_form`](../../app/views/items/catalog_items/_form.html.erb) paths **wrap or delegate** to the product form — metadata entry is product-first, not catalog-item-only.
+
+### Hidden-field and stale-data policy
+
+Resolvers determine which fields are **visible** and **accepted** for the current context.
+
+| Situation | Policy |
+| --------- | ------ |
+| **New create** | Hidden submitted fields are **ignored** (`MetadataParamsSanitizer` filters against `EntryContext`) |
+| **Edit, item kind unchanged** | Hidden fields with existing DB values are **preserved** — submit must not wipe values merely because they are not on the form |
+| **Edit, item kind changed** | Incompatible controlled classifications (e.g. BISAC on non-book, wrong genre scheme) must be **cleared or reviewed** via a deliberate item-kind-change path — not left stale silently |
+
+Coordinate item-kind-change cleanup with `ProductBisacSync` / `Products::GenreSync`.
+
+### Resolver context object
+
+`Products::EntryContext` (or `FormContext`) composes resolver outputs. Controllers pass **one object** to views instead of scattered instance variables. Minimum surface:
+
+* `field_visibility` — visible/required field keys
+* `field_labels` — contextual labels (Publisher / Label / Studio)
+* `eligible_formats` — scoped format relation
+* `controlled_scheme` — BISAC or genre scheme key, or nil
+* `operational_product_type` — derived/defaulted `product_type`
+* `short_form?` — Service / Non-Inventory collapsed layout
+* `staff_item_kind` — normalized staff choice (distinct from raw `catalog_item_type` for Service / Non-Inventory)
+
+### Legacy format compatibility
+
+Add **mappings** for legacy format keys in import and eligibility paths (e.g. `hardcover` → `trade_cloth`). **Do not** retire, inactivate, or delete legacy `formats` rows in v0.04-16 unless all import paths and existing records are audited. MVP format seed **upserts** new rows alongside legacy keys.
+
+### Service / Non-Inventory behavior
+
+* Staff labels **Service** and **Non-Inventory Item** only — never plain **Other**
+* Short-form entry via `EntryContext#short_form?`
+* `OperationalTypeDeriver` sets `product_type`
+* Follow existing `ProductVariants::OperationalPolicy` — **no normal variant setup** in Add Item (skip sellable SKU step or auto single non-orderable variant per existing rules)
 
 ---
 
@@ -279,9 +324,9 @@ Reuse existing product/item setup permissions. No new permission keys required f
 3. Migration / model: **scheme-aware `CategoryNode#node_key` length** — see [data-model § Category node keys](data-model.md#category-node-keys-genre-trees)
 4. Seeds: MVP formats + genre scheme CSV import (`music_genres`, `video_genres`, `video_game_genres`, `sideline_genres`)
 5. Genre tree importer (reuse `CsvClassificationImporter` two-pass pattern)
-6. Services: visibility, format eligibility, operational type deriver
+6. Services: resolvers, `EntryContext`, `MetadataParamsSanitizer`
 7. Stimulus: progressive form toggles (optional enhancement; server validates)
-8. Views: Add Item, product form, variant form; Setup category node form `maxlength` aligned to scheme
+8. Views: product metadata form partials; catalog_items delegate; Add Item, variant form; Setup category node `maxlength`
 9. Tests + `shelfstack:v00416:verify_product_entry_revamp`
 
 ---
@@ -305,5 +350,8 @@ Recommended v0.04-17 UI placement: new section **Recognitions & Features** on pr
 - [ ] Legacy products with `audiobook`/`ebook` types remain editable
 - [ ] Genre scheme CSVs import without `node_key` validation errors (keys up to 128 chars)
 - [ ] `store_categories` nodes still enforce ≤30 char `node_key` on create/edit
+- [ ] Hidden fields ignored on create; preserved on edit when item kind unchanged
+- [ ] Item kind change clears or reviews incompatible BISAC/genre classifications
+- [ ] Legacy format rows remain; import mappers resolve legacy keys
 - [ ] Existing import and buyback paths pass regression tests
 - [ ] Verifier task passes with `STRICT=1`

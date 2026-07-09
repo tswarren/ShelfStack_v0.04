@@ -38,6 +38,7 @@ No new product metadata table. This milestone extends **formats**, seeds **genre
 | Extend `CategoryScheme::PURPOSES` if needed | Genre scheme purposes |
 | Scheme-aware `CategoryNode#node_key` max length | Genre CSV keys up to ~83 chars; store categories stay ≤30 |
 | Service objects only | Visibility, eligibility, operational type derivation |
+| `Products::EntryContext` + `MetadataParamsSanitizer` | Composed form context and param policy |
 
 ### Do not add
 
@@ -202,7 +203,7 @@ Approximately 25 formats. Remaining draft slugs deferred to Setup admin or v0.04
 | ---------- | ---- | ------- | ------- |
 | other | Other | false | false |
 
-Legacy format rows (hardcover, compact_disc, etc.) remain; map or inactivate duplicates during seed idempotency review.
+Legacy format rows (`hardcover`, `trade_paperback`, etc.) from Phase 3 seeds **remain active**. MVP seed upserts new format keys alongside them. Import mappers add eligibility mappings (e.g. `hardcover` → `trade_cloth`) — **do not** inactivate or delete legacy rows in v0.04-16 without full audit.
 
 ---
 
@@ -343,7 +344,7 @@ When staff selects **Service** or **Non-Inventory Item**:
 
 **Hidden:** Digital, format, creators, store category (optional exception: allow store category for non-inventory gift-like items — default hidden), variation setup (single non-orderable variant path or zero variants per existing product rules), physical block, genre pickers.
 
-Variant creation: follow existing `non_inventory` / `service` product rules via `ProductVariants::OperationalPolicy`.
+Variant creation: follow existing `non_inventory` / `service` product rules via `ProductVariants::OperationalPolicy`. Add Item wizard **skips normal sellable SKU setup** for these kinds (auto single non-orderable variant or zero-variant path per existing policy).
 
 ### Staff display label (not storage)
 
@@ -355,6 +356,56 @@ Both store `catalog_item_type: other`. Staff-facing label **must** come from the
 | Non-Inventory Item | **Non-Inventory Item** | Other, Other / non_inventory |
 
 Apply in Add Item, product edit, item index, and search/filter chips.
+
+---
+
+## Product metadata form and entry context
+
+### Form ownership
+
+Progressive metadata UI lives under:
+
+```text
+app/views/items/shared/product_forms/metadata/
+  _form.html.erb
+  _identity.html.erb
+  _selling_classification.html.erb
+  _format_metadata.html.erb
+  _physical_logistics.html.erb
+  _variant_setup.html.erb
+  _internal_controls.html.erb
+```
+
+`app/views/items/catalog_items/_form.html.erb` delegates to the product metadata form for legacy catalog paths.
+
+### `Products::EntryContext`
+
+Composed object built per request from resolver services:
+
+```ruby
+Products::EntryContext.build(
+  product: product,
+  staff_item_kind: staff_item_kind,  # normalized staff choice
+  digital: digital,
+  format: format,
+  variation_type: variation_type,
+  mode: :new | :edit
+)
+```
+
+Exposes: `field_visibility`, `field_labels`, `eligible_formats`, `controlled_scheme`, `operational_product_type`, `short_form?`, `staff_item_kind`.
+
+### `Products::MetadataParamsSanitizer`
+
+Filters strong params against `EntryContext`:
+
+| Mode | Behavior |
+| ---- | -------- |
+| `:new` | Drop keys not visible in context |
+| `:edit`, kind unchanged | Permit only visible keys; do not null hidden columns with existing values |
+| `:edit`, kind changed | Permit visible keys; invoke classification cleanup for incompatible `categorizations` |
+
+Item-kind-change cleanup coordinates with `ProductBisacSync` / `Products::GenreSync` (clear or staff confirm).
 
 ---
 
