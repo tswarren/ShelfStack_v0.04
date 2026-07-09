@@ -1,0 +1,34 @@
+<%# locals: f, record, entry_context, store_category_nodes: nil,
+           primary_bisac_category_node_id: nil, primary_bisac_category_node_label: nil,
+           bisac_category_node_ids: [], bisac_scheme_loaded: false,
+           primary_genre_category_node_id: nil, primary_genre_category_node_label: nil,
+           genre_category_node_ids: [], genre_scheme_loaded: false %>
+<% if entry_context.visible?(:creators) %>
+  <%= render layout: "shared/forms/section", locals: { title: "Contributors" } do %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :creators } do %>
+      <%= f.text_area :creators, rows: 2, data: { catalog_item_form_target: "creatorsSource" } %>
+      <p class="ss-hint">Parsed preview: <span data-catalog-item-form-target="creatorsPreview"><%= metadata_creators_preview(record.creators) %></span></p>
+    <% end %>
+  <% end %>
+<% end %>
+<% unless entry_context.short_form? %>
+  <%= render "items/shared/product_forms/metadata/selling_classification",
+        f: f, record: record, entry_context: entry_context, store_category_nodes: store_category_nodes %>
+  <%= render "items/shared/product_forms/metadata/format_metadata",
+        f: f, record: record, entry_context: entry_context %>
+  <%= render "items/shared/product_forms/metadata/physical_logistics",
+        f: f, record: record, entry_context: entry_context %>
+  <%= render "items/shared/product_forms/metadata/variant_setup",
+        f: f, record: record, entry_context: entry_context %>
+<% end %>
+
+<%= render "items/shared/product_forms/metadata/internal_controls",
+      f: f, record: record, entry_context: entry_context,
+      primary_bisac_category_node_id: primary_bisac_category_node_id,
+      primary_bisac_category_node_label: primary_bisac_category_node_label,
+      bisac_category_node_ids: bisac_category_node_ids,
+      bisac_scheme_loaded: bisac_scheme_loaded,
+      primary_genre_category_node_id: primary_genre_category_node_id,
+      primary_genre_category_node_label: primary_genre_category_node_label,
+      genre_category_node_ids: genre_category_node_ids,
+      genre_scheme_loaded: genre_scheme_loaded %>

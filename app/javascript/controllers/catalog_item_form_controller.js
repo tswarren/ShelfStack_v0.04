@@ -6,6 +6,15 @@ export default class extends Controller {
   connect() {
     this.refresh()
     this.bindMetadataPreviews()
+    this.element.addEventListener("turbo:frame-load", this.handleFrameLoad)
+  }
+
+  disconnect() {
+    this.element.removeEventListener("turbo:frame-load", this.handleFrameLoad)
+  }
+
+  handleFrameLoad = () => {
+    this.bindMetadataPreviews()
   }
 
   refresh() {
@@ -28,12 +37,16 @@ export default class extends Controller {
   }
 
   bindPreview(source, preview, parser) {
+    if (source.dataset.previewBound === "true") return
+
+    source.dataset.previewBound = "true"
     const update = () => {
       preview.textContent = parser(source.value)
     }
 
     source.addEventListener("input", update)
     source.addEventListener("change", update)
+    update()
   }
 
   splitOutsideBrackets(input) {

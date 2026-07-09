@@ -304,10 +304,16 @@ module Items
     end
 
     def catalog_item_type_label
+      product_record = product || (catalog_item.is_a?(Product) ? catalog_item : nil)
+      if product_record.present?
+        staff_kind = Products::ItemKindNormalizer.infer_staff_item_kind(product_record)
+        return Products::ItemKindNormalizer.staff_label(staff_kind)
+      end
+
       type = display_metadata&.catalog_item_type
       return nil if type.blank?
 
-      humanize_status(type)
+      humanize_status(Products::ItemKindNormalizer.normalize_legacy_catalog_item_type(type))
     end
 
     def description_text

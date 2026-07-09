@@ -2,7 +2,7 @@
   <%= render "shared/forms/errors", record: @category_node %>
   <div class="ss-form-grid ss-form-grid--2">
     <%= render layout: "shared/forms/field", locals: { f: f, record: @category_node, field: :node_key, label: "Node key", required: true } do %>
-      <%= f.text_field :node_key, maxlength: 30 %>
+      <%= f.text_field :node_key, maxlength: CategoryNode.new(category_scheme: @category_scheme).node_key_max_length %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: @category_node, field: :name, required: true } do %>
       <%= f.text_field :name %>

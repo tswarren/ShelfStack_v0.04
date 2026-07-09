@@ -1,0 +1,21 @@
+<% if entry_context.visible?(:variation_type) || entry_context.visible?(:variant_label_1) %>
+  <%= render layout: "shared/forms/section", locals: { title: "Variant Setup" } do %>
+    <div class="ss-form-grid ss-form-grid--2">
+      <% if entry_context.visible?(:variation_type) && record.is_a?(Product) %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :variation_type } do %>
+          <%= f.select :variation_type, Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] } %>
+        <% end %>
+      <% end %>
+      <% if entry_context.visible?(:variant_label_1) && record.is_a?(Product) %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :variant1_label, label: "Variant label 1" } do %>
+          <%= f.text_field :variant1_label %>
+        <% end %>
+      <% end %>
+      <% if entry_context.visible?(:variant_label_2) && record.is_a?(Product) %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :variant2_label, label: "Variant label 2" } do %>
+          <%= f.text_field :variant2_label %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

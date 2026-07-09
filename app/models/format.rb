@@ -7,8 +7,17 @@ class Format < ApplicationRecord
   validates :name, presence: true
   validates :short_name, presence: true, length: { maximum: 20 }
   validates :code, length: { maximum: 20 }, allow_blank: true
+  validates :catalog_item_type, inclusion: { in: ProductMetadata::CATALOG_ITEM_TYPES }, allow_nil: true
+  validates :sort_order, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   scope :active_records, -> { where(active: true) }
+  scope :ordered_for_display, -> { order(:sort_order, :format_key) }
+  scope :eligible_for, lambda { |catalog_item_type:, digital: nil|
+    scope = active_records.where(catalog_item_type: catalog_item_type)
+    return scope if digital.nil?
+
+    scope.where(digital: [ digital, nil ])
+  }
 
   before_validation :normalize_strings
 

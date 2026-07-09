@@ -21,6 +21,7 @@ require_relative "seeds/phase3b_sub_departments"
 require_relative "seeds/phase3b_reference_trees"
 require_relative "seeds/phase3b_category_schemes"
 require_relative "seeds/phase3b_bisac"
+require_relative "seeds/phase3b_genre_schemes"
 require_relative "seeds/phase3b_templates"
 require_relative "seeds/phase4_inventory"
 require_relative "seeds/phase5_inventory"
@@ -175,6 +176,10 @@ Permission.active_records.find_each { |permission| super_admin_role.grant_permis
 SuperAdministratorProtection.restore!
 
 puts "Phase 3B seed complete."
+
+puts "Seeding Phase 3B genre schemes and MVP formats..."
+Seeds::Phase3bGenreSchemes.seed!
+puts "Phase 3B genre schemes seed complete."
 
 puts "Seeding Phase 4 inventory..."
 Seeds::Phase4Inventory.seed!

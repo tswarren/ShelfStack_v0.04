@@ -1,0 +1,13 @@
+<%= render layout: "shared/forms/field",
+      locals: { f: f, record: variant, field: :selling_price_cents, label: "Selling price", required: local_assigns.fetch(:required, false) } do %>
+  <div data-controller="currency-field" data-currency-field-cents-value="<%= variant.selling_price_cents.to_i %>">
+    <span class="ss-input-prefix">$</span>
+    <%= number_field_tag nil,
+          variant.selling_price_cents.present? ? format("%.2f", variant.selling_price_cents / 100.0) : nil,
+          step: 0.01,
+          min: 0,
+          class: "ss-input ss-input--currency",
+          data: { currency_field_target: "display", action: "input->currency-field#updateCents" } %>
+    <%= f.hidden_field :selling_price_cents, data: { currency_field_target: "cents" } %>
+  </div>
+<% end %>

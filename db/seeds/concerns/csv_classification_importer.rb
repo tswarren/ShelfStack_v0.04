@@ -13,6 +13,13 @@ module Seeds
     STORE_TAX_MAPPINGS_PATH = DATA_DIR.join("store_tax_mappings.csv").freeze
     DISPLAY_LOCATIONS_PATH = DATA_DIR.join("display_locations.csv").freeze
     STORE_CATEGORIES_PATH = DATA_DIR.join("store_categories.csv").freeze
+    FORMATS_MVP_PATH = DATA_DIR.join("formats_mvp.csv").freeze
+    GENRE_CSV_PATHS = {
+      "music_genres" => DATA_DIR.join("music_genres.csv"),
+      "video_genres" => DATA_DIR.join("video_genres.csv"),
+      "video_game_genres" => DATA_DIR.join("video_game_genres.csv"),
+      "sideline_genres" => DATA_DIR.join("sideline_genres.csv")
+    }.freeze
 
     module_function
 
@@ -236,6 +243,76 @@ module Seeds
       end
 
       nodes_by_key
+    end
+
+    def import_formats_mvp!(path: FORMATS_MVP_PATH)
+      read_csv(path).each do |row|
+        format_key = row.fetch("format_key").strip.downcase
+        digital = parse_boolean(row["digital"])
+        virtual = parse_boolean(row["virtual"])
+
+        Format.find_or_initialize_by(format_key: format_key).tap do |format|
+          format.assign_attributes(
+            name: row.fetch("name").strip,
+            short_name: row.fetch("short_name").strip,
+            catalog_item_type: row.fetch("catalog_item_type").strip.downcase,
+            digital: digital,
+            virtual: virtual,
+            sort_order: row.fetch("sort_order").to_i,
+            active: true
+          )
+          format.save!
+        end
+      end
+    end
+
+    def import_genre_category_nodes!(scheme:, path:)
+      rows = read_csv(path)
+      nodes_by_key = {}
+
+      CategoryScheme.transaction do
+        rows.each_with_index do |row, index|
+          node_key = row.fetch("node_key").strip.downcase
+          node = scheme.category_nodes.find_or_initialize_by(node_key: node_key)
+          node.assign_attributes(
+            name: row.fetch("name").strip,
+            sort_order: index,
+            active: true
+          )
+          node.save!(validate: false)
+          nodes_by_key[node_key] = node
+        end
+
+        rows.each do |row|
+          node_key = row.fetch("node_key").strip.downcase
+          parent_key = row["parent_node_key"]&.strip&.downcase
+          next if parent_key.blank?
+
+          node = nodes_by_key.fetch(node_key)
+          parent = nodes_by_key.fetch(parent_key)
+          if node.parent_id != parent.id
+            node.parent = parent
+            node.save!(validate: false)
+          end
+        end
+
+        nodes_by_key.each_value(&:save!)
+      end
+
+      nodes_by_key
+    end
+
+    def import_all_genre_schemes!
+      GENRE_CSV_PATHS.each do |scheme_key, path|
+        scheme = CategoryScheme.find_or_initialize_by(scheme_key: scheme_key)
+        scheme.assign_attributes(
+          name: scheme_key.humanize,
+          purpose: scheme_key,
+          active: true
+        )
+        scheme.save!
+        import_genre_category_nodes!(scheme: scheme, path: path)
+      end
     end
   end
 end

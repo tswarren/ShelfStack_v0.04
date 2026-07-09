@@ -1,7 +1,12 @@
 # frozen_string_literal: true
 
 class CategoryScheme < ApplicationRecord
-  PURPOSES = %w[store_categories store_sections_topics reporting website browse internal bisac].freeze
+  PURPOSES = %w[
+    store_categories store_sections_topics reporting website browse internal bisac
+    music_genres video_genres video_game_genres sideline_genres
+  ].freeze
+
+  GENRE_PURPOSES = %w[music_genres video_genres video_game_genres sideline_genres].freeze
 
   has_many :category_nodes, dependent: :restrict_with_error
   has_many :categorizations, through: :category_nodes

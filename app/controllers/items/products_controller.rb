@@ -3,14 +3,17 @@
 module Items
   class ProductsController < BaseController
     include ProductBisacSyncable
+    include ProductGenreSyncable
+    include ProductEntryContextable
+    include ProductMetadataSectionsRefreshable
 
     before_action :set_product, only: %i[
-      show edit update destroy inactivate reactivate regenerate_name edit_metadata update_metadata
+      show edit update destroy inactivate reactivate regenerate_name edit_metadata update_metadata metadata_sections
     ]
     before_action -> { authorize!("items.products.view") }, only: %i[index show]
     before_action -> { authorize!("items.products.create") }, only: %i[new create]
     before_action -> { authorize!("items.products.update") }, only: %i[
-      edit update regenerate_name edit_metadata update_metadata
+      edit update regenerate_name edit_metadata update_metadata metadata_sections
     ]
     before_action -> { authorize!("items.products.inactivate") }, only: :inactivate
     before_action -> { authorize!("items.products.reactivate") }, only: :reactivate
@@ -114,6 +117,15 @@ module Items
       end
 
       load_metadata_form_collections
+      @entry_context = build_product_entry_context(@product, mode: :edit)
+    end
+
+    def metadata_sections
+      unless @product.metadata_fused?
+        head :forbidden and return
+      end
+
+      render_product_metadata_sections(product: @product, mode: :edit)
     end
 
     def update_metadata
@@ -128,13 +140,29 @@ module Items
       end
 
       load_metadata_form_collections
+      @entry_context = build_product_entry_context(@product, mode: :edit)
       purge_cover_image_if_requested
-      if @product.update(product_metadata_params)
-        bisac_result = sync_product_bisac!(@product)
+      kind_changed = item_kind_changed?(@product)
+      attrs = sanitized_product_metadata_params(@product, mode: :edit, item_kind_changed: kind_changed)
+      @product.assign_attributes(attrs)
+      apply_entry_context_product_type!(@product, @entry_context)
+      if @product.save
+        clear_incompatible_classifications!(@product, entry_context: @entry_context) if kind_changed
+        if @entry_context.visible?(:bisac_picker)
+          bisac_result = sync_product_bisac!(@product)
+          apply_bisac_sync_notice!(bisac_result)
+        end
+        if @entry_context.visible?(:genre_scheme_picker) && @entry_context.controlled_scheme.present?
+          sync_product_genre!(
+            @product,
+            scheme_key: @entry_context.controlled_scheme,
+            primary_genre_category_node_id: params[:primary_genre_category_node_id],
+            genre_category_node_ids: params[:genre_category_node_ids]
+          )
+        end
         store_category_result = sync_product_store_category!(@product)
         regenerate_metadata_product_name!
         record_audit!("product.updated", @product)
-        apply_bisac_sync_notice!(bisac_result)
         apply_store_category_sync_notice!(store_category_result)
         redirect_to item_return_path(@product, tab: "item_setup"), notice: "Bibliographic details updated."
       else
@@ -162,9 +190,18 @@ module Items
     end
 
     def load_metadata_form_collections
-      @formats = Format.active_records.order(:name)
+      @entry_context = build_product_entry_context(@product, mode: @product.persisted? ? :edit : :new)
+      @formats = @entry_context.eligible_formats
       load_store_category_collections
       load_bisac_form_state(@product)
+      load_genre_form_state_if_needed(@product, entry_context: @entry_context)
+    end
+
+    def load_genre_form_state_if_needed(product, entry_context:)
+      scheme_key = entry_context.controlled_scheme
+      return if scheme_key.blank? || scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
+
+      @genre_form_state = load_genre_form_state(product, scheme_key: scheme_key)
     end
 
     def load_store_category_collections
@@ -194,12 +231,13 @@ module Items
 
     def product_metadata_params
       params.require(:product).permit(
-        :catalog_item_type, :title, :creators, :publisher, :publication_date, :publication_status,
+        :staff_item_kind, :catalog_item_type, :title, :creators, :publisher, :publication_date, :publication_status,
         :series_name, :series_enumeration, :format_id, :edition_statement, :language_code,
         :height, :width, :depth, :dimension_units, :weight, :weight_units, :page_count,
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
         :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
-        :store_category_id, :cover_image
+        :store_category_id, :default_sub_department_id, :list_price_cents, :variation_type,
+        :variant1_label, :variant2_label, :cover_image
       )
     end
 

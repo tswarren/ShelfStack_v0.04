@@ -1,0 +1,53 @@
+<%= render layout: "shared/forms/section", locals: { title: "Identity" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <% if entry_context.visible?(:item_kind) %>
+      <%= render layout: "shared/forms/field",
+            locals: { f: f, record: record, field: :staff_item_kind, label: "Item kind", required: entry_context.required?(:item_kind) } do %>
+        <%= select_tag "#{f.object_name}[staff_item_kind]",
+              options_for_select(
+                Products::ItemKindNormalizer::STAFF_ITEM_KINDS.map { |k| [Products::ItemKindNormalizer.staff_label(k), k] },
+                entry_context.staff_item_kind
+              ),
+              data: {
+                catalog_item_form_target: "typeSelect",
+                product_metadata_form_target: "staffItemKind",
+                action: "change->product-metadata-form#itemKindChanged"
+              } %>
+      <% end %>
+    <% end %>
+    <% if entry_context.visible?(:title) %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :title, required: entry_context.required?(:title) } do %>
+        <%= f.text_field :title %>
+      <% end %>
+    <% end %>
+    <% if entry_context.visible?(:thumbnail) && record.is_a?(CatalogItem) %>
+      <%= render "items/catalog_items/primary_thumbnail", f: f, catalog_item: record %>
+    <% end %>
+  </div>
+
+  <% if include_identifier %>
+    <% initial_identifier_type = params.dig(:catalog_item, :initial_identifier_type).presence || params.dig(:product, :initial_identifier_type).presence || "isbn13" %>
+    <% initial_identifier_value = params.dig(:catalog_item, :initial_identifier_value) || params.dig(:product, :initial_identifier_value) %>
+    <%= render layout: "shared/forms/section", locals: { title: "Initial Identifier" } do %>
+      <div data-controller="identifier-preview"
+           data-identifier-preview-url-value="<%= items_identifier_preview_path %>"
+           data-action="input->identifier-preview#refresh change->identifier-preview#refresh">
+        <div class="ss-form-grid ss-form-grid--2">
+          <div class="ss-field">
+            <%= label_tag "#{f.object_name}[initial_identifier_type]", "Identifier type", class: "ss-label" %>
+            <%= select_tag "#{f.object_name}[initial_identifier_type]",
+                  options_for_select(ProductIdentifierService::LEGACY_IDENTIFIER_TYPES.map { |t| [t.upcase, t] }, initial_identifier_type),
+                  data: { identifier_preview_target: "identifierType" } %>
+          </div>
+          <div class="ss-field">
+            <%= label_tag "#{f.object_name}[initial_identifier_value]", "Identifier value", class: "ss-label" %>
+            <%= text_field_tag "#{f.object_name}[initial_identifier_value]", initial_identifier_value,
+                  data: { identifier_preview_target: "identifierValue" } %>
+          </div>
+        </div>
+        <p class="ss-hint">Normalized preview: <span data-identifier-preview-target="normalized">—</span></p>
+        <p class="ss-hint" data-identifier-preview-target="validation"></p>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

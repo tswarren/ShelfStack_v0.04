@@ -275,6 +275,8 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     get items_add_item_path(step: "sellable_sku")
     assert_response :success
     assert_includes response.body, 'value="2499"'
+    assert_includes response.body, "Selling price"
+    assert_not_includes response.body, 'name="product_variant[sku]"'
   end
 
   test "sellable sku step defaults conditional price and sku for new condition" do
@@ -293,9 +295,9 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     get items_add_item_path(step: "sellable_sku")
     assert_response :success
     assert_includes response.body, 'value="2000"'
-    assert_includes response.body, 'data-variant-preview-target="skuPreview">COND-001</span>'
     assert_includes response.body, 'data-controller="variant-preview"'
-    assert_not_includes response.body, 'name="product_variant[sku]" value="COND-001"'
+    assert_not_includes response.body, 'name="product_variant[sku]"'
+    assert_not_includes response.body, 'data-variant-preview-target="skuPreview"'
   end
 
   test "non-catalog path does not require catalog item create permission" do
@@ -386,6 +388,43 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Duplicate ISBN Book"
     assert_includes response.body, "Someone New"
     assert_includes response.body, 'value="978-0-306-40615-7"'
+  end
+
+  test "metadata_sections returns genre picker for recorded music item kind" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+
+    get items_add_item_metadata_sections_path, params: {
+      catalog_item: { staff_item_kind: "recorded_music" }
+    }, headers: { "Turbo-Frame" => "product_metadata_sections" }
+
+    assert_response :success
+    assert_includes response.body, 'turbo-frame id="product_metadata_sections"'
+    assert_not_includes response.body, "bisac_subjects_picker"
+    assert_includes response.body, "genre_subjects"
+  end
+
+  test "metadata_sections returns short form for service item kind" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+
+    get items_add_item_metadata_sections_path, params: {
+      catalog_item: { staff_item_kind: "service" }
+    }, headers: { "Turbo-Frame" => "product_metadata_sections" }
+
+    assert_response :success
+    assert_not_includes response.body, "Format &amp; Metadata"
+    assert_not_includes response.body, "Format & Metadata"
+    assert_includes response.body, "Subdepartment"
+  end
+
+  test "item details includes metadata sections frame and item kind refresh wiring" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+    get items_add_item_path(step: "item_details")
+
+    assert_response :success
+    assert_includes response.body, 'turbo-frame id="product_metadata_sections"'
+    assert_includes response.body, 'data-product-metadata-form-target="sectionsFrame"'
+    assert_includes response.body, 'data-product-metadata-form-target="staffItemKind"'
+    assert_includes response.body, items_add_item_metadata_sections_path
   end
 
   test "selling setup attaches cover image during add item wizard" do

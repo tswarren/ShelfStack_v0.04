@@ -3,6 +3,9 @@
 module Items
   class AddItemController < BaseController
     include ProductBisacSyncable
+    include ProductGenreSyncable
+    include ProductEntryContextable
+    include ProductMetadataSectionsRefreshable
 
     STEPS = %w[choose_path identify item_details selling_setup sellable_sku].freeze
     WORKFLOWS = %w[catalog_linked non_catalog].freeze
@@ -11,6 +14,8 @@ module Items
     before_action :load_draft
     before_action :capture_match_context!
     before_action :authorize_step!
+    skip_before_action :authorize_step!, only: :metadata_sections
+    before_action :authorize_metadata_sections!, only: :metadata_sections
 
     def new
       reset_draft!
@@ -31,6 +36,11 @@ module Items
 
     def show
       render_step
+    end
+
+    def metadata_sections
+      ensure_catalog_linked_workflow! or return
+      render_product_metadata_sections(product: find_or_build_product, mode: :new)
     end
 
     private
@@ -68,6 +78,10 @@ module Items
       end
     end
 
+    def authorize_metadata_sections!
+      authorize!("items.catalog_items.create")
+    end
+
     def catalog_linked?
       @draft["workflow"] == "catalog_linked"
     end
@@ -90,8 +104,10 @@ module Items
         ensure_catalog_linked_workflow! or return
         @external_lookup_staged = external_lookup_staged?
         @product = find_or_build_product
-        @formats = Format.active_records.order(:name)
+        @entry_context = build_product_entry_context(@product, mode: @product.persisted? ? :edit : :new)
+        @formats = @entry_context.eligible_formats
         load_bisac_form_state(@product)
+        load_genre_form_state_if_needed(@product, entry_context: @entry_context)
         load_store_category_collections
         render "items/add_item/item_details"
       when "selling_setup"
@@ -109,6 +125,12 @@ module Items
       when "sellable_sku"
         ensure_product_in_draft! or return
         @product = Product.find(@draft["product_id"])
+        if short_form_product?(@product)
+          redirect_to ItemPresenter.from_product(@product).show_path,
+                      notice: "Item added successfully."
+          reset_draft!
+          return
+        end
         prepare_sellable_sku_form
         render "items/add_item/sellable_sku"
       end
@@ -165,18 +187,23 @@ module Items
 
       if @draft["product_id"].present?
         @product = Product.find(@draft["product_id"])
-        @product.assign_attributes(product_metadata_params)
+        @entry_context = build_product_entry_context(@product, mode: :edit)
+        attrs = sanitized_product_metadata_params(@product, mode: :edit, item_kind_changed: item_kind_changed?(@product))
+        @product.assign_attributes(attrs)
+        apply_entry_context_product_type!(@product, @entry_context)
         saved = persist_product_updates!(@product)
         created = false
       else
+        @entry_context = build_product_entry_context(Product.new, mode: :new)
+        attrs = sanitized_product_metadata_params(Product.new, mode: :new)
         @product = Product.new(
-          product_metadata_params.merge(
+          attrs.merge(
             active: true,
             publication_status: "active",
-            product_type: "physical",
-            variation_type: "conditional"
+            variation_type: @entry_context.short_form? ? "standard" : "conditional"
           )
         )
+        apply_entry_context_product_type!(@product, @entry_context)
         saved, sku_validation, identifier_result = save_product!(@product)
         created = saved
       end
@@ -184,10 +211,20 @@ module Items
 
       finalize_external_lookup_import!(@product) if @external_lookup_staged
 
-      bisac_result = sync_product_bisac!(@product)
+      if @entry_context.visible?(:bisac_picker)
+        bisac_result = sync_product_bisac!(@product)
+        apply_bisac_sync_notice!(bisac_result)
+      end
+      if @entry_context.visible?(:genre_scheme_picker) && @entry_context.controlled_scheme.present?
+        sync_product_genre!(
+          @product,
+          scheme_key: @entry_context.controlled_scheme,
+          primary_genre_category_node_id: params[:primary_genre_category_node_id],
+          genre_category_node_ids: params[:genre_category_node_ids]
+        )
+      end
       store_category_result = sync_product_store_category!(@product)
       record_audit!(created ? "product.created" : "product.updated", @product)
-      apply_bisac_sync_notice!(bisac_result)
       apply_store_category_sync_notice!(store_category_result)
       apply_initial_identifier_notice!(identifier_result, sku_validation)
       draft_attrs = {
@@ -205,6 +242,10 @@ module Items
         reset_draft!
         redirect_to ItemPresenter.from_product(@product).show_path,
                     notice: "Item details saved. Status: Product Only."
+      elsif @entry_context.short_form?
+        reset_draft!
+        redirect_to ItemPresenter.from_product(@product).show_path,
+                    notice: "Item added successfully."
       else
         redirect_to items_add_item_path(step: "selling_setup")
       end
@@ -244,6 +285,9 @@ module Items
         if done_commit?
           reset_draft!
           redirect_to ItemPresenter.from_product(@product).show_path, notice: notice.presence
+        elsif short_form_product?(@product)
+          reset_draft!
+          redirect_to ItemPresenter.from_product(@product).show_path, notice: notice.presence || "Item added successfully."
         else
           redirect_to items_add_item_path(step: "sellable_sku"),
                       notice: notice.presence || "Selling setup saved."
@@ -559,13 +603,25 @@ module Items
       source = params[:product].presence || params[:catalog_item]
       params_hash = source.is_a?(ActionController::Parameters) ? source : ActionController::Parameters.new(source || {})
       params_hash.permit(
-        :catalog_item_type, :title, :creators, :publisher, :publication_date, :publication_status,
+        :staff_item_kind, :catalog_item_type, :title, :creators, :publisher, :publication_date, :publication_status,
         :series_name, :series_enumeration, :format_id, :edition_statement, :language_code,
         :height, :width, :depth, :dimension_units, :weight, :weight_units, :page_count,
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
         :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
-        :store_category_id
+        :store_category_id, :default_sub_department_id, :list_price_cents, :variation_type,
+        :variant1_label, :variant2_label
       )
+    end
+
+    def load_genre_form_state_if_needed(product, entry_context:)
+      scheme_key = entry_context.controlled_scheme
+      return if scheme_key.blank? || scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
+
+      @genre_form_state = load_genre_form_state(product, scheme_key: scheme_key)
+    end
+
+    def short_form_product?(product)
+      Products::ItemKindNormalizer.infer_staff_item_kind(product).in?(%w[service non_inventory])
     end
 
     def product_params
