@@ -23,7 +23,7 @@ Verifier checks (minimum):
 * `Products::FieldVisibilityResolver` returns expected visibility for book, music, service, non-inventory
 * `Products::FormatEligibility` excludes ineligible formats
 * Add Item book path creates product with correct `catalog_item_type` and no spurious physical fields when digital
-* Service / Non-Inventory short form creates correct `product_type`
+* Service / Non-Inventory short form creates correct `product_type` and staff labels (not **Other**)
 * Variant edit form does not expose SKU override fields
 * Legacy `audiobook` product remains loadable in edit form
 
@@ -88,6 +88,16 @@ Verifier checks (minimum):
 | ---- | --------- |
 | audiobook legacy | Normalizes to book + digital display context |
 | ebook legacy | Normalizes to book + digital display context |
+| Service product | Staff label **Service** (not Other) |
+| Non-inventory product | Staff label **Non-Inventory Item** (not Other) |
+
+### Field labels (`Products::FieldLabelResolver` or visibility helper)
+
+| Test | Assertion |
+| ---- | --------- |
+| Recorded music | `publisher` field labeled **Label** |
+| Video | `publisher` field labeled **Studio** |
+| Book | `publisher` field labeled **Publisher** |
 
 ---
 

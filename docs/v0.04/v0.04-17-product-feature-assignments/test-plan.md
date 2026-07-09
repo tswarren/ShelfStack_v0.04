@@ -83,6 +83,13 @@ Verifier checks (minimum):
 * maps award shortlisted → compact label
 * hides `public_visible: false` in customer context
 * hides expired assignments
+* program-backed assignment shows template node vocabulary in badge when program has `category_node_id`
+
+### `ProductFeatures::VisibilityPreset`
+
+* Staff only preset sets staff true, others false
+* Website-ready preset sets all four true
+* round-trip preset ↔ stored flags on edit
 
 ### `ProductFeatures::AssignmentValidator`
 
@@ -97,6 +104,7 @@ Verifier checks (minimum):
 * `award_shortlisted` scope
 * `staff_pick` scope
 * `expiring_soon` scope
+* filter by template `category_node_id` includes program-backed assignments
 
 ---
 
@@ -109,6 +117,8 @@ Verifier checks (minimum):
 | Recognitions section | Award assignment appears grouped under Recognitions |
 | Lists section | NYT list row shows rank, list_name, list_date |
 | Create assignment | Authorized user POST creates assignment |
+| Visibility preset | Staff only preset persists correct flag combination |
+| Promotion kind label | UI shows **Merchandising promotion**, not POS-discount wording |
 | Deactivate | Assignment `active: false`; hidden from effective badges |
 | Unauthorized | Mutate without permission → 403/redirect per app pattern |
 | Variant-specific | Assignment with `product_variant_id` shows on variant context |

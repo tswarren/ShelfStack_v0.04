@@ -109,9 +109,17 @@ formats
   sort_order          integer, default 0
 ```
 
-**Alternative (if multi-kind per format is common):** join table `format_item_kind_eligibilities (format_id, catalog_item_type, digital)`. MVP may use single `catalog_item_type` + `digital` on `formats` when each format maps to one kind; use join table in a follow-up slice if overlap is frequent.
+**Alternative (likely v0.04-16b):** join table `format_item_kind_eligibilities (format_id, catalog_item_type, digital)`. MVP uses columns on `formats` when each format maps to one kind; migrate to join table when overlap appears. Examples that may need multi-kind eligibility:
 
-MVP recommendation: **columns on `formats`** for simplicity; ~25 formats with single kind each.
+| format_key (example) | Item kinds |
+| -------------------- | ---------- |
+| activity_book | book, sideline |
+| workbook | book, sideline |
+| board_game | sideline, game |
+| download_code | book, videorecording, game |
+| kit | sideline, book |
+
+MVP recommendation: **columns on `formats`** for simplicity; ~25 formats with single kind each. **Keep join-table path visible** in roadmap/deferred — not a distant maybe.
 
 ### Existing columns (retain)
 
@@ -286,7 +294,7 @@ Legend: **Y** = visible, **R** = required when section shown, **—** = hidden, 
 * **Page count:** book non-digital formats; some sideline book-like formats.
 * **Running time:** book audiobook formats; music; video.
 * **Large print:** book print formats only.
-* **Publisher:** music UI may label **Label**; video **Studio** — same `publisher` column.
+* **Publisher / Label / Studio:** same `publisher` column; staff label from `Products::FieldVisibilityResolver` or `Products::FieldLabelResolver` — never show book-centric **Publisher** on music/video forms.
 * **Calendar year:** calendar kinds; some sideline dated products.
 
 ### Format-driven overrides
@@ -336,6 +344,17 @@ When staff selects **Service** or **Non-Inventory Item**:
 **Hidden:** Digital, format, creators, store category (optional exception: allow store category for non-inventory gift-like items — default hidden), variation setup (single non-orderable variant path or zero variants per existing product rules), physical block, genre pickers.
 
 Variant creation: follow existing `non_inventory` / `service` product rules via `ProductVariants::OperationalPolicy`.
+
+### Staff display label (not storage)
+
+Both store `catalog_item_type: other`. Staff-facing label **must** come from the item-kind picker / `Products::ItemKindNormalizer`, not from `catalog_item_type` alone:
+
+| Staff choice | Display label | Never show |
+| ------------ | ------------- | ---------- |
+| Service | **Service** | Other, Other / service |
+| Non-Inventory Item | **Non-Inventory Item** | Other, Other / non_inventory |
+
+Apply in Add Item, product edit, item index, and search/filter chips.
 
 ---
 
@@ -414,7 +433,7 @@ Follow [seed-data-spec.md](../../specifications/seed-data-spec.md) idempotent up
 ## Deferred (v0.04-16b or later)
 
 * Full format catalog from draft (~100+ rows)
-* `format_item_kind_eligibilities` join table if multi-kind formats proliferate
-* Periodical issue columns (`volume`, `issue_number`, `cover_date`)
+* **`format_item_kind_eligibilities` join table** — when formats span multiple item kinds (see formats section examples)
+* **Periodical issue columns** (`volume`, `issue_number`, `cover_date` / issue date) — **priority near-follow-up** after v0.04-16 MVP
 * `classification_axis` on `category_schemes` (alternative to growing `purpose`)
 * Column rename `catalog_item_type` → `item_kind`

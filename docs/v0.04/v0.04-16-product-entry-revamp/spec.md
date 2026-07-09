@@ -46,6 +46,7 @@ This milestone completes the **staff UX** for the v0.04-1 fused product model. M
 | Legacy `audiobook` / `ebook` types | Remain valid in DB; edit UI normalizes display to **Book** + digital + format; backfill optional/deferred |
 | Operational type | Keep **`product_type`** (`physical`, `digital`, `service`, `non_inventory`, `financial`) — derived/defaulted, not primary staff taxonomy |
 | Service vs non-inventory | Staff picks **Service** or **Non-Inventory Item**; both store `catalog_item_type: other` with `product_type: service` or `non_inventory` |
+| Service / Non-Inventory display | **Never** show staff label **Other** for these — use explicit **Service** / **Non-Inventory Item** in forms, index, and search (`Products::ItemKindNormalizer` + presenters) |
 | Format catalog | **MVP subset** (~25 common formats); extensible via Setup |
 | Store category | Available for all sellable item kinds except Service / Non-Inventory short form |
 | Field visibility | **`Products::FieldVisibilityResolver`** — item kind + digital + format + variation type + operational product_type |
@@ -83,8 +84,8 @@ Do **not** use “Product type” in the UI for Book / Video / Sideline — that
 | Calendar | `calendar` | `physical` | Use **Calendar year** field |
 | Sideline | `sideline` | `physical` | |
 | Other | `other` | `physical` | |
-| Service | `other` | `service` | Short form |
-| Non-Inventory Item | `other` | `non_inventory` | Short form |
+| Service | `other` | `service` | Short form; staff label **Service** only |
+| Non-Inventory Item | `other` | `non_inventory` | Short form; staff label **Non-Inventory Item** only |
 
 Legacy values `audiobook`, `ebook`, `map`, `gift` remain in `ProductMetadata::CATALOG_ITEM_TYPES` for existing rows. New creates use the table above.
 
@@ -103,6 +104,7 @@ Legacy values `audiobook`, `ebook`, `map`, `gift` remain in `ProductMetadata::CA
 9. **Store category** selection must preview default subdepartment and display location via existing `StoreCategoryDefaults`.
 10. **Audit events** on product metadata create/update where entry paths already audit (preserve existing behavior; extend if gaps found).
 11. **Genre `node_key` values** in seed CSVs are authoritative — widen `CategoryNode` validation (128 for genre schemes); do **not** shorten hierarchical keys to fit the legacy 30-char limit.
+12. **Service / Non-Inventory** must never present as plain **Other** in staff UI, item index filters, or search results — resolve display label from staff item-kind choice / `product_type`, not raw `catalog_item_type` alone.
 
 ---
 
@@ -128,7 +130,8 @@ Legacy values `audiobook`, `ebook`, `map`, `gift` remain in `ProductMetadata::CA
 
 * v0.04-17 product feature assignments (awards, lists, displays, staff picks as participation records)
 * Full format catalog (~100+ slugs from draft)
-* Periodical issue metadata (volume, issue number, frequency) beyond basic fields
+* **`format_item_kind_eligibilities` join table** when a format spans multiple item kinds (see data-model — likely follow-up after MVP)
+* **Periodical issue metadata** (`volume`, `issue_number`, `cover_date` / issue date) — **near follow-up (v0.04-16b)**; periodicals will feel incomplete without at least cover/issue date soon after MVP
 * Contributor role normalization (author/narrator/illustrator tables)
 * Platform/rating/region as first-class columns (use `metadata` JSONB until needed)
 * Rename `catalog_item_type` column to `item_kind`
@@ -247,7 +250,8 @@ SKU remains system-assigned per v0.04-2. Barcode/identifier scan paths unchanged
 | `Products::FieldVisibilityResolver` | Returns visible/required fields for context |
 | `Products::FormatEligibility` | Returns allowed `Format` records for kind + digital |
 | `Products::OperationalTypeDeriver` | Defaults `product_type` on create from kind + digital + service/non-inventory |
-| `Products::ItemKindNormalizer` | Maps legacy `audiobook`/`ebook` to book display context for edit |
+| `Products::ItemKindNormalizer` | Maps legacy `audiobook`/`ebook` to book display context; resolves staff item-kind label for Service / Non-Inventory (never plain **Other**) |
+| `Products::FieldLabelResolver` (or resolver helper) | Contextual field labels — e.g. **Publisher** (book), **Label** (music), **Studio** (video) on shared `publisher` column |
 | `StoreCategoryDefaults` | Existing — wire live preview on store category change |
 
 Controllers remain thin; Stimulus controllers may toggle sections client-side but **server-side resolver is authoritative** for submit validation.
@@ -294,7 +298,7 @@ Recommended v0.04-17 UI placement: new section **Recognitions & Features** on pr
 
 - [ ] Staff can create a **Book** (print and digital) with only applicable fields visible
 - [ ] Staff can create **Recorded Music**, **Video**, **Sideline** with correct genre scheme picker
-- [ ] **Service** and **Non-Inventory** short forms work with correct `product_type`
+- [ ] **Service** and **Non-Inventory** short forms work with correct `product_type` and staff labels (not **Other**)
 - [ ] Format dropdown never shows ineligible formats for selected kind/digital
 - [ ] Store category updates subdepartment/display location preview
 - [ ] Variant form uses currency selling price and hides legacy SKU/name override fields

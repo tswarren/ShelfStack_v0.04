@@ -321,7 +321,11 @@ ProductFeatures::BadgePresenter.call(
 )
 ```
 
-Prefers `label_text`; maps status + kind to compact badge labels; respects visibility flags.
+Prefers `label_text`; maps status + kind to compact badge labels; respects visibility flags. For program-backed assignments, resolves display name from `product_feature_program` and optional template `category_node_id` (inherit vocabulary label for reporting/badges without duplicating node on assignment).
+
+### `ProductFeatures::VisibilityPreset`
+
+Maps staff UI presets to the four stored boolean columns (see spec § Visibility presets). Inverse mapping for edit forms.
 
 ### `ProductFeatures::AssignmentValidator`
 
@@ -334,7 +338,7 @@ Prefers `label_text`; maps status + kind to compact badge labels; respects visib
 
 ### `ProductFeatures::SearchFilters`
 
-Scope builder for item index and future reports.
+Scope builder for item index and future reports. When filtering by `category_node_id`, include assignments anchored to programs whose `category_node_id` matches the template node.
 
 ---
 

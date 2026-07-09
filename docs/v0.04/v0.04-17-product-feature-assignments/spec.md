@@ -77,7 +77,10 @@ There is **no `product_features` vocabulary table** — durable feature names li
 | `feature_kind` | Required on assignment; denormalized for filters; derived from node scheme where possible |
 | Staff picks | Assignment + `recommended_by_user_id` — no separate staff-pick table in v1 |
 | Promotions ↔ POS | Descriptive only — no discount linkage in v0.04-17 |
-| Visibility | `public_visible`, `staff_visible`, `pos_visible`, `website_visible` on assignment |
+| Promotion UI label | Staff-facing **Merchandising promotion** (or **Promotional feature**) — not wording that implies automatic POS discount |
+| Visibility storage | Individual flags on assignment (`public_visible`, `staff_visible`, `pos_visible`, `website_visible`) |
+| Visibility UI (MVP) | **Presets** in forms; advanced per-flag override optional — schema keeps granular columns |
+| Program template node | `ProductFeatureProgram.category_node_id` optional; presenters and search resolve template for program-backed assignments |
 | Import quality | `needs_review` on assignment for uncertain imports |
 | Status values | Controlled strings by `feature_kind` in v1 — no normalized status table |
 | Scheme purpose (v1) | Extend `CategoryScheme::PURPOSES` with feature-oriented values (Option A) |
@@ -261,7 +264,7 @@ Grouped sections (empty groups hidden):
 ```text
 Recognitions     — awards, review callouts
 Lists            — bestseller/featured lists, book clubs
-Merchandising    — displays, promotions, vendor co-op
+Merchandising    — displays, merchandising promotions, vendor co-op
 Staff & Events   — staff picks, event tie-ins, reading lists
 ```
 
@@ -274,9 +277,20 @@ Inactive/expired rows: collapsed history or separate “Show history” toggle (
 Staff with `products.feature_assignments.create` may:
 
 * Choose vocabulary node **or** active program
-* Set status, dates, rank, list name/date, notes, visibility
+* Set status, dates, rank, list name/date, notes, **visibility preset** (maps to stored flags)
 * Attach to product or specific variant
 * Deactivate assignment
+
+**Visibility presets (MVP UI)** — map to stored flags; staff need not manage four checkboxes by default:
+
+| Preset | `staff_visible` | `pos_visible` | `public_visible` | `website_visible` |
+| ------ | --------------- | ------------- | ---------------- | ----------------- |
+| Staff only | true | false | false | false |
+| Staff + POS | true | true | false | false |
+| Public / customer-facing | true | true | true | false |
+| Website-ready | true | true | true | true |
+
+Advanced edit may expose individual flags. Schema retains all four columns.
 
 ### Program admin
 
