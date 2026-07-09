@@ -1,0 +1,661 @@
+node_key,name,parent_node_key
+alternative,Alternative,
+alternative_art_punk,Art Punk,alternative
+alternative_alternative_rock,Alternative Rock,alternative
+alternative_britpunk,Britpunk,alternative
+alternative_college_rock,College Rock,alternative
+alternative_crossover_thrash,Crossover Thrash,alternative
+alternative_crust_punk_thx_haug,Crust Punk (thx Haug),alternative
+alternative_emotional_hardcore_emo_emocore,Emotional Hardcore (emo / emocore),alternative
+alternative_experimental_rock,Experimental Rock,alternative
+alternative_folk_punk,Folk Punk,alternative
+alternative_goth_gothic_rock,Goth / Gothic Rock,alternative
+alternative_grunge,Grunge,alternative
+alternative_hardcore_punk,Hardcore Punk,alternative
+alternative_hard_rock,Hard Rock,alternative
+alternative_indie_rock,Indie Rock,alternative
+alternative_lofi,Lo-fi,alternative
+alternative_musique_concrte,Musique Concrète,alternative
+alternative_new_wave,New Wave,alternative
+alternative_progressive_rock,Progressive Rock,alternative
+alternative_punk,Punk,alternative
+alternative_shoegaze,Shoegaze,alternative
+alternative_steampunk,Steampunk,alternative
+anime,Anime,
+blues,Blues,
+blues_acoustic_blues,Acoustic Blues,blues
+blues_african_blues,African Blues,blues
+blues_blues_rock,Blues Rock,blues
+blues_blues_shouter,Blues Shouter,blues
+blues_british_blues,British Blues,blues
+blues_canadian_blues,Canadian Blues,blues
+blues_chicago_blues,Chicago Blues,blues
+blues_classic_blues,Classic Blues,blues
+blues_classic_female_blues,Classic Female Blues,blues
+blues_contemporary_blues,Contemporary Blues,blues
+blues_contemporary_r_b,Contemporary R&B,blues
+blues_country_blues,Country Blues,blues
+blues_dark_blues,Dark Blues,blues
+blues_delta_blues,Delta Blues,blues
+blues_detroit_blues,Detroit Blues,blues
+blues_doom_blues,Doom Blues,blues
+blues_electric_blues,Electric Blues,blues
+blues_folk_blues,Folk Blues,blues
+blues_gospel_blues,Gospel Blues,blues
+blues_harmonica_blues,Harmonica Blues,blues
+blues_hill_country_blues,Hill Country Blues,blues
+blues_hokum_blues,Hokum Blues,blues
+blues_jazz_blues,Jazz Blues,blues
+blues_jump_blues,Jump Blues,blues
+blues_kansas_city_blues,Kansas City Blues,blues
+blues_louisiana_blues,Louisiana Blues,blues
+blues_memphis_blues,Memphis Blues,blues
+blues_modern_blues,Modern Blues,blues
+blues_new_orlean_blues,New Orlean Blues,blues
+blues_ny_blues,NY Blues,blues
+blues_piano_blues,Piano Blues,blues
+blues_piedmont_blues,Piedmont Blues,blues
+blues_punk_blues,Punk Blues,blues
+blues_ragtime_blues,Ragtime Blues,blues
+blues_rhythm_blues,Rhythm Blues,blues
+blues_soul_blues,Soul Blues,blues
+blues_st_louis_blues,St. Louis Blues,blues
+blues_swamp_blues,Swamp Blues,blues
+blues_texas_blues,Texas Blues,blues
+blues_urban_blues,Urban Blues,blues
+blues_vandeville,Vandeville,blues
+blues_west_coast_blues,West Coast Blues,blues
+blues_zydeco_also_under_world_genre,Zydeco (also under ‘World’ genre),blues
+childrens_music,Children’s Music,
+childrens_music_lullabies,Lullabies,childrens_music
+childrens_music_singalong,Sing-Along,childrens_music
+childrens_music_stories,Stories,childrens_music
+classical,Classical,
+classical_avantgarde,Avant-Garde,classical
+classical_ballet,Ballet,classical
+classical_baroque,Baroque,classical
+classical_cantata,Cantata,classical
+classical_chamber_music,Chamber Music,classical
+classical_chant,Chant,classical
+classical_choral,Choral,classical
+classical_classical_crossover,Classical Crossover,classical
+classical_concerto,Concerto,classical
+classical_concerto_grosso,Concerto Grosso,classical
+classical_contemporary_classical,Contemporary Classical,classical
+classical_early_music,Early Music,classical
+classical_expressionist,Expressionist,classical
+classical_high_classical,High Classical,classical
+classical_impressionist,Impressionist,classical
+classical_mass_requiem,Mass Requiem,classical
+classical_medieval,Medieval,classical
+classical_minimalism,Minimalism,classical
+classical_modern_composition,Modern Composition,classical
+classical_modern_classical,Modern Classical,classical
+classical_opera,Opera,classical
+classical_oratorio,Oratorio,classical
+classical_orchestral,Orchestral,classical
+classical_organum,Organum,classical
+classical_renaissance,Renaissance,classical
+classical_romantic_early_period,Romantic (early period),classical
+classical_romantic_later_period,Romantic (later period),classical
+classical_sonata,Sonata,classical
+classical_symphonic,Symphonic,classical
+classical_symphony,Symphony,classical
+classical_twelvetone,Twelve-tone,classical
+classical_wedding_music,Wedding Music,classical
+comedy,Comedy,
+comedy_novelty,Novelty,comedy
+comedy_parody_music_weird_al,Parody Music (Weird Al!),comedy
+comedy_standup_comedy,Stand-up Comedy,comedy
+comedy_vaudeville,Vaudeville,comedy
+country,Country,
+country_alternative_country,Alternative Country,country
+country_americana,Americana,country
+country_australian_country,Australian Country,country
+country_bakersfield_sound,Bakersfield Sound,country
+country_bluegrass,Bluegrass,country
+country_blues_country,Blues Country,country
+country_cajun_fiddle_tunes,Cajun Fiddle Tunes,country
+country_christian_country,Christian Country,country
+country_classic_country,Classic Country,country
+country_close_harmony,Close Harmony,country
+country_contemporary_bluegrass,Contemporary Bluegrass,country
+country_contemporary_country,Contemporary Country,country
+country_country_gospel,Country Gospel,country
+country_country_pop,Country Pop,country
+country_country_rap,Country Rap,country
+country_country_rock,Country Rock,country
+country_country_soul,Country Soul,country
+country_cowboy_western,Cowboy / Western,country
+country_cowpunk,Cowpunk,country
+country_dansband,Dansband,country
+country_honky_tonk,Honky Tonk,country
+country_francocountry,Franco-Country,country
+country_gulf_and_western,Gulf and Western,country
+country_hellbilly_music,Hellbilly Music,country
+country_instrumental_country,Instrumental Country,country
+country_lubbock_sound,Lubbock Sound,country
+country_nashville_sound,Nashville Sound,country
+country_neotraditional_country,Neotraditional Country,country
+country_outlaw_country,Outlaw Country,country
+country_progressive,Progressive,country
+country_psychobilly_punkabilly,Psychobilly / Punkabilly,country
+country_red_dirt,Red Dirt,country
+country_sertanejo,Sertanejo,country
+country_texas_county,Texas County,country
+country_traditional_bluegrass,Traditional Bluegrass,country
+country_traditional_country,Traditional Country,country
+country_truckdriving_country,Truck-Driving Country,country
+country_urban_cowboy,Urban Cowboy,country
+country_western_swing,Western Swing,country
+country_zydeco,Zydeco,country
+dance,Dance,
+dance_club_club_dance,Club / Club Dance,dance
+dance_breakcore,Breakcore,dance
+dance_breakbeat_breakstep,Breakbeat / Breakstep,dance
+dance_brostep,Brostep,dance
+dance_chillstep,Chillstep,dance
+dance_deep_house,Deep House,dance
+dance_dubstep,Dubstep,dance
+dance_electro_house,Electro House,dance
+dance_electroswing,Electroswing,dance
+dance_exercise,Exercise,dance
+dance_future_garage,Future Garage,dance
+dance_garage,Garage,dance
+dance_glitch_hop,Glitch Hop,dance
+dance_glitch_pop,Glitch Pop,dance
+dance_grime,Grime,dance
+dance_hardcore,Hardcore,dance
+dance_hard_dance,Hard Dance,dance
+dance_hinrg_eurodance,Hi-NRG / Eurodance,dance
+dance_horrorcore_thx_matt,Horrorcore (thx Matt),dance
+dance_house,House,dance
+dance_jackin_house,Jackin House,dance
+dance_jungle_drumnbass,Jungle / Drum’n’bass,dance
+dance_liquid_dub,Liquid Dub,dance
+dance_regstep,Regstep,dance
+dance_speedcore,Speedcore,dance
+dance_techno,Techno,dance
+dance_trance,Trance,dance
+dance_hard_trance,Hard Trance,dance
+dance_prog_trance,Prog. Trance,dance
+dance_psytrance,Psy-Trance,dance
+dance_minimal_techno,Minimal Techno,dance
+dance_tech_house,Tech House,dance
+dance_tech_trance,Tech Trance,dance
+dance_uplifting_trance,Uplifting Trance,dance
+dance_vocal_trance,Vocal Trance,dance
+dance_trap,Trap,dance
+disney,Disney,
+easy_listening,Easy Listening,
+easy_listening_background,Background,easy_listening
+easy_listening_bop,Bop,easy_listening
+easy_listening_elevator,Elevator,easy_listening
+easy_listening_furniture,Furniture,easy_listening
+easy_listening_lounge,Lounge,easy_listening
+easy_listening_middle_of_the_road,Middle of the Road,easy_listening
+easy_listening_swing,Swing,easy_listening
+electronic,Electronic,
+electronic_2step_thx_random_haug,2-Step (thx Ran’dom Haug),electronic
+electronic_8bit_aka_8bit_bitpop_and_chiptune_see_below,"8bit – aka 8-bit, Bitpop and Chiptune (see below)",electronic
+electronic_ambient,Ambient,electronic
+electronic_asian_underground,Asian Underground,electronic
+electronic_bassline,Bassline,electronic
+electronic_chillwave,Chillwave,electronic
+electronic_chiptune,Chiptune,electronic
+electronic_crunk,Crunk,electronic
+electronic_downtempo,Downtempo,electronic
+electronic_drum_bass,Drum & Bass,electronic
+electronic_electro,Electro,electronic
+electronic_electroswing,Electro-swing,electronic
+electronic_electronica,Electronica,electronic
+electronic_electronic_rock,Electronic Rock,electronic
+electronic_eurodance,Eurodance,electronic
+electronic_hardstyle,Hardstyle,electronic
+electronic_hinrg,Hi-Nrg,electronic
+electronic_idmexperimental,IDM/Experimental,electronic
+electronic_industrial,Industrial,electronic
+electronic_trip_hop,Trip Hop,electronic
+electronic_vaporwave,Vaporwave,electronic
+electronic_uk_garage,UK Garage,electronic
+enka,Enka,
+french_pop,French Pop,
+folk_music,Folk Music,
+folk_music_american_folk_revival,American Folk Revival,folk_music
+folk_music_antifolk,Anti-Folk,folk_music
+folk_music_british_folk_revival,British Folk Revival,folk_music
+folk_music_contemporary_folk,Contemporary Folk,folk_music
+folk_music_filk_music,Filk Music,folk_music
+folk_music_freak_folk,Freak Folk,folk_music
+folk_music_indie_folk,Indie Folk,folk_music
+folk_music_industrial_folk,Industrial Folk,folk_music
+folk_music_neofolk,Neofolk,folk_music
+folk_music_progressive_folk,Progressive Folk,folk_music
+folk_music_psychedelic_folk,Psychedelic Folk,folk_music
+folk_music_sung_poetry,Sung Poetry,folk_music
+folk_music_technofolk,Techno-Folk,folk_music
+german_folk,German Folk,
+german_pop,German Pop,
+fitness_workout,Fitness & Workout,
+hiphoprap,Hip-Hop/Rap,
+hiphoprap_alternative_rap,Alternative Rap,hiphoprap
+hiphoprap_avantgarde,Avant-Garde,hiphoprap
+hiphoprap_bounce,Bounce,hiphoprap
+hiphoprap_chap_hop,Chap Hop,hiphoprap
+hiphoprap_christian_hip_hop,Christian Hip Hop,hiphoprap
+hiphoprap_conscious_hip_hop,Conscious Hip Hop,hiphoprap
+hiphoprap_countryrap,Country-Rap,hiphoprap
+hiphoprap_grunk,Grunk,hiphoprap
+hiphoprap_crunkcore,Crunkcore,hiphoprap
+hiphoprap_cumbia_rap,Cumbia Rap,hiphoprap
+hiphoprap_dirty_south,Dirty South,hiphoprap
+hiphoprap_east_coast,East Coast,hiphoprap
+hiphoprap_freestyle_rap,Freestyle Rap,hiphoprap
+hiphoprap_gfunk,G-Funk,hiphoprap
+hiphoprap_gangsta_rap,Gangsta Rap,hiphoprap
+hiphoprap_golden_age,Golden Age,hiphoprap
+hiphoprap_grime,Grime,hiphoprap
+hiphoprap_hardcore_rap,Hardcore Rap,hiphoprap
+hiphoprap_hiphop,Hip-Hop,hiphoprap
+hiphoprap_hip_pop,Hip Pop,hiphoprap
+hiphoprap_horrorcore,Horrorcore,hiphoprap
+hiphoprap_hyphy,Hyphy,hiphoprap
+hiphoprap_industrial_hip_hop,Industrial Hip Hop,hiphoprap
+hiphoprap_instrumental_hip_hop,Instrumental Hip Hop,hiphoprap
+hiphoprap_jazz_rap,Jazz Rap,hiphoprap
+hiphoprap_latin_rap,Latin Rap,hiphoprap
+hiphoprap_low_bap,Low Bap,hiphoprap
+hiphoprap_lyrical_hip_hop,Lyrical Hip Hop,hiphoprap
+hiphoprap_merenrap,Merenrap,hiphoprap
+hiphoprap_midwest_hip_hop,Midwest Hip Hop,hiphoprap
+hiphoprap_motswako,Motswako,hiphoprap
+hiphoprap_nerdcore,Nerdcore,hiphoprap
+hiphoprap_new_jack_swing,New Jack Swing,hiphoprap
+hiphoprap_new_school_hip_hop,New School Hip Hop,hiphoprap
+hiphoprap_old_school_rap,Old School Rap,hiphoprap
+hiphoprap_rap,Rap,hiphoprap
+hiphoprap_trap,Trap,hiphoprap
+hiphoprap_turntablism,Turntablism,hiphoprap
+hiphoprap_underground_rap,Underground Rap,hiphoprap
+hiphoprap_west_coast_rap,West Coast Rap,hiphoprap
+holiday,Holiday,
+holiday_chanukah,Chanukah,holiday
+holiday_christmas,Christmas,holiday
+holiday_christmas_childrens,Christmas: Children’s,holiday
+holiday_christmas_classic,Christmas: Classic,holiday
+holiday_christmas_classical,Christmas: Classical,holiday
+holiday_christmas_comedy,Christmas: Comedy,holiday
+holiday_christmas_jazz,Christmas: Jazz,holiday
+holiday_christmas_modern,Christmas: Modern,holiday
+holiday_christmas_pop,Christmas: Pop,holiday
+holiday_christmas_r_b,Christmas: R&B,holiday
+holiday_christmas_religious,Christmas: Religious,holiday
+holiday_christmas_rock,Christmas: Rock,holiday
+holiday_easter,Easter,holiday
+holiday_halloween,Halloween,holiday
+holiday_thanksgiving,Thanksgiving,holiday
+holiday_other,Other,holiday
+indie_pop,Indie Pop,
+industrial,Industrial,
+industrial_aggrotech,Aggrotech,industrial
+industrial_coldwave,Coldwave,industrial
+industrial_cybergrind,Cybergrind,industrial
+industrial_dark_electro,Dark Electro,industrial
+industrial_death_industrial,Death Industrial,industrial
+industrial_electroindustrial,Electro-Industrial,industrial
+industrial_electronic_body_music,Electronic Body Music,industrial
+industrial_industrial_metal,Industrial Metal,industrial
+industrial_industrial_rock,Industrial Rock,industrial
+industrial_noise,Noise,industrial
+industrial_witch_house,Witch House,industrial
+inspirational_christian_gospel,Inspirational – Christian & Gospel,
+inspirational_christian_gospel_ccm_contemporary_christian_music,CCM (Contemporary Christian Music),inspirational_christian_gospel
+inspirational_christian_gospel_christian_metal,Christian Metal,inspirational_christian_gospel
+inspirational_christian_gospel_christian_pop,Christian Pop,inspirational_christian_gospel
+inspirational_christian_gospel_christian_rap,Christian Rap,inspirational_christian_gospel
+inspirational_christian_gospel_christian_rock,Christian Rock,inspirational_christian_gospel
+inspirational_christian_gospel_classic_christian,Classic Christian,inspirational_christian_gospel
+inspirational_christian_gospel_contemporary_gospel,Contemporary Gospel,inspirational_christian_gospel
+inspirational_christian_gospel_gospel,Gospel,inspirational_christian_gospel
+inspirational_christian_gospel_christian_gospel,Christian & Gospel,inspirational_christian_gospel
+inspirational_christian_gospel_praise_worship,Praise & Worship,inspirational_christian_gospel
+inspirational_christian_gospel_qawwali,Qawwali,inspirational_christian_gospel
+inspirational_christian_gospel_southern_gospel,Southern Gospel,inspirational_christian_gospel
+inspirational_christian_gospel_traditional_gospel,Traditional Gospel,inspirational_christian_gospel
+instrumental,Instrumental,
+instrumental_march_marching_band,March (Marching Band),instrumental
+jpop,J-Pop,
+jpop_jrock,J-Rock,jpop
+jpop_jsynth,J-Synth,jpop
+jpop_jska,J-Ska,jpop
+jpop_jpunk,J-Punk,jpop
+jazz,Jazz,
+jazz_acid_jazz,Acid Jazz,jazz
+jazz_afrocuban_jazz,Afro-Cuban Jazz,jazz
+jazz_avantgarde_jazz,Avant-Garde Jazz,jazz
+jazz_bebop,Bebop,jazz
+jazz_big_band,Big Band,jazz
+jazz_blue_note,Blue Note,jazz
+jazz_british_dance_band_jazz,British Dance Band (Jazz),jazz
+jazz_cape_jazz,Cape Jazz,jazz
+jazz_chamber_jazz,Chamber Jazz,jazz
+jazz_contemporary_jazz,Contemporary Jazz,jazz
+jazz_continental_jazz,Continental Jazz,jazz
+jazz_cool_jazz,Cool Jazz,jazz
+jazz_crossover_jazz,Crossover Jazz,jazz
+jazz_dark_jazz,Dark Jazz,jazz
+jazz_dixieland,Dixieland,jazz
+jazz_early_jazz,Early Jazz,jazz
+jazz_electro_swing_jazz,Electro Swing (Jazz),jazz
+jazz_ethiojazz,Ethio-jazz,jazz
+jazz_ethnojazz,Ethno-Jazz,jazz
+jazz_european_free_jazz,European Free Jazz,jazz
+jazz_free_funk_avantgarde_funk_jazz,Free Funk (Avant-Garde / Funk Jazz),jazz
+jazz_free_jazz,Free Jazz,jazz
+jazz_fusion,Fusion,jazz
+jazz_gypsy_jazz,Gypsy Jazz,jazz
+jazz_hard_bop,Hard Bop,jazz
+jazz_indo_jazz,Indo Jazz,jazz
+jazz_jazz_blues,Jazz Blues,jazz
+jazz_jazzfunk_see_free_funk,Jazz-Funk (see Free Funk),jazz
+jazz_jazzfusion,Jazz-Fusion,jazz
+jazz_jazz_rap,Jazz Rap,jazz
+jazz_jazz_rock,Jazz Rock,jazz
+jazz_kansas_city_jazz,Kansas City Jazz,jazz
+jazz_latin_jazz,Latin Jazz,jazz
+jazz_mbase_jazz,M-Base Jazz,jazz
+jazz_mainstream_jazz,Mainstream Jazz,jazz
+jazz_modal_jazz,Modal Jazz,jazz
+jazz_neobop,Neo-Bop,jazz
+jazz_neoswing,Neo-Swing,jazz
+jazz_nu_jazz,Nu Jazz,jazz
+jazz_orchestral_jazz,Orchestral Jazz,jazz
+jazz_postbop,Post-Bop,jazz
+jazz_punk_jazz,Punk Jazz,jazz
+jazz_ragtime,Ragtime,jazz
+jazz_ska_jazz,Ska Jazz,jazz
+jazz_skiffle_also_folk,Skiffle (also Folk),jazz
+jazz_smooth_jazz,Smooth Jazz,jazz
+jazz_soul_jazz,Soul Jazz,jazz
+jazz_swing_jazz,Swing Jazz,jazz
+jazz_straightahead_jazz,Straight-Ahead Jazz,jazz
+jazz_trad_jazz,Trad Jazz,jazz
+jazz_third_stream,Third Stream,jazz
+jazz_jazzfunk,Jazz-Funk,jazz
+jazz_west_coast_jazz,West Coast Jazz,jazz
+kpop_,K-Pop ,
+karaoke,Karaoke,
+kayokyoku,Kayokyoku,
+latin,Latin,
+latin_alternativo_rock_latino,Alternativo & Rock Latino,latin
+latin_argentine_tango,Argentine Tango,latin
+latin_bachata,Bachata,latin
+latin_baithak_gana,Baithak Gana,latin
+latin_baladas_y_boleros,Baladas y Boleros,latin
+latin_bolero,Bolero,latin
+latin_bossa_nova,Bossa Nova,latin
+latin_brazilian,Brazilian,latin
+latin_chicha,Chicha,latin
+latin_criolla,Criolla,latin
+latin_contemporary_latin,Contemporary Latin,latin
+latin_cumbia,Cumbia,latin
+latin_flamenco_spanish_flamenco,Flamenco / Spanish Flamenco,latin
+latin_huayno,Huayno,latin
+latin_joropo_popular_style_in_venezuela_and_also_in_the_llanos_plains_of_colombia,"Joropo (popular style in Venezuela, and also in the llanos (plains) of Colombia)",latin
+latin_latin_jazz,Latin Jazz,latin
+latin_mambo_cuba,Mambo (Cuba),latin
+latin_mariachi,Mariachi,latin
+latin_merengue_tpico,Merengue Típico,latin
+latin_nuevo_flamenco,Nuevo Flamenco,latin
+latin_pop_latino,Pop Latino,latin
+latin_portuguese_fado,Portuguese Fado,latin
+latin_punta,Punta,latin
+latin_punta_rock,Punta Rock,latin
+latin_ranchera,Ranchera,latin
+latin_races,Raíces,latin
+latin_raison,Raison,latin
+latin_reggaeton_y_hiphop,Reggaeton y Hip-Hop,latin
+latin_regional_mexicano,Regional Mexicano,latin
+latin_salsa_y_tropical,Salsa y Tropical,latin
+latin_soca,Soca,latin
+latin_son,Son,latin
+latin_tejano,Tejano,latin
+latin_timba,Timba,latin
+latin_twoubadou,Twoubadou,latin
+latin_vallenato,Vallenato,latin
+latin_zouk,Zouk,latin
+metal,Metal,
+metal_heavy_metal,Heavy Metal,metal
+metal_speed_metal,Speed Metal,metal
+metal_thrash_metal,Thrash Metal,metal
+metal_power_metal,Power Metal,metal
+metal_death_metal,Death Metal,metal
+metal_black_metal,Black Metal,metal
+metal_pagan_metal,Pagan Metal,metal
+metal_viking_metal,Viking Metal,metal
+metal_folk_metal,Folk Metal,metal
+metal_symphonic_metal,Symphonic Metal,metal
+metal_gothic_metal,Gothic Metal,metal
+metal_glam_metal,Glam Metal,metal
+metal_hair_metal,Hair Metal,metal
+metal_doom_metal,Doom Metal,metal
+metal_groove_metal,Groove Metal,metal
+metal_industrial_metal,Industrial Metal,metal
+metal_modern_metal,Modern Metal,metal
+metal_neoclassical_metal,Neoclassical Metal,metal
+metal_new_wave_of_british_heavy_metal,New Wave Of British Heavy Metal,metal
+metal_post_metal,Post Metal,metal
+metal_progressive_metal,Progressive Metal,metal
+metal_avantgarde_metal,Avantgarde Metal,metal
+metal_sludge,Sludge,metal
+metal_djent,Djent,metal
+metal_drone,Drone,metal
+metal_kawaii_metal,Kawaii Metal,metal
+metal_pirate_metal,Pirate Metal,metal
+metal_nu_metal,Nu Metal,metal
+metal_neue_deutsche_hrte,Neue Deutsche Härte,metal
+metal_math_metal,Math Metal,metal
+metal_crossover,Crossover,metal
+metal_grindcore,Grindcore,metal
+metal_hardcore,Hardcore,metal
+metal_metalcore,Metalcore,metal
+metal_deathcore,Deathcore,metal
+metal_post_hardcore,Post Hardcore,metal
+metal_mathcore,Mathcore,metal
+new_age,New Age,
+new_age_environmental,Environmental,new_age
+new_age_healing,Healing,new_age
+new_age_meditation,Meditation,new_age
+new_age_nature,Nature,new_age
+new_age_relaxation,Relaxation,new_age
+new_age_travel,Travel,new_age
+opera,Opera,
+pop,Pop,
+pop_adult_contemporary,Adult Contemporary,pop
+pop_arab_pop,Arab Pop,pop
+pop_baroque,Baroque,pop
+pop_britpop,Britpop,pop
+pop_bubblegum_pop,Bubblegum Pop,pop
+pop_chamber_pop,Chamber Pop,pop
+pop_chanson,Chanson,pop
+pop_christian_pop,Christian Pop,pop
+pop_classical_crossover,Classical Crossover,pop
+pop_europop,Europop,pop
+pop_dance_pop,Dance Pop,pop
+pop_dream_pop,Dream Pop,pop
+pop_electro_pop,Electro Pop,pop
+pop_iranian_pop,Iranian Pop,pop
+pop_jangle_pop,Jangle Pop,pop
+pop_latin_ballad,Latin Ballad,pop
+pop_levenslied,Levenslied,pop
+pop_louisiana_swamp_pop,Louisiana Swamp Pop,pop
+pop_mexican_pop,Mexican Pop,pop
+pop_motorpop,Motorpop,pop
+pop_new_romanticism,New Romanticism,pop
+pop_orchestral_pop,Orchestral Pop,pop
+pop_pop_rap,Pop Rap,pop
+pop_popera,Popera,pop
+pop_poprock,Pop/Rock,pop
+pop_pop_punk,Pop Punk,pop
+pop_power_pop,Power Pop,pop
+pop_psychedelic_pop,Psychedelic Pop,pop
+pop_schlager,Schlager,pop
+pop_soft_rock,Soft Rock,pop
+pop_sophistipop,Sophisti-Pop,pop
+pop_space_age_pop,Space Age Pop,pop
+pop_sunshine_pop,Sunshine Pop,pop
+pop_surf_pop,Surf Pop,pop
+pop_synthpop,Synthpop,pop
+pop_teen_pop,Teen Pop,pop
+pop_traditional_pop_music,Traditional Pop Music,pop
+pop_turkish_pop,Turkish Pop,pop
+pop_vispop,Vispop,pop
+pop_wonky_pop,Wonky Pop,pop
+postdisco,Post-Disco,
+postdisco_boogie,Boogie,postdisco
+postdisco_dancepop,Dance-pop,postdisco
+progressive,Progressive,
+progressive_progressive_house_trance,Progressive House / Trance,progressive
+progressive_progressive_breaks,Progressive Breaks,progressive
+progressive_progressive_drum_bass,Progressive Drum & Bass,progressive
+progressive_progressive_techno,Progressive Techno,progressive
+r_bsoul,R&B/Soul,
+r_bsoul_carolina_beach_music,(Carolina) Beach Music,r_bsoul
+r_bsoul_contemporary_r_b,Contemporary R&B,r_bsoul
+r_bsoul_disco,Disco,r_bsoul
+r_bsoul_doo_wop,Doo Wop,r_bsoul
+r_bsoul_funk,Funk,r_bsoul
+r_bsoul_modern_soul,Modern Soul,r_bsoul
+r_bsoul_motown,Motown,r_bsoul
+r_bsoul_neosoul,Neo-Soul,r_bsoul
+r_bsoul_northern_soul,Northern Soul,r_bsoul
+r_bsoul_psychedelic_soul,Psychedelic Soul,r_bsoul
+r_bsoul_quiet_storm,Quiet Storm,r_bsoul
+r_bsoul_soul,Soul,r_bsoul
+r_bsoul_soul_blues,Soul Blues,r_bsoul
+r_bsoul_southern_soul,Southern Soul,r_bsoul
+reggae,Reggae,
+reggae_2tone,2-Tone,reggae
+reggae_dub,Dub,reggae
+reggae_roots_reggae,Roots Reggae,reggae
+reggae_reggae_fusion,Reggae Fusion,reggae
+reggae_reggae_en_espaol,Reggae en Español,reggae
+reggae_lovers_rock,Lovers Rock,reggae
+reggae_raggamuffin,Raggamuffin,reggae
+reggae_ska,Ska,reggae
+reggae_dancehall,Reggae Dancehall,
+rock,Rock,
+rock_acid_rock,Acid Rock,rock
+rock_adultoriented_rock,Adult-Oriented Rock,rock
+rock_afro_punk,Afro Punk,rock
+rock_adult_alternative,Adult Alternative,rock
+rock_alternative_rock,Alternative Rock,rock
+rock_american_traditional_rock,American Traditional Rock,rock
+rock_anatolian_rock,Anatolian Rock,rock
+rock_arena_rock,Arena Rock,rock
+rock_art_rock,Art Rock,rock
+rock_bluesrock,Blues-Rock,rock
+rock_british_invasion,British Invasion,rock
+rock_cock_rock,Cock Rock,rock
+rock_death_metal_black_metal,Death Metal / Black Metal,rock
+rock_doom_metal,Doom Metal,rock
+rock_glam_rock,Glam Rock,rock
+rock_gothic_metal,Gothic Metal,rock
+rock_grind_core,Grind Core,rock
+rock_hair_metal,Hair Metal,rock
+rock_hard_rock,Hard Rock,rock
+rock_math_metal,Math Metal,rock
+rock_math_rock,Math Rock,rock
+rock_metal,Metal,rock
+rock_metal_core,Metal Core,rock
+rock_noise_rock_genre_japanoise,Noise Rock (genre – Japanoise),rock
+rock_jam_bands,Jam Bands,rock
+rock_post_punk,Post Punk,rock
+rock_post_rock,Post Rock,rock
+rock_progrockart_rock,Prog-Rock/Art Rock,rock
+rock_progressive_metal,Progressive Metal,rock
+rock_psychedelic,Psychedelic,rock
+rock_rock_roll,Rock & Roll,rock
+rock_rockabilly,Rockabilly,rock
+rock_roots_rock,Roots Rock,rock
+rock_singersongwriter,Singer/Songwriter,rock
+rock_southern_rock,Southern Rock,rock
+rock_spazzcore,Spazzcore,rock
+rock_stoner_metal_duuuude,Stoner Metal (duuuude),rock
+rock_surf,Surf,rock
+rock_technical_death_metal,Technical Death Metal,rock
+rock_texmex,Tex-Mex,rock
+rock_thrash_metal,Thrash Metal,rock
+rock_time_lord_rock_trock,Time Lord Rock (Trock),rock
+rock_triphop,Trip-hop,rock
+rock_yacht_rock_soft_rock,Yacht Rock (soft rock),rock
+singersongwriter,Singer/Songwriter,
+singersongwriter_alternative_folk,Alternative Folk,singersongwriter
+singersongwriter_contemporary_folk,Contemporary Folk,singersongwriter
+singersongwriter_contemporary_singersongwriter,Contemporary Singer/Songwriter,singersongwriter
+singersongwriter_indie_folk,Indie Folk,singersongwriter
+singersongwriter_folkrock,Folk-Rock,singersongwriter
+singersongwriter_love_song_chanson,Love Song (Chanson),singersongwriter
+singersongwriter_new_acoustic,New Acoustic,singersongwriter
+singersongwriter_traditional_folk,Traditional Folk,singersongwriter
+soundtrack,Soundtrack,
+soundtrack_foreign_cinema,Foreign Cinema,soundtrack
+soundtrack_movie_soundtrack,Movie Soundtrack,soundtrack
+soundtrack_musicals,Musicals,soundtrack
+soundtrack_original_score,Original Score,soundtrack
+soundtrack_soundtrack,Soundtrack,soundtrack
+soundtrack_tv_soundtrack,TV Soundtrack,soundtrack
+spoken_word,Spoken Word,
+texmex_tejano,Tex-Mex / Tejano,
+texmex_tejano_chicano,Chicano,texmex_tejano
+texmex_tejano_classic,Classic,texmex_tejano
+texmex_tejano_conjunto,Conjunto,texmex_tejano
+texmex_tejano_conjunto_progressive,Conjunto Progressive,texmex_tejano
+texmex_tejano_new_mex,New Mex,texmex_tejano
+texmex_tejano_texmex,Tex-Mex,texmex_tejano
+vocal,Vocal,
+vocal_a_cappella,A cappella,vocal
+vocal_barbershop,Barbershop,vocal
+vocal_cantique_sacred_vocal,Cantique (sacred vocal),vocal
+vocal_doowop,Doo-wop,vocal
+vocal_gregorian_chant,Gregorian Chant,vocal
+vocal_standards,Standards,vocal
+vocal_traditional_pop,Traditional Pop,vocal
+vocal_vocal_jazz,Vocal Jazz,vocal
+vocal_vocal_pop,Vocal Pop,vocal
+vocal_yodel,Yodel,vocal
+world,World,
+world_africa,Africa,world
+world_asia,Asia,world
+world_australia,Australia,world
+world_cajun,Cajun,world
+world_calypso,Calypso,world
+world_caribbean,Caribbean,world
+world_carnatic_karnataka_sanghetha,Carnatic (Karnataka Sanghetha),world
+world_celtic,Celtic,world
+world_celtic_folk,Celtic Folk,world
+world_contemporary_celtic,Contemporary Celtic,world
+world_coupdcal_congo,Coupé-décalé – Congo,world
+world_dangdut,Dangdut,world
+world_drinking_songs,Drinking Songs,world
+world_drone,Drone,world
+world_europe_portugal_fado,Europe – Portugal: Fado,world
+world_europe_greece_laiko_entechno_rebetika,"Europe – Greece: Laiko, Entechno, Rebetika",world
+world_europe_germany_austria_sweden_uk_schlager,Europe – Germany / Austria / Sweden / UK: Schlager,world
+world_france,France,world
+world_hawaii,Hawaii,world
+world_japan,Japan,world
+world_klezmer,Klezmer,world
+world_mbalax_senegal,Mbalax – Senegal,world
+world_middle_east,Middle East,world
+world_north_america,North America,world
+world_ode,Ode,world
+world_piphat_thailand,Piphat – Thailand,world
+world_polka,Polka,world
+world_soca,Soca,world
+world_south_africa,South Africa,world
+world_south_america,South America,world
+world_south_southeast_asia,South / Southeast Asia,world
+world_traditional_celtic,Traditional Celtic,world
+world_worldbeat,Worldbeat,world
+world_zydeco,Zydeco,world

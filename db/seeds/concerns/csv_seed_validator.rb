@@ -28,6 +28,12 @@ module Seeds
       dl_path = data_dir.join("display_locations.csv")
       sc_path = data_dir.join("store_categories.csv")
       bisac_path = data_dir.join("bisac.csv")
+      genre_paths = {
+        "music_genres" => data_dir.join("music_genres.csv"),
+        "video_genres" => data_dir.join("video_genres.csv"),
+        "video_game_genres" => data_dir.join("video_game_genres.csv"),
+        "sideline_genres" => data_dir.join("sideline_genres.csv")
+      }
 
       depts = read_csv(dept_path, errors)
       tax = read_csv(tax_path, errors)
@@ -49,6 +55,9 @@ module Seeds
       validate_display_locations!(dl, errors)
       validate_store_categories!(sc, sub, dl, dept_nums, errors)
       validate_bisac!(bisac, errors)
+      genre_paths.each do |label, path|
+        validate_genre_category_tree!(label, read_csv(path, errors), errors, warnings)
+      end
 
       Result.new(errors: errors, warnings: warnings)
     end
@@ -150,6 +159,27 @@ module Seeds
       errors << "bisac: #{codes.size - codes.uniq.size} duplicate codes" if codes.size != codes.uniq.size
       errors << "bisac: blank code rows" if codes.any?(&:blank?)
       rows.each { |r| errors << "bisac: blank heading for #{field(r, 'code')}" if field(r, "heading").blank? }
+    end
+
+    def validate_genre_category_tree!(label, rows, errors, warnings)
+      return if rows.empty?
+
+      keys = rows.map { |r| field(r, "node_key")&.downcase }.compact
+      key_set = keys.to_set
+
+      keys.group_by(&:itself).select { |_k, v| v.size > 1 }.each do |k, v|
+        errors << "#{label}: DUPLICATE node_key #{k} (#{v.size}x)"
+      end
+
+      rows.each do |row|
+        nk = field(row, "node_key")
+        pk = field(row, "parent_node_key")
+        errors << "#{label}: blank node_key" if nk.blank?
+        errors << "#{label}: blank name for #{nk.inspect}" if nk.present? && field(row, "name").blank?
+        errors << "#{label}: parent #{pk.inspect} not found for #{nk}" if pk && !key_set.include?(pk.downcase)
+        errors << "#{label}: node_key >255 chars: #{nk}" if nk && nk.length > 255
+        warnings << "#{label}: node_key >30 chars (#{nk.length}) for #{nk} — widen CategoryNode validation in v0.04-16" if nk && nk.length > 30
+      end
     end
   end
 end

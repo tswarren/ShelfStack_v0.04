@@ -1,0 +1,131 @@
+node_key,name,parent_node_key
+vg_act,Action,
+vg_actadv,Action & Adventure,
+vg_actadv_expl,Exploration Adventure,vg_actadv
+vg_actadv_metro,Metroidvania,vg_actadv
+vg_actadv_open,Open World Adventure,vg_actadv
+vg_actadv_survh,Survival Horror,vg_actadv
+vg_act_arcade,Arcade Action,vg_act
+vg_act_beat,Beat 'em Up,vg_act
+vg_act_brawler,Brawler,vg_act
+vg_act_hack,Hack and Slash,vg_act
+vg_act_lgun,Light Gun,vg_act
+vg_act_stlth,Stealth,vg_act
+vg_act_surv,Survival,vg_act
+vg_act_vehcom,Vehicular Combat,vg_act
+vg_adv,Adventure,
+vg_adv_myst,Detective & Mystery,vg_adv
+vg_adv_walk,Exploration Narrative,vg_adv
+vg_adv_graph,Graphic Adventure,vg_adv
+vg_adv_if,Interactive Fiction,vg_adv
+vg_adv_narr,Narrative Adventure,vg_adv
+vg_adv_point,Point-and-Click,vg_adv
+vg_edu,Educational & Training,
+vg_edu_brain,Brain Training,vg_edu
+vg_edu_child,Children's Educational,vg_edu
+vg_edu_health,Health & Fitness,vg_edu
+vg_edu_lang,Language Learning,vg_edu
+vg_edu_train,Training Simulation,vg_edu
+vg_fight,Fighting,
+vg_fight_2d,2D Fighting,vg_fight
+vg_fight_3d,3D Fighting,vg_fight
+vg_fight_arena,Arena Fighting,vg_fight
+vg_fight_plat,Platform Fighter,vg_fight
+vg_mmo,MMO & Online Worlds,
+vg_mmo_shoot,MMO Shooter,vg_mmo
+vg_mmo_mmorpg,MMORPG,vg_mmo
+vg_mmo_persist,Persistent World,vg_mmo
+vg_mmo_sandbox,Sandbox MMO,vg_mmo
+vg_mmo_social,Social MMO,vg_mmo
+vg_party,Party & Social,
+vg_party_gshow,Game Show,vg_party
+vg_party_local,Local Multiplayer Party,vg_party
+vg_party_mini,Minigame Collection,vg_party
+vg_party_game,Party Game,vg_party
+vg_party_quiz,Trivia & Quiz,vg_party
+vg_plat,Platformer,
+vg_plat_2d,2D Platformer,vg_plat
+vg_plat_3d,3D Platformer,vg_plat
+vg_plat_prec,Precision Platformer,vg_plat
+vg_plat_puzz,Puzzle Platformer,vg_plat
+vg_plat_run,Runner,vg_plat
+vg_puzz,Puzzle,
+vg_puzz_escape,Escape Room,vg_puzz
+vg_puzz_hidden,Hidden Object,vg_puzz
+vg_puzz_logic,Logic Puzzle,vg_puzz
+vg_puzz_match,Match-3,vg_puzz
+vg_puzz_maze,Maze,vg_puzz
+vg_puzz_phys,Physics Puzzle,vg_puzz
+vg_puzz_tile,Tile-Matching,vg_puzz
+vg_puzz_word,Word Puzzle,vg_puzz
+vg_race,Racing & Driving,
+vg_race_arcade,Arcade Racing,vg_race
+vg_race_drive,Driving Simulation,vg_race
+vg_race_kart,Kart Racing,vg_race
+vg_race_offroad,Off-Road Racing,vg_race
+vg_race_sim,Racing Simulation,vg_race
+vg_rhy,Rhythm & Music,
+vg_rhy_dance,Dance Game,vg_rhy
+vg_rhy_instr,Instrument Performance,vg_rhy
+vg_rhy_rhythm,Rhythm Game,vg_rhy
+vg_rhy_karaoke,Singing & Karaoke,vg_rhy
+vg_rpg,Role-Playing Game / RPG,
+vg_rpg_action,Action RPG,vg_rpg
+vg_rpg_dungeon,Dungeon Crawler,vg_rpg
+vg_rpg_jrpg,Japanese RPG,vg_rpg
+vg_rpg_monster,Monster Taming,vg_rpg
+vg_rpg_rogue,Roguelike,vg_rpg
+vg_rpg_roguelite,Roguelite,vg_rpg
+vg_rpg_tact,Tactical RPG,vg_rpg
+vg_rpg_wrpg,Western RPG,vg_rpg
+vg_shoot,Shooter,
+vg_shoot_bullet,Bullet Hell,vg_shoot
+vg_shoot_fps,First-Person Shooter,vg_shoot
+vg_shoot_hero,Hero Shooter,vg_shoot
+vg_shoot_loot,Looter Shooter,vg_shoot
+vg_shoot_rail,Rail Shooter,vg_shoot
+vg_shoot_shmup,Shoot 'em Up,vg_shoot
+vg_shoot_tact,Tactical Shooter,vg_shoot
+vg_shoot_tps,Third-Person Shooter,vg_shoot
+vg_shoot_twin,Twin-Stick Shooter,vg_shoot
+vg_sim,Simulation,
+vg_sim_biz,Business Simulation,vg_sim
+vg_sim_city,City Builder,vg_sim
+vg_sim_cms,Construction & Management Simulation,vg_sim
+vg_sim_farm,Farming Simulation,vg_sim
+vg_sim_flight,Flight Simulation,vg_sim
+vg_sim_life,Life Simulation,vg_sim
+vg_sim_sandbox,Sandbox Simulation,vg_sim
+vg_sim_vehicle,Vehicle Simulation,vg_sim
+vg_sport,Sports,
+vg_sport_base,Baseball,vg_sport
+vg_sport_bask,Basketball,vg_sport
+vg_sport_extreme,Extreme Sports,vg_sport
+vg_sport_fish,Fishing & Hunting,vg_sport
+vg_sport_fball,Football,vg_sport
+vg_sport_golf,Golf,vg_sport
+vg_sport_hock,Hockey,vg_sport
+vg_sport_socc,Soccer,vg_sport
+vg_sport_tenn,Tennis,vg_sport
+vg_strat,Strategy,
+vg_strat_4x,4X,vg_strat
+vg_strat_artillery,Artillery,vg_strat
+vg_strat_grand,Grand Strategy,vg_strat
+vg_strat_moba,MOBA,vg_strat
+vg_strat_rts,Real-Time Strategy,vg_strat
+vg_strat_tactics,Tactics,vg_strat
+vg_strat_tower,Tower Defense,vg_strat
+vg_strat_tbs,Turn-Based Strategy,vg_strat
+vg_strat_war,Wargame,vg_strat
+vg_table,Tabletop Card & Board Games,
+vg_table_abstract,Abstract Strategy Board Game,vg_table
+vg_table_board,Board Game,vg_table
+vg_table_card,Card Game,vg_table
+vg_table_casino,Casino & Gambling,vg_table
+vg_table_ccg,Collectible Card Game,vg_table
+vg_table_pinball,Pinball,vg_table
+vg_vn,Visual Novel,
+vg_vn_dating,Dating Sim,vg_vn
+vg_vn_book,Interactive Book,vg_vn
+vg_vn_kinetic,Kinetic Novel,vg_vn
+vg_vn_myst,Mystery Visual Novel,vg_vn
