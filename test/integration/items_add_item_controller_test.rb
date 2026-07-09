@@ -427,6 +427,22 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, items_add_item_metadata_sections_path
   end
 
+  test "metadata_sections preserves in-progress section field values from request params" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+
+    get items_add_item_metadata_sections_path, params: {
+      catalog_item: {
+        staff_item_kind: "book",
+        publisher: "In-Progress Publisher",
+        description: "Still typing"
+      }
+    }, headers: { "Turbo-Frame" => "product_metadata_sections" }
+
+    assert_response :success
+    assert_includes response.body, "In-Progress Publisher"
+    assert_includes response.body, "Still typing"
+  end
+
   test "selling setup attaches cover image during add item wizard" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
 

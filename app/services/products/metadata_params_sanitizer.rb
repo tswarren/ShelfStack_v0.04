@@ -2,17 +2,6 @@
 
 module Products
   class MetadataParamsSanitizer
-    PRODUCT_METADATA_KEYS = %i[
-      catalog_item_type title list_price_cents digital creators description active
-      format_id store_category_id default_sub_department_id variation_type
-      variant_label_1 variant_label_2 publisher publication_date publication_status
-      large_print edition_statement genres themes target_audiences access_restrictions
-      language year page_count running_time publication_frequency issue_number
-      volume_number internal_notes primary_bisac_category_node_id bisac_category_node_ids
-      bisac_subjects primary_genre_category_node_id genre_category_node_ids
-      staff_item_kind
-    ].freeze
-
     FIELD_PARAM_MAP = {
       title: :title,
       list_price: :list_price_cents,
@@ -21,8 +10,8 @@ module Products
       store_category: :store_category_id,
       subdepartment: :default_sub_department_id,
       variation_type: :variation_type,
-      variant_label_1: :variant_label_1,
-      variant_label_2: :variant_label_2,
+      variant_label_1: :variant1_label,
+      variant_label_2: :variant2_label,
       format: :format_id,
       publisher: :publisher,
       publication_date: :publication_date,
@@ -36,14 +25,24 @@ module Products
       active: :active,
       year: :year,
       page_count: :page_count,
-      running_time: :running_time,
+      running_time: :duration_minutes,
       target_audience: :target_audiences,
       access_restrictions: :access_restrictions,
-      language: :language,
+      language: :language_code,
       subjects: :themes,
       free_text_genres: :genres,
+      series_name: %i[series_name series_enumeration],
+      periodical_metadata: :publication_frequency,
       item_kind: :catalog_item_type
     }.freeze
+
+    PRODUCT_METADATA_KEYS = (
+      FIELD_PARAM_MAP.values.flatten +
+      %i[
+        staff_item_kind catalog_item_type primary_bisac_category_node_id bisac_category_node_ids
+        bisac_subjects primary_genre_category_node_id genre_category_node_ids issue_number volume_number
+      ]
+    ).uniq.freeze
 
     def self.sanitize(params:, entry_context:, mode: :new, item_kind_changed: false)
       new(params: params, entry_context: entry_context, mode: mode, item_kind_changed: item_kind_changed).sanitize

@@ -98,6 +98,39 @@ class Products::MetadataParamsSanitizerTest < ActiveSupport::TestCase
     refute result.key?(:format_id)
     refute result.key?(:publisher)
   end
+
+  test "keeps physical and format metadata keys that match form param names" do
+    ctx = Products::EntryContext.build(
+      product: Product.new(variation_type: "variable"),
+      staff_item_kind: "book",
+      digital: false,
+      mode: :new
+    )
+    result = Products::MetadataParamsSanitizer.sanitize(
+      params: {
+        title: "Heavy Book",
+        height: "2.5",
+        width: "6.0",
+        depth: "9.0",
+        dimension_units: "in",
+        weight: "16",
+        weight_units: "oz",
+        language_code: "eng",
+        variant1_label: "Size",
+        series_name: "Saga",
+        series_enumeration: "1"
+      },
+      entry_context: ctx,
+      mode: :new
+    )
+
+    assert_equal "2.5", result[:height]
+    assert_equal "in", result[:dimension_units]
+    assert_equal "eng", result[:language_code]
+    assert_equal "Size", result[:variant1_label]
+    assert_equal "Saga", result[:series_name]
+    assert_equal "1", result[:series_enumeration]
+  end
 end
 
 class FormatEligibilityColumnsTest < ActiveSupport::TestCase

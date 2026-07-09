@@ -197,13 +197,6 @@ module Items
       load_genre_form_state_if_needed(@product, entry_context: @entry_context)
     end
 
-    def load_genre_form_state_if_needed(product, entry_context:)
-      scheme_key = entry_context.controlled_scheme
-      return if scheme_key.blank? || scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
-
-      @genre_form_state = load_genre_form_state(product, scheme_key: scheme_key)
-    end
-
     def load_store_category_collections
       scheme = CategoryScheme.active_records.find_by(scheme_key: CategoryNode::STORE_CATEGORIES_SCHEME_KEY)
       @store_category_nodes = scheme ? CategoryNode.active_for_tree_select(scheme) : CategoryNode.none

@@ -229,7 +229,7 @@ module Items
 
       [
         { label: "Subjects", headings: cleaned_headings_from(bisac_subject_source) },
-        { label: "Genres", headings: cleaned_headings_from({ data: meta.genre_data, raw: meta.genres }) },
+        { label: "Genres", headings: cleaned_headings_from(genre_subject_source) },
         { label: "Themes", headings: cleaned_headings_from({ data: meta.theme_data, raw: meta.themes }) },
         { label: "Audiences", headings: cleaned_headings_from({ data: meta.target_audience_data, raw: meta.target_audiences }) },
         { label: "Access Restrictions", headings: cleaned_headings_from({ data: meta.access_restriction_data, raw: meta.access_restrictions }) }
@@ -555,7 +555,7 @@ module Items
 
       [
         bisac_subject_source,
-        { data: meta.genre_data, raw: meta.genres },
+        genre_subject_source,
         { data: meta.theme_data, raw: meta.themes }
       ]
     end
@@ -582,6 +582,31 @@ module Items
       return { data: linked_headings, raw: nil } if linked_headings.any?
 
       { data: catalog_item.bisac_subject_data, raw: catalog_item.bisac_subjects }
+    end
+
+    def genre_subject_source
+      meta = display_metadata
+      return { data: [], raw: nil } unless meta
+
+      if product.present?
+        linked_headings = product.genre_categorizations
+          .order(primary: :desc, id: :asc)
+          .map { |categorization| { "heading" => categorization.category_node.breadcrumb_label } }
+        return { data: linked_headings, raw: nil } if linked_headings.any?
+
+        return { data: meta.genre_data, raw: meta.genres } if meta.genres.present? || meta.genre_data.present?
+
+        return { data: [], raw: nil }
+      end
+
+      return { data: [], raw: nil } unless catalog_item
+
+      linked_headings = catalog_item.genre_categorizations
+        .order(primary: :desc, id: :asc)
+        .map { |categorization| { "heading" => categorization.category_node.breadcrumb_label } }
+      return { data: linked_headings, raw: nil } if linked_headings.any?
+
+      { data: meta.genre_data, raw: meta.genres }
     end
 
     def headings_from_subject_source(source)

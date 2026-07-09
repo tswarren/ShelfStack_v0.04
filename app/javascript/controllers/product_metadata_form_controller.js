@@ -39,24 +39,18 @@ export default class extends Controller {
   }
 
   reloadSections() {
-    if (!this.hasSectionsFrameTarget || !this.hasPreviewUrlValue) return
+    const form = this.element.closest("form")
+    if (!form || !this.hasSectionsFrameTarget || !this.hasPreviewUrlValue) return
 
     const frame = this.sectionsFrameTarget.querySelector("turbo-frame#product_metadata_sections")
     if (!frame) return
 
     const url = new URL(this.previewUrlValue, window.location.origin)
-    const namespace = this.namespaceValue
+    const formData = new FormData(form)
 
-    if (this.hasStaffItemKindTarget) {
-      url.searchParams.set(`${namespace}[staff_item_kind]`, this.staffItemKindTarget.value)
-    }
-
-    if (this.hasDigitalTarget) {
-      url.searchParams.set(`${namespace}[digital]`, this.digitalTarget.checked ? "1" : "0")
-    }
-
-    if (this.hasFormatTarget && this.formatTarget.value) {
-      url.searchParams.set(`${namespace}[format_id]`, this.formatTarget.value)
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) continue
+      url.searchParams.append(key, value.toString())
     }
 
     frame.src = url.toString()

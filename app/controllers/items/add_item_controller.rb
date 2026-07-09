@@ -617,7 +617,13 @@ module Items
       scheme_key = entry_context.controlled_scheme
       return if scheme_key.blank? || scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
 
-      @genre_form_state = load_genre_form_state(product, scheme_key: scheme_key)
+      @genre_form_state = if genre_structured_input?
+                            load_genre_form_state_from_params(scheme_key: scheme_key)
+                          elsif product.persisted?
+                            load_genre_form_state(product, scheme_key: scheme_key)
+                          else
+                            empty_genre_form_state(scheme_key: scheme_key)
+                          end
     end
 
     def short_form_product?(product)

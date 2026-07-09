@@ -20,12 +20,7 @@ module Items
     end
 
     def product_metadata_sections_locals(mode:)
-      genre_state = if @entry_context.controlled_scheme.present? &&
-                       @entry_context.controlled_scheme != Bisac::CategoryNodeImporter::SCHEME_KEY
-                      load_genre_form_state(@product, scheme_key: @entry_context.controlled_scheme)
-      else
-                      {}
-      end
+      genre_state = genre_form_state_for_preview(entry_context: @entry_context)
 
       {
         record: @product,
@@ -47,15 +42,9 @@ module Items
       raw = product_metadata_params_hash
       return if raw.blank?
 
-      preview_keys = %i[
-        format_id digital variation_type default_sub_department_id store_category_id list_price_cents
-        publisher publication_date publication_status edition_statement language_code
-        height width depth dimension_units weight weight_units page_count duration_minutes
-        large_print bisac_subjects genres themes target_audiences access_restrictions
-        publication_frequency description year series_name series_enumeration
-        variant1_label variant2_label active
-      ]
-      product.assign_attributes(raw.slice(*preview_keys))
+      product.assign_attributes(
+        raw.except(:staff_item_kind, :catalog_item_type)
+      )
     end
 
     def metadata_sections_form_namespace
@@ -63,6 +52,19 @@ module Items
         :product
       else
         :catalog_item
+      end
+    end
+
+    def genre_form_state_for_preview(entry_context:)
+      scheme_key = entry_context.controlled_scheme
+      return {} if scheme_key.blank? || scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
+
+      if genre_structured_input?
+        load_genre_form_state_from_params(scheme_key: scheme_key)
+      elsif @product.persisted?
+        load_genre_form_state(@product, scheme_key: scheme_key)
+      else
+        empty_genre_form_state(scheme_key: scheme_key)
       end
     end
   end
