@@ -59,24 +59,15 @@ module Products
       permitted = @params.slice(*PRODUCT_METADATA_KEYS)
       permitted[:catalog_item_type] = @entry_context.catalog_item_type if @entry_context.staff_item_kind.present?
 
-      if @mode == :new
-        filter_to_visible_keys!(permitted)
-      elsif @item_kind_changed
-        filter_to_visible_keys!(permitted)
-        permitted[:_classification_cleanup] = true
-      else
-        filter_to_visible_keys!(permitted, preserve_hidden: true)
-      end
-
+      filter_to_visible_keys!(permitted)
+      permitted[:_classification_cleanup] = true if @mode == :edit && @item_kind_changed
       permitted
     end
 
     private
 
-    def filter_to_visible_keys!(permitted, preserve_hidden: false)
+    def filter_to_visible_keys!(permitted)
       FIELD_PARAM_MAP.each do |field_key, param_keys|
-        next if preserve_hidden && !@entry_context.visible?(field_key)
-
         Array(param_keys).each do |param_key|
           permitted.delete(param_key) unless @entry_context.visible?(field_key)
         end

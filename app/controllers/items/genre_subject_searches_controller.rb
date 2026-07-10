@@ -21,10 +21,9 @@ module Items
         return
       end
 
-      like_query = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
       nodes = scheme.category_nodes.active_records
                     .includes(:parent)
-                    .where("category_nodes.name ILIKE :query OR category_nodes.node_key ILIKE :query", query: like_query)
+                    .matching_name_or_key(query)
                     .order(:name)
                     .limit(25)
 

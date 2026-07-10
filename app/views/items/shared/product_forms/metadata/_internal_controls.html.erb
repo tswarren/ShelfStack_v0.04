@@ -48,6 +48,11 @@
         <%= f.text_area :access_restrictions, rows: 2 %>
       <% end %>
     <% end %>
+    <% if entry_context.visible?(:internal_notes) %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :internal_notes, label: "Internal notes" } do %>
+        <%= f.text_area :internal_notes, rows: 3 %>
+      <% end %>
+    <% end %>
   </div>
   <% if entry_context.visible?(:active) %>
     <%= render "shared/forms/checkbox", f: f, record: record, field: :active %>

@@ -131,6 +131,24 @@ class Products::MetadataParamsSanitizerTest < ActiveSupport::TestCase
     assert_equal "Saga", result[:series_name]
     assert_equal "1", result[:series_enumeration]
   end
+
+  test "edit drops hidden submitted keys" do
+    product = Product.new(
+      catalog_item_type: "book",
+      product_type: "physical",
+      variation_type: "standard",
+      publisher: "Saved Publisher"
+    )
+    ctx = Products::EntryContext.build(product: product, staff_item_kind: "service", mode: :edit)
+    result = Products::MetadataParamsSanitizer.sanitize(
+      params: { title: "Repair", publisher: "Evil Override", format_id: 9 },
+      entry_context: ctx,
+      mode: :edit
+    )
+    assert_equal "Repair", result[:title]
+    refute result.key?(:publisher)
+    refute result.key?(:format_id)
+  end
 end
 
 class FormatEligibilityColumnsTest < ActiveSupport::TestCase
@@ -145,6 +163,27 @@ class FormatEligibilityColumnsTest < ActiveSupport::TestCase
       active: true
     )
     assert format.valid?, format.errors.full_messages.join(", ")
+  end
+end
+
+class CategoryNodeMatchingNameOrKeyTest < ActiveSupport::TestCase
+  test "matching_name_or_key is case insensitive without ILIKE" do
+    scheme = CategoryScheme.find_or_create_by!(scheme_key: "test_genres_#{SecureRandom.hex(3)}") do |s|
+      s.name = "Test Genres"
+      s.purpose = "music_genres"
+      s.active = true
+    end
+    node = CategoryNode.create!(
+      category_scheme: scheme,
+      node_key: "jazz_fusion",
+      name: "Jazz Fusion",
+      sort_order: 0,
+      active: true
+    )
+
+    assert_includes CategoryNode.matching_name_or_key("jazz"), node
+    assert_includes CategoryNode.matching_name_or_key("FUSION"), node
+    assert_includes CategoryNode.matching_name_or_key("jazz_fusion"), node
   end
 end
 

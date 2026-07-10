@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["sectionsFrame", "staffItemKind", "digital", "format"]
+  static targets = ["sectionsFrame", "staffItemKind", "digital", "format", "variationType"]
   static values = {
     previewUrl: String,
     namespace: String
@@ -34,6 +34,7 @@ export default class extends Controller {
 
     if (this.hasDigitalTarget && target === this.digitalTarget) return true
     if (this.hasFormatTarget && target === this.formatTarget) return true
+    if (this.hasVariationTypeTarget && target === this.variationTypeTarget) return true
 
     return false
   }

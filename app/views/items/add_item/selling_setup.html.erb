@@ -1,15 +1,6 @@
-<% if @draft["workflow"] == "catalog_linked" %>
-  <%= render "shared/forms/page_header",
-             eyebrow: "Add Item",
-             title: "Create Selling Setup",
-             description: "Product: #{@product.display_title}" %>
-  <%= render "items/add_item/match_context" %>
-  <%= render "catalog_selling_setup", product: @product, sub_departments: @sub_departments, display_locations: @display_locations %>
-<% else %>
-  <%= render "shared/forms/page_header",
-             eyebrow: "Add Item",
-             title: "Add Non-Catalog Item",
-             description: "Create a product without catalog metadata." %>
-  <%= render "items/add_item/match_context" %>
-  <%= render "non_catalog_selling_setup", product: @product, sub_departments: @sub_departments, display_locations: @display_locations, generated_sku: @draft["generated_sku"] %>
-<% end %>
+<%= render "shared/forms/page_header",
+           eyebrow: "Add Item",
+           title: "Create Selling Setup",
+           description: "Product: #{@product.display_title}" %>
+<%= render "items/add_item/match_context" %>
+<%= render "catalog_selling_setup", product: @product, sub_departments: @sub_departments, display_locations: @display_locations %>

@@ -1,7 +1,13 @@
 <%= render "shared/forms/page_header",
            eyebrow: "Add Item",
-           title: "Add Catalog-Linked Item — Item Details",
-           description: @external_lookup_staged ? "Review imported metadata, edit as needed, then save to create the product record." : "Enter product metadata. You can finish after this step or continue to selling setup." %>
+           title: non_catalog? ? "Add Non-Catalog Item — Item Details" : "Add Catalog-Linked Item — Item Details",
+           description: if non_catalog?
+                          "Enter item details. Short-form service and non-inventory items can finish here; others continue to selling setup."
+                        elsif @external_lookup_staged
+                          "Review imported metadata, edit as needed, then save to create the product record."
+                        else
+                          "Enter product metadata. You can finish after this step or continue to selling setup."
+                        end %>
 
 <%= render "items/add_item/match_context" %>
 
@@ -12,7 +18,7 @@
           f: f,
           catalog_item: @product,
           formats: @formats,
-          include_identifier: !@external_lookup_staged,
+          include_identifier: catalog_linked? && !@external_lookup_staged,
           primary_bisac_category_node_id: @primary_bisac_category_node_id,
           primary_bisac_category_node_label: @primary_bisac_category_node_label,
           bisac_category_node_ids: @bisac_category_node_ids,
@@ -21,7 +27,11 @@
           entry_context: @entry_context %>
   <% end %>
   <footer class="ss-form-actions">
-    <%= render "shared/ui/button", label: "Create Selling Setup", type: :submit, variant: :primary %>
+    <% if @entry_context&.short_form? %>
+      <%= render "shared/ui/button", label: "Add Item", type: :submit, variant: :primary %>
+    <% else %>
+      <%= render "shared/ui/button", label: "Create Selling Setup", type: :submit, variant: :primary %>
+    <% end %>
     <%= render "shared/ui/button", label: "Done", type: :submit, variant: :secondary, name: "commit" %>
     <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: add_item_cancel_path %>
   </footer>

@@ -39,7 +39,7 @@ module Items
     end
 
     def metadata_sections
-      ensure_catalog_linked_workflow! or return
+      ensure_item_details_workflow! or return
       render_product_metadata_sections(product: find_or_build_product, mode: :new)
     end
 
@@ -70,7 +70,11 @@ module Items
       when "identify"
         authorize!("items.external_lookup.access")
       when "item_details"
-        authorize!("items.catalog_items.create")
+        if non_catalog?
+          authorize!("items.products.create")
+        else
+          authorize!("items.catalog_items.create")
+        end
       when "selling_setup"
         authorize!("items.products.create")
       when "sellable_sku"
@@ -79,7 +83,11 @@ module Items
     end
 
     def authorize_metadata_sections!
-      authorize!("items.catalog_items.create")
+      if catalog_linked?
+        authorize!("items.catalog_items.create")
+      else
+        authorize!("items.products.create")
+      end
     end
 
     def catalog_linked?
@@ -101,8 +109,8 @@ module Items
         @local_match_variant = local_match_variant_for_request
         render "items/add_item/identify"
       when "item_details"
-        ensure_catalog_linked_workflow! or return
-        @external_lookup_staged = external_lookup_staged?
+        ensure_item_details_workflow! or return
+        @external_lookup_staged = external_lookup_staged? if catalog_linked?
         @product = find_or_build_product
         @entry_context = build_product_entry_context(@product, mode: @product.persisted? ? :edit : :new)
         @formats = @entry_context.eligible_formats
@@ -112,14 +120,10 @@ module Items
         render "items/add_item/item_details"
       when "selling_setup"
         if params[:generate_sku].present?
-          save_draft!("generated_sku" => AddItem::ProductSkuGenerator.generate!)
-          redirect_to items_add_item_path(step: "selling_setup") and return
+          redirect_to items_add_item_path(step: "item_details"), alert: "Set item details first; SKU is assigned when the product is saved."
+          return
         end
-        if catalog_linked?
-          ensure_product_metadata_in_draft! or return
-        else
-          ensure_non_catalog_workflow! or return
-        end
+        ensure_product_metadata_in_draft! or return
         prepare_selling_setup_form
         render "items/add_item/selling_setup"
       when "sellable_sku"
@@ -147,7 +151,7 @@ module Items
       if workflow == "catalog_linked"
         redirect_to items_add_item_path(step: "identify")
       else
-        redirect_to items_add_item_path(step: "selling_setup")
+        redirect_to items_add_item_path(step: "item_details")
       end
     end
 
@@ -177,10 +181,12 @@ module Items
     end
 
     def handle_item_details
-      ensure_catalog_linked_workflow! or return
+      ensure_item_details_workflow! or return
       @formats = Format.active_records.order(:name)
       load_store_category_collections
       @external_lookup_staged = external_lookup_staged?
+
+      @external_lookup_staged = catalog_linked? && external_lookup_staged?
 
       cover_image_url = external_lookup_result&.image_url if @external_lookup_staged
       sku_validation = nil
@@ -196,13 +202,9 @@ module Items
       else
         @entry_context = build_product_entry_context(Product.new, mode: :new)
         attrs = sanitized_product_metadata_params(Product.new, mode: :new)
-        @product = Product.new(
-          attrs.merge(
-            active: true,
-            publication_status: "active",
-            variation_type: @entry_context.short_form? ? "standard" : "conditional"
-          )
-        )
+        merged_attrs = attrs.merge(active: true, publication_status: "active")
+        merged_attrs[:variation_type] ||= @entry_context.short_form? ? "standard" : "conditional"
+        @product = Product.new(merged_attrs)
         apply_entry_context_product_type!(@product, @entry_context)
         saved, sku_validation, identifier_result = save_product!(@product)
         created = saved
@@ -253,17 +255,11 @@ module Items
 
     def handle_selling_setup
       if params[:generate_sku].present?
-        ensure_non_catalog_workflow! or return
-        save_draft!("generated_sku" => AddItem::ProductSkuGenerator.generate!)
-        redirect_to items_add_item_path(step: "selling_setup")
+        redirect_to items_add_item_path(step: "item_details"), alert: "Set item details first; SKU is assigned when the product is saved."
         return
       end
 
-      if catalog_linked?
-        ensure_product_metadata_in_draft! or return
-      else
-        ensure_non_catalog_workflow! or return
-      end
+      ensure_product_metadata_in_draft! or return
 
       @product = build_product_from_params
       load_product_collections
@@ -442,47 +438,27 @@ module Items
 
     def prepare_selling_setup_form
       load_product_collections
-
-      if catalog_linked?
-        ensure_product_metadata_in_draft!
-        @product = Product.find(@draft["product_id"])
-        @product.assign_attributes(
-          list_price_cents: @product.list_price_cents.to_i.positive? ? @product.list_price_cents : external_lookup_msrp_cents,
-          default_sub_department_id: @product.default_sub_department_id,
-          default_display_location_id: @product.default_display_location_id
-        )
-        apply_store_category_product_defaults!(@product)
-      else
-        @product = Product.new(
-          active: true,
-          product_type: "physical",
-          variation_type: "standard",
-          sku: @draft["generated_sku"],
-          list_price_cents: 0
-        )
-      end
+      ensure_product_metadata_in_draft!
+      @product = Product.find(@draft["product_id"])
+      @product.assign_attributes(
+        list_price_cents: @product.list_price_cents.to_i.positive? ? @product.list_price_cents : external_lookup_msrp_cents,
+        default_sub_department_id: @product.default_sub_department_id,
+        default_display_location_id: @product.default_display_location_id
+      )
+      apply_store_category_product_defaults!(@product)
     end
 
     def build_product_from_params
-      if catalog_linked?
-        product = Product.find(@draft["product_id"])
-        attrs = product_params.to_h.symbolize_keys
-        attrs[:variation_type] = resolved_variation_type(attrs[:product_type], attrs[:variation_type].presence || "conditional")
-        attrs.delete(:name)
-        attrs.delete(:sku) if attrs[:sku].blank?
-        product.assign_attributes(attrs)
-        apply_store_category_product_defaults!(product)
-        product.default_inventory_tracking ||= AddItem::InventoryTrackingMapper.for_product_type(product.product_type)
-        product
-      else
-        attrs = product_params.to_h.symbolize_keys
-        attrs[:active] = true
-        attrs[:variation_type] = resolved_variation_type(attrs[:product_type], attrs[:variation_type])
-        attrs.delete(:name_override)
-        Product.new(attrs).tap do |built|
-          built.default_inventory_tracking ||= AddItem::InventoryTrackingMapper.for_product_type(built.product_type)
-        end
-      end
+      product = Product.find(@draft["product_id"])
+      attrs = product_params.to_h.symbolize_keys
+      attrs[:variation_type] = resolved_variation_type(product.product_type, attrs[:variation_type].presence || product.variation_type)
+      attrs.delete(:name)
+      attrs.delete(:sku) if attrs[:sku].blank?
+      attrs.delete(:product_type)
+      product.assign_attributes(attrs)
+      apply_store_category_product_defaults!(product)
+      product.default_inventory_tracking ||= AddItem::InventoryTrackingMapper.for_product_type(product.product_type)
+      product
     end
 
     def apply_store_category_product_defaults!(target)
@@ -547,9 +523,18 @@ module Items
         ExternalCatalog::StagedProductBuilder.build(lookup_result:, format:)
       elsif @draft["product_id"].present?
         Product.find(@draft["product_id"])
+      elsif non_catalog?
+        Product.new(active: true, publication_status: "active", catalog_item_type: "other", product_type: "physical", variation_type: "standard")
       else
         Product.new(active: true, publication_status: "active", catalog_item_type: "book", product_type: "physical", variation_type: "conditional")
       end
+    end
+
+    def ensure_item_details_workflow!
+      return true if catalog_linked? || non_catalog?
+
+      redirect_to items_add_item_path(step: "choose_path"), alert: "Choose an item type to continue."
+      false
     end
 
     def ensure_catalog_linked_workflow!
@@ -609,7 +594,7 @@ module Items
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
         :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
         :store_category_id, :default_sub_department_id, :list_price_cents, :variation_type,
-        :variant1_label, :variant2_label
+        :variant1_label, :variant2_label, :internal_notes
       )
     end
 
@@ -704,8 +689,11 @@ module Items
     def render_item_details_errors(product)
       @step = "item_details"
       @product = product
-      @external_lookup_staged = external_lookup_staged?
+      @external_lookup_staged = catalog_linked? && external_lookup_staged?
+      @entry_context = build_product_entry_context(@product, mode: @product.persisted? ? :edit : :new)
+      @formats = @entry_context.eligible_formats
       load_bisac_form_state(product)
+      load_genre_form_state_if_needed(product, entry_context: @entry_context)
       load_store_category_collections
       render "items/add_item/item_details", status: :unprocessable_entity
     end
@@ -807,6 +795,6 @@ module Items
       }
     end
     helper_method :add_item_match_params, :buyback_line_match_draft, :load_match_context,
-                   :add_item_cancel_path
+                   :add_item_cancel_path, :catalog_linked?, :non_catalog?
   end
 end

@@ -3,7 +3,10 @@
     <div class="ss-form-grid ss-form-grid--2">
       <% if entry_context.visible?(:variation_type) && record.is_a?(Product) %>
         <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :variation_type } do %>
-          <%= f.select :variation_type, Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] } %>
+          <%= f.select :variation_type,
+                Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] },
+                {},
+                data: { product_metadata_form_target: "variationType" } %>
         <% end %>
       <% end %>
       <% if entry_context.visible?(:variant_label_1) && record.is_a?(Product) %>

@@ -91,20 +91,21 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_equal @sub_department.id, product.default_sub_department_id
   end
 
-  test "catalog-linked selling setup shows variation type for service product type" do
+  test "catalog-linked selling setup shows variation type without product type selector" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
     post items_add_item_path(step: "item_details"), params: {
       catalog_item: {
-        title: "Service Catalog Item",
-        catalog_item_type: "sideline",
-        format_id: @format.id
+        staff_item_kind: "sideline",
+        title: "Sideline Catalog Item",
+        format_id: @format.id,
+        default_sub_department_id: @sub_department.id
       },
       commit: "Create Selling Setup"
     }
     follow_redirect!
 
     assert_select "select[name=\"product[variation_type]\"]", count: 1
-    assert_select "select[name=\"product[product_type]\"] option[value='service']", count: 1
+    assert_select "select[name=\"product[product_type]\"]", count: 0
   end
 
   test "catalog-linked done after item details saves product only" do
@@ -132,19 +133,24 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
 
   test "non-catalog full path creates product and variant without catalog item" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    assert_redirected_to items_add_item_path(step: "selling_setup")
+    assert_redirected_to items_add_item_path(step: "item_details")
 
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
-        sku: "FEE-001",
-        name: "Bag Fee",
-        product_type: "financial",
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "other",
+        title: "Bag Fee",
         variation_type: "matrix",
         variant1_label: "Denomination",
         variant2_label: "Series",
         list_price_cents: 10,
         default_sub_department_id: @sub_department.id
-      }
+      },
+      commit: "Create Selling Setup"
+    }
+    assert_redirected_to items_add_item_path(step: "selling_setup")
+
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: { default_sub_department_id: @sub_department.id }
     }
     assert_redirected_to items_add_item_path(step: "sellable_sku")
 
@@ -154,30 +160,27 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
           sub_department_id: @sub_department.id,
           selling_price_cents: 10,
           attribute1_value: "25",
-          attribute1_sku_component: "25",
-          attribute2_value: "2024",
-          attribute2_sku_component: "24"
+          attribute2_value: "2024"
         }
       }
     end
 
-    product = Product.find_by!(sku: "FEE-001")
-    assert_nil product.catalog_item
+    product = Product.find_by!(title: "Bag Fee")
+    assert_nil product.catalog_item_id
     assert_equal "matrix", product.variation_type
-    assert_equal "pure_financial", product.product_variants.first.inventory_behavior
+    assert_equal "standard_physical", product.product_variants.first.inventory_behavior
     assert_redirected_to items_item_path(product_id: product.id)
   end
 
-  test "non-catalog done after selling setup creates product without variant" do
+  test "non-catalog service completes at item details without variant" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
 
     assert_difference -> { Product.count }, 1 do
       assert_no_difference -> { ProductVariant.count } do
-        post items_add_item_path(step: "selling_setup"), params: {
-          product: {
-            sku: "DONE-SKU",
-            name: "Done Product",
-            product_type: "service",
+        post items_add_item_path(step: "item_details"), params: {
+          catalog_item: {
+            staff_item_kind: "service",
+            title: "Done Product",
             list_price_cents: 0,
             default_sub_department_id: @sub_department.id
           },
@@ -186,28 +189,29 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    product = Product.find_by!(sku: "DONE-SKU")
+    product = Product.find_by!(title: "Done Product")
+    assert_equal "service", product.product_type
     assert_redirected_to items_item_path(product_id: product.id)
 
     follow_redirect!
-    # v0.04-15: the generic lifecycle badge ("Product Created") was removed from
-    # the Overview hero. A product created without a variant now lands on its
-    # Overview showing the title and the "no sellable SKUs" empty state.
     assert_match "Done Product", response.body
     assert_match "No sellable SKUs yet", response.body
   end
 
   test "create sku and add another keeps wizard on sellable sku step" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
-        sku: "MULTI-001",
-        name: "Multi Variant",
-        product_type: "physical",
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "other",
+        title: "Multi Variant",
         variation_type: "conditional",
         list_price_cents: 1500,
         default_sub_department_id: @sub_department.id
-      }
+      },
+      commit: "Create Selling Setup"
+    }
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: { default_sub_department_id: @sub_department.id }
     }
 
     condition_new = ProductCondition.find_by(condition_key: "new") || create_product_condition!(condition_key: "new", new_condition: true)
@@ -221,26 +225,29 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference -> { ProductVariant.count }, 1 do
       post items_add_item_path(step: "sellable_sku"), params: {
-        product_variant: { condition_id: used.id, sub_department_id: @sub_department.id, selling_price_cents: 900, sku: "MULTI-001-U" },
+        product_variant: { condition_id: used.id, sub_department_id: @sub_department.id, selling_price_cents: 900 },
         commit: "Create SKU"
       }
     end
 
-    product = Product.find_by!(sku: "MULTI-001")
+    product = Product.find_by!(title: "Multi Variant")
     assert_equal 2, product.product_variants.count
   end
 
   test "add item sellable sku honors non-inventory tracking selection" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
-        sku: "NONINV-001",
-        name: "Non-Inventory Physical",
-        product_type: "physical",
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "other",
+        title: "Non-Inventory Physical",
         variation_type: "standard",
         list_price_cents: 1500,
         default_sub_department_id: @sub_department.id
-      }
+      },
+      commit: "Create Selling Setup"
+    }
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: { default_sub_department_id: @sub_department.id }
     }
 
     assert_difference -> { ProductVariant.count }, 1 do
@@ -261,15 +268,18 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
 
   test "sellable sku step defaults selling price from list price" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
-        sku: "PRICE-001",
-        name: "Priced Product",
-        product_type: "physical",
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "other",
+        title: "Priced Product",
         variation_type: "standard",
         list_price_cents: 2499,
         default_sub_department_id: @sub_department.id
-      }
+      },
+      commit: "Create Selling Setup"
+    }
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: { default_sub_department_id: @sub_department.id }
     }
 
     get items_add_item_path(step: "sellable_sku")
@@ -281,15 +291,18 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
 
   test "sellable sku step defaults conditional price and sku for new condition" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
-        sku: "COND-001",
-        name: "Conditional Product",
-        product_type: "physical",
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "other",
+        title: "Conditional Product",
         variation_type: "conditional",
         list_price_cents: 2000,
         default_sub_department_id: @sub_department.id
-      }
+      },
+      commit: "Create Selling Setup"
+    }
+    post items_add_item_path(step: "selling_setup"), params: {
+      product: { default_sub_department_id: @sub_department.id }
     }
 
     get items_add_item_path(step: "sellable_sku")
@@ -311,7 +324,25 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     post login_path, params: { username: "nconly", password: "Password123!" }
 
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    assert_redirected_to items_add_item_path(step: "selling_setup")
+    assert_redirected_to items_add_item_path(step: "item_details")
+  end
+
+  test "non-catalog metadata_sections works without catalog item create permission" do
+    delete logout_path
+    user = create_user!(username: "ncmeta", password: "Password123!")
+    grant_permission!(user, "items.access")
+    grant_permission!(user, "items.products.create")
+    assign_workstation!(@workstation, cookies)
+    post login_path, params: { username: "ncmeta", password: "Password123!" }
+
+    post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
+
+    get items_add_item_metadata_sections_path, params: {
+      catalog_item: { staff_item_kind: "service" }
+    }, headers: { "Turbo-Frame" => "product_metadata_sections" }
+
+    assert_response :success
+    assert_includes response.body, "Subdepartment"
   end
 
   test "invalid isbn13 during item details shows warning after save" do
@@ -445,21 +476,26 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
 
   test "selling setup attaches cover image during add item wizard" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "other",
+        title: "Cover Product",
+        list_price_cents: 1000,
+        default_sub_department_id: @sub_department.id
+      },
+      commit: "Create Selling Setup"
+    }
 
     cover = fixture_file_upload("cover.png", "image/png")
     post items_add_item_path(step: "selling_setup"), params: {
       product: {
-        sku: "COVER-001",
-        name: "Cover Product",
-        product_type: "physical",
-        list_price_cents: 1000,
         default_sub_department_id: @sub_department.id,
         cover_image: cover
       },
       commit: "Done"
     }
 
-    product = Product.find_by!(sku: "COVER-001")
+    product = Product.find_by!(title: "Cover Product")
     assert product.cover_image.attached?
   end
 end

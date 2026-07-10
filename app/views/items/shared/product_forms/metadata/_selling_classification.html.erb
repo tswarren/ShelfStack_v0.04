@@ -10,9 +10,7 @@
       <% end %>
     <% end %>
     <% if entry_context.visible?(:list_price) && record.is_a?(Product) %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :list_price_cents, label: "List price" } do %>
-        <%= f.number_field :list_price_cents, step: 1 %>
-      <% end %>
+      <%= render "items/shared/product_forms/metadata/list_price", f: f, record: record %>
     <% end %>
   </div>
 <% end %>

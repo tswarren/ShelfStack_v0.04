@@ -230,7 +230,7 @@ module Items
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
         :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
         :store_category_id, :default_sub_department_id, :list_price_cents, :variation_type,
-        :variant1_label, :variant2_label, :cover_image
+        :variant1_label, :variant2_label, :cover_image, :internal_notes
       )
     end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_040000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -1403,6 +1403,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_040000) do
     t.jsonb "genre_data"
     t.string "genres"
     t.decimal "height", precision: 10, scale: 2
+    t.text "internal_notes"
     t.string "language_code", limit: 10
     t.boolean "large_print", default: false, null: false
     t.integer "list_price_cents", default: 0, null: false

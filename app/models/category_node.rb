@@ -29,6 +29,13 @@ class CategoryNode < ApplicationRecord
 
   scope :active_records, -> { where(active: true) }
 
+  def self.matching_name_or_key(query)
+    return none if query.blank?
+
+    pattern = "%#{sanitize_sql_like(query.to_s.downcase)}%"
+    where("LOWER(category_nodes.name) LIKE :pattern OR LOWER(category_nodes.node_key) LIKE :pattern", pattern: pattern)
+  end
+
   def self.ordered_tree_rows_for(category_scheme)
     if category_scheme.scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
       return category_scheme.category_nodes

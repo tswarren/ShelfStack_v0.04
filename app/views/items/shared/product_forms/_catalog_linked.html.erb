@@ -20,18 +20,6 @@
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :name_override, label: "Name override (optional)" } do %>
         <%= f.text_field :name_override %>
       <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :sku, label: "SKU", help: "Transitional product identifier (cached in SKU until v0.04-2)." } do %>
-        <%= f.text_field :sku, value: product.sku %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :product_type, label: "Product type" } do %>
-        <%= f.select :product_type,
-              Product::PRODUCT_TYPES.map { |t| [humanize_controlled_value(t), t] },
-              { selected: product.product_type || "physical" },
-              { data: { product_form_target: "productType" } } %>
-      <% end %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :list_price_cents, label: "List price (cents)" } do %>
-        <%= f.number_field :list_price_cents, min: 0, value: product.list_price_cents || 0 %>
-      <% end %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_sub_department_id, label: "Default subdepartment" } do %>
         <%= f.collection_select :default_sub_department_id, sub_departments, :id, :name, include_blank: false %>
         <p class="ss-help">Applied as the default for sellable SKUs you create for this product.</p>

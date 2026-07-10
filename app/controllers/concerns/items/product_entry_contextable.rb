@@ -25,12 +25,16 @@ module Items
       format_id = params.dig(:product, :format_id) || params.dig(:catalog_item, :format_id)
       format = format_id.present? ? Format.find_by(id: format_id) : product.format
 
+      variation_type = params.dig(:product, :variation_type).presence ||
+                       params.dig(:catalog_item, :variation_type).presence ||
+                       product.variation_type
+
       Products::EntryContext.build(
         product: product,
         staff_item_kind: staff_item_kind,
         digital: digital,
         format: format,
-        variation_type: product.variation_type,
+        variation_type: variation_type,
         mode: mode || (product.persisted? ? :edit : :new)
       )
     end
