@@ -190,8 +190,10 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Variant display locations", response.body
     assert_match @variant.sku, response.body
+    assert_match "Preferred vendor", response.body
     assert_match "No product vendor sourcing records yet", response.body
     assert_match new_items_product_product_vendor_path(@product), response.body
+    assert_match edit_items_product_path(@product, anchor: "product_preferred_vendor_id"), response.body
     assert_match edit_items_product_path(@product, anchor: "product_default_display_location_id"), response.body
     assert_match edit_items_product_variant_path(@variant), response.body
   end

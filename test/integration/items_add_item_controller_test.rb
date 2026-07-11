@@ -476,8 +476,51 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-product-metadata-form-target="staffItemKind"'
     assert_includes response.body, items_product_entry_context_path
     assert_includes response.body, 'data-product-field-key="title"'
+    assert_includes response.body, 'data-product-field-key="preferred_vendor"'
+    assert_select "select[name=\"catalog_item[preferred_vendor_id]\"]", count: 1
     assert_not_includes response.body, 'data-controller="catalog-item-form product-metadata-form"'
     assert_not_includes response.body, "data-product-metadata-form-preview-url-value"
+  end
+
+  test "item details saves preferred vendor on create" do
+    vendor = create_vendor!(name: "Add Flow Vendor")
+
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "book",
+        title: "Preferred Vendor Book",
+        format_id: @format.id,
+        default_sub_department_id: @sub_department.id,
+        preferred_vendor_id: vendor.id,
+        list_price_cents: 1500
+      }
+    }
+
+    product = Product.find_by!(title: "Preferred Vendor Book")
+    assert_equal vendor.id, product.preferred_vendor_id
+    assert_redirected_to items_add_item_path(step: "sellable_sku")
+
+    get items_add_item_path(step: "sellable_sku")
+    assert_response :success
+    assert_select "select[name=\"product_variant[preferred_vendor_id]\"]" do
+      assert_select "option[value=\"#{vendor.id}\"][selected]", count: 1
+    end
+
+    post items_add_item_path(step: "sellable_sku"), params: {
+      product_variant: {
+        selling_price_cents: 1500,
+        sub_department_id: @sub_department.id,
+        preferred_vendor_id: vendor.id
+      }
+    }
+
+    variant = product.product_variants.order(:id).last
+    assert_equal vendor.id, variant.preferred_vendor_id
+
+    get items_item_path(product_id: product.id, tab: "item_setup")
+    assert_response :success
+    assert_includes response.body, "Add Flow Vendor"
+    assert_includes response.body, "Preferred vendor"
   end
 
   test "metadata_sections preserves in-progress section field values from request params" do

@@ -26,6 +26,7 @@ module Products
         selling_price_cents: @product.list_price_cents.to_i,
         sub_department_id: @product.default_sub_department_id,
         display_location_id: @product.default_display_location_id,
+        preferred_vendor_id: @product.preferred_vendor_id,
         discountable: @product.discountable
       )
       Items::InventoryTrackingSync.seed_defaults_from_product!(variant: variant)

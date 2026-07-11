@@ -117,6 +117,7 @@ module Items
         load_bisac_form_state(@product)
         load_genre_form_state_if_needed(@product, entry_context: @entry_context)
         load_store_category_collections
+        load_selling_defaults_collections
         render "items/add_item/item_details"
       when "selling_setup"
         if params[:generate_sku].present?
@@ -198,6 +199,7 @@ module Items
 
       cover_image_url = external_lookup_result&.image_url if @external_lookup_staged
       sku_validation = nil
+      load_selling_defaults_collections
 
       if @draft["product_id"].present?
         @product = Product.find(@draft["product_id"])
@@ -508,6 +510,7 @@ module Items
         @variant.condition ||= condition
       end
       @variant.sub_department_id ||= @product.default_sub_department_id.presence || @sub_departments.first&.id
+      @variant.preferred_vendor_id ||= @product.preferred_vendor_id if @variant.preferred_vendor_id.blank?
       Items::InventoryTrackingSync.seed_defaults_from_product!(variant: @variant) unless sellable_sku_params_submitted?
       VariantClassificationSetup.apply!(variant: @variant) unless sellable_sku_params_submitted?
       apply_variant_defaults! unless sellable_sku_params_submitted?
@@ -602,6 +605,12 @@ module Items
     def load_product_collections
       @sub_departments = SubDepartment.active_records.order(:name)
       @display_locations = DisplayLocation.active_for_tree_select
+      @vendors = Vendor.active_records.order(:name)
+    end
+
+    def load_selling_defaults_collections
+      @display_locations = DisplayLocation.active_for_tree_select
+      @vendors = Vendor.active_records.order(:name)
     end
 
     def load_variant_collections
@@ -619,7 +628,8 @@ module Items
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
         :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
         :store_category_id, :default_sub_department_id, :list_price_cents, :variation_type,
-        :variant1_label, :variant2_label, :internal_notes
+        :variant1_label, :variant2_label, :internal_notes,
+        :preferred_vendor_id, :default_display_location_id
       )
     end
 
@@ -644,7 +654,7 @@ module Items
       params.require(:product).permit(
         :name, :name_override, :sku, :product_type, :variation_type, :list_price_cents,
         :default_display_location_id, :default_sub_department_id, :variant1_label, :variant2_label,
-        :cover_image
+        :preferred_vendor_id, :cover_image
       )
     end
 
@@ -652,7 +662,8 @@ module Items
       params.require(:product_variant).permit(
         :condition_id, :sub_department_id, :selling_price_cents, :display_location_id, :sku,
         :name_override, :attribute1_value, :attribute1_sku_component,
-        :attribute2_value, :attribute2_sku_component, :inventory_tracking
+        :attribute2_value, :attribute2_sku_component, :inventory_tracking,
+        :preferred_vendor_id, :orderable, :discountable
       )
     end
 
@@ -720,6 +731,7 @@ module Items
       load_bisac_form_state(product)
       load_genre_form_state_if_needed(product, entry_context: @entry_context)
       load_store_category_collections
+      load_selling_defaults_collections
       render "items/add_item/item_details", status: :unprocessable_entity
     end
 

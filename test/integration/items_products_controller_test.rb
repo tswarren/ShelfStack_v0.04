@@ -235,6 +235,26 @@ class ItemsProductsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-product-field-key="variant_label_2"'
     assert_select "select[name=\"product[variation_type]\"]", count: 1
     assert_select "select[name=\"product[product_type]\"]", count: 0
+    assert_select "select[name=\"product[preferred_vendor_id]\"]", count: 1
+    assert_includes response.body, 'data-product-field-key="preferred_vendor"'
+  end
+
+  test "update product preferred vendor from unified edit form" do
+    product = create_product!(title: "Vendor Prefer Book", catalog_item_type: "book", publication_status: "active")
+    vendor = create_vendor!(name: "Preferred Books Inc")
+
+    patch items_product_path(product, return_to: "item"), params: {
+      product: {
+        title: product.title,
+        staff_item_kind: "book",
+        preferred_vendor_id: vendor.id,
+        list_price_cents: product.list_price_cents,
+        active: true
+      }
+    }
+
+    assert_redirected_to items_item_path(product_id: product.id, tab: "item_setup")
+    assert_equal vendor.id, product.reload.preferred_vendor_id
   end
 
   test "update product can remove cover image" do

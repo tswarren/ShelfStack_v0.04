@@ -127,10 +127,8 @@ module Items
       @entry_context = build_product_entry_context(@product, mode: :edit)
       kind_changed = item_kind_changed?(@product)
       attrs = sanitized_product_metadata_params(@product, mode: :edit, item_kind_changed: kind_changed)
-      selling_attrs = product_params.to_h.symbolize_keys.slice(
-        :default_display_location_id, :preferred_vendor_id, :cover_image
-      )
-      @product.assign_attributes(attrs.merge(selling_attrs.compact))
+      cover_attrs = product_params.to_h.symbolize_keys.slice(:cover_image)
+      @product.assign_attributes(attrs.merge(cover_attrs.compact))
       apply_entry_context_product_type!(@product, @entry_context)
       if @product.save
         clear_incompatible_classifications!(@product, entry_context: @entry_context) if kind_changed
@@ -190,6 +188,8 @@ module Items
     def load_metadata_form_collections
       @entry_context = build_product_entry_context(@product, mode: @product.persisted? ? :edit : :new)
       @formats = @entry_context.eligible_formats
+      @display_locations = DisplayLocation.active_for_tree_select
+      @vendors = Vendor.active_records.order(:name)
       load_store_category_collections
       load_bisac_form_state(@product)
       load_genre_form_state_if_needed(@product, entry_context: @entry_context)
@@ -228,7 +228,8 @@ module Items
         :duration_minutes, :large_print, :bisac_subjects, :genres, :themes, :target_audiences,
         :access_restrictions, :publication_frequency, :description, :year, :digital, :active,
         :store_category_id, :default_sub_department_id, :list_price_cents, :variation_type,
-        :variant1_label, :variant2_label, :cover_image, :internal_notes
+        :variant1_label, :variant2_label, :cover_image, :internal_notes,
+        :preferred_vendor_id, :default_display_location_id
       )
     end
 

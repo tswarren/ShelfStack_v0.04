@@ -18,6 +18,22 @@ export default class extends Controller {
 
   connect() {
     this.applyContext(this.hasContextValue ? this.contextValue : {})
+    this.element.closest("form")?.addEventListener("submit", this.ensureVisibleFieldsEnabled)
+  }
+
+  disconnect() {
+    this.element.closest("form")?.removeEventListener("submit", this.ensureVisibleFieldsEnabled)
+  }
+
+  // Disabled fields are omitted from submit. Re-enable shells marked visible so
+  // preferred vendor / other selling defaults are not dropped on create/update.
+  ensureVisibleFieldsEnabled = () => {
+    this.element.querySelectorAll('[data-product-field-key][data-visible="true"]').forEach((shell) => {
+      shell.querySelectorAll("input, select, textarea").forEach((input) => {
+        if (input.dataset.productFieldKeepEnabled === "true") return
+        input.disabled = false
+      })
+    })
   }
 
   onDriverChange(event) {

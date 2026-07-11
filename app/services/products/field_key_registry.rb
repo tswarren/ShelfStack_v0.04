@@ -10,6 +10,8 @@ module Products
       creators: :creators,
       store_category: :store_category_id,
       subdepartment: :default_sub_department_id,
+      preferred_vendor: :preferred_vendor_id,
+      default_display_location: :default_display_location_id,
       variation_type: :variation_type,
       variant_label_1: :variant1_label,
       variant_label_2: :variant2_label,

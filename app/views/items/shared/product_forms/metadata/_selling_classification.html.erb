@@ -23,6 +23,21 @@
             locals: { field_key: :list_price, entry_context: entry_context } do %>
         <%= render "items/shared/product_forms/metadata/list_price", f: f, record: record %>
       <% end %>
+
+      <%= render layout: "items/shared/product_forms/metadata/field_shell",
+            locals: { field_key: :default_display_location, entry_context: entry_context } do %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :default_display_location_id, label: "Default display location" } do %>
+          <%= tree_collection_select(f, :default_display_location_id, Array(local_assigns[:display_locations]), include_blank: true) %>
+        <% end %>
+      <% end %>
+
+      <%= render layout: "items/shared/product_forms/metadata/field_shell",
+            locals: { field_key: :preferred_vendor, entry_context: entry_context } do %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :preferred_vendor_id, label: "Preferred vendor" } do %>
+          <%= f.collection_select :preferred_vendor_id, Array(local_assigns[:vendors]), :id, :name, include_blank: "Select preferred vendor" %>
+          <p class="ss-hint">Who ShelfStack suggests for ordering. This is separate from Product vendor sourcing rows (item number, discount, returnability).</p>
+        <% end %>
+      <% end %>
     <% end %>
   </div>
 <% end %>

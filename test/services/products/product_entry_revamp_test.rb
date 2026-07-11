@@ -28,7 +28,16 @@ class Products::FieldVisibilityResolverTest < Products::ProductEntryRevampTestCa
     result = Products::FieldVisibilityResolver.resolve(staff_item_kind: "service", digital: false)
     refute result[:format].visible
     refute result[:digital].visible
+    refute result[:preferred_vendor].visible
+    refute result[:default_display_location].visible
     assert result[:title].required
+  end
+
+  test "ordinary kinds show preferred vendor and display location defaults" do
+    result = Products::FieldVisibilityResolver.resolve(staff_item_kind: "book", digital: false)
+    assert result[:preferred_vendor].visible
+    assert result[:default_display_location].visible
+    refute result[:preferred_vendor].required
   end
 
   test "variable variation shows variant label 1" do
