@@ -294,7 +294,7 @@ module Items
     def description_summary_label
       meta = display_metadata
       parts = []
-      parts << "#{pages_label} pp." if pages_label.present?
+      parts << "#{pages_label} pages" if pages_label.present?
       parts << running_time_label if running_time_label.present?
       parts << pub_frequency_label if pub_frequency_label.present?
       if meta&.year.present? && released_date_label.blank?
