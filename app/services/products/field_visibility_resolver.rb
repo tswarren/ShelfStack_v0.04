@@ -6,6 +6,7 @@ module Products
 
     FIELD_KEYS = %i[
       item_kind primary_identifier title list_price digital creators store_category subdepartment
+      preferred_vendor default_display_location
       variation_type variant_label_1 variant_label_2 thumbnail format publisher publication_date
       publication_status large_print edition_statement bisac_picker genre_scheme_picker
       free_text_genres subjects series_name page_count running_time year target_audience
@@ -126,6 +127,7 @@ module Products
       end
 
       states = base_states
+      apply_selling_defaults_visibility!(states)
       apply_digital_overrides!(states)
       apply_variation_overrides!(states)
       apply_format_overrides!(states)
@@ -160,6 +162,11 @@ module Products
         state = defaults[key] || :hidden
         FieldState.new(visible: state.in?(%i[visible required conditional]), required: state == :required)
       end
+    end
+
+    def apply_selling_defaults_visibility!(states)
+      states[:preferred_vendor] = FieldState.new(visible: true, required: false)
+      states[:default_display_location] = FieldState.new(visible: true, required: false)
     end
 
     def apply_digital_overrides!(states)

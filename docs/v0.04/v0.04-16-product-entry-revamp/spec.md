@@ -2,19 +2,30 @@
 
 ## Status
 
-**Draft** — product-metadata entry workflow redesign. Progressive Add Item, product edit, and variant edit surfaces; vocabulary alignment; format and genre eligibility. No new core product metadata tables.
+**Complete** — product-metadata entry foundation: progressive forms, vocabulary alignment, format and genre eligibility, resolver/sanitizer stack. No new core product metadata tables.
 
 Companion documents:
 
 * [data-model.md](data-model.md) — format eligibility, genre schemes, field matrix, services
 * [test-plan.md](test-plan.md) — resolver, integration, and regression gates
+* [completion](../../implementation/v0.04-16-completion.md)
 * [classification-target-spec.md](../../specifications/classification-target-spec.md) — classification spine
 * [v0.04-1 product fusion](../v0.04-1-product-fusion/spec.md) — fused metadata on `products`
 * [v0.04-15 overview refactor](../v0.04-15-products-overview-refactor/spec.md) — read surfaces this milestone improves data for
 
-**Next milestone:** v0.04-17 Product feature assignments — [spec bundle](../v0.04-17-product-feature-assignments/spec.md) (participation layer on top of classification).
+**Next milestone:** v0.04-16.1 Unified product management & form stability — [spec bundle](../v0.04-16.1-unified-product-management/spec.md). Then v0.04-17 Product feature assignments — [spec bundle](../v0.04-17-product-feature-assignments/spec.md).
 
 Source drafts (superseded by this bundle): `docs/drafts_temp/v0.04-1x-product-entry-revamp_summary.md`, `docs/drafts_temp/v0.04-1x-product-entry-revamp-details.md`.
+
+### Known follow-ups (v0.04-16.1)
+
+Do **not** extend these as the long-term Product form architecture; they are deferred to [v0.04-16.1](../v0.04-16.1-unified-product-management/spec.md):
+
+* Turbo Frame full-form GET section replacement for visibility changes
+* Staff Catalog-linked vs Non-catalog Add Item choice → unified **Add Product**
+* Separate Edit Bibliographic Details surface → unified **Edit Product**
+* Form stability: mounted fields + driver-only context endpoint (no large HTML section replacement)
+* Service / Non-Inventory default-variant auto-create policy (locked in 16.1)
 
 ---
 
@@ -31,7 +42,7 @@ What SKUs?                → Variant setup
 Internal behavior?        → Inventory, orderable, discountable, notes
 ```
 
-This milestone completes the **staff UX** for the v0.04-1 fused product model. Metadata columns already live on `products`; v0.04-16 adds eligibility rules, expanded formats (MVP subset), genre schemes, and unified progressive forms.
+This milestone delivers the **resolver, format/genre, and progressive-form foundation** for the v0.04-1 fused product model. Metadata columns already live on `products`; v0.04-16 adds eligibility rules, expanded formats (MVP subset), genre schemes, and progressive metadata forms. **Unified staff Product create/edit vocabulary and stable form mechanics are completed in v0.04-16.1.**
 
 ---
 
@@ -40,7 +51,7 @@ This milestone completes the **staff UX** for the v0.04-1 fused product model. M
 | Decision | Choice |
 | -------- | ------ |
 | Milestone id | **v0.04-16** product entry revamp |
-| Next milestone | **v0.04-17** product feature assignments (deferred) |
+| Next milestone | **v0.04-16.1** unified product management & form stability; then **v0.04-17** product feature assignments |
 | Item kind storage | Keep column **`catalog_item_type`**; staff UI label **Item kind** |
 | Audiobooks / eBooks | Single item kind **Book** — `digital` + format (`ebook`, `epub`, `audiobook_download`, etc.) |
 | Legacy `audiobook` / `ebook` types | Remain valid in DB; edit UI normalizes display to **Book** + digital + format; backfill optional/deferred |
@@ -256,7 +267,7 @@ SKU remains system-assigned per v0.04-2. Barcode/identifier scan paths unchanged
 | `Products::MetadataParamsSanitizer` | Enforces hidden-field policy on create, edit, and item-kind change |
 | `StoreCategoryDefaults` | Existing — wire live preview on store category change |
 
-Controllers remain thin; build one `Products::EntryContext` per request. Stimulus controllers may toggle sections client-side but **server-side resolver + sanitizer are authoritative** for submit validation.
+Controllers remain thin; build one `Products::EntryContext` per request. Client controllers may apply visibility from server context, but **server-side resolver + sanitizer are authoritative** for submit validation. Do **not** treat large Turbo Frame HTML section replacement (full-form GET reload) as the long-term progressive-form mechanism — that debt is retired in v0.04-16.1.
 
 ---
 
@@ -299,7 +310,7 @@ Add **mappings** for legacy format keys in import and eligibility paths (e.g. `h
 * Staff labels **Service** and **Non-Inventory Item** only — never plain **Other**
 * Short-form entry via `EntryContext#short_form?`
 * `OperationalTypeDeriver` sets `product_type`
-* Follow existing `ProductVariants::OperationalPolicy` — **no normal variant setup** in Add Item (skip sellable SKU step or auto single non-orderable variant per existing rules)
+* Follow existing `ProductVariants::OperationalPolicy` — **no normal variant setup** in Add Item for Service / Non-Inventory in v0.04-16 (skip sellable SKU step). Default-variant auto-create on primary save is locked in **v0.04-16.1**.
 
 ---
 
@@ -325,7 +336,7 @@ Reuse existing product/item setup permissions. No new permission keys required f
 4. Seeds: MVP formats + genre scheme CSV import (`music_genres`, `video_genres`, `video_game_genres`, `sideline_genres`)
 5. Genre tree importer (reuse `CsvClassificationImporter` two-pass pattern)
 6. Services: resolvers, `EntryContext`, `MetadataParamsSanitizer`
-7. Stimulus: progressive form toggles (optional enhancement; server validates)
+7. Client progressive visibility (server validates; Turbo Frame full-form GET replacement is transitional — retired in v0.04-16.1)
 8. Views: product metadata form partials; catalog_items delegate; Add Item, variant form; Setup category node `maxlength`
 9. Tests + `shelfstack:v00416:verify_product_entry_revamp`
 

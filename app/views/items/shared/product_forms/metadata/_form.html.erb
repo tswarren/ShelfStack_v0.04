@@ -1,14 +1,16 @@
 <%# locals: f, record, entry_context, store_category_nodes: nil, include_identifier: false,
-           metadata_sections_url: nil,
+           vendors: nil, display_locations: nil,
            primary_bisac_category_node_id: nil, primary_bisac_category_node_label: nil,
            bisac_category_node_ids: [], bisac_scheme_loaded: false,
            primary_genre_category_node_id: nil, primary_genre_category_node_label: nil,
            genre_category_node_ids: [], genre_scheme_loaded: false %>
-<% preview_url = local_assigns.fetch(:metadata_sections_url) { record.persisted? ? metadata_sections_items_product_path(record) : items_add_item_metadata_sections_path } %>
-<div data-controller="catalog-item-form product-metadata-form"
-     data-product-metadata-form-preview-url-value="<%= preview_url %>"
-     data-product-metadata-form-namespace-value="<%= f.object_name %>"
-     data-action="change->catalog-item-form#refresh change->product-metadata-form#refresh">
+<%= tag.div(
+      data: {
+        controller: "product-metadata-form",
+        product_metadata_form_context_url_value: items_product_entry_context_path,
+        product_metadata_form_context_value: entry_context.to_client_payload
+      }
+    ) do %>
   <%= render "shared/forms/errors", record: record %>
 
   <% if record.is_a?(Product) %>
@@ -22,19 +24,21 @@
   <%= render "items/shared/product_forms/metadata/identity",
         f: f, record: record, entry_context: entry_context, include_identifier: include_identifier %>
 
-  <%= render "items/shared/product_forms/metadata/sections_frame",
-        f: f,
-        record: record,
-        entry_context: entry_context,
-        form_namespace: f.object_name.to_sym,
-        store_category_nodes: store_category_nodes,
-        primary_bisac_category_node_id: primary_bisac_category_node_id,
-        primary_bisac_category_node_label: primary_bisac_category_node_label,
-        bisac_category_node_ids: bisac_category_node_ids,
-        bisac_scheme_loaded: bisac_scheme_loaded,
-        primary_genre_category_node_id: primary_genre_category_node_id,
-        primary_genre_category_node_label: primary_genre_category_node_label,
-        genre_category_node_ids: genre_category_node_ids,
-        genre_scheme_loaded: genre_scheme_loaded %>
-
-</div>
+  <div data-product-metadata-form-target="sections">
+    <%= render "items/shared/product_forms/metadata/sections",
+          f: f,
+          record: record,
+          entry_context: entry_context,
+          store_category_nodes: store_category_nodes,
+          vendors: local_assigns[:vendors],
+          display_locations: local_assigns[:display_locations],
+          primary_bisac_category_node_id: primary_bisac_category_node_id,
+          primary_bisac_category_node_label: primary_bisac_category_node_label,
+          bisac_category_node_ids: bisac_category_node_ids,
+          bisac_scheme_loaded: bisac_scheme_loaded,
+          primary_genre_category_node_id: primary_genre_category_node_id,
+          primary_genre_category_node_label: primary_genre_category_node_label,
+          genre_category_node_ids: genre_category_node_ids,
+          genre_scheme_loaded: genre_scheme_loaded %>
+  </div>
+<% end %>

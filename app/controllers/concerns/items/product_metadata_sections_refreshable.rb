@@ -14,6 +14,8 @@ module Items
       load_bisac_form_state(@product)
       load_genre_form_state_if_needed(@product, entry_context: @entry_context)
       load_store_category_collections
+      @display_locations = DisplayLocation.active_for_tree_select
+      @vendors = Vendor.active_records.order(:name)
 
       render partial: "items/shared/product_forms/metadata/sections_turbo_frame",
              locals: product_metadata_sections_locals(mode: mode)
@@ -27,6 +29,8 @@ module Items
         entry_context: @entry_context,
         form_namespace: metadata_sections_form_namespace,
         store_category_nodes: @store_category_nodes,
+        vendors: @vendors,
+        display_locations: @display_locations,
         primary_bisac_category_node_id: @primary_bisac_category_node_id,
         primary_bisac_category_node_label: @primary_bisac_category_node_label,
         bisac_category_node_ids: @bisac_category_node_ids || [],
@@ -42,9 +46,13 @@ module Items
       raw = product_metadata_params_hash
       return if raw.blank?
 
-      product.assign_attributes(
-        raw.except(:staff_item_kind, :catalog_item_type)
+      entry_context = build_product_entry_context(product, mode: product.persisted? ? :edit : :new)
+      attrs = Products::MetadataPreviewParams.filter(
+        params: raw,
+        entry_context: entry_context,
+        mode: product.persisted? ? :edit : :new
       )
+      product.assign_attributes(attrs)
     end
 
     def metadata_sections_form_namespace

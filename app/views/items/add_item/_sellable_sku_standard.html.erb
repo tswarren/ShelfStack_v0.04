@@ -13,7 +13,7 @@
       <%= f.number_field :selling_price_cents, min: 0, value: variant.selling_price_cents %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sub_department_id, label: "Subdepartment", required: true } do %>
-      <%= f.collection_select :sub_department_id, sub_departments, :id, :name, selected: variant.sub_department_id %>
+      <%= sub_department_grouped_select f, :sub_department_id, sub_departments: sub_departments %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :display_location_id, label: "Display location" } do %>
       <%= tree_collection_select(f, :display_location_id, display_locations, include_blank: true) %>

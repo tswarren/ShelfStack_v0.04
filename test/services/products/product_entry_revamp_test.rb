@@ -28,7 +28,16 @@ class Products::FieldVisibilityResolverTest < Products::ProductEntryRevampTestCa
     result = Products::FieldVisibilityResolver.resolve(staff_item_kind: "service", digital: false)
     refute result[:format].visible
     refute result[:digital].visible
+    refute result[:preferred_vendor].visible
+    refute result[:default_display_location].visible
     assert result[:title].required
+  end
+
+  test "ordinary kinds show preferred vendor and display location defaults" do
+    result = Products::FieldVisibilityResolver.resolve(staff_item_kind: "book", digital: false)
+    assert result[:preferred_vendor].visible
+    assert result[:default_display_location].visible
+    refute result[:preferred_vendor].required
   end
 
   test "variable variation shows variant label 1" do
@@ -83,6 +92,16 @@ class Products::EntryContextTest < ActiveSupport::TestCase
     ctx = Products::EntryContext.build(product: Product.new, staff_item_kind: "service")
     assert ctx.short_form?
     assert_equal "service", ctx.operational_product_type
+  end
+
+  test "to_client_payload exposes field visibility for the form controller" do
+    ctx = Products::EntryContext.build(product: Product.new(catalog_item_type: "book"), staff_item_kind: "book", digital: false)
+    payload = ctx.to_client_payload
+
+    assert_equal "book", payload[:staff_item_kind]
+    assert_equal false, payload[:short_form]
+    assert payload[:field_visibility][:page_count].key?(:visible)
+    assert payload[:eligible_formats].is_a?(Array)
   end
 end
 
@@ -145,6 +164,83 @@ class Products::MetadataParamsSanitizerTest < ActiveSupport::TestCase
       entry_context: ctx,
       mode: :edit
     )
+    assert_equal "Repair", result[:title]
+    refute result.key?(:publisher)
+    refute result.key?(:format_id)
+  end
+
+  test "edit kind change sets classification cleanup flag and drops invalid picker keys" do
+    product = Product.new(catalog_item_type: "book", product_type: "physical", variation_type: "conditional")
+    ctx = Products::EntryContext.build(product: product, staff_item_kind: "recorded_music", mode: :edit)
+    result = Products::MetadataParamsSanitizer.sanitize(
+      params: {
+        title: "Album",
+        primary_bisac_category_node_id: 11,
+        bisac_category_node_ids: [ 12 ],
+        primary_genre_category_node_id: 21
+      },
+      entry_context: ctx,
+      mode: :edit,
+      item_kind_changed: true
+    )
+
+    assert_equal true, result[:_classification_cleanup]
+    assert_equal 21, result[:primary_genre_category_node_id]
+    refute result.key?(:primary_bisac_category_node_id)
+    refute result.key?(:bisac_category_node_ids)
+  end
+
+  test "edit without kind change does not set classification cleanup" do
+    product = Product.new(catalog_item_type: "book", product_type: "physical", variation_type: "conditional")
+    ctx = Products::EntryContext.build(product: product, staff_item_kind: "book", mode: :edit)
+    result = Products::MetadataParamsSanitizer.sanitize(
+      params: { title: "Still a Book" },
+      entry_context: ctx,
+      mode: :edit,
+      item_kind_changed: false
+    )
+
+    refute result.key?(:_classification_cleanup)
+  end
+end
+
+class Products::FieldKeyRegistryTest < ActiveSupport::TestCase
+  test "param map keys are a subset of visibility field keys" do
+    assert Products::FieldKeyRegistry.consistent?,
+           "Unmapped drift keys: #{Products::FieldKeyRegistry.drift_keys.inspect}"
+  end
+end
+
+class Products::MetadataPreviewParamsTest < ActiveSupport::TestCase
+  test "filters to assignable visible attributes and drops picker keys" do
+    ctx = Products::EntryContext.build(product: Product.new, staff_item_kind: "book", mode: :new)
+    result = Products::MetadataPreviewParams.filter(
+      params: {
+        title: "Preview Title",
+        publisher: "Pub",
+        staff_item_kind: "book",
+        primary_bisac_category_node_id: 99,
+        unknown_junk: "nope"
+      },
+      entry_context: ctx,
+      mode: :new
+    )
+
+    assert_equal "Preview Title", result[:title]
+    assert_equal "Pub", result[:publisher]
+    refute result.key?(:primary_bisac_category_node_id)
+    refute result.key?(:staff_item_kind)
+    refute result.key?(:unknown_junk)
+  end
+
+  test "does not assign hidden keys for short form" do
+    ctx = Products::EntryContext.build(product: Product.new, staff_item_kind: "service", mode: :new)
+    result = Products::MetadataPreviewParams.filter(
+      params: { title: "Repair", publisher: "Should Drop", format_id: 3 },
+      entry_context: ctx,
+      mode: :new
+    )
+
     assert_equal "Repair", result[:title]
     refute result.key?(:publisher)
     refute result.key?(:format_id)

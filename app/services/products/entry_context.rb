@@ -32,22 +32,22 @@ module Products
     end
 
     def resolve!
+      @operational_product_type = OperationalTypeDeriver.derive(
+        staff_item_kind: @staff_item_kind,
+        digital: @digital
+      )
       resolver = FieldVisibilityResolver.new(
         staff_item_kind: @staff_item_kind,
         digital: @digital,
         format: @format,
         variation_type: @variation_type,
-        product_type: operational_product_type
+        product_type: @operational_product_type
       )
       @field_visibility = resolver.resolve
       @controlled_scheme = resolver.controlled_scheme
       @field_labels = FieldLabelResolver.labels_for(staff_item_kind: @staff_item_kind)
       @eligible_formats = FormatEligibility.eligible_formats(
         catalog_item_type: ItemKindNormalizer.catalog_item_type_for(@staff_item_kind),
-        digital: @digital
-      )
-      @operational_product_type = OperationalTypeDeriver.derive(
-        staff_item_kind: @staff_item_kind,
         digital: @digital
       )
       self
@@ -67,6 +67,19 @@ module Products
 
     def catalog_item_type
       ItemKindNormalizer.catalog_item_type_for(@staff_item_kind)
+    end
+
+    def to_client_payload
+      {
+        staff_item_kind: staff_item_kind,
+        catalog_item_type: catalog_item_type,
+        operational_product_type: operational_product_type,
+        short_form: short_form?,
+        controlled_scheme: controlled_scheme,
+        field_visibility: field_visibility.transform_values { |state| { visible: state.visible, required: state.required } },
+        field_labels: field_labels,
+        eligible_formats: eligible_formats.map { |format| { id: format.id, name: format.name, format_key: format.format_key } }
+      }
     end
   end
 end

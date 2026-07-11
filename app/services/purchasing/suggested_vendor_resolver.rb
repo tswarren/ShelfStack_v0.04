@@ -31,7 +31,7 @@ module Purchasing
 
       variants = ProductVariant
         .where(id: variant_ids)
-        .includes(product: :product_vendors, preferred_vendor: {})
+        .includes(product: [ :product_vendors, :preferred_vendor ], preferred_vendor: {})
         .index_by(&:id)
 
       variant_vendors = ProductVariantVendor

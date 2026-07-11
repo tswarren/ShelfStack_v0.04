@@ -1,12 +1,20 @@
+<% genre_scheme_key = entry_context.controlled_scheme.presence %>
+<% genre_scheme_key = "music_genres" if genre_scheme_key.blank? || genre_scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY %>
+<% genre_label = entry_context.field_labels[:genre_scheme].presence || "Genre" %>
+
 <%= render layout: "shared/forms/section", locals: { title: entry_context.short_form? ? "Details" : "Classification & Internal" } do %>
   <div class="ss-form-grid ss-form-grid--2">
-    <% if entry_context.visible?(:subdepartment) && record.is_a?(Product) %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :default_sub_department_id, label: "Subdepartment", required: entry_context.required?(:subdepartment) } do %>
-        <%= f.collection_select :default_sub_department_id, SubDepartment.active_records.order(:name), :id, :name, include_blank: "Select subdepartment" %>
+    <% if record.is_a?(Product) %>
+      <%= render layout: "items/shared/product_forms/metadata/field_shell",
+            locals: { field_key: :subdepartment, entry_context: entry_context } do %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :default_sub_department_id, label: "Subdepartment", required: entry_context.required?(:subdepartment) } do %>
+          <%= sub_department_grouped_select f, :default_sub_department_id, include_blank: "Select subdepartment" %>
+        <% end %>
       <% end %>
     <% end %>
 
-    <% if entry_context.visible?(:bisac_picker) %>
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :bisac_picker, entry_context: entry_context, class_name: "ss-field--full" } do %>
       <%= render "items/catalog_items/bisac_subjects_picker",
             f: f,
             catalog_item: record,
@@ -16,45 +24,57 @@
             bisac_scheme_loaded: bisac_scheme_loaded %>
     <% end %>
 
-    <% if entry_context.visible?(:genre_scheme_picker) && entry_context.controlled_scheme.present? %>
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :genre_scheme_picker, entry_context: entry_context, class_name: "ss-field--full" } do %>
       <%= render "items/shared/product_forms/metadata/genre_picker",
             f: f,
             record: record,
-            scheme_key: entry_context.controlled_scheme,
-            genre_label: entry_context.field_labels[:genre_scheme],
+            scheme_key: genre_scheme_key,
+            genre_label: genre_label,
             primary_genre_category_node_id: primary_genre_category_node_id,
             primary_genre_category_node_label: primary_genre_category_node_label,
             genre_category_node_ids: genre_category_node_ids,
             genre_scheme_loaded: genre_scheme_loaded %>
     <% end %>
 
-    <% if entry_context.visible?(:free_text_genres) %>
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :free_text_genres, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :genres } do %>
         <%= f.text_area :genres, rows: 2 %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:subjects) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :subjects, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :themes, label: "Subjects" } do %>
         <%= f.text_area :themes, rows: 2 %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:target_audience) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :target_audience, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :target_audiences, label: "Target audiences" } do %>
         <%= f.text_area :target_audiences, rows: 2 %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:access_restrictions) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :access_restrictions, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :access_restrictions, label: "Access restrictions" } do %>
         <%= f.text_area :access_restrictions, rows: 2 %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:internal_notes) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :internal_notes, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :internal_notes, label: "Internal notes" } do %>
         <%= f.text_area :internal_notes, rows: 3 %>
       <% end %>
     <% end %>
   </div>
-  <% if entry_context.visible?(:active) %>
+
+  <%= render layout: "items/shared/product_forms/metadata/field_shell",
+        locals: { field_key: :active, entry_context: entry_context } do %>
     <%= render "shared/forms/checkbox", f: f, record: record, field: :active %>
   <% end %>
 <% end %>

@@ -2,46 +2,12 @@
 
 module Products
   class MetadataParamsSanitizer
-    FIELD_PARAM_MAP = {
-      title: :title,
-      list_price: :list_price_cents,
-      digital: :digital,
-      creators: :creators,
-      store_category: :store_category_id,
-      subdepartment: :default_sub_department_id,
-      variation_type: :variation_type,
-      variant_label_1: :variant1_label,
-      variant_label_2: :variant2_label,
-      format: :format_id,
-      publisher: :publisher,
-      publication_date: :publication_date,
-      publication_status: :publication_status,
-      large_print: :large_print,
-      edition_statement: :edition_statement,
-      description: :description,
-      physical_dimensions: %i[height width depth dimension_units],
-      weight: %i[weight weight_units],
-      internal_notes: :internal_notes,
-      active: :active,
-      year: :year,
-      page_count: :page_count,
-      running_time: :duration_minutes,
-      target_audience: :target_audiences,
-      access_restrictions: :access_restrictions,
-      language: :language_code,
-      subjects: :themes,
-      free_text_genres: :genres,
-      series_name: %i[series_name series_enumeration],
-      periodical_metadata: :publication_frequency,
-      item_kind: :catalog_item_type
-    }.freeze
+    FIELD_PARAM_MAP = FieldKeyRegistry::PARAM_MAP
 
     PRODUCT_METADATA_KEYS = (
-      FIELD_PARAM_MAP.values.flatten +
-      %i[
-        staff_item_kind catalog_item_type primary_bisac_category_node_id bisac_category_node_ids
-        bisac_subjects primary_genre_category_node_id genre_category_node_ids issue_number volume_number
-      ]
+      FieldKeyRegistry::PARAM_MAP.values.flatten +
+      FieldKeyRegistry::PICKER_PARAM_KEYS +
+      %i[staff_item_kind catalog_item_type issue_number volume_number]
     ).uniq.freeze
 
     def self.sanitize(params:, entry_context:, mode: :new, item_kind_changed: false)
@@ -67,7 +33,7 @@ module Products
     private
 
     def filter_to_visible_keys!(permitted)
-      FIELD_PARAM_MAP.each do |field_key, param_keys|
+      FieldKeyRegistry::PARAM_MAP.each do |field_key, param_keys|
         Array(param_keys).each do |param_key|
           permitted.delete(param_key) unless @entry_context.visible?(field_key)
         end

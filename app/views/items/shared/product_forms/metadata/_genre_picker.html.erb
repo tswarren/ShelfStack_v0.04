@@ -7,18 +7,28 @@
 
 <div class="ss-field ss-field--full"
      data-controller="genre-subjects"
+     data-product-metadata-form-target="genrePicker"
      data-genre-subjects-search-url-value="<%= items_genre_subjects_search_path(format: :json, scheme: scheme_key) %>"
      data-genre-subjects-primary-id-value="<%= primary_id.to_i %>"
      data-genre-subjects-primary-label-value="<%= primary_label.to_s %>"
      data-genre-subjects-additional-selections-value="<%= additional_selections.to_json %>">
+  <%# Canonical staged values — always mounted; disabled when picker field shell is hidden. %>
+  <div class="ss-product-canonical-inputs ss-visually-hidden" data-product-canonical-inputs="genre_scheme_picker">
+    <%= hidden_field_tag :primary_genre_category_node_id, primary_id,
+          data: {
+            genre_subjects_target: "primaryHidden",
+            product_canonical_input: true
+          } %>
+    <div data-genre-subjects-target="additionalContainer" data-product-canonical-input="true"></div>
+  </div>
+
   <% unless scheme_loaded %>
     <p class="ss-form-errors"><%= genre_label %> tree is not loaded.</p>
   <% end %>
 
-  <div class="ss-form-grid ss-form-grid--2">
+  <div class="ss-form-grid ss-form-grid--2 ss-product-picker-ui">
     <div class="ss-field">
       <%= label_tag :primary_genre_category_node_id, "Primary #{genre_label.downcase}", class: "ss-label" %>
-      <%= hidden_field_tag :primary_genre_category_node_id, primary_id, data: { genre_subjects_target: "primaryHidden" } %>
       <div class="ss-bisac-primary-selection">
         <p data-genre-subjects-target="primaryDisplay" class="ss-muted"><%= primary_label.presence || "None selected" %></p>
         <button type="button"
@@ -40,7 +50,7 @@
 
     <div class="ss-field">
       <label class="ss-label">Additional <%= genre_label.downcase %></label>
-      <div data-genre-subjects-target="additionalContainer"></div>
+      <div data-genre-subjects-target="additionalDisplay"></div>
       <input type="search"
              class="ss-input"
              placeholder="Search to add another"

@@ -7,6 +7,7 @@ export default class extends Controller {
     "primaryDisplay",
     "primaryClear",
     "additionalContainer",
+    "additionalDisplay",
     "linkedPreview"
   ]
 
@@ -148,18 +149,24 @@ export default class extends Controller {
   }
 
   renderAdditionalSelections() {
-    if (!this.hasAdditionalContainerTarget) return
+    if (this.hasAdditionalContainerTarget) {
+      this.additionalContainerTarget.innerHTML = ""
+      this.additionalSelectionsValue.forEach((entry) => {
+        const hidden = document.createElement("input")
+        hidden.type = "hidden"
+        hidden.name = "genre_category_node_ids[]"
+        hidden.value = entry.id
+        hidden.dataset.productCanonicalInput = "true"
+        this.additionalContainerTarget.appendChild(hidden)
+      })
+    }
 
-    this.additionalContainerTarget.innerHTML = ""
+    if (!this.hasAdditionalDisplayTarget) return
+
+    this.additionalDisplayTarget.innerHTML = ""
     this.additionalSelectionsValue.forEach((entry) => {
       const row = document.createElement("div")
       row.className = "ss-bisac-selection-row"
-
-      const hidden = document.createElement("input")
-      hidden.type = "hidden"
-      hidden.name = "genre_category_node_ids[]"
-      hidden.value = entry.id
-      row.appendChild(hidden)
 
       const label = document.createElement("span")
       label.textContent = entry.label
@@ -173,7 +180,7 @@ export default class extends Controller {
       button.dataset.action = "genre-subjects#removeAdditional"
       row.appendChild(button)
 
-      this.additionalContainerTarget.appendChild(row)
+      this.additionalDisplayTarget.appendChild(row)
     })
   }
 

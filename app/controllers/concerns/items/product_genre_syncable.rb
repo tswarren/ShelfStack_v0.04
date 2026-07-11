@@ -12,11 +12,11 @@ module Items
 
       @genre_form_state = if genre_structured_input?
                             load_genre_form_state_from_params(scheme_key: scheme_key)
-                          elsif product.persisted?
+      elsif product.persisted?
                             load_genre_form_state(product, scheme_key: scheme_key)
-                          else
+      else
                             empty_genre_form_state(scheme_key: scheme_key)
-                          end
+      end
     end
 
     def load_genre_form_state(product, scheme_key:)
@@ -30,7 +30,12 @@ module Items
       {
         primary_genre_category_node_id: primary&.category_node_id,
         primary_genre_category_node_label: primary&.category_node&.breadcrumb_label,
-        genre_category_node_ids: categorizations.reject { |row| row.id == primary&.id }.map(&:category_node_id),
+        genre_category_node_ids: categorizations.reject { |row| row.id == primary&.id }.filter_map do |row|
+          node = row.category_node
+          next if node.blank?
+
+          { id: node.id, label: node.breadcrumb_label }
+        end,
         genre_scheme_loaded: scheme.present?
       }
     end
@@ -44,7 +49,12 @@ module Items
       {
         primary_genre_category_node_id: primary_id,
         primary_genre_category_node_label: primary_node&.breadcrumb_label,
-        genre_category_node_ids: additional_ids,
+        genre_category_node_ids: additional_ids.filter_map do |node_id|
+          node = scheme&.category_nodes&.find_by(id: node_id)
+          next if node.blank?
+
+          { id: node.id, label: node.breadcrumb_label }
+        end,
         genre_scheme_loaded: scheme.present?
       }
     end

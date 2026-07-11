@@ -1,6 +1,6 @@
-<%# locals: f, record, field, label: nil, help: nil %>
+<%# locals: f, record, field, label: nil, help: nil, input_data: {} %>
 <div class="ss-check-field">
-  <%= f.check_box field %>
+  <%= f.check_box field, data: local_assigns.fetch(:input_data, {}) %>
   <div>
     <%= f.label field, local_assigns.fetch(:label, nil) || field.to_s.humanize %>
     <% if local_assigns.fetch(:help, nil).present? %>

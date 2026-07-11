@@ -23,27 +23,14 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
 
   test "catalog-linked full path creates conditional product and variant" do
     get items_new_add_item_path
-    assert_redirected_to items_add_item_path(step: "choose_path")
-
-    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
-    assert_redirected_to items_add_item_path(step: "identify")
+    assert_redirected_to items_add_item_path(step: "item_details")
 
     post items_add_item_path(step: "item_details"), params: {
       catalog_item: {
         title: "Wizard Book",
         catalog_item_type: "book",
         format_id: @format.id,
-        creators: "Test Author"
-      },
-      commit: "Create Selling Setup"
-    }
-    assert_redirected_to items_add_item_path(step: "selling_setup")
-
-    follow_redirect!
-    assert_response :success
-
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
+        creators: "Test Author",
         list_price_cents: 2000,
         default_sub_department_id: @sub_department.id
       }
@@ -66,24 +53,18 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_item_path(product_id: item.id)
   end
 
-  test "catalog-linked selling setup allows non-conditional variation type" do
+  test "item details can set non-conditional variation type before create variant" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
     post items_add_item_path(step: "item_details"), params: {
       catalog_item: {
         title: "Variable Book",
         catalog_item_type: "book",
-        format_id: @format.id
-      },
-      commit: "Create Selling Setup"
-    }
-
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
+        format_id: @format.id,
         variation_type: "standard",
         list_price_cents: 1500,
         default_sub_department_id: @sub_department.id
       },
-      commit: "Done"
+      commit: "Save Product Only"
     }
 
     product = Product.find_by!(title: "Variable Book")
@@ -91,21 +72,13 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_equal @sub_department.id, product.default_sub_department_id
   end
 
-  test "catalog-linked selling setup shows variation type without product type selector" do
+  test "item details shows variation type without product type selector" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
-    post items_add_item_path(step: "item_details"), params: {
-      catalog_item: {
-        staff_item_kind: "sideline",
-        title: "Sideline Catalog Item",
-        format_id: @format.id,
-        default_sub_department_id: @sub_department.id
-      },
-      commit: "Create Selling Setup"
-    }
-    follow_redirect!
+    get items_add_item_path(step: "item_details")
 
-    assert_select "select[name=\"product[variation_type]\"]", count: 1
-    assert_select "select[name=\"product[product_type]\"]", count: 0
+    assert_response :success
+    assert_select "select[name=\"product[variation_type]\"], select[name=\"catalog_item[variation_type]\"]", count: 1
+    assert_select "select[name=\"product[product_type]\"], select[name=\"catalog_item[product_type]\"]", count: 0
   end
 
   test "catalog-linked done after item details saves product only" do
@@ -128,7 +101,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_item_path(product_id: product.id)
 
     follow_redirect!
-    assert_match "Product Only", response.body
+    assert_match "Product saved", response.body
   end
 
   test "non-catalog full path creates product and variant without catalog item" do
@@ -145,9 +118,9 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         list_price_cents: 10,
         default_sub_department_id: @sub_department.id
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
-    assert_redirected_to items_add_item_path(step: "selling_setup")
+    assert_redirected_to items_add_item_path(step: "sellable_sku")
 
     post items_add_item_path(step: "selling_setup"), params: {
       product: { default_sub_department_id: @sub_department.id }
@@ -172,7 +145,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to items_item_path(product_id: product.id)
   end
 
-  test "non-catalog service completes at item details without variant" do
+  test "non-catalog service save product only completes without variant" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
 
     assert_difference -> { Product.count }, 1 do
@@ -184,7 +157,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
             list_price_cents: 0,
             default_sub_department_id: @sub_department.id
           },
-          commit: "Done"
+          commit: "Save Product Only"
         }
       end
     end
@@ -198,6 +171,25 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_match "No sellable SKUs yet", response.body
   end
 
+  test "service primary save creates default variant" do
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "service",
+        title: "Gift Wrap",
+        list_price_cents: 500,
+        default_sub_department_id: @sub_department.id
+      }
+    }
+
+    product = Product.find_by!(title: "Gift Wrap")
+    assert_redirected_to items_item_path(product_id: product.id)
+    assert_equal 1, product.product_variants.count
+    variant = product.product_variants.first
+    assert_equal 500, variant.selling_price_cents
+    assert_equal @sub_department.id, variant.sub_department_id
+    assert variant.active?
+  end
+
   test "create sku and add another keeps wizard on sellable sku step" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
     post items_add_item_path(step: "item_details"), params: {
@@ -208,7 +200,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         list_price_cents: 1500,
         default_sub_department_id: @sub_department.id
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
     post items_add_item_path(step: "selling_setup"), params: {
       product: { default_sub_department_id: @sub_department.id }
@@ -244,7 +236,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         list_price_cents: 1500,
         default_sub_department_id: @sub_department.id
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
     post items_add_item_path(step: "selling_setup"), params: {
       product: { default_sub_department_id: @sub_department.id }
@@ -276,7 +268,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         list_price_cents: 2499,
         default_sub_department_id: @sub_department.id
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
     post items_add_item_path(step: "selling_setup"), params: {
       product: { default_sub_department_id: @sub_department.id }
@@ -299,7 +291,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         list_price_cents: 2000,
         default_sub_department_id: @sub_department.id
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
     post items_add_item_path(step: "selling_setup"), params: {
       product: { default_sub_department_id: @sub_department.id }
@@ -355,7 +347,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         initial_identifier_type: "isbn13",
         initial_identifier_value: "9780123456780"
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
 
     product = Product.find_by!(title: "Invalid ISBN Book")
@@ -378,13 +370,13 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         initial_identifier_type: "isbn13",
         initial_identifier_value: "9780306406157"
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
 
     product = Product.find_by!(title: "Valid ISBN Book")
     assert_equal "9780306406157", product.sku
     assert_equal "9780306406157", product.primary_identifier.normalized_identifier
-    assert_redirected_to items_add_item_path(step: "selling_setup")
+    assert_redirected_to items_add_item_path(step: "sellable_sku")
   end
 
   test "duplicate primary identifier re-renders item details with warning and preserved fields" do
@@ -409,7 +401,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
           initial_identifier_type: "isbn13",
           initial_identifier_value: "978-0-306-40615-7"
         },
-        commit: "Create Selling Setup"
+        commit: nil
       }
     end
 
@@ -421,6 +413,35 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'value="978-0-306-40615-7"'
   end
 
+  test "product_entry_context returns driver-only visibility payload" do
+    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+
+    get items_product_entry_context_path, params: {
+      staff_item_kind: "recorded_music",
+      digital: "0",
+      variation_type: "conditional"
+    }, as: :json
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal "recorded_music", payload["staff_item_kind"]
+    assert_equal false, payload["short_form"]
+    assert payload["field_visibility"].key?("genre_scheme_picker")
+    assert_equal true, payload["field_visibility"]["genre_scheme_picker"]["visible"]
+    assert_equal false, payload["field_visibility"]["bisac_picker"]["visible"]
+    assert payload["eligible_formats"].is_a?(Array)
+  end
+
+  test "product_entry_context returns short form for service" do
+    get items_product_entry_context_path, params: { staff_item_kind: "service" }, as: :json
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal true, payload["short_form"]
+    assert_equal true, payload["field_visibility"]["subdepartment"]["visible"]
+    assert_equal false, payload["field_visibility"]["format"]["visible"]
+  end
+
   test "metadata_sections returns genre picker for recorded music item kind" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
 
@@ -429,8 +450,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     }, headers: { "Turbo-Frame" => "product_metadata_sections" }
 
     assert_response :success
-    assert_includes response.body, 'turbo-frame id="product_metadata_sections"'
-    assert_not_includes response.body, "bisac_subjects_picker"
+    assert_includes response.body, 'data-product-field-key="genre_scheme_picker"'
     assert_includes response.body, "genre_subjects"
   end
 
@@ -442,20 +462,65 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
     }, headers: { "Turbo-Frame" => "product_metadata_sections" }
 
     assert_response :success
-    assert_not_includes response.body, "Format &amp; Metadata"
-    assert_not_includes response.body, "Format & Metadata"
+    assert_includes response.body, 'data-product-field-key="subdepartment"'
+    assert_match(/data-product-field-key="format"[^>]*hidden/, response.body)
     assert_includes response.body, "Subdepartment"
   end
 
-  test "item details includes metadata sections frame and item kind refresh wiring" do
+  test "item details includes stable product form context wiring" do
     post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
     get items_add_item_path(step: "item_details")
 
     assert_response :success
-    assert_includes response.body, 'turbo-frame id="product_metadata_sections"'
-    assert_includes response.body, 'data-product-metadata-form-target="sectionsFrame"'
+    assert_includes response.body, 'data-controller="product-metadata-form"'
     assert_includes response.body, 'data-product-metadata-form-target="staffItemKind"'
-    assert_includes response.body, items_add_item_metadata_sections_path
+    assert_includes response.body, items_product_entry_context_path
+    assert_includes response.body, 'data-product-field-key="title"'
+    assert_includes response.body, 'data-product-field-key="preferred_vendor"'
+    assert_select "select[name=\"catalog_item[preferred_vendor_id]\"]", count: 1
+    assert_not_includes response.body, 'data-controller="catalog-item-form product-metadata-form"'
+    assert_not_includes response.body, "data-product-metadata-form-preview-url-value"
+  end
+
+  test "item details saves preferred vendor on create" do
+    vendor = create_vendor!(name: "Add Flow Vendor")
+
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        staff_item_kind: "book",
+        title: "Preferred Vendor Book",
+        format_id: @format.id,
+        default_sub_department_id: @sub_department.id,
+        preferred_vendor_id: vendor.id,
+        list_price_cents: 1500
+      }
+    }
+
+    product = Product.find_by!(title: "Preferred Vendor Book")
+    assert_equal vendor.id, product.preferred_vendor_id
+    assert_redirected_to items_add_item_path(step: "sellable_sku")
+
+    get items_add_item_path(step: "sellable_sku")
+    assert_response :success
+    assert_select "select[name=\"product_variant[preferred_vendor_id]\"]" do
+      assert_select "option[value=\"#{vendor.id}\"][selected]", count: 1
+    end
+
+    post items_add_item_path(step: "sellable_sku"), params: {
+      product_variant: {
+        selling_price_cents: 1500,
+        sub_department_id: @sub_department.id,
+        preferred_vendor_id: vendor.id
+      }
+    }
+
+    variant = product.product_variants.order(:id).last
+    assert_equal vendor.id, variant.preferred_vendor_id
+
+    get items_item_path(product_id: product.id, tab: "item_setup")
+    assert_response :success
+    assert_includes response.body, "Add Flow Vendor"
+    assert_includes response.body, "Preferred vendor"
   end
 
   test "metadata_sections preserves in-progress section field values from request params" do
@@ -483,7 +548,7 @@ class ItemsAddItemControllerTest < ActionDispatch::IntegrationTest
         list_price_cents: 1000,
         default_sub_department_id: @sub_department.id
       },
-      commit: "Create Selling Setup"
+      commit: nil
     }
 
     cover = fixture_file_upload("cover.png", "image/png")

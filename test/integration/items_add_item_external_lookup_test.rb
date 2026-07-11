@@ -60,42 +60,32 @@ class ItemsAddItemExternalLookupTest < ActionDispatch::IntegrationTest
 
     assert_difference -> { Product.count }, 1 do
       assert_difference -> { ExternalCatalogImport.count }, 1 do
-        post items_add_item_path(step: "item_details"), params: {
-          catalog_item: {
-            title: "Edited Great Gatsby",
-            catalog_item_type: "book",
-            format_id: @format.id
-          },
-          commit: "Create Selling Setup"
-        }
+        cover_attached = false
+        original_call = ExternalCatalog::CoverImageImporter.method(:call)
+        ExternalCatalog::CoverImageImporter.singleton_class.define_method(:call) do |**_args|
+          cover_attached = true
+          ExternalCatalog::CoverImageImporter::Result.new(attached: true, message: nil)
+        end
+        begin
+          post items_add_item_path(step: "item_details"), params: {
+            catalog_item: {
+              title: "Edited Great Gatsby",
+              catalog_item_type: "book",
+              format_id: @format.id,
+              list_price_cents: 1700,
+              default_sub_department_id: @sub_department.id
+            }
+          }
+        ensure
+          ExternalCatalog::CoverImageImporter.singleton_class.define_method(:call, original_call)
+        end
+        assert cover_attached
       end
     end
 
     product = Product.find_by!(title: "Edited Great Gatsby")
     assert_equal Phase65TestHelper::ISBNDB_SUCCESS_ISBN, product.sku
-    assert_redirected_to items_add_item_path(step: "selling_setup")
-
-    follow_redirect!
-    assert_select "input[name='product[list_price_cents]'][value='1700']"
-
-    cover_attached = false
-    original_call = ExternalCatalog::CoverImageImporter.method(:call)
-    ExternalCatalog::CoverImageImporter.singleton_class.define_method(:call) do |**_args|
-      cover_attached = true
-      ExternalCatalog::CoverImageImporter::Result.new(attached: true, message: nil)
-    end
-    begin
-      post items_add_item_path(step: "selling_setup"), params: {
-        product: {
-          list_price_cents: 2000,
-          default_sub_department_id: @sub_department.id
-        }
-      }
-    ensure
-      ExternalCatalog::CoverImageImporter.singleton_class.define_method(:call, original_call)
-    end
-
-    assert cover_attached
+    assert_equal 1700, product.list_price_cents
     assert_redirected_to items_add_item_path(step: "sellable_sku")
   end
 

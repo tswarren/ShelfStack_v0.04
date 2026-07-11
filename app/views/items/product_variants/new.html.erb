@@ -19,7 +19,10 @@
              show_advanced: false,
              manage_inventory_behavior: @manage_inventory_behavior %>
   <footer class="ss-form-actions">
-    <%= render "shared/ui/button", label: "Create Variant", type: :submit, variant: :primary %>
+    <%= render "shared/ui/button", label: "Create Variant", type: :submit, variant: :primary, name: "commit" %>
+    <% if @product_variant.product.present? && @product_variant.product.variation_type.in?(%w[variable matrix conditional]) %>
+      <%= render "shared/ui/button", label: "Create Variant and Add Another", type: :submit, variant: :secondary, name: "commit" %>
+    <% end %>
     <% cancel_path = @product_variant.product.present? ? item_flow_cancel_path(@product_variant.product, tab: "item_setup") : items_product_variants_path %>
     <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: cancel_path %>
   </footer>
