@@ -3,15 +3,15 @@
     <h2>Sellable SKU</h2>
   </header>
   <div class="ss-form-grid ss-form-grid--2">
-    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :name_override, label: "Name override (optional)" } do %>
-      <%= f.text_field :name_override %>
+    <% unless local_assigns.fetch(:simplified, true) %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :name_override, label: "Name override (optional)" } do %>
+        <%= f.text_field :name_override %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sku, label: "SKU (leave blank to generate)" } do %>
+        <%= f.text_field :sku, maxlength: 50 %>
+      <% end %>
     <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sku, label: "SKU (leave blank to generate)" } do %>
-      <%= f.text_field :sku, maxlength: 50 %>
-    <% end %>
-    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :selling_price_cents, label: "Selling price (cents)" } do %>
-      <%= f.number_field :selling_price_cents, min: 0, value: variant.selling_price_cents %>
-    <% end %>
+    <%= render "items/shared/variant_forms/selling_price", f: f, variant: variant %>
   </div>
 </section>
 
@@ -21,5 +21,7 @@
            sub_departments: sub_departments,
            conditions: local_assigns[:conditions],
            display_locations: display_locations,
+           vendors: local_assigns[:vendors],
            classification_defaults: local_assigns[:classification_defaults],
-           hide_condition: true %>
+           hide_condition: true,
+           simplified: local_assigns.fetch(:simplified, true) %>

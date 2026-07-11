@@ -77,4 +77,51 @@ module FormHelper
       { include_blank: blank_label }.merge(html_options)
     )
   end
+
+  # Returns [[department_name, [[sub_name, id], ...]], ...] for grouped_options_for_select.
+  def sub_department_options_grouped_by_department(sub_departments = nil)
+    records =
+      case sub_departments
+      when nil
+        SubDepartment.active_records.includes(:department).joins(:department)
+          .order(Arel.sql("departments.name ASC, sub_departments.name ASC")).to_a
+      when ActiveRecord::Relation
+        sub_departments.includes(:department).joins(:department)
+          .order(Arel.sql("departments.name ASC, sub_departments.name ASC")).to_a
+      else
+        Array(sub_departments).sort_by { |sd| [ sd.department&.name.to_s, sd.name.to_s ] }
+      end
+
+    records
+      .group_by { |sd| sd.department&.name.presence || "Other" }
+      .map { |department_name, rows| [ department_name, rows.map { |sd| [ sd.name, sd.id ] } ] }
+  end
+
+  def sub_department_grouped_select(form, attribute, sub_departments: nil, include_blank: false, html_options: {})
+    selected = form.object&.public_send(attribute)
+    blank_label = case include_blank
+    when String then include_blank
+    when true then ""
+    end
+
+    form.select(
+      attribute,
+      grouped_options_for_select(sub_department_options_grouped_by_department(sub_departments), selected),
+      { include_blank: blank_label },
+      html_options
+    )
+  end
+
+  def sub_department_grouped_select_tag(name, selected: nil, sub_departments: nil, include_blank: false, html_options: {})
+    blank_label = case include_blank
+    when String then include_blank
+    when true then ""
+    end
+
+    select_tag(
+      name,
+      grouped_options_for_select(sub_department_options_grouped_by_department(sub_departments), selected),
+      { include_blank: blank_label }.merge(html_options)
+    )
+  end
 end

@@ -69,8 +69,10 @@ Rails.application.routes.draw do
     get "setup_modals/classification_tax_preview", to: "setup_modals#classification_tax_preview", as: :setup_modals_classification_tax_preview
 
     get "add_item", to: "add_item#show", as: :add_item
+    get "add_item/metadata_sections", to: "add_item#metadata_sections", as: :add_item_metadata_sections
     post "add_item", to: "add_item#create"
     get "add_item/new", to: "add_item#new", as: :new_add_item
+    get "product_entry_context", to: "product_entry_contexts#show", as: :product_entry_context
 
     get "ingram_import", to: "ingram_import#show", as: :ingram_import
     post "ingram_import/preview", to: "ingram_import#preview", as: :ingram_import_preview
@@ -83,6 +85,7 @@ Rails.application.routes.draw do
     post "external_lookup/:id/import", to: "external_lookup#import", as: :external_lookup_import
 
     get "bisac_subjects/search", to: "bisac_subject_searches#index", as: :bisac_subjects_search
+    get "genre_subjects/search", to: "genre_subject_searches#index", as: :genre_subjects_search
     resources :catalog_items do
       member do
         patch :inactivate
@@ -99,6 +102,7 @@ Rails.application.routes.draw do
     resources :products do
       member do
         get :edit_metadata
+        get :metadata_sections
         patch :update_metadata
         patch :inactivate
         patch :reactivate

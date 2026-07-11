@@ -1,0 +1,32 @@
+<%= render layout: "shared/forms/section", locals: { title: "Variant Setup" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <% if record.is_a?(Product) %>
+      <%= render layout: "items/shared/product_forms/metadata/field_shell",
+            locals: { field_key: :variation_type, entry_context: entry_context } do %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :variation_type } do %>
+          <%= f.select :variation_type,
+                Product::VARIATION_TYPES.map { |t| [humanize_controlled_value(t), t] },
+                {},
+                data: {
+                  product_metadata_form_target: "variationType",
+                  action: "change->product-metadata-form#onDriverChange"
+                } %>
+        <% end %>
+      <% end %>
+
+      <%= render layout: "items/shared/product_forms/metadata/field_shell",
+            locals: { field_key: :variant_label_1, entry_context: entry_context } do %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :variant1_label, label: "Variant label 1" } do %>
+          <%= f.text_field :variant1_label %>
+        <% end %>
+      <% end %>
+
+      <%= render layout: "items/shared/product_forms/metadata/field_shell",
+            locals: { field_key: :variant_label_2, entry_context: entry_context } do %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :variant2_label, label: "Variant label 2" } do %>
+          <%= f.text_field :variant2_label %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

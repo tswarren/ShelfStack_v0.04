@@ -17,6 +17,15 @@
   </div>
   <%= render "shared/forms/checkbox", f: f, record: format, field: :virtual,
              help: "Virtual formats represent digital or non-physical items." %>
+  <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :catalog_item_type, label: "Item kind" } do %>
+    <%= f.select :catalog_item_type, ProductMetadata::CATALOG_ITEM_TYPES.map { |t| [humanize_controlled_value(t), t] }, include_blank: true %>
+  <% end %>
+  <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :digital } do %>
+    <%= f.select :digital, [["Either", ""], ["Physical only", false], ["Digital only", true]], selected: format.digital %>
+  <% end %>
+  <%= render layout: "shared/forms/field", locals: { f: f, record: format, field: :sort_order } do %>
+    <%= f.number_field :sort_order, min: 0, step: 1 %>
+  <% end %>
 <% end %>
 
 <%= render layout: "shared/forms/section", locals: { title: "Status" } do %>

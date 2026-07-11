@@ -62,6 +62,13 @@ class CatalogItem < ApplicationRecord
       .includes(category_node: :parent)
   end
 
+  def genre_categorizations
+    categorizations
+      .joins(category_node: :category_scheme)
+      .where(category_schemes: { purpose: CategoryScheme::GENRE_PURPOSES })
+      .includes(category_node: :parent)
+  end
+
   def primary_bisac_categorization
     bisac_categorizations.primary_records.first
   end

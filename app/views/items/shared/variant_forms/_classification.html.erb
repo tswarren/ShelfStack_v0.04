@@ -6,7 +6,7 @@
 
   <div class="ss-form-grid ss-form-grid--2">
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sub_department_id, label: "Subdepartment", required: true } do %>
-      <%= f.collection_select :sub_department_id, sub_departments, :id, :name, selected: variant.sub_department_id %>
+      <%= sub_department_grouped_select f, :sub_department_id, sub_departments: sub_departments %>
     <% end %>
 
     <% if variant.condition_id.present? || f.object.condition.present? %>
@@ -22,21 +22,18 @@
     <%= render "items/shared/variant_forms/inventory_tracking", f: f, variant: variant %>
     <%= render "shared/forms/checkbox", f: f, record: variant, field: :discountable,
                help: "When unchecked, this sellable SKU cannot receive POS discounts." %>
-    <% if local_assigns[:vendors].present? %>
-      <% variant_policy = ProductVariants::OperationalPolicy.for(variant) %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :preferred_vendor_id, label: "Preferred vendor" } do %>
-        <% if variant_policy.used_like? %>
-          <%= f.collection_select :preferred_vendor_id, vendors, :id, :name,
-                include_blank: true, disabled: true %>
-          <p class="ss-hint"><%= variant_policy.vendor_sourcing_not_applicable_message %></p>
-        <% else %>
-          <%= f.collection_select :preferred_vendor_id, vendors, :id, :name, include_blank: true %>
-        <% end %>
+    <% variant_policy = ProductVariants::OperationalPolicy.for(variant) %>
+    <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :preferred_vendor_id, label: "Preferred vendor" } do %>
+      <% if variant_policy.used_like? %>
+        <%= f.collection_select :preferred_vendor_id, Array(local_assigns[:vendors]), :id, :name,
+              include_blank: true, disabled: true %>
+        <p class="ss-hint"><%= variant_policy.vendor_sourcing_not_applicable_message %></p>
+      <% else %>
+        <%= f.collection_select :preferred_vendor_id, Array(local_assigns[:vendors]), :id, :name, include_blank: true %>
       <% end %>
     <% end %>
     <%= render "shared/forms/checkbox", f: f, record: variant, field: :orderable,
                help: "When unchecked, this SKU cannot be added to normal vendor purchase orders." %>
-    <% variant_policy ||= ProductVariants::OperationalPolicy.for(variant) %>
     <% if variant_policy.used_like? && variant.orderable? %>
       <p class="ss-hint ss-hint--warning">Used-like variants cannot be added to normal vendor purchase orders even when marked orderable.</p>
     <% end %>

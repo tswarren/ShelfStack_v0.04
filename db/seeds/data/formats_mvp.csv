@@ -1,0 +1,28 @@
+format_key,name,short_name,catalog_item_type,digital,virtual,sort_order
+trade_cloth,Trade Cloth,Trade Cloth,book,false,false,10
+trade_paperback,Trade Paperback,Trade PB,book,false,false,20
+mass_market_paperback,Mass Market Paperback,Mass Mkt,book,false,false,30
+board_book,Board Book,Board Book,book,false,false,40
+library_binding,Library Binding,Lib Binding,book,false,false,50
+ebook,eBook,eBook,book,true,true,60
+epub,EPUB,EPUB,book,true,true,70
+audiobook_download,Downloadable Audiobook,Aud DL,book,true,true,80
+audiobook_streaming,Streaming Audiobook,Aud Stream,book,true,true,90
+audiobook_cd,Audiobook CD,Aud CD,book,false,false,100
+audio_cd,Audio CD,Audio CD,recorded_music,false,false,110
+vinyl_lp,Vinyl LP,Vinyl,recorded_music,false,false,120
+digital_music,Digital Music,Digital Music,recorded_music,true,true,130
+dvd,DVD,DVD,videorecording,false,false,140
+blu_ray,Blu-ray,Blu-ray,videorecording,false,false,150
+digital_video,Digital Video,Digital Video,videorecording,true,true,160
+video_game_disc,Video Game Disc,Game Disc,game,false,false,170
+video_game_cartridge,Video Game Cartridge,Game Cart,game,false,false,180
+video_game_digital,Digital Video Game,Digital Game,game,true,true,190
+magazine,Magazine,Magazine,periodical,false,false,200
+newspaper,Newspaper,Newspaper,periodical,false,false,210
+wall_calendar,Wall Calendar,Wall Cal,calendar,false,false,220
+desk_calendar,Desk Calendar,Desk Cal,calendar,false,false,230
+gift_item,Gift Item,Gift,sideline,false,false,240
+apparel,Apparel,Apparel,sideline,false,false,250
+other_merchandise,Other Merchandise,Other Merch,sideline,false,false,260
+other,Other,Other,other,false,false,270

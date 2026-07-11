@@ -30,12 +30,21 @@ az               <%= render "shared/ui/button",
   <section class="ss-item-display-section">
     <h3>Product display defaults</h3>
     <dl class="ss-summary">
+      <dt>Preferred vendor</dt>
+      <dd class="ss-summary-with-action">
+        <span><%= item.product.preferred_vendor&.name || "—" %></span>
+        <%= link_to "Edit", edit_items_product_path(item.product, anchor: "product_preferred_vendor_id") %>
+      </dd>
       <dt>Default display location</dt>
       <dd class="ss-summary-with-action">
         <span><%= item.product.default_display_location&.name || "—" %></span>
         <%= link_to "Edit", edit_items_product_path(item.product, anchor: "product_default_display_location_id") %>
       </dd>
     </dl>
+    <p class="ss-muted">
+      Preferred vendor is who ShelfStack suggests for ordering.
+      Product vendor rows below supply item number, discount, and returnability for a vendor.
+    </p>
   </section>
 
   <% if item.variants.any? %>

@@ -47,7 +47,12 @@ module Items
       load_form_collections
       if @product_variant.save
         record_audit!("product_variant.created", @product_variant, details: { "sku" => @product_variant.sku })
-        redirect_to variant_return_path(@product_variant), notice: "Product variant created."
+        if add_another_variant_commit?
+          redirect_to new_items_product_variant_path(product_id: @product_variant.product_id, return_to: params[:return_to].presence || "item"),
+                      notice: "Product variant created. Add another or cancel to finish."
+        else
+          redirect_to variant_return_path(@product_variant), notice: "Product variant created."
+        end
       else
         render :new, status: :unprocessable_entity
       end
@@ -189,6 +194,10 @@ module Items
         tab: "item_setup",
         variant_id: variant.id
       )
+    end
+
+    def add_another_variant_commit?
+      params[:commit].to_s.include?("Add Another")
     end
 
     def product_variant_params

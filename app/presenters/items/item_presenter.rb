@@ -229,7 +229,7 @@ module Items
 
       [
         { label: "Subjects", headings: cleaned_headings_from(bisac_subject_source) },
-        { label: "Genres", headings: cleaned_headings_from({ data: meta.genre_data, raw: meta.genres }) },
+        { label: "Genres", headings: cleaned_headings_from(genre_subject_source) },
         { label: "Themes", headings: cleaned_headings_from({ data: meta.theme_data, raw: meta.themes }) },
         { label: "Audiences", headings: cleaned_headings_from({ data: meta.target_audience_data, raw: meta.target_audiences }) },
         { label: "Access Restrictions", headings: cleaned_headings_from({ data: meta.access_restriction_data, raw: meta.access_restrictions }) }
@@ -294,7 +294,7 @@ module Items
     def description_summary_label
       meta = display_metadata
       parts = []
-      parts << "#{pages_label} pp." if pages_label.present?
+      parts << "#{pages_label} pages" if pages_label.present?
       parts << running_time_label if running_time_label.present?
       parts << pub_frequency_label if pub_frequency_label.present?
       if meta&.year.present? && released_date_label.blank?
@@ -304,10 +304,16 @@ module Items
     end
 
     def catalog_item_type_label
+      product_record = product || (catalog_item.is_a?(Product) ? catalog_item : nil)
+      if product_record.present?
+        staff_kind = Products::ItemKindNormalizer.infer_staff_item_kind(product_record)
+        return Products::ItemKindNormalizer.staff_label(staff_kind)
+      end
+
       type = display_metadata&.catalog_item_type
       return nil if type.blank?
 
-      humanize_status(type)
+      humanize_status(Products::ItemKindNormalizer.normalize_legacy_catalog_item_type(type))
     end
 
     def description_text
@@ -320,12 +326,6 @@ module Items
 
     def overview_actions(helper: self)
       actions = []
-      if path = edit_bibliographic_metadata_path(helper: helper)
-        actions << {
-          label: "Edit bibliographic details",
-          url: path
-        }
-      end
       if product
         actions << {
           label: "Edit Product",
@@ -393,11 +393,9 @@ module Items
     end
 
     def edit_bibliographic_metadata_path(helper: self)
-      if catalog_item.present?
-        helper.edit_items_catalog_item_path(catalog_item, item_return_params)
-      elsif product&.metadata_fused?
-        helper.edit_metadata_items_product_path(product, item_return_params)
-      end
+      return helper.edit_items_product_path(product, item_return_params) if product.present?
+
+      nil
     end
 
     def cover_image_attached?
@@ -486,10 +484,9 @@ module Items
     end
 
     def edit_catalog_action(helper: self)
-      path = edit_bibliographic_metadata_path(helper: helper)
-      return unless path
+      return unless product
 
-      { label: "Edit bibliographic details", url: path }
+      { label: "Edit Product", url: helper.edit_items_product_path(product, item_return_params) }
     end
 
     def sell_new_action(helper: self)
@@ -549,7 +546,7 @@ module Items
 
       [
         bisac_subject_source,
-        { data: meta.genre_data, raw: meta.genres },
+        genre_subject_source,
         { data: meta.theme_data, raw: meta.themes }
       ]
     end
@@ -576,6 +573,31 @@ module Items
       return { data: linked_headings, raw: nil } if linked_headings.any?
 
       { data: catalog_item.bisac_subject_data, raw: catalog_item.bisac_subjects }
+    end
+
+    def genre_subject_source
+      meta = display_metadata
+      return { data: [], raw: nil } unless meta
+
+      if product.present?
+        linked_headings = product.genre_categorizations
+          .order(primary: :desc, id: :asc)
+          .map { |categorization| { "heading" => categorization.category_node.breadcrumb_label } }
+        return { data: linked_headings, raw: nil } if linked_headings.any?
+
+        return { data: meta.genre_data, raw: meta.genres } if meta.genres.present? || meta.genre_data.present?
+
+        return { data: [], raw: nil }
+      end
+
+      return { data: [], raw: nil } unless catalog_item
+
+      linked_headings = catalog_item.genre_categorizations
+        .order(primary: :desc, id: :asc)
+        .map { |categorization| { "heading" => categorization.category_node.breadcrumb_label } }
+      return { data: linked_headings, raw: nil } if linked_headings.any?
+
+      { data: meta.genre_data, raw: meta.genres }
     end
 
     def headings_from_subject_source(source)

@@ -5,7 +5,7 @@ module CatalogImport
     class FormatError < StandardError; end
 
     FORMAT_KEYS = {
-      "hardcover" => "hardcover",
+      "hardcover" => "trade_cloth",
       "paperback" => "trade_paperback",
       "trade paperback" => "trade_paperback",
       "mass market paperback" => "mass_market_paperback",
@@ -48,7 +48,16 @@ module CatalogImport
       format_key = FORMAT_KEYS[normalized_name]
       return nil if format_key.blank?
 
-      Format.active_records.find_by(format_key: format_key)
+      Format.active_records.find_by(format_key: format_key) ||
+        Format.active_records.find_by(format_key: legacy_fallback_key(format_key))
+    end
+
+    def legacy_fallback_key(format_key)
+      case format_key
+      when "trade_cloth" then "hardcover"
+      when "audiobook_download", "audiobook_streaming" then "audiobook_digital"
+      else format_key
+      end
     end
 
     private

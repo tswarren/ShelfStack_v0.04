@@ -133,22 +133,23 @@ class ItemsItemPresenterTest < ActiveSupport::TestCase
     assert_not_includes presenter.search_statuses, "invalid_identifier_warning"
   end
 
-  test "context actions include edit bibliographic details for legacy linked product" do
+  test "context actions include edit product for legacy linked product" do
     product = create_legacy_catalog_linked_product!
     presenter = Items::ItemPresenter.from_product(product)
 
     labels = presenter.context_actions.map { |action| action[:label] }
 
-    assert_includes labels, "Edit bibliographic details"
+    assert_includes labels, "Edit Product"
+    assert_not_includes labels, "Edit bibliographic details"
   end
 
-  test "overview actions include bibliographic edit and edit product for fused metadata" do
+  test "overview actions include edit product for fused metadata" do
     product = create_product!
     presenter = Items::ItemPresenter.from_product(product)
 
     labels = presenter.overview_actions.map { |action| action[:label] }
 
-    assert_equal [ "Edit bibliographic details", "Edit Product" ], labels
+    assert_equal [ "Edit Product" ], labels
   end
 
   test "creator entries parse display names and roles" do

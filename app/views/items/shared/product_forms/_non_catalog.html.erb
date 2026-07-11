@@ -27,7 +27,7 @@
     <%= render "items/shared/product_forms/variation_fields", f: f, product: product %>
 
     <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_sub_department_id, label: "Default subdepartment" } do %>
-      <%= f.collection_select :default_sub_department_id, local_assigns[:sub_departments], :id, :name, include_blank: false %>
+      <%= sub_department_grouped_select f, :default_sub_department_id, sub_departments: local_assigns[:sub_departments] %>
       <p class="ss-help">Applied as the default for sellable SKUs you create for this product.</p>
     <% end %>
     <% if local_assigns[:vendors].present? %>

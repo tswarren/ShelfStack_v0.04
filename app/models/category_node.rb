@@ -3,6 +3,8 @@
 class CategoryNode < ApplicationRecord
   STORE_CATEGORIES_SCHEME_KEY = "store_categories"
   LEGACY_STORE_SCHEME_KEY = "store_sections_topics"
+  STANDARD_NODE_KEY_MAX_LENGTH = 30
+  GENRE_NODE_KEY_MAX_LENGTH = 128
 
   belongs_to :category_scheme
   belongs_to :parent, class_name: "CategoryNode", optional: true
@@ -15,7 +17,8 @@ class CategoryNode < ApplicationRecord
   has_many :catalog_items_as_store_category, class_name: "CatalogItem", foreign_key: :store_category_id,
            dependent: :restrict_with_error, inverse_of: :store_category
 
-  validates :node_key, presence: true, uniqueness: { scope: :category_scheme_id }, length: { maximum: 30 }
+  validates :node_key, presence: true, uniqueness: { scope: :category_scheme_id }
+  validate :node_key_length_within_scheme_limit
   validates :name, presence: true
   validates :sort_order, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :parent_must_belong_to_same_scheme
@@ -25,6 +28,13 @@ class CategoryNode < ApplicationRecord
   validate :name_unique_within_parent_scope
 
   scope :active_records, -> { where(active: true) }
+
+  def self.matching_name_or_key(query)
+    return none if query.blank?
+
+    pattern = "%#{sanitize_sql_like(query.to_s.downcase)}%"
+    where("LOWER(category_nodes.name) LIKE :pattern OR LOWER(category_nodes.node_key) LIKE :pattern", pattern: pattern)
+  end
 
   def self.ordered_tree_rows_for(category_scheme)
     if category_scheme.scheme_key == Bisac::CategoryNodeImporter::SCHEME_KEY
@@ -82,7 +92,24 @@ class CategoryNode < ApplicationRecord
     category_scheme&.scheme_key.in?([ STORE_CATEGORIES_SCHEME_KEY, LEGACY_STORE_SCHEME_KEY ])
   end
 
+  def genre_scheme?
+    category_scheme&.purpose.in?(CategoryScheme::GENRE_PURPOSES)
+  end
+
+  def node_key_max_length
+    genre_scheme? ? GENRE_NODE_KEY_MAX_LENGTH : STANDARD_NODE_KEY_MAX_LENGTH
+  end
+
   private
+
+  def node_key_length_within_scheme_limit
+    return if node_key.blank?
+
+    max = node_key_max_length
+    return if node_key.length <= max
+
+    errors.add(:node_key, "is too long (maximum is #{max} characters)")
+  end
 
   def normalize_strings
     self.node_key = node_key&.strip&.downcase

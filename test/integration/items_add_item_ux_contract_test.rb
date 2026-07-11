@@ -23,20 +23,19 @@ class ItemsAddItemUxContractTest < ActionDispatch::IntegrationTest
     post login_path, params: { username: "add_item_ux", password: "Password123!" }
   end
 
-  test "choose path step uses contract form footer" do
+  test "optional assist step uses Add Product vocabulary" do
     get items_add_item_path(step: "choose_path")
 
     assert_response :success
-    assert_select ".ss-page-header h1", text: "Add Item"
-    footer = css_select("footer.ss-form-actions").first.to_s
-    assert_operator footer.index("Continue"), :<, footer.index("Cancel")
+    assert_select ".ss-page-header h1", text: "Add Product"
+    assert_select "span.ss-choice-title", text: "Look up by identifier"
+    assert_select "span.ss-choice-title", text: "Enter product details"
     assert_select "footer.ss-form-actions button.ss-btn-primary", text: "Continue"
-    assert_select "footer.ss-form-actions a.ss-btn-secondary", text: "Search for existing item"
     assert_select "footer.ss-form-actions a.ss-btn-tertiary", text: "Cancel"
   end
 
   test "identify step uses contract form footer" do
-    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
+    post items_add_item_path(step: "choose_path"), params: { assist: "lookup" }
     get items_add_item_path(step: "identify")
 
     assert_response :success
@@ -46,37 +45,21 @@ class ItemsAddItemUxContractTest < ActionDispatch::IntegrationTest
     assert_select "footer.ss-form-actions a.ss-btn-tertiary", text: "Cancel"
   end
 
-  test "item details step uses contract form footer" do
-    post items_add_item_path(step: "choose_path"), params: { workflow: "catalog_linked" }
-    get items_add_item_path(step: "item_details")
+  test "item details step uses unified create CTAs" do
+    get items_new_add_item_path
+    follow_redirect!
 
     assert_response :success
-    assert_select "footer.ss-form-actions button.ss-btn-primary", text: "Create Selling Setup"
-    assert_select "footer.ss-form-actions button.ss-btn-secondary", text: "Done"
+    assert_select "footer.ss-form-actions button.ss-btn-primary", text: "Save and Create Variant"
+    assert_select "footer.ss-form-actions button.ss-btn-secondary", text: "Save Product Only"
     assert_select "footer.ss-form-actions a.ss-btn-tertiary", text: "Cancel"
-  end
-
-  test "non-catalog selling setup uses contract form footer" do
-    post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    get items_add_item_path(step: "selling_setup")
-
-    assert_response :success
-    assert_select ".ss-page-header h1", text: "Add Non-Catalog Item"
-    assert_select "footer.ss-form-actions button.ss-btn-primary", text: "Add Sellable SKU"
-    assert_select "footer.ss-form-actions button.ss-btn-secondary", text: "Done"
-    assert_select "footer.ss-form-actions a.ss-btn-tertiary", text: "Cancel"
-    assert_select ".ss-inline-actions button.ss-btn-secondary", text: "Generate SKU"
-    assert_select ".ss-inline-actions a.ss-btn-link", text: "Back"
   end
 
   test "sellable sku step uses contract form footer and back link" do
-    post items_add_item_path(step: "choose_path"), params: { workflow: "non_catalog" }
-    post items_add_item_path(step: "selling_setup"), params: {
-      product: {
-        sku: "UX-MUG-001",
-        name: "Wizard Mug",
-        product_type: "financial",
-        variation_type: "standard",
+    post items_add_item_path(step: "item_details"), params: {
+      catalog_item: {
+        title: "Wizard Mug",
+        staff_item_kind: "other",
         list_price_cents: 1299,
         default_sub_department_id: @sub_department.id
       }
@@ -84,10 +67,9 @@ class ItemsAddItemUxContractTest < ActionDispatch::IntegrationTest
     get items_add_item_path(step: "sellable_sku")
 
     assert_response :success
-    assert_select "footer.ss-form-actions button.ss-btn-primary", text: "Create SKU"
-    assert_select "footer.ss-form-actions button.ss-btn-secondary", text: "Create SKU and Add Another"
+    assert_select "footer.ss-form-actions button.ss-btn-primary[name=commit]", text: "Create SKU"
+    assert_select "footer.ss-form-actions button.ss-btn-secondary[name=commit]", text: "Create SKU and Add Another"
     assert_select "footer.ss-form-actions a.ss-btn-tertiary", text: "Cancel"
-    assert_select "a.ss-btn-link", text: "Back"
   end
 
   test "ingram import uses contract form footer" do

@@ -177,8 +177,12 @@ module Seeds
         errors << "#{label}: blank node_key" if nk.blank?
         errors << "#{label}: blank name for #{nk.inspect}" if nk.present? && field(row, "name").blank?
         errors << "#{label}: parent #{pk.inspect} not found for #{nk}" if pk && !key_set.include?(pk.downcase)
-        errors << "#{label}: node_key >255 chars: #{nk}" if nk && nk.length > 255
-        warnings << "#{label}: node_key >30 chars (#{nk.length}) for #{nk} — widen CategoryNode validation in v0.04-16" if nk && nk.length > 30
+        errors << "#{label}: node_key >128 chars: #{nk}" if nk && nk.length > 128
+        if nk && nk.length > CategoryNode::STANDARD_NODE_KEY_MAX_LENGTH && nk.length <= CategoryNode::GENRE_NODE_KEY_MAX_LENGTH
+          # Expected for genre scheme CSV keys — validated at import via scheme-aware CategoryNode limit
+        elsif nk && nk.length > CategoryNode::STANDARD_NODE_KEY_MAX_LENGTH
+          errors << "#{label}: node_key >#{CategoryNode::STANDARD_NODE_KEY_MAX_LENGTH} chars: #{nk}"
+        end
       end
     end
   end

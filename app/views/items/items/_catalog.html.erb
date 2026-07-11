@@ -93,7 +93,7 @@
                    variant: :secondary,
                    url: items_item_external_metadata_path(catalog_item_id: setup_catalog_item.id) %>
       <% end %>
-      <%= render "shared/ui/button", label: "Edit bibliographic details", variant: :primary, url: bibliographic_edit_path %>
+      <%= render "shared/ui/button", label: "Edit Product", variant: :primary, url: bibliographic_edit_path %>
     <% end %>
     <% if setup_product.present? && Authorization.allowed?(user: current_user, permission_key: "items.catalog_items.update", store: current_store) %>
       <%= render "shared/ui/button",

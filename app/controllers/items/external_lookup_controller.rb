@@ -55,7 +55,8 @@ module Items
 
       if result.status == :staged
         session[:add_item_draft] = (session[:add_item_draft] || {}).merge(
-          "workflow" => "catalog_linked",
+          "workflow" => "unified",
+          "assist" => "lookup",
           "external_lookup_result_id" => @lookup_result.id,
           "external_lookup_format_id" => result.format&.id || params[:format_id]
         )
@@ -63,7 +64,8 @@ module Items
                     notice: result.message
       elsif result.status == :applied && result.product.present?
         session[:add_item_draft] = (session[:add_item_draft] || {}).merge(
-          "workflow" => "catalog_linked",
+          "workflow" => "unified",
+          "assist" => "lookup",
           "product_id" => result.product.id,
           "external_lookup_cover_image_url" => @lookup_result.image_url,
           "external_lookup_msrp_cents" => @lookup_result.msrp_cents
@@ -99,7 +101,8 @@ module Items
 
     def save_draft_for_local_match!(product)
       session[:add_item_draft] = (session[:add_item_draft] || {}).merge(
-        "workflow" => "catalog_linked",
+        "workflow" => "unified",
+        "assist" => "lookup",
         "product_id" => product.id,
         "local_match_isbn" => params[:isbn]
       )

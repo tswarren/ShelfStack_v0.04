@@ -68,7 +68,7 @@
       <%= tree_collection_select(f, :default_display_location_id, display_locations, include_blank: true, html_options: { id: "product_default_display_location_id" }) %>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :default_sub_department_id, label: "Default subdepartment" } do %>
-      <%= f.collection_select :default_sub_department_id, sub_departments, :id, :name, include_blank: true %>
+      <%= sub_department_grouped_select f, :default_sub_department_id, sub_departments: sub_departments, include_blank: true %>
       <p class="ss-hint">Default subdepartment for sellable SKUs created for this product.</p>
     <% end %>
     <%= render layout: "shared/forms/field", locals: { f: f, record: product, field: :preferred_vendor_id, label: "Preferred vendor" } do %>

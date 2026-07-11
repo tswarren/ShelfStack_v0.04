@@ -1,0 +1,29 @@
+<%= render layout: "shared/forms/section", locals: { title: "Physical & Logistics" } do %>
+  <div class="ss-form-grid ss-form-grid--2">
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :physical_dimensions, entry_context: entry_context } do %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :height } do %>
+        <%= f.number_field :height, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :width } do %>
+        <%= f.number_field :width, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :depth } do %>
+        <%= f.number_field :depth, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :dimension_units } do %>
+        <%= f.select :dimension_units, ProductMetadata::DIMENSION_UNITS, include_blank: true %>
+      <% end %>
+    <% end %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :weight, entry_context: entry_context } do %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :weight } do %>
+        <%= f.number_field :weight, step: 0.01 %>
+      <% end %>
+      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :weight_units } do %>
+        <%= f.select :weight_units, ProductMetadata::WEIGHT_UNITS, include_blank: true %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

@@ -14,7 +14,8 @@
         primary_bisac_category_node_label: @primary_bisac_category_node_label,
         bisac_category_node_ids: @bisac_category_node_ids,
         bisac_scheme_loaded: @bisac_scheme_loaded,
-        store_category_nodes: @store_category_nodes %>
+        store_category_nodes: @store_category_nodes,
+        entry_context: @entry_context %>
   <footer class="ss-form-actions">
     <%= render "shared/ui/button", label: "Update Bibliographic Details", type: :submit, variant: :primary %>
     <%= render "shared/ui/button", label: "Cancel", variant: :tertiary, url: item_flow_cancel_path(@product, tab: "item_setup") %>

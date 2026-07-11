@@ -12,7 +12,7 @@
 | [Delivery roadmap](../roadmap/v0.04-delivery-roadmap.md) | Milestones, dependencies, preserve vs replace |
 | [v0.03 phase index](../roadmap/README.md) | Historical Phases 1–10 (built the pre-v0.04 codebase) |
 
-**Current priority:** **v0.04-16** product entry revamp (spec drafted). **v0.04-17** product feature assignments (spec drafted; after v0.04-16). v0.04-13 demand-to-fulfillment continuity remains deferred. v0.04-3 product groups and readiness-tier slices (B, E2, R) deferred.
+**Current priority:** **v0.04-16.1** unified product management & form stability (after v0.04-16). Then **v0.04-17** product feature assignments. v0.04-13 demand-to-fulfillment continuity remains deferred. v0.04-3 product groups and readiness-tier slices (B, E2, R) deferred.
 
 ---
 
@@ -38,7 +38,8 @@ Each milestone bundle lives under `docs/v0.04/<milestone>/` with `spec.md`, `dat
 | v0.04-13 Demand-to-fulfillment continuity | **Deferred** (after v0.04-14) | [spec](v0.04-13-demand-to-fulfillment-continuity/spec.md) · [data model](v0.04-13-demand-to-fulfillment-continuity/data-model.md) · [test plan](v0.04-13-demand-to-fulfillment-continuity/test-plan.md) · [completion stub](../implementation/v0.04-13-completion.md) |
 | v0.04-14 Design system UX migration | **Complete (integration branch)** | [spec](v0.04-14-design-system-ux-migration/spec.md) · [data model](v0.04-14-design-system-ux-migration/data-model.md) · [test plan](v0.04-14-design-system-ux-migration/test-plan.md) · [build plan](../design/ux-migration-build-plan.md) · [completion](../implementation/v0.04-14-completion.md) |
 | v0.04-15 Products overview refactor | **Complete** | [spec](v0.04-15-products-overview-refactor/spec.md) · [data model](v0.04-15-products-overview-refactor/data-model.md) · [test plan](v0.04-15-products-overview-refactor/test-plan.md) · [completion](../implementation/v0.04-15-completion.md) |
-| v0.04-16 Product entry revamp | **Draft** | [spec](v0.04-16-product-entry-revamp/spec.md) · [data model](v0.04-16-product-entry-revamp/data-model.md) · [test plan](v0.04-16-product-entry-revamp/test-plan.md) |
+| v0.04-16 Product entry revamp | **Complete** | [spec](v0.04-16-product-entry-revamp/spec.md) · [completion](../implementation/v0.04-16-completion.md) |
+| v0.04-16.1 Unified product management & form stability | **Draft** | [spec](v0.04-16.1-unified-product-management/spec.md) · [data model](v0.04-16.1-unified-product-management/data-model.md) · [test plan](v0.04-16.1-unified-product-management/test-plan.md) · [completion stub](../implementation/v0.04-16.1-completion.md) |
 | v0.04-17 Product feature assignments | **Draft** | [spec](v0.04-17-product-feature-assignments/spec.md) · [data model](v0.04-17-product-feature-assignments/data-model.md) · [test plan](v0.04-17-product-feature-assignments/test-plan.md) |
 
 ---

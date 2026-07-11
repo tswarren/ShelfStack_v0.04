@@ -22,7 +22,7 @@ class ItemsIndexControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match "Items", response.body
-    assert_match "Add Item", response.body
+    assert_match "Add Product", response.body
     assert_match "View Item", response.body
     assert_match items_item_path(product_id: @product.id), response.body
   end

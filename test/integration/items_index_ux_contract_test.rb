@@ -23,7 +23,7 @@ class ItemsIndexUxContractTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".ss-page-header h1", text: "Items"
     assert_select ".ss-page-description", text: /Search and browse catalog items/
-    assert_select ".ss-page-actions .ss-btn-primary", text: "Add Item"
+    assert_select ".ss-page-actions .ss-btn-primary", text: "Add Product"
     assert_select ".ss-items-index-filters .ss-btn-primary", text: "Apply filters"
     assert_select ".ss-items-index-filters .ss-btn-tertiary", text: "Clear filters"
     assert_select ".ss-table"

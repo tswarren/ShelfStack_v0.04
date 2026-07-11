@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_06_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -695,14 +695,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_010000) do
 
   create_table "formats", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.string "catalog_item_type"
     t.string "code", limit: 20
     t.datetime "created_at", null: false
+    t.boolean "digital"
     t.string "format_key", limit: 30, null: false
     t.string "name", null: false
     t.string "short_name", limit: 20, null: false
+    t.integer "sort_order", default: 0, null: false
     t.datetime "updated_at", null: false
     t.boolean "virtual", default: false, null: false
     t.index ["active"], name: "index_formats_on_active"
+    t.index ["catalog_item_type", "digital", "active"], name: "index_formats_on_kind_digital_active"
+    t.index ["catalog_item_type"], name: "index_formats_on_catalog_item_type"
     t.index ["code"], name: "index_formats_on_code"
     t.index ["format_key"], name: "index_formats_on_format_key", unique: true
     t.index ["short_name"], name: "index_formats_on_short_name"
@@ -1398,6 +1403,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_010000) do
     t.jsonb "genre_data"
     t.string "genres"
     t.decimal "height", precision: 10, scale: 2
+    t.text "internal_notes"
     t.string "language_code", limit: 10
     t.boolean "large_print", default: false, null: false
     t.integer "list_price_cents", default: 0, null: false

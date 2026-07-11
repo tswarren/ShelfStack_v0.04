@@ -73,7 +73,10 @@ module Setup
     end
 
     def format_params
-      params.require(:format).permit(:format_key, :name, :short_name, :code, :virtual, :active)
+      params.require(:format).permit(
+        :format_key, :name, :short_name, :code, :virtual, :active,
+        :catalog_item_type, :digital, :sort_order
+      )
     end
   end
 end
