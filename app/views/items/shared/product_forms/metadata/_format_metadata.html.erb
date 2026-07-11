@@ -1,71 +1,97 @@
 <%= render layout: "shared/forms/section", locals: { title: "Format & Metadata" } do %>
   <div class="ss-form-grid ss-form-grid--2">
-    <% if entry_context.visible?(:format) %>
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :format, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :format_id, label: "Format", required: entry_context.required?(:format) } do %>
         <%= f.collection_select :format_id, entry_context.eligible_formats, :id, :name, { include_blank: "Select format" },
-              data: { product_metadata_form_target: "format" } %>
+              data: {
+                product_metadata_form_target: "format",
+                action: "change->product-metadata-form#onDriverChange"
+              } %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:publisher) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :publisher, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field",
             locals: { f: f, record: record, field: :publisher, label: entry_context.field_labels[:publisher] } do %>
         <%= f.text_field :publisher %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:publication_status) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :publication_status, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :publication_status } do %>
         <%= f.select :publication_status, ProductMetadata::PUBLICATION_STATUSES.map { |s| [humanize_controlled_value(s), s] } %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:publication_date) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :publication_date, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :publication_date } do %>
         <%= f.date_field :publication_date %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:edition_statement) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :edition_statement, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :edition_statement } do %>
         <%= f.text_field :edition_statement %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:year) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :year, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :year, label: "Calendar year", required: entry_context.required?(:year) } do %>
         <%= f.text_field :year, maxlength: 4 %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:page_count) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :page_count, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :page_count } do %>
         <%= f.number_field :page_count %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:running_time) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :running_time, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :duration_minutes, label: "Running time (minutes)" } do %>
         <%= f.number_field :duration_minutes %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:large_print) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :large_print, entry_context: entry_context } do %>
       <%= render "shared/forms/checkbox", f: f, record: record, field: :large_print %>
     <% end %>
-    <% if entry_context.visible?(:language) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :language, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :language_code, label: "Language" } do %>
         <%= f.text_field :language_code, maxlength: 10 %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:series_name) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :series_name, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :series_name } do %>
         <%= f.text_field :series_name %>
       <% end %>
-    <% end %>
-    <% if entry_context.visible?(:series_name) %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :series_enumeration } do %>
         <%= f.text_field :series_enumeration, maxlength: 15 %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:periodical_metadata) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :periodical_metadata, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :publication_frequency } do %>
         <%= f.select :publication_frequency, ProductMetadata::PUBLICATION_FREQUENCIES.map { |v| [humanize_controlled_value(v), v] }, include_blank: true %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:description) %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :description, entry_context: entry_context } do %>
       <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :description } do %>
         <%= f.text_area :description, rows: 4 %>
       <% end %>

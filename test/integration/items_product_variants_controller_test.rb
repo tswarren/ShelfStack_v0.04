@@ -44,6 +44,29 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "create variable variant and add another stays on new variant form" do
+    product = create_product!(variation_type: "variable", variant1_label: "Color")
+
+    get new_items_product_variant_path(product_id: product.id, return_to: "item")
+    assert_response :success
+    assert_select "footer.ss-form-actions button.ss-btn-secondary[name=commit]", text: "Create Variant and Add Another"
+
+    assert_difference -> { ProductVariant.count }, 1 do
+      post items_product_variants_path(return_to: "item"), params: {
+        commit: "Create Variant and Add Another",
+        product_variant: {
+          product_id: product.id,
+          sub_department_id: @sub_department.id,
+          selling_price_cents: 1200,
+          attribute1_value: "Blue",
+          active: true
+        }
+      }
+    end
+
+    assert_redirected_to new_items_product_variant_path(product_id: product.id, return_to: "item")
+  end
+
   test "update variant with return_to item redirects to selling tab with variant highlight" do
     variant = create_product_variant!(product: @product, sub_department: @sub_department)
 
@@ -66,13 +89,11 @@ class ItemsProductVariantsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1299, variant.reload.selling_price_cents
   end
 
-  test "new variant form leaves sku blank for generation" do
+  test "new variant form omits manual sku field for system generation" do
     get new_items_product_variant_path(product_id: @product.id, condition_id: @used_condition.id, return_to: "item")
 
     assert_response :success
-    assert_select "input[name='product_variant[sku]']" do |elements|
-      assert elements.first["value"].blank?
-    end
+    assert_select "input[name='product_variant[sku]']", count: 0
   end
 
   test "update variant with inventory tracking selection syncs behavior" do

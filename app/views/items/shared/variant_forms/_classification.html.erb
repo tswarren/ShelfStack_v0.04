@@ -6,7 +6,7 @@
 
   <div class="ss-form-grid ss-form-grid--2">
     <%= render layout: "shared/forms/field", locals: { f: f, record: variant, field: :sub_department_id, label: "Subdepartment", required: true } do %>
-      <%= f.collection_select :sub_department_id, sub_departments, :id, :name, selected: variant.sub_department_id %>
+      <%= sub_department_grouped_select f, :sub_department_id, sub_departments: sub_departments %>
     <% end %>
 
     <% if variant.condition_id.present? || f.object.condition.present? %>

@@ -60,19 +60,17 @@ module Items
 
     def edit
       load_form_collections
+      load_metadata_form_collections if @product.metadata_fused?
     end
 
     def update
       load_form_collections
       purge_cover_image_if_requested
-      previous_sku = @product.sku
-      if @product.update(product_params)
-        sync_identifiers_from_product_sku! if @product.sku.present? && (@product.sku != previous_sku || @product.product_identifiers.active_records.none?)
-        regenerate_catalog_linked_name!
-        record_audit!("product.updated", @product)
-        redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product updated."
+
+      if @product.metadata_fused?
+        update_unified_product!
       else
-        render :edit, status: :unprocessable_entity
+        update_legacy_selling_product!
       end
     end
 
@@ -106,18 +104,7 @@ module Items
     end
 
     def edit_metadata
-      if @product.catalog_linked?
-        redirect_to edit_items_catalog_item_path(@product.catalog_item, return_to: params[:return_to].presence || "item")
-        return
-      end
-      unless @product.metadata_fused?
-        redirect_to item_return_path(@product, tab: "item_setup"),
-                    alert: "Bibliographic metadata is not editable for this product."
-        return
-      end
-
-      load_metadata_form_collections
-      @entry_context = build_product_entry_context(@product, mode: :edit)
+      redirect_to edit_items_product_path(@product, return_to: params[:return_to].presence || "item")
     end
 
     def metadata_sections
@@ -129,22 +116,21 @@ module Items
     end
 
     def update_metadata
-      if @product.catalog_linked?
-        redirect_to edit_items_catalog_item_path(@product.catalog_item, return_to: params[:return_to].presence || "item")
-        return
-      end
-      unless @product.metadata_fused?
-        redirect_to item_return_path(@product, tab: "item_setup"),
-                    alert: "Bibliographic metadata is not editable for this product."
-        return
-      end
+      redirect_to edit_items_product_path(@product, return_to: params[:return_to].presence || "item"),
+                  notice: "Use Edit Product to update product details."
+    end
 
+    private
+
+    def update_unified_product!
       load_metadata_form_collections
       @entry_context = build_product_entry_context(@product, mode: :edit)
-      purge_cover_image_if_requested
       kind_changed = item_kind_changed?(@product)
       attrs = sanitized_product_metadata_params(@product, mode: :edit, item_kind_changed: kind_changed)
-      @product.assign_attributes(attrs)
+      selling_attrs = product_params.to_h.symbolize_keys.slice(
+        :default_display_location_id, :preferred_vendor_id, :cover_image
+      )
+      @product.assign_attributes(attrs.merge(selling_attrs.compact))
       apply_entry_context_product_type!(@product, @entry_context)
       if @product.save
         clear_incompatible_classifications!(@product, entry_context: @entry_context) if kind_changed
@@ -164,13 +150,25 @@ module Items
         regenerate_metadata_product_name!
         record_audit!("product.updated", @product)
         apply_store_category_sync_notice!(store_category_result)
-        redirect_to item_return_path(@product, tab: "item_setup"), notice: "Bibliographic details updated."
+        redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product updated."
       else
-        render :edit_metadata, status: :unprocessable_entity
+        load_metadata_form_collections
+        @entry_context = build_product_entry_context(@product, mode: :edit)
+        render :edit, status: :unprocessable_entity
       end
     end
 
-    private
+    def update_legacy_selling_product!
+      previous_sku = @product.sku
+      if @product.update(product_params.except("sku", "product_type", "name_override"))
+        sync_identifiers_from_product_sku! if @product.sku.present? && (@product.sku != previous_sku || @product.product_identifiers.active_records.none?)
+        regenerate_catalog_linked_name!
+        record_audit!("product.updated", @product)
+        redirect_to item_return_path(@product, tab: "item_setup"), notice: "Product updated."
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
 
     def set_product
       @product = Product.with_attached_cover_image.find(params[:id])

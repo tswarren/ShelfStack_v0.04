@@ -42,9 +42,13 @@ module Items
       raw = product_metadata_params_hash
       return if raw.blank?
 
-      product.assign_attributes(
-        raw.except(:staff_item_kind, :catalog_item_type)
+      entry_context = build_product_entry_context(product, mode: product.persisted? ? :edit : :new)
+      attrs = Products::MetadataPreviewParams.filter(
+        params: raw,
+        entry_context: entry_context,
+        mode: product.persisted? ? :edit : :new
       )
+      product.assign_attributes(attrs)
     end
 
     def metadata_sections_form_namespace

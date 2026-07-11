@@ -7,10 +7,12 @@ module Items
     private
 
     def build_product_entry_context(product, mode: nil)
-      staff_item_kind = params.dig(:product, :staff_item_kind).presence ||
+      staff_item_kind = params[:staff_item_kind].presence ||
+                        params.dig(:product, :staff_item_kind).presence ||
                         params.dig(:catalog_item, :staff_item_kind).presence
       if staff_item_kind.blank?
-        catalog_type = params.dig(:product, :catalog_item_type).presence ||
+        catalog_type = params[:catalog_item_type].presence ||
+                       params.dig(:product, :catalog_item_type).presence ||
                        params.dig(:catalog_item, :catalog_item_type).presence ||
                        product.catalog_item_type
         staff_item_kind = Products::ItemKindNormalizer.staff_item_kind_from_catalog_item_type(
@@ -18,14 +20,24 @@ module Items
           product_type: product.product_type
         )
       end
-      digital_param = params.dig(:product, :digital)
-      digital_param = params.dig(:catalog_item, :digital) if digital_param.nil?
+
+      digital_param =
+        if params.key?(:digital)
+          params[:digital]
+        elsif params.dig(:product)&.key?(:digital)
+          params.dig(:product, :digital)
+        elsif params.dig(:catalog_item)&.key?(:digital)
+          params.dig(:catalog_item, :digital)
+        end
       digital = digital_param.nil? ? product.digital : ActiveModel::Type::Boolean.new.cast(digital_param)
 
-      format_id = params.dig(:product, :format_id) || params.dig(:catalog_item, :format_id)
+      format_id = params[:format_id].presence ||
+                  params.dig(:product, :format_id) ||
+                  params.dig(:catalog_item, :format_id)
       format = format_id.present? ? Format.find_by(id: format_id) : product.format
 
-      variation_type = params.dig(:product, :variation_type).presence ||
+      variation_type = params[:variation_type].presence ||
+                       params.dig(:product, :variation_type).presence ||
                        params.dig(:catalog_item, :variation_type).presence ||
                        product.variation_type
 

@@ -72,6 +72,7 @@ Rails.application.routes.draw do
     get "add_item/metadata_sections", to: "add_item#metadata_sections", as: :add_item_metadata_sections
     post "add_item", to: "add_item#create"
     get "add_item/new", to: "add_item#new", as: :new_add_item
+    get "product_entry_context", to: "product_entry_contexts#show", as: :product_entry_context
 
     get "ingram_import", to: "ingram_import#show", as: :ingram_import
     post "ingram_import/preview", to: "ingram_import#preview", as: :ingram_import_preview

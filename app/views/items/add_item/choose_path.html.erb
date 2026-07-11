@@ -1,7 +1,7 @@
 <%= render "shared/forms/page_header",
            eyebrow: "Items",
-           title: "Add Item",
-           description: "What kind of item are you adding?" %>
+           title: "Add Product",
+           description: "Optionally look up an identifier, or enter product details directly." %>
 
 <% if @match_context&.valid? %>
   <%= render "shared/request_match_banner", context: @match_context %>
@@ -9,20 +9,20 @@
 
 <%= form_with url: items_add_item_path(step: "choose_path"), method: :post, class: "ss-form ss-form--standard" do %>
   <%= render "shared/request_match_params_fields", context: @match_context if @match_context&.active? %>
-  <%= render layout: "shared/forms/section", locals: { title: "Creation Path" } do %>
-    <div class="ss-choice-list" role="radiogroup" aria-label="Creation path">
-      <label class="ss-choice-option" for="workflow_catalog_linked">
-        <%= radio_button_tag :workflow, "catalog_linked", @draft["workflow"] == "catalog_linked", id: "workflow_catalog_linked" %>
+  <%= render layout: "shared/forms/section", locals: { title: "How do you want to start?" } do %>
+    <div class="ss-choice-list" role="radiogroup" aria-label="Add product assist">
+      <label class="ss-choice-option" for="assist_lookup">
+        <%= radio_button_tag :assist, "lookup", @draft["assist"] == "lookup", id: "assist_lookup" %>
         <div>
-          <span class="ss-choice-title">Catalog-linked item</span>
-          <p class="ss-help">Books, media, gifts, and other items with bibliographic or catalog metadata. Catalog-linked items start with ISBN lookup.</p>
+          <span class="ss-choice-title">Look up by identifier</span>
+          <p class="ss-help">Search ISBN/UPC or external catalog, then review and save as a Product.</p>
         </div>
       </label>
-      <label class="ss-choice-option" for="workflow_non_catalog">
-        <%= radio_button_tag :workflow, "non_catalog", @draft["workflow"] == "non_catalog", id: "workflow_non_catalog" %>
+      <label class="ss-choice-option" for="assist_manual">
+        <%= radio_button_tag :assist, "manual", @draft["assist"] != "lookup", id: "assist_manual" %>
         <div>
-          <span class="ss-choice-title">Non-catalog item</span>
-          <p class="ss-help">Services, fees, donations, gift cards, and simple merchandise without catalog metadata.</p>
+          <span class="ss-choice-title">Enter product details</span>
+          <p class="ss-help">Open the Product form directly. Type defaults to Book; change Type for music, service, and other kinds.</p>
         </div>
       </label>
     </div>

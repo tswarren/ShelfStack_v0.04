@@ -70,4 +70,17 @@ class FormHelperTest < ActionView::TestCase
     assert_includes html, "ss-field-error"
     assert_includes html, ss_field_dom_id(department, :name, "error")
   end
+
+  test "sub_department_options_grouped_by_department groups by parent department name" do
+    books = create_department!(name: "Books Dept", short_name: "BKS", department_number: "101")
+    gifts = create_department!(name: "Gifts Dept", short_name: "GFT", department_number: "102")
+    fiction = create_sub_department!(department: books, name: "Fiction", short_name: "FIC", sub_department_key: "fiction_grp")
+    cards = create_sub_department!(department: gifts, name: "Cards", short_name: "CRD", sub_department_key: "cards_grp")
+
+    groups = sub_department_options_grouped_by_department(SubDepartment.where(id: [ fiction.id, cards.id ]))
+
+    assert_equal [ "Books Dept", "Gifts Dept" ], groups.map(&:first)
+    assert_includes groups.assoc("Books Dept").last, [ "Fiction", fiction.id ]
+    assert_includes groups.assoc("Gifts Dept").last, [ "Cards", cards.id ]
+  end
 end

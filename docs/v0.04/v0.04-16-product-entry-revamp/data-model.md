@@ -2,9 +2,9 @@
 
 ## Status
 
-**Draft**
+**Complete** — companion to the v0.04-16 functional spec.
 
-Spec: [spec.md](spec.md)
+Spec: [spec.md](spec.md) · Follow-up: [v0.04-16.1](../v0.04-16.1-unified-product-management/spec.md)
 
 ---
 

@@ -1,16 +1,28 @@
 <%= render layout: "shared/forms/section", locals: { title: "Selling & Classification" } do %>
   <div class="ss-form-grid ss-form-grid--2">
-    <% if entry_context.visible?(:digital) %>
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :digital, entry_context: entry_context } do %>
       <%= render "shared/forms/checkbox", f: f, record: record, field: :digital,
-                 input_data: { product_metadata_form_target: "digital" } %>
+                 input_data: {
+                   product_metadata_form_target: "digital",
+                   action: "change->product-metadata-form#onDriverChange"
+                 } %>
     <% end %>
-    <% if entry_context.visible?(:store_category) && store_category_nodes.present? %>
-      <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :store_category_id, label: "Store category" } do %>
-        <%= tree_collection_select(f, :store_category_id, store_category_nodes, include_blank: "Select store category") %>
+
+    <%= render layout: "items/shared/product_forms/metadata/field_shell",
+          locals: { field_key: :store_category, entry_context: entry_context } do %>
+      <% if store_category_nodes.present? %>
+        <%= render layout: "shared/forms/field", locals: { f: f, record: record, field: :store_category_id, label: "Store category" } do %>
+          <%= tree_collection_select(f, :store_category_id, store_category_nodes, include_blank: "Select store category") %>
+        <% end %>
       <% end %>
     <% end %>
-    <% if entry_context.visible?(:list_price) && record.is_a?(Product) %>
-      <%= render "items/shared/product_forms/metadata/list_price", f: f, record: record %>
+
+    <% if record.is_a?(Product) %>
+      <%= render layout: "items/shared/product_forms/metadata/field_shell",
+            locals: { field_key: :list_price, entry_context: entry_context } do %>
+        <%= render "items/shared/product_forms/metadata/list_price", f: f, record: record %>
+      <% end %>
     <% end %>
   </div>
 <% end %>

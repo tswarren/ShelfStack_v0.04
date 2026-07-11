@@ -8,7 +8,8 @@ module Items
     include ProductMetadataSectionsRefreshable
 
     STEPS = %w[choose_path identify item_details selling_setup sellable_sku].freeze
-    WORKFLOWS = %w[catalog_linked non_catalog].freeze
+    WORKFLOWS = %w[unified catalog_linked non_catalog].freeze
+    ASSISTS = %w[lookup manual].freeze
 
     before_action :load_step
     before_action :load_draft
@@ -19,7 +20,8 @@ module Items
 
     def new
       reset_draft!
-      redirect_to items_add_item_path(step: "choose_path")
+      save_draft!("workflow" => "unified", "assist" => "manual")
+      redirect_to items_add_item_path(step: "item_details")
     end
 
     def create
@@ -70,11 +72,7 @@ module Items
       when "identify"
         authorize!("items.external_lookup.access")
       when "item_details"
-        if non_catalog?
-          authorize!("items.products.create")
-        else
-          authorize!("items.catalog_items.create")
-        end
+        authorize!("items.products.create")
       when "selling_setup"
         authorize!("items.products.create")
       when "sellable_sku"
@@ -83,34 +81,36 @@ module Items
     end
 
     def authorize_metadata_sections!
-      if catalog_linked?
-        authorize!("items.catalog_items.create")
-      else
-        authorize!("items.products.create")
-      end
+      authorize!("items.products.create")
     end
 
     def catalog_linked?
-      @draft["workflow"] == "catalog_linked"
+      # Legacy alias: lookup-assisted create (ISBN/external import).
+      @draft["workflow"] == "catalog_linked" || @draft["assist"] == "lookup" || external_lookup_staged?
     end
 
     def non_catalog?
       @draft["workflow"] == "non_catalog"
     end
 
+    def unified_workflow?
+      @draft["workflow"].blank? || @draft["workflow"] == "unified" || catalog_linked? || non_catalog?
+    end
+
     def render_step
       @match_context = load_match_context
       case @step
       when "choose_path"
+        # Optional assist only — happy path starts at item_details via #new.
         render "items/add_item/choose_path"
       when "identify"
-        ensure_catalog_linked_workflow! or return
+        ensure_identify_allowed! or return
         @local_product = local_match_product
         @local_match_variant = local_match_variant_for_request
         render "items/add_item/identify"
       when "item_details"
         ensure_item_details_workflow! or return
-        @external_lookup_staged = external_lookup_staged? if catalog_linked?
+        @external_lookup_staged = external_lookup_staged?
         @product = find_or_build_product
         @entry_context = build_product_entry_context(@product, mode: @product.persisted? ? :edit : :new)
         @formats = @entry_context.eligible_formats
@@ -141,14 +141,22 @@ module Items
     end
 
     def handle_choose_path
-      workflow = params.require(:workflow)
-      unless WORKFLOWS.include?(workflow)
-        redirect_to items_add_item_path(step: "choose_path"), alert: "Choose a valid item type."
+      assist = params[:assist].presence
+      workflow = params[:workflow].presence
+
+      # Legacy catalog/non-catalog params remain accepted as assist aliases.
+      if assist.blank? && workflow.present?
+        assist = workflow == "catalog_linked" ? "lookup" : "manual"
+      end
+      assist = "manual" if assist.blank?
+
+      unless ASSISTS.include?(assist)
+        redirect_to items_add_item_path(step: "choose_path"), alert: "Choose how you want to add the product."
         return
       end
 
-      save_draft!("workflow" => workflow)
-      if workflow == "catalog_linked"
+      save_draft!("workflow" => "unified", "assist" => assist)
+      if assist == "lookup"
         redirect_to items_add_item_path(step: "identify")
       else
         redirect_to items_add_item_path(step: "item_details")
@@ -156,7 +164,7 @@ module Items
     end
 
     def handle_identify
-      ensure_catalog_linked_workflow! or return
+      ensure_identify_allowed! or return
       redirect_to items_add_item_path(step: "identify")
     end
 
@@ -186,7 +194,7 @@ module Items
       load_store_category_collections
       @external_lookup_staged = external_lookup_staged?
 
-      @external_lookup_staged = catalog_linked? && external_lookup_staged?
+      @external_lookup_staged = external_lookup_staged?
 
       cover_image_url = external_lookup_result&.image_url if @external_lookup_staged
       sku_validation = nil
@@ -239,17 +247,26 @@ module Items
         draft_attrs["external_lookup_msrp_cents"] = external_lookup_result.msrp_cents
       end
       save_draft!(draft_attrs)
+      import_external_cover_image!(@product)
 
-      if done_commit?
+      if save_product_only_commit?
         reset_draft!
         redirect_to ItemPresenter.from_product(@product).show_path,
-                    notice: "Item details saved. Status: Product Only."
+                    notice: "Product saved."
       elsif @entry_context.short_form?
+        result = Products::CreateDefaultVariant.call(product: @product)
+        unless result.success?
+          result.errors.each { |message| @product.errors.add(:base, message) }
+          render_item_details_errors(@product)
+          return
+        end
+        record_audit!("product_variant.created", result.variant, details: { "sku" => result.variant.sku, "default_variant" => true })
         reset_draft!
         redirect_to ItemPresenter.from_product(@product).show_path,
-                    notice: "Item added successfully."
+                    notice: "Product and default variant created."
       else
-        redirect_to items_add_item_path(step: "selling_setup")
+        redirect_to items_add_item_path(step: "sellable_sku"),
+                    notice: "Product saved. Create a sellable variant."
       end
     end
 
@@ -523,45 +540,53 @@ module Items
         ExternalCatalog::StagedProductBuilder.build(lookup_result:, format:)
       elsif @draft["product_id"].present?
         Product.find(@draft["product_id"])
-      elsif non_catalog?
-        Product.new(active: true, publication_status: "active", catalog_item_type: "other", product_type: "physical", variation_type: "standard")
       else
-        Product.new(active: true, publication_status: "active", catalog_item_type: "book", product_type: "physical", variation_type: "conditional")
+        Product.new(
+          active: true,
+          publication_status: "active",
+          catalog_item_type: "book",
+          product_type: "physical",
+          variation_type: "conditional"
+        )
       end
     end
 
     def ensure_item_details_workflow!
-      return true if catalog_linked? || non_catalog?
+      if @draft["workflow"].blank?
+        save_draft!("workflow" => "unified", "assist" => @draft["assist"].presence || "manual")
+      end
+      return true if unified_workflow?
 
-      redirect_to items_add_item_path(step: "choose_path"), alert: "Choose an item type to continue."
+      redirect_to items_add_item_path(step: "item_details"), alert: "Start Add Product to continue."
       false
+    end
+
+    def ensure_identify_allowed!
+      if @draft["workflow"].blank?
+        save_draft!("workflow" => "unified", "assist" => "lookup")
+      end
+      true
     end
 
     def ensure_catalog_linked_workflow!
-      return true if catalog_linked?
-
-      redirect_to items_add_item_path(step: "choose_path"), alert: "Choose catalog-linked item to continue."
-      false
+      ensure_identify_allowed!
     end
 
     def ensure_non_catalog_workflow!
-      return true if non_catalog?
-
-      redirect_to items_add_item_path(step: "choose_path"), alert: "Choose non-catalog item to continue."
-      false
+      ensure_item_details_workflow!
     end
 
     def ensure_product_metadata_in_draft!
       return true if @draft["product_id"].present?
 
-      redirect_to items_add_item_path(step: "item_details"), alert: "Complete item details first."
+      redirect_to items_add_item_path(step: "item_details"), alert: "Complete product details first."
       false
     end
 
     def ensure_product_in_draft!
       return true if @draft["product_id"].present?
 
-      redirect_to items_add_item_path(step: "selling_setup"), alert: "Complete selling setup first."
+      redirect_to items_add_item_path(step: "item_details"), alert: "Complete product details first."
       false
     end
 
@@ -604,11 +629,11 @@ module Items
 
       @genre_form_state = if genre_structured_input?
                             load_genre_form_state_from_params(scheme_key: scheme_key)
-                          elsif product.persisted?
+      elsif product.persisted?
                             load_genre_form_state(product, scheme_key: scheme_key)
-                          else
+      else
                             empty_genre_form_state(scheme_key: scheme_key)
-                          end
+      end
     end
 
     def short_form_product?(product)
@@ -689,7 +714,7 @@ module Items
     def render_item_details_errors(product)
       @step = "item_details"
       @product = product
-      @external_lookup_staged = catalog_linked? && external_lookup_staged?
+      @external_lookup_staged = external_lookup_staged?
       @entry_context = build_product_entry_context(@product, mode: @product.persisted? ? :edit : :new)
       @formats = @entry_context.eligible_formats
       load_bisac_form_state(product)
@@ -699,7 +724,12 @@ module Items
     end
 
     def done_commit?
-      params[:commit].to_s.casecmp("done").zero?
+      save_product_only_commit?
+    end
+
+    def save_product_only_commit?
+      commit = params[:commit].to_s
+      commit.match?(/save product only/i) || commit.casecmp("done").zero?
     end
 
     def add_another_commit?

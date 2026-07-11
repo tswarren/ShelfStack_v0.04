@@ -122,9 +122,10 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "<th>Valid</th>", response.body
     assert_match items_setup_modals_identifier_path(primary, product_id: @product.id), response.body
     assert_match "Quick edit", response.body
-    assert_match "Edit bibliographic details", response.body
+    assert_match "Edit Product", response.body
     assert_match "Quick add identifier", response.body
-    assert_match edit_items_catalog_item_path(@product.catalog_item, return_to: "item"), response.body
+    assert_match edit_items_product_path(@product, return_to: "item"), response.body
+    assert_no_match "Edit bibliographic details", response.body
     assert_match "Inactivate catalog item", response.body
     assert_match "Generate house EAN (201)", response.body
     assert_no_match "ss-context-actions", response.body
@@ -145,7 +146,7 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Invalid Identifier Warning", response.body
   end
 
-  test "item setup tab shows bibliographic edit for fused product without catalog item" do
+  test "item setup tab shows edit product for fused product without catalog item" do
     grant_permission!(@user, "items.products.update")
     fused_product = create_product!(
       skip_product_identifier: true,
@@ -158,8 +159,9 @@ class ItemsItemsControllerTest < ActionDispatch::IntegrationTest
     get items_item_path(product_id: fused_product.id, tab: "item_setup")
 
     assert_response :success
-    assert_match "Edit bibliographic details", response.body
-    assert_match edit_metadata_items_product_path(fused_product, return_to: "item"), response.body
+    assert_match "Edit Product", response.body
+    assert_match edit_items_product_path(fused_product, return_to: "item"), response.body
+    assert_no_match "Edit bibliographic details", response.body
   end
 
   test "item setup tab lists primary identifier before other identifiers" do

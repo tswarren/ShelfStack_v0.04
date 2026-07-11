@@ -1,0 +1,12 @@
+<%# locals: field_key, entry_context, class_name: nil %>
+<% field_key = field_key.to_sym %>
+<% visible = entry_context.visible?(field_key) %>
+<% required = entry_context.required?(field_key) %>
+<div id="product-field-<%= field_key.to_s.tr('_', '-') %>"
+     class="<%= local_assigns[:class_name] %>"
+     data-product-field-key="<%= field_key %>"
+     data-visible="<%= visible %>"
+     data-required="<%= required %>"
+     <%= "hidden" unless visible %>>
+  <%= yield %>
+</div>

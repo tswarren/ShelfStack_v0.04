@@ -326,12 +326,6 @@ module Items
 
     def overview_actions(helper: self)
       actions = []
-      if path = edit_bibliographic_metadata_path(helper: helper)
-        actions << {
-          label: "Edit bibliographic details",
-          url: path
-        }
-      end
       if product
         actions << {
           label: "Edit Product",
@@ -399,11 +393,9 @@ module Items
     end
 
     def edit_bibliographic_metadata_path(helper: self)
-      if catalog_item.present?
-        helper.edit_items_catalog_item_path(catalog_item, item_return_params)
-      elsif product&.metadata_fused?
-        helper.edit_metadata_items_product_path(product, item_return_params)
-      end
+      return helper.edit_items_product_path(product, item_return_params) if product.present?
+
+      nil
     end
 
     def cover_image_attached?
@@ -492,10 +484,9 @@ module Items
     end
 
     def edit_catalog_action(helper: self)
-      path = edit_bibliographic_metadata_path(helper: helper)
-      return unless path
+      return unless product
 
-      { label: "Edit bibliographic details", url: path }
+      { label: "Edit Product", url: helper.edit_items_product_path(product, item_return_params) }
     end
 
     def sell_new_action(helper: self)

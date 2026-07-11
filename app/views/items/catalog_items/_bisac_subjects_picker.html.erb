@@ -4,19 +4,28 @@
 <% bisac_scheme_loaded = local_assigns.fetch(:bisac_scheme_loaded, false) %>
 
 <div class="ss-field ss-field--full"
-     data-controller="bisac-subjects"
+     data-controller="bisac-subjects catalog-item-form"
      data-bisac-subjects-search-url-value="<%= items_bisac_subjects_search_path(format: :json) %>"
      data-bisac-subjects-primary-id-value="<%= primary_id.to_i %>"
      data-bisac-subjects-primary-label-value="<%= primary_label.to_s %>"
      data-bisac-subjects-additional-selections-value="<%= additional_selections.to_json %>">
+  <%# Canonical staged values — always mounted; disabled when picker field shell is hidden. %>
+  <div class="ss-product-canonical-inputs ss-visually-hidden" data-product-canonical-inputs="bisac_picker">
+    <%= hidden_field_tag :primary_bisac_category_node_id, primary_id,
+          data: {
+            bisac_subjects_target: "primaryHidden",
+            product_canonical_input: true
+          } %>
+    <div data-bisac-subjects-target="additionalContainer" data-product-canonical-input="true"></div>
+  </div>
+
   <% unless bisac_scheme_loaded %>
     <p class="ss-form-errors">BISAC subject tree is not loaded. Import subjects from Setup → BISAC Subjects before using structured pickers.</p>
   <% end %>
 
-  <div class="ss-form-grid ss-form-grid--2">
+  <div class="ss-form-grid ss-form-grid--2 ss-product-picker-ui">
     <div class="ss-field">
       <%= label_tag :primary_bisac_category_node_id, "Primary BISAC subject", class: "ss-label" %>
-      <%= hidden_field_tag :primary_bisac_category_node_id, primary_id, data: { bisac_subjects_target: "primaryHidden" } %>
       <div class="ss-bisac-primary-selection">
         <p data-bisac-subjects-target="primaryDisplay" class="ss-muted"><%= primary_label.presence || "None selected" %></p>
         <button type="button"
@@ -38,7 +47,7 @@
 
     <div class="ss-field">
       <label class="ss-label">Additional BISAC subjects</label>
-      <div data-bisac-subjects-target="additionalContainer"></div>
+      <div data-bisac-subjects-target="additionalDisplay"></div>
       <input type="search"
              class="ss-input"
              placeholder="Search to add another subject"
@@ -50,7 +59,7 @@
 
   <p class="ss-hint">Linked preview: <span data-bisac-subjects-target="linkedPreview">—</span></p>
 
-  <details class="ss-details">
+  <details class="ss-details ss-product-picker-ui">
     <summary>Advanced subject entry</summary>
     <div class="ss-field">
       <%= f.text_area :bisac_subjects,
